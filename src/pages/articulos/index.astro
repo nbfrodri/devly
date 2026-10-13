@@ -1,10 +1,12 @@
 ---
-import ArticleList from "@/components/article-list.astro";
-import Icon from "@/components/icon.astro";
+import ArticleCard from "@/components/article-card.astro";
+import FilterBar from "@/components/filter-bar.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { getArticles } from "@/lib/content";
 import { LAYERS } from "@/lib/layers";
-import { LEVEL_LABELS, LEVELS } from "@/lib/levels";
+
+/** Cards shown per layer before the "see all" button. */
+const LIMIT = 6;
 
 const articles = await getArticles();
 const groups = LAYERS.map((layer) => ({
@@ -21,65 +23,41 @@ const groups = LAYERS.map((layer) => ({
 		<header class="page-head">
 			<h1>Artículos</h1>
 			<p class="lead">
-				Los {articles.length} artículos, agrupados por capa y ordenados de básico
-				a avanzado.
+				{articles.length} artículos, agrupados por capa y ordenados de básico a
+				avanzado.
 			</p>
 		</header>
 
-		<form class="filter-bar" data-filters>
-			<fieldset class="filter-field">
-				<legend>Nivel</legend>
-				<div class="segmented">
-					<label>
-						<input type="radio" name="level" value="" checked />
-						<span>Todos</span>
-					</label>
-					{
-						LEVELS.map((level) => (
-							<label>
-								<input type="radio" name="level" value={level} />
-								<span>{LEVEL_LABELS[level]}</span>
-							</label>
-						))
-					}
-				</div>
-			</fieldset>
-			<fieldset class="filter-field">
-				<legend>Capa</legend>
-				<div class="chips">
-					<label>
-						<input type="radio" name="layer" value="" checked />
-						<span>Todas</span>
-					</label>
-					{
-						groups.map((group) => (
-							<label>
-								<input type="radio" name="layer" value={group.layer.id} />
-								<span>{group.layer.name}</span>
-							</label>
-						))
-					}
-				</div>
-			</fieldset>
-			<div class="filter-summary">
-				<p role="status" data-filter-status>{articles.length} artículos</p>
-				<button class="text-button" type="reset" data-filter-reset hidden>
-					<Icon name="x" />
-					Quitar filtros
-				</button>
-			</div>
-		</form>
+		<FilterBar
+			layers={groups.map((group) => group.layer)}
+			total={articles.length}
+			singular="artículo"
+			plural="artículos"
+		/>
 
 		<div data-filterable>
 			{
 				groups.map((group) => (
-					<section class="section" data-layer={group.layer.id}>
-						<h2>
+					<section class="section" data-layer={group.layer.id} data-limit={LIMIT}>
+						<h2 class="section-title">
 							<a class="plain-link" href={`/capas/${group.layer.id}/`}>
 								{group.layer.name}
 							</a>
+							<span class="section-count">{group.articles.length}</span>
 						</h2>
-						<ArticleList articles={group.articles} showLayer={false} />
+						<ul class="card-grid">
+							{group.articles.map((article, index) => (
+								<ArticleCard article={article} hidden={index >= LIMIT} />
+							))}
+						</ul>
+						<button
+							class="more-button"
+							type="button"
+							data-expand
+							hidden={group.articles.length <= LIMIT}
+						>
+							Ver los {group.articles.length} artículos
+						</button>
 					</section>
 				))
 			}
@@ -89,47 +67,3 @@ const groups = LAYERS.map((layer) => ({
 		</div>
 	</div>
 </BaseLayout>
-
-<script>
-	const form = document.querySelector<HTMLFormElement>("[data-filters]");
-	const list = document.querySelector<HTMLElement>("[data-filterable]");
-	const status = document.querySelector<HTMLElement>("[data-filter-status]");
-	const reset = document.querySelector<HTMLElement>("[data-filter-reset]");
-	const empty = document.querySelector<HTMLElement>("[data-filter-empty]");
-
-	function applyFilters() {
-		if (!form || !list) return;
-
-		const data = new FormData(form);
-		const level = String(data.get("level") ?? "");
-		const layer = String(data.get("layer") ?? "");
-		let visible = 0;
-
-		for (const section of list.querySelectorAll<HTMLElement>("[data-layer]")) {
-			const layerMatches = layer === "" || section.dataset.layer === layer;
-			let visibleInSection = 0;
-
-			for (const item of section.querySelectorAll<HTMLElement>("li")) {
-				const matches =
-					layerMatches && (level === "" || item.dataset.level === level);
-				item.hidden = !matches;
-				if (matches) visibleInSection += 1;
-			}
-
-			section.hidden = visibleInSection === 0;
-			visible += visibleInSection;
-		}
-
-		if (status) {
-			status.textContent = `${visible} ${visible === 1 ? "artículo" : "artículos"}`;
-		}
-		if (reset) reset.hidden = level === "" && layer === "";
-		if (empty) empty.hidden = visible > 0;
-
-		list.dispatchEvent(new CustomEvent("devly:content-change", { bubbles: true }));
-	}
-
-	form?.addEventListener("change", applyFilters);
-	// A reset restores the inputs after this event, so wait a tick to read them.
-	form?.addEventListener("reset", () => window.setTimeout(applyFilters));
-</script>

@@ -1,13 +1,25 @@
 ---
-import { getCollection } from "astro:content";
+import { getCollection, getEntries } from "astro:content";
+import FilterBar from "@/components/filter-bar.astro";
 import PathCard from "@/components/path-card.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { LAYERS } from "@/lib/layers";
+import { normalizeForSearch } from "@/lib/text";
 
-const paths = await getCollection("paths");
+const paths = await Promise.all(
+	(await getCollection("paths")).map(async (path) => {
+		const steps = await getEntries(path.data.steps);
+
+		return {
+			path,
+			levels: [...new Set(steps.map((step) => step.data.level))].join(" "),
+			text: normalizeForSearch(`${path.data.title} ${path.data.description}`),
+		};
+	}),
+);
 const groups = LAYERS.map((layer) => ({
 	layer,
-	paths: paths.filter((path) => path.data.layer === layer.id),
+	paths: paths.filter(({ path }) => path.data.layer === layer.id),
 })).filter((group) => group.paths.length > 0);
 ---
 
@@ -19,19 +31,35 @@ const groups = LAYERS.map((layer) => ({
 				Una ruta ordena los artículos para que cada uno se apoye en el anterior.
 			</p>
 		</header>
-		{
-			groups.map((group) => (
-				<section class="section">
-					<h2>{group.layer.name}</h2>
-					<ul class="path-grid">
-						{group.paths.map((path) => (
-							<li>
-								<PathCard path={path} />
-							</li>
-						))}
-					</ul>
-				</section>
-			))
-		}
+
+		<FilterBar
+			layers={groups.map((group) => group.layer)}
+			total={paths.length}
+			singular="ruta"
+			plural="rutas"
+		/>
+
+		<div data-filterable>
+			{
+				groups.map((group) => (
+					<section class="section" data-layer={group.layer.id}>
+						<h2 class="section-title">
+							{group.layer.name}
+							<span class="section-count">{group.paths.length}</span>
+						</h2>
+						<ul class="path-grid">
+							{group.paths.map(({ path, levels, text }) => (
+								<li data-item data-levels={levels} data-text={text}>
+									<PathCard path={path} />
+								</li>
+							))}
+						</ul>
+					</section>
+				))
+			}
+			<p class="empty" data-filter-empty hidden>
+				Ninguna ruta coincide con esos filtros.
+			</p>
+		</div>
 	</div>
 </BaseLayout>

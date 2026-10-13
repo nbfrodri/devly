@@ -1,0 +1,27 @@
+---
+import type { Article } from "@/lib/content";
+import { LEVEL_LABELS } from "@/lib/levels";
+import { normalizeForSearch } from "@/lib/text";
+
+type Props = {
+	article: Article;
+	/** Hidden until the section is expanded or a filter is active. */
+	hidden?: boolean;
+};
+
+const { article, hidden = false } = Astro.props;
+const { title, description, level } = article.data;
+---
+
+<li
+	data-item
+	data-levels={level}
+	data-text={normalizeForSearch(`${title} ${description}`)}
+	hidden={hidden}
+>
+	<a class="article-card" href={`/articulos/${article.id}/`}>
+		<span class="article-card-title">{title}</span>
+		<span class="article-card-description">{description}</span>
+		<span class="article-card-level">{LEVEL_LABELS[level]}</span>
+	</a>
+</li>

@@ -34,6 +34,15 @@ const links = [
 				}
 			} catch {}
 
+			// The layer stack builds itself once per session; later visits show it at once.
+			try {
+				if (sessionStorage.getItem("intro")) {
+					document.documentElement.classList.add("no-intro");
+				} else {
+					sessionStorage.setItem("intro", "1");
+				}
+			} catch {}
+
 		</script>
 	</head>
 	<body>
@@ -133,7 +142,14 @@ const links = [
 </html>
 
 <script>
-	import "@/scripts/reveal";
+	// Entrance motion is decoration: load it when the browser is idle so it
+	// never competes with first paint.
+	const loadMotion = () => import("@/scripts/reveal");
+	if ("requestIdleCallback" in window) {
+		window.requestIdleCallback(loadMotion, { timeout: 2000 });
+	} else {
+		setTimeout(loadMotion, 300);
+	}
 
 	const button = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
 	const root = document.documentElement;

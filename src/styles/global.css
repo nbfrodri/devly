@@ -509,15 +509,66 @@ a:hover {
 	--pagefind-ui-font: var(--font-body);
 }
 
-/* Pagefind renders its own clear button; show the Tabler "x" instead of its text. */
-.search .pagefind-ui__search-clear {
-	width: 2.75rem;
+.search-placeholder {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	height: 57.6px;
+	padding: 0 0 0 3rem;
+	font: inherit;
+	font-size: 1.0125rem;
+	font-weight: 700;
+	text-align: left;
+	color: color-mix(in srgb, var(--muted) 55%, transparent);
+	background: var(--surface);
+	border: 2px solid var(--ink);
+	border-radius: var(--radius);
+	cursor: text;
+}
+
+/*
+ * Pagefind renders its own clear button with a text label. It becomes a square
+ * icon button showing the Tabler "x"; the id selector outranks Pagefind's own
+ * styles, which load later.
+ */
+#search .pagefind-ui__search-clear {
+	top: 50%;
+	right: 0.5rem;
+	width: 2.5rem;
+	height: 2.5rem;
 	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	font-size: 0;
-	background-color: var(--ink);
+	color: var(--muted);
+	background: none;
+	border-radius: var(--radius);
+	transform: translateY(-50%);
+	cursor: pointer;
+}
+
+#search .pagefind-ui__search-clear::before {
+	content: "";
+	width: 1.375rem;
+	height: 1.375rem;
+	background-color: currentColor;
 	mask:
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6l-12 12'/%3E%3Cpath d='M6 6l12 12'/%3E%3C/svg%3E")
-		center / 1.25rem no-repeat;
+		center / contain no-repeat;
+}
+
+#search .pagefind-ui__search-clear:hover {
+	color: var(--ink);
+	background: var(--quiet);
+}
+
+#search mark {
+	padding-inline: 0.125rem;
+	color: inherit;
+	font-weight: 600;
+	background: var(--quiet);
+	border-radius: 2px;
 }
 
 .section {
@@ -702,6 +753,10 @@ a:hover {
 	}
 }
 
+.no-intro .stack-build li {
+	animation: none;
+}
+
 /* Lists */
 
 .path-card {
@@ -812,7 +867,7 @@ a:hover {
 
 .filter-bar {
 	display: grid;
-	grid-template-columns: auto 1fr;
+	grid-template-columns: auto minmax(0, 1fr);
 	gap: 1.25rem 2rem;
 	margin-bottom: 2.5rem;
 	padding: 1.25rem 1.5rem;
@@ -831,12 +886,37 @@ a:hover {
 	gap: 0.5rem;
 }
 
-.filter-field legend {
+.filter-field legend,
+.filter-field > label {
 	padding: 0;
-	margin-bottom: 0.5rem;
 	font-size: 0.8125rem;
 	font-weight: 600;
 	color: var(--muted);
+}
+
+.filter-field legend {
+	margin-bottom: 0.5rem;
+}
+
+.filter-search {
+	grid-column: 1 / -1;
+}
+
+.filter-search input {
+	width: 100%;
+	max-width: 26rem;
+	min-height: 2.75rem;
+	padding-inline: 0.875rem;
+	font: inherit;
+	font-size: 0.9375rem;
+	color: var(--ink);
+	background: var(--bg);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+}
+
+.filter-search input:hover {
+	border-color: var(--ink);
 }
 
 /* Both controls are radio groups: the input is hidden and its label is the target. */
@@ -927,8 +1007,96 @@ a:hover {
 	font-weight: 600;
 }
 
+[data-filterable] {
+	padding-bottom: 4rem;
+}
+
 .filter-summary .text-button {
 	min-height: 2rem;
+}
+
+.section-title {
+	display: flex;
+	align-items: baseline;
+	gap: 0.75rem;
+}
+
+.section-count {
+	font-family: var(--font-body);
+	font-size: 1rem;
+	font-weight: 500;
+	letter-spacing: 0;
+	color: var(--muted);
+}
+
+.card-grid {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+	gap: 0.75rem;
+}
+
+.article-card {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	padding: 1rem 1.125rem;
+	color: var(--ink);
+	text-decoration: none;
+	background: var(--surface);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+}
+
+.article-card:hover {
+	color: var(--ink);
+	border-color: var(--ink);
+}
+
+.article-card-title {
+	font-weight: 600;
+	font-size: 1.0625rem;
+	line-height: 1.3;
+}
+
+.article-card-description {
+	display: -webkit-box;
+	overflow: hidden;
+	font-size: 0.875rem;
+	line-height: 1.45;
+	color: var(--muted);
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+}
+
+.article-card-level {
+	margin-top: auto;
+	padding-top: 0.375rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--muted);
+}
+
+.more-button {
+	align-self: flex-start;
+	min-height: 2.75rem;
+	padding-inline: 1.125rem;
+	font: inherit;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--ink);
+	background: none;
+	border: 2px solid var(--ink);
+	border-radius: var(--radius);
+	cursor: pointer;
+}
+
+.more-button:hover {
+	background: var(--quiet);
 }
 
 /* Without JavaScript the first six stay; with it, six random ones are kept. */
@@ -1268,10 +1436,28 @@ a:hover {
 @media (max-width: 48rem) {
 	.site-footer .container {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 2rem 1.5rem;
+		padding-block: 2.5rem 1.5rem;
+	}
+
+	.footer-brand,
+	.site-footer nav:first-of-type {
+		grid-column: 1 / -1;
 	}
 
 	.footer-brand {
-		grid-column: 1 / -1;
+		max-width: none;
+	}
+
+	/* Seven layer names read better in two columns than as one long list. */
+	.site-footer nav:first-of-type ul {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.125rem 1.5rem;
+	}
+
+	.site-footer li a {
+		min-height: 2.5rem;
 	}
 
 	.filter-bar {
@@ -1377,10 +1563,13 @@ a:hover {
 	.article-title,
 	.site-nav a,
 	.segmented span,
-	.chips span {
+	.chips span,
+	.article-card,
+	.more-button {
 		transition:
 			color 120ms ease,
-			background-color 120ms ease;
+			background-color 120ms ease,
+			border-color 120ms ease;
 	}
 
 	.theme-toggle:active {

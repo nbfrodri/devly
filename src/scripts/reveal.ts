@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
  * they scroll into view. Anything already on screen when the page loads is
  * left alone, so nothing waits for this script and nothing flashes.
  */
-const ITEMS = ".article-list li, .path-card";
+const ITEMS = ".article-list li, .path-card, .article-card";
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 function reveal(targets: Element[]) {
@@ -14,13 +14,13 @@ function reveal(targets: Element[]) {
 
 	gsap.fromTo(
 		targets,
-		{ opacity: 0, y: 16 },
+		{ opacity: 0, y: 10 },
 		{
 			opacity: 1,
 			y: 0,
-			duration: 0.45,
-			ease: "power3.out",
-			stagger: 0.05,
+			duration: 0.28,
+			ease: "power2.out",
+			stagger: 0.02,
 			overwrite: true,
 			// Leaves hover transforms defined in CSS free to work afterwards.
 			clearProps: "opacity,transform",
@@ -37,7 +37,7 @@ if (!reducedMotion.matches) {
 
 	gsap.set(belowTheFold, { opacity: 0 });
 	ScrollTrigger.batch(belowTheFold, {
-		start: "top 94%",
+		start: "top 100%",
 		once: true,
 		onEnter: (batch) => reveal(batch),
 	});

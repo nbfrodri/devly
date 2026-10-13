@@ -1,0 +1,79 @@
+---
+import Icon from "@/components/icon.astro";
+import type { Layer } from "@/lib/layers";
+import { LEVEL_LABELS, LEVELS } from "@/lib/levels";
+
+type Props = {
+	/** Layers that have at least one item on the page. */
+	layers: readonly Layer[];
+	total: number;
+	/** Singular and plural noun for the count, e.g. "artículo" and "artículos". */
+	singular: string;
+	plural: string;
+};
+
+const { layers, total, singular, plural } = Astro.props;
+---
+
+<form
+	class="filter-bar"
+	data-filters
+	data-singular={singular}
+	data-plural={plural}
+>
+	<div class="filter-field filter-search">
+		<label for="filtro-texto">Buscar</label>
+		<input
+			id="filtro-texto"
+			type="search"
+			name="text"
+			placeholder={`Filtrar ${plural} por título`}
+			autocomplete="off"
+		/>
+	</div>
+	<fieldset class="filter-field">
+		<legend>Nivel</legend>
+		<div class="segmented">
+			<label>
+				<input type="radio" name="level" value="" checked />
+				<span>Todos</span>
+			</label>
+			{
+				LEVELS.map((level) => (
+					<label>
+						<input type="radio" name="level" value={level} />
+						<span>{LEVEL_LABELS[level]}</span>
+					</label>
+				))
+			}
+		</div>
+	</fieldset>
+	<fieldset class="filter-field">
+		<legend>Capa</legend>
+		<div class="chips">
+			<label>
+				<input type="radio" name="layer" value="" checked />
+				<span>Todas</span>
+			</label>
+			{
+				layers.map((layer) => (
+					<label>
+						<input type="radio" name="layer" value={layer.id} />
+						<span>{layer.name}</span>
+					</label>
+				))
+			}
+		</div>
+	</fieldset>
+	<div class="filter-summary">
+		<p role="status" data-filter-status>{total} {total === 1 ? singular : plural}</p>
+		<button class="text-button" type="reset" data-filter-reset hidden>
+			<Icon name="x" />
+			Quitar filtros
+		</button>
+	</div>
+</form>
+
+<script>
+	import "@/scripts/filters";
+</script>

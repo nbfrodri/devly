@@ -2,22 +2,54 @@
 // The Pagefind bundle only exists after `pnpm build`, so search is empty in dev.
 ---
 
-<link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
 <div class="search">
 	<span id="search-label">Busca un concepto</span>
-	<div id="search" aria-labelledby="search-label"></div>
+	<div id="search" aria-labelledby="search-label">
+		<!-- Stands in for the search box until Pagefind is loaded. -->
+		<button class="search-placeholder" type="button" data-search-placeholder>
+			variable, DNS, proceso
+		</button>
+	</div>
 </div>
-<!-- Deferred so the rest of the page is parsed and painted without waiting for it. -->
-<script is:inline defer src="/pagefind/pagefind-ui.js"></script>
 <script is:inline>
-	window.addEventListener("DOMContentLoaded", () => {
-		if (window.PagefindUI) {
-			new window.PagefindUI({
-				element: "#search",
-				showSubResults: true,
-				showImages: false,
-				translations: { placeholder: "variable, DNS, proceso" },
-			});
+	// The search engine (script and styles) is fetched when the browser is idle,
+	// or at once if the visitor reaches for the box first.
+	(() => {
+		const box = document.getElementById("search");
+		const placeholder = box.querySelector("[data-search-placeholder]");
+		let started = false;
+
+		function load(focusAfter) {
+			if (started) return;
+			started = true;
+
+			const styles = document.createElement("link");
+			styles.rel = "stylesheet";
+			styles.href = "/pagefind/pagefind-ui.css";
+			document.head.append(styles);
+
+			const script = document.createElement("script");
+			script.src = "/pagefind/pagefind-ui.js";
+			script.onload = () => {
+				box.replaceChildren();
+				new window.PagefindUI({
+					element: "#search",
+					showSubResults: true,
+					showImages: false,
+					translations: { placeholder: "variable, DNS, proceso" },
+				});
+				if (focusAfter) box.querySelector("input")?.focus();
+			};
+			document.head.append(script);
 		}
-	});
+
+		placeholder.addEventListener("click", () => load(true));
+		placeholder.addEventListener("focus", () => load(true));
+
+		if ("requestIdleCallback" in window) {
+			window.requestIdleCallback(() => load(false), { timeout: 3000 });
+		} else {
+			setTimeout(() => load(false), 1500);
+		}
+	})();
 </script>
