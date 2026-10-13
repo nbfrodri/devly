@@ -1,0 +1,139 @@
+---
+title: "¿Qué son los embeddings?"
+description: "Un embedding representa un texto como una lista de números, de modo que los significados parecidos quedan cerca."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "Google: Embeddings (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/embeddings?hl=es-419
+  - title: "Mikolov y otros: Efficient Estimation of Word Representations in Vector Space (2013, en inglés)"
+    url: https://arxiv.org/abs/1301.3781
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **embedding** es una representación de algo, normalmente un texto, como una lista de números. Está construida de forma que las cosas con significado parecido tengan listas parecidas. Permite a un ordenador comparar significados, algo que con texto tal cual no puede hacer.
+
+A esa lista de números se la llama **vector**.
+
+## Qué problema resuelve
+
+Para un programa, "coche" y "automóvil" son dos textos sin relación: no comparten casi ninguna letra. Y "banco" y "banca" se parecen mucho, signifiquen lo que signifiquen.
+
+Una búsqueda por palabras solo encuentra coincidencias literales. Si buscas "cómo arreglar una rueda pinchada" y el documento dice "reparación de neumáticos", no lo encuentra.
+
+Hace falta una forma de representar el **significado**, no las letras.
+
+## Significados como posiciones
+
+Imagina un mapa en el que cada palabra es un punto. Las palabras de animales están en una zona, las de comida en otra, las de tecnología en otra. Dentro de la zona de animales, "perro" y "lobo" están cerca; "perro" y "sardina", algo más lejos.
+
+Un embedding es la posición de un texto en un mapa así. Las coordenadas son los números del vector.
+
+Un mapa de verdad tiene dos dimensiones. Los embeddings tienen cientos o miles, lo que les permite recoger muchos matices a la vez: el tema, el tono, si es formal, si habla de algo concreto o abstracto.
+
+Nadie define qué significa cada dimensión. Las aprende un modelo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) a partir de enormes cantidades de texto, con una idea de fondo: las palabras que aparecen en contextos parecidos suelen significar cosas parecidas.
+
+## Medir el parecido
+
+Si los significados son posiciones, comparar significados es medir lo cerca que están. La medida más usada es la **similitud del coseno**, que compara la dirección de dos vectores:
+
+- Cerca de 1: apuntan en la misma dirección. Significados muy parecidos.
+- Cerca de 0: no tienen relación.
+
+Este ejemplo usa vectores inventados de tres dimensiones para ilustrarlo. Los reales los calcula un modelo:
+
+```js
+function similitud(a, b) {
+	let producto = 0;
+	let normaA = 0;
+	let normaB = 0;
+
+	for (let i = 0; i < a.length; i++) {
+		producto = producto + a[i] * b[i];
+		normaA = normaA + a[i] * a[i];
+		normaB = normaB + b[i] * b[i];
+	}
+
+	return producto / (Math.sqrt(normaA) * Math.sqrt(normaB));
+}
+
+const perro = [0.9, 0.8, 0.1];
+const lobo = [0.8, 0.9, 0.2];
+const ordenador = [0.1, 0.2, 0.9];
+
+console.log(similitud(perro, lobo) > 0.95); // true
+console.log(similitud(perro, ordenador) < 0.4); // true
+```
+
+"Perro" y "lobo" quedan muy cerca; "perro" y "ordenador", lejos.
+
+## No solo palabras
+
+Se pueden calcular embeddings de frases, párrafos y documentos enteros. También de imágenes, sonidos o productos de una tienda. Incluso existen modelos que colocan texto e imágenes en el mismo espacio, de modo que la frase "un gato durmiendo" queda cerca de una foto de un gato durmiendo.
+
+## Para qué se usan
+
+### Búsqueda semántica
+
+En lugar de buscar palabras, se busca significado:
+
+1. Se calcula el embedding de cada documento y se guarda.
+2. Cuando llega una consulta, se calcula su embedding.
+3. Se devuelven los documentos cuyos vectores están más cerca.
+
+Así "rueda pinchada" encuentra "reparación de neumáticos".
+
+### Dar contexto a un modelo de lenguaje
+
+Un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) solo conoce sus datos de entrenamiento. Para que responda sobre tus documentos, se usa la **generación aumentada por recuperación** (RAG):
+
+1. Con embeddings, se buscan los fragmentos de tus documentos más relacionados con la pregunta.
+2. Esos fragmentos se añaden a la instrucción que recibe el modelo.
+3. El modelo responde apoyándose en ellos.
+
+El modelo deja de depender solo de su memoria y trabaja con información concreta, lo que reduce las respuestas inventadas.
+
+### Otros usos
+
+- **Recomendaciones**: sugerir productos o artículos parecidos a los que has visto.
+- **Agrupación**: reunir automáticamente textos que tratan de lo mismo.
+- **Detección de duplicados**: encontrar preguntas que dicen lo mismo con otras palabras.
+- **Clasificación**: decidir a qué categoría pertenece un texto por su cercanía a ejemplos.
+
+<Quiz
+	client:visible
+	question="¿Qué indica que dos embeddings estén muy cerca?"
+	options={[
+		"Que los textos tienen la misma longitud",
+		"Que los textos tienen significados parecidos",
+		"Que los textos comparten las mismas letras",
+	]}
+	answer={1}
+/>
+
+## Bases de datos vectoriales
+
+Comparar una consulta con millones de vectores, uno a uno, sería lento. Las **bases de datos vectoriales** están diseñadas para encontrar con rapidez los vectores más cercanos a uno dado.
+
+Lo consiguen con índices que dan un resultado **aproximado**: casi siempre los más cercanos, sin garantía de que sean exactamente los primeros. A cambio, responden en milisegundos.
+
+## Lo que hay que saber antes de usarlos
+
+- **Solo se comparan embeddings del mismo modelo.** Cada modelo construye su propio espacio, con otras dimensiones. Si cambias de modelo, hay que volver a calcularlos todos.
+- **Cercanía no es verdad.** "El café es bueno" y "el café es malo" pueden quedar próximos: hablan de lo mismo. Un embedding capta el tema mejor que el matiz.
+- **Heredan sesgos.** Reflejan las asociaciones presentes en los textos de entrenamiento, incluidos los estereotipos.
+- **Los textos largos se trocean.** Un solo vector para un documento entero mezcla demasiadas ideas. Se divide en fragmentos y se calcula un embedding para cada uno.
+- **No sustituyen a la búsqueda por palabras.** Para un código de producto o un nombre propio, la coincidencia literal sigue siendo mejor. Muchos sistemas combinan las dos.
+
+## Lo esencial
+
+- Un embedding representa un texto como un vector de números.
+- Los textos de significado parecido tienen vectores cercanos.
+- La similitud del coseno mide lo próximos que están dos vectores.
+- Permiten la búsqueda por significado y dar contexto relevante a un modelo de lenguaje.
+- Solo son comparables entre sí los embeddings calculados con el mismo modelo.

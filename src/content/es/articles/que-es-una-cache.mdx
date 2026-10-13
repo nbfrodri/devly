@@ -1,0 +1,193 @@
+---
+title: "¿Qué es una caché?"
+description: "Una caché guarda temporalmente el resultado de algo costoso para no tener que repetirlo."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-http
+  - tablas-hash
+updated: 2026-10-13
+sources:
+  - title: "MDN: Almacenamiento en caché de HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Caching
+  - title: "RFC 9111: HTTP Caching"
+    url: https://www.rfc-editor.org/info/rfc9111/
+  - title: "Redis: Data types (documentación oficial, en inglés)"
+    url: https://redis.io/docs/latest/develop/data-types/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **caché** es un almacén temporal donde se guarda el resultado de una operación costosa para reutilizarlo en lugar de repetirla. Es una de las técnicas más usadas para hacer que un sistema responda rápido.
+
+## La idea
+
+Si consultas a menudo un libro de la biblioteca, acabas teniéndolo en tu mesa. La biblioteca sigue siendo el lugar "oficial", pero la copia a mano te ahorra el viaje.
+
+Una caché se apoya en lo mismo: obtener un dato del sitio original cuesta, hay datos que se piden una y otra vez, y guardar una copia cerca sale más barato que volver a buscarlo.
+
+## Aciertos y fallos
+
+Cuando se pide un dato:
+
+- Si está en la caché, es un **acierto** (*hit*): se devuelve al momento.
+- Si no está, es un **fallo** (*miss*): se obtiene del origen, se guarda en la caché y se devuelve.
+
+La proporción de aciertos mide lo útil que es una caché. Si casi todo son fallos, solo añade trabajo.
+
+Este ejemplo guarda los resultados de una función lenta en un [`Map`](/articulos/tablas-hash/):
+
+```js
+const cache = new Map();
+let calculos = 0;
+
+function cuadradoLento(numero) {
+	calculos = calculos + 1;
+	return numero * numero;
+}
+
+function cuadrado(numero) {
+	if (cache.has(numero)) {
+		return cache.get(numero);
+	}
+
+	const resultado = cuadradoLento(numero);
+	cache.set(numero, resultado);
+
+	return resultado;
+}
+
+cuadrado(12);
+cuadrado(12);
+cuadrado(12);
+
+console.log(cuadrado(12)); // 144
+console.log(calculos); // 1
+```
+
+Cuatro llamadas y un solo cálculo. Guardar así los resultados de una función se llama **memorización**.
+
+## Hay cachés en todas partes
+
+La misma idea aparece en todos los niveles de un sistema:
+
+| Dónde | Qué guarda |
+| --- | --- |
+| El [procesador](/articulos/como-funciona-un-procesador/) | Los datos de memoria usados hace poco |
+| El sistema operativo | Partes del disco leídas recientemente |
+| El navegador | Imágenes, estilos y programas de las páginas visitadas |
+| Una CDN | Copias de los archivos de un sitio, repartidas por el mundo |
+| La aplicación | Resultados de consultas a la base de datos o a otros servicios |
+| El [DNS](/articulos/que-es-dns/) | Las direcciones IP de los nombres ya resueltos |
+
+## El problema difícil: los datos caducan
+
+Una caché guarda una copia, y el original puede cambiar. Entonces la copia queda **obsoleta**: la caché sirve un dato que ya no es verdad.
+
+Decidir cuándo una copia deja de valer se llama **invalidación**, y tiene fama de ser uno de los problemas difíciles de la informática. Hay tres enfoques.
+
+### Caducidad por tiempo
+
+Cada dato se guarda con un **tiempo de vida** (TTL). Pasado ese tiempo, se descarta y se vuelve a pedir.
+
+Es simple y robusto, y obliga a elegir: un TTL largo da más aciertos y más riesgo de servir datos viejos; uno corto, lo contrario.
+
+### Invalidación explícita
+
+Cuando el dato original cambia, se borra o se actualiza la copia. Es preciso, pero exige que todo el código que modifica el dato se acuerde de avisar a la caché. Un olvido deja datos obsoletos sin fecha de fin.
+
+### Nombres que cambian con el contenido
+
+Si el nombre de un archivo incluye una huella de su contenido, como `estilos.3f9a2c.css`, cualquier cambio produce un nombre nuevo. El archivo puede guardarse en caché para siempre, porque nunca cambiará: lo que cambia es a qué nombre apunta la página.
+
+## Cuando la caché se llena
+
+La memoria es limitada, así que en algún momento hay que tirar algo. La regla que decide qué se elimina es la **política de desalojo**. La más habitual es **LRU** (*least recently used*): se descarta lo que lleva más tiempo sin usarse.
+
+```js
+class CacheLRU {
+	#datos = new Map();
+
+	constructor(capacidad) {
+		this.capacidad = capacidad;
+	}
+
+	obtener(clave) {
+		if (!this.#datos.has(clave)) {
+			return undefined;
+		}
+
+		const valor = this.#datos.get(clave);
+		this.#datos.delete(clave);
+		this.#datos.set(clave, valor);
+
+		return valor;
+	}
+
+	guardar(clave, valor) {
+		this.#datos.delete(clave);
+		this.#datos.set(clave, valor);
+
+		if (this.#datos.size > this.capacidad) {
+			const masAntigua = this.#datos.keys().next().value;
+			this.#datos.delete(masAntigua);
+		}
+	}
+}
+
+const cache = new CacheLRU(2);
+cache.guardar("a", 1);
+cache.guardar("b", 2);
+cache.obtener("a");
+cache.guardar("c", 3);
+
+console.log(cache.obtener("a")); // 1
+console.log(cache.obtener("b")); // undefined
+```
+
+Al guardar `c` no cabe todo. Como `a` se acababa de consultar, la que se descarta es `b`.
+
+## La caché de HTTP
+
+En la web, el servidor indica cuánto puede guardarse una respuesta con la cabecera `Cache-Control` de [HTTP](/articulos/que-es-http/):
+
+| Valor | Significado |
+| --- | --- |
+| `max-age=3600` | Válida durante una hora |
+| `no-cache` | Se puede guardar, pero hay que preguntar al servidor antes de usarla |
+| `no-store` | No se guarda nunca |
+| `private` | Solo la guarda el navegador del usuario, no los intermediarios |
+
+Cuando una copia ha caducado, el navegador no tiene que descargarla entera. Pregunta al servidor si ha cambiado; si no, el servidor responde `304 Not Modified`, sin cuerpo, y se reutiliza la copia.
+
+<Quiz
+	client:visible
+	question="Una caché sirve un precio que ya ha cambiado en la base de datos. ¿Qué ha fallado?"
+	options={[
+		"La política de desalojo",
+		"La invalidación: la copia quedó obsoleta",
+		"La proporción de aciertos",
+	]}
+	answer={1}
+/>
+
+## Sus riesgos
+
+- **Datos obsoletos**, ya vistos.
+- **Datos privados en una caché compartida.** Guardar la respuesta de un usuario y servírsela a otro es un fallo de seguridad grave. Lo que depende de quién pregunta no debe compartirse.
+- **Avalancha al caducar.** Si una copia muy solicitada caduca, miles de peticiones pueden ir a la vez al origen para regenerarla.
+- **Más complejidad.** Los errores causados por una caché son difíciles de reproducir: aparecen y desaparecen según lo que haya guardado en ese instante.
+
+## Cuándo usarla
+
+Una caché compensa cuando el dato **cuesta de obtener**, se **lee mucho más de lo que cambia** y se tolera que esté **ligeramente desactualizado**.
+
+No arregla un diseño lento: lo tapa. Conviene medir primero dónde está el problema y añadir la caché como último recurso, no como primero.
+
+## Lo esencial
+
+- Una caché guarda una copia de un resultado costoso para reutilizarla.
+- Un acierto evita el trabajo; un fallo obliga a ir al origen.
+- Lo difícil es la invalidación: saber cuándo la copia deja de ser válida.
+- Cuando se llena, una política de desalojo como LRU decide qué eliminar.
+- Sirve para datos que se leen mucho y cambian poco.

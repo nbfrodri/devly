@@ -60,20 +60,20 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 - [x] Diferencias entre monolito y microservicios
 - [x] ¿Qué es el diseño guiado por el dominio (DDD)?
 - [x] Patrones de diseño
-- [ ] Scrum y las metodologías ágiles
-- [ ] Heurísticas de usabilidad
+- [x] Scrum y las metodologías ágiles
+- [x] Heurísticas de usabilidad
 
 ## Datos
 
-- [ ] Normalización de bases de datos
+- [x] Normalización de bases de datos
 - [x] Transacciones y propiedades ACID
-- [ ] ¿Qué es una caché?
+- [x] ¿Qué es una caché?
 
 ## Inteligencia artificial
 
-- [ ] ¿Qué es un modelo de lenguaje?
-- [ ] ¿Qué son los embeddings?
-- [ ] ¿Qué es el Model Context Protocol (MCP)?
+- [x] ¿Qué es un modelo de lenguaje?
+- [x] ¿Qué son los embeddings?
+- [x] ¿Qué es el Model Context Protocol (MCP)?
 
 ## Curiosidades
 

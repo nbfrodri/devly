@@ -13,3 +13,4 @@ steps:
   - que-es-sql
   - transacciones-y-acid
   - atomicidad-e-idempotencia
+  - que-es-una-cache

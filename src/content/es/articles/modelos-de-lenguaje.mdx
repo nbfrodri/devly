@@ -1,0 +1,133 @@
+---
+title: "¿Qué es un modelo de lenguaje?"
+description: "Un modelo de lenguaje predice qué texto viene a continuación. De esa tarea tan simple salen los asistentes de IA actuales."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+updated: 2026-10-13
+sources:
+  - title: "Vaswani y otros: Attention Is All You Need (2017, en inglés)"
+    url: https://arxiv.org/abs/1706.03762
+  - title: "Google: Introducción a los modelos de lenguaje extenso (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/llm?hl=es-419
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, libro de texto libre (en inglés)"
+    url: https://www.deeplearningbook.org/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **modelo de lenguaje** es un sistema entrenado para predecir qué texto viene a continuación de otro. Los **modelos de lenguaje extensos** (LLM, por sus siglas en inglés) son [redes neuronales](/articulos/que-es-una-red-neuronal/) enormes entrenadas con cantidades gigantescas de texto, y son la tecnología detrás de los asistentes de inteligencia artificial actuales.
+
+## La tarea: predecir lo siguiente
+
+Completa la frase: "El cielo es de color...".
+
+Probablemente has pensado "azul". Un modelo de lenguaje hace eso mismo: dado un texto, calcula qué es más probable que venga después.
+
+No devuelve una sola palabra, sino una **probabilidad** para cada continuación posible: "azul" con mucha, "gris" con algo menos, "tostadora" con casi ninguna.
+
+Para escribir un texto largo, repite el proceso: elige un fragmento, lo añade al texto y vuelve a predecir a partir del resultado. Una y otra vez, hasta terminar.
+
+## Un modelo de juguete
+
+Este programa cuenta, en un texto de ejemplo, qué palabra sigue a cada palabra, y usa esas cuentas para predecir:
+
+```js
+const texto = "el gato come pescado y el gato duerme y el perro come carne";
+const palabras = texto.split(" ");
+const siguientes = new Map();
+
+for (let i = 0; i < palabras.length - 1; i++) {
+	const actual = palabras[i];
+	const siguiente = palabras[i + 1];
+
+	if (!siguientes.has(actual)) {
+		siguientes.set(actual, new Map());
+	}
+
+	const cuentas = siguientes.get(actual);
+	cuentas.set(siguiente, (cuentas.get(siguiente) ?? 0) + 1);
+}
+
+function predecir(palabra) {
+	const cuentas = [...siguientes.get(palabra)];
+	cuentas.sort((a, b) => b[1] - a[1]);
+
+	return cuentas[0][0];
+}
+
+console.log(predecir("el")); // "gato"
+console.log(predecir("gato")); // "come"
+```
+
+Después de "el" predice "gato", porque en el texto "el gato" aparece dos veces y "el perro" una.
+
+Este modelo solo mira la palabra anterior y solo conoce doce palabras. Un LLM hace lo mismo en esencia, predecir lo siguiente, pero teniendo en cuenta miles de palabras previas y habiendo aprendido de una parte considerable de lo que la humanidad ha escrito.
+
+## Tokens
+
+Los modelos no trabajan con palabras completas, sino con **tokens**: fragmentos de texto que pueden ser una palabra, un trozo de palabra o un signo de puntuación.
+
+Trocear así permite manejar cualquier texto con un vocabulario limitado, incluidas palabras que el modelo nunca ha visto: las compone con trozos conocidos.
+
+Los tokens son la unidad en la que se mide todo: lo que el modelo puede leer, lo que genera y, en los servicios de pago, lo que cuesta.
+
+## Por qué funcionan tan bien: el transformer
+
+Predecir bien exige entender de qué habla el texto. En "Ana dejó el libro en la mesa porque estaba cansada", saber quién estaba cansada requiere relacionar palabras alejadas entre sí.
+
+La arquitectura que lo hizo posible es el **transformer**, presentada en 2017. Su mecanismo central es la **atención**: al procesar cada token, el modelo calcula cuánto debe fijarse en cada uno de los demás tokens del texto, estén cerca o lejos.
+
+Además, el transformer procesa todo el texto a la vez en lugar de palabra por palabra, lo que permite entrenarlo con muchísimos más datos en menos tiempo.
+
+## Cómo se entrenan
+
+### Preentrenamiento
+
+Se toma una cantidad enorme de texto, se oculta lo que viene después de cada fragmento y se pide al modelo que lo adivine. Se compara con el texto real y se ajustan los parámetros para reducir el error, como en cualquier [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/).
+
+No hacen falta personas que etiqueten nada: el propio texto contiene la respuesta correcta. Por eso se puede entrenar con tantísimo material.
+
+Un modelo grande tiene miles de millones de parámetros, y entrenarlo requiere mucho tiempo y una capacidad de cálculo enorme.
+
+Lo sorprendente es lo que emerge de esa tarea. Para predecir bien el siguiente token de un texto de física hay que haber captado algo de física; para continuar un programa, algo de programación. El modelo no fue entrenado para traducir ni para resumir, y sin embargo puede hacerlo.
+
+### Ajuste fino
+
+Después, el modelo puede seguir entrenándose con datos más específicos para especializarlo: seguir instrucciones, mantener una conversación o dominar un campo concreto.
+
+## Conceptos que conviene conocer
+
+- **Ventana de contexto.** La cantidad máxima de tokens que el modelo puede tener en cuenta a la vez. Incluye lo que le das y lo que responde. Lo que queda fuera, no existe para él.
+- **Instrucción** (*prompt*). El texto que recibe. Como el modelo continúa lo que se le da, la forma de pedir influye mucho en el resultado.
+- **Temperatura.** Regula cuánto azar hay al elegir el siguiente token. Baja, el modelo elige casi siempre lo más probable y es más previsible. Alta, se arriesga más y es más variado.
+
+<Quiz
+	client:visible
+	question="¿Qué hace, en esencia, un modelo de lenguaje?"
+	options={[
+		"Busca la respuesta en una base de datos",
+		"Predice qué texto viene a continuación",
+		"Aplica reglas gramaticales escritas a mano",
+	]}
+	answer={1}
+/>
+
+## Lo que no son
+
+- **No son una base de datos.** No consultan hechos guardados: generan texto plausible. Pueden producir afirmaciones falsas con total seguridad, citas inventadas incluidas. A esto se le llama **alucinación**.
+- **No saben lo que no saben.** No distinguen de forma fiable lo que conocen de lo que se están inventando.
+- **Tienen fecha de corte.** Solo conocen lo que había en sus datos de entrenamiento. Lo posterior hay que proporcionárselo.
+- **Heredan los sesgos** de los textos con los que aprendieron.
+- **No son deterministas.** La misma pregunta puede dar respuestas distintas.
+
+Por eso sus respuestas deben comprobarse, sobre todo cuando importan. Y por eso se han desarrollado técnicas para darles información fiable, como buscar documentos relevantes con [embeddings](/articulos/embeddings/), o para conectarlos con herramientas externas, como el [Model Context Protocol](/articulos/model-context-protocol/).
+
+## Lo esencial
+
+- Un modelo de lenguaje predice el siguiente token de un texto, y genera repitiendo esa predicción.
+- Los modelos actuales son transformers, cuyo mecanismo de atención relaciona todas las partes del texto.
+- Se preentrenan con enormes cantidades de texto y pueden ajustarse para tareas concretas.
+- Trabajan dentro de una ventana de contexto limitada.
+- Generan texto plausible, no verdades comprobadas: pueden equivocarse con seguridad.

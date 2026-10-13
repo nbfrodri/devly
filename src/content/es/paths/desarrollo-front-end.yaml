@@ -7,3 +7,4 @@ steps:
   - el-dom
   - diseno-adaptable
   - accesibilidad-web
+  - heuristicas-de-usabilidad

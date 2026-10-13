@@ -1,0 +1,140 @@
+---
+title: "¿Qué es el Model Context Protocol (MCP)?"
+description: "MCP es un protocolo abierto que estandariza cómo las aplicaciones de IA se conectan con herramientas y fuentes de datos externas."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - que-es-una-api
+updated: 2026-10-13
+sources:
+  - title: "Model Context Protocol: Introducción (documentación oficial, en inglés)"
+    url: https://modelcontextprotocol.io/docs/getting-started/intro
+  - title: "Model Context Protocol: Architecture overview (documentación oficial, en inglés)"
+    url: https://modelcontextprotocol.io/docs/learn/architecture
+  - title: "Model Context Protocol: Specification (en inglés)"
+    url: https://modelcontextprotocol.io/specification/latest
+  - title: "Anthropic: Introducing the Model Context Protocol (2024, en inglés)"
+    url: https://www.anthropic.com/news/model-context-protocol
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **Model Context Protocol** (MCP) es un protocolo abierto que define una forma común de conectar aplicaciones de inteligencia artificial con herramientas y fuentes de datos externas. Lo presentó Anthropic a finales de 2024.
+
+## Qué problema resuelve
+
+Un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) por sí solo vive aislado. Solo conoce sus datos de entrenamiento y lo único que hace es producir texto. No puede leer tus archivos, consultar una base de datos ni enviar un mensaje.
+
+Para que sea útil hay que conectarlo con el mundo. El problema es cómo.
+
+Sin un estándar, cada aplicación de IA necesita una integración hecha a medida para cada servicio. Con cinco aplicaciones y diez servicios, son cincuenta integraciones, cada una distinta y cada una con su mantenimiento.
+
+MCP propone que todos hablen el mismo idioma. Cada servicio se expone una vez, cada aplicación implementa el protocolo una vez, y cualquier aplicación funciona con cualquier servicio. Cinco más diez, en lugar de cinco por diez.
+
+La comparación habitual es el conector USB: antes cada aparato tenía su cable; con un estándar, cualquier dispositivo se conecta a cualquier ordenador.
+
+## Los tres participantes
+
+| Pieza | Qué es | Ejemplo |
+| --- | --- | --- |
+| **Anfitrión** (*host*) | La aplicación de IA que usa la persona | Un asistente de escritorio, un editor de código |
+| **Cliente** | El componente del anfitrión que mantiene la conexión con un servidor | Uno por cada servidor conectado |
+| **Servidor** | El programa que ofrece capacidades | Un servidor para archivos, otro para una base de datos |
+
+El anfitrión crea un cliente por cada servidor al que se conecta. Sigue el modelo [cliente-servidor](/articulos/cliente-servidor/), con una particularidad: un servidor MCP suele ser un programa pequeño, a menudo ejecutándose en la misma máquina, que hace de puente con un servicio.
+
+## Lo que ofrece un servidor
+
+Un servidor puede exponer tres tipos de cosas:
+
+| Primitiva | Qué es | Ejemplo |
+| --- | --- | --- |
+| **Herramientas** (*tools*) | Funciones que el modelo puede pedir que se ejecuten | Buscar en una base de datos, crear una incidencia |
+| **Recursos** (*resources*) | Datos que sirven de contexto | El contenido de un archivo, un registro |
+| **Instrucciones** (*prompts*) | Plantillas reutilizables | Un formato para revisar código |
+
+Las herramientas son las más usadas: son lo que permite a un modelo **actuar**, no solo responder.
+
+## Cómo funciona una llamada a una herramienta
+
+1. Al conectarse, el cliente pregunta al servidor qué herramientas tiene. Cada una viene con su nombre, una descripción y los parámetros que acepta.
+2. Esa lista se le da al modelo como parte de su contexto.
+3. Ante una petición del usuario, el modelo puede decidir que necesita una herramienta e indica cuál y con qué argumentos.
+4. El anfitrión envía la llamada al servidor correspondiente.
+5. El servidor ejecuta la acción y devuelve el resultado.
+6. El resultado vuelve al modelo, que lo usa para elaborar su respuesta.
+
+Un detalle importante: **el modelo no ejecuta nada**. Solo produce texto que dice "quiero llamar a esta herramienta con estos datos". Quien la ejecuta es el anfitrión, que puede pedir permiso a la persona antes de hacerlo.
+
+## El formato de los mensajes
+
+Los mensajes de MCP siguen **JSON-RPC 2.0**, un formato sencillo para pedir a otro programa que ejecute algo. Una llamada a una herramienta tiene este aspecto:
+
+```js
+const peticion = {
+	jsonrpc: "2.0",
+	id: 1,
+	method: "tools/call",
+	params: {
+		name: "buscar_articulos",
+		arguments: { consulta: "bases de datos" },
+	},
+};
+
+const mensaje = JSON.stringify(peticion);
+
+console.log(JSON.parse(mensaje).method); // "tools/call"
+console.log(JSON.parse(mensaje).params.name); // "buscar_articulos"
+```
+
+El campo `id` permite emparejar cada respuesta con su petición.
+
+### Cómo viajan
+
+El protocolo define dos transportes:
+
+- **Entrada y salida estándar** (*stdio*). El anfitrión arranca el servidor como un [proceso](/articulos/que-es-un-proceso/) en la misma máquina y se comunican por sus canales de entrada y salida. Es lo habitual para servidores locales.
+- **HTTP**, para servidores remotos, accesibles por la red.
+
+<Quiz
+	client:visible
+	question="En MCP, ¿quién ejecuta realmente una herramienta?"
+	options={[
+		"El modelo de lenguaje",
+		"El servidor, a petición del anfitrión",
+		"El usuario, a mano",
+	]}
+	answer={1}
+/>
+
+## En qué se diferencia de una API normal
+
+Un servidor MCP suele envolver una [API](/articulos/que-es-una-api/) ya existente. La diferencia está en para quién se diseña:
+
+| | API tradicional | Servidor MCP |
+| --- | --- | --- |
+| Quién la usa | Un programa escrito por una persona | Un modelo de lenguaje |
+| Cómo se descubre | Leyendo la documentación | El servidor describe sus capacidades al conectarse |
+| Quién decide qué llamar | Quien programó el cliente | El modelo, según la conversación |
+
+Por eso las descripciones de las herramientas importan tanto: son lo que el modelo lee para decidir cuándo usarlas.
+
+## Seguridad
+
+Dar a un modelo la capacidad de actuar introduce riesgos nuevos.
+
+- **Un servidor MCP es código que se ejecuta con tus permisos.** Instalar uno de origen desconocido es como instalar cualquier otro programa desconocido.
+- **Inyección de instrucciones.** Si una herramienta devuelve texto de una fuente no fiable, como una página web o un correo, ese texto puede contener instrucciones ocultas dirigidas al modelo. El modelo no siempre distingue los datos que lee de las órdenes que debe obedecer.
+- **Consentimiento.** Las acciones con consecuencias, como borrar, enviar o pagar, deben requerir la confirmación de la persona.
+- **Mínimo privilegio.** Conviene dar a cada servidor solo el acceso imprescindible. Un servidor para leer documentos no necesita poder borrarlos.
+
+Son las ideas habituales de la [ciberseguridad](/articulos/que-es-la-ciberseguridad/), aplicadas a un sistema en el que quien decide qué hacer es un modelo.
+
+## Lo esencial
+
+- MCP estandariza la conexión entre aplicaciones de IA y herramientas o datos externos.
+- Sustituye las integraciones a medida por un protocolo común.
+- Participan un anfitrión, sus clientes y los servidores.
+- Un servidor ofrece herramientas, recursos e instrucciones.
+- El modelo solicita las acciones y el anfitrión las ejecuta, idealmente con el consentimiento del usuario.

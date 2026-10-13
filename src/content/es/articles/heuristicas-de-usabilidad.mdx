@@ -1,0 +1,123 @@
+---
+title: "¿Qué son las heurísticas de usabilidad?"
+description: "Las diez heurísticas de Nielsen son principios generales para diseñar interfaces fáciles de usar y para detectar sus problemas."
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+sources:
+  - title: "Jakob Nielsen: 10 Usability Heuristics for User Interface Design (en inglés)"
+    url: https://www.nngroup.com/articles/ten-usability-heuristics/
+  - title: "W3C WAI: Accessibility, Usability, and Inclusion (en inglés)"
+    url: https://www.w3.org/WAI/fundamentals/accessibility-usability-inclusion/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las **heurísticas de usabilidad** son principios generales que describen qué hace que una interfaz sea fácil de usar. Las más conocidas son las diez que formuló Jakob Nielsen en los años noventa, que siguen siendo la referencia habitual en diseño de experiencia de usuario.
+
+Una **heurística** es una regla práctica: no garantiza un buen diseño, pero orienta y ayuda a encontrar problemas.
+
+## Usabilidad
+
+La **usabilidad** mide lo fácil que resulta usar algo para conseguir un objetivo. Suele descomponerse en:
+
+- **Facilidad de aprendizaje**: cuánto cuesta la primera vez.
+- **Eficiencia**: lo rápido que se trabaja una vez aprendido.
+- **Recuerdo**: si se retoma con facilidad tras un tiempo sin usarlo.
+- **Errores**: cuántos se cometen y lo fácil que es recuperarse.
+- **Satisfacción**: lo agradable que resulta.
+
+Es parte de la **experiencia de usuario** (UX), que abarca todo lo que una persona percibe al usar un producto. La **interfaz** (UI) es la parte visible con la que interactúa.
+
+## Las diez heurísticas
+
+### 1. Visibilidad del estado del sistema
+
+La interfaz debe informar de lo que está pasando, con una respuesta rápida. Una barra de progreso al subir un archivo, un botón que cambia al pulsarlo, un aviso de "Guardado".
+
+Sin respuesta, la persona no sabe si su acción ha funcionado y la repite.
+
+### 2. Relación entre el sistema y el mundo real
+
+Usar el lenguaje de quien usa el producto, no el del sistema. "No hemos podido guardar los cambios" en lugar de "Error 500". Iconos y conceptos que ya resulten familiares, como la papelera.
+
+### 3. Control y libertad del usuario
+
+La gente se equivoca y pulsa donde no quería. Hace falta una salida clara: deshacer, cancelar, volver atrás. Poder deshacer el envío de un correo durante unos segundos es un buen ejemplo.
+
+### 4. Consistencia y estándares
+
+Lo mismo debe verse y funcionar igual en todas partes. Si el botón principal es azul y está a la derecha en una pantalla, también en las demás.
+
+Incluye respetar las convenciones generales: el logotipo lleva a la portada, el texto subrayado es un enlace. Las personas pasan casi todo su tiempo en otros sitios y esperan que el tuyo funcione igual.
+
+### 5. Prevención de errores
+
+Mejor que un buen mensaje de error es que el error no pueda ocurrir. Desactivar el botón de envío hasta que el formulario esté completo, ofrecer un selector de fecha en lugar de un campo libre, pedir confirmación antes de borrar algo definitivo.
+
+### 6. Reconocer en lugar de recordar
+
+Reconocer algo que se ve es más fácil que recordarlo de memoria. Las opciones deben estar a la vista: menús en lugar de órdenes que hay que saberse, búsquedas recientes, campos que muestran el formato esperado.
+
+### 7. Flexibilidad y eficiencia de uso
+
+La misma interfaz debe servir a quien llega por primera vez y a quien la usa a diario. Los atajos de teclado, las acciones en bloque y la personalización aceleran al experto sin estorbar al principiante.
+
+### 8. Diseño estético y minimalista
+
+Cada elemento que no hace falta compite por la atención con los que sí. No se trata de que la interfaz sea escasa, sino de que lo importante destaque y nada sobre.
+
+### 9. Ayudar a reconocer, diagnosticar y corregir errores
+
+Cuando algo falla, el mensaje debe decir en lenguaje llano **qué ha pasado** y **cómo arreglarlo**, junto al lugar donde ocurre.
+
+| Mal | Bien |
+| --- | --- |
+| "Entrada no válida" | "La contraseña debe tener al menos 12 caracteres" |
+| "Ha ocurrido un error" | "No hay conexión. Comprueba tu red y vuelve a intentarlo" |
+
+### 10. Ayuda y documentación
+
+Lo ideal es que no haga falta explicación. Cuando hace falta, la ayuda debe ser fácil de encontrar, centrarse en la tarea y dar pasos concretos. Mejor una pista breve junto al campo que un manual aparte.
+
+<Quiz
+	client:visible
+	question="Una web desactiva el botón de pagar hasta que todos los campos son correctos. ¿Qué heurística aplica?"
+	options={[
+		"Prevención de errores",
+		"Diseño estético y minimalista",
+		"Ayuda y documentación",
+	]}
+	answer={0}
+/>
+
+## Cómo se usan
+
+### Al diseñar
+
+Como lista de comprobación mientras se construye: ¿se entera el usuario de lo que pasa?, ¿puede deshacer?, ¿este mensaje dice cómo resolverlo?
+
+### Al evaluar
+
+En una **evaluación heurística**, varias personas recorren la interfaz por separado y apuntan dónde se incumple cada principio. Después se juntan los hallazgos y se ordenan por gravedad.
+
+Es un método rápido y barato, porque no requiere usuarios. Varios evaluadores encuentran más que uno, ya que cada cual se fija en cosas distintas.
+
+## Sus límites
+
+Una evaluación heurística la hacen personas que conocen el diseño, no quienes van a usar el producto. Detecta problemas evidentes, pero no sustituye a las **pruebas con usuarios**: observar a personas reales intentando completar una tarea. Lo que parecía obvio para el equipo a menudo no lo es.
+
+Lo habitual es combinar las dos cosas: primero las heurísticas, para limpiar lo evidente, y después las pruebas con usuarios, para descubrir lo que nadie esperaba.
+
+## Usabilidad y accesibilidad
+
+Se solapan, pero no son lo mismo. La usabilidad busca que el producto sea fácil para sus usuarios en general. La [accesibilidad](/articulos/accesibilidad-web/) busca que puedan usarlo también las personas con discapacidad. Un sitio puede ser cómodo para la mayoría e imposible con un lector de pantalla.
+
+Muchas mejoras sirven a las dos: mensajes de error claros, estructura coherente, textos legibles.
+
+## Lo esencial
+
+- Las heurísticas de usabilidad son principios generales para diseñar y evaluar interfaces.
+- Las diez de Nielsen cubren la información al usuario, el control, la consistencia, los errores, la memoria, la eficiencia, la sencillez y la ayuda.
+- Sirven de guía al diseñar y de método barato para encontrar problemas.
+- No sustituyen a probar con usuarios reales.

@@ -1,0 +1,153 @@
+---
+title: "¿Qué es la normalización de una base de datos?"
+description: "Normalizar es organizar las tablas para que cada dato se guarde una sola vez, lo que evita incoherencias."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+  - que-es-sql
+updated: 2026-10-13
+sources:
+  - title: "E. F. Codd: A Relational Model of Data for Large Shared Data Banks (1970, en inglés)"
+    url: https://www.seas.upenn.edu/~zives/03f/cis550/codd.pdf
+  - title: "Microsoft Learn: Description of the database normalization basics (en inglés)"
+    url: https://learn.microsoft.com/en-us/office/troubleshoot/access/database-normalization-description
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **normalización** es el proceso de organizar las tablas de una [base de datos relacional](/articulos/que-es-una-base-de-datos/) para reducir la repetición de datos. La idea central es que cada hecho se guarde en un solo lugar.
+
+Se describe mediante una serie de reglas llamadas **formas normales**. Las tres primeras bastan para la mayoría de los casos.
+
+## Qué problema resuelve
+
+Esta tabla guarda pedidos junto con los datos del cliente y del producto:
+
+| pedido | cliente | ciudad | producto | precio |
+| --- | --- | --- | --- | --- |
+| 1 | Ana | Madrid | Libro | 20 |
+| 2 | Ana | Madrid | Lápiz | 2 |
+| 3 | Luis | Sevilla | Libro | 20 |
+
+Funciona, pero repite información, y esa repetición causa tres problemas con nombre propio:
+
+- **Anomalía de actualización.** Si Ana se muda, hay que cambiar su ciudad en todas sus filas. Si se olvida una, la base de datos dice que vive en dos sitios.
+- **Anomalía de inserción.** No se puede dar de alta un producto que nadie ha pedido todavía, porque no hay pedido al que asociarlo.
+- **Anomalía de borrado.** Si se borra el pedido 3, desaparece con él todo lo que se sabía de Luis.
+
+La raíz es la misma en los tres casos: la tabla mezcla hechos sobre cosas distintas.
+
+## Primera forma normal
+
+**Cada casilla contiene un solo valor, y no hay grupos de columnas repetidas.**
+
+Esta tabla la incumple de dos maneras posibles:
+
+| pedido | productos |
+| --- | --- |
+| 1 | Libro, Lápiz |
+
+| pedido | producto1 | producto2 |
+| --- | --- | --- |
+| 1 | Libro | Lápiz |
+
+En la primera no se puede buscar ni contar por producto sin trocear un texto. En la segunda, un pedido con tres productos no cabe.
+
+La solución es una fila por cada valor:
+
+| pedido | producto |
+| --- | --- |
+| 1 | Libro |
+| 1 | Lápiz |
+
+## Segunda forma normal
+
+**Además de la primera, ninguna columna depende solo de una parte de la clave.**
+
+Solo afecta a tablas cuya clave primaria está formada por varias columnas. En la tabla de líneas de pedido, la clave es la pareja pedido y producto:
+
+| pedido | producto | cantidad | precio_producto |
+| --- | --- | --- | --- |
+| 1 | Libro | 2 | 20 |
+| 3 | Libro | 1 | 20 |
+
+La `cantidad` depende de las dos: es cuánto de ese producto hay en ese pedido. Pero `precio_producto` depende solo del producto, y por eso se repite.
+
+Se separa en su propia tabla:
+
+| producto | precio |
+| --- | --- |
+| Libro | 20 |
+| Lápiz | 2 |
+
+## Tercera forma normal
+
+**Además de la segunda, ninguna columna depende de otra columna que no sea la clave.**
+
+| cliente_id | nombre | codigo_postal | ciudad |
+| --- | --- | --- | --- |
+| 1 | Ana | 28001 | Madrid |
+| 2 | Marta | 28001 | Madrid |
+
+La ciudad no depende del cliente, sino del código postal. El cliente determina el código postal, y el código postal determina la ciudad. Esa cadena se llama **dependencia transitiva**.
+
+Otra vez, se separa:
+
+| codigo_postal | ciudad |
+| --- | --- |
+| 28001 | Madrid |
+
+Hay un resumen clásico de las tres formas: cada columna debe depender **de la clave, de toda la clave y de nada más que la clave**.
+
+## El resultado
+
+La tabla inicial queda repartida así:
+
+| Tabla | Columnas |
+| --- | --- |
+| clientes | id, nombre, ciudad |
+| productos | id, nombre, precio |
+| pedidos | id, cliente_id |
+| lineas_de_pedido | pedido_id, producto_id, cantidad |
+
+Las tablas se enlazan mediante claves foráneas, y los datos se reúnen con `JOIN` al consultarlos, como explica el artículo sobre [SQL](/articulos/que-es-sql/).
+
+Las tres anomalías han desaparecido. La ciudad de Ana está en una sola fila; un producto existe aunque nadie lo haya pedido; borrar un pedido no borra al cliente.
+
+<Quiz
+	client:visible
+	question="Una tabla de clientes guarda el código postal y también la ciudad, que depende del código postal. ¿Qué forma normal incumple?"
+	options={["La primera", "La segunda", "La tercera"]}
+	answer={2}
+/>
+
+## Un matiz sobre los datos históricos
+
+Normalizar no significa referenciarlo todo. El precio de un producto cambia con el tiempo, pero un pedido antiguo debe conservar el precio al que se vendió.
+
+Por eso es correcto guardar el precio en la línea de pedido: no es una copia del precio del producto, sino un hecho distinto, "a cuánto se vendió en ese momento". La pregunta útil es si dos datos son el mismo hecho o dos hechos que hoy coinciden.
+
+## Desnormalizar
+
+Una base de datos muy normalizada tiene muchas tablas, y reunir los datos exige combinarlas. Con volúmenes grandes, eso puede ser lento.
+
+**Desnormalizar** es introducir repetición a propósito para acelerar las lecturas: guardar junto al pedido el nombre del cliente, o un total ya calculado.
+
+Tiene un precio: vuelve la posibilidad de incoherencias, y la aplicación debe mantener las copias al día.
+
+| | Normalizado | Desnormalizado |
+| --- | --- | --- |
+| Repetición | Mínima | Deliberada |
+| Coherencia | La garantiza la estructura | La mantiene la aplicación |
+| Escrituras | Sencillas | Hay que actualizar varias copias |
+| Lecturas | Requieren combinar tablas | Más directas |
+
+La regla habitual es **normalizar primero** y desnormalizar solo donde se haya medido un problema de rendimiento. Es el camino contrario al de muchas [bases de datos NoSQL](/articulos/bases-de-datos-nosql/), que parten de guardar junto lo que se lee junto.
+
+## Lo esencial
+
+- Normalizar es organizar las tablas para que cada hecho se guarde una vez.
+- Evita las anomalías de actualización, inserción y borrado.
+- Primera forma normal: un valor por casilla. Segunda: nada depende de una parte de la clave. Tercera: nada depende de otra columna que no sea la clave.
+- Desnormalizar acelera las lecturas a cambio de riesgo de incoherencia, y se hace de forma deliberada.

@@ -4,3 +4,6 @@ layer: ia
 steps:
   - que-es-el-aprendizaje-automatico
   - que-es-una-red-neuronal
+  - modelos-de-lenguaje
+  - embeddings
+  - model-context-protocol

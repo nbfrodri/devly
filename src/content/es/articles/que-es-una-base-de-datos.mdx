@@ -63,7 +63,7 @@ Los pedidos de esos clientes van en otra tabla. En lugar de repetir el nombre y 
 
 La columna `cliente_id` es una **clave foránea**: su valor apunta a la clave primaria de otra tabla. Los pedidos 10 y 11 son de Ana; el 12, de Marta.
 
-Guardar cada dato una sola vez tiene una ventaja importante. Si Ana se muda, se cambia su ciudad en una única fila y todos sus pedidos quedan actualizados, porque nunca copiaron el dato.
+Guardar cada dato una sola vez, que es el objetivo de la [normalización](/articulos/normalizacion-de-bases-de-datos/), tiene una ventaja importante. Si Ana se muda, se cambia su ciudad en una única fila y todos sus pedidos quedan actualizados, porque nunca copiaron el dato.
 
 La base de datos también vigila estas relaciones: se le puede indicar que rechace un pedido cuyo `cliente_id` no exista. A esa garantía se le llama **integridad referencial**.
 

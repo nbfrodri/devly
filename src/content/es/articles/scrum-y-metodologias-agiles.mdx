@@ -1,0 +1,125 @@
+---
+title: "¿Qué son Scrum y las metodologías ágiles?"
+description: "Las metodologías ágiles entregan el software en incrementos pequeños y frecuentes. Scrum es la más extendida."
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+sources:
+  - title: "Manifiesto por el Desarrollo Ágil de Software"
+    url: https://agilemanifesto.org/iso/es/manifesto.html
+  - title: "Principios del Manifiesto Ágil"
+    url: https://agilemanifesto.org/iso/es/principles.html
+  - title: "Ken Schwaber y Jeff Sutherland: La Guía de Scrum (2020)"
+    url: https://scrumguides.org/docs/scrumguide/v2020/2020-Scrum-Guide-Spanish-European.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las **metodologías ágiles** son formas de organizar el desarrollo de software en las que el producto se construye en pasos pequeños y frecuentes, revisando el rumbo después de cada uno. **Scrum** es el marco de trabajo ágil más utilizado.
+
+## Qué problema resuelven
+
+El modelo tradicional, llamado **en cascada**, divide un proyecto en fases que van una detrás de otra: se recogen todos los requisitos, se diseña todo, se programa todo, se prueba todo y se entrega. Cada fase empieza cuando termina la anterior.
+
+Funciona cuando se sabe desde el principio qué hay que construir y eso no va a cambiar. En el software rara vez ocurre:
+
+- El cliente descubre lo que necesita **cuando ve algo funcionando**.
+- El mercado y las prioridades cambian durante los meses que dura el proyecto.
+- Los errores de planteamiento salen a la luz al final, cuando corregirlos es más caro.
+
+El resultado típico era entregar, tras un año, exactamente lo que se pidió y que ya no fuera lo que hacía falta.
+
+## El Manifiesto Ágil
+
+En 2001, un grupo de desarrolladores resumió otra forma de trabajar en cuatro valores:
+
+| Se valora más | Que |
+| --- | --- |
+| Individuos e interacciones | Procesos y herramientas |
+| Software funcionando | Documentación extensa |
+| Colaboración con el cliente | Negociación contractual |
+| Respuesta ante el cambio | Seguir un plan |
+
+El texto precisa que lo de la derecha tiene valor, pero lo de la izquierda tiene más. No dice que no haya que planificar ni documentar.
+
+La idea práctica que une todo: **trabajar en ciclos cortos**. Se construye una parte pequeña y útil, se enseña, se recoge la reacción y se decide el siguiente paso con esa información.
+
+Ágil es un conjunto de valores, no un método. Scrum, Kanban o la programación extrema son formas concretas de llevarlo a la práctica.
+
+## Scrum
+
+Scrum organiza el trabajo en **sprints**: periodos de duración fija, de un mes como máximo y a menudo de dos semanas. Al final de cada sprint tiene que haber una parte del producto terminada y utilizable.
+
+Se define con pocas piezas: tres responsabilidades, cinco eventos y tres artefactos.
+
+### Las tres responsabilidades
+
+| Responsabilidad | Se ocupa de |
+| --- | --- |
+| **Propietario del producto** (*Product Owner*) | Decidir qué se construye y en qué orden, para obtener el mayor valor |
+| **Scrum Master** | Que el equipo entienda y aplique Scrum, y quitar los obstáculos que lo frenan |
+| **Desarrolladores** | Construir el producto. Deciden cómo hacer el trabajo |
+
+El equipo es pequeño, normalmente de diez personas o menos, y se organiza a sí mismo. El Scrum Master no es un jefe que reparte tareas.
+
+### Los cinco eventos
+
+1. **El sprint**, que contiene a los demás.
+2. **Planificación del sprint**: el equipo decide qué va a hacer en este sprint y cómo.
+3. **Scrum diario**: una reunión de quince minutos como mucho, en la que los desarrolladores revisan el avance y ajustan el plan del día. No es un informe para un jefe.
+4. **Revisión del sprint**: se enseña lo construido a las personas interesadas y se recoge su opinión.
+5. **Retrospectiva**: el equipo examina cómo ha trabajado y elige qué mejorar.
+
+Los dos últimos miran cosas distintas: la revisión inspecciona el **producto**; la retrospectiva, la **forma de trabajar**.
+
+### Los tres artefactos
+
+- **Pila del producto** (*Product Backlog*): la lista ordenada de todo lo que podría hacerse. Está viva: se reordena y se cambia continuamente.
+- **Pila del sprint** (*Sprint Backlog*): lo que el equipo ha elegido para este sprint, con su plan.
+- **Incremento**: el resultado, una parte del producto que funciona.
+
+Para que "terminado" signifique lo mismo para todos, el equipo acuerda una **definición de terminado**: los requisitos que debe cumplir un trabajo, por ejemplo que tenga [pruebas](/articulos/pruebas-de-software/) y esté revisado.
+
+<Quiz
+	client:visible
+	question="¿Qué se examina en la retrospectiva de un sprint?"
+	options={[
+		"El producto construido",
+		"La forma de trabajar del equipo",
+		"El presupuesto del proyecto",
+	]}
+	answer={1}
+/>
+
+## Kanban
+
+**Kanban** es otro enfoque ágil, sin sprints. El trabajo se representa en un tablero con columnas, como "Por hacer", "En curso" y "Hecho", y las tareas avanzan de una a otra.
+
+Su regla principal es **limitar el trabajo en curso**: no se empieza una tarea hasta que hay hueco. Así se termina lo empezado antes de abrir frentes nuevos, y los atascos se ven enseguida.
+
+| | Scrum | Kanban |
+| --- | --- | --- |
+| Ritmo | Sprints de duración fija | Flujo continuo |
+| Responsabilidades | Tres, definidas | Ninguna obligatoria |
+| Cambios de prioridad | Entre sprints | En cualquier momento |
+| Encaja con | Desarrollo de producto | Trabajo imprevisible, como soporte o mantenimiento |
+
+## Relación con las prácticas técnicas
+
+Entregar algo que funcione cada dos semanas solo es viable con apoyo técnico: [pruebas automáticas](/articulos/pruebas-de-software/) que avisen de lo que se rompe, e [integración y despliegue continuos](/articulos/integracion-y-despliegue-continuos/) para publicar sin esfuerzo. Sin eso, los ciclos cortos acumulan errores.
+
+## Lo que sale mal
+
+- **Ceremonias sin cambio de fondo.** Hacer la reunión diaria y los sprints, pero seguir con un plan cerrado a un año. Se conserva la forma y se pierde el propósito.
+- **El scrum diario como control.** Convertido en un parte al jefe, deja de servir al equipo.
+- **Retrospectivas sin consecuencias.** Si nada cambia después, la gente deja de hablar.
+- **Medir la actividad en lugar del resultado.** Lo que importa es que el producto mejore para quien lo usa, no cuántas tareas se cierran.
+- **Ágil como excusa.** "Somos ágiles" no significa no planificar ni no documentar.
+
+## Lo esencial
+
+- Las metodologías ágiles construyen en ciclos cortos y ajustan el rumbo tras cada uno.
+- El Manifiesto Ágil prioriza a las personas, el software que funciona, la colaboración y la respuesta al cambio.
+- Scrum trabaja en sprints, con tres responsabilidades, cinco eventos y tres artefactos.
+- Kanban gestiona un flujo continuo limitando el trabajo en curso.
+- Sin prácticas técnicas que lo sostengan, el ritmo ágil no se mantiene.
