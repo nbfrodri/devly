@@ -1,0 +1,42 @@
+---
+title: ¿Qué es una API?
+description: Una API es el conjunto de reglas que permite a un programa pedirle algo a otro.
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **API** es la forma acordada en que un programa puede pedirle algo a otro. Define qué puedes pedir, cómo tienes que pedirlo y qué recibirás a cambio. Las siglas vienen de *Application Programming Interface*, interfaz de programación de aplicaciones.
+
+Piensa en un restaurante. No entras en la cocina: lees la carta, pides un plato y te lo traen. La carta es la API. Te dice qué hay disponible sin que necesites saber cómo se cocina.
+
+## Un ejemplo
+
+Una aplicación del tiempo no mide la temperatura. Se la pide a un servicio meteorológico a través de su API. La aplicación envía una petición y el servicio contesta con datos, normalmente en un formato de texto llamado JSON:
+
+```js
+const respuesta = '{"ciudad": "Madrid", "temperatura": 21}';
+
+const datos = JSON.parse(respuesta);
+console.log(datos.temperatura); // 21
+```
+
+En este ejemplo la respuesta está escrita a mano para que puedas ejecutarlo. En una aplicación real ese texto llegaría por internet.
+
+## Por qué son útiles
+
+- **Reutilizas el trabajo de otros**: mapas, pagos o inicio de sesión ya existen como servicios con API.
+- **Ocultan la complejidad**: usas el resultado sin conocer el funcionamiento interno.
+- **Permiten cambiar por dentro**: mientras la API no cambie, el servicio puede reescribirse sin que tu programa lo note.
+
+No todas las API funcionan por internet. Cualquier conjunto de funciones que un programa ofrece a otros es una API, incluidas las que trae el propio lenguaje.
+
+<Quiz
+	client:visible
+	question="En la comparación con el restaurante, ¿qué representa la API?"
+	options={["La cocina", "La carta", "El cliente"]}
+	answer={1}
+/>

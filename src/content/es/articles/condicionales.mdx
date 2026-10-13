@@ -1,0 +1,63 @@
+---
+title: ¿Qué es un condicional?
+description: Un condicional permite que el programa haga una cosa u otra según se cumpla una condición.
+level: basico
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+  - tipos-de-datos
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **condicional** es una instrucción que ejecuta un bloque de código solo si una condición es verdadera. Es la forma que tiene un programa de tomar decisiones.
+
+```js
+const edad = 20;
+
+if (edad >= 18) {
+	console.log("Puedes entrar");
+} else {
+	console.log("No puedes entrar");
+}
+```
+
+Entre paréntesis va la **condición**: una expresión que da `true` o `false`. Si da `true`, se ejecuta el primer bloque. Si da `false`, se ejecuta el bloque de `else`. El `else` es opcional.
+
+## Comparar valores
+
+Las condiciones suelen construirse con operadores de comparación:
+
+| Operador | Significa |
+| --- | --- |
+| `===` | es igual a |
+| `!==` | es distinto de |
+| `>` y `<` | mayor que, menor que |
+| `>=` y `<=` | mayor o igual, menor o igual |
+
+Fíjate en que comparar usa `===` y guardar un valor usa `=`. Son cosas distintas.
+
+## Más de dos caminos
+
+Con `else if` puedes encadenar varias condiciones. Se comprueban en orden y solo se ejecuta la primera que se cumple.
+
+```js
+const nota = 7;
+
+if (nota >= 9) {
+	console.log("Sobresaliente");
+} else if (nota >= 5) {
+	console.log("Aprobado");
+} else {
+	console.log("Suspenso");
+}
+```
+
+<Quiz
+	client:visible
+	question="En el último ejemplo, ¿qué se muestra si nota vale 9?"
+	options={["Sobresaliente", "Aprobado", "Las dos cosas"]}
+	answer={0}
+/>

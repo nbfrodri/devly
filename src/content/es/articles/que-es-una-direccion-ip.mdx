@@ -1,0 +1,46 @@
+---
+title: ¿Qué es una dirección IP?
+description: Una dirección IP es el número que identifica a un dispositivo dentro de una red.
+level: basico
+layer: redes
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **dirección IP** es un número que identifica a un dispositivo dentro de una red. Cumple el papel de una dirección postal: para que los datos lleguen a un dispositivo, hay que saber adónde enviarlos.
+
+IP son las siglas de *Internet Protocol*, el conjunto de reglas que define cómo se direccionan y se envían los datos en internet.
+
+## Qué aspecto tiene
+
+La versión más extendida, **IPv4**, escribe la dirección como cuatro números separados por puntos. Cada uno va de 0 a 255:
+
+```
+192.168.1.20
+```
+
+Cada número ocupa 8 bits, así que una dirección IPv4 tiene 32 bits. Eso da unos 4.300 millones de direcciones posibles, menos que dispositivos conectados hay hoy.
+
+Por eso existe **IPv6**, que usa 128 bits y se escribe con grupos de cifras hexadecimales separados por dos puntos:
+
+```
+2001:0db8:85a3:0000:0000:8a2e:0370:7334
+```
+
+Las dos versiones conviven actualmente.
+
+## Públicas y privadas
+
+- Una **IP pública** identifica tu conexión en internet. Normalmente es la de tu router, y la comparten todos los dispositivos de tu casa.
+- Una **IP privada** identifica a un dispositivo dentro de tu red local. Las que empiezan por `192.168.` son privadas: sirven dentro de tu casa, pero no en internet.
+
+Hay una dirección especial, `127.0.0.1`, que siempre significa "este mismo dispositivo". También se la conoce como *localhost*.
+
+<Quiz
+	client:visible
+	question="¿Cuántos bits tiene una dirección IPv4?"
+	options={["8", "32", "128"]}
+	answer={1}
+/>

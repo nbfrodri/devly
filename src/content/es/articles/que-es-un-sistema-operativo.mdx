@@ -1,0 +1,34 @@
+---
+title: ¿Qué es un sistema operativo?
+description: El sistema operativo es el programa que gestiona el hardware y permite que los demás programas funcionen.
+level: basico
+layer: sistemas
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **sistema operativo** es el programa que hace de intermediario entre el hardware de un dispositivo y el resto de programas. Windows, macOS, Linux, Android e iOS son sistemas operativos.
+
+Sin él, cada aplicación tendría que saber hablar directamente con el disco, la pantalla y el teclado de cada modelo de ordenador. El sistema operativo resuelve eso una vez y ofrece a todas las aplicaciones una forma común de pedirlo.
+
+## De qué se encarga
+
+- **Procesos**: decide qué programa usa el procesador en cada momento. Reparte el tiempo tan rápido que parece que todos funcionan a la vez.
+- **Memoria**: da a cada programa su propia zona de memoria y evita que uno lea o pise la de otro.
+- **Archivos**: organiza lo que hay en el disco en archivos y carpetas, y controla quién puede leerlos o modificarlos.
+- **Dispositivos**: se comunica con el teclado, la pantalla, la red o la impresora mediante programas llamados controladores o *drivers*.
+
+## El núcleo
+
+La parte central del sistema operativo se llama **núcleo** o *kernel*. Es la única que habla directamente con el hardware. Las aplicaciones no tocan el hardware: le piden al núcleo que lo haga por ellas.
+
+Lo que ves al encender el ordenador (ventanas, iconos, menús) es solo la capa visible. Un sistema operativo puede funcionar sin interfaz gráfica, y muchos servidores lo hacen.
+
+<Quiz
+	client:visible
+	question="¿Qué parte del sistema operativo se comunica directamente con el hardware?"
+	options={["El núcleo", "La interfaz gráfica", "Cada aplicación"]}
+	answer={0}
+/>

@@ -1,0 +1,54 @@
+---
+title: ¿Qué es una función?
+description: Una función es un bloque de código con nombre que puedes ejecutar cuando lo necesites.
+level: basico
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **función** es un bloque de código al que le pones nombre para poder usarlo tantas veces como quieras. Escribes las instrucciones una vez y después solo las llamas.
+
+```js
+function saludar(nombre) {
+	return "Hola, " + nombre;
+}
+
+console.log(saludar("Ana")); // "Hola, Ana"
+console.log(saludar("Luis")); // "Hola, Luis"
+```
+
+Una función tiene tres partes:
+
+- **Nombre**: `saludar`. Es lo que escribes para usarla.
+- **Parámetros**: `nombre`. Son los datos que necesita para trabajar. Puede no tener ninguno o tener varios.
+- **Valor de retorno**: lo que va después de `return`. Es el resultado que la función entrega a quien la llamó.
+
+## Definir no es ejecutar
+
+Escribir la función solo la define. El código de dentro no se ejecuta hasta que la **llamas** con paréntesis: `saludar("Ana")`.
+
+## Para qué sirven
+
+- **Reutilizar**: si cambias el saludo, lo cambias en un solo sitio.
+- **Dar nombre a una idea**: `calcularPrecioFinal(precio)` se entiende mejor que la fórmula escrita en mitad del programa.
+
+```js
+function calcularPrecioFinal(precio) {
+	const iva = precio * 0.21;
+	return precio + iva;
+}
+
+console.log(calcularPrecioFinal(100)); // 121
+```
+
+<Quiz
+	client:visible
+	question="¿Qué devuelve calcularPrecioFinal(200)?"
+	options={["221", "242", "42"]}
+	answer={1}
+/>

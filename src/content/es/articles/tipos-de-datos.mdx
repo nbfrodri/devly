@@ -1,0 +1,46 @@
+---
+title: ¿Qué es un tipo de dato?
+description: El tipo le dice al lenguaje qué clase de valor tienes y qué puedes hacer con él.
+level: basico
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **tipo de dato** es la clase a la que pertenece un valor: un número, un texto, un sí o no. El tipo decide qué operaciones tienen sentido. Puedes dividir dos números, pero no dos frases.
+
+Estos son los tres tipos más básicos en JavaScript:
+
+```js
+const edad = 30; // number: un número
+const nombre = "Ana"; // string: un texto, siempre entre comillas
+const esMayor = true; // boolean: verdadero o falso
+
+console.log(typeof edad); // "number"
+console.log(typeof nombre); // "string"
+console.log(typeof esMayor); // "boolean"
+```
+
+`typeof` te devuelve el tipo de cualquier valor.
+
+## Por qué importa
+
+La misma operación hace cosas distintas según el tipo. Con números, `+` suma. Con textos, `+` los une uno detrás de otro.
+
+```js
+console.log(2 + 2); // 4
+console.log("2" + "2"); // "22"
+```
+
+Las comillas son la diferencia: `2` es un número y `"2"` es un texto que contiene el carácter 2. Confundirlos es uno de los errores más comunes al empezar.
+
+<Quiz
+	client:visible
+	question='¿Qué muestra console.log("10" + "5")?'
+	options={["15", "105", "Un error"]}
+	answer={1}
+/>

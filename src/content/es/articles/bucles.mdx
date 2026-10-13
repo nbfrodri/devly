@@ -1,0 +1,52 @@
+---
+title: ¿Qué es un bucle?
+description: Un bucle repite un bloque de código mientras se cumpla una condición.
+level: basico
+layer: programacion
+prerequisites:
+  - condicionales
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **bucle** es una instrucción que repite un bloque de código varias veces. Sirve para no escribir lo mismo una y otra vez, y para trabajar con cantidades que no conoces de antemano.
+
+## Repetir mientras algo sea cierto
+
+`while` repite el bloque mientras la condición sea verdadera.
+
+```js
+let contador = 1;
+
+while (contador <= 3) {
+	console.log(contador);
+	contador = contador + 1;
+}
+// Muestra 1, 2 y 3
+```
+
+Antes de cada vuelta se comprueba la condición. Cuando `contador` llega a 4, la condición es falsa y el bucle termina.
+
+La línea que suma 1 es imprescindible. Sin ella la condición nunca dejaría de cumplirse y el programa se quedaría repitiendo para siempre: eso es un **bucle infinito**.
+
+## Repetir un número de veces
+
+Cuando sabes cuántas vueltas quieres, `for` junta en una sola línea las tres piezas del ejemplo anterior: el valor inicial, la condición y el cambio en cada vuelta.
+
+```js
+for (let i = 1; i <= 3; i++) {
+	console.log(i);
+}
+// Muestra 1, 2 y 3
+```
+
+`i++` es una forma corta de escribir `i = i + 1`.
+
+<Quiz
+	client:visible
+	question="¿Cuántas veces se ejecuta el bloque de for (let i = 0; i < 5; i++)?"
+	options={["4", "5", "6"]}
+	answer={1}
+/>

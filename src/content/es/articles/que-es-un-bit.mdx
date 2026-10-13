@@ -1,0 +1,49 @@
+---
+title: ¿Qué es un bit?
+description: El bit es la unidad mínima de información, un valor que solo puede ser 0 o 1.
+level: basico
+layer: hardware
+updated: 2026-10-13
+draft: true
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **bit** es la cantidad de información más pequeña que existe en un ordenador: un valor que solo puede ser `0` o `1`. Todo lo que guarda o procesa un ordenador, sea un texto, una foto o un programa, está hecho de bits.
+
+## Por qué solo dos valores
+
+Un ordenador está hecho de circuitos electrónicos, y lo más fiable que puede distinguir un circuito es si hay tensión eléctrica o no la hay. Dos estados: uno representa el `1` y el otro el `0`.
+
+## Juntar bits
+
+Un solo bit distingue dos cosas. Para representar más, se juntan varios. Cada bit que añades duplica las combinaciones posibles:
+
+| Bits | Combinaciones |
+| --- | --- |
+| 1 | 2 |
+| 2 | 4 |
+| 3 | 8 |
+| 8 | 256 |
+
+Con `n` bits hay 2 elevado a `n` combinaciones.
+
+Un grupo de 8 bits se llama **byte**. Es la unidad con la que se mide el tamaño de los archivos y de la memoria: un kilobyte, un megabyte o un gigabyte son cantidades de bytes.
+
+## Números en binario
+
+Los números se escriben con bits usando el **sistema binario**. Funciona como el decimal, pero cada posición vale el doble que la de su derecha en lugar de diez veces más: 1, 2, 4, 8...
+
+El número binario `101` tiene un 1 en la posición que vale 4, un 0 en la que vale 2 y un 1 en la que vale 1. En total, 4 + 1 = 5.
+
+```js
+console.log(parseInt("101", 2)); // 5
+console.log((5).toString(2)); // "101"
+```
+
+<Quiz
+	client:visible
+	question="¿Cuántas combinaciones distintas se pueden representar con 4 bits?"
+	options={["8", "16", "32"]}
+	answer={1}
+/>
