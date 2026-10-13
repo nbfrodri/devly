@@ -1,5 +1,6 @@
 ---
 import ArticleList from "@/components/article-list.astro";
+import Icon from "@/components/icon.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { getArticles } from "@/lib/content";
 import { LAYERS } from "@/lib/layers";
@@ -25,93 +26,110 @@ const groups = LAYERS.map((layer) => ({
 			</p>
 		</header>
 
-		<div class="filters">
-			<div class="filter-row">
-				<span class="filter-label" id="filtro-nivel">Mostrar nivel</span>
-				<div class="filter-group" role="group" aria-labelledby="filtro-nivel">
-					<button type="button" data-level="" aria-pressed="true">Todos</button>
+		<form class="filter-bar" data-filters>
+			<fieldset class="filter-field">
+				<legend>Nivel</legend>
+				<div class="segmented">
+					<label>
+						<input type="radio" name="level" value="" checked />
+						<span>Todos</span>
+					</label>
 					{
 						LEVELS.map((level) => (
-							<button type="button" data-level={level} aria-pressed="false">
-								{LEVEL_LABELS[level]}
-							</button>
+							<label>
+								<input type="radio" name="level" value={level} />
+								<span>{LEVEL_LABELS[level]}</span>
+							</label>
 						))
 					}
 				</div>
-				<p class="muted" id="filter-status" role="status"></p>
-			</div>
-			<nav class="filter-row" aria-labelledby="salto-capa">
-				<span class="filter-label" id="salto-capa">Ir a la capa</span>
-				<ul class="jump-links">
+			</fieldset>
+			<fieldset class="filter-field">
+				<legend>Capa</legend>
+				<div class="chips">
+					<label>
+						<input type="radio" name="layer" value="" checked />
+						<span>Todas</span>
+					</label>
 					{
 						groups.map((group) => (
-							<li data-jump={group.layer.id}>
-								<a href={`#${group.layer.id}`}>{group.layer.name}</a>
-							</li>
+							<label>
+								<input type="radio" name="layer" value={group.layer.id} />
+								<span>{group.layer.name}</span>
+							</label>
 						))
 					}
-				</ul>
-			</nav>
-		</div>
+				</div>
+			</fieldset>
+			<div class="filter-summary">
+				<p role="status" data-filter-status>{articles.length} artículos</p>
+				<button class="text-button" type="reset" data-filter-reset hidden>
+					<Icon name="x" />
+					Quitar filtros
+				</button>
+			</div>
+		</form>
 
-		{
-			groups.map((group) => (
-				<section class="section" id={group.layer.id} data-filter-section>
-					<h2>
-						<a class="plain-link" href={`/capas/${group.layer.id}/`}>
-							{group.layer.name}
-						</a>
-					</h2>
-					<ArticleList articles={group.articles} showLayer={false} />
-				</section>
-			))
-		}
+		<div data-filterable>
+			{
+				groups.map((group) => (
+					<section class="section" data-layer={group.layer.id}>
+						<h2>
+							<a class="plain-link" href={`/capas/${group.layer.id}/`}>
+								{group.layer.name}
+							</a>
+						</h2>
+						<ArticleList articles={group.articles} showLayer={false} />
+					</section>
+				))
+			}
+			<p class="empty" data-filter-empty hidden>
+				Ningún artículo coincide con esos filtros.
+			</p>
+		</div>
 	</div>
 </BaseLayout>
 
 <script>
-	const buttons = document.querySelectorAll<HTMLButtonElement>(
-		".filter-group button",
-	);
-	const sections = document.querySelectorAll<HTMLElement>(
-		"[data-filter-section]",
-	);
-	const status = document.getElementById("filter-status");
+	const form = document.querySelector<HTMLFormElement>("[data-filters]");
+	const list = document.querySelector<HTMLElement>("[data-filterable]");
+	const status = document.querySelector<HTMLElement>("[data-filter-status]");
+	const reset = document.querySelector<HTMLElement>("[data-filter-reset]");
+	const empty = document.querySelector<HTMLElement>("[data-filter-empty]");
 
-	function applyFilter(level: string) {
+	function applyFilters() {
+		if (!form || !list) return;
+
+		const data = new FormData(form);
+		const level = String(data.get("level") ?? "");
+		const layer = String(data.get("layer") ?? "");
 		let visible = 0;
 
-		for (const section of sections) {
+		for (const section of list.querySelectorAll<HTMLElement>("[data-layer]")) {
+			const layerMatches = layer === "" || section.dataset.layer === layer;
 			let visibleInSection = 0;
 
 			for (const item of section.querySelectorAll<HTMLElement>("li")) {
-				const matches = level === "" || item.dataset.level === level;
+				const matches =
+					layerMatches && (level === "" || item.dataset.level === level);
 				item.hidden = !matches;
 				if (matches) visibleInSection += 1;
 			}
 
 			section.hidden = visibleInSection === 0;
-			const jump = document.querySelector<HTMLElement>(
-				`[data-jump="${section.id}"]`,
-			);
-			if (jump) jump.hidden = visibleInSection === 0;
 			visible += visibleInSection;
 		}
 
 		if (status) {
-			status.textContent =
-				level === ""
-					? ""
-					: `${visible} ${visible === 1 ? "artículo" : "artículos"} de este nivel`;
+			status.textContent = `${visible} ${visible === 1 ? "artículo" : "artículos"}`;
 		}
+		if (reset) reset.hidden = level === "" && layer === "";
+		if (empty) empty.hidden = visible > 0;
+
+		list.dispatchEvent(new CustomEvent("devly:content-change", { bubbles: true }));
 	}
 
-	for (const button of buttons) {
-		button.addEventListener("click", () => {
-			for (const other of buttons) {
-				other.setAttribute("aria-pressed", String(other === button));
-			}
-			applyFilter(button.dataset.level ?? "");
-		});
-	}
+	form?.addEventListener("change", applyFilters);
+	// A reset restores the inputs after this event, so wait a tick to read them.
+	form?.addEventListener("reset", () => window.setTimeout(applyFilters));
 </script>

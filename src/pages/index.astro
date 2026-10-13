@@ -104,7 +104,12 @@ const firstPath = featured[0];
 					showSix();
 					box.dataset.ready = "";
 					document.addEventListener("click", (event) => {
-						if (event.target.closest("[data-shuffle]")) showSix();
+						if (!event.target.closest("[data-shuffle]")) return;
+
+						showSix();
+						box.dispatchEvent(
+							new CustomEvent("devly:content-change", { bubbles: true }),
+						);
 					});
 				})();
 			</script>

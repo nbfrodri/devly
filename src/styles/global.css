@@ -331,6 +331,29 @@ a:hover {
 	height: 1.375rem;
 }
 
+/* The button shows the theme it switches to: a moon on light, a sun on dark. */
+.theme-icon-sun {
+	display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) .theme-icon-sun {
+		display: inline-flex;
+	}
+
+	:root:not([data-theme="light"]) .theme-icon-moon {
+		display: none;
+	}
+}
+
+:root[data-theme="dark"] .theme-icon-sun {
+	display: inline-flex;
+}
+
+:root[data-theme="dark"] .theme-icon-moon {
+	display: none;
+}
+
 .site-nav a {
 	display: inline-flex;
 	align-items: center;
@@ -478,6 +501,17 @@ a:hover {
 	--pagefind-ui-border-width: 2px;
 	--pagefind-ui-border-radius: 4px;
 	--pagefind-ui-font: var(--font-body);
+}
+
+/* Pagefind renders its own clear button; show the Tabler "x" instead of its text. */
+.search .pagefind-ui__search-clear {
+	width: 2.75rem;
+	padding: 0;
+	font-size: 0;
+	background-color: var(--ink);
+	mask:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6l-12 12'/%3E%3Cpath d='M6 6l12 12'/%3E%3C/svg%3E")
+		center / 1.25rem no-repeat;
 }
 
 .section {
@@ -644,8 +678,8 @@ a:hover {
 /* The stack builds from the machine upwards: one load sequence, nothing else moves. */
 @media (prefers-reduced-motion: no-preference) {
 	.stack-build li {
-		animation: layer-in 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-		animation-delay: calc((var(--count) - 1 - var(--depth)) * 70ms);
+		animation: layer-in 320ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+		animation-delay: calc((var(--count) - 1 - var(--depth)) * 30ms);
 	}
 
 	@keyframes layer-in {
@@ -770,72 +804,125 @@ a:hover {
 	color: var(--muted);
 }
 
-.filters {
+.filter-bar {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 1.25rem 2rem;
+	margin-bottom: 2.5rem;
+	padding: 1.25rem 1.5rem;
+	background: var(--surface);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+}
+
+.filter-field {
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 1.25rem;
-	padding-bottom: 2.5rem;
-}
-
-.filter-row {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem 1rem;
-}
-
-.filter-label {
-	flex: none;
-	min-width: 7rem;
-	font-size: 0.9375rem;
-	font-weight: 600;
-}
-
-.filter-group {
-	display: flex;
-	flex-wrap: wrap;
 	gap: 0.5rem;
 }
 
-/* Buttons change what is shown; they look pressable. */
-.filter-group button {
-	min-height: 2.75rem;
-	padding-inline: 1rem;
-	font: inherit;
-	font-size: 0.9375rem;
-	font-weight: 500;
-	color: var(--ink);
-	background: var(--surface);
-	border: 2px solid var(--ink);
-	border-radius: var(--radius);
+.filter-field legend {
+	padding: 0;
+	margin-bottom: 0.5rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--muted);
+}
+
+/* Both controls are radio groups: the input is hidden and its label is the target. */
+.segmented input,
+.chips input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.segmented label,
+.chips label {
 	cursor: pointer;
 }
 
-.filter-group button:hover {
-	background: var(--quiet);
+.segmented span,
+.chips span {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.5rem;
+	padding-inline: 0.875rem;
+	font-size: 0.9375rem;
+	font-weight: 500;
+	border-radius: 3px;
+	white-space: nowrap;
 }
 
-.filter-group button[aria-pressed="true"] {
+.segmented {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.125rem;
+	padding: 0.1875rem;
+	background: var(--quiet);
+	border-radius: var(--radius);
+}
+
+.segmented span {
+	color: var(--muted);
+}
+
+.segmented label:hover span {
+	color: var(--ink);
+}
+
+.segmented input:checked + span {
+	background: var(--accent-solid);
+	color: var(--on-accent);
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+}
+
+.chips span {
+	color: var(--ink);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+}
+
+.chips label:hover span {
+	border-color: var(--ink);
+}
+
+.chips input:checked + span {
 	background: var(--accent-solid);
 	border-color: var(--accent-solid);
 	color: var(--on-accent);
 }
 
-/* Jump links move the page; they look like links. */
-.jump-links {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25rem 1.25rem;
-	font-size: 0.9375rem;
+.segmented input:focus-visible + span,
+.chips input:focus-visible + span {
+	outline: 3px solid var(--accent);
+	outline-offset: 2px;
 }
 
-.jump-links a {
-	display: inline-flex;
+.filter-summary {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	min-height: 2.25rem;
+	justify-content: space-between;
+	gap: 0.25rem 1.5rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--rule);
+	font-size: 0.9375rem;
+	font-weight: 600;
+}
+
+.filter-summary .text-button {
+	min-height: 2rem;
 }
 
 /* Without JavaScript the first six stay; with it, six random ones are kept. */
@@ -1173,6 +1260,11 @@ a:hover {
 
 /* Phone: the article comes first, its context (layer and path) follows. */
 @media (max-width: 48rem) {
+	.filter-bar {
+		grid-template-columns: 1fr;
+		padding: 1rem;
+	}
+
 	.logo {
 		gap: 0.4rem;
 		font-size: 1.375rem;
@@ -1212,6 +1304,7 @@ a:hover {
 }
 
 /* Motion. Everything here answers an action or a navigation; nothing loops. */
+
 @view-transition {
 	navigation: auto;
 }
@@ -1220,14 +1313,6 @@ a:hover {
 	::view-transition-old(root),
 	::view-transition-new(root) {
 		animation-duration: 160ms;
-	}
-
-	.theme-toggle svg {
-		transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	:root[data-theme="dark"] .theme-toggle svg {
-		transform: rotate(180deg);
 	}
 
 	.path-grid .path-card {
@@ -1248,20 +1333,13 @@ a:hover {
 
 	.article-title,
 	.site-nav a,
-	.jump-links a {
+	.segmented span,
+	.chips span {
 		transition:
 			color 120ms ease,
 			background-color 120ms ease;
 	}
 
-	.filter-group button {
-		transition:
-			background-color 120ms ease,
-			border-color 120ms ease,
-			transform 120ms ease-out;
-	}
-
-	.filter-group button:active,
 	.theme-toggle:active {
 		transform: scale(0.96);
 	}

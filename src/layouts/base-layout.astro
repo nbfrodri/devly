@@ -33,6 +33,7 @@ const links = [
 					document.documentElement.dataset.theme = stored;
 				}
 			} catch {}
+
 		</script>
 	</head>
 	<body>
@@ -54,7 +55,8 @@ const links = [
 						}
 					</nav>
 					<button class="theme-toggle" type="button" data-theme-toggle>
-						<Icon name="contrast" />
+						<Icon name="moon" class="theme-icon-moon" />
+						<Icon name="sun" class="theme-icon-sun" />
 					</button>
 				</div>
 			</div>
@@ -131,6 +133,8 @@ const links = [
 </html>
 
 <script>
+	import "@/scripts/reveal";
+
 	const button = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
 	const root = document.documentElement;
 	const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
