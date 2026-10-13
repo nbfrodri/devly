@@ -1,0 +1,8 @@
+title: Estructuras de datos
+description: Las formas básicas de organizar la información y cuándo conviene cada una.
+steps:
+  - arrays
+  - pilas-y-colas
+  - listas-enlazadas
+  - tablas-hash
+  - arboles-binarios-de-busqueda

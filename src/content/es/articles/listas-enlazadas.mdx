@@ -1,0 +1,140 @@
+---
+title: "¿Qué es una lista enlazada?"
+description: "Una lista enlazada guarda sus elementos en nodos sueltos, cada uno con una referencia al siguiente."
+level: intermedio
+layer: programacion
+prerequisites:
+  - arrays
+  - programacion-orientada-a-objetos
+updated: 2026-10-13
+sources:
+  - title: "Pat Morin: Open Data Structures, libro de texto libre (en inglés)"
+    url: https://opendatastructures.org/
+  - title: "MIT OpenCourseWare: 6.006, Data Structures and Dynamic Arrays (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-2-data-structures-and-dynamic-arrays/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **lista enlazada** es una estructura de datos formada por **nodos**. Cada nodo guarda un valor y una referencia al nodo siguiente. Los elementos no están juntos en la memoria: lo que los mantiene en orden son esos enlaces.
+
+## Qué problema resuelve
+
+Un [array](/articulos/arrays/) guarda sus elementos en posiciones contiguas. Por eso acceder a cualquiera por su índice es inmediato. Pero esa misma disposición hace costoso insertar o quitar al principio o en medio: hay que desplazar todos los elementos que vienen después.
+
+Una lista enlazada hace lo contrario. Como cada elemento solo conoce al siguiente, insertar o quitar consiste en cambiar un par de enlaces, sin mover nada más. A cambio, se pierde el acceso directo.
+
+Imagina una búsqueda del tesoro en la que cada pista dice dónde está la siguiente. Para llegar a la quinta hay que pasar por las cuatro anteriores. Pero añadir una pista nueva en medio solo exige cambiar lo que dice la anterior.
+
+## Cómo está hecha
+
+- Cada **nodo** tiene un valor y una referencia, `siguiente`.
+- La lista recuerda dónde está el primer nodo, la **cabeza**.
+- El último nodo apunta a `null`: no hay más.
+
+```js
+class Nodo {
+	constructor(valor) {
+		this.valor = valor;
+		this.siguiente = null;
+	}
+}
+
+class ListaEnlazada {
+	cabeza = null;
+
+	insertarAlPrincipio(valor) {
+		const nodo = new Nodo(valor);
+		nodo.siguiente = this.cabeza;
+		this.cabeza = nodo;
+	}
+
+	aArray() {
+		const valores = [];
+		let actual = this.cabeza;
+
+		while (actual !== null) {
+			valores.push(actual.valor);
+			actual = actual.siguiente;
+		}
+
+		return valores;
+	}
+}
+
+const lista = new ListaEnlazada();
+lista.insertarAlPrincipio("c");
+lista.insertarAlPrincipio("b");
+lista.insertarAlPrincipio("a");
+
+console.log(lista.aArray().join(" ")); // "a b c"
+```
+
+### Insertar al principio
+
+`insertarAlPrincipio` hace dos cosas: el nodo nuevo apunta a la antigua cabeza y la lista pasa a empezar por él. Son dos asignaciones, tenga la lista tres elementos o tres millones.
+
+### Recorrer
+
+No hay índices. Para visitar los elementos se empieza en la cabeza y se sigue el enlace `siguiente` hasta encontrar `null`, como hace `aArray`.
+
+## Insertar y quitar en medio
+
+Para insertar un nodo después de otro, se cambian dos enlaces: el nuevo apunta al que venía después, y el anterior apunta al nuevo.
+
+Para quitar un nodo, basta con que el anterior salte por encima y apunte al siguiente. El nodo descartado queda sin referencias y el lenguaje libera su memoria.
+
+En los dos casos el cambio en sí es inmediato. Lo que cuesta es **llegar** hasta ese punto, porque hay que recorrer la lista desde la cabeza.
+
+## Comparación con un array
+
+| Operación | Array | Lista enlazada |
+| --- | --- | --- |
+| Leer el elemento de una posición | O(1) | O(n) |
+| Insertar o quitar al principio | O(n) | O(1) |
+| Insertar o quitar al final | O(1) | O(n), o O(1) si se guarda una referencia al último |
+| Insertar o quitar en un punto ya localizado | O(n) | O(1) |
+| Buscar un valor | O(n) | O(n) |
+
+Las letras expresan la [complejidad](/articulos/complejidad-algoritmica/) de cada operación.
+
+<Quiz
+	client:visible
+	question="¿Qué operación es más rápida en una lista enlazada que en un array?"
+	options={[
+		"Leer el elemento número 500",
+		"Insertar un elemento al principio",
+		"Buscar un valor concreto",
+	]}
+	answer={1}
+/>
+
+## Variantes
+
+- **Simplemente enlazada**: cada nodo conoce solo al siguiente. Es la del ejemplo.
+- **Doblemente enlazada**: cada nodo conoce al siguiente y al anterior. Permite recorrerla en los dos sentidos y quitar un nodo sin haber guardado el anterior, a costa de más memoria.
+- **Circular**: el último nodo apunta al primero.
+
+## Cuándo usarla
+
+Menos de lo que sugiere la tabla. En la práctica, un array suele ser más rápido incluso en operaciones donde la teoría favorece a la lista:
+
+- Los elementos de un array están juntos en la memoria, y los procesadores actuales leen la memoria contigua mucho más deprisa que saltando de un sitio a otro.
+- Cada nodo ocupa memoria extra para guardar el enlace.
+
+La lista enlazada compensa cuando se inserta y se quita continuamente en los extremos o en puntos que ya se tienen localizados. Es la base natural de [pilas y colas](/articulos/pilas-y-colas/) y aparece dentro de otras estructuras, como las [tablas hash](/articulos/tablas-hash/).
+
+Su mayor valor es didáctico: es la estructura más sencilla construida con referencias entre nodos, la misma idea que sostiene los [árboles](/articulos/arboles-binarios-de-busqueda/) y los grafos.
+
+## Errores comunes
+
+- **Perder el resto de la lista** al cambiar los enlaces en el orden equivocado. Si la cabeza pasa a apuntar al nodo nuevo antes de que este apunte a la antigua cabeza, lo demás queda inaccesible.
+- **Olvidar el caso de la lista vacía**, en la que la cabeza es `null`.
+- **Tratarla como un array** y pedir el elemento de una posición dentro de un bucle: cada acceso recorre la lista desde el principio.
+
+## Lo esencial
+
+- Una lista enlazada está formada por nodos que apuntan al siguiente.
+- Insertar y quitar es inmediato una vez localizado el punto; llegar a él exige recorrer la lista.
+- No hay acceso directo por posición.
+- En la práctica los arrays suelen rendir mejor; la lista compensa en casos concretos y como base de otras estructuras.

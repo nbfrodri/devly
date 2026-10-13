@@ -21,13 +21,13 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 
 ## Programación y algoritmos
 
-- [ ] ¿Qué es la recursividad?
-- [ ] Pilas y colas
-- [ ] Listas enlazadas
-- [ ] Tablas hash
-- [ ] Árboles y árboles binarios de búsqueda
+- [x] ¿Qué es la recursividad?
+- [x] Pilas y colas
+- [x] Listas enlazadas
+- [x] Tablas hash
+- [x] Árboles y árboles binarios de búsqueda
 - [ ] Grafos
-- [ ] Algoritmos de ordenación
+- [x] Algoritmos de ordenación
 - [ ] ¿Qué es la programación funcional?
 - [ ] Diferencias entre tipado estático y dinámico
 - [ ] Diferencias entre compilador e intérprete

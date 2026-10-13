@@ -1,0 +1,148 @@
+---
+title: "¿Qué es una tabla hash?"
+description: "Una tabla hash guarda pares de clave y valor y encuentra cualquier valor por su clave casi al instante."
+level: intermedio
+layer: programacion
+prerequisites:
+  - arrays
+  - complejidad-algoritmica
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare: 6.006, Hashing (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-4-hashing/
+  - title: "Pat Morin: Open Data Structures, libro de texto libre (en inglés)"
+    url: https://opendatastructures.org/
+  - title: "MDN: Map"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Map
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **tabla hash** es una estructura de datos que guarda pares de **clave** y **valor** y permite recuperar un valor a partir de su clave en un tiempo que, por término medio, no depende de cuántos datos haya.
+
+En cada lenguaje recibe un nombre: diccionario, mapa, objeto, array asociativo.
+
+## Qué problema resuelve
+
+Buscar un valor en un [array](/articulos/arrays/) sin ordenar obliga a mirar los elementos uno a uno: [complejidad](/articulos/complejidad-algoritmica/) O(n). Con el array ordenado, la [búsqueda binaria](/articulos/busqueda-binaria/) lo baja a O(log n).
+
+Una tabla hash lo hace en O(1) de media. Encontrar un dato entre diez o entre diez millones cuesta prácticamente lo mismo.
+
+## La idea
+
+Acceder a un array por su índice es inmediato. Si pudiéramos convertir cualquier clave en un índice, podríamos guardar cada valor en esa posición e ir a buscarlo directamente.
+
+Eso hace una **función hash**: recibe una clave, por ejemplo un texto, y devuelve un número. Ese número, ajustado al tamaño del array interno, indica en qué casilla va el valor.
+
+Un guardarropa funciona así: entregas el abrigo, te dan un número y con ese número lo localizan sin revisar todas las perchas.
+
+Las casillas del array interno se suelen llamar **cubetas** (*buckets*).
+
+## Un ejemplo de juguete
+
+Esta función suma los códigos de los caracteres de la clave y se queda con el resto de dividir entre el número de cubetas:
+
+```js
+function indice(clave, cubetas) {
+	let suma = 0;
+
+	for (const caracter of clave) {
+		suma = suma + caracter.charCodeAt(0);
+	}
+
+	return suma % cubetas;
+}
+
+console.log(indice("ana", 8)); // 0
+console.log(indice("luis", 8)); // 5
+console.log(indice("naa", 8)); // 0
+```
+
+La misma clave da siempre el mismo índice. Pero "ana" y "naa" tienen las mismas letras, suman lo mismo y caen en la misma cubeta.
+
+## Colisiones
+
+Que dos claves distintas acaben en la misma cubeta es una **colisión**. No se pueden evitar del todo: las claves posibles son infinitas y las cubetas, pocas. Lo que hace una buena tabla hash es gestionarlas y procurar que sean escasas.
+
+Hay dos estrategias principales:
+
+- **Encadenamiento.** Cada cubeta guarda una pequeña lista con todos los pares que han caído en ella, a menudo una [lista enlazada](/articulos/listas-enlazadas/). Para buscar, se va a la cubeta y se revisa esa lista.
+- **Direccionamiento abierto.** Si la cubeta está ocupada, se prueba con otra siguiendo una regla fija, hasta dar con una libre.
+
+En ambos casos, junto al valor se guarda la clave original, para poder distinguir entre los pares que comparten cubeta.
+
+## Por qué es rápida, y cuándo deja de serlo
+
+Con una buena función hash, las claves se reparten de forma uniforme y cada cubeta contiene muy pocos elementos. Buscar es calcular el índice y mirar una cubeta casi vacía: O(1).
+
+En el peor caso, todas las claves caen en la misma cubeta y la tabla se convierte en una lista: O(n). Para que eso no ocurra hay dos cuidados:
+
+- **Una función hash que disperse bien.** La del ejemplo es mala precisamente porque palabras con las mismas letras colisionan siempre.
+- **Mantener la tabla holgada.** El **factor de carga** es el número de elementos dividido entre el de cubetas. Cuando supera un umbral, la tabla crea un array interno mayor y recoloca todos los elementos. Esa operación es costosa, pero ocurre pocas veces, y repartida entre todas las inserciones el coste medio sigue siendo constante.
+
+| Operación | Caso medio | Peor caso |
+| --- | --- | --- |
+| Buscar | O(1) | O(n) |
+| Insertar | O(1) | O(n) |
+| Eliminar | O(1) | O(n) |
+
+## En JavaScript
+
+No hace falta construirla. `Map` es una tabla hash lista para usar:
+
+```js
+const edades = new Map();
+
+edades.set("ana", 30);
+edades.set("luis", 25);
+
+console.log(edades.get("ana")); // 30
+console.log(edades.has("marta")); // false
+console.log(edades.size); // 2
+
+edades.delete("luis");
+console.log(edades.size); // 1
+```
+
+Los objetos de JavaScript también asocian claves con valores. `Map` es preferible cuando las claves no se conocen de antemano o se añaden y quitan con frecuencia.
+
+Un uso típico es contar apariciones:
+
+```js
+const palabras = ["sol", "mar", "sol", "luna", "sol"];
+const veces = new Map();
+
+for (const palabra of palabras) {
+	veces.set(palabra, (veces.get(palabra) ?? 0) + 1);
+}
+
+console.log(veces.get("sol")); // 3
+console.log(veces.get("mar")); // 1
+```
+
+<Quiz
+	client:visible
+	question="¿Qué es una colisión en una tabla hash?"
+	options={[
+		"Que dos claves distintas vayan a la misma cubeta",
+		"Que se intente guardar dos veces la misma clave",
+		"Que la tabla se quede sin memoria",
+	]}
+	answer={0}
+/>
+
+## Lo que no ofrece
+
+- **Orden.** Una tabla hash clásica no mantiene los elementos ordenados por clave. No sirve para preguntar "cuál es la siguiente clave" o "todas las claves entre dos valores". Para eso se usa un [árbol](/articulos/arboles-binarios-de-busqueda/).
+- **Búsqueda por valor.** Solo es rápida buscando por clave.
+
+## No confundir con la criptografía
+
+Las funciones hash de una tabla buscan ser veloces y repartir bien. Las [funciones hash criptográficas](/articulos/funciones-hash/) buscan además que nadie pueda fabricar colisiones ni deshacer el resultado. Comparten nombre e idea de partida, pero no son intercambiables.
+
+## Lo esencial
+
+- Una tabla hash convierte cada clave en un índice mediante una función hash y guarda el valor en esa posición.
+- Buscar, insertar y eliminar cuestan O(1) de media.
+- Las colisiones son inevitables y se resuelven con encadenamiento o direccionamiento abierto.
+- No conserva el orden de las claves.

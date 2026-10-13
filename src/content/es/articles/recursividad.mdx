@@ -1,0 +1,172 @@
+---
+title: "¿Qué es la recursividad?"
+description: "Una función recursiva resuelve un problema llamándose a sí misma con una versión más pequeña del mismo problema."
+level: basico
+layer: programacion
+prerequisites:
+  - funciones
+  - condicionales
+updated: 2026-10-13
+sources:
+  - title: "MDN: Recursión (glosario)"
+    url: https://developer.mozilla.org/es/docs/Glossary/Recursion
+  - title: "MDN: InternalError, too much recursion"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Errors/Too_much_recursion
+  - title: "MIT OpenCourseWare: 6.006 Introduction to Algorithms (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **recursividad** es una técnica en la que una [función](/articulos/funciones/) se llama a sí misma para resolver un problema. Cada llamada trabaja sobre una versión más pequeña del problema, hasta llegar a un caso tan simple que se resuelve directamente.
+
+## La idea
+
+Algunos problemas tienen una propiedad útil: su solución se puede expresar en función de la solución de un problema igual pero más pequeño.
+
+Las muñecas rusas lo ilustran bien. Para saber cuántas muñecas hay dentro de una, la abres y te haces la misma pregunta con la que encuentras dentro. Así hasta dar con una que no se abre.
+
+## Las dos partes de toda función recursiva
+
+- **Caso base**: la situación más simple, que se responde sin volver a llamar a la función. Es lo que detiene el proceso.
+- **Caso recursivo**: la función se llama a sí misma con un problema más pequeño, que se acerca al caso base.
+
+Si falta el caso base, o las llamadas no se acercan a él, la función no termina nunca.
+
+## Un ejemplo: el factorial
+
+El factorial de un número es el producto de todos los enteros desde 1 hasta él. El de 5 es 5 × 4 × 3 × 2 × 1 = 120.
+
+Se puede definir de forma recursiva: el factorial de `n` es `n` multiplicado por el factorial de `n - 1`. Y el factorial de 1 es 1.
+
+```js
+function factorial(n) {
+	if (n <= 1) {
+		return 1;
+	}
+
+	return n * factorial(n - 1);
+}
+
+console.log(factorial(5)); // 120
+```
+
+El `if` es el caso base. La última línea es el caso recursivo.
+
+## Qué ocurre por dentro
+
+Al llamar a `factorial(3)`, las llamadas se van encadenando y quedan en espera:
+
+1. `factorial(3)` necesita `factorial(2)` y espera.
+2. `factorial(2)` necesita `factorial(1)` y espera.
+3. `factorial(1)` es el caso base: devuelve 1.
+4. `factorial(2)` ya puede calcular 2 × 1 y devuelve 2.
+5. `factorial(3)` calcula 3 × 2 y devuelve 6.
+
+Hay una fase de ida, en la que las llamadas se acumulan, y una de vuelta, en la que se resuelven en orden inverso.
+
+### La pila de llamadas
+
+Cada llamada pendiente ocupa memoria: el programa tiene que recordar por dónde iba y con qué valores. Esa información se guarda en la **pila de llamadas**, una [pila](/articulos/pilas-y-colas/) en la que la última llamada en entrar es la primera en salir.
+
+La pila tiene un tamaño limitado. Si la recursión es demasiado profunda, o no tiene fin, se llena y el programa se detiene con un error. A esto se le llama **desbordamiento de pila** (*stack overflow*).
+
+## Recorrer una estructura
+
+La recursividad encaja de forma natural con datos que contienen datos del mismo tipo. Sumar una lista que puede tener listas dentro, a cualquier profundidad:
+
+```js
+function sumar(lista) {
+	let total = 0;
+
+	for (const elemento of lista) {
+		if (Array.isArray(elemento)) {
+			total = total + sumar(elemento);
+		} else {
+			total = total + elemento;
+		}
+	}
+
+	return total;
+}
+
+console.log(sumar([1, [2, 3], [4, [5, 6]]])); // 21
+```
+
+Con [bucles](/articulos/bucles/) sin más, esto sería difícil, porque no se sabe de antemano cuántos niveles hay. Lo mismo ocurre con las carpetas de un disco o con los [árboles](/articulos/arboles-binarios-de-busqueda/).
+
+<Quiz
+	client:visible
+	question="¿Qué ocurre si una función recursiva no tiene caso base?"
+	options={[
+		"Devuelve undefined",
+		"Se llama sin parar hasta desbordar la pila",
+		"El lenguaje añade uno automáticamente",
+	]}
+	answer={1}
+/>
+
+## Cuando la recursión sale cara
+
+La sucesión de Fibonacci empieza con 0 y 1, y cada término es la suma de los dos anteriores: 0, 1, 1, 2, 3, 5, 8... La definición se traduce directamente a código:
+
+```js
+function fibonacci(n) {
+	if (n < 2) {
+		return n;
+	}
+
+	return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(10)); // 55
+```
+
+Funciona, pero es muy ineficiente. Para calcular `fibonacci(5)` se calcula `fibonacci(3)` dos veces y `fibonacci(2)` tres. Cada llamada genera dos más, y el trabajo crece de forma exponencial: con valores de `n` cercanos a 50, el programa tarda minutos.
+
+La solución es no repetir cálculos. Guardar cada resultado la primera vez que se obtiene y reutilizarlo después se llama **memorización**:
+
+```js
+const calculados = new Map();
+
+function fibonacci(n) {
+	if (n < 2) {
+		return n;
+	}
+
+	if (!calculados.has(n)) {
+		calculados.set(n, fibonacci(n - 1) + fibonacci(n - 2));
+	}
+
+	return calculados.get(n);
+}
+
+console.log(fibonacci(50)); // 12586269025
+```
+
+Ahora cada valor se calcula una sola vez y el resultado es inmediato.
+
+## Recursión o bucle
+
+Todo lo que se resuelve con recursión puede resolverse con bucles, y al revés. La elección depende de qué queda más claro:
+
+| | Recursión | Bucle |
+| --- | --- | --- |
+| Encaja con | Estructuras anidadas, problemas que se dividen | Repeticiones simples |
+| Memoria | Una entrada en la pila por llamada | Constante |
+| Riesgo | Desbordar la pila | Bucle infinito |
+
+Para contar del 1 al 100, un bucle es más directo. Para recorrer un árbol, la versión recursiva suele ser mucho más corta y fácil de leer.
+
+## Errores comunes
+
+- **Olvidar el caso base.**
+- **No acercarse al caso base**: llamar a la función con el mismo valor, o con uno que se aleja.
+- **Repetir cálculos** sin darse cuenta, como en el primer Fibonacci.
+
+## Lo esencial
+
+- Una función recursiva se llama a sí misma con un problema más pequeño.
+- Necesita un caso base que detenga las llamadas.
+- Cada llamada pendiente ocupa espacio en la pila, que es limitada.
+- Es la herramienta natural para estructuras anidadas; para repeticiones simples basta un bucle.

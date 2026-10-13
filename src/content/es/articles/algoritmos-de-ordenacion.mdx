@@ -1,0 +1,166 @@
+---
+title: "¿Cómo funcionan los algoritmos de ordenación?"
+description: "Ordenar una lista se puede hacer de muchas formas, con costes muy distintos. Qué hacen los algoritmos más conocidos y cuál elegir."
+level: intermedio
+layer: programacion
+prerequisites:
+  - arrays
+  - complejidad-algoritmica
+  - recursividad
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare: 6.006 Introduction to Algorithms (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/
+  - title: "MDN: Array.prototype.sort()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+  - title: "Pat Morin: Open Data Structures, libro de texto libre (en inglés)"
+    url: https://opendatastructures.org/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **algoritmo de ordenación** coloca los elementos de una lista en un orden determinado, normalmente de menor a mayor. Es uno de los problemas más estudiados de la informática, y hay muchos algoritmos que lo resuelven con eficiencias muy diferentes.
+
+## Por qué importa
+
+Los datos ordenados se aprovechan mejor. Permiten usar la [búsqueda binaria](/articulos/busqueda-binaria/), detectar duplicados comparando vecinos o encontrar el mínimo y el máximo sin buscar.
+
+En el trabajo diario se usa la función de ordenación del lenguaje. Entender cómo funcionan los algoritmos sirve para saber qué esperar de ella y, sobre todo, porque son el mejor ejemplo de cómo dos soluciones al mismo problema pueden diferir en [complejidad](/articulos/complejidad-algoritmica/).
+
+## Ordenación por inserción
+
+Es como ordenan las cartas la mayoría de las personas: se toma una carta y se coloca en su sitio entre las que ya están ordenadas.
+
+El algoritmo recorre la lista de izquierda a derecha. La parte izquierda está siempre ordenada. Cada elemento nuevo se desplaza hacia la izquierda hasta encontrar su posición.
+
+```js
+function ordenarPorInsercion(lista) {
+	const resultado = [...lista];
+
+	for (let i = 1; i < resultado.length; i++) {
+		const actual = resultado[i];
+		let j = i - 1;
+
+		while (j >= 0 && resultado[j] > actual) {
+			resultado[j + 1] = resultado[j];
+			j = j - 1;
+		}
+
+		resultado[j + 1] = actual;
+	}
+
+	return resultado;
+}
+
+console.log(ordenarPorInsercion([5, 2, 8, 1]).join(" ")); // "1 2 5 8"
+```
+
+En el peor caso, con la lista en orden inverso, cada elemento recorre toda la parte ordenada. Son dos bucles anidados: O(n²).
+
+Tiene una virtud: si la lista ya está casi ordenada, cada elemento se mueve muy poco y el algoritmo es rápido. Por eso se usa para listas pequeñas o casi ordenadas.
+
+## Ordenación por mezcla
+
+La **ordenación por mezcla** (*merge sort*) aplica la estrategia de **divide y vencerás**:
+
+1. **Dividir** la lista en dos mitades.
+2. **Ordenar** cada mitad por separado, con el mismo procedimiento.
+3. **Mezclar** las dos mitades ordenadas en una sola.
+
+El paso clave es la mezcla. Juntar dos listas ya ordenadas es fácil: se compara el primer elemento de cada una, se toma el menor y se repite.
+
+```js
+function mezclar(izquierda, derecha) {
+	const resultado = [];
+	let i = 0;
+	let j = 0;
+
+	while (i < izquierda.length && j < derecha.length) {
+		if (izquierda[i] <= derecha[j]) {
+			resultado.push(izquierda[i]);
+			i = i + 1;
+		} else {
+			resultado.push(derecha[j]);
+			j = j + 1;
+		}
+	}
+
+	return [...resultado, ...izquierda.slice(i), ...derecha.slice(j)];
+}
+
+function ordenarPorMezcla(lista) {
+	if (lista.length <= 1) {
+		return lista;
+	}
+
+	const mitad = Math.floor(lista.length / 2);
+	const izquierda = ordenarPorMezcla(lista.slice(0, mitad));
+	const derecha = ordenarPorMezcla(lista.slice(mitad));
+
+	return mezclar(izquierda, derecha);
+}
+
+console.log(ordenarPorMezcla([5, 2, 8, 1, 9, 3]).join(" ")); // "1 2 3 5 8 9"
+```
+
+La función es [recursiva](/articulos/recursividad/). El caso base es una lista de un elemento o ninguno, que ya está ordenada.
+
+### Por qué es más rápida
+
+La lista se divide por la mitad hasta llegar a trozos de un elemento, lo que da unos log n niveles. En cada nivel, mezclar todo cuesta n pasos. En total, O(n log n).
+
+Para un millón de elementos, eso son unos veinte millones de pasos, frente al billón de un algoritmo cuadrático.
+
+## Otros algoritmos conocidos
+
+- **Burbuja.** Compara cada par de vecinos y los intercambia si están desordenados, una y otra vez. O(n²). Se enseña por su sencillez y apenas se usa.
+- **Quicksort.** Elige un elemento, el pivote, coloca los menores a un lado y los mayores al otro, y ordena cada parte por separado. O(n log n) de media y muy rápido en la práctica; con una mala elección del pivote degenera en O(n²).
+
+| Algoritmo | Caso medio | Peor caso | Estable |
+| --- | --- | --- | --- |
+| Burbuja | O(n²) | O(n²) | Sí |
+| Inserción | O(n²) | O(n²) | Sí |
+| Mezcla | O(n log n) | O(n log n) | Sí |
+| Quicksort | O(n log n) | O(n²) | No, en su forma habitual |
+
+## Estabilidad
+
+Un algoritmo es **estable** si conserva el orden relativo de los elementos que son iguales según el criterio de ordenación.
+
+Importa al ordenar por varios criterios. Tienes una lista de personas ordenada por nombre y la ordenas por ciudad. Con un algoritmo estable, dentro de cada ciudad los nombres siguen en orden alfabético. Con uno inestable, ese orden puede perderse.
+
+<Quiz
+	client:visible
+	question="¿Cuál es la complejidad de la ordenación por mezcla?"
+	options={["O(n)", "O(n log n)", "O(n²)"]}
+	answer={1}
+/>
+
+## Ordenar en JavaScript
+
+El método `sort` de los arrays tiene una trampa conocida: si no se le indica cómo comparar, convierte los elementos en texto y los ordena alfabéticamente.
+
+```js
+console.log([10, 9, 1].sort().join(" ")); // "1 10 9"
+console.log([10, 9, 1].sort((a, b) => a - b).join(" ")); // "1 9 10"
+```
+
+Como texto, "10" va antes que "9", igual que "aa" va antes que "b". Para ordenar números hay que pasar una **función de comparación**. Recibe dos elementos y devuelve un número negativo si el primero va antes, positivo si va después y cero si da igual.
+
+`sort` modifica el array original. `toSorted` hace lo mismo y devuelve una copia ordenada sin tocarlo.
+
+## Cuál elegir
+
+- **En el trabajo normal**, la función de ordenación del lenguaje. Está muy optimizada y suele combinar varios algoritmos según el tamaño y la forma de los datos.
+- **Si necesitas estabilidad**, comprueba que la función que usas la garantiza. La de JavaScript es estable.
+- **Con datos muy particulares**, como enteros dentro de un rango pequeño, existen algoritmos que no comparan elementos entre sí y alcanzan O(n).
+
+Ningún algoritmo que ordene comparando elementos puede bajar de O(n log n) en el caso general. Es un límite demostrado, no una carencia de los algoritmos conocidos.
+
+## Lo esencial
+
+- Ordenar permite búsquedas rápidas y simplifica muchos problemas.
+- Los algoritmos sencillos, como inserción y burbuja, son O(n²); mezcla y quicksort son O(n log n).
+- La ordenación por mezcla divide, ordena cada mitad y mezcla los resultados.
+- Un algoritmo estable conserva el orden de los elementos iguales.
+- En JavaScript, `sort` necesita una función de comparación para ordenar números.

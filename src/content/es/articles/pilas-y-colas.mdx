@@ -1,0 +1,156 @@
+---
+title: "¿Qué son las pilas y las colas?"
+description: "Dos estructuras de datos que solo dejan añadir y sacar elementos en un orden fijo: la pila por el mismo extremo, la cola por extremos opuestos."
+level: basico
+layer: programacion
+prerequisites:
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "Pat Morin: Open Data Structures, libro de texto libre (en inglés)"
+    url: https://opendatastructures.org/
+  - title: "MIT OpenCourseWare: 6.006, Data Structures and Dynamic Arrays (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-2-data-structures-and-dynamic-arrays/
+  - title: "MDN: Array"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **pila** y una **cola** son estructuras de datos que guardan elementos en orden y solo permiten añadirlos y sacarlos de una manera concreta. En la pila, el último en entrar es el primero en salir. En la cola, sale primero el que entró primero.
+
+Una **estructura de datos** es una forma de organizar la información para que ciertas operaciones resulten cómodas y eficientes.
+
+## Por qué limitarse
+
+Un [array](/articulos/arrays/) permite leer y modificar cualquier posición. Una pila o una cola ofrecen menos. Parece una desventaja, pero no lo es:
+
+- Muchos problemas necesitan justo ese orden y nada más.
+- Al restringir las operaciones, el código expresa su intención y se evitan errores.
+- Las pocas operaciones permitidas pueden hacerse muy rápidas.
+
+## La pila
+
+Piensa en una pila de platos. Pones un plato encima y, cuando necesitas uno, coges el de arriba. No sacas uno del medio.
+
+Ese comportamiento se llama **LIFO** (*last in, first out*): el último en entrar es el primero en salir.
+
+| Operación | Nombre habitual | Qué hace |
+| --- | --- | --- |
+| Apilar | `push` | Añade un elemento encima |
+| Desapilar | `pop` | Quita y devuelve el de encima |
+| Consultar | `peek` | Mira el de encima sin quitarlo |
+
+En JavaScript, un array ya funciona como pila con `push` y `pop`:
+
+```js
+const pila = [];
+
+pila.push("a");
+pila.push("b");
+pila.push("c");
+
+console.log(pila.pop()); // "c"
+console.log(pila.pop()); // "b"
+console.log(pila[pila.length - 1]); // "a"
+```
+
+Los elementos salen en orden inverso al de entrada.
+
+### Dónde aparecen las pilas
+
+- **La pila de llamadas.** Cuando una función llama a otra, el programa apila por dónde iba. Al terminar la segunda, desapila y continúa. Es lo que hace posible la [recursividad](/articulos/recursividad/).
+- **Deshacer.** Cada acción se apila; deshacer saca la última.
+- **El botón de retroceso del navegador.** Cada página visitada se apila.
+- **Comprobar paréntesis.** Para saber si están bien emparejados en una expresión.
+
+Ese último caso muestra por qué el orden de la pila es justo el que hace falta:
+
+```js
+function estaEquilibrado(texto) {
+	const pila = [];
+	const parejas = { ")": "(", "]": "[" };
+
+	for (const caracter of texto) {
+		if (caracter === "(" || caracter === "[") {
+			pila.push(caracter);
+		} else if (caracter === ")" || caracter === "]") {
+			if (pila.pop() !== parejas[caracter]) {
+				return false;
+			}
+		}
+	}
+
+	return pila.length === 0;
+}
+
+console.log(estaEquilibrado("(a[b]c)")); // true
+console.log(estaEquilibrado("(a[b)c]")); // false
+```
+
+Cada símbolo de cierre debe corresponder al último de apertura que quedó pendiente, y ese es precisamente el que está encima de la pila.
+
+## La cola
+
+Una cola funciona como la de una tienda: se atiende a quien llegó primero, y quien llega se coloca al final.
+
+Ese comportamiento se llama **FIFO** (*first in, first out*): el primero en entrar es el primero en salir.
+
+| Operación | Nombre habitual | Qué hace |
+| --- | --- | --- |
+| Encolar | `enqueue` | Añade un elemento al final |
+| Desencolar | `dequeue` | Quita y devuelve el del principio |
+
+```js
+const cola = [];
+
+cola.push("a");
+cola.push("b");
+cola.push("c");
+
+console.log(cola.shift()); // "a"
+console.log(cola.shift()); // "b"
+```
+
+Los elementos salen en el mismo orden en que entraron.
+
+### Dónde aparecen las colas
+
+- **Tareas pendientes.** Los documentos que esperan en una impresora, las peticiones que aguardan a que un servidor quede libre.
+- **Mensajes entre sistemas.** Un servicio deja mensajes en una cola y otro los procesa a su ritmo.
+- **El planificador del sistema operativo**, que reparte el procesador entre los [procesos](/articulos/que-es-un-proceso/) que esperan turno.
+- **Recorridos por niveles** en árboles y grafos.
+
+<Quiz
+	client:visible
+	question="Añades los números 1, 2 y 3, en ese orden, a una pila. ¿Cuál sale primero?"
+	options={["El 1", "El 2", "El 3"]}
+	answer={2}
+/>
+
+## Comparación
+
+| | Pila | Cola |
+| --- | --- | --- |
+| Orden de salida | El último que entró | El primero que entró |
+| Siglas | LIFO | FIFO |
+| Se añade y se saca | Por el mismo extremo | Por extremos opuestos |
+| Imagen | Platos apilados | Fila de una tienda |
+
+## El coste de las operaciones
+
+En una pila hecha con un array, `push` y `pop` trabajan sobre el final y son inmediatas, de [complejidad](/articulos/complejidad-algoritmica/) O(1).
+
+En la cola del ejemplo hay un detalle: `shift` quita el primer elemento y obliga a mover todos los demás una posición. Su coste es O(n). Con pocas decenas de elementos no se nota; con colas grandes y muy usadas conviene otra implementación, como una [lista enlazada](/articulos/listas-enlazadas/), en la que sacar del principio es inmediato.
+
+## Variantes
+
+- **Cola doble** (*deque*): permite añadir y sacar por los dos extremos.
+- **Cola de prioridad**: no sale el más antiguo, sino el de mayor prioridad. Es la que usa una sala de urgencias.
+
+## Lo esencial
+
+- Una pila saca primero lo último que entró (LIFO); una cola, lo primero (FIFO).
+- La pila sostiene las llamadas a funciones y las operaciones de deshacer.
+- La cola ordena el trabajo pendiente y los mensajes entre sistemas.
+- Sus operaciones básicas deben ser de coste constante; depende de cómo se implementen.
