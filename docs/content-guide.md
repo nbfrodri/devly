@@ -65,8 +65,10 @@ Intercala una o dos preguntas de comprobación justo después de la idea que eva
 
 Todo artículo cita al menos una fuente en `sources`; sin ella el build falla. Se muestran al final, en "Fuentes y más información", y sirven para contrastar lo que dice el texto y para seguir leyendo.
 
-- Prefiere fuentes primarias y estables: documentación oficial (MDN, la del propio lenguaje o herramienta), especificaciones (RFC, W3C, ECMAScript) y, para conceptos generales, Wikipedia.
-- En español cuando exista una versión fiable; si no, en inglés.
+- Cita fuentes primarias y estables: especificaciones (RFC, W3C, ECMAScript), documentación oficial (MDN, la del propio lenguaje, sistema o herramienta), organismos de normalización (NIST) y libros de texto o artículos originales de acceso libre.
+- No cites Wikipedia ni otras enciclopedias de edición abierta: resumen otras fuentes y su contenido cambia. Si un artículo de Wikipedia te resulta útil, cita las fuentes en las que se apoya.
+- Si un sitio no deja comprobar el enlace, no lo cites.
+- En español cuando exista una versión fiable; si no, en inglés, indicándolo en el título.
 - Abre cada enlace antes de citarlo. No cites de memoria una URL.
 - El título dice qué es y de dónde viene: `"MDN: Funciones"`, `"RFC 791: Internet Protocol"`.
 
