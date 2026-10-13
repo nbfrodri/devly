@@ -1,0 +1,42 @@
+---
+import { type CollectionEntry, getCollection, getEntries } from "astro:content";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { LEVEL_LABELS } from "@/lib/levels";
+
+export async function getStaticPaths() {
+	const paths = await getCollection("paths");
+
+	return paths.map((path) => ({
+		params: { id: path.id },
+		props: { path },
+	}));
+}
+
+type Props = {
+	path: CollectionEntry<"paths">;
+};
+
+const { path } = Astro.props;
+const steps = await getEntries(path.data.steps);
+const isPublishable = (step: (typeof steps)[number] | undefined) =>
+	step !== undefined && (import.meta.env.DEV || !step.data.draft);
+
+if (!steps.every(isPublishable)) {
+	throw new Error(`Path "${path.id}" references a missing or draft article.`);
+}
+---
+
+<BaseLayout title={path.data.title} description={path.data.description}>
+	<h1>{path.data.title}</h1>
+	<p>{path.data.description}</p>
+	<ol>
+		{
+			steps.map((step) => (
+				<li>
+					<a href={`/articulos/${step.id}/`}>{step.data.title}</a>
+					<span>{LEVEL_LABELS[step.data.level]}</span>
+				</li>
+			))
+		}
+	</ol>
+</BaseLayout>

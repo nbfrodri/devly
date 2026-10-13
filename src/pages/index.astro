@@ -1,0 +1,41 @@
+---
+import { getCollection } from "astro:content";
+import Search from "@/components/search.astro";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { getPublishedArticles } from "@/lib/content";
+import { LEVEL_LABELS } from "@/lib/levels";
+
+const articles = await getPublishedArticles();
+const paths = await getCollection("paths");
+---
+
+<BaseLayout
+	title="Inicio"
+	description="Explicaciones de informática, desarrollo y tecnología, de lo más básico a lo más complejo."
+>
+	<h1>devly</h1>
+	<Search />
+
+	<h2>Rutas de aprendizaje</h2>
+	<ul>
+		{
+			paths.map((path) => (
+				<li>
+					<a href={`/rutas/${path.id}/`}>{path.data.title}</a>
+				</li>
+			))
+		}
+	</ul>
+
+	<h2>Artículos</h2>
+	<ul>
+		{
+			articles.map((article) => (
+				<li>
+					<a href={`/articulos/${article.id}/`}>{article.data.title}</a>
+					<span>{LEVEL_LABELS[article.data.level]}</span>
+				</li>
+			))
+		}
+	</ul>
+</BaseLayout>

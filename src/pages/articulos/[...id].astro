@@ -1,0 +1,47 @@
+---
+import { getEntries, render } from "astro:content";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { type Article, getPublishedArticles } from "@/lib/content";
+import { LEVEL_LABELS } from "@/lib/levels";
+
+export async function getStaticPaths() {
+	const articles = await getPublishedArticles();
+
+	return articles.map((article) => ({
+		params: { id: article.id },
+		props: { article },
+	}));
+}
+
+type Props = {
+	article: Article;
+};
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+const prerequisites = await getEntries(article.data.prerequisites);
+---
+
+<BaseLayout title={article.data.title} description={article.data.description}>
+	<article data-pagefind-body>
+		<h1>{article.data.title}</h1>
+		<p>{LEVEL_LABELS[article.data.level]}</p>
+		{
+			prerequisites.length > 0 && (
+				<aside>
+					<h2>Antes de leer esto</h2>
+					<ul>
+						{prerequisites.map((prerequisite) => (
+							<li>
+								<a href={`/articulos/${prerequisite.id}/`}>
+									{prerequisite.data.title}
+								</a>
+							</li>
+						))}
+					</ul>
+				</aside>
+			)
+		}
+		<Content />
+	</article>
+</BaseLayout>

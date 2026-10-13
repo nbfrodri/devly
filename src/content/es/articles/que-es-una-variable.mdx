@@ -1,0 +1,27 @@
+---
+title: ¿Qué es una variable?
+description: El concepto más básico de la programación, un nombre que guarda un valor.
+level: basico
+topic: programacion
+updated: 2026-10-13
+draft: false
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **variable** es un nombre que apunta a un valor guardado en memoria. En lugar
+de recordar el valor, recuerdas el nombre.
+
+```js
+let edad = 30;
+edad = 31;
+```
+
+Aquí `edad` es la variable. Primero guarda `30` y después pasa a guardar `31`.
+
+<Quiz
+	client:visible
+	question="Después de ejecutar el código anterior, ¿cuánto vale edad?"
+	options={["30", "31", "61"]}
+	answer={1}
+/>
