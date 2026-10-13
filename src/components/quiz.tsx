@@ -27,9 +27,9 @@ export function Quiz({ question, options, answer }: QuizProps) {
 				))}
 			</div>
 			{selected !== null && (
-				<p className="quiz-result" role="status" data-correct={isCorrect}>
+				<output className="quiz-result" data-correct={isCorrect}>
 					{isCorrect ? "Correcto." : "No es correcto, prueba otra vez."}
-				</p>
+				</output>
 			)}
 		</fieldset>
 	);
