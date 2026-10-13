@@ -1,0 +1,9 @@
+title: Sistemas operativos a fondo
+description: Cómo gestiona el sistema la memoria y los archivos, y cómo se maneja desde la terminal.
+layer: sistemas
+steps:
+  - que-es-un-sistema-operativo
+  - que-es-un-proceso
+  - memoria-virtual
+  - sistema-de-archivos
+  - terminal-y-shell

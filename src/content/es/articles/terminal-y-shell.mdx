@@ -1,0 +1,177 @@
+---
+title: "¿Qué son la terminal y la shell?"
+description: "La terminal es la ventana donde se escriben órdenes; la shell es el programa que las interpreta y las ejecuta."
+level: basico
+layer: sistemas
+prerequisites:
+  - sistema-de-archivos
+updated: 2026-10-13
+sources:
+  - title: "GNU Bash Reference Manual (en inglés)"
+    url: https://www.gnu.org/software/bash/manual/bash.html
+  - title: "The Open Group: POSIX, Shell Command Language (en inglés)"
+    url: https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **terminal** es el programa que muestra una ventana de texto donde se escriben órdenes. La **shell** es el programa que lee esas órdenes, las interpreta y las ejecuta. Juntas forman la **línea de órdenes**: una manera de manejar el ordenador escribiendo en lugar de pulsando botones.
+
+## Por qué sigue usándose
+
+Una interfaz gráfica es más fácil de descubrir. La línea de órdenes compensa con otras ventajas:
+
+- **Se puede automatizar.** Una serie de órdenes se guarda en un archivo y se repite cuando haga falta, sin intervención.
+- **Se puede combinar.** La salida de un programa sirve de entrada a otro.
+- **Es precisa y reproducible.** "Ejecuta esta orden" no deja dudas; "pulsa aquí y luego allá" sí.
+- **Funciona en remoto.** Los servidores suelen manejarse así, a menudo sin pantalla.
+- **Muchas herramientas de desarrollo solo existen así**, como [Git](/articulos/control-de-versiones-con-git/).
+
+## Terminal, shell y órdenes
+
+Se confunden porque siempre se usan juntas:
+
+| Pieza | Qué es | Ejemplos |
+| --- | --- | --- |
+| Terminal | La ventana que muestra texto y recoge el teclado | La aplicación Terminal, la de un editor de código |
+| Shell | El programa que interpreta lo que escribes | Bash, Zsh, PowerShell |
+| Orden | Un programa que la shell ejecuta | `ls`, `git`, `node` |
+
+Los ejemplos de este artículo valen para Bash y Zsh, las shells habituales en Linux y macOS.
+
+## Anatomía de una orden
+
+```bash
+ls -l documentos
+```
+
+- `ls` es la **orden**: el programa que se ejecuta. Lista el contenido de un directorio.
+- `-l` es una **opción**: cambia su comportamiento. Aquí pide el formato detallado.
+- `documentos` es un **argumento**: sobre qué actúa.
+
+Las opciones cortas llevan un guion y una letra, y se pueden juntar: `-la`. Las largas llevan dos guiones y una palabra: `--all`.
+
+La shell muestra un indicador, el *prompt*, cuando está lista para recibir una orden. Suele terminar en `$`.
+
+## Moverse y manejar archivos
+
+La shell siempre está situada en un directorio del [sistema de archivos](/articulos/sistema-de-archivos/), el **directorio de trabajo**. Las rutas relativas se interpretan desde ahí.
+
+| Orden | Qué hace |
+| --- | --- |
+| `pwd` | Muestra el directorio de trabajo |
+| `ls` | Lista el contenido de un directorio |
+| `cd carpeta` | Cambia de directorio |
+| `mkdir carpeta` | Crea un directorio |
+| `cp origen destino` | Copia |
+| `mv origen destino` | Mueve o cambia de nombre |
+| `rm archivo` | Borra |
+| `cat archivo` | Muestra el contenido |
+
+```bash
+mkdir proyecto
+cd proyecto
+echo "hola" > saludo.txt
+cat saludo.txt
+```
+
+Las cuatro líneas crean un directorio, entran en él, crean un archivo con la palabra "hola" y muestran su contenido.
+
+Un aviso serio: `rm` borra sin pasar por la papelera. No hay deshacer.
+
+## Redirecciones y tuberías
+
+Cada programa tiene tres canales: una **entrada estándar**, una **salida estándar** y una **salida de errores**. Por defecto están conectados al teclado y a la pantalla, y la shell permite cambiarlo.
+
+| Símbolo | Efecto |
+| --- | --- |
+| `>` | Envía la salida a un archivo, sustituyendo su contenido |
+| `>>` | La añade al final del archivo |
+| `<` | Toma la entrada de un archivo |
+| `\|` | Conecta la salida de una orden con la entrada de la siguiente |
+
+La barra vertical es la **tubería** (*pipe*), y es la idea más potente de la shell:
+
+```bash
+cat acceso.log | grep "error" | wc -l
+```
+
+`cat` muestra el archivo, `grep` se queda con las líneas que contienen "error" y `wc -l` las cuenta. Tres programas pequeños, cada uno con una sola tarea, encadenados para resolver algo que ninguno hace por separado.
+
+Es una forma de diseño: herramientas simples que hacen bien una cosa y se combinan.
+
+<Quiz
+	client:visible
+	question="¿Qué hace el símbolo | entre dos órdenes?"
+	options={[
+		"Ejecuta la segunda solo si la primera falla",
+		"Envía la salida de la primera como entrada de la segunda",
+		"Guarda la salida de la primera en un archivo",
+	]}
+	answer={1}
+/>
+
+## Variables de entorno
+
+La shell guarda **variables**: pares de nombre y valor que los programas pueden consultar. Se leen con `$`:
+
+```bash
+NOMBRE="Ana"
+echo "Hola, $NOMBRE"
+```
+
+Algunas las define el sistema. La más importante es `PATH`: la lista de directorios donde la shell busca los programas. Cuando escribes `git`, recorre esos directorios hasta encontrar un ejecutable con ese nombre. Si una orden recién instalada "no se encuentra", casi siempre es que su directorio no está en `PATH`.
+
+Las variables de entorno son también la forma habitual de pasar configuración a un programa sin escribirla en el código, como la dirección de una base de datos.
+
+## Saber si algo ha ido bien
+
+Al terminar, cada orden devuelve un número, su **código de salida**. Cero significa que todo fue bien; cualquier otro valor indica un error.
+
+Con eso se encadenan órdenes según el resultado:
+
+```bash
+mkdir datos && cd datos
+```
+
+`&&` ejecuta la segunda orden solo si la primera tuvo éxito. `||` hace lo contrario: la ejecuta solo si la primera falló.
+
+## Guiones
+
+Una serie de órdenes guardada en un archivo es un **guion** o *script*:
+
+```bash
+#!/bin/bash
+set -e
+
+echo "Instalando dependencias"
+npm install
+
+echo "Ejecutando pruebas"
+npm test
+```
+
+La primera línea indica con qué programa se ejecuta. `set -e` hace que el guion se detenga en cuanto una orden falle, en lugar de seguir adelante.
+
+Así se automatizan tareas repetitivas, y así funcionan por dentro los [pipelines de integración continua](/articulos/integracion-y-despliegue-continuos/).
+
+## Pedir ayuda
+
+- `man orden` muestra el manual.
+- `orden --help` muestra un resumen de sus opciones.
+- La tecla de tabulación completa nombres de órdenes y de archivos.
+- La flecha hacia arriba recupera órdenes anteriores.
+
+## Precauciones
+
+- **No ejecutar órdenes que no se entienden**, sobre todo si se han copiado de internet.
+- **Cuidado con `sudo`**, que ejecuta una orden con permisos de administrador.
+- **Comprobar las rutas antes de borrar.** Un espacio de más en una orden de borrado puede eliminar lo que no era.
+
+## Lo esencial
+
+- La terminal muestra el texto; la shell interpreta las órdenes.
+- Una orden tiene nombre, opciones y argumentos.
+- Las tuberías conectan la salida de un programa con la entrada de otro.
+- `PATH` indica dónde se buscan los programas, y el código de salida dice si una orden tuvo éxito.
+- Un guion guarda una serie de órdenes para repetirlas.

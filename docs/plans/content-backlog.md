@@ -26,7 +26,7 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 - [x] Listas enlazadas
 - [x] Tablas hash
 - [x] Árboles y árboles binarios de búsqueda
-- [ ] Grafos
+- [x] Grafos
 - [x] Algoritmos de ordenación
 - [x] ¿Qué es la programación funcional?
 - [x] Diferencias entre tipado estático y dinámico
@@ -36,16 +36,16 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 
 - [x] Hilos y concurrencia
 - [x] Condiciones de carrera y bloqueos
-- [ ] ¿Qué es la memoria virtual?
-- [ ] ¿Qué es un sistema de archivos?
-- [ ] La terminal y la shell
+- [x] ¿Qué es la memoria virtual?
+- [x] ¿Qué es un sistema de archivos?
+- [x] La terminal y la shell
 - [x] Diferencias entre contenedores y máquinas virtuales
 
 ## Redes
 
-- [ ] La capa de enlace: Ethernet y direcciones MAC
-- [ ] La capa de red: cómo se enruta un paquete
-- [ ] ¿Qué son los WebSockets?
+- [x] La capa de enlace: Ethernet y direcciones MAC
+- [x] La capa de red: cómo se enruta un paquete
+- [x] ¿Qué son los WebSockets?
 
 ## Aplicaciones e ingeniería del software
 

@@ -1,0 +1,152 @@
+---
+title: "¿Qué son los WebSockets?"
+description: "Un WebSocket es una conexión permanente entre navegador y servidor por la que ambos pueden enviarse mensajes en cualquier momento."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-http
+  - tcp-y-udp
+updated: 2026-10-13
+sources:
+  - title: "RFC 6455: The WebSocket Protocol"
+    url: https://www.rfc-editor.org/info/rfc6455/
+  - title: "MDN: La API de WebSocket"
+    url: https://developer.mozilla.org/es/docs/Web/API/WebSockets_API
+  - title: "MDN: WebSocket"
+    url: https://developer.mozilla.org/es/docs/Web/API/WebSocket
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **WebSocket** es una conexión que se mantiene abierta entre un navegador y un servidor, por la que cualquiera de los dos puede enviar mensajes al otro en cualquier momento. Sirve para aplicaciones que necesitan actualizarse al instante, como un chat.
+
+## Qué problema resuelve
+
+[HTTP](/articulos/que-es-http/) funciona con preguntas y respuestas: el cliente pide y el servidor contesta. El servidor nunca habla primero.
+
+Para un chat eso es un obstáculo. Cuando otra persona te escribe, el servidor tiene el mensaje pero no tiene forma de avisarte: debe esperar a que tu navegador pregunte.
+
+Antes de los WebSockets se recurría a trucos:
+
+- **Sondeo** (*polling*). El navegador pregunta cada pocos segundos si hay algo nuevo. Casi todas las peticiones son inútiles, y los mensajes llegan con retraso.
+- **Sondeo largo** (*long polling*). El servidor retiene la petición sin contestar hasta que tiene algo que decir. Mejora el retraso, pero hay que abrir una petición nueva tras cada respuesta.
+
+Los dos funcionan y los dos desperdician recursos. Un WebSocket ofrece lo que hacía falta: un canal abierto en los dos sentidos.
+
+## Cómo se establece
+
+Un WebSocket empieza como una petición HTTP normal, con unas cabeceras que piden cambiar de protocolo:
+
+```
+GET /chat HTTP/1.1
+Host: ejemplo.com
+Upgrade: websocket
+Connection: Upgrade
+```
+
+Si el servidor acepta, responde con el código `101 Switching Protocols`. A partir de ese momento, la misma conexión [TCP](/articulos/tcp-y-udp/) deja de hablar HTTP y pasa a transportar mensajes de WebSocket.
+
+Empezar con HTTP no es un capricho. Permite que los WebSockets usen los mismos puertos que la web, el 80 y el 443, y atraviesen la infraestructura existente sin configuración especial.
+
+Las direcciones usan su propio esquema:
+
+| Esquema | Significado |
+| --- | --- |
+| `ws://` | Sin cifrar |
+| `wss://` | Cifrado con [TLS](/articulos/https-y-tls/), el equivalente a HTTPS |
+
+En producción debe usarse siempre `wss://`.
+
+## Cómo funciona después
+
+Una vez abierta, la conexión es:
+
+- **Bidireccional.** El cliente y el servidor pueden enviar.
+- **Simultánea.** Los dos pueden hacerlo a la vez, sin esperar turno.
+- **Persistente.** Sigue abierta hasta que una de las partes la cierra.
+- **Ligera.** Cada mensaje lleva una cabecera de unos pocos bytes, frente a las cabeceras completas de cada petición HTTP.
+
+Los datos viajan en **mensajes**, que pueden ser de texto o binarios. A diferencia de TCP, que entrega un flujo continuo de bytes, un WebSocket conserva los límites: lo que se envía como un mensaje se recibe como un mensaje.
+
+## En el navegador
+
+El navegador ofrece un objeto `WebSocket`. Se trabaja reaccionando a eventos:
+
+```js
+function conectar(direccion) {
+	const conexion = new WebSocket(direccion);
+
+	conexion.addEventListener("open", () => {
+		conexion.send("Hola");
+	});
+
+	conexion.addEventListener("message", (evento) => {
+		console.log("Recibido:", evento.data);
+	});
+
+	conexion.addEventListener("close", () => {
+		console.log("Conexión cerrada");
+	});
+
+	return conexion;
+}
+
+console.log(typeof conectar); // "function"
+```
+
+- `open` se dispara cuando la conexión está lista.
+- `message`, cada vez que llega un mensaje del servidor.
+- `close`, cuando se cierra.
+- `send` envía un mensaje.
+
+El ejemplo define la función sin llamarla, porque para conectarse hace falta un servidor real.
+
+<Quiz
+	client:visible
+	question="¿Qué puede hacer un servidor con un WebSocket que no puede hacer con HTTP normal?"
+	options={[
+		"Enviar datos cifrados",
+		"Enviar un mensaje al cliente sin que este lo haya pedido",
+		"Responder más rápido a una petición",
+	]}
+	answer={1}
+/>
+
+## Para qué se usan
+
+- **Chats y mensajería.**
+- **Edición colaborativa**, en la que varias personas ven los cambios de las demás mientras escriben.
+- **Juegos en línea.**
+- **Paneles con datos en vivo**: cotizaciones, métricas, resultados deportivos.
+- **Notificaciones** inmediatas.
+
+## Lo que cuestan
+
+Una conexión permanente cambia cómo hay que construir el servidor.
+
+- **El servidor mantiene estado.** Cada cliente conectado ocupa una conexión abierta y memoria. Deja de ser [stateless](/articulos/stateful-y-stateless/), con lo que eso complica.
+- **Repartir entre servidores es más difícil.** Si dos personas del mismo chat están conectadas a servidores distintos, esos servidores necesitan un mecanismo para pasarse los mensajes.
+- **Las conexiones se caen.** Una red móvil que cambia, un portátil que se suspende. La aplicación tiene que detectar el corte, reconectar y recuperar lo que se perdió mientras tanto.
+- **La autenticación va aparte.** La identidad se comprueba al abrir la conexión, y hay que decidir qué pasa si la sesión caduca mientras sigue abierta.
+
+## Alternativas
+
+No todo lo "en tiempo real" necesita un WebSocket.
+
+| Técnica | Sentido | Cuándo conviene |
+| --- | --- | --- |
+| Sondeo | El cliente pregunta | Datos que cambian poco; lo más simple |
+| Eventos enviados por el servidor (SSE) | Solo del servidor al cliente | Notificaciones y datos en vivo que el usuario solo recibe |
+| WebSocket | Los dos | Interacción continua en ambas direcciones |
+
+Los **eventos enviados por el servidor** funcionan sobre HTTP corriente y reconectan solos. Si los datos solo van del servidor al navegador, suelen ser la opción más sencilla.
+
+La regla práctica: empezar por lo más simple que resuelva el problema, y pasar a WebSockets cuando de verdad haga falta enviar con frecuencia en los dos sentidos.
+
+## Lo esencial
+
+- Un WebSocket es una conexión persistente y bidireccional entre cliente y servidor.
+- Se abre con una petición HTTP que pide cambiar de protocolo.
+- Permite al servidor enviar datos sin que el cliente los pida.
+- Obliga a gestionar conexiones abiertas, reconexiones y reparto entre servidores.
+- Para datos que solo van del servidor al cliente, los eventos enviados por el servidor suelen bastar.

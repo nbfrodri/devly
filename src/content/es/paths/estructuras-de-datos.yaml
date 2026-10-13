@@ -7,3 +7,4 @@ steps:
   - listas-enlazadas
   - tablas-hash
   - arboles-binarios-de-busqueda
+  - grafos

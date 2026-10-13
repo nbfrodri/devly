@@ -1,0 +1,134 @@
+---
+title: "¿Qué es la memoria virtual?"
+description: "La memoria virtual hace creer a cada proceso que tiene toda la memoria para él, y el sistema operativo traduce esas direcciones a memoria real."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - que-es-un-proceso
+updated: 2026-10-13
+sources:
+  - title: "Operating Systems: Three Easy Pieces, The Abstraction: Address Spaces (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-intro.pdf
+  - title: "Operating Systems: Three Easy Pieces, Paging: Introduction (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf
+  - title: "Operating Systems: Three Easy Pieces, Beyond Physical Memory: Mechanisms (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **memoria virtual** es una técnica del sistema operativo que da a cada [proceso](/articulos/que-es-un-proceso/) la ilusión de tener para él solo un bloque de memoria grande y continuo. Las direcciones que usa el programa no son las de la memoria real: el sistema las traduce sobre la marcha.
+
+## Qué problema resuelve
+
+La memoria física, la RAM, es una sola y la comparten todos los programas. Si cada programa usara directamente direcciones reales, habría tres problemas:
+
+- **Colisiones.** Dos programas podrían querer la misma dirección.
+- **Falta de protección.** Un programa podría leer o sobrescribir la memoria de otro, o la del sistema.
+- **Límite rígido.** No cabrían más programas de los que entran en la RAM.
+
+La memoria virtual resuelve los tres con una capa de traducción entre lo que el programa cree que usa y lo que realmente ocupa.
+
+## Dos tipos de direcciones
+
+- Una **dirección virtual** es la que ve el programa. Cada proceso tiene su propio conjunto, su **espacio de direcciones**, que empieza en cero.
+- Una **dirección física** es una posición real en los chips de memoria.
+
+Dos procesos pueden usar la misma dirección virtual sin estorbarse, porque cada una se traduce a una dirección física distinta.
+
+Es parecido a los números de habitación de dos hoteles: la 101 existe en los dos, pero son habitaciones diferentes.
+
+## Páginas y marcos
+
+Traducir dirección a dirección sería inmanejable. La memoria se divide en bloques de tamaño fijo:
+
+- El espacio virtual se divide en **páginas**.
+- La memoria física se divide en **marcos**, del mismo tamaño.
+
+Un tamaño habitual es de 4 kilobytes. La traducción se hace por páginas enteras: cada página virtual se asocia a un marco físico.
+
+Las páginas de un proceso no tienen que estar juntas ni en orden en la memoria física. Lo que el programa ve como un bloque continuo puede estar repartido por toda la RAM.
+
+## La tabla de páginas
+
+Cada proceso tiene una **tabla de páginas**, donde el sistema operativo anota en qué marco está cada página:
+
+| Página virtual | Marco físico |
+| --- | --- |
+| 0 | 5 |
+| 1 | 2 |
+| 2 | No está en memoria |
+
+Una dirección se divide en dos partes: el número de página y el **desplazamiento** dentro de ella. Para traducir, se cambia el número de página por el de marco y se conserva el desplazamiento.
+
+```js
+const TAMANO_DE_PAGINA = 4096;
+const tablaDePaginas = { 0: 5, 1: 2 };
+
+function traducir(direccionVirtual) {
+	const pagina = Math.floor(direccionVirtual / TAMANO_DE_PAGINA);
+	const desplazamiento = direccionVirtual % TAMANO_DE_PAGINA;
+	const marco = tablaDePaginas[pagina];
+
+	if (marco === undefined) {
+		return "fallo de página";
+	}
+
+	return marco * TAMANO_DE_PAGINA + desplazamiento;
+}
+
+console.log(traducir(100)); // 20580
+console.log(traducir(4100)); // 8196
+console.log(traducir(9000)); // "fallo de página"
+```
+
+La dirección 100 está en la página 0, con desplazamiento 100. La página 0 está en el marco 5, así que la dirección física es 5 × 4096 + 100.
+
+### Quién hace la traducción
+
+Esta operación ocurre en cada acceso a memoria, millones de veces por segundo. Hacerla por software sería lentísimo, así que la realiza un componente del [procesador](/articulos/como-funciona-un-procesador/), la **unidad de gestión de memoria** (MMU).
+
+Para no consultar la tabla en cada acceso, el procesador guarda las traducciones recientes en una caché pequeña y muy rápida, la **TLB**. Como los programas suelen usar las mismas páginas una y otra vez, casi todas las traducciones se resuelven ahí.
+
+## Más memoria de la que hay
+
+No todas las páginas de un proceso tienen que estar en la RAM. Las que llevan tiempo sin usarse pueden guardarse en el disco, en una zona llamada **espacio de intercambio** o *swap*, y dejar su marco libre para otra.
+
+Cuando un programa accede a una página que no está en memoria se produce un **fallo de página**:
+
+1. El procesador avisa al sistema operativo.
+2. El sistema busca un marco libre. Si no hay, elige una página poco usada y la lleva al disco.
+3. Carga desde el disco la página pedida.
+4. Actualiza la tabla de páginas.
+5. El programa continúa sin enterarse.
+
+Así, la suma de la memoria que usan todos los procesos puede superar la RAM instalada.
+
+### El precio
+
+El disco es muchísimo más lento que la memoria. Unos pocos fallos de página no se notan. Pero si la memoria se queda corta y el sistema pasa más tiempo moviendo páginas entre el disco y la RAM que ejecutando programas, todo se vuelve lentísimo. A esa situación se la llama **hiperpaginación** (*thrashing*), y es la razón de que un ordenador con poca memoria vaya "a tirones".
+
+<Quiz
+	client:visible
+	question="¿Qué ocurre cuando un programa accede a una página que no está en la memoria física?"
+	options={[
+		"El programa se cierra con un error",
+		"Se produce un fallo de página y el sistema la carga desde el disco",
+		"El procesador la ignora",
+	]}
+	answer={1}
+/>
+
+## Qué más se consigue
+
+- **Aislamiento.** Un proceso no puede nombrar siquiera la memoria de otro: sus direcciones virtuales solo se traducen a sus propios marcos. Si intenta acceder a una dirección que no tiene asignada, el sistema lo detiene.
+- **Permisos por página.** Cada página puede marcarse como de solo lectura, de escritura o ejecutable. Impedir que los datos se ejecuten como código frena una clase entera de ataques.
+- **Compartir sin copiar.** Si diez programas usan la misma biblioteca, sus tablas apuntan a los mismos marcos. Está una sola vez en memoria.
+- **Reservar sin gastar.** Un programa puede pedir mucha memoria; el sistema solo le asigna marcos reales cuando la usa.
+
+## Lo esencial
+
+- Cada proceso trabaja con direcciones virtuales, que el sistema traduce a direcciones físicas.
+- La memoria se gestiona en páginas y marcos, relacionados mediante la tabla de páginas.
+- La traducción la hace el procesador, con ayuda de una caché de traducciones.
+- Las páginas poco usadas pueden ir al disco, lo que permite usar más memoria de la instalada a costa de velocidad.

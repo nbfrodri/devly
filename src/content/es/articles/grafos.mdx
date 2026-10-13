@@ -1,0 +1,193 @@
+---
+title: "¿Qué es un grafo?"
+description: "Un grafo representa elementos y las conexiones entre ellos. Sirve para modelar redes de cualquier tipo."
+level: intermedio
+layer: programacion
+prerequisites:
+  - arboles-binarios-de-busqueda
+  - pilas-y-colas
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare: 6.006, Breadth-First Search (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-9-breadth-first-search/
+  - title: "MIT OpenCourseWare: 6.006, Depth-First Search (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-10-depth-first-search/
+  - title: "Pat Morin: Open Data Structures, libro de texto libre (en inglés)"
+    url: https://opendatastructures.org/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **grafo** es una estructura de datos formada por **nodos** y por las **aristas** que los conectan. Representa cosas y las relaciones entre ellas: ciudades y carreteras, personas y amistades, páginas web y enlaces.
+
+A los nodos también se les llama vértices.
+
+## Qué problema resuelve
+
+Las estructuras vistas hasta ahora imponen una forma. Un [array](/articulos/arrays/) es una fila. Un [árbol](/articulos/arboles-binarios-de-busqueda/) es una jerarquía en la que cada nodo tiene un solo padre.
+
+Muchas relaciones reales no encajan ahí. En una red de carreteras no hay un "padre", y entre dos ciudades puede haber varios caminos. Un grafo no impone restricciones: cualquier nodo puede estar conectado con cualquier otro.
+
+Un árbol es, de hecho, un caso particular de grafo: uno conectado y sin ciclos.
+
+## Tipos de grafos
+
+- **No dirigido**: las conexiones van en los dos sentidos. Si Ana es amiga de Luis, Luis lo es de Ana.
+- **Dirigido**: cada arista tiene un sentido. Que Ana siga a Luis en una red social no implica lo contrario.
+- **Ponderado**: cada arista lleva un número, su **peso**: una distancia, un coste, un tiempo.
+- **Cíclico o acíclico**: según si se puede salir de un nodo y volver a él siguiendo aristas. Un **ciclo** es ese camino cerrado.
+
+## Cómo se representan
+
+### Lista de adyacencia
+
+Para cada nodo se guarda la lista de sus vecinos. Es la forma más usada.
+
+```js
+const grafo = {
+	A: ["B", "C"],
+	B: ["A", "D"],
+	C: ["A", "D"],
+	D: ["B", "C", "E"],
+	E: ["D"],
+};
+
+console.log(grafo.D.length); // 3
+console.log(grafo.A.includes("B")); // true
+```
+
+Ocupa espacio proporcional al número de nodos más el de aristas, y permite recorrer los vecinos de un nodo directamente.
+
+### Matriz de adyacencia
+
+Una tabla con una fila y una columna por nodo. La casilla indica si existe arista entre los dos.
+
+| | A | B | C |
+| --- | --- | --- | --- |
+| **A** | 0 | 1 | 1 |
+| **B** | 1 | 0 | 0 |
+| **C** | 1 | 0 | 0 |
+
+Comprobar si dos nodos están conectados es inmediato, pero la tabla ocupa el cuadrado del número de nodos. Conviene cuando el grafo tiene muchas aristas; la mayoría de los grafos reales tienen pocas en comparación con las posibles, y por eso se prefiere la lista.
+
+## Recorrer un grafo
+
+Hay dos estrategias básicas. Las dos necesitan recordar qué nodos se han visitado, porque en un grafo puede haber ciclos y sin esa precaución el recorrido daría vueltas sin fin.
+
+### En anchura
+
+La **búsqueda en anchura** (BFS) visita primero todos los vecinos del nodo inicial, después los vecinos de esos, y así por niveles, como una onda que se extiende.
+
+Usa una [cola](/articulos/pilas-y-colas/): los nodos se exploran en el orden en que se descubren.
+
+Su propiedad más útil: en un grafo sin pesos, encuentra el **camino más corto**, el que tiene menos aristas.
+
+```js
+const grafo = {
+	A: ["B", "C"],
+	B: ["A", "D"],
+	C: ["A", "D"],
+	D: ["B", "C", "E"],
+	E: ["D"],
+};
+
+function caminoMasCorto(inicio, destino) {
+	const cola = [[inicio]];
+	const visitados = new Set([inicio]);
+
+	while (cola.length > 0) {
+		const camino = cola.shift();
+		const nodo = camino[camino.length - 1];
+
+		if (nodo === destino) {
+			return camino;
+		}
+
+		for (const vecino of grafo[nodo]) {
+			if (!visitados.has(vecino)) {
+				visitados.add(vecino);
+				cola.push([...camino, vecino]);
+			}
+		}
+	}
+
+	return null;
+}
+
+console.log(caminoMasCorto("A", "E").join(" ")); // "A B D E"
+```
+
+### En profundidad
+
+La **búsqueda en profundidad** (DFS) avanza por un camino todo lo que puede y, cuando no hay más por donde seguir, retrocede y prueba otra rama. Es como recorrer un laberinto siguiendo siempre una pared.
+
+Usa una pila o, lo que es equivalente, [recursividad](/articulos/recursividad/).
+
+```js
+const grafo = {
+	A: ["B", "C"],
+	B: ["A", "D"],
+	C: ["A", "D"],
+	D: ["B", "C", "E"],
+	E: ["D"],
+};
+
+function recorrer(nodo, visitados = []) {
+	visitados.push(nodo);
+
+	for (const vecino of grafo[nodo]) {
+		if (!visitados.includes(vecino)) {
+			recorrer(vecino, visitados);
+		}
+	}
+
+	return visitados;
+}
+
+console.log(recorrer("A").join(" ")); // "A B D C E"
+```
+
+| | En anchura | En profundidad |
+| --- | --- | --- |
+| Estructura | Cola | Pila o recursividad |
+| Orden | Por niveles | Por ramas |
+| Sirve para | El camino más corto sin pesos | Detectar ciclos, ordenar dependencias |
+
+Las dos visitan cada nodo y cada arista una vez, así que su [complejidad](/articulos/complejidad-algoritmica/) es proporcional al tamaño del grafo.
+
+<Quiz
+	client:visible
+	question="¿Qué recorrido encuentra el camino con menos aristas en un grafo sin pesos?"
+	options={["En anchura", "En profundidad", "Cualquiera de los dos"]}
+	answer={0}
+/>
+
+## Problemas clásicos
+
+- **Camino más corto con pesos.** Cuando las aristas tienen distancias, la búsqueda en anchura no basta. El algoritmo de Dijkstra lo resuelve, y es la base de los navegadores de rutas.
+- **Ordenación topológica.** En un grafo dirigido sin ciclos, ordenar los nodos de modo que cada uno vaya después de aquellos de los que depende. Es lo que hace un gestor de paquetes al decidir en qué orden instalar.
+- **Detección de ciclos.** Para saber, por ejemplo, si hay dependencias circulares.
+- **Árbol de expansión mínima.** Conectar todos los nodos con el menor coste total.
+
+## Dónde aparecen
+
+- **Redes sociales**: personas y relaciones.
+- **Mapas**: cruces y calles, con distancias como pesos.
+- **Internet**: los routers y sus enlaces forman un grafo, sobre el que se decide [por dónde enviar cada paquete](/articulos/enrutamiento/).
+- **La web**: páginas y enlaces.
+- **Dependencias**: entre paquetes de software o entre tareas de un proyecto.
+
+Las bases de datos de grafos, una de las familias [NoSQL](/articulos/bases-de-datos-nosql/), guardan los datos directamente con esta forma.
+
+## Errores comunes
+
+- **No marcar los nodos visitados.** Con ciclos, el recorrido no termina.
+- **Usar la búsqueda en anchura con pesos.** Devuelve el camino con menos aristas, que no es necesariamente el más corto.
+- **Elegir la matriz para un grafo grande con pocas aristas.** Desperdicia memoria.
+
+## Lo esencial
+
+- Un grafo son nodos unidos por aristas, sin restricciones de forma.
+- Puede ser dirigido o no, y llevar pesos.
+- Se suele guardar como lista de adyacencia.
+- La búsqueda en anchura recorre por niveles y halla el camino más corto sin pesos; la búsqueda en profundidad recorre por ramas.

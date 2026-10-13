@@ -1,0 +1,152 @@
+---
+title: "¿Cómo se enruta un paquete en internet?"
+description: "El enrutamiento es el proceso por el que cada router decide hacia dónde reenviar un paquete para acercarlo a su destino."
+level: intermedio
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+  - modelos-osi-y-tcp-ip
+updated: 2026-10-13
+sources:
+  - title: "RFC 791: Internet Protocol"
+    url: https://www.rfc-editor.org/info/rfc791/
+  - title: "RFC 1812: Requirements for IP Version 4 Routers"
+    url: https://www.rfc-editor.org/info/rfc1812/
+  - title: "RFC 4632: Classless Inter-domain Routing (CIDR)"
+    url: https://www.rfc-editor.org/info/rfc4632/
+  - title: "RFC 4271: A Border Gateway Protocol 4 (BGP-4)"
+    url: https://www.rfc-editor.org/info/rfc4271/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **enrutamiento** es el proceso por el que un paquete viaja de una red a otra hasta llegar a su destino. Lo llevan a cabo los **routers**, que en cada paso deciden hacia dónde reenviarlo.
+
+Es la tarea de la capa de red de los [modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/).
+
+## Qué problema resuelve
+
+Internet no es una sola red, sino decenas de miles de redes independientes conectadas entre sí. Entre tu ordenador y un servidor de otro continente no hay un cable directo: hay una cadena de equipos intermedios, y muchos caminos posibles.
+
+Nadie conoce el mapa completo. Aun así, un paquete tiene que llegar. La solución es que cada router tome una decisión pequeña y local.
+
+## Salto a salto
+
+Un router no calcula el camino entero. Solo responde a una pregunta: **¿a cuál de mis vecinos le paso este paquete para que se acerque a su destino?**
+
+El siguiente router hace lo mismo, y así hasta el final. Cada uno de esos pasos es un **salto**.
+
+Es como preguntar una dirección en un pueblo: nadie te da la ruta completa hasta otra ciudad, pero cada persona te señala hacia dónde seguir.
+
+Esto hace a internet resistente. Si un enlace cae, los routers vecinos empiezan a enviar el tráfico por otro lado, y el resto de la red no necesita enterarse.
+
+## Redes y prefijos
+
+Los routers no guardan una entrada por cada dispositivo del mundo. Agrupan las [direcciones IP](/articulos/que-es-una-direccion-ip/) por redes.
+
+Una dirección IPv4 tiene dos partes: la que identifica la **red** y la que identifica el **equipo** dentro de ella. Dónde está la frontera lo indica el **prefijo**, con la notación **CIDR**:
+
+```
+192.168.1.0/24
+```
+
+El `/24` significa que los primeros 24 [bits](/articulos/que-es-un-bit/) identifican la red. Quedan 8 para los equipos, es decir, 256 direcciones: de `192.168.1.0` a `192.168.1.255`.
+
+| Prefijo | Bits para equipos | Direcciones |
+| --- | --- | --- |
+| `/24` | 8 | 256 |
+| `/16` | 16 | 65 536 |
+| `/8` | 24 | 16 777 216 |
+
+Cuanto menor es el número, mayor es la red.
+
+Para saber si una dirección pertenece a una red, se comparan sus primeros bits con los del prefijo:
+
+```js
+function aNumero(ip) {
+	return ip
+		.split(".")
+		.reduce((total, parte) => total * 256 + Number(parte), 0);
+}
+
+function perteneceA(ip, red, prefijo) {
+	const tamano = 2 ** (32 - prefijo);
+
+	return Math.floor(aNumero(ip) / tamano) === Math.floor(aNumero(red) / tamano);
+}
+
+console.log(perteneceA("192.168.1.77", "192.168.1.0", 24)); // true
+console.log(perteneceA("192.168.2.77", "192.168.1.0", 24)); // false
+console.log(perteneceA("192.168.2.77", "192.168.0.0", 16)); // true
+```
+
+## La tabla de enrutamiento
+
+Cada router tiene una **tabla de enrutamiento**: una lista de redes y, para cada una, por dónde enviar los paquetes dirigidos a ella.
+
+| Red de destino | Enviar a |
+| --- | --- |
+| `192.168.1.0/24` | Directamente: está conectada |
+| `10.0.0.0/8` | Router vecino A |
+| `10.20.0.0/16` | Router vecino B |
+| `0.0.0.0/0` | Router vecino C |
+
+### El prefijo más largo gana
+
+Un destino puede coincidir con varias filas. La dirección `10.20.5.9` encaja con `10.0.0.0/8` y con `10.20.0.0/16`. El router elige la **más específica**, la de prefijo más largo: aquí, el `/16`.
+
+Esta regla permite tener una ruta general para un bloque grande y excepciones para partes concretas.
+
+### La ruta por defecto
+
+`0.0.0.0/0` coincide con cualquier dirección. Es la **ruta por defecto**: adónde enviar lo que no encaja con nada más específico.
+
+Tu ordenador tiene una tabla muy corta: su red local y una ruta por defecto que apunta al router de casa, su **puerta de enlace**. Todo lo que no es local se lo entrega a él.
+
+<Quiz
+	client:visible
+	question="Un paquete va a 10.20.5.9. La tabla tiene rutas para 10.0.0.0/8 y para 10.20.0.0/16. ¿Cuál se usa?"
+	options={["La de 10.0.0.0/8", "La de 10.20.0.0/16", "La primera que aparezca en la tabla"]}
+	answer={1}
+/>
+
+## Evitar bucles eternos
+
+Un error de configuración puede hacer que dos routers se pasen un paquete el uno al otro sin fin. Para evitarlo, cada paquete lleva un contador, el **TTL** (*time to live*).
+
+Cada router resta uno antes de reenviarlo. Si llega a cero, lo descarta y avisa al remitente.
+
+Ese mecanismo es el que aprovecha la herramienta `traceroute`. Envía paquetes con TTL 1, luego 2, luego 3, y con los avisos que recibe reconstruye la lista de routers del camino.
+
+## Cómo se construyen las tablas
+
+- **Enrutamiento estático.** Alguien escribe las rutas a mano. Sirve para redes pequeñas.
+- **Enrutamiento dinámico.** Los routers se intercambian información mediante **protocolos de enrutamiento** y calculan las rutas solos. Si un enlace cae, recalculan.
+
+La red de routers y enlaces es un [grafo](/articulos/grafos/), y calcular las rutas es un problema de caminos más cortos sobre él.
+
+## Internet a gran escala
+
+Internet está dividida en **sistemas autónomos**: grandes redes gestionadas por una sola organización, como un proveedor de acceso, una universidad o una gran empresa.
+
+Dentro de un sistema autónomo, cada organización enruta como prefiere. Entre sistemas autónomos se usa un único protocolo, **BGP**. Con él, cada uno anuncia a sus vecinos a qué redes puede llevar tráfico.
+
+BGP no busca solo el camino más corto. Las decisiones dependen también de acuerdos comerciales entre organizaciones: por quién se paga por pasar y por quién no. Y se basa en la confianza entre ellas, por lo que un anuncio erróneo de una sola red puede desviar o cortar tráfico de medio mundo.
+
+## Lo que el enrutamiento no garantiza
+
+La capa de red hace lo que puede y nada más:
+
+- Los paquetes pueden **perderse**, si un router está saturado.
+- Pueden llegar **desordenados**, porque dos paquetes del mismo mensaje pueden seguir caminos distintos.
+- Pueden llegar **duplicados**.
+
+Corregir todo eso es tarea de la capa superior, en concreto de [TCP](/articulos/tcp-y-udp/).
+
+## Lo esencial
+
+- Cada router decide solo el siguiente salto; nadie conoce el camino completo.
+- Las direcciones se agrupan en redes mediante prefijos, escritos en notación CIDR.
+- La tabla de enrutamiento asocia redes con vecinos, y gana la ruta de prefijo más largo.
+- El TTL impide que un paquete circule para siempre.
+- Entre las grandes redes de internet, las rutas se intercambian con BGP.
