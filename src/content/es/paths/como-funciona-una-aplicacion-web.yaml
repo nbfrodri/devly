@@ -6,5 +6,8 @@ steps:
   - que-es-http
   - stateful-y-stateless
   - que-es-una-api
+  - que-es-rest
   - que-es-una-base-de-datos
   - que-es-sql
+  - transacciones-y-acid
+  - atomicidad-e-idempotencia

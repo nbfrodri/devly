@@ -1,0 +1,9 @@
+title: Cómo se entrega el software
+description: Del repositorio a producción, comprobando y empaquetando cada cambio.
+layer: aplicaciones
+steps:
+  - control-de-versiones-con-git
+  - pruebas-de-software
+  - integracion-y-despliegue-continuos
+  - que-es-docker
+  - contenedores-y-maquinas-virtuales

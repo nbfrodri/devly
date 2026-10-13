@@ -1,0 +1,138 @@
+---
+title: "¿Qué es Docker?"
+description: "Docker empaqueta una aplicación con todo lo que necesita para ejecutarse, de modo que funcione igual en cualquier máquina."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-un-proceso
+updated: 2026-10-13
+sources:
+  - title: "Docker Docs: Docker overview (en inglés)"
+    url: https://docs.docker.com/get-started/docker-overview/
+  - title: "Docker Docs: What is a container? (en inglés)"
+    url: https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/
+  - title: "Docker Docs: Dockerfile reference (en inglés)"
+    url: https://docs.docker.com/reference/dockerfile/
+  - title: "Open Container Initiative: About (en inglés)"
+    url: https://opencontainers.org/about/overview/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Docker** es una herramienta para empaquetar una aplicación junto con todo lo que necesita (su código, sus bibliotecas, sus programas auxiliares) en una unidad llamada **contenedor**, que se ejecuta igual en cualquier máquina.
+
+## Qué problema resuelve
+
+"En mi ordenador funciona" es una de las frases más repetidas del desarrollo. Un programa depende de su entorno: la versión del lenguaje, las bibliotecas instaladas, la configuración del sistema. Basta una diferencia para que algo que iba bien en un portátil falle en el servidor.
+
+Docker ataca el problema en la raíz: en lugar de preparar cada máquina para la aplicación, se empaqueta el entorno entero junto con ella. Lo que se probó es exactamente lo que se ejecuta.
+
+El nombre viene del transporte marítimo. Un contenedor de mercancías tiene medidas estándar: da igual lo que lleve dentro, cualquier barco, grúa o camión sabe manejarlo. Docker hace lo mismo con el software.
+
+## Imagen y contenedor
+
+Son los dos conceptos centrales, y se confunden a menudo.
+
+- Una **imagen** es una plantilla de solo lectura con todo lo necesario para ejecutar la aplicación. No hace nada por sí sola.
+- Un **contenedor** es una imagen en ejecución: un [proceso](/articulos/que-es-un-proceso/) aislado, creado a partir de ella.
+
+La relación es la misma que entre una clase y sus objetos en [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/), o entre un programa y un proceso. De una imagen se pueden arrancar muchos contenedores iguales.
+
+Un contenedor es **desechable**. Lo que se escribe dentro desaparece al borrarlo, así que los datos que deben conservarse se guardan fuera, en un **volumen**.
+
+## El Dockerfile
+
+Una imagen se describe en un archivo de texto llamado **Dockerfile**: la receta para construirla, paso a paso.
+
+```dockerfile
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 3000
+CMD ["node", "servidor.js"]
+```
+
+| Instrucción | Qué hace |
+| --- | --- |
+| `FROM` | Parte de una imagen existente, aquí una con Node.js ya instalado |
+| `WORKDIR` | Fija la carpeta de trabajo dentro de la imagen |
+| `COPY` | Copia archivos de tu proyecto a la imagen |
+| `RUN` | Ejecuta una orden al construir, como instalar dependencias |
+| `EXPOSE` | Documenta en qué puerto escucha la aplicación |
+| `CMD` | Indica qué se ejecuta al arrancar un contenedor |
+
+Como es un archivo de texto, se guarda con el resto del código en [Git](/articulos/control-de-versiones-con-git/). El entorno queda escrito y versionado, en lugar de vivir en la memoria de quien configuró el servidor.
+
+### Capas
+
+Cada instrucción crea una **capa**, y Docker las guarda en caché. Al reconstruir, solo repite el trabajo a partir de la primera capa que ha cambiado.
+
+Por eso en el ejemplo se copian primero los archivos de dependencias y se instalan, y después el resto del código. Mientras no cambien las dependencias, esa instalación lenta se reutiliza y la construcción dura segundos.
+
+## Las órdenes básicas
+
+```bash
+docker build -t mi-app .
+docker run -p 8080:3000 mi-app
+docker ps
+docker stop <identificador>
+```
+
+- `docker build` construye una imagen a partir del Dockerfile y le pone nombre.
+- `docker run` arranca un contenedor. `-p 8080:3000` conecta el [puerto](/articulos/tcp-y-udp/) 8080 de tu máquina con el 3000 del contenedor.
+- `docker ps` lista los contenedores en marcha.
+- `docker stop` detiene uno.
+
+## Registros
+
+Las imágenes se comparten a través de un **registro**: un almacén del que se suben y se descargan. Docker Hub es el público más conocido, y existen registros privados.
+
+Así funciona la línea `FROM node:22-alpine`: descarga esa imagen del registro. Nadie tiene que instalar Node.js a mano.
+
+<Quiz
+	client:visible
+	question="¿Qué relación hay entre una imagen y un contenedor?"
+	options={[
+		"Son dos nombres para lo mismo",
+		"Un contenedor es una imagen en ejecución",
+		"Una imagen es un contenedor detenido",
+	]}
+	answer={1}
+/>
+
+## Cómo consigue el aislamiento
+
+Un contenedor no es un ordenador simulado. Es un proceso normal al que el núcleo del [sistema operativo](/articulos/que-es-un-sistema-operativo/) muestra una vista restringida: su propio sistema de archivos, su propia red, su propia lista de procesos, y un límite de memoria y de procesador.
+
+Como no arranca un sistema operativo completo, un contenedor se inicia en menos de un segundo y pesa mucho menos que una máquina virtual. La comparación detallada está en [diferencias entre contenedores y máquinas virtuales](/articulos/contenedores-y-maquinas-virtuales/).
+
+## Varios contenedores
+
+Una aplicación real suele necesitar varias piezas: el servidor web, la base de datos, una caché. La práctica habitual es poner cada una en su contenedor.
+
+**Docker Compose** permite describirlas todas en un archivo y arrancarlas con una sola orden. Para coordinar muchos contenedores repartidos en varias máquinas existen los **orquestadores**, como Kubernetes.
+
+## Buenas prácticas
+
+- **Imágenes pequeñas.** Partir de una imagen base ligera reduce el tamaño, el tiempo de descarga y la superficie de ataque.
+- **Un proceso por contenedor.** Facilita escalar y sustituir cada pieza.
+- **No ejecutar como administrador** dentro del contenedor.
+- **No meter secretos en la imagen.** Quien tenga la imagen los tendría. Se pasan al arrancar.
+- **Fijar versiones** de la imagen base. Usar siempre "la última" hace que la construcción cambie sin aviso.
+
+## Docker y los contenedores
+
+Docker popularizó los contenedores, pero no es la única herramienta. El formato de las imágenes y la forma de ejecutarlas están definidos en estándares abiertos, de modo que una imagen creada con Docker funciona con otras herramientas compatibles.
+
+## Lo esencial
+
+- Docker empaqueta una aplicación con su entorno para que se ejecute igual en todas partes.
+- Una imagen es la plantilla; un contenedor, una imagen en ejecución.
+- El Dockerfile describe cómo se construye la imagen y se versiona con el código.
+- Un contenedor es un proceso aislado, ligero y desechable.

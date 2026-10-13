@@ -1,0 +1,125 @@
+---
+title: "¿Qué son los hilos y la concurrencia?"
+description: "La concurrencia es que un programa gestione varias tareas a la vez. Los hilos son la forma más directa de conseguirlo."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - que-es-un-proceso
+updated: 2026-10-13
+sources:
+  - title: "Operating Systems: Three Easy Pieces, Concurrency: An Introduction (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf
+  - title: "MDN: async function"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/async_function
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **concurrencia** es la capacidad de un programa para tener varias tareas en marcha durante el mismo periodo de tiempo. Un **hilo** es un flujo de ejecución dentro de un [proceso](/articulos/que-es-un-proceso/): la herramienta más directa para que un programa haga varias cosas a la vez.
+
+## Qué problema resuelve
+
+Un programa que hace una sola cosa cada vez se queda parado cuando esa cosa tarda. Si un navegador descargara un archivo sin poder hacer nada más, la ventana quedaría congelada hasta terminar.
+
+Hay dos motivos para querer concurrencia:
+
+- **No bloquearse.** Mientras una tarea espera al disco o a la red, otras pueden avanzar.
+- **Aprovechar varios núcleos.** Un [procesador](/articulos/como-funciona-un-procesador/) actual tiene varios, y un programa con un solo flujo de ejecución usa uno solo.
+
+## Concurrencia no es paralelismo
+
+Se usan como sinónimos y no lo son.
+
+- **Concurrencia**: varias tareas están en curso y avanzan intercalándose. Puede haber un solo núcleo, que salta de una a otra.
+- **Paralelismo**: varias tareas se ejecutan literalmente en el mismo instante, en núcleos distintos.
+
+Un cocinero que prepara tres platos, atendiendo cada uno mientras los otros se hacen, trabaja de forma concurrente. Tres cocineros, cada uno con su plato, trabajan en paralelo.
+
+La concurrencia es una forma de **organizar** el programa. El paralelismo es una forma de **ejecutarlo**, y requiere hardware con varios núcleos.
+
+## Qué es un hilo
+
+Un proceso tiene al menos un hilo, el principal. Puede crear más.
+
+Lo que distingue a los hilos de los procesos es lo que comparten:
+
+| | Procesos distintos | Hilos del mismo proceso |
+| --- | --- | --- |
+| Memoria | Separada | Compartida |
+| Pila de llamadas | Una cada uno | Una cada uno |
+| Crearlos y cambiar entre ellos | Más costoso | Más barato |
+| Si uno falla | Los demás siguen | Puede caer todo el proceso |
+
+Cada hilo tiene su propia [pila](/articulos/pilas-y-colas/) y su propio punto de ejecución, pero todos ven las mismas variables y los mismos datos.
+
+Compartir memoria es su gran ventaja: pasarse información es inmediato. Y es también su gran peligro, como se verá.
+
+## Quién decide el orden
+
+El planificador del [sistema operativo](/articulos/que-es-un-sistema-operativo/) reparte el tiempo de procesador entre los hilos. Puede interrumpir a uno en cualquier momento, incluso a mitad de una operación, para dar paso a otro.
+
+El programa no controla en qué orden se intercalan. Dos ejecuciones del mismo programa pueden mezclar los pasos de forma distinta. A esto se le llama **no determinismo**, y es lo que hace difícil la programación concurrente: un error puede aparecer una vez de cada mil.
+
+## El riesgo de compartir
+
+Si dos hilos modifican el mismo dato sin coordinarse, el resultado depende de cómo se intercalen. Es una **condición de carrera**, y produce fallos intermitentes muy difíciles de reproducir.
+
+La forma de evitarlo y los problemas que trae consigo, como los bloqueos mutuos, se explican en [condiciones de carrera y bloqueos](/articulos/condiciones-de-carrera-y-bloqueos/).
+
+<Quiz
+	client:visible
+	question="¿Qué comparten los hilos de un mismo proceso?"
+	options={[
+		"La memoria del proceso",
+		"La pila de llamadas",
+		"Nada: están aislados entre sí",
+	]}
+	answer={0}
+/>
+
+## Otra forma: un solo hilo que no espera
+
+No toda la concurrencia usa varios hilos. JavaScript ejecuta el código de una página en un solo hilo y aun así atiende clics, descargas y temporizadores a la vez.
+
+El truco es no quedarse esperando. Cuando una operación va a tardar, como una petición de red, el programa la inicia, deja anotado qué hacer cuando termine y sigue con otra cosa. Un mecanismo llamado **bucle de eventos** va despachando las tareas pendientes a medida que están listas.
+
+```js
+function esperar(milisegundos) {
+	return new Promise((resolver) => setTimeout(resolver, milisegundos));
+}
+
+async function tarea(nombre, duracion, registro) {
+	registro.push(`empieza ${nombre}`);
+	await esperar(duracion);
+	registro.push(`termina ${nombre}`);
+}
+
+const registro = [];
+await Promise.all([tarea("A", 30, registro), tarea("B", 10, registro)]);
+
+console.log(registro.join(", ")); // "empieza A, empieza B, termina B, termina A"
+```
+
+Las dos tareas empiezan una tras otra y B termina antes, aunque se lanzó después. Mientras A espera, el único hilo atiende a B. `await` marca los puntos en los que una tarea cede el paso.
+
+Este modelo se llama **asíncrono**. Encaja muy bien cuando la mayor parte del tiempo se va en esperar: a la red, al disco, a una base de datos. Con él, un solo hilo atiende a miles de clientes.
+
+No sirve para acelerar cálculos. Si una tarea ocupa el procesador sin pausas, bloquea a todas las demás, porque solo hay un hilo.
+
+## Cuál elegir
+
+| El trabajo consiste en | Conviene |
+| --- | --- |
+| Esperar: red, disco, base de datos | Modelo asíncrono |
+| Calcular: procesar imágenes, comprimir, simular | Varios hilos o procesos, en paralelo |
+
+## Un límite que conviene conocer
+
+Añadir núcleos no acelera un programa sin fin. Solo se beneficia la parte del trabajo que se puede repartir. Si la décima parte de un programa tiene que ejecutarse en orden, por muchos núcleos que añadas nunca irá más de diez veces más rápido. Esta observación se conoce como **ley de Amdahl**.
+
+## Lo esencial
+
+- La concurrencia es tener varias tareas en curso; el paralelismo, ejecutarlas en el mismo instante.
+- Un hilo es un flujo de ejecución dentro de un proceso; los hilos comparten memoria.
+- El orden en que se intercalan no lo controla el programa.
+- El modelo asíncrono consigue concurrencia con un solo hilo, y es adecuado cuando el trabajo consiste en esperar.

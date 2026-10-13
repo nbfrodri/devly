@@ -1,0 +1,7 @@
+title: Concurrencia
+description: Cómo hace un programa varias cosas a la vez y qué puede salir mal.
+layer: sistemas
+steps:
+  - que-es-un-proceso
+  - hilos-y-concurrencia
+  - condiciones-de-carrera-y-bloqueos

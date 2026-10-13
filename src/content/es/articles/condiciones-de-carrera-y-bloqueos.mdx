@@ -1,0 +1,166 @@
+---
+title: "¿Qué son las condiciones de carrera y los bloqueos?"
+description: "Una condición de carrera ocurre cuando el resultado depende del orden en que se intercalan dos tareas. Evitarla con cerrojos puede causar otro problema: el bloqueo mutuo."
+level: avanzado
+layer: sistemas
+prerequisites:
+  - hilos-y-concurrencia
+updated: 2026-10-13
+sources:
+  - title: "Operating Systems: Three Easy Pieces, Locks (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf
+  - title: "Operating Systems: Three Easy Pieces, Common Concurrency Problems (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-bugs.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **condición de carrera** es un error que aparece cuando dos tareas acceden al mismo dato a la vez y el resultado depende del orden exacto en que se intercalan sus pasos. Un **bloqueo mutuo** es la situación en la que varias tareas se quedan detenidas para siempre, esperándose unas a otras.
+
+Son los dos problemas clásicos de la [concurrencia](/articulos/hilos-y-concurrencia/).
+
+## La condición de carrera
+
+Restar dinero de un saldo parece una sola operación. En realidad son tres pasos:
+
+1. Leer el saldo actual.
+2. Calcular el nuevo.
+3. Guardar el resultado.
+
+Si dos tareas hacen esto a la vez, sus pasos pueden mezclarse. Con un saldo de 100, una retirada de 30 y otra de 50:
+
+| Paso | Tarea A (retira 30) | Tarea B (retira 50) | Saldo guardado |
+| --- | --- | --- | --- |
+| 1 | Lee 100 | | 100 |
+| 2 | | Lee 100 | 100 |
+| 3 | Guarda 70 | | 70 |
+| 4 | | Guarda 50 | 50 |
+
+El saldo final es 50, cuando debería ser 20. La retirada de A se ha perdido: B calculó a partir de un valor que ya no era el actual. Se llama **actualización perdida**.
+
+Este programa lo reproduce. La espera simula el tiempo que tarda una operación real, como consultar una base de datos:
+
+```js
+let saldo = 100;
+
+function esperar() {
+	return new Promise((resolver) => setTimeout(resolver, 10));
+}
+
+async function retirar(cantidad) {
+	const actual = saldo;
+	await esperar();
+	saldo = actual - cantidad;
+}
+
+await Promise.all([retirar(30), retirar(50)]);
+
+console.log(saldo); // 50
+```
+
+### Por qué es tan difícil de encontrar
+
+El error solo ocurre con un orden concreto. Si las dos tareas no se pisan, todo funciona. Un programa así puede pasar todas las pruebas, ir bien durante meses y fallar un día con mucha carga. Al intentar reproducirlo, no aparece.
+
+## La sección crítica
+
+El fragmento de código que accede a un dato compartido y no debe ejecutarse a la vez en dos tareas se llama **sección crítica**. Aquí son los tres pasos de la retirada.
+
+La solución es garantizar la **exclusión mutua**: que solo una tarea esté dentro de la sección crítica en cada momento.
+
+## Cerrojos
+
+La herramienta básica es el **cerrojo**, o *lock*; también se le llama *mutex*.
+
+- Antes de entrar en la sección crítica, la tarea **adquiere** el cerrojo.
+- Si otra lo tiene, espera.
+- Al salir, lo **libera**.
+
+Funciona como la llave del baño de un bar: solo hay una. Quien quiere entrar la pide; si alguien la tiene, espera a que la devuelva.
+
+Este ejemplo encadena las operaciones para que cada una empiece cuando ha terminado la anterior, que es el efecto de un cerrojo:
+
+```js
+let saldo = 100;
+let turno = Promise.resolve();
+
+function esperar() {
+	return new Promise((resolver) => setTimeout(resolver, 10));
+}
+
+function retirar(cantidad) {
+	turno = turno.then(async () => {
+		const actual = saldo;
+		await esperar();
+		saldo = actual - cantidad;
+	});
+
+	return turno;
+}
+
+await Promise.all([retirar(30), retirar(50)]);
+
+console.log(saldo); // 20
+```
+
+Los cerrojos resuelven la condición de carrera, pero tienen un coste: las tareas que esperan no avanzan. Conviene que la sección crítica sea lo más corta posible.
+
+<Quiz
+	client:visible
+	question="Dos tareas leen un saldo de 100 a la vez; una resta 30 y la otra 50, y cada una guarda su resultado. ¿Qué saldo final es posible?"
+	options={["Solo 20", "50 o 70, según el orden", "100"]}
+	answer={1}
+/>
+
+## El bloqueo mutuo
+
+Los cerrojos traen un problema nuevo. Imagina dos tareas que necesitan dos cerrojos, y los piden en orden distinto:
+
+| Paso | Tarea A | Tarea B |
+| --- | --- | --- |
+| 1 | Adquiere el cerrojo 1 | |
+| 2 | | Adquiere el cerrojo 2 |
+| 3 | Pide el cerrojo 2 y espera | |
+| 4 | | Pide el cerrojo 1 y espera |
+
+A tiene el 1 y espera el 2. B tiene el 2 y espera el 1. Ninguna soltará lo que tiene hasta conseguir lo que le falta. Se quedan así para siempre: es un **bloqueo mutuo** o *deadlock*.
+
+Es como dos coches frente a frente en un puente de un solo carril, cada uno esperando a que retroceda el otro.
+
+### Las cuatro condiciones
+
+Para que haya un bloqueo mutuo tienen que darse cuatro circunstancias a la vez:
+
+1. **Exclusión mutua**: el recurso solo lo puede tener una tarea.
+2. **Retener y esperar**: una tarea conserva lo que tiene mientras pide más.
+3. **Sin expropiación**: no se le puede quitar a la fuerza.
+4. **Espera circular**: hay un ciclo de tareas, cada una esperando a la siguiente.
+
+Basta con romper una para que el bloqueo sea imposible.
+
+### Cómo evitarlo
+
+- **Adquirir siempre los cerrojos en el mismo orden.** Es la técnica más usada. Si todas las tareas piden primero el 1 y luego el 2, no puede formarse el ciclo.
+- **Poner un límite a la espera.** Si no se consigue el cerrojo en un tiempo, se libera lo que se tiene y se reintenta.
+- **Usar un solo cerrojo**, cuando el rendimiento lo permite.
+- **Mantener los cerrojos poco tiempo** y no llamar a código desconocido mientras se tiene uno.
+
+## Otros problemas parecidos
+
+- **Inanición**: una tarea nunca consigue el recurso porque otras siempre se le adelantan. No hay bloqueo, pero para ella el efecto es el mismo.
+- **Bloqueo activo** (*livelock*): las tareas no están detenidas, pero tampoco avanzan. Como dos personas que se cruzan en un pasillo y se apartan hacia el mismo lado una y otra vez.
+
+## Evitar el problema de raíz
+
+La forma más segura de no tener condiciones de carrera es no compartir datos modificables:
+
+- **Datos que no cambian.** Si nadie los modifica, pueden leerlos todos a la vez. Es una de las razones del interés por la [programación funcional](/articulos/programacion-funcional/).
+- **Paso de mensajes.** Cada tarea tiene sus propios datos y se comunica con las demás enviando mensajes.
+- **Dejárselo a la base de datos.** Las [transacciones](/articulos/transacciones-y-acid/) resuelven este mismo problema para los datos guardados.
+
+## Lo esencial
+
+- Una condición de carrera aparece cuando varias tareas modifican un dato compartido y el resultado depende del orden.
+- Se evita con exclusión mutua: un cerrojo deja entrar a una sola tarea en la sección crítica.
+- Los cerrojos pueden provocar un bloqueo mutuo, en el que las tareas se esperan entre sí sin fin.
+- Adquirir los cerrojos siempre en el mismo orden evita el bloqueo mutuo.

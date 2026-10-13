@@ -1,0 +1,139 @@
+---
+title: "¿Qué es REST?"
+description: "REST es un estilo de diseño para API web que organiza todo en recursos y usa HTTP tal como fue pensado."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-una-api
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "R. T. Fielding: Architectural Styles and the Design of Network-based Software Architectures, capítulo 5 (2000, en inglés)"
+    url: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+  - title: "Martin Fowler: Richardson Maturity Model (en inglés)"
+    url: https://martinfowler.com/articles/richardsonMaturityModel.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**REST** (*Representational State Transfer*) es un estilo de arquitectura para diseñar [API](/articulos/que-es-una-api/) web. Organiza la API alrededor de **recursos** y aprovecha [HTTP](/articulos/que-es-http/) tal como está diseñado, en lugar de usarlo solo como un tubo por el que enviar órdenes.
+
+Lo definió Roy Fielding en su tesis doctoral, en el año 2000. No es un protocolo ni un estándar, sino un conjunto de principios. A una API que los sigue se la llama **RESTful**.
+
+## Qué problema resuelve
+
+Una API se puede diseñar de muchas formas. Sin criterio común, cada una inventa sus propias convenciones y quien la usa tiene que aprenderlas desde cero.
+
+REST propone reutilizar lo que la web ya resolvió: direcciones para identificar cosas, un pequeño conjunto de operaciones con significado conocido y códigos de estado para comunicar el resultado. Quien conoce una API REST se orienta rápido en cualquier otra.
+
+## Recursos
+
+En REST todo gira en torno a los **recursos**: las cosas que la API expone. Un usuario, un pedido, un artículo.
+
+Cada recurso tiene una dirección que lo identifica:
+
+| Dirección | Recurso |
+| --- | --- |
+| `/articulos` | La colección de artículos |
+| `/articulos/42` | El artículo 42 |
+| `/articulos/42/comentarios` | Los comentarios de ese artículo |
+
+Las direcciones nombran **cosas**, con sustantivos. No nombran acciones.
+
+Lo que viaja no es el recurso en sí, sino una **representación** de su estado, normalmente en JSON. De ahí el nombre del estilo.
+
+## Los métodos son los verbos
+
+La acción no va en la dirección, sino en el método de HTTP:
+
+| Método | Operación | Ejemplo |
+| --- | --- | --- |
+| `GET` | Leer | `GET /articulos/42` |
+| `POST` | Crear | `POST /articulos` |
+| `PUT` | Sustituir entero | `PUT /articulos/42` |
+| `PATCH` | Modificar una parte | `PATCH /articulos/42` |
+| `DELETE` | Borrar | `DELETE /articulos/42` |
+
+La diferencia con un diseño que no es REST se ve al compararlos:
+
+| Sin seguir REST | Siguiendo REST |
+| --- | --- |
+| `POST /obtenerArticulo?id=42` | `GET /articulos/42` |
+| `POST /crearArticulo` | `POST /articulos` |
+| `POST /borrarArticulo?id=42` | `DELETE /articulos/42` |
+
+### Seguros e idempotentes
+
+Los métodos tienen propiedades que todo el mundo puede dar por supuestas:
+
+- Un método **seguro** no modifica nada. `GET` lo es: se puede repetir, guardar en caché o seguir desde un enlace sin miedo.
+- Un método **idempotente** produce el mismo efecto se ejecute una vez o varias. `PUT` y `DELETE` lo son: borrar dos veces el mismo artículo lo deja igual de borrado. `POST` no lo es: enviarlo dos veces crea dos artículos.
+
+Esto importa cuando falla la red. Si una petición idempotente no recibe respuesta, se puede reintentar sin riesgo. La relación de esta propiedad con la atomicidad se explica en [diferencias entre atomicidad e idempotencia](/articulos/atomicidad-e-idempotencia/).
+
+## Los códigos de estado dicen qué pasó
+
+Una API REST comunica el resultado con el código de estado, no solo con el cuerpo de la respuesta:
+
+| Código | Cuándo |
+| --- | --- |
+| `200 OK` | La operación salió bien |
+| `201 Created` | Se creó un recurso |
+| `204 No Content` | Salió bien y no hay nada que devolver |
+| `400 Bad Request` | La petición está mal formada |
+| `401` y `403` | Falta [identidad o permiso](/articulos/autenticacion-y-autorizacion/) |
+| `404 Not Found` | El recurso no existe |
+| `409 Conflict` | Choca con el estado actual |
+
+Un error frecuente es responder siempre `200` y meter el fallo dentro del cuerpo. Obliga a cada cliente a inspeccionar el contenido para saber si algo ha ido mal.
+
+## Los principios de REST
+
+Fielding describió varias restricciones. Las que más se notan en el día a día:
+
+- **Cliente-servidor.** Interfaz y datos están separados y evolucionan por su cuenta, como en el modelo [cliente-servidor](/articulos/cliente-servidor/).
+- **Sin estado.** Cada petición lleva todo lo necesario para atenderla. El servidor no recuerda las anteriores, lo que lo hace [stateless](/articulos/stateful-y-stateless/) y fácil de repartir entre varias máquinas.
+- **Caché.** Las respuestas indican si pueden guardarse y reutilizarse.
+- **Interfaz uniforme.** Todos los recursos se manejan de la misma forma: direcciones, métodos y representaciones.
+- **Sistema en capas.** Entre cliente y servidor puede haber intermediarios, como un balanceador de carga, sin que el cliente lo sepa.
+
+<Quiz
+	client:visible
+	question="¿Cuál de estas peticiones sigue mejor el estilo REST para borrar el pedido 7?"
+	options={[
+		"POST /borrarPedido?id=7",
+		"DELETE /pedidos/7",
+		"GET /pedidos/7/borrar",
+	]}
+	answer={1}
+/>
+
+## Enlaces entre recursos
+
+En su forma completa, REST pide que las respuestas incluyan enlaces a las acciones y recursos relacionados, de modo que el cliente descubra qué puede hacer siguiendo esos enlaces, igual que una persona navega por una web. Se conoce por las siglas **HATEOAS**.
+
+En la práctica, la mayoría de las API que se llaman REST no llegan a esto. Se quedan en recursos, métodos y códigos de estado, que ya aportan casi toda la utilidad.
+
+## Buenas prácticas habituales
+
+- **Sustantivos en plural** para las colecciones: `/usuarios`, no `/usuario` ni `/obtenerUsuarios`.
+- **Filtrar, ordenar y paginar con parámetros**: `/articulos?nivel=basico&pagina=2`.
+- **Versionar la API**, por ejemplo con `/v1/` en la dirección, para poder cambiarla sin romper a quien ya la usa.
+- **Errores con formato constante**, con un mensaje que explique qué falló.
+
+## Sus límites
+
+- **Varias peticiones para una pantalla.** Si necesitas un usuario, sus pedidos y los productos de cada pedido, pueden ser muchas llamadas.
+- **Datos de más o de menos.** Cada dirección devuelve una forma fija, que rara vez coincide con lo que una pantalla necesita.
+- **Operaciones que no son recursos.** "Enviar un correo" o "calcular un presupuesto" no encajan bien en crear, leer, modificar y borrar.
+
+Para esos casos existen alternativas, como GraphQL, en la que el cliente pide exactamente los campos que quiere.
+
+## Lo esencial
+
+- REST organiza una API en recursos identificados por direcciones.
+- Los métodos de HTTP expresan la operación y los códigos de estado, el resultado.
+- Cada petición es independiente: el servidor no guarda estado entre ellas.
+- Es un conjunto de principios, no un estándar, y la mayoría de las API los aplican solo en parte.

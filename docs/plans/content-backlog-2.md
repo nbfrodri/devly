@@ -48,6 +48,10 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 - [ ] Limitación de peticiones (API)
 - [ ] Diferencias entre sesiones y tokens (JWT, stateful y stateless)
 
+## Conceptos transversales
+
+- [x] Diferencias entre atomicidad e idempotencia (transacciones y ACID, REST)
+
 ## Programación
 
 - [ ] Funciones de orden superior y clausuras (programación funcional)

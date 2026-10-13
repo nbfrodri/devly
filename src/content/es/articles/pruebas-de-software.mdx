@@ -1,0 +1,140 @@
+---
+title: "¿Qué son las pruebas de software?"
+description: "Las pruebas automáticas son programas que comprueban que otro programa hace lo que debe, y avisan cuando deja de hacerlo."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - funciones
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Test Pyramid (en inglés)"
+    url: https://martinfowler.com/bliki/TestPyramid.html
+  - title: "Ham Vocke: The Practical Test Pyramid (en inglés)"
+    url: https://martinfowler.com/articles/practical-test-pyramid.html
+  - title: "Node.js: Assert (documentación oficial, en inglés)"
+    url: https://nodejs.org/api/assert.html
+  - title: "Node.js: Test runner (documentación oficial, en inglés)"
+    url: https://nodejs.org/api/test.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **prueba automática** es un pequeño programa que ejecuta una parte de tu código con unos datos conocidos y comprueba que el resultado es el esperado. Si no lo es, la prueba falla y avisa.
+
+## Qué problema resuelven
+
+Comprobar a mano que algo funciona es razonable la primera vez. El problema llega después: cada cambio puede romper algo que funcionaba, y nadie repasa a mano toda la aplicación tras cada modificación.
+
+Un fallo que aparece en algo que antes iba bien se llama **regresión**. Las pruebas automáticas existen sobre todo para detectarlas:
+
+- **Avisan en segundos** de que un cambio ha roto algo.
+- **Dan confianza para modificar el código.** Sin pruebas, mejorar código que funciona da miedo; con ellas, si algo se rompe, te enteras.
+- **Documentan el comportamiento** con ejemplos que no se quedan anticuados, porque fallan si dejan de ser ciertos.
+
+## Cómo es una prueba
+
+Toda prueba sigue tres pasos: preparar los datos, ejecutar el código y comprobar el resultado. Esa comprobación se llama **aserción**.
+
+```js
+import assert from "node:assert/strict";
+
+function calcularTotal(precios, descuento = 0) {
+	const suma = precios.reduce((total, precio) => total + precio, 0);
+
+	return suma - suma * descuento;
+}
+
+assert.equal(calcularTotal([10, 20]), 30);
+assert.equal(calcularTotal([100], 0.1), 90);
+assert.equal(calcularTotal([]), 0);
+
+console.log("Todas las pruebas pasan"); // "Todas las pruebas pasan"
+```
+
+Si alguna aserción no se cumple, el programa se detiene con un error que indica qué se esperaba y qué se obtuvo.
+
+Las tres comprobaciones cubren un caso normal, uno con descuento y uno extremo, la lista vacía. Los **casos límite** son donde se esconden más errores: lo vacío, el cero, los negativos, lo enorme.
+
+En un proyecto se usa un **marco de pruebas**, que localiza todas las pruebas, las ejecuta y muestra un resumen.
+
+## Tipos de pruebas
+
+Se distinguen por cuánta parte del sistema ejercitan.
+
+### Unitarias
+
+Comprueban una pieza pequeña de forma aislada, normalmente una [función](/articulos/funciones/) o una clase. La del ejemplo es una prueba unitaria.
+
+Son rápidas, de milisegundos, y cuando fallan señalan con precisión dónde está el problema. No demuestran que las piezas funcionen bien juntas.
+
+### De integración
+
+Comprueban que varias piezas colaboran: que el código guarda de verdad en la [base de datos](/articulos/que-es-una-base-de-datos/), o que dos módulos se entienden.
+
+Detectan fallos que las unitarias no ven, como una consulta mal escrita. Son más lentas y exigen preparar un entorno.
+
+### De extremo a extremo
+
+Manejan la aplicación completa como lo haría una persona: abren un navegador, rellenan un formulario, pulsan un botón y comprueban lo que aparece.
+
+Son las que dan más confianza en que todo funciona de verdad. También son las más lentas y las más frágiles: fallan a veces por causas ajenas al código, como una espera demasiado corta.
+
+## La pirámide de pruebas
+
+Como cada tipo tiene costes distintos, se recomienda repartirlas en forma de pirámide:
+
+| Nivel | Cantidad | Velocidad | Coste de mantener |
+| --- | --- | --- | --- |
+| De extremo a extremo | Pocas | Lentas | Alto |
+| De integración | Algunas | Medias | Medio |
+| Unitarias | Muchas | Muy rápidas | Bajo |
+
+Muchas pruebas rápidas en la base, que cubren la lógica con detalle, y pocas pruebas lentas arriba, para los recorridos críticos.
+
+El error contrario es apoyarse casi solo en pruebas de extremo a extremo. El conjunto tarda tanto y falla tan a menudo sin motivo que la gente deja de ejecutarlo.
+
+<Quiz
+	client:visible
+	question="¿Qué tipo de prueba conviene tener en mayor cantidad?"
+	options={["Unitarias", "De integración", "De extremo a extremo"]}
+	answer={0}
+/>
+
+## Dobles de prueba
+
+Para probar una pieza aislada, a veces hay que sustituir aquello de lo que depende: una base de datos, un servicio externo, el reloj. Esos sustitutos se llaman **dobles de prueba**; el más conocido es el *mock*.
+
+Permiten probar sin red y simular situaciones difíciles de provocar, como un servicio que no responde.
+
+Conviene no abusar. Una prueba que sustituye casi todo acaba comprobando que los sustitutos se comportan como se programaron, no que el código funcione. Esta posibilidad de cambiar unas piezas por otras es una de las ventajas de la inversión de dependencias que describen los [principios SOLID](/articulos/principios-solid/).
+
+## Qué hace buena a una prueba
+
+- **Es rápida.** Si tarda, no se ejecuta.
+- **Es independiente.** No depende de que otra prueba haya ido antes.
+- **Es determinista.** Da siempre el mismo resultado. Una prueba que falla "a veces" enseña al equipo a ignorar los fallos.
+- **Comprueba el comportamiento, no los detalles internos.** Si reorganizas el código sin cambiar lo que hace, las pruebas deben seguir pasando.
+- **Su nombre dice qué comprueba.** Al fallar, debe quedar claro qué se ha roto.
+
+## Escribir la prueba antes
+
+En el **desarrollo guiado por pruebas** (TDD) se invierte el orden habitual:
+
+1. Se escribe una prueba para lo que se quiere conseguir. Falla, porque el código aún no existe.
+2. Se escribe el código mínimo para que pase.
+3. Se mejora el código, con la prueba como red de seguridad.
+
+Obliga a pensar primero en cómo se va a usar el código y garantiza que nada queda sin probar.
+
+## Lo que las pruebas no dan
+
+Las pruebas demuestran que hay errores, no que no los haya. Solo comprueban los casos que alguien pensó.
+
+La **cobertura** mide qué porcentaje del código se ejecuta durante las pruebas. Sirve para localizar zonas sin probar, pero un 100 % no significa ausencia de errores: una línea puede ejecutarse sin que nadie compruebe su resultado.
+
+## Lo esencial
+
+- Una prueba automática ejecuta código con datos conocidos y comprueba el resultado.
+- Su principal valor es detectar regresiones y permitir cambiar el código con confianza.
+- Hay pruebas unitarias, de integración y de extremo a extremo; conviene tener muchas de las primeras y pocas de las últimas.
+- Una buena prueba es rápida, independiente y determinista.

@@ -1,0 +1,163 @@
+---
+title: "¿Qué son las transacciones y las propiedades ACID?"
+description: "Una transacción agrupa varias operaciones de una base de datos para que se apliquen todas o ninguna. ACID resume las garantías que ofrece."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+  - que-es-sql
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Transactions (documentación oficial, en inglés)"
+    url: https://www.postgresql.org/docs/current/tutorial-transactions.html
+  - title: "PostgreSQL: Transaction Isolation (documentación oficial, en inglés)"
+    url: https://www.postgresql.org/docs/current/transaction-iso.html
+  - title: "SQLite: Transaction (en inglés)"
+    url: https://www.sqlite.org/lang_transaction.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **transacción** es un grupo de operaciones sobre una [base de datos](/articulos/que-es-una-base-de-datos/) que se trata como una unidad: o se aplican todas, o no se aplica ninguna. **ACID** es el acrónimo de las cuatro garantías que una base de datos ofrece sobre sus transacciones.
+
+## Qué problema resuelve
+
+Transferir dinero entre dos cuentas son dos operaciones: restar de una y sumar en la otra. Entre una y otra pueden pasar muchas cosas: el programa falla, se corta la luz, la segunda operación viola una regla.
+
+Si solo se aplica la primera, el dinero ha desaparecido. La base de datos queda en un estado que no debería existir, y nadie lo detecta hasta que alguien revisa las cuentas.
+
+Una transacción elimina ese estado intermedio: las dos operaciones tienen éxito juntas o se deshace lo que se hubiera hecho.
+
+## Cómo se usa
+
+En [SQL](/articulos/que-es-sql/), una transacción se delimita con tres órdenes:
+
+```sql
+BEGIN;
+
+UPDATE cuentas SET saldo = saldo - 30 WHERE titular = 'ana';
+UPDATE cuentas SET saldo = saldo + 30 WHERE titular = 'luis';
+
+COMMIT;
+```
+
+- `BEGIN` abre la transacción.
+- `COMMIT` la **confirma**: los cambios pasan a ser definitivos.
+- `ROLLBACK`, en lugar de `COMMIT`, la **deshace**: la base de datos queda como estaba antes del `BEGIN`.
+
+Este programa lo muestra con una base de datos en memoria. La tabla prohíbe los saldos negativos:
+
+```js
+import { DatabaseSync } from "node:sqlite";
+
+const db = new DatabaseSync(":memory:");
+db.exec(
+	"CREATE TABLE cuentas (titular TEXT, saldo INTEGER CHECK (saldo >= 0))",
+);
+db.exec("INSERT INTO cuentas VALUES ('ana', 100), ('luis', 50)");
+
+function transferir(origen, destino, importe) {
+	db.exec("BEGIN");
+
+	try {
+		db.prepare("UPDATE cuentas SET saldo = saldo + ? WHERE titular = ?").run(
+			importe,
+			destino,
+		);
+		db.prepare("UPDATE cuentas SET saldo = saldo - ? WHERE titular = ?").run(
+			importe,
+			origen,
+		);
+		db.exec("COMMIT");
+		return true;
+	} catch {
+		db.exec("ROLLBACK");
+		return false;
+	}
+}
+
+function saldoDe(titular) {
+	return db.prepare("SELECT saldo FROM cuentas WHERE titular = ?").get(titular)
+		.saldo;
+}
+
+console.log(transferir("ana", "luis", 500)); // false
+console.log(saldoDe("luis")); // 50
+console.log(transferir("ana", "luis", 30)); // true
+console.log(saldoDe("ana")); // 70
+```
+
+En la primera transferencia, sumar 500 a Luis funciona, pero restar 500 a Ana viola la regla del saldo. Al deshacer la transacción, la suma a Luis también desaparece: sigue teniendo 50.
+
+## Las cuatro propiedades
+
+### A: atomicidad
+
+**Todo o nada.** Una transacción no puede quedar aplicada a medias. Si algo falla, se deshace por completo. Es la propiedad que acaba de mostrar el ejemplo. No hay que confundirla con la [idempotencia](/articulos/atomicidad-e-idempotencia/), que trata de qué ocurre al repetir una operación.
+
+### C: consistencia
+
+**De un estado válido a otro estado válido.** La base de datos nunca queda incumpliendo sus propias reglas: tipos de datos, valores obligatorios, claves foráneas, restricciones como la del saldo.
+
+Esta garantía es compartida. La base de datos hace cumplir las reglas que se le han declarado; las que solo existen en la cabeza de quien programa tiene que mantenerlas la aplicación.
+
+No es la misma "consistencia" del [teorema CAP](/articulos/teorema-cap/), que habla de que las copias de un dato coincidan entre máquinas.
+
+### I: aislamiento
+
+**Las transacciones simultáneas no se estorban.** Aunque muchas se ejecuten a la vez, el resultado debe ser como si se hubieran ejecutado una detrás de otra.
+
+Es la respuesta de las bases de datos a las [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/). Sin aislamiento, una transacción podría leer datos que otra todavía no ha confirmado, o dos podrían pisarse al actualizar la misma fila.
+
+### D: durabilidad
+
+**Lo confirmado no se pierde.** Una vez que `COMMIT` responde, los cambios sobreviven a un fallo del programa o a un corte de corriente.
+
+Se consigue escribiendo los cambios en un registro en el disco antes de darlos por confirmados. Si el sistema cae, al arrancar reconstruye su estado a partir de ese registro.
+
+| Propiedad | Garantiza | Protege de |
+| --- | --- | --- |
+| Atomicidad | Todo o nada | Operaciones a medias |
+| Consistencia | Se cumplen las reglas | Datos inválidos |
+| Aislamiento | Las transacciones no interfieren | Errores por accesos simultáneos |
+| Durabilidad | Lo confirmado permanece | Pérdidas por fallos |
+
+<Quiz
+	client:visible
+	question="Una transacción hace tres cambios y falla en el tercero. ¿Qué garantiza la atomicidad?"
+	options={[
+		"Que se conservan los dos primeros",
+		"Que se deshacen los tres",
+		"Que el tercero se reintenta hasta funcionar",
+	]}
+	answer={1}
+/>
+
+## El aislamiento tiene niveles
+
+El aislamiento perfecto es costoso: obliga a que las transacciones se esperen unas a otras. Por eso las bases de datos ofrecen varios **niveles de aislamiento**, que cambian protección por rendimiento.
+
+| Nivel | Qué evita |
+| --- | --- |
+| Lectura confirmada | Leer datos que otra transacción aún no ha confirmado |
+| Lectura repetible | Además, que una fila ya leída cambie dentro de la misma transacción |
+| Serializable | Todo: equivale a ejecutarlas una tras otra |
+
+El nivel por defecto varía de una base de datos a otra y no suele ser el más estricto. Conviene saber cuál se está usando, porque con niveles bajos siguen siendo posibles algunas anomalías.
+
+## Buenas prácticas
+
+- **Transacciones cortas.** Mientras una está abierta puede bloquear a otras. No hay que dejarla abierta esperando a una persona o a un servicio externo.
+- **Tratar siempre el error.** Una transacción que falla y no se deshace queda abierta, reteniendo recursos.
+- **No dar por hecho el aislamiento.** Conocer el nivel por defecto y subirlo cuando la operación lo exija.
+
+## Más allá de una sola base de datos
+
+Las garantías ACID son relativamente fáciles de dar dentro de una sola base de datos. Mantenerlas cuando los datos están repartidos entre varias máquinas es mucho más difícil, y muchas [bases de datos NoSQL](/articulos/bases-de-datos-nosql/) renuncian a parte de ellas a cambio de escalar mejor.
+
+## Lo esencial
+
+- Una transacción agrupa operaciones que se aplican todas o ninguna.
+- `BEGIN` la abre, `COMMIT` la confirma y `ROLLBACK` la deshace.
+- ACID resume cuatro garantías: atomicidad, consistencia, aislamiento y durabilidad.
+- El aislamiento se ofrece en niveles, y el nivel por defecto no siempre es el más estricto.

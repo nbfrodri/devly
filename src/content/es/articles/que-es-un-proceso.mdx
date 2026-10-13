@@ -75,9 +75,9 @@ Un proceso termina cuando acaba su trabajo, cuando falla o cuando otro con permi
 
 ## Hilos
 
-Dentro de un proceso puede haber varios **hilos**: flujos de ejecución que avanzan por separado pero comparten la misma memoria. Un navegador puede usar un hilo para atender tus clics y otro para descargar una imagen.
+Dentro de un proceso puede haber varios [**hilos**](/articulos/hilos-y-concurrencia/): flujos de ejecución que avanzan por separado pero comparten la misma memoria. Un navegador puede usar un hilo para atender tus clics y otro para descargar una imagen.
 
-Al compartir memoria, los hilos se coordinan con facilidad, pero también pueden estorbarse si dos modifican el mismo dato a la vez.
+Al compartir memoria, los hilos se coordinan con facilidad, pero también pueden estorbarse si dos modifican el mismo dato a la vez, lo que se conoce como [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/).
 
 ## Lo esencial
 

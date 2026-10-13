@@ -1,0 +1,150 @@
+---
+title: "¿Qué son la integración y el despliegue continuos (CI/CD)?"
+description: "CI/CD automatiza comprobar cada cambio y ponerlo en producción, para entregar a menudo y con poco riesgo."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - control-de-versiones-con-git
+  - pruebas-de-software
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Continuous Integration (en inglés)"
+    url: https://martinfowler.com/articles/continuousIntegration.html
+  - title: "Martin Fowler: Continuous Delivery (en inglés)"
+    url: https://martinfowler.com/bliki/ContinuousDelivery.html
+  - title: "GitHub Docs: Entender GitHub Actions"
+    url: https://docs.github.com/es/actions/get-started/understand-github-actions
+---
+
+import { Quiz } from "@/components/quiz";
+
+**CI/CD** son las siglas de integración continua y entrega o despliegue continuos. Es un conjunto de prácticas que automatizan lo que ocurre desde que alguien sube un cambio hasta que ese cambio está funcionando para los usuarios.
+
+## Qué problema resuelve
+
+Imagina un equipo en el que cada persona trabaja semanas en su rama y, al final, se junta todo. Aparecen conflictos por todas partes, cosas que funcionaban por separado dejan de hacerlo juntas, y nadie sabe qué cambio rompió qué.
+
+Con la publicación pasa algo parecido. Si se hace a mano cada varios meses, es un momento de tensión: una lista de pasos, alguien que se salta uno, y muchos cambios acumulados que salen todos a la vez.
+
+La idea que une estas prácticas es contraintuitiva: **lo que duele hay que hacerlo más a menudo**. Integrar y publicar con frecuencia obliga a automatizarlo, y los cambios pequeños son fáciles de revisar y de deshacer.
+
+## Integración continua
+
+En la **integración continua** (CI), todo el equipo une sus cambios a la rama principal con mucha frecuencia, idealmente a diario. Cada vez que alguien sube código, un sistema automático:
+
+1. Descarga el código.
+2. Instala las dependencias.
+3. Construye el proyecto.
+4. Ejecuta las [pruebas](/articulos/pruebas-de-software/) y otras comprobaciones.
+5. Informa del resultado.
+
+Si algo falla, se sabe en minutos y se sabe qué cambio lo causó. Arreglarlo es fácil, porque el cambio es pequeño y quien lo hizo lo tiene reciente.
+
+Tres condiciones para que funcione:
+
+- **Integrar a menudo.** Una rama que vive semanas se aparta demasiado del resto.
+- **Que las comprobaciones sean rápidas.** Si tardan una hora, la gente las esquiva.
+- **Arreglar de inmediato lo que se rompe.** Una rama principal en rojo bloquea a todos.
+
+## Entrega continua
+
+La **entrega continua** va un paso más allá: después de pasar las comprobaciones, el cambio queda empaquetado y listo para publicarse en cualquier momento. Publicar es una decisión, no una hazaña: basta con pulsar un botón.
+
+## Despliegue continuo
+
+En el **despliegue continuo** ni siquiera hay botón. Todo cambio que supera las comprobaciones se publica automáticamente.
+
+Las dos comparten la abreviatura CD:
+
+| | Integración continua | Entrega continua | Despliegue continuo |
+| --- | --- | --- | --- |
+| Construir y probar | Automático | Automático | Automático |
+| Dejar listo para publicar | | Automático | Automático |
+| Publicar en producción | | Manual, con un clic | Automático |
+
+## El pipeline
+
+La secuencia de pasos automáticos se llama **pipeline**. Se describe en un archivo dentro del propio repositorio, de modo que queda versionado con [Git](/articulos/control-de-versiones-con-git/) como el resto del código.
+
+Este es un pipeline sencillo para GitHub Actions:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+```
+
+- `on` indica cuándo se ejecuta: al subir cambios a la rama principal y al abrir una solicitud de cambios.
+- `jobs` agrupa los trabajos; cada uno se ejecuta en una máquina limpia.
+- `steps` son los pasos, en orden. Si uno falla, el pipeline se detiene.
+
+Las etapas habituales de un pipeline completo:
+
+| Etapa | Qué hace |
+| --- | --- |
+| Análisis estático | Revisa formato y errores comunes sin ejecutar el código |
+| Pruebas | Ejecuta las pruebas automáticas |
+| Construcción | Genera el paquete o la imagen que se va a publicar |
+| Despliegue a pruebas | Lo publica en un entorno parecido al real |
+| Despliegue a producción | Lo publica para los usuarios |
+
+Un principio importante: **lo que se prueba es lo mismo que se publica**. El paquete se construye una vez y esa misma copia recorre todos los entornos.
+
+<Quiz
+	client:visible
+	question="¿Qué diferencia hay entre entrega continua y despliegue continuo?"
+	options={[
+		"En la entrega continua no hay pruebas automáticas",
+		"En el despliegue continuo la publicación en producción también es automática",
+		"Son dos nombres para lo mismo",
+	]}
+	answer={1}
+/>
+
+## Publicar con menos riesgo
+
+Automatizar la publicación permite técnicas que reducen el impacto de un fallo:
+
+- **Despliegue gradual.** El cambio llega primero a una pequeña parte de los usuarios. Si todo va bien, se amplía.
+- **Dos entornos.** La versión nueva se levanta junto a la antigua y el tráfico se cambia de una a otra. Volver atrás es cambiarlo de nuevo.
+- **Interruptores de funcionalidad.** El código nuevo se publica desactivado y se enciende después, sin otro despliegue.
+- **Vuelta atrás automática.** Si las métricas empeoran tras publicar, el sistema recupera la versión anterior.
+
+## Qué se necesita
+
+CI/CD no es una herramienta que se instala. Depende de varias cosas:
+
+- **Pruebas automáticas fiables.** Sin ellas, automatizar la publicación solo sirve para publicar errores más deprisa.
+- **Todo en el control de versiones**: código, configuración y el propio pipeline.
+- **Entornos reproducibles.** Los [contenedores](/articulos/que-es-docker/) ayudan a que el programa se ejecute igual en todas partes.
+- **Disciplina de equipo**: cambios pequeños y arreglar enseguida lo que se rompe.
+
+## Errores comunes
+
+- **Pruebas que fallan a veces sin motivo.** El equipo aprende a ignorar el rojo.
+- **Un pipeline lento.** Empuja a acumular cambios, justo lo contrario de lo buscado.
+- **Secretos escritos en el archivo del pipeline.** Las claves se guardan en el almacén de secretos de la plataforma.
+- **Pasos manuales escondidos.** Si publicar requiere que alguien recuerde algo, no está automatizado.
+
+## Lo esencial
+
+- La integración continua comprueba automáticamente cada cambio al unirlo a la rama principal.
+- La entrega continua deja cada cambio listo para publicar; el despliegue continuo lo publica sin intervención.
+- Los pasos automáticos forman un pipeline, definido en un archivo versionado.
+- Funciona con cambios pequeños, pruebas fiables y comprobaciones rápidas.

@@ -381,7 +381,8 @@ a:hover {
 .site-footer .container {
 	padding-block: 3rem 2rem;
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+	grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+	align-items: start;
 	gap: 2.5rem 2rem;
 }
 
@@ -393,6 +394,9 @@ a:hover {
 }
 
 .site-footer .logo {
+	align-self: flex-start;
+	min-height: 0;
+	line-height: 1.2;
 	color: #ffffff;
 }
 
@@ -411,6 +415,8 @@ a:hover {
 
 .site-footer h2 {
 	margin-bottom: 0.75rem;
+	/* Same line box as the logo beside it, so the first row lines up. */
+	line-height: 1.8rem;
 	font-family: var(--font-body);
 	font-size: 0.9375rem;
 	font-weight: 600;
@@ -1260,9 +1266,46 @@ a:hover {
 
 /* Phone: the article comes first, its context (layer and path) follows. */
 @media (max-width: 48rem) {
+	.site-footer .container {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.footer-brand {
+		grid-column: 1 / -1;
+	}
+
 	.filter-bar {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
 		padding: 1rem;
+	}
+
+	/* Level: four equal segments across the full width. */
+	.segmented {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.segmented span {
+		justify-content: center;
+		width: 100%;
+		padding-inline: 0.25rem;
+		font-size: 0.875rem;
+	}
+
+	/* Layer: one row that scrolls sideways instead of wrapping into five. */
+	.chips {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		margin-inline: -1rem;
+		padding: 0.25rem 1rem;
+		scroll-snap-type: x proximity;
+		scroll-padding-inline: 1rem;
+		scrollbar-width: none;
+	}
+
+	.chips label {
+		flex: none;
+		scroll-snap-align: start;
 	}
 
 	.logo {

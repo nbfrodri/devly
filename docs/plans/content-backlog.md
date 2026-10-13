@@ -34,12 +34,12 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 
 ## Sistemas operativos y concurrencia
 
-- [ ] Hilos y concurrencia
-- [ ] Condiciones de carrera y bloqueos
+- [x] Hilos y concurrencia
+- [x] Condiciones de carrera y bloqueos
 - [ ] ¿Qué es la memoria virtual?
 - [ ] ¿Qué es un sistema de archivos?
 - [ ] La terminal y la shell
-- [ ] Diferencias entre contenedores y máquinas virtuales
+- [x] Diferencias entre contenedores y máquinas virtuales
 
 ## Redes
 
@@ -52,11 +52,11 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 - [ ] El DOM y JavaScript en el navegador
 - [ ] Accesibilidad web
 - [ ] Diseño adaptable
-- [ ] ¿Qué es REST?
+- [x] ¿Qué es REST?
 - [ ] Diferencias entre REST y GraphQL
-- [ ] Pruebas de software: unitarias, de integración y de extremo a extremo
-- [ ] Integración y despliegue continuos (CI/CD)
-- [ ] ¿Qué es Docker?
+- [x] Pruebas de software: unitarias, de integración y de extremo a extremo
+- [x] Integración y despliegue continuos (CI/CD)
+- [x] ¿Qué es Docker?
 - [ ] Diferencias entre monolito y microservicios
 - [ ] ¿Qué es el diseño guiado por el dominio (DDD)?
 - [ ] Patrones de diseño
@@ -66,7 +66,7 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 ## Datos
 
 - [ ] Normalización de bases de datos
-- [ ] Transacciones y propiedades ACID
+- [x] Transacciones y propiedades ACID
 - [ ] ¿Qué es una caché?
 
 ## Inteligencia artificial
