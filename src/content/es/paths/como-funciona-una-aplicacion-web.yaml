@@ -7,6 +7,7 @@ steps:
   - stateful-y-stateless
   - que-es-una-api
   - que-es-rest
+  - rest-frente-a-graphql
   - websockets
   - que-es-una-base-de-datos
   - que-es-sql

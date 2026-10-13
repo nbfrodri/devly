@@ -1,0 +1,125 @@
+---
+title: "Diferencias entre monolito y microservicios"
+description: "Un monolito es una aplicación que se despliega como una sola pieza; los microservicios la dividen en servicios pequeños e independientes."
+level: avanzado
+layer: aplicaciones
+prerequisites:
+  - cliente-servidor
+  - que-es-una-api
+updated: 2026-10-13
+sources:
+  - title: "James Lewis y Martin Fowler: Microservices (en inglés)"
+    url: https://martinfowler.com/articles/microservices.html
+  - title: "Martin Fowler: MonolithFirst (en inglés)"
+    url: https://martinfowler.com/bliki/MonolithFirst.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **monolito** es una aplicación cuyo código se construye y se despliega como una sola unidad. Una arquitectura de **microservicios** divide la aplicación en servicios pequeños, cada uno con una responsabilidad, que se despliegan por separado y se comunican por la red.
+
+Es una de las decisiones de arquitectura con más consecuencias, y una en la que se cometen muchos errores por seguir la moda.
+
+## Monolito
+
+En un monolito, todas las funciones viven en el mismo programa: usuarios, catálogo, pedidos, pagos. Comparten código, se ejecutan en el mismo [proceso](/articulos/que-es-un-proceso/) y suelen usar una única [base de datos](/articulos/que-es-una-base-de-datos/).
+
+Monolito no significa código desordenado. Un monolito puede estar bien organizado en módulos con fronteras claras. Lo que lo define es que **se despliega entero**.
+
+**Ventajas:**
+
+- **Simplicidad.** Un repositorio, un proceso, un despliegue.
+- **Llamadas directas.** Un módulo llama a otro como a una [función](/articulos/funciones/): rápido y fiable.
+- **Transacciones sencillas.** Con una sola base de datos, una [transacción](/articulos/transacciones-y-acid/) cubre toda la operación.
+- **Fácil de depurar.** Se puede seguir una petición de principio a fin en un solo sitio.
+
+**Inconvenientes, que aparecen al crecer:**
+
+- **Todo se despliega junto.** Un cambio mínimo exige publicar la aplicación entera.
+- **Se escala entero.** Si solo una parte recibe mucha carga, hay que replicarlo todo.
+- **Los equipos se estorban.** Con decenas de personas sobre el mismo código, coordinarse cuesta.
+- **Un fallo puede tumbarlo todo.**
+- **Una sola tecnología** para toda la aplicación.
+
+## Microservicios
+
+En una arquitectura de microservicios, cada función es un **servicio** independiente:
+
+- Tiene una responsabilidad concreta, alineada con una parte del negocio.
+- Se despliega por separado, sin tocar a los demás.
+- **Es dueño de sus datos**: tiene su propia base de datos, y nadie más accede a ella directamente.
+- Se comunica con los demás por la red, mediante [API](/articulos/que-es-una-api/) o mensajes.
+- Suele pertenecer a un equipo pequeño que lo desarrolla y lo opera.
+
+**Ventajas:**
+
+- **Despliegues independientes.** Un equipo publica su servicio cuando quiere.
+- **Escalado selectivo.** Solo se replica lo que lo necesita.
+- **Autonomía de los equipos**, incluida la elección de tecnología.
+- **Aislamiento de fallos**, si el sistema está preparado: un servicio caído no arrastra al resto.
+
+**Inconvenientes:** se cambia complejidad dentro del código por complejidad entre servicios, que es más difícil de manejar.
+
+## Lo que cuestan los microservicios
+
+Al separar los servicios, lo que era una llamada dentro del mismo programa pasa a ser una petición por la red. Eso lo cambia todo.
+
+- **La red falla.** Una llamada puede tardar, no llegar o quedarse sin respuesta. Hay que prever tiempos de espera, reintentos y qué hacer cuando otro servicio no contesta. Por eso las operaciones deben ser [idempotentes](/articulos/atomicidad-e-idempotencia/).
+- **No hay transacciones globales.** Un pedido que toca tres servicios con tres bases de datos no puede envolverse en una transacción. La coherencia hay que construirla, y a menudo se acepta que sea [eventual](/articulos/teorema-cap/).
+- **Depurar es más difícil.** Una petición atraviesa varios servicios; seguirla exige herramientas específicas de trazas y registros.
+- **La operación se multiplica.** Decenas de servicios que desplegar, vigilar y actualizar. Sin [automatización](/articulos/integracion-y-despliegue-continuos/) y [contenedores](/articulos/que-es-docker/) no es viable.
+- **Las pruebas se complican.** Comprobar que todo funciona junto requiere levantar muchas piezas.
+
+## Comparación
+
+| | Monolito | Microservicios |
+| --- | --- | --- |
+| Despliegue | Una unidad | Uno por servicio |
+| Comunicación interna | Llamadas a funciones | Peticiones por la red |
+| Base de datos | Normalmente una | Una por servicio |
+| Transacciones | Sencillas | Difíciles entre servicios |
+| Escalado | Toda la aplicación | Servicio a servicio |
+| Complejidad operativa | Baja | Alta |
+| Encaja con | Equipos pequeños, productos nuevos | Organizaciones grandes, muchos equipos |
+
+<Quiz
+	client:visible
+	question="¿Cuál es el mayor coste de pasar de un monolito a microservicios?"
+	options={[
+		"Que el código ocupa más espacio",
+		"Que las llamadas internas pasan a hacerse por una red que puede fallar",
+		"Que no se pueden usar bases de datos",
+	]}
+	answer={1}
+/>
+
+## El monolito distribuido
+
+El peor resultado posible tiene nombre: **monolito distribuido**. Son servicios separados que, en la práctica, no son independientes:
+
+- hay que desplegarlos juntos;
+- comparten la misma base de datos;
+- un cambio en uno obliga a cambiar otros.
+
+Se pagan todos los costes de los microservicios, la red y la operación, sin obtener su principal ventaja. Ocurre cuando se dividen los servicios por capas técnicas o sin entender dónde están las fronteras reales del negocio. El [diseño guiado por el dominio](/articulos/diseno-guiado-por-el-dominio/) ofrece herramientas para encontrar esas fronteras.
+
+## Empezar por el monolito
+
+Una recomendación extendida es **empezar con un monolito** y dividir más adelante, si hace falta. Tiene sentido por dos motivos:
+
+- Al principio no se conocen bien las fronteras del dominio. Equivocarse en ellas dentro de un monolito se corrige moviendo código; entre servicios, es mucho más caro.
+- La mayoría de los productos nunca llegan a la escala en la que los microservicios compensan.
+
+Un término medio muy razonable es el **monolito modular**: un solo despliegue, pero con módulos de fronteras estrictas que no se saltan. Da orden sin los costes de la distribución, y si un día hay que extraer un servicio, la frontera ya existe.
+
+## El motivo real suele ser organizativo
+
+Los microservicios resuelven sobre todo un problema de personas: permiten que muchos equipos trabajen y publiquen sin esperarse unos a otros. Si hay un solo equipo, ese problema no existe, y lo que queda es el coste.
+
+## Lo esencial
+
+- Un monolito se despliega como una unidad; los microservicios, por separado.
+- El monolito es más simple; los microservicios dan independencia a cambio de complejidad operativa y de red.
+- Con microservicios desaparecen las transacciones globales y aparecen los fallos de red.
+- Servicios que no son independientes forman un monolito distribuido, con lo peor de los dos mundos.
+- Suele convenir empezar con un monolito bien modularizado.

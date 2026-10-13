@@ -1,0 +1,187 @@
+---
+title: "¿Qué es el diseño guiado por el dominio (DDD)?"
+description: "DDD es una forma de diseñar software que pone en el centro el problema del negocio y el lenguaje de quienes lo conocen."
+level: avanzado
+layer: aplicaciones
+prerequisites:
+  - programacion-orientada-a-objetos
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Domain Driven Design (en inglés)"
+    url: https://martinfowler.com/bliki/DomainDrivenDesign.html
+  - title: "Martin Fowler: Bounded Context (en inglés)"
+    url: https://martinfowler.com/bliki/BoundedContext.html
+  - title: "Martin Fowler: Ubiquitous Language (en inglés)"
+    url: https://martinfowler.com/bliki/UbiquitousLanguage.html
+  - title: "Eric Evans: Domain-Driven Design Reference (en inglés)"
+    url: https://www.domainlanguage.com/ddd/reference/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **diseño guiado por el dominio** (*Domain-Driven Design*, **DDD**) es un enfoque para desarrollar software complejo en el que el diseño del código gira alrededor del **dominio**: el área de conocimiento y de actividad para la que se construye el programa.
+
+Lo describió Eric Evans en un libro publicado en 2003.
+
+## Qué problema resuelve
+
+En muchos proyectos, lo difícil no es la tecnología. Es entender bien el negocio: las reglas de un seguro, el cálculo de una nómina, el flujo de un pedido.
+
+Lo habitual es que los expertos del negocio hablen de una forma y el código de otra. El experto dice "póliza en suspenso"; en el código hay un campo `estado = 3`. Alguien tiene que traducir constantemente, y en cada traducción se pierde información y se cuelan errores.
+
+DDD propone eliminar esa traducción: que el código se exprese con los mismos conceptos y palabras que usa el negocio.
+
+## El lenguaje ubicuo
+
+La idea central es el **lenguaje ubicuo**: un vocabulario común, acordado entre desarrolladores y expertos, que se usa en todas partes. En las conversaciones, en los documentos y en el código: en los nombres de clases, métodos y variables.
+
+Si el negocio dice que un pedido "se confirma", el código tiene un método `confirmar`, no `setEstado(2)`. Si en una conversación se descubre que una palabra era ambigua, se corrige en el lenguaje y también en el código.
+
+Es la parte más valiosa de DDD y la más barata de aplicar.
+
+## Contextos delimitados
+
+En una empresa, la misma palabra significa cosas distintas según quién la diga. "Cliente":
+
+- Para **ventas**, alguien con un historial de ofertas y un comercial asignado.
+- Para **facturación**, un NIF, una dirección fiscal y un método de pago.
+- Para **soporte**, alguien con incidencias abiertas.
+
+Intentar un único modelo de "Cliente" que sirva a todos da una clase enorme, llena de campos que solo importan a unos pocos, y de reglas que se contradicen.
+
+DDD propone dividir el sistema en **contextos delimitados** (*bounded contexts*). Dentro de cada uno, cada término tiene un único significado y hay un modelo coherente. Entre contextos, el mismo concepto puede modelarse de formas distintas, y la traducción se hace de forma explícita en la frontera.
+
+| Contexto | Qué es un "cliente" |
+| --- | --- |
+| Ventas | Un posible comprador con ofertas |
+| Facturación | Un titular con datos fiscales |
+| Soporte | Una persona con incidencias |
+
+Estas fronteras son una buena guía para dividir un sistema en módulos o en servicios, como se explica en [monolito y microservicios](/articulos/monolito-y-microservicios/).
+
+## Las piezas del modelo
+
+Dentro de un contexto, DDD ofrece un vocabulario para construir el modelo. Se apoya en la [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/), aunque las ideas valen para otros estilos.
+
+### Entidades
+
+Una **entidad** tiene identidad propia, que se mantiene aunque cambien sus datos. Un pedido sigue siendo el mismo pedido aunque se modifique su dirección de entrega. Dos entidades son la misma si tienen el mismo identificador.
+
+### Objetos de valor
+
+Un **objeto de valor** no tiene identidad: se define por sus atributos. Un importe de 10 euros es igual a cualquier otro importe de 10 euros. No se modifican: si hace falta otro valor, se crea uno nuevo.
+
+Además, pueden llevar dentro sus propias reglas, de modo que no llegue a existir un valor inválido:
+
+```js
+class Dinero {
+	constructor(cantidad, moneda) {
+		if (cantidad < 0) {
+			throw new Error("El importe no puede ser negativo");
+		}
+
+		this.cantidad = cantidad;
+		this.moneda = moneda;
+		Object.freeze(this);
+	}
+
+	sumar(otro) {
+		if (otro.moneda !== this.moneda) {
+			throw new Error("No se pueden sumar monedas distintas");
+		}
+
+		return new Dinero(this.cantidad + otro.cantidad, this.moneda);
+	}
+
+	esIgualA(otro) {
+		return this.cantidad === otro.cantidad && this.moneda === otro.moneda;
+	}
+}
+
+const precio = new Dinero(10, "EUR");
+const total = precio.sumar(new Dinero(5, "EUR"));
+
+console.log(total.cantidad); // 15
+console.log(precio.cantidad); // 10
+console.log(precio.esIgualA(new Dinero(10, "EUR"))); // true
+```
+
+Usar `Dinero` en lugar de un número suelto impide errores como sumar euros con dólares, y deja la regla en un único lugar.
+
+### Agregados
+
+Un **agregado** es un grupo de objetos que se trata como una unidad a efectos de coherencia. Tiene una entidad principal, la **raíz**, que es la única puerta de entrada.
+
+Un pedido y sus líneas forman un agregado, con el pedido como raíz. No se añade una línea directamente: se le pide al pedido, que comprueba las reglas, por ejemplo que no esté ya enviado.
+
+```js
+class Pedido {
+	#lineas = [];
+	#enviado = false;
+
+	anadirLinea(producto, cantidad) {
+		if (this.#enviado) {
+			throw new Error("No se puede modificar un pedido enviado");
+		}
+
+		this.#lineas.push({ producto, cantidad });
+	}
+
+	enviar() {
+		if (this.#lineas.length === 0) {
+			throw new Error("Un pedido vacío no se puede enviar");
+		}
+
+		this.#enviado = true;
+	}
+
+	get totalDeLineas() {
+		return this.#lineas.length;
+	}
+}
+
+const pedido = new Pedido();
+pedido.anadirLinea("libro", 2);
+pedido.enviar();
+
+console.log(pedido.totalDeLineas); // 1
+```
+
+Las reglas del negocio viven dentro del agregado. No hay forma de dejarlo en un estado inválido desde fuera.
+
+### Repositorios y eventos
+
+- Un **repositorio** se encarga de guardar y recuperar agregados, y oculta los detalles de la base de datos.
+- Un **evento de dominio** registra algo relevante que ha ocurrido, como "pedido enviado". Otros contextos pueden reaccionar a él sin que el primero los conozca.
+
+<Quiz
+	client:visible
+	question="¿Qué distingue a una entidad de un objeto de valor?"
+	options={[
+		"La entidad tiene identidad propia; el objeto de valor se define por sus atributos",
+		"La entidad no puede tener métodos",
+		"El objeto de valor se guarda en la base de datos y la entidad no",
+	]}
+	answer={0}
+/>
+
+## Dos niveles
+
+- El **diseño estratégico** trata de lo grande: el lenguaje ubicuo, los contextos delimitados y cómo se relacionan. Es lo que más valor aporta.
+- El **diseño táctico** son las piezas: entidades, objetos de valor, agregados, repositorios.
+
+Un error habitual es quedarse solo con lo táctico: llenar el código de repositorios y agregados sin haber hablado con los expertos del negocio ni delimitado los contextos. Eso es copiar la forma sin el fondo.
+
+## Cuándo no usarlo
+
+DDD tiene un coste: requiere tiempo, acceso a quienes conocen el negocio y más diseño inicial.
+
+Compensa cuando la dificultad está en las reglas del negocio. Para una aplicación que casi solo guarda y muestra datos, es un exceso que choca con [KISS](/articulos/principio-kiss/) y [YAGNI](/articulos/principio-yagni/). Dentro de un mismo sistema, lo razonable es aplicarlo en la parte que diferencia al negocio y usar soluciones simples en el resto.
+
+## Lo esencial
+
+- DDD centra el diseño en el dominio del negocio, no en la tecnología.
+- El lenguaje ubicuo es un vocabulario compartido que aparece también en el código.
+- Los contextos delimitados dan a cada término un único significado dentro de una frontera.
+- Entidades, objetos de valor y agregados sirven para expresar el modelo y proteger sus reglas.
+- Compensa en dominios complejos; en aplicaciones simples es demasiado.

@@ -1,0 +1,186 @@
+---
+title: "¿Qué son los patrones de diseño?"
+description: "Un patrón de diseño es una solución probada, con nombre, a un problema que se repite al organizar el código."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - programacion-orientada-a-objetos
+  - principios-solid
+updated: 2026-10-13
+sources:
+  - title: "Refactoring.Guru: Patrones de diseño"
+    url: https://refactoring.guru/es/design-patterns
+  - title: "Robert Nystrom: Game Programming Patterns, libro libre (en inglés)"
+    url: https://gameprogrammingpatterns.com/contents.html
+  - title: "Robert C. Martin: Design Principles and Design Patterns (2000, en inglés)"
+    url: https://web.archive.org/web/20150906155800/http://www.objectmentor.com/resources/articles/Principles_and_Patterns.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **patrón de diseño** es una solución general y reutilizable a un problema que aparece una y otra vez al diseñar software. No es código que se copia, sino una idea con nombre que se adapta a cada caso.
+
+El concepto se popularizó en 1994 con un libro que describía veintitrés patrones. A sus cuatro autores se les conoce como la "banda de los cuatro", o GoF por sus siglas en inglés.
+
+## Para qué sirven
+
+- **Evitan reinventar.** Muchos problemas de diseño ya los resolvió alguien, y la solución se ha probado en miles de proyectos.
+- **Dan vocabulario.** Decir "aquí hay un observador" comunica en dos palabras una estructura que costaría un párrafo explicar.
+
+Se clasifican en tres familias:
+
+| Familia | Se ocupan de | Ejemplos |
+| --- | --- | --- |
+| Creacionales | Cómo se crean los objetos | Fábrica, Singleton, Constructor |
+| Estructurales | Cómo se combinan | Adaptador, Decorador, Fachada |
+| De comportamiento | Cómo colaboran y se reparten las tareas | Estrategia, Observador, Comando |
+
+Estos son tres de los más usados.
+
+## Estrategia
+
+**Problema:** hay varias formas de hacer una misma tarea y se quiere poder cambiar de una a otra.
+
+**Sin el patrón**, el código acumula condiciones:
+
+```js
+function calcularEnvio(tipo, peso) {
+	if (tipo === "normal") {
+		return 5;
+	}
+	if (tipo === "urgente") {
+		return 5 + peso * 2;
+	}
+	if (tipo === "recogida") {
+		return 0;
+	}
+	return 0;
+}
+
+console.log(calcularEnvio("urgente", 3)); // 11
+```
+
+Cada tipo nuevo obliga a modificar esta función.
+
+**Con el patrón**, cada algoritmo va en su propia pieza, y todas son intercambiables:
+
+```js
+const estrategias = {
+	normal: () => 5,
+	urgente: (peso) => 5 + peso * 2,
+	recogida: () => 0,
+};
+
+function calcularEnvio(tipo, peso) {
+	return estrategias[tipo](peso);
+}
+
+console.log(calcularEnvio("urgente", 3)); // 11
+console.log(calcularEnvio("recogida", 3)); // 0
+```
+
+Añadir un tipo es añadir una entrada, sin tocar lo que ya funciona. Es el principio abierto/cerrado de [SOLID](/articulos/principios-solid/) llevado a la práctica.
+
+## Observador
+
+**Problema:** cuando algo cambia, otras partes del programa tienen que enterarse, sin que el objeto que cambia las conozca.
+
+Un objeto mantiene una lista de interesados y los avisa cuando ocurre algo. Es el mecanismo de los eventos del [DOM](/articulos/el-dom/): `addEventListener` apunta una función en esa lista.
+
+```js
+class Emisor {
+	#suscriptores = [];
+
+	suscribir(funcion) {
+		this.#suscriptores.push(funcion);
+	}
+
+	emitir(dato) {
+		for (const funcion of this.#suscriptores) {
+			funcion(dato);
+		}
+	}
+}
+
+const pedidos = new Emisor();
+const registro = [];
+
+pedidos.suscribir((pedido) => registro.push(`correo para ${pedido.cliente}`));
+pedidos.suscribir((pedido) => registro.push(`stock de ${pedido.producto}`));
+
+pedidos.emitir({ cliente: "Ana", producto: "libro" });
+
+console.log(registro.length); // 2
+console.log(registro[0]); // "correo para Ana"
+```
+
+El código que crea el pedido no sabe nada de correos ni de inventario. Para añadir una reacción nueva basta con otra suscripción.
+
+El coste es que el flujo se vuelve menos visible: al leer `emitir` no se ve qué va a ejecutarse.
+
+## Adaptador
+
+**Problema:** hay que usar un componente cuya interfaz no coincide con la que el resto del código espera.
+
+Un adaptador envuelve ese componente y traduce. Es como el adaptador de un enchufe: no cambia la corriente, solo la forma de la clavija.
+
+```js
+class ServicioDePagosAntiguo {
+	realizarCobro(centimos) {
+		return `cobrados ${centimos} céntimos`;
+	}
+}
+
+class AdaptadorDePagos {
+	constructor(servicio) {
+		this.servicio = servicio;
+	}
+
+	cobrar(euros) {
+		return this.servicio.realizarCobro(Math.round(euros * 100));
+	}
+}
+
+const pagos = new AdaptadorDePagos(new ServicioDePagosAntiguo());
+
+console.log(pagos.cobrar(12.5)); // "cobrados 1250 céntimos"
+```
+
+El resto del programa habla con `cobrar(euros)` y no sabe nada del servicio antiguo. Si un día se cambia de proveedor, solo hay que escribir otro adaptador.
+
+## Otros que conviene reconocer
+
+- **Fábrica**: centraliza la creación de objetos, para que el código que los usa no dependa de la clase concreta.
+- **Singleton**: garantiza que solo exista una instancia de una clase. Es el más discutido, porque introduce un estado global que complica las pruebas.
+- **Decorador**: añade comportamiento a un objeto envolviéndolo, sin modificarlo.
+- **Fachada**: ofrece una interfaz sencilla sobre un conjunto complejo de piezas.
+- **Comando**: convierte una acción en un objeto, lo que permite guardarla, ponerla en cola o deshacerla.
+
+<Quiz
+	client:visible
+	question="Quieres que varias partes de un programa reaccionen cuando se crea un pedido, sin que el código del pedido las conozca. ¿Qué patrón encaja?"
+	options={["Adaptador", "Observador", "Singleton"]}
+	answer={1}
+/>
+
+## Patrones de diseño y de arquitectura
+
+Los patrones de diseño organizan unas pocas clases o funciones. Los **patrones de arquitectura** organizan el sistema entero: es el caso de [MVC](/articulos/patron-mvc/) o del modelo [cliente-servidor](/articulos/cliente-servidor/). La idea es la misma, a otra escala.
+
+## El riesgo: usarlos de más
+
+El error típico de quien acaba de aprenderlos es aplicarlos en todas partes. Un patrón añade piezas e indirección, y eso solo se justifica si resuelve un problema que existe.
+
+- **Un patrón es una respuesta, no un objetivo.** Primero el problema; después, si encaja, el patrón.
+- **Es mejor llegar a ellos que partir de ellos.** Suele funcionar bien escribir la solución simple y, cuando el código empieza a doler, reorganizarlo hacia un patrón.
+- **El lenguaje importa.** Muchos patrones clásicos nacieron para suplir carencias de los lenguajes de su época. En uno donde las funciones son valores, una Estrategia puede ser una simple función, como en el ejemplo.
+
+Aplicar un patrón que no hace falta va contra [KISS](/articulos/principio-kiss/) y [YAGNI](/articulos/principio-yagni/).
+
+## Lo esencial
+
+- Un patrón de diseño es una solución con nombre a un problema recurrente.
+- Hay patrones creacionales, estructurales y de comportamiento.
+- Estrategia hace intercambiables varios algoritmos; Observador avisa de los cambios; Adaptador hace compatibles dos interfaces.
+- Aportan vocabulario común además de soluciones.
+- Se aplican cuando resuelven un problema real, no por sistema.

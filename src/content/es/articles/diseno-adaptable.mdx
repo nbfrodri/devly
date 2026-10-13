@@ -1,0 +1,166 @@
+---
+title: "¿Qué es el diseño adaptable?"
+description: "El diseño adaptable hace que una misma página se vea y se use bien en cualquier tamaño de pantalla."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - que-es-css
+updated: 2026-10-13
+sources:
+  - title: "MDN: Diseño responsivo"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Core/CSS_layout/Responsive_Design
+  - title: "MDN: Uso de consultas de medios"
+    url: https://developer.mozilla.org/es/docs/Web/CSS/Guides/Media_queries/Using
+  - title: "Ethan Marcotte: Responsive Web Design, A List Apart (2010, en inglés)"
+    url: https://alistapart.com/article/responsive-web-design/
+  - title: "MDN: Imágenes responsivas"
+    url: https://developer.mozilla.org/es/docs/Web/HTML/Guides/Responsive_images
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **diseño adaptable** (*responsive design*) es una forma de construir páginas web para que se ajusten al tamaño de la pantalla en la que se muestran. La misma página, con el mismo HTML, funciona en un móvil, en una tableta y en un monitor grande.
+
+El término lo acuñó Ethan Marcotte en 2010.
+
+## Qué problema resuelve
+
+Durante años las webs se diseñaron para una anchura fija, la de un monitor de escritorio. Con los móviles llegaron dos soluciones malas: mostrar la página en miniatura, obligando a ampliar y desplazarse, o mantener un segundo sitio solo para móviles, con el doble de trabajo.
+
+El diseño adaptable propone un solo sitio que se reorganiza según el espacio disponible.
+
+## El primer paso: la etiqueta viewport
+
+Sin esta línea en el `head` del [HTML](/articulos/que-es-html/), un móvil finge tener una pantalla ancha y encoge el resultado:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1">
+```
+
+Le dice al navegador que use la anchura real del dispositivo. Es imprescindible: sin ella, nada de lo demás funciona.
+
+## Los tres ingredientes
+
+### Diseños fluidos
+
+En lugar de medidas fijas en píxeles, se usan medidas que dependen del espacio disponible:
+
+| Unidad | Relativa a |
+| --- | --- |
+| `%` | El elemento contenedor |
+| `rem` | El tamaño de letra base de la página |
+| `vw`, `vh` | La anchura y la altura de la ventana |
+| `fr` | El espacio libre de una cuadrícula |
+
+```css
+.contenido {
+	width: 100%;
+	max-width: 70rem;
+	margin-inline: auto;
+}
+```
+
+Esta caja ocupa todo el ancho en una pantalla pequeña y deja de crecer en una grande, donde queda centrada.
+
+### Imágenes flexibles
+
+Una imagen más ancha que su contenedor se sale y provoca un desplazamiento horizontal. Una regla lo evita:
+
+```css
+img {
+	max-width: 100%;
+	height: auto;
+}
+```
+
+La imagen nunca supera a su contenedor y conserva sus proporciones.
+
+### Consultas de medios
+
+Una **consulta de medios** (*media query*) aplica un bloque de [CSS](/articulos/que-es-css/) solo cuando se cumple una condición, normalmente sobre la anchura de la ventana:
+
+```css
+.tarjetas {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+@media (min-width: 48rem) {
+	.tarjetas {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+```
+
+Las tarjetas van en una columna y, a partir de cierta anchura, en tres. El valor en el que cambia el diseño se llama **punto de ruptura** (*breakpoint*).
+
+## Empezar por el móvil
+
+El ejemplo anterior sigue la estrategia **mobile first**: los estilos base son los de la pantalla pequeña, y las consultas de medios añaden cosas a medida que hay más espacio.
+
+Tiene ventajas prácticas:
+
+- **Obliga a priorizar.** En poco espacio solo cabe lo importante.
+- **El CSS queda más simple.** El diseño de una columna apenas necesita reglas; lo complejo se añade después.
+- **Los móviles cargan menos**, justo donde la conexión y el procesador suelen ser más modestos.
+
+## Dónde poner los puntos de ruptura
+
+No conviene elegirlos según modelos concretos de teléfono: hay miles y cambian cada año.
+
+La forma recomendada es ensanchar la ventana poco a poco y añadir un punto de ruptura **cuando el diseño empieza a verse mal**: las líneas de texto son demasiado largas, o sobra espacio. Los puntos de ruptura los decide el contenido.
+
+## Diseños que se adaptan solos
+
+El CSS actual permite diseños que se reorganizan sin consultas de medios.
+
+```css
+.tarjetas {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+	gap: 1rem;
+}
+```
+
+Esta cuadrícula crea tantas columnas de al menos 16 rem como quepan. En un móvil sale una; en un monitor, cuatro o cinco. Sin puntos de ruptura.
+
+Otras herramientas en la misma línea:
+
+- **Flexbox con `flex-wrap`**, que deja que los elementos salten de línea cuando no caben.
+- **`clamp()`**, que da a una medida un mínimo, un valor ideal que crece con la ventana y un máximo. Muy útil para el tamaño de los títulos.
+- **Consultas de contenedor**, que adaptan un componente al espacio de su contenedor, no al de la ventana. Así un mismo componente se ve bien en una columna estrecha o en una ancha.
+
+<Quiz
+	client:visible
+	question="¿Qué significa diseñar con la estrategia mobile first?"
+	options={[
+		"Hacer una web aparte para móviles",
+		"Escribir primero los estilos de pantalla pequeña y ampliarlos para las grandes",
+		"Ocultar contenido en las pantallas grandes",
+	]}
+	answer={1}
+/>
+
+## No es solo cuestión de anchura
+
+- **Entrada táctil.** Un dedo es menos preciso que un ratón. Los elementos pulsables necesitan un tamaño cómodo, de unos 44 píxeles de lado como mínimo, y separación entre ellos.
+- **No hay "pasar el ratón por encima".** Lo que solo aparece al situar el puntero sobre algo es inaccesible en una pantalla táctil.
+- **Rendimiento.** Enviar a un móvil una imagen pensada para un monitor grande malgasta datos. El HTML permite ofrecer varias versiones para que el navegador elija.
+- **Texto legible.** Las líneas muy largas cansan. Un máximo de entre 60 y 80 caracteres por línea es una buena referencia.
+
+## Errores comunes
+
+- **Olvidar la etiqueta viewport.**
+- **Anchuras fijas en píxeles**, que provocan desplazamiento horizontal.
+- **Ocultar contenido en el móvil** en lugar de reorganizarlo. Quien usa un móvil suele querer lo mismo que quien usa un ordenador.
+- **Probar solo encogiendo la ventana.** Un dispositivo real se comporta distinto: el tacto, el teclado en pantalla, la velocidad.
+- **Impedir que se amplíe la página.** Es un problema de [accesibilidad](/articulos/accesibilidad-web/) para quien necesita letra más grande.
+
+## Lo esencial
+
+- El diseño adaptable hace que una misma página funcione en cualquier tamaño de pantalla.
+- Se apoya en medidas relativas, imágenes flexibles y consultas de medios.
+- Con la estrategia mobile first se parte de la pantalla pequeña y se amplía.
+- Los puntos de ruptura se ponen donde el contenido lo pide, no según dispositivos concretos.
+- También hay que pensar en el tacto, el rendimiento y la legibilidad.

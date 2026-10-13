@@ -1,0 +1,183 @@
+---
+title: "¿Qué es el DOM?"
+description: "El DOM es la representación en forma de árbol que el navegador construye de una página, y lo que JavaScript modifica para cambiarla."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+  - arboles-binarios-de-busqueda
+updated: 2026-10-13
+sources:
+  - title: "MDN: Introducción al DOM"
+    url: https://developer.mozilla.org/es/docs/Web/API/Document_Object_Model/Introduction
+  - title: "WHATWG: DOM Standard (en inglés)"
+    url: https://dom.spec.whatwg.org/
+  - title: "MDN: Document.querySelector()"
+    url: https://developer.mozilla.org/es/docs/Web/API/Document/querySelector
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **DOM** (*Document Object Model*, modelo de objetos del documento) es la representación de una página web que el navegador mantiene en memoria. Tiene forma de árbol, y es lo que JavaScript lee y modifica para que una página cambie sin recargarse.
+
+## Qué problema resuelve
+
+El [HTML](/articulos/que-es-html/) que llega del servidor es texto. Un programa no puede trabajar cómodamente con texto: para cambiar el contenido de un párrafo habría que buscarlo carácter a carácter.
+
+El navegador lee ese texto una vez y construye con él una estructura de objetos. A partir de ahí, la página **es** esa estructura. Lo que ves en pantalla es su dibujo, y cualquier cambio en ella se refleja al momento.
+
+El DOM es además una [API](/articulos/que-es-una-api/): un conjunto de objetos y funciones que el navegador ofrece para consultar y alterar la página.
+
+## Un árbol de nodos
+
+Cada elemento del HTML se convierte en un **nodo**, y como los elementos se anidan, los nodos forman un [árbol](/articulos/arboles-binarios-de-busqueda/).
+
+```html
+<body>
+	<h1>Tareas</h1>
+	<ul>
+		<li>Estudiar</li>
+		<li>Comprar pan</li>
+	</ul>
+</body>
+```
+
+Ese fragmento da lugar a este árbol:
+
+```
+body
+├── h1
+│   └── "Tareas"
+└── ul
+    ├── li
+    │   └── "Estudiar"
+    └── li
+        └── "Comprar pan"
+```
+
+Se usa el vocabulario de los árboles: `body` es el **padre** de `h1` y de `ul`; los dos `li` son **hijos** de `ul` y **hermanos** entre sí. El texto de cada elemento es también un nodo.
+
+El objeto `document` representa la página entera y es el punto de entrada.
+
+## El DOM no es el HTML
+
+Se parecen, pero no son lo mismo:
+
+- **El navegador corrige.** Si falta una etiqueta de cierre, o falta el `body`, el árbol se construye bien de todos modos.
+- **JavaScript lo cambia.** Tras ejecutar código, el DOM puede no parecerse al HTML original.
+
+Por eso "ver código fuente" muestra el HTML que llegó, mientras que el inspector del navegador muestra el DOM tal como está en ese momento.
+
+## Leer y cambiar la página
+
+Los ejemplos siguientes funcionan en la consola del navegador, no en Node.js, porque necesitan una página.
+
+### Encontrar elementos
+
+```javascript
+const titulo = document.querySelector("h1");
+const tareas = document.querySelectorAll("li");
+
+console.log(titulo.textContent); // "Tareas"
+console.log(tareas.length); // 2
+```
+
+`querySelector` devuelve el primer elemento que coincide con un selector de [CSS](/articulos/que-es-css/). `querySelectorAll` los devuelve todos.
+
+### Cambiar el contenido y el aspecto
+
+```javascript
+const titulo = document.querySelector("h1");
+
+titulo.textContent = "Mis tareas";
+titulo.classList.add("destacado");
+```
+
+`textContent` cambia el texto. `classList` añade o quita clases, que es la forma recomendada de cambiar el aspecto: el estilo queda en el CSS y el código solo decide qué clase toca.
+
+### Crear y eliminar
+
+```javascript
+const lista = document.querySelector("ul");
+const nueva = document.createElement("li");
+
+nueva.textContent = "Leer";
+lista.append(nueva);
+
+lista.firstElementChild.remove();
+```
+
+Se crea un elemento, se le da contenido y se añade al árbol. Hasta que no se añade, existe pero no se ve.
+
+## Eventos
+
+Una página responde a lo que hace el usuario mediante **eventos**: señales que el navegador emite cuando ocurre algo, como un clic, una tecla o el envío de un formulario.
+
+```javascript
+const boton = document.querySelector("button");
+
+boton.addEventListener("click", () => {
+	console.log("Has pulsado el botón");
+});
+```
+
+`addEventListener` registra una función que se ejecutará cada vez que ocurra el evento.
+
+### Los eventos suben por el árbol
+
+Un clic en un `li` no se queda en el `li`. Después de dispararse ahí, sube al `ul`, al `body` y hasta `document`. Se llama **propagación** (*bubbling*).
+
+Eso permite la **delegación de eventos**: en lugar de registrar una función en cada elemento de una lista, se registra una sola en el contenedor.
+
+```javascript
+const lista = document.querySelector("ul");
+
+lista.addEventListener("click", (evento) => {
+	const tarea = evento.target.closest("li");
+
+	if (tarea) {
+		tarea.classList.toggle("hecha");
+	}
+});
+```
+
+Con una sola función se atienden todos los elementos, incluidos los que se añadan después.
+
+<Quiz
+	client:visible
+	question="¿Qué muestra el inspector de elementos del navegador?"
+	options={[
+		"El archivo HTML tal como llegó del servidor",
+		"El DOM en su estado actual",
+		"El código JavaScript de la página",
+	]}
+	answer={1}
+/>
+
+## El coste de tocar el DOM
+
+Cambiar el DOM no es gratis. Tras una modificación, el navegador puede tener que recalcular la posición y el tamaño de los elementos y volver a dibujar la zona afectada.
+
+Un cambio no se nota. Miles seguidos, sí. Dos costumbres ayudan:
+
+- **Agrupar los cambios**: preparar todo y añadirlo al árbol de una vez.
+- **No alternar lecturas y escrituras** de medidas dentro de un bucle, porque cada lectura obliga a recalcular.
+
+Las bibliotecas de interfaz, como React, existen en buena parte para no manejar el DOM a mano: tú describes cómo debe quedar la interfaz y ellas calculan y aplican los cambios mínimos.
+
+## Seguridad
+
+Hay dos maneras de insertar contenido, y la diferencia importa:
+
+- `textContent` trata lo que recibe como texto.
+- `innerHTML` lo interpreta como HTML.
+
+Usar `innerHTML` con datos que vienen de un usuario abre la puerta a que se ejecute código ajeno en la página, el ataque conocido como [cross-site scripting](/articulos/cross-site-scripting-xss/).
+
+## Lo esencial
+
+- El DOM es el árbol de objetos que el navegador construye a partir del HTML.
+- JavaScript lo consulta y lo modifica, y la pantalla refleja los cambios.
+- Los elementos se localizan con selectores de CSS.
+- Los eventos avisan de lo que hace el usuario y suben por el árbol.
+- Modificar el DOM tiene un coste, y conviene agrupar los cambios.

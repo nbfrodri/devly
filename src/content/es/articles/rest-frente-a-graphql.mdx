@@ -1,0 +1,181 @@
+---
+title: "Diferencias entre REST y GraphQL"
+description: "En REST el servidor decide qué devuelve cada dirección; en GraphQL el cliente pide exactamente los campos que quiere en una sola consulta."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-rest
+updated: 2026-10-13
+sources:
+  - title: "GraphQL: Learn (documentación oficial, en inglés)"
+    url: https://graphql.org/learn/
+  - title: "GraphQL Specification (en inglés)"
+    url: https://spec.graphql.org/
+  - title: "R. T. Fielding: Architectural Styles and the Design of Network-based Software Architectures, capítulo 5 (2000, en inglés)"
+    url: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm
+---
+
+import { Quiz } from "@/components/quiz";
+
+**REST** y **GraphQL** son dos formas de diseñar una [API](/articulos/que-es-una-api/). En [REST](/articulos/que-es-rest/), cada dirección devuelve un recurso con una forma fijada por el servidor. En GraphQL hay una sola dirección, y el cliente envía una consulta que describe exactamente qué datos quiere.
+
+GraphQL lo creó Facebook y lo publicó en 2015.
+
+## El problema del que parte GraphQL
+
+Una pantalla de perfil muestra el nombre de un usuario, los títulos de sus tres últimos artículos y cuántos comentarios tiene cada uno. Con una API REST típica:
+
+1. `GET /usuarios/7` devuelve el usuario, con veinte campos de los que se usa uno.
+2. `GET /usuarios/7/articulos` devuelve todos sus artículos, con el texto completo.
+3. Por cada artículo, `GET /articulos/31/comentarios` para poder contarlos.
+
+Aparecen dos problemas con nombre propio:
+
+- **Datos de más** (*over-fetching*): llegan campos que no se usan.
+- **Datos de menos** (*under-fetching*): una respuesta no basta y hay que encadenar varias peticiones.
+
+En una red móvil lenta, las dos cosas se notan.
+
+## Cómo lo plantea GraphQL
+
+El cliente describe la forma de los datos que necesita:
+
+```graphql
+query {
+	usuario(id: 7) {
+		nombre
+		articulos(ultimos: 3) {
+			titulo
+			totalDeComentarios
+		}
+	}
+}
+```
+
+Y la respuesta tiene exactamente esa forma:
+
+```json
+{
+	"data": {
+		"usuario": {
+			"nombre": "Ana",
+			"articulos": [
+				{ "titulo": "¿Qué es una variable?", "totalDeComentarios": 4 },
+				{ "titulo": "¿Qué es un bucle?", "totalDeComentarios": 2 }
+			]
+		}
+	}
+}
+```
+
+Una petición, y ni un campo de más.
+
+### El esquema
+
+Una API GraphQL se define con un **esquema**: la descripción de todos los tipos de datos, sus campos y sus relaciones.
+
+```graphql
+type Usuario {
+	id: ID!
+	nombre: String!
+	articulos(ultimos: Int): [Articulo!]!
+}
+
+type Articulo {
+	titulo: String!
+	totalDeComentarios: Int!
+}
+```
+
+El signo `!` indica que el campo no puede faltar. El esquema es un contrato con [tipos](/articulos/tipado-estatico-y-dinamico/): las consultas se validan contra él antes de ejecutarse, y las herramientas pueden autocompletar y generar documentación.
+
+### Tres operaciones
+
+| Operación | Para qué |
+| --- | --- |
+| `query` | Leer |
+| `mutation` | Modificar |
+| `subscription` | Recibir avisos cuando algo cambia |
+
+Todas se envían a la misma dirección, normalmente con el método `POST`.
+
+## Comparación
+
+| | REST | GraphQL |
+| --- | --- | --- |
+| Direcciones | Una por recurso | Una sola |
+| Quién decide la forma de la respuesta | El servidor | El cliente |
+| Datos de más o de menos | Frecuentes | Se evitan |
+| Operación | El método HTTP | El tipo de operación |
+| Contrato | Opcional, con herramientas externas | El esquema, obligatorio |
+| Caché | Sencilla, la de HTTP | Más compleja |
+| Errores | Códigos de estado HTTP | Casi siempre `200`, con los errores en el cuerpo |
+| Curva de aprendizaje | Baja | Mayor |
+
+<Quiz
+	client:visible
+	question="¿Qué problema de las API REST evita GraphQL?"
+	options={[
+		"Recibir campos que no se necesitan y tener que encadenar peticiones",
+		"La falta de cifrado",
+		"Que el servidor guarde estado",
+	]}
+	answer={0}
+/>
+
+## Lo que GraphQL complica
+
+La flexibilidad tiene contrapartidas, y casi todas recaen en el servidor.
+
+### La caché
+
+En REST, cada dirección identifica un recurso, y la caché de [HTTP](/articulos/que-es-http/) funciona sin esfuerzo: navegadores e intermediarios guardan la respuesta de un `GET`.
+
+En GraphQL todo va a la misma dirección y cada consulta es distinta. Esa caché no sirve tal cual, y hay que resolverlo en el cliente o con técnicas adicionales.
+
+### El coste de una consulta
+
+Como el cliente compone la consulta, puede pedir algo carísimo: los usuarios, con sus artículos, con los comentarios de cada uno, con el autor de cada comentario. Una API pública tiene que protegerse limitando la profundidad o el coste de las consultas.
+
+### El problema N+1
+
+Una consulta inocente puede provocar muchísimas consultas a la [base de datos](/articulos/que-es-una-base-de-datos/). Al pedir diez artículos con su autor, una implementación directa hace una consulta para los artículos y otra por cada autor: once en total. Se soluciona agrupando las peticiones, pero hay que saberlo y hacerlo.
+
+### Errores y permisos
+
+Una respuesta puede traer parte de los datos y parte de errores a la vez, casi siempre con el código `200`. Quien consume la API no puede fiarse del código de estado.
+
+Y la [autorización](/articulos/autenticacion-y-autorizacion/) deja de comprobarse por dirección: hay que decidir, campo a campo, quién puede ver qué.
+
+## Cuándo usar cada uno
+
+**REST** encaja cuando:
+
+- la API es sencilla o se organiza de forma natural en recursos;
+- es pública y debe ser fácil de entender para cualquiera;
+- la caché de HTTP importa;
+- el equipo es pequeño y no quiere más infraestructura.
+
+**GraphQL** encaja cuando:
+
+- hay clientes muy distintos, como web, móvil y terceros, que necesitan datos diferentes;
+- las pantallas combinan datos de muchas fuentes;
+- la interfaz cambia a menudo y no se quiere tocar el servidor en cada cambio;
+- se quiere reducir el número de peticiones, por ejemplo para móviles.
+
+## No son excluyentes
+
+Muchas organizaciones usan las dos: REST para una API pública sencilla y GraphQL como capa que reúne varios servicios internos para la interfaz. También es frecuente que GraphQL se coloque por delante de API REST ya existentes.
+
+## Confusiones frecuentes
+
+- **"GraphQL sustituye a REST."** Es una alternativa con otras contrapartidas.
+- **"GraphQL es una base de datos."** Es un lenguaje de consulta para API. Los datos pueden venir de cualquier sitio.
+- **"GraphQL es más rápido."** Ahorra peticiones y datos en la red; en el servidor, una consulta mal resuelta puede ser más lenta.
+
+## Lo esencial
+
+- En REST el servidor define qué devuelve cada dirección; en GraphQL el cliente pide los campos que quiere.
+- GraphQL evita recibir datos de más y encadenar peticiones.
+- A cambio, complica la caché, el control de costes y la gestión de errores y permisos.
+- REST es más simple y suficiente para muchas API; GraphQL compensa con clientes variados y datos muy relacionados.

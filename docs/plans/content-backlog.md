@@ -49,17 +49,17 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 
 ## Aplicaciones e ingeniería del software
 
-- [ ] El DOM y JavaScript en el navegador
-- [ ] Accesibilidad web
-- [ ] Diseño adaptable
+- [x] El DOM y JavaScript en el navegador
+- [x] Accesibilidad web
+- [x] Diseño adaptable
 - [x] ¿Qué es REST?
-- [ ] Diferencias entre REST y GraphQL
+- [x] Diferencias entre REST y GraphQL
 - [x] Pruebas de software: unitarias, de integración y de extremo a extremo
 - [x] Integración y despliegue continuos (CI/CD)
 - [x] ¿Qué es Docker?
-- [ ] Diferencias entre monolito y microservicios
-- [ ] ¿Qué es el diseño guiado por el dominio (DDD)?
-- [ ] Patrones de diseño
+- [x] Diferencias entre monolito y microservicios
+- [x] ¿Qué es el diseño guiado por el dominio (DDD)?
+- [x] Patrones de diseño
 - [ ] Scrum y las metodologías ágiles
 - [ ] Heurísticas de usabilidad
 

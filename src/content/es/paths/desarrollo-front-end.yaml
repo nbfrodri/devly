@@ -1,0 +1,9 @@
+title: Desarrollo front-end
+description: De la estructura de una página a una interfaz que funciona en cualquier pantalla y para cualquier persona.
+layer: aplicaciones
+steps:
+  - que-es-html
+  - que-es-css
+  - el-dom
+  - diseno-adaptable
+  - accesibilidad-web

@@ -1,0 +1,9 @@
+title: Arquitectura de software
+description: Cómo se organiza el código de un sistema, de las clases a los servicios.
+layer: aplicaciones
+steps:
+  - principios-solid
+  - patrones-de-diseno
+  - patron-mvc
+  - diseno-guiado-por-el-dominio
+  - monolito-y-microservicios

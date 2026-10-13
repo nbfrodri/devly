@@ -83,7 +83,7 @@ En la práctica no se escribe esta función a mano. Los marcos de trabajo y los 
 
 ### Las puertas traseras
 
-Casi todas las herramientas ofrecen una forma de insertar HTML sin escapar, pensada para casos concretos. Usarla con datos de un usuario reabre el problema. En JavaScript, la más conocida es asignar a `innerHTML`:
+Casi todas las herramientas ofrecen una forma de insertar HTML sin escapar, pensada para casos concretos. Usarla con datos de un usuario reabre el problema. En JavaScript, al trabajar con el [DOM](/articulos/el-dom/), la más conocida es asignar a `innerHTML`:
 
 - `elemento.innerHTML = dato` interpreta el dato como HTML. Peligroso con datos externos.
 - `elemento.textContent = dato` lo trata siempre como texto. Seguro.

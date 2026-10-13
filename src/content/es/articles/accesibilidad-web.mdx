@@ -1,0 +1,160 @@
+---
+title: "¿Qué es la accesibilidad web?"
+description: "La accesibilidad web consiste en construir sitios que pueda usar cualquier persona, también quienes no ven la pantalla o no usan ratón."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+updated: 2026-10-13
+sources:
+  - title: "W3C: Web Content Accessibility Guidelines (WCAG) 2.2 (en inglés)"
+    url: https://www.w3.org/TR/WCAG22/
+  - title: "W3C WAI: Introducción a la accesibilidad web"
+    url: https://www.w3.org/WAI/fundamentals/accessibility-intro/es
+  - title: "MDN: Accesibilidad"
+    url: https://developer.mozilla.org/es/docs/Web/Accessibility
+  - title: "W3C WAI: ARIA Authoring Practices Guide (en inglés)"
+    url: https://www.w3.org/WAI/ARIA/apg/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **accesibilidad web** es la práctica de diseñar y construir sitios que pueda usar cualquier persona, sean cuales sean sus capacidades y la forma en que accede a la web. Se abrevia **a11y**: entre la "a" y la "y" de *accessibility* hay once letras.
+
+## A quién afecta
+
+Se piensa en la ceguera, pero el abanico es mucho mayor:
+
+- **Visual**: ceguera, baja visión, daltonismo.
+- **Auditiva**: sordera o pérdida de audición.
+- **Motora**: dificultad para usar un ratón o un teclado.
+- **Cognitiva**: dislexia, dificultades de atención o de memoria.
+
+Y no siempre es permanente. Un brazo escayolado, una pantalla al sol, un vídeo que no puedes escuchar porque estás en el tren: son limitaciones temporales o de situación. Lo que ayuda a unos pocos de forma imprescindible mejora la experiencia de todos. Los subtítulos son el ejemplo clásico.
+
+Además, en muchos países la ley exige que los sitios públicos, y cada vez más los privados, sean accesibles.
+
+## Cómo navega quien no ve la pantalla
+
+Un **lector de pantalla** es un programa que lee en voz alta el contenido de una página y permite recorrerla con el teclado. No interpreta píxeles: lee la estructura del documento, que el navegador obtiene del [DOM](/articulos/el-dom/).
+
+Quien lo usa salta de título en título, lista los enlaces o va directo al contenido principal. Eso solo funciona si la página dice qué es cada cosa.
+
+## Las pautas
+
+El estándar de referencia son las **WCAG**, publicadas por el W3C. Se organizan en cuatro principios:
+
+| Principio | Significa | Ejemplo |
+| --- | --- | --- |
+| **Perceptible** | La información puede percibirse por más de un sentido | Texto alternativo en las imágenes |
+| **Operable** | Todo se puede manejar, también sin ratón | Navegación con teclado |
+| **Comprensible** | El contenido y el funcionamiento se entienden | Mensajes de error claros |
+| **Robusto** | Funciona con distintos navegadores y ayudas técnicas | HTML correcto |
+
+Cada criterio tiene un nivel de exigencia: A, AA o AAA. El objetivo habitual, y el que suelen pedir las leyes, es el **AA**.
+
+## Lo que más importa en la práctica
+
+### HTML semántico
+
+Es la base, y resuelve la mayor parte del trabajo. Los elementos de [HTML](/articulos/que-es-html/) traen la accesibilidad incorporada:
+
+```html
+<button>Guardar</button>
+```
+
+Un `button` se puede alcanzar con el tabulador, se activa con Intro o con la barra espaciadora, y el lector de pantalla lo anuncia como botón.
+
+```html
+<div class="boton" onclick="guardar()">Guardar</div>
+```
+
+Este `div` se ve igual, pero no recibe el foco, no responde al teclado y se anuncia como un texto cualquiera. Para quien no usa ratón, no existe.
+
+Usar el elemento correcto es gratis. Reproducir a mano lo que hace es difícil y casi siempre queda incompleto.
+
+### Texto alternativo
+
+Toda imagen que aporta información necesita un atributo `alt` que la describa:
+
+```html
+<img src="grafico.png" alt="Las ventas subieron un 20 % entre enero y marzo">
+```
+
+Si la imagen es decorativa, el atributo se deja vacío, `alt=""`, para que el lector de pantalla la ignore. Omitirlo es peor: muchos lectores leen entonces el nombre del archivo.
+
+### Teclado
+
+Todo lo que se hace con el ratón debe poder hacerse con el teclado:
+
+- El tabulador recorre los elementos interactivos en un orden lógico.
+- **El foco tiene que verse.** Quitar el contorno que marca el elemento activo deja a la persona sin saber dónde está.
+- No debe haber trampas: sitios de los que no se puede salir con el teclado.
+
+### Contraste
+
+El texto debe distinguirse del fondo. Las pautas piden una relación de contraste de al menos **4,5 a 1** para el texto normal y de **3 a 1** para el texto grande. El gris claro sobre blanco, tan frecuente, no la cumple.
+
+Y la información no puede depender solo del color. Un campo con error marcado únicamente en rojo es invisible para una persona daltónica: hace falta también un icono o un texto.
+
+### Formularios
+
+Cada campo necesita una etiqueta asociada:
+
+```html
+<label for="correo">Correo electrónico</label>
+<input id="correo" type="email">
+```
+
+El atributo `for` une la etiqueta con el campo. Así el lector de pantalla anuncia para qué sirve, y pulsar sobre la etiqueta lleva el cursor al campo. El texto de ejemplo dentro del campo no sustituye a la etiqueta, porque desaparece al escribir.
+
+### Títulos en orden
+
+Los títulos, de `h1` a `h6`, forman el índice de la página. Deben seguir un orden lógico, sin saltos, y elegirse por la estructura, no por el tamaño de letra.
+
+<Quiz
+	client:visible
+	question="¿Qué texto alternativo debe llevar una imagen puramente decorativa?"
+	options={[
+		"Ninguno: se omite el atributo alt",
+		'Un atributo alt vacío',
+		"El nombre del archivo",
+	]}
+	answer={1}
+/>
+
+## ARIA
+
+**ARIA** es un conjunto de atributos que añaden información para las ayudas técnicas cuando el HTML no basta, como en componentes complejos que no existen como elemento nativo.
+
+Su primera regla es no usarlo si un elemento de HTML ya hace el trabajo. ARIA cambia lo que se anuncia, pero no añade comportamiento: un `div` con `role="button"` se anuncia como botón y sigue sin responder al teclado. Un ARIA mal puesto es peor que ninguno, porque promete algo que no ocurre.
+
+## Movimiento
+
+Las animaciones pueden marear o distraer. El sistema operativo permite indicar que se prefiere menos movimiento, y una página puede respetarlo con una consulta de medios de [CSS](/articulos/que-es-css/):
+
+```css
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation: none;
+		transition: none;
+	}
+}
+```
+
+## Cómo comprobarlo
+
+- **Usa la página solo con el teclado.** Es la prueba más rápida y reveladora.
+- **Pasa una herramienta automática.** Detecta contraste insuficiente, imágenes sin texto alternativo y campos sin etiqueta.
+- **Prueba con un lector de pantalla.**
+- **Amplía el texto al 200 %** y comprueba que nada se rompe.
+
+Las herramientas automáticas encuentran solo una parte de los problemas. No saben si un texto alternativo describe bien la imagen ni si el orden de lectura tiene sentido.
+
+## Lo esencial
+
+- La accesibilidad permite que cualquiera use un sitio, y beneficia a todos.
+- Las WCAG la organizan en cuatro principios: perceptible, operable, comprensible y robusto.
+- El HTML semántico resuelve la mayor parte: elementos correctos, texto alternativo, etiquetas y títulos en orden.
+- Todo debe funcionar con teclado y con contraste suficiente.
+- ARIA es para lo que el HTML no cubre, no un sustituto.
