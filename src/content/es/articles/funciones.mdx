@@ -9,11 +9,26 @@ updated: 2026-10-13
 sources:
   - title: "MDN: Funciones"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
+  - title: "MDN: Funciones flecha"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Functions/Arrow_functions
+  - title: "MDN: Scope (glosario)"
+    url: https://developer.mozilla.org/es/docs/Glossary/Scope
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **función** es un bloque de código al que le pones nombre para poder usarlo tantas veces como quieras. Escribes las instrucciones una vez y después solo las llamas.
+Una **función** es un bloque de código con nombre que puedes ejecutar cuando lo necesites. Escribes las instrucciones una vez y después las usas tantas veces como quieras.
+
+## Por qué existen
+
+Supón que en tres sitios de un programa calculas el precio con IVA. Si copias la fórmula tres veces y un día cambia el IVA, tienes que acordarte de cambiarla en los tres sitios. Con una función, la fórmula está en un único lugar.
+
+Las funciones resuelven dos problemas a la vez:
+
+- **Repetición**: el código se escribe una vez.
+- **Comprensión**: `calcularPrecioFinal(precio)` dice qué hace sin obligarte a leer cómo lo hace.
+
+## Definir y llamar
 
 ```js
 function saludar(nombre) {
@@ -24,20 +39,38 @@ console.log(saludar("Ana")); // "Hola, Ana"
 console.log(saludar("Luis")); // "Hola, Luis"
 ```
 
-Una función tiene tres partes:
+Las primeras líneas **definen** la función: le dan nombre y describen qué hará. Ese código no se ejecuta todavía.
 
-- **Nombre**: `saludar`. Es lo que escribes para usarla.
-- **Parámetros**: `nombre`. Son los datos que necesita para trabajar. Puede no tener ninguno o tener varios.
+`saludar("Ana")` la **llama**: ahí es cuando se ejecuta lo de dentro. Los paréntesis son los que provocan la llamada. Escribir `saludar` sin paréntesis no ejecuta nada.
+
+## Las partes de una función
+
+- **Nombre**: `saludar`. Suele ser un verbo, porque una función hace algo.
+- **Parámetros**: `nombre`. Son [variables](/articulos/que-es-una-variable/) que solo existen dentro de la función y reciben los datos con los que va a trabajar.
+- **Cuerpo**: lo que hay entre llaves.
 - **Valor de retorno**: lo que va después de `return`. Es el resultado que la función entrega a quien la llamó.
 
-## Definir no es ejecutar
+### Parámetros y argumentos
 
-Escribir la función solo la define. El código de dentro no se ejecuta hasta que la **llamas** con paréntesis: `saludar("Ana")`.
+El **parámetro** es el nombre que aparece en la definición (`nombre`). El **argumento** es el valor concreto que pasas al llamar (`"Ana"`). En cada llamada, el parámetro toma el valor del argumento.
 
-## Para qué sirven
+Una función puede tener varios parámetros, separados por comas, o ninguno:
 
-- **Reutilizar**: si cambias el saludo, lo cambias en un solo sitio.
-- **Dar nombre a una idea**: `calcularPrecioFinal(precio)` se entiende mejor que la fórmula escrita en mitad del programa.
+```js
+function sumar(a, b) {
+	return a + b;
+}
+
+console.log(sumar(2, 3)); // 5
+```
+
+Los argumentos se asignan por orden: el primero a `a`, el segundo a `b`.
+
+## Devolver un valor
+
+`return` hace dos cosas: entrega un valor y termina la función en ese punto. Lo que haya después dentro de la función no se ejecuta.
+
+El valor devuelto ocupa el lugar de la llamada. Puedes guardarlo, mostrarlo o usarlo en otra operación:
 
 ```js
 function calcularPrecioFinal(precio) {
@@ -45,7 +78,9 @@ function calcularPrecioFinal(precio) {
 	return precio + iva;
 }
 
-console.log(calcularPrecioFinal(100)); // 121
+const total = calcularPrecioFinal(100);
+console.log(total); // 121
+console.log(calcularPrecioFinal(50) * 2); // 121
 ```
 
 <Quiz
@@ -54,3 +89,59 @@ console.log(calcularPrecioFinal(100)); // 121
 	options={["221", "242", "42"]}
 	answer={1}
 />
+
+### Mostrar no es devolver
+
+`console.log` enseña un valor en pantalla. `return` se lo entrega al código que llamó a la función. Son cosas distintas, y confundirlas es el error más común al empezar.
+
+```js
+function doble(numero) {
+	console.log(numero * 2);
+}
+
+const resultado = doble(4); // Muestra 8
+console.log(resultado); // undefined
+```
+
+`doble` muestra el 8 pero no lo devuelve. Una función sin `return` devuelve `undefined`, así que `resultado` se queda sin el valor.
+
+## Lo que pasa dentro se queda dentro
+
+Las variables declaradas dentro de una función solo existen ahí. Desde fuera no se pueden leer.
+
+```js
+function calcular() {
+	const interno = 42;
+	return interno;
+}
+
+console.log(calcular()); // 42
+console.log(typeof interno); // "undefined"
+```
+
+La zona del código donde una variable es visible se llama **ámbito** o *scope*. Gracias a esto, dos funciones pueden usar el mismo nombre de variable sin estorbarse.
+
+## Otra forma de escribirlas
+
+Verás a menudo las **funciones flecha**. Hacen lo mismo con menos texto:
+
+```js
+const sumar = (a, b) => a + b;
+
+console.log(sumar(2, 3)); // 5
+```
+
+Cuando el cuerpo es una sola expresión, no hacen falta ni las llaves ni `return`: el resultado de la expresión es lo que se devuelve.
+
+## Errores comunes
+
+- **Definir la función y no llamarla.** Sin la llamada, el código de dentro no se ejecuta nunca.
+- **Olvidar `return`** y recibir `undefined`.
+- **Pasar los argumentos en otro orden** del que esperan los parámetros.
+
+## Lo esencial
+
+- Una función agrupa instrucciones bajo un nombre para reutilizarlas.
+- Recibe datos por los parámetros y entrega un resultado con `return`.
+- Definirla no la ejecuta; llamarla, sí.
+- Sus variables internas no son visibles desde fuera.

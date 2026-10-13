@@ -9,15 +9,21 @@ updated: 2026-10-13
 sources:
   - title: "MDN: Bucles e iteración"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Loops_and_iteration
+  - title: "MDN: for...of"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/for...of
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **bucle** es una instrucción que repite un bloque de código varias veces. Sirve para no escribir lo mismo una y otra vez, y para trabajar con cantidades que no conoces de antemano.
+Un **bucle** es una instrucción que repite un bloque de código varias veces. Evita escribir lo mismo una y otra vez y permite trabajar con cantidades que no conoces de antemano.
+
+## Por qué hacen falta
+
+Mostrar los números del 1 al 3 se puede hacer con tres líneas. Mostrar del 1 al 1000 no. Y si la cantidad depende de algo que solo se sabe mientras el programa funciona, como cuántos productos hay en un carrito, no hay forma de escribirlo línea a línea. Un bucle resuelve los dos casos: describes una vuelta y dices cuándo parar.
 
 ## Repetir mientras algo sea cierto
 
-`while` repite el bloque mientras la condición sea verdadera.
+`while` significa "mientras". Repite el bloque mientras la [condición](/articulos/condicionales/) sea verdadera.
 
 ```js
 let contador = 1;
@@ -29,13 +35,24 @@ while (contador <= 3) {
 // Muestra 1, 2 y 3
 ```
 
-Antes de cada vuelta se comprueba la condición. Cuando `contador` llega a 4, la condición es falsa y el bucle termina.
+Conviene seguirlo paso a paso:
 
-La línea que suma 1 es imprescindible. Sin ella la condición nunca dejaría de cumplirse y el programa se quedaría repitiendo para siempre: eso es un **bucle infinito**.
+1. `contador` vale 1. ¿Es menor o igual que 3? Sí. Muestra 1 y pasa a valer 2.
+2. ¿2 es menor o igual que 3? Sí. Muestra 2 y pasa a valer 3.
+3. ¿3 es menor o igual que 3? Sí. Muestra 3 y pasa a valer 4.
+4. ¿4 es menor o igual que 3? No. El bucle termina.
+
+La condición se comprueba **antes** de cada vuelta. Si fuera falsa desde el principio, el bloque no se ejecutaría ni una vez.
+
+### Bucles infinitos
+
+La línea `contador = contador + 1` es imprescindible. Sin ella `contador` valdría siempre 1, la condición nunca dejaría de cumplirse y el programa repetiría el bloque sin parar. Eso es un **bucle infinito**, y normalmente deja el programa bloqueado.
+
+Todo bucle necesita que algo cambie en cada vuelta para que la condición acabe siendo falsa.
 
 ## Repetir un número de veces
 
-Cuando sabes cuántas vueltas quieres, `for` junta en una sola línea las tres piezas del ejemplo anterior: el valor inicial, la condición y el cambio en cada vuelta.
+Cuando sabes cuántas vueltas quieres, `for` reúne en una línea las tres piezas que en `while` estaban repartidas:
 
 ```js
 for (let i = 1; i <= 3; i++) {
@@ -44,7 +61,13 @@ for (let i = 1; i <= 3; i++) {
 // Muestra 1, 2 y 3
 ```
 
-`i++` es una forma corta de escribir `i = i + 1`.
+Entre los paréntesis hay tres partes separadas por punto y coma:
+
+- `let i = 1`: el **inicio**. Se ejecuta una sola vez, antes de empezar.
+- `i <= 3`: la **condición**. Se comprueba antes de cada vuelta.
+- `i++`: el **paso**. Se ejecuta al final de cada vuelta. Es una forma corta de escribir `i = i + 1`.
+
+La variable se suele llamar `i`, de "índice". Es una convención.
 
 <Quiz
 	client:visible
@@ -52,3 +75,65 @@ for (let i = 1; i <= 3; i++) {
 	options={["4", "5", "6"]}
 	answer={1}
 />
+
+## Recorrer una lista
+
+El uso más frecuente de un bucle es hacer algo con cada elemento de una lista. Para eso existe `for...of`, que no necesita contador:
+
+```js
+const frutas = ["manzana", "pera", "uva"];
+
+for (const fruta of frutas) {
+	console.log(fruta);
+}
+// Muestra manzana, pera y uva
+```
+
+En cada vuelta, `fruta` contiene el siguiente elemento. El bucle termina solo cuando se acaba la lista.
+
+## Acumular un resultado
+
+Un patrón muy habitual es crear una variable antes del bucle e ir actualizándola en cada vuelta:
+
+```js
+const precios = [10, 25, 5];
+let total = 0;
+
+for (const precio of precios) {
+	total = total + precio;
+}
+
+console.log(total); // 40
+```
+
+`total` se declara fuera del bucle. Si se declarase dentro, volvería a valer 0 en cada vuelta.
+
+## Salir antes o saltarse una vuelta
+
+- `break` termina el bucle en ese momento.
+- `continue` abandona la vuelta actual y pasa a la siguiente.
+
+```js
+for (let i = 1; i <= 5; i++) {
+	if (i === 3) {
+		continue;
+	}
+	if (i === 5) {
+		break;
+	}
+	console.log(i);
+}
+// Muestra 1, 2 y 4
+```
+
+## Errores comunes
+
+- **Olvidar el paso** en un `while` y crear un bucle infinito.
+- **Pasarse o quedarse corto por uno.** `i < 5` empezando en 0 da cinco vueltas (0, 1, 2, 3, 4); `i <= 5` da seis. Es tan frecuente que tiene nombre propio: error *off-by-one*.
+- **Declarar dentro del bucle** la variable que acumula el resultado.
+
+## Lo esencial
+
+- Un bucle repite un bloque mientras se cumpla una condición.
+- `while` sirve cuando no sabes cuántas vueltas hacen falta; `for`, cuando lo sabes; `for...of`, para recorrer una lista.
+- Algo debe cambiar en cada vuelta para que el bucle termine.

@@ -9,23 +9,91 @@ sources:
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Grammar_and_types
   - title: "MDN: let"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/let
+  - title: "MDN: const"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/const
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **variable** es un nombre que apunta a un valor guardado en memoria. En lugar
-de recordar el valor, recuerdas el nombre.
+Una **variable** es un nombre que apunta a un valor guardado en la memoria del ordenador. En lugar de recordar el valor, recuerdas el nombre, y el programa se encarga de ir a buscarlo.
+
+## Para qué sirve
+
+Un programa trabaja con datos que no conoce de antemano: lo que escribe una persona, el precio de un producto, la hora actual. Para poder usar esos datos más adelante necesita guardarlos en algún sitio y tener una forma de referirse a ellos. Eso es una variable.
+
+Imagina una caja con una etiqueta. La etiqueta es el nombre, lo que hay dentro es el valor. Puedes mirar lo que hay dentro, y también puedes sacarlo y meter otra cosa.
+
+## Crear una variable
+
+En JavaScript se crea con la palabra `let`, un nombre, el signo `=` y el valor:
+
+```js
+let edad = 30;
+console.log(edad); // 30
+```
+
+Esta línea hace dos cosas. **Declara** la variable, es decir, le dice al programa que a partir de ahora existe algo llamado `edad`. Y le **asigna** un valor, 30.
+
+El signo `=` no significa "es igual a" como en matemáticas. Significa "guarda lo de la derecha en lo de la izquierda". Por eso se llama operador de asignación.
+
+## Cambiar el valor
+
+Una variable creada con `let` puede recibir un valor nuevo. El anterior se pierde:
 
 ```js
 let edad = 30;
 edad = 31;
+console.log(edad); // 31
 ```
 
-Aquí `edad` es la variable. Primero guarda `30` y después pasa a guardar `31`.
+La segunda línea ya no lleva `let`: la variable existe, solo le estás dando otro valor.
+
+El valor nuevo puede calcularse a partir del antiguo. El programa primero resuelve lo que hay a la derecha del `=` y después lo guarda:
+
+```js
+let puntos = 10;
+puntos = puntos + 5;
+console.log(puntos); // 15
+```
 
 <Quiz
 	client:visible
-	question="Después de ejecutar el código anterior, ¿cuánto vale edad?"
-	options={["30", "31", "61"]}
-	answer={1}
+	question="Si puntos vale 15 y se ejecuta puntos = puntos * 2, ¿cuánto vale después?"
+	options={["15", "17", "30"]}
+	answer={2}
 />
+
+## Valores que no cambian
+
+Si un valor no debe cambiar nunca, se declara con `const` en lugar de `let`. Si después intentas darle otro valor, el programa se detiene con un error:
+
+```js
+const diasDeLaSemana = 7;
+console.log(diasDeLaSemana); // 7
+```
+
+Usar `const` siempre que puedas tiene una ventaja: quien lea el código sabe de un vistazo que ese valor no va a cambiar más abajo.
+
+## Poner nombres
+
+El nombre lo eliges tú, con unas pocas reglas:
+
+- Puede tener letras, números, `_` y `$`, pero no puede empezar por un número.
+- No puede tener espacios. Cuando son varias palabras se juntan poniendo en mayúscula la inicial de cada una menos la primera: `precioFinal`, `nombreDeUsuario`.
+- Distingue mayúsculas de minúsculas: `edad` y `Edad` son dos variables distintas.
+
+Un buen nombre dice qué contiene. `precioConIva` se entiende solo; `x` o `dato2` obligan a leer el resto del código para saber qué son.
+
+## Errores comunes
+
+- **Usar una variable que no existe.** Si escribes `edda` en lugar de `edad`, el programa se detiene con un error que dice que `edda` no está definida.
+- **Declararla dos veces.** Escribir `let edad` otra vez más abajo en el mismo bloque es un error. Para cambiar el valor se escribe solo `edad = ...`.
+- **Leer `=` como una comparación.** `edad = 18` guarda 18 en `edad`. Para preguntar si vale 18 se usa `===`, que se explica en el artículo sobre [condicionales](/articulos/condicionales/).
+
+## Lo esencial
+
+- Una variable es un nombre asociado a un valor.
+- `let` crea una variable cuyo valor puede cambiar; `const`, una que no.
+- `=` guarda un valor, no compara.
+
+El siguiente paso es saber qué clases de valores puede guardar una variable: los [tipos de datos](/articulos/tipos-de-datos/).

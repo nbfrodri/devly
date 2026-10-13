@@ -13,38 +13,51 @@ sources:
     url: https://www.rfc-editor.org/info/rfc8200/
   - title: "Wikipedia: Dirección IP"
     url: https://es.wikipedia.org/wiki/Direcci%C3%B3n_IP
+  - title: "RFC 2131: Dynamic Host Configuration Protocol"
+    url: https://www.rfc-editor.org/info/rfc2131/
+  - title: "Wikipedia: Traducción de direcciones de red"
+    url: https://es.wikipedia.org/wiki/Traducci%C3%B3n_de_direcciones_de_red
+  - title: "Wikipedia: Sistema de nombres de dominio"
+    url: https://es.wikipedia.org/wiki/Sistema_de_nombres_de_dominio
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **dirección IP** es un número que identifica a un dispositivo dentro de una red. Cumple el papel de una dirección postal: para que los datos lleguen a un dispositivo, hay que saber adónde enviarlos.
+Una **dirección IP** es el número que identifica a un dispositivo dentro de una red. Cumple el papel de una dirección postal: para que los datos lleguen a un dispositivo, hay que saber adónde enviarlos.
 
 IP son las siglas de *Internet Protocol*, el conjunto de reglas que define cómo se direccionan y se envían los datos en internet.
 
+## Qué problema resuelve
+
+Cuando abres una página web, tu dispositivo y el servidor que la tiene intercambian datos. Esos datos no viajan de una vez: se dividen en trozos pequeños llamados **paquetes**, que pasan por muchos equipos intermedios hasta llegar.
+
+Cada paquete lleva escritas dos direcciones IP: la de origen y la de destino. Con la de destino, cada equipo del camino decide hacia dónde reenviarlo. Con la de origen, el destinatario sabe a quién contestar. Sin direcciones no habría forma de entregar nada.
+
 ## Qué aspecto tiene
 
-La versión más extendida, **IPv4**, escribe la dirección como cuatro números separados por puntos. Cada uno va de 0 a 255:
+La versión más extendida es **IPv4**. Escribe la dirección como cuatro números separados por puntos, cada uno entre 0 y 255:
 
 ```
 192.168.1.20
 ```
 
-Cada número ocupa 8 bits, así que una dirección IPv4 tiene 32 bits. Eso da unos 4.300 millones de direcciones posibles, menos que dispositivos conectados hay hoy.
+Ese rango no es casual. Cada número ocupa un byte, y con los 8 [bits](/articulos/que-es-un-bit/) de un byte se pueden representar 256 valores, del 0 al 255. Cuatro bytes son 32 bits.
 
-Por eso existe **IPv6**, que usa 128 bits y se escribe con grupos de cifras hexadecimales separados por dos puntos:
+```js
+console.log(2 ** 32); // 4294967296
+```
+
+Unos 4.300 millones de direcciones parecían de sobra cuando se diseñó. Hoy hay más dispositivos conectados que direcciones IPv4.
+
+### IPv6
+
+Para resolverlo se creó **IPv6**, que usa 128 bits. Se escribe con ocho grupos de cifras hexadecimales separados por dos puntos:
 
 ```
 2001:0db8:85a3:0000:0000:8a2e:0370:7334
 ```
 
-Las dos versiones conviven actualmente.
-
-## Públicas y privadas
-
-- Una **IP pública** identifica tu conexión en internet. Normalmente es la de tu router, y la comparten todos los dispositivos de tu casa.
-- Una **IP privada** identifica a un dispositivo dentro de tu red local. Las que empiezan por `192.168.` son privadas: sirven dentro de tu casa, pero no en internet.
-
-Hay una dirección especial, `127.0.0.1`, que siempre significa "este mismo dispositivo". También se la conoce como *localhost*.
+La cantidad de direcciones posibles es tan grande que no hay riesgo de que se agoten. Las dos versiones conviven: la transición es lenta porque exige actualizar equipos en todo el mundo.
 
 <Quiz
 	client:visible
@@ -52,3 +65,46 @@ Hay una dirección especial, `127.0.0.1`, que siempre significa "este mismo disp
 	options={["8", "32", "128"]}
 	answer={1}
 />
+
+## Públicas y privadas
+
+No todas las direcciones sirven para lo mismo.
+
+Una **IP pública** es única en todo internet. La asigna tu proveedor de conexión y es la que ven los servidores a los que te conectas.
+
+Una **IP privada** solo vale dentro de una red local, como la de tu casa. Hay tres rangos reservados para esto, y cualquier red del mundo puede reutilizarlos:
+
+| Rango | Uso habitual |
+| --- | --- |
+| `10.0.0.0` a `10.255.255.255` | Redes grandes |
+| `172.16.0.0` a `172.31.255.255` | Redes medianas |
+| `192.168.0.0` a `192.168.255.255` | Redes domésticas |
+
+Por eso tu ordenador y el de otra persona en otra ciudad pueden tener los dos la dirección `192.168.1.20` sin conflicto: cada uno está en su propia red.
+
+### Cómo sale a internet una IP privada
+
+En tu casa, el router tiene dos direcciones: una privada hacia dentro y la pública hacia fuera. Cuando un dispositivo envía algo a internet, el router sustituye la dirección privada por la pública y recuerda a quién pertenecía la petición para entregarle la respuesta. Esta técnica se llama **NAT**, traducción de direcciones de red.
+
+Gracias a NAT, todos los dispositivos de una casa comparten una sola IP pública. Es una de las razones por las que IPv4 ha aguantado tanto con tan pocas direcciones.
+
+## Quién asigna la dirección
+
+Normalmente no la configuras tú. Al conectarte a una red, tu dispositivo pide una dirección y el router le presta una libre durante un tiempo. El mecanismo se llama **DHCP**. Por eso la IP privada de tu móvil puede cambiar de un día para otro.
+
+Una dirección que cambia se llama **dinámica**. Una **estática** es siempre la misma, y la necesitan los servidores para que se los pueda encontrar.
+
+## Una dirección especial
+
+`127.0.0.1` siempre significa "este mismo dispositivo". Se la conoce como *localhost* y se usa para que un programa se comunique con otro que está en la misma máquina. Es la dirección que verás al desarrollar una web en tu ordenador antes de publicarla.
+
+## Direcciones y nombres
+
+Las personas no recuerdan números, así que escribimos nombres como `wikipedia.org`. Antes de conectarse, tu dispositivo consulta un servicio llamado **DNS** que traduce ese nombre a la dirección IP correspondiente. El nombre es para ti; la IP es lo que usa la red.
+
+## Lo esencial
+
+- Una dirección IP identifica a un dispositivo en una red y permite entregarle datos.
+- IPv4 usa 32 bits y se escribe como cuatro números de 0 a 255; IPv6 usa 128 bits.
+- Las IP privadas solo valen dentro de una red local; el router las traduce a una pública con NAT.
+- `127.0.0.1` es tu propio dispositivo.

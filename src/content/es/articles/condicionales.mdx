@@ -10,40 +10,109 @@ updated: 2026-10-13
 sources:
   - title: "MDN: if...else"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/if...else
+  - title: "MDN: Igualdad estricta (===)"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators/Strict_equality
+  - title: "MDN: Falsy (glosario, en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/Falsy
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **condicional** es una instrucción que ejecuta un bloque de código solo si una condición es verdadera. Es la forma que tiene un programa de tomar decisiones.
+Un **condicional** es una instrucción que ejecuta un bloque de código solo si se cumple una condición. Es la forma que tiene un programa de tomar decisiones.
+
+## Por qué hacen falta
+
+Sin condicionales, un programa ejecutaría siempre las mismas líneas en el mismo orden. Pero casi todo lo útil depende de algo: mostrar un error si la contraseña es incorrecta, aplicar un descuento si la compra supera cierta cantidad, dejar pasar solo a mayores de edad.
+
+## La forma básica
 
 ```js
 const edad = 20;
 
 if (edad >= 18) {
 	console.log("Puedes entrar");
-} else {
-	console.log("No puedes entrar");
 }
 ```
 
-Entre paréntesis va la **condición**: una expresión que da `true` o `false`. Si da `true`, se ejecuta el primer bloque. Si da `false`, se ejecuta el bloque de `else`. El `else` es opcional.
+Tiene tres partes:
 
-## Comparar valores
+- La palabra `if`, que significa "si".
+- La **condición**, entre paréntesis. Es una expresión que da `true` o `false`.
+- El **bloque**, entre llaves. Solo se ejecuta si la condición da `true`.
 
-Las condiciones suelen construirse con operadores de comparación:
+Si la condición da `false`, el programa se salta el bloque y sigue con lo que haya después.
 
-| Operador | Significa |
-| --- | --- |
-| `===` | es igual a |
-| `!==` | es distinto de |
-| `>` y `<` | mayor que, menor que |
-| `>=` y `<=` | mayor o igual, menor o igual |
+## Hacer otra cosa en caso contrario
 
-Fíjate en que comparar usa `===` y guardar un valor usa `=`. Son cosas distintas.
+`else` añade un segundo bloque que se ejecuta cuando la condición no se cumple. Siempre se ejecuta uno de los dos, nunca ambos.
+
+```js
+const edad = 15;
+
+if (edad >= 18) {
+	console.log("Puedes entrar");
+} else {
+	console.log("No puedes entrar");
+}
+// Muestra "No puedes entrar"
+```
+
+## Construir condiciones
+
+Las condiciones suelen ser comparaciones. Una comparación siempre da un [booleano](/articulos/tipos-de-datos/):
+
+| Operador | Significa | Ejemplo | Resultado |
+| --- | --- | --- | --- |
+| `===` | es igual a | `5 === 5` | `true` |
+| `!==` | es distinto de | `5 !== 5` | `false` |
+| `>` | mayor que | `5 > 3` | `true` |
+| `<` | menor que | `5 < 3` | `false` |
+| `>=` | mayor o igual | `5 >= 5` | `true` |
+| `<=` | menor o igual | `4 <= 3` | `false` |
+
+### Tres signos, no dos
+
+JavaScript tiene también `==`, con dos signos, que antes de comparar convierte los valores al mismo tipo. Eso da resultados que no esperas:
+
+```js
+console.log("5" == 5); // true
+console.log("5" === 5); // false
+```
+
+`===` compara el valor y el tipo sin convertir nada. Es el que debes usar siempre, salvo que tengas un motivo concreto para lo contrario.
+
+## Combinar condiciones
+
+Tres operadores permiten unir o invertir condiciones:
+
+- `&&` (y): es verdadero solo si las dos lo son.
+- `||` (o): es verdadero si al menos una lo es.
+- `!` (no): invierte el valor.
+
+```js
+const edad = 20;
+const tieneEntrada = false;
+
+if (edad >= 18 && tieneEntrada) {
+	console.log("Adelante");
+} else {
+	console.log("No puedes pasar");
+}
+// Muestra "No puedes pasar"
+```
+
+Se cumple la edad, pero no hay entrada. Con `&&` hacen falta las dos cosas.
+
+<Quiz
+	client:visible
+	question="Con edad = 20 y tieneEntrada = false, ¿qué da edad >= 18 || tieneEntrada?"
+	options={["true", "false", "Un error"]}
+	answer={0}
+/>
 
 ## Más de dos caminos
 
-Con `else if` puedes encadenar varias condiciones. Se comprueban en orden y solo se ejecuta la primera que se cumple.
+`else if` encadena varias condiciones. Se comprueban de arriba abajo y se ejecuta solo el bloque de la primera que se cumple. El resto se ignora, aunque también fueran ciertas.
 
 ```js
 const nota = 7;
@@ -55,11 +124,42 @@ if (nota >= 9) {
 } else {
 	console.log("Suspenso");
 }
+// Muestra "Aprobado"
 ```
+
+El orden importa. Si la primera condición fuera `nota >= 5`, un 9 mostraría "Aprobado" y nunca se llegaría a "Sobresaliente".
 
 <Quiz
 	client:visible
-	question="En el último ejemplo, ¿qué se muestra si nota vale 9?"
+	question="En el ejemplo de las notas, ¿qué se muestra si nota vale 9?"
 	options={["Sobresaliente", "Aprobado", "Las dos cosas"]}
 	answer={0}
 />
+
+## Valores que cuentan como falso
+
+La condición no tiene por qué ser un booleano. Si pones otro valor, JavaScript lo trata como verdadero o falso. Cuentan como falso `false`, `0`, `""` (un texto vacío), `null`, `undefined` y `NaN`. Casi todo lo demás cuenta como verdadero.
+
+```js
+const nombre = "";
+
+if (nombre) {
+	console.log("Hola, " + nombre);
+} else {
+	console.log("No has escrito tu nombre");
+}
+// Muestra "No has escrito tu nombre"
+```
+
+## Errores comunes
+
+- **Escribir `=` en lugar de `===`.** `if (edad = 18)` no compara: guarda 18 en `edad`.
+- **Poner las condiciones en mal orden** en una cadena de `else if`, de la más amplia a la más concreta.
+- **Comparar con `==`** un número con un texto y obtener un `true` inesperado.
+
+## Lo esencial
+
+- `if` ejecuta un bloque si la condición es verdadera; `else`, si no lo es.
+- Las condiciones se construyen con comparaciones y se combinan con `&&`, `||` y `!`.
+- Usa `===` para comparar.
+- En una cadena de `else if` solo se ejecuta el primer bloque cuya condición se cumple.

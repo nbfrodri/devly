@@ -11,38 +11,116 @@ sources:
     url: https://developer.mozilla.org/es/docs/Learn_web_development/Extensions/Client-side_APIs/Introduction
   - title: "MDN: JSON.parse()"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse
+  - title: "MDN: Métodos de petición HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Reference/Methods
+  - title: "MDN: Códigos de estado de respuesta HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Reference/Status
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **API** es la forma acordada en que un programa puede pedirle algo a otro. Define qué puedes pedir, cómo tienes que pedirlo y qué recibirás a cambio. Las siglas vienen de *Application Programming Interface*, interfaz de programación de aplicaciones.
+Una **API** es la forma acordada en que un programa puede pedirle algo a otro. Define qué puedes pedir, cómo tienes que pedirlo y qué recibirás a cambio.
 
-Piensa en un restaurante. No entras en la cocina: lees la carta, pides un plato y te lo traen. La carta es la API. Te dice qué hay disponible sin que necesites saber cómo se cocina.
+Las siglas vienen de *Application Programming Interface*, interfaz de programación de aplicaciones.
 
-## Un ejemplo
+## Qué problema resuelve
 
-Una aplicación del tiempo no mide la temperatura. Se la pide a un servicio meteorológico a través de su API. La aplicación envía una petición y el servicio contesta con datos, normalmente en un formato de texto llamado JSON:
+Ningún programa lo hace todo. Una aplicación de reparto necesita mapas, pagos y avisos al móvil, y construir cada una de esas cosas desde cero llevaría años. Lo razonable es usar servicios que ya las ofrecen.
+
+Para eso, los dos programas necesitan un acuerdo: qué se puede pedir y en qué formato. Ese acuerdo es la API.
+
+Piensa en un restaurante. No entras en la cocina: lees la carta, pides un plato y te lo traen. La carta es la API. Te dice qué hay disponible y cómo pedirlo, sin que necesites saber cómo se cocina.
+
+## Interfaz y funcionamiento interno
+
+Una API separa dos cosas:
+
+- La **interfaz**: lo que se ve desde fuera. Qué operaciones hay, qué datos piden y qué devuelven.
+- La **implementación**: cómo se hace por dentro.
+
+Quien usa la API solo conoce la interfaz. Esto permite que el servicio cambie por dentro, incluso que se reescriba entero, sin que los programas que lo usan tengan que tocar nada. Lo único que no puede cambiar a la ligera es la interfaz, porque hay otros programas que dependen de ella.
+
+## Ya has usado alguna
+
+No todas las API funcionan por internet. Cualquier conjunto de [funciones](/articulos/funciones/) que un programa ofrece a otros es una API, incluidas las que trae el propio lenguaje.
+
+```js
+console.log(Math.max(4, 9, 2)); // 9
+console.log("hola".toUpperCase()); // "HOLA"
+```
+
+No sabes cómo calcula `Math.max` el mayor número ni te hace falta. Sabes qué le das y qué te devuelve. Eso es usar una API.
+
+## Las API web
+
+Cuando se habla de "una API" sin más, casi siempre se trata de una **API web**: un servicio al que otro programa hace peticiones a través de internet.
+
+La comunicación tiene dos mitades:
+
+1. **Petición**: tu programa envía un mensaje a una dirección del servicio diciendo qué quiere.
+2. **Respuesta**: el servicio contesta con un código que indica si ha ido bien y, normalmente, con datos.
+
+### La petición
+
+Una petición indica una dirección y una acción. Cada dirección que ofrece una API se llama **endpoint**. La acción se expresa con un verbo; los más habituales son:
+
+| Verbo | Para qué se usa |
+| --- | --- |
+| `GET` | Pedir datos |
+| `POST` | Enviar datos nuevos |
+| `PUT` | Sustituir datos existentes |
+| `DELETE` | Borrar datos |
+
+Una petición para saber el tiempo en Madrid podría tener este aspecto. El servicio y la dirección son inventados para el ejemplo:
+
+```
+GET https://api.ejemplo.com/tiempo?ciudad=Madrid
+```
+
+### La respuesta
+
+La respuesta empieza con un **código de estado**, un número de tres cifras:
+
+| Código | Significa |
+| --- | --- |
+| `200` | Todo ha ido bien |
+| `404` | Lo que pides no existe |
+| `500` | El servicio ha tenido un error |
+
+Como regla general, los que empiezan por 2 indican éxito, los que empiezan por 4 indican un fallo en la petición y los que empiezan por 5, un fallo del servidor.
+
+Después vienen los datos, casi siempre en **JSON**: un formato de texto que organiza la información en pares de nombre y valor.
 
 ```js
 const respuesta = '{"ciudad": "Madrid", "temperatura": 21}';
 
 const datos = JSON.parse(respuesta);
+console.log(datos.ciudad); // "Madrid"
 console.log(datos.temperatura); // 21
 ```
 
-En este ejemplo la respuesta está escrita a mano para que puedas ejecutarlo. En una aplicación real ese texto llegaría por internet.
-
-## Por qué son útiles
-
-- **Reutilizas el trabajo de otros**: mapas, pagos o inicio de sesión ya existen como servicios con API.
-- **Ocultan la complejidad**: usas el resultado sin conocer el funcionamiento interno.
-- **Permiten cambiar por dentro**: mientras la API no cambie, el servicio puede reescribirse sin que tu programa lo note.
-
-No todas las API funcionan por internet. Cualquier conjunto de funciones que un programa ofrece a otros es una API, incluidas las que trae el propio lenguaje.
+En este ejemplo la respuesta está escrita a mano para que puedas ejecutarlo. En una aplicación real ese texto llegaría por internet. `JSON.parse` lo convierte en un valor con el que el programa puede trabajar.
 
 <Quiz
 	client:visible
-	question="En la comparación con el restaurante, ¿qué representa la API?"
-	options={["La cocina", "La carta", "El cliente"]}
+	question="Una API responde con el código 404. ¿Qué ha pasado?"
+	options={[
+		"Todo ha ido bien",
+		"Lo que se pedía no existe",
+		"El servidor ha fallado",
+	]}
 	answer={1}
 />
+
+## Claves de acceso
+
+Muchas API exigen identificarse. El servicio te entrega una **clave de API**, un texto largo y único que envías con cada petición. Así sabe quién eres y puede limitar cuántas peticiones haces.
+
+Una clave es como una contraseña: quien la tenga puede hacer peticiones en tu nombre. No debe aparecer en código que se publique.
+
+## Lo esencial
+
+- Una API es el acuerdo que permite a un programa pedirle algo a otro.
+- Muestra una interfaz y oculta cómo funciona por dentro.
+- En una API web, el programa hace una petición a un endpoint y recibe un código de estado y datos, normalmente en JSON.
+- Las funciones que trae un lenguaje también son una API.

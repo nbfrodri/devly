@@ -9,45 +9,120 @@ sources:
     url: https://es.wikipedia.org/wiki/Bit
   - title: "Wikipedia: Sistema binario"
     url: https://es.wikipedia.org/wiki/Sistema_binario
+  - title: "Wikipedia: Byte"
+    url: https://es.wikipedia.org/wiki/Byte
+  - title: "Wikipedia: ASCII"
+    url: https://es.wikipedia.org/wiki/ASCII
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **bit** es la cantidad de información más pequeña que existe en un ordenador: un valor que solo puede ser `0` o `1`. Todo lo que guarda o procesa un ordenador, sea un texto, una foto o un programa, está hecho de bits.
+Un **bit** es la unidad mínima de información: un valor que solo puede ser `0` o `1`. Todo lo que guarda o procesa un ordenador, sea un texto, una foto o un programa, está hecho de bits.
+
+La palabra viene de *binary digit*, dígito binario.
 
 ## Por qué solo dos valores
 
-Un ordenador está hecho de circuitos electrónicos, y lo más fiable que puede distinguir un circuito es si hay tensión eléctrica o no la hay. Dos estados: uno representa el `1` y el otro el `0`.
+Un ordenador está hecho de circuitos electrónicos. Lo más sencillo y fiable que puede hacer un circuito es distinguir entre dos estados: hay tensión eléctrica o no la hay. A uno se le llama `1` y al otro `0`.
+
+Podría haberse diseñado para distinguir diez niveles de tensión y trabajar con los dígitos del 0 al 9. Pero cuantos más niveles, más fácil es que una pequeña interferencia haga confundir uno con el vecino. Con dos niveles muy separados, el margen de error es enorme. Esa fiabilidad es la razón de que toda la informática se apoye en el sistema binario.
+
+## Qué puede representar un bit
+
+Un bit distingue entre dos posibilidades, las que sean: sí o no, encendido o apagado, verdadero o falso. Qué significa cada valor depende de quien lo interprete.
+
+Dos posibilidades son pocas. Para representar más, se juntan varios bits.
 
 ## Juntar bits
 
-Un solo bit distingue dos cosas. Para representar más, se juntan varios. Cada bit que añades duplica las combinaciones posibles:
+Con dos bits hay cuatro combinaciones: `00`, `01`, `10` y `11`. Con tres, ocho. Cada bit que añades duplica las combinaciones, porque todo lo anterior puede ir ahora precedido de un 0 o de un 1.
 
 | Bits | Combinaciones |
 | --- | --- |
 | 1 | 2 |
 | 2 | 4 |
 | 3 | 8 |
+| 4 | 16 |
 | 8 | 256 |
+| 16 | 65 536 |
 
-Con `n` bits hay 2 elevado a `n` combinaciones.
-
-Un grupo de 8 bits se llama **byte**. Es la unidad con la que se mide el tamaño de los archivos y de la memoria: un kilobyte, un megabyte o un gigabyte son cantidades de bytes.
-
-## Números en binario
-
-Los números se escriben con bits usando el **sistema binario**. Funciona como el decimal, pero cada posición vale el doble que la de su derecha en lugar de diez veces más: 1, 2, 4, 8...
-
-El número binario `101` tiene un 1 en la posición que vale 4, un 0 en la que vale 2 y un 1 en la que vale 1. En total, 4 + 1 = 5.
+La regla general: con `n` bits se pueden representar 2 elevado a `n` cosas distintas.
 
 ```js
-console.log(parseInt("101", 2)); // 5
-console.log((5).toString(2)); // "101"
+console.log(2 ** 8); // 256
+console.log(2 ** 16); // 65536
 ```
 
 <Quiz
 	client:visible
-	question="¿Cuántas combinaciones distintas se pueden representar con 4 bits?"
-	options={["8", "16", "32"]}
+	question="¿Cuántas combinaciones distintas se pueden representar con 5 bits?"
+	options={["10", "25", "32"]}
+	answer={2}
+/>
+
+## El byte
+
+Un grupo de 8 bits se llama **byte**. Es la unidad con la que se miden los archivos y la memoria. Con un byte se pueden representar 256 valores distintos, del 0 al 255.
+
+Los tamaños grandes se expresan con prefijos:
+
+| Unidad | Equivale a |
+| --- | --- |
+| 1 kilobyte (kB) | 1000 bytes |
+| 1 megabyte (MB) | 1000 kilobytes |
+| 1 gigabyte (GB) | 1000 megabytes |
+| 1 terabyte (TB) | 1000 gigabytes |
+
+Verás también esas mismas palabras usadas con saltos de 1024 en lugar de 1000, porque 1024 es una potencia de 2 (2 elevado a 10). Para esos valores existen nombres propios, como kibibyte (KiB) y mebibyte (MiB), aunque en la práctica se mezclan. Por eso un disco de "500 GB" aparece con menos capacidad en algunos sistemas.
+
+## Números en binario
+
+El sistema decimal usa diez dígitos, y cada posición vale diez veces más que la de su derecha: unidades, decenas, centenas.
+
+El **sistema binario** usa dos dígitos, y cada posición vale el doble que la de su derecha: 1, 2, 4, 8, 16...
+
+Para leer un número binario, sumas el valor de las posiciones que tienen un 1. Por ejemplo, `1101`:
+
+| Posición vale | 8 | 4 | 2 | 1 |
+| --- | --- | --- | --- | --- |
+| Dígito | 1 | 1 | 0 | 1 |
+
+8 + 4 + 1 = 13.
+
+Puedes comprobarlo en JavaScript:
+
+```js
+console.log(parseInt("1101", 2)); // 13
+console.log((13).toString(2)); // "1101"
+```
+
+`parseInt` con un 2 interpreta el texto como binario. `toString(2)` hace el camino contrario.
+
+<Quiz
+	client:visible
+	question="¿Qué número decimal es el binario 110?"
+	options={["3", "6", "110"]}
 	answer={1}
 />
+
+## Todo lo demás también son números
+
+Si los bits sirven para escribir números, cualquier cosa que pueda convertirse en números puede guardarse en bits.
+
+- **Texto**: a cada carácter se le asigna un número. La letra A mayúscula es el 65.
+- **Imágenes**: una imagen es una cuadrícula de puntos, y el color de cada punto son tres números: cuánto rojo, cuánto verde y cuánto azul.
+- **Sonido**: se mide la onda miles de veces por segundo y se guarda cada medida como un número.
+
+```js
+console.log("A".charCodeAt(0)); // 65
+console.log((65).toString(2)); // "1000001"
+```
+
+Los mismos bits pueden ser el número 65 o la letra A. Lo que decide cuál es el [tipo de dato](/articulos/tipos-de-datos/) con el que el programa los interpreta.
+
+## Lo esencial
+
+- Un bit es un valor que solo puede ser 0 o 1.
+- Con `n` bits hay 2 elevado a `n` combinaciones.
+- 8 bits forman un byte.
+- Números, texto, imágenes y sonido se guardan como números escritos en binario.

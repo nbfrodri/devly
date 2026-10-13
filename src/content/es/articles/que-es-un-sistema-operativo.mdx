@@ -9,30 +9,73 @@ sources:
     url: https://es.wikipedia.org/wiki/Sistema_operativo
   - title: "Wikipedia: Núcleo (informática)"
     url: https://es.wikipedia.org/wiki/N%C3%BAcleo_(inform%C3%A1tica)
+  - title: "Wikipedia: Proceso (informática)"
+    url: https://es.wikipedia.org/wiki/Proceso_(inform%C3%A1tica)
+  - title: "Wikipedia: Llamada al sistema"
+    url: https://es.wikipedia.org/wiki/Llamada_al_sistema
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **sistema operativo** es el programa que hace de intermediario entre el hardware de un dispositivo y el resto de programas. Windows, macOS, Linux, Android e iOS son sistemas operativos.
+Un **sistema operativo** es el programa que gestiona el hardware de un dispositivo y permite que los demás programas funcionen. Windows, macOS, Linux, Android e iOS son sistemas operativos.
 
-Sin él, cada aplicación tendría que saber hablar directamente con el disco, la pantalla y el teclado de cada modelo de ordenador. El sistema operativo resuelve eso una vez y ofrece a todas las aplicaciones una forma común de pedirlo.
+## Qué problema resuelve
+
+Imagina un ordenador sin sistema operativo. Cada programa tendría que saber hablar directamente con ese modelo concreto de disco, de pantalla y de teclado. Un editor de texto necesitaría incluir instrucciones distintas para cada fabricante. Y si dos programas quisieran usar la memoria o la impresora a la vez, nada les impediría pisarse.
+
+El sistema operativo se coloca en medio y resuelve las dos cosas:
+
+- **Oculta las diferencias del hardware.** Un programa pide "guarda este archivo" y no necesita saber qué tipo de disco hay debajo.
+- **Reparte los recursos.** Decide quién usa el procesador, la memoria y los dispositivos, y evita que un programa interfiera con otro.
 
 ## De qué se encarga
 
-- **Procesos**: decide qué programa usa el procesador en cada momento. Reparte el tiempo tan rápido que parece que todos funcionan a la vez.
-- **Memoria**: da a cada programa su propia zona de memoria y evita que uno lea o pise la de otro.
-- **Archivos**: organiza lo que hay en el disco en archivos y carpetas, y controla quién puede leerlos o modificarlos.
-- **Dispositivos**: se comunica con el teclado, la pantalla, la red o la impresora mediante programas llamados controladores o *drivers*.
+### Procesos
+
+Un programa es un archivo guardado en el disco. Cuando lo abres, el sistema operativo lo carga en memoria y empieza a ejecutarlo: a ese programa en ejecución se le llama **proceso**.
+
+Un procesador puede atender muy pocas tareas a la vez, pero tú tienes abiertos el navegador, la música y varios programas más. El sistema operativo reparte el tiempo: deja que un proceso use el procesador durante una fracción de segundo, lo pausa, da paso al siguiente y así sucesivamente. El cambio es tan rápido que parece que todos funcionan a la vez. La parte que decide a quién le toca se llama **planificador**.
+
+### Memoria
+
+Cada proceso necesita memoria para sus datos. El sistema operativo asigna a cada uno su propia zona y no le deja leer ni modificar la de los demás. Así, un fallo en un programa no corrompe a otro, y un programa no puede espiar los datos de otro.
+
+### Archivos
+
+Un disco es, físicamente, una enorme secuencia de [bits](/articulos/que-es-un-bit/). El **sistema de archivos** es la parte del sistema operativo que la organiza en archivos y carpetas con nombre, recuerda dónde está cada trozo y controla quién puede leer o modificar cada cosa.
+
+### Dispositivos
+
+Teclado, pantalla, red, impresora: cada dispositivo se maneja de una forma distinta. El sistema operativo se comunica con ellos mediante programas llamados **controladores** o *drivers*. Cuando conectas un dispositivo nuevo y "se instala", lo que se instala es su controlador.
 
 ## El núcleo
 
-La parte central del sistema operativo se llama **núcleo** o *kernel*. Es la única que habla directamente con el hardware. Las aplicaciones no tocan el hardware: le piden al núcleo que lo haga por ellas.
+La parte central del sistema operativo se llama **núcleo** o *kernel*. Es la única que tiene permiso para hablar directamente con el hardware.
 
-Lo que ves al encender el ordenador (ventanas, iconos, menús) es solo la capa visible. Un sistema operativo puede funcionar sin interfaz gráfica, y muchos servidores lo hacen.
+Los programas normales se ejecutan con permisos limitados. Cuando necesitan algo del hardware, como leer un archivo o enviar datos por la red, se lo piden al núcleo mediante una **llamada al sistema**. El núcleo comprueba que la petición está permitida, la realiza y devuelve el resultado.
+
+Esta separación es la que da estabilidad y seguridad: un programa con un error puede cerrarse sin tumbar todo el ordenador, porque nunca tuvo acceso directo a lo que hay debajo.
 
 <Quiz
 	client:visible
-	question="¿Qué parte del sistema operativo se comunica directamente con el hardware?"
-	options={["El núcleo", "La interfaz gráfica", "Cada aplicación"]}
-	answer={0}
+	question="¿Qué hace un programa cuando necesita leer un archivo del disco?"
+	options={[
+		"Accede al disco directamente",
+		"Se lo pide al núcleo con una llamada al sistema",
+		"Instala un controlador",
+	]}
+	answer={1}
 />
+
+## Lo que ves no es todo
+
+Ventanas, iconos y menús forman la **interfaz gráfica**, que es solo la capa visible. Un sistema operativo puede funcionar sin ella: muchos servidores se manejan únicamente escribiendo órdenes de texto en una **terminal**.
+
+Varios sistemas pueden compartir núcleo y diferenciarse en todo lo demás. Android, por ejemplo, usa el núcleo de Linux.
+
+## Lo esencial
+
+- El sistema operativo hace de intermediario entre el hardware y los programas.
+- Gestiona procesos, memoria, archivos y dispositivos.
+- Su núcleo es la única parte que habla con el hardware; los programas le hacen peticiones mediante llamadas al sistema.
+- La interfaz gráfica es una capa encima, no el sistema operativo en sí.

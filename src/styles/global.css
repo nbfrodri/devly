@@ -611,6 +611,18 @@ a:hover {
 	padding-top: 1rem;
 }
 
+.aside-links {
+	margin: 0;
+	padding-left: 1.125rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.aside-links a {
+	color: var(--ink);
+}
+
 .aside-title {
 	font-weight: 600;
 }
@@ -674,6 +686,7 @@ a:hover {
 	font-family: var(--font-code);
 	font-size: 1rem;
 	line-height: 1.6;
+	tab-size: 2;
 }
 
 .prose code {
@@ -685,6 +698,32 @@ a:hover {
 	background: var(--code-inline);
 	border-radius: 3px;
 	font-size: 0.92em;
+}
+
+.prose table {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+	border-collapse: collapse;
+	font-size: 1rem;
+	line-height: 1.45;
+}
+
+.prose th,
+.prose td {
+	padding: 0.625rem 1rem 0.625rem 0;
+	text-align: left;
+	vertical-align: top;
+	border-bottom: 1px solid var(--rule);
+}
+
+.prose th {
+	font-weight: 600;
+	border-bottom: 2px solid var(--ink);
+}
+
+.prose li + li {
+	margin-top: 0.375rem;
 }
 
 .sources {
@@ -758,7 +797,8 @@ a:hover {
 .quiz-options button {
 	min-width: 5.5rem;
 	min-height: 3rem;
-	padding-inline: 1.25rem;
+	padding: 0.625rem 1.25rem;
+	text-align: left;
 	font: inherit;
 	font-weight: 600;
 	color: var(--ink);

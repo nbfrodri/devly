@@ -11,40 +11,125 @@ sources:
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Data_structures
   - title: "MDN: typeof"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators/typeof
+  - title: "MDN: Plantillas literales"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Template_literals
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **tipo de dato** es la clase a la que pertenece un valor: un número, un texto, un sí o no. El tipo decide qué operaciones tienen sentido. Puedes dividir dos números, pero no dos frases.
+Un **tipo de dato** es la clase a la que pertenece un valor: un número, un texto, un sí o no. El tipo determina qué puedes hacer con ese valor. Puedes dividir dos números, pero dividir dos frases no significa nada.
 
-Estos son los tres tipos más básicos en JavaScript:
+## Por qué existen
+
+Para el ordenador todo son [bits](/articulos/que-es-un-bit/). Los mismos ceros y unos pueden ser un número, una letra o un color según cómo se interpreten. El tipo es esa interpretación: le dice al lenguaje qué representa el valor y qué operaciones tienen sentido con él.
+
+## Los tipos básicos
+
+JavaScript tiene varios tipos. Estos cinco son los que aparecen desde el primer día:
+
+| Tipo | Qué representa | Ejemplos |
+| --- | --- | --- |
+| `number` | Un número, con o sin decimales | `30`, `3.14`, `-5` |
+| `string` | Un texto | `"Ana"`, `"Hola, mundo"` |
+| `boolean` | Verdadero o falso | `true`, `false` |
+| `undefined` | Todavía no tiene valor | `undefined` |
+| `null` | No tiene valor, a propósito | `null` |
+
+El operador `typeof` devuelve el tipo de un valor:
 
 ```js
-const edad = 30; // number: un número
-const nombre = "Ana"; // string: un texto, siempre entre comillas
-const esMayor = true; // boolean: verdadero o falso
+console.log(typeof 30); // "number"
+console.log(typeof "Ana"); // "string"
+console.log(typeof true); // "boolean"
 
-console.log(typeof edad); // "number"
-console.log(typeof nombre); // "string"
-console.log(typeof esMayor); // "boolean"
+let pendiente;
+console.log(typeof pendiente); // "undefined"
 ```
 
-`typeof` te devuelve el tipo de cualquier valor.
+Una variable declarada sin valor vale `undefined`. En cambio `null` lo escribes tú cuando quieres dejar claro que algo está vacío.
 
-## Por qué importa
+## Números
 
-La misma operación hace cosas distintas según el tipo. Con números, `+` suma. Con textos, `+` los une uno detrás de otro.
+Los números se escriben tal cual, con punto para los decimales. Admiten las operaciones habituales:
+
+```js
+console.log(7 + 2); // 9
+console.log(7 - 2); // 5
+console.log(7 * 2); // 14
+console.log(7 / 2); // 3.5
+console.log(7 % 2); // 1
+```
+
+`%` es el resto de la división: 7 entre 2 da 3 y sobra 1. Se usa mucho para saber si un número es par, porque el resto de dividir un número par entre 2 es 0.
+
+## Textos
+
+Un texto, o *string*, va siempre entre comillas. Sin ellas el lenguaje lo interpretaría como el nombre de una variable.
+
+Con textos, `+` no suma: une uno detrás de otro.
+
+```js
+const nombre = "Ana";
+console.log("Hola, " + nombre); // "Hola, Ana"
+console.log(nombre.length); // 3
+```
+
+`.length` devuelve cuántos caracteres tiene el texto.
+
+Hay una forma más cómoda de mezclar texto y variables: las comillas invertidas. Dentro de ellas, lo que pongas entre `${` y `}` se sustituye por su valor.
+
+```js
+const nombre = "Ana";
+const edad = 30;
+console.log(`${nombre} tiene ${edad} años`); // "Ana tiene 30 años"
+```
+
+## Booleanos
+
+Un booleano solo puede ser `true` o `false`. Casi nunca lo escribes a mano: es el resultado de una comparación.
+
+```js
+console.log(5 > 3); // true
+console.log(5 === 3); // false
+```
+
+Son la base de las decisiones de un programa, que se explican en [condicionales](/articulos/condicionales/).
+
+## Cuando los tipos se mezclan
+
+Las comillas cambian el tipo. `2` es un número y `"2"` es un texto que contiene el carácter 2.
 
 ```js
 console.log(2 + 2); // 4
 console.log("2" + "2"); // "22"
+console.log("2" + 2); // "22"
 ```
 
-Las comillas son la diferencia: `2` es un número y `"2"` es un texto que contiene el carácter 2. Confundirlos es uno de los errores más comunes al empezar.
+En la tercera línea JavaScript encuentra un texto y un número, convierte el número en texto y los une. Esta conversión automática es la causa de muchos errores, sobre todo porque lo que escribe una persona en un formulario llega siempre como texto.
+
+Para evitar sorpresas, convierte tú el valor:
+
+```js
+console.log(Number("2") + 2); // 4
+console.log(String(2) + "2"); // "22"
+```
 
 <Quiz
 	client:visible
-	question='¿Qué muestra console.log("10" + "5")?'
+	question='¿Qué muestra console.log("10" + 5)?'
 	options={["15", "105", "Un error"]}
 	answer={1}
 />
+
+## Errores comunes
+
+- **Olvidar las comillas de un texto.** `let nombre = Ana` busca una variable llamada `Ana` y falla porque no existe.
+- **Sumar un número que en realidad es un texto.** Si el resultado sale "pegado" en lugar de sumado, comprueba el tipo con `typeof`.
+- **Confundir `undefined` con un error.** `undefined` es un valor normal: significa que todavía no hay nada.
+
+## Lo esencial
+
+- El tipo dice qué clase de valor tienes y qué operaciones admite.
+- Los básicos son `number`, `string`, `boolean`, `undefined` y `null`.
+- `typeof` te dice el tipo; `Number()` y `String()` convierten entre tipos.
+- El mismo operador puede hacer cosas distintas según el tipo: `+` suma números y une textos.
