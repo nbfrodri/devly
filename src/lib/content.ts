@@ -3,12 +3,8 @@ import { compareByLevel } from "./levels";
 
 export type Article = CollectionEntry<"articles">;
 
-/** Drafts are visible in dev so generated content can be reviewed before publishing. */
-export async function getPublishedArticles(): Promise<Article[]> {
-	const articles = await getCollection(
-		"articles",
-		({ data }) => import.meta.env.DEV || !data.draft,
-	);
+export async function getArticles(): Promise<Article[]> {
+	const articles = await getCollection("articles");
 
 	return articles.sort(
 		(a, b) =>

@@ -11,7 +11,7 @@ Sitio de explicaciones de informática, desarrollo y tecnología, de lo más bá
 
 ```bash
 pnpm install
-pnpm dev        # servidor de desarrollo (muestra también los borradores)
+pnpm dev        # servidor de desarrollo
 pnpm check      # lint, tipos, tests y build: lo mismo que ejecuta el CI
 pnpm build      # genera dist/ y el índice de búsqueda
 pnpm preview    # sirve dist/ en local
@@ -21,10 +21,13 @@ La búsqueda (Pagefind) solo funciona sobre el sitio construido: usa `pnpm build
 
 ## Añadir contenido
 
-1. Crea `src/content/es/articles/<slug>.mdx` siguiendo la [guía de contenido](docs/content-guide.md).
-2. Revísalo con `pnpm dev`. Mientras tenga `draft: true` no se publica.
-3. Cuando esté revisado, pon `draft: false` y, si procede, añádelo a una ruta en `src/content/es/paths/`.
-4. Ejecuta `pnpm check` antes de hacer commit.
+1. Crea `src/content/es/articles/<slug>.mdx` siguiendo la [guía de contenido](docs/content-guide.md), con al menos una fuente en `sources`.
+2. Míralo con `pnpm dev` y, si procede, añádelo a una ruta en `src/content/es/paths/`.
+3. Ejecuta `pnpm check` antes de hacer commit. Lo que llega a `main` se publica.
+
+## Despliegue
+
+Cloudflare construye y publica cada push a `main` con `pnpm build` y `npx wrangler deploy`. `wrangler.jsonc` indica que solo se sirven los archivos estáticos de `dist/`.
 
 ## Documentación
 

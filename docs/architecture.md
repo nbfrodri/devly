@@ -13,17 +13,17 @@ devly is a static content site. Content lives in the repository as files, is val
 | Styling | One global stylesheet with CSS custom properties | Light and dark themes follow `prefers-color-scheme` |
 | Fonts | Fontsource packages, self-hosted | Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono |
 | Tooling | pnpm, TypeScript strict, Biome, Vitest, `astro check` | `pnpm check` runs all of them plus the build |
-| Hosting | Cloudflare Pages (planned) | Not configured yet |
+| Hosting | Cloudflare Workers static assets | `wrangler.jsonc`; Cloudflare builds and deploys each push to `main` |
 
 ## Content model
 
 - **Layer** (`src/lib/layers.ts`): five fixed areas of computing, ordered from most abstract to closest to the machine. Layers are code, not content, because the home page and the visual system depend on their order and count.
-- **Article** (`src/content/es/articles/*.mdx`): one concept. Declares a `layer`, a `level` (`basico`, `intermedio`, `avanzado`), optional `prerequisites` and a `draft` flag.
+- **Article** (`src/content/es/articles/*.mdx`): one concept. Declares a `layer`, a `level` (`basico`, `intermedio`, `avanzado`), optional `prerequisites` and at least one entry in `sources`.
 - **Path** (`src/content/es/paths/*.yaml`): an ordered list of article references.
 
 Layer and level are independent axes: the layer says what an article is about, the level says how much the reader must already know.
 
-Drafts are rendered in development and excluded from production builds (`getPublishedArticles` in `src/lib/content.ts`). A path that references a missing or draft article fails the production build.
+There is no draft state: every article in the repository is built. A path that references a missing article fails the build, and so does an article without sources.
 
 ## Routes
 
@@ -56,6 +56,7 @@ The design source is a Claude Design canvas kept outside the repository; `src/st
 
 ## Decisions
 
-- **Files over a CMS**: content is generated with AI and reviewed by one person. Git gives review, history and rollback without a database, auth or an admin panel.
+- **Files over a CMS**: one person maintains the content. Git gives history and rollback without a database, auth or an admin panel.
+- **Sources are required**: the schema rejects an article without them, so the rule cannot be skipped by accident.
 - **Astro over Next.js**: the site is read-only content. Astro ships no JavaScript except for interactive islands and needs no server.
-- **Not done yet**: user accounts, progress tracking, comments, a second language, deployment. Each would be a new decision, not an extension of something already built.
+- **Not done yet**: user accounts, progress tracking, comments, a second language. Each would be a new decision, not an extension of something already built.

@@ -18,11 +18,9 @@ type Props = {
 
 const { path } = Astro.props;
 const steps = await getEntries(path.data.steps);
-const isPublishable = (step: (typeof steps)[number] | undefined) =>
-	step !== undefined && (import.meta.env.DEV || !step.data.draft);
 
-if (!steps.every(isPublishable)) {
-	throw new Error(`Path "${path.id}" references a missing or draft article.`);
+if (steps.some((step) => step === undefined)) {
+	throw new Error(`Path "${path.id}" references a missing article.`);
 }
 ---
 

@@ -1,9 +1,9 @@
 ---
 import LayerStack from "@/components/layer-stack.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
-import { countByLayer, getPublishedArticles } from "@/lib/content";
+import { countByLayer, getArticles } from "@/lib/content";
 
-const articles = await getPublishedArticles();
+const articles = await getArticles();
 ---
 
 <BaseLayout

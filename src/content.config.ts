@@ -13,7 +13,7 @@ const articles = defineCollection({
 		layer: z.enum(LAYER_IDS),
 		prerequisites: z.array(reference("articles")).default([]),
 		updated: z.coerce.date(),
-		draft: z.boolean().default(true),
+		sources: z.array(z.object({ title: z.string(), url: z.url() })).min(1),
 	}),
 });
 

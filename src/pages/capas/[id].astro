@@ -1,7 +1,7 @@
 ---
 import ArticleList from "@/components/article-list.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
-import { getPublishedArticles } from "@/lib/content";
+import { getArticles } from "@/lib/content";
 import { LAYERS, type Layer } from "@/lib/layers";
 
 export function getStaticPaths() {
@@ -16,7 +16,7 @@ type Props = {
 };
 
 const { layer } = Astro.props;
-const articles = (await getPublishedArticles()).filter(
+const articles = (await getArticles()).filter(
 	(article) => article.data.layer === layer.id,
 );
 ---

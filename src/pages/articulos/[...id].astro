@@ -3,12 +3,12 @@ import { getCollection, getEntries, getEntry, render } from "astro:content";
 import LayerStack from "@/components/layer-stack.astro";
 import PathCard from "@/components/path-card.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
-import { type Article, getPublishedArticles } from "@/lib/content";
+import { type Article, getArticles } from "@/lib/content";
 import { LEVEL_LABELS } from "@/lib/levels";
 import { getStepNeighbors } from "@/lib/paths";
 
 export async function getStaticPaths() {
-	const articles = await getPublishedArticles();
+	const articles = await getArticles();
 
 	return articles.map((article) => ({
 		params: { id: article.id },
@@ -82,6 +82,20 @@ const next = neighbors.next
 			<div class="prose">
 				<Content />
 			</div>
+			<section class="sources">
+				<h2>Fuentes y más información</h2>
+				<ul>
+					{
+						article.data.sources.map((source) => (
+							<li>
+								<a href={source.url} rel="noopener">
+									{source.title}
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</section>
 			{
 				mainPath && (
 					<nav class="path-nav" aria-label={`Ruta ${mainPath.data.title}`}>
