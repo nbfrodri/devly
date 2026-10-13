@@ -1,4 +1,10 @@
+<p>
+	<img src="public/favicon.svg" alt="" width="56" height="56">
+</p>
+
 # devly
+
+**[devly.nbfrodri.workers.dev](https://devly.nbfrodri.workers.dev)**
 
 Sitio educativo que explica lo que se aprende en una ingeniería informática, de telecomunicación o del software, en ciencias de la computación, análisis de datos e inteligencia artificial, de lo más básico a lo más complejo. El contenido se organiza en siete **capas** (del hardware a la inteligencia artificial), **artículos** con nivel y **rutas** que ordenan artículos paso a paso.
 
