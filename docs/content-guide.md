@@ -56,7 +56,26 @@ devly es un sitio educativo. Un artículo debe dejar al lector entendiendo el co
 
 **Enlazado en los dos sentidos**: los enlaces entre artículos se escriben a mano. Al publicar un artículo nuevo, busca en los ya existentes dónde se menciona ese concepto y enlaza la primera mención. Un test comprueba que todo enlace interno apunta a un artículo que existe. Lo que pertenece a otro concepto se enlaza (`/articulos/<slug>/`) en lugar de volver a explicarlo, y lo imprescindible para seguir el texto se declara en `prerequisites`.
 
-**A fondo**: dentro de ese concepto no se deja nada importante sin explicar. Como referencia, un artículo básico ronda entre 600 y 900 palabras.
+**A fondo**: dentro de ese concepto no se deja nada importante sin explicar. Como referencia, un artículo de concepto o de comparación ronda entre 600 y 900 palabras.
+
+## Tipos de artículo
+
+**Concepto**: explica una idea a fondo. Es el tipo habitual y sigue la estructura de abajo. Título en forma de pregunta: "¿Qué es un proceso?".
+
+**Comparación**: enfrenta dos conceptos que se confunden o entre los que hay que elegir. Título: "Diferencias entre X e Y". Estructura:
+
+1. La diferencia en una o dos frases.
+2. Cada lado por separado, con un ejemplo. Si es posible, el mismo caso resuelto de las dos formas.
+3. Una tabla que los compare criterio a criterio.
+4. Cuándo conviene cada uno.
+5. Confusiones frecuentes.
+6. Lo esencial.
+
+Una comparación no repite la explicación completa de cada lado: enlaza a los artículos de concepto y los declara en `prerequisites`.
+
+**Definición**: aclara un término concreto que no da para un artículo largo. Puede quedarse en 200 a 400 palabras: qué significa, un ejemplo, con qué no confundirlo y enlaces a los conceptos mayores de los que forma parte.
+
+## Estructura de un artículo de concepto
 
 Estructura habitual, que se adapta al tema:
 

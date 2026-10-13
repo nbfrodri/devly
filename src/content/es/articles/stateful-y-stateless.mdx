@@ -1,0 +1,117 @@
+---
+title: "Diferencias entre stateful y stateless"
+description: "Un sistema stateful recuerda las interacciones anteriores; uno stateless trata cada petición como si fuera la primera."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - cliente-servidor
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "R. T. Fielding: Architectural Styles and the Design of Network-based Software Architectures, capítulo 5 (2000, en inglés)"
+    url: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+  - title: "RFC 6265: HTTP State Management Mechanism"
+    url: https://www.rfc-editor.org/info/rfc6265/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un sistema **stateful** (con estado) recuerda lo ocurrido en interacciones anteriores y lo usa para responder. Un sistema **stateless** (sin estado) no recuerda nada: cada petición debe traer todo lo necesario para atenderla.
+
+## Qué es el estado
+
+El **estado** es la información que un sistema conserva entre una interacción y la siguiente: quién ha iniciado sesión, qué hay en el carrito, por qué paso de un formulario vas.
+
+La diferencia entre los dos modelos no es si esa información existe, que casi siempre existe, sino **dónde se guarda** y quién la aporta en cada petición.
+
+## Un ejemplo cotidiano
+
+Vas a una cafetería de barrio y pides "lo de siempre". El camarero te conoce y sabe qué servirte. Eso es stateful: la conversación depende de lo que él recuerda.
+
+En una máquina expendedora, cada compra empieza de cero. Introduces el dinero y marcas el código, sin que importe lo que compraste ayer. Eso es stateless: cada interacción es completa en sí misma.
+
+## Cómo funciona cada uno
+
+### Stateful
+
+El servidor guarda en su memoria datos de cada cliente. Las peticiones pueden ser cortas, porque el servidor ya conoce el contexto.
+
+El inconveniente aparece al crecer. Si hay varios servidores, las peticiones de un cliente tienen que ir siempre al mismo, el único que lo recuerda. Y si ese servidor se cae, lo que recordaba se pierde.
+
+### Stateless
+
+El servidor no guarda nada entre peticiones. Cada una trae todo el contexto: quién eres y qué quieres.
+
+Las peticiones son más grandes, pero cualquier servidor puede atender cualquiera de ellas. Añadir servidores es sencillo y, si uno falla, otro continúa sin que el cliente lo note.
+
+Este programa imita los dos modelos con un contador:
+
+```js
+function crearContadorConEstado() {
+	let total = 0;
+
+	return function sumar() {
+		total = total + 1;
+		return total;
+	};
+}
+
+const sumar = crearContadorConEstado();
+console.log(sumar()); // 1
+console.log(sumar()); // 2
+
+function sumarSinEstado(totalActual) {
+	return totalActual + 1;
+}
+
+console.log(sumarSinEstado(1)); // 2
+console.log(sumarSinEstado(1)); // 2
+```
+
+La primera función recuerda cuántas veces se ha llamado, así que la misma llamada da resultados distintos. La segunda no recuerda nada: hay que pasarle el valor actual, y con la misma entrada siempre da la misma salida.
+
+## Comparación
+
+| | Stateful | Stateless |
+| --- | --- | --- |
+| Dónde está el contexto | En el servidor | En cada petición o en un almacén compartido |
+| Tamaño de las peticiones | Menor | Mayor |
+| Añadir servidores | Difícil: cada cliente depende de uno | Fácil: cualquiera sirve |
+| Si un servidor falla | Se pierde lo que recordaba | Otro continúa |
+| Facilidad para probarlo | Menor: el resultado depende de la historia | Mayor: misma entrada, misma salida |
+
+## HTTP es stateless, pero las webs recuerdan
+
+[HTTP](/articulos/que-es-http/) no guarda estado: el servidor no relaciona una petición con la anterior. Aun así, una tienda en línea recuerda tu carrito. No hay contradicción. El estado sigue existiendo, pero se ha movido de sitio:
+
+- **Al cliente.** El navegador guarda un identificador en una **cookie** y lo envía en cada petición.
+- **A un almacén compartido.** Los datos de la sesión se guardan en una [base de datos](/articulos/que-es-una-base-de-datos/) a la que acceden todos los servidores.
+
+Los servidores que atienden las peticiones siguen siendo stateless: no guardan nada propio y son intercambiables. El estado vive en un lugar pensado para conservarlo.
+
+<Quiz
+	client:visible
+	question="Una aplicación guarda las sesiones en una base de datos compartida. ¿Cómo son sus servidores web?"
+	options={["Stateful", "Stateless", "Ninguna de las dos cosas"]}
+	answer={1}
+/>
+
+## Cuándo conviene cada uno
+
+**Stateless** es la opción habitual para servicios web y [API](/articulos/que-es-una-api/), porque permite repartir la carga entre muchas máquinas y tolerar fallos.
+
+**Stateful** es necesario cuando la propia función consiste en guardar datos, como una base de datos, o cuando hay una conexión continua en la que reenviar todo el contexto en cada mensaje sería un desperdicio: una partida de un juego en línea, una videollamada.
+
+## Confusiones frecuentes
+
+- **Stateless no significa "sin datos".** Significa que el componente no los conserva entre peticiones.
+- **No es una propiedad de toda la aplicación.** Una aplicación suele tener partes stateless, como los servidores web, y partes stateful, como la base de datos.
+
+## Lo esencial
+
+- El estado es la información que se conserva entre interacciones.
+- Un sistema stateful la guarda en el servidor; uno stateless la recibe en cada petición.
+- Los sistemas stateless escalan y se recuperan de fallos con más facilidad.
+- El estado no se elimina: se traslada al cliente o a un almacén compartido.

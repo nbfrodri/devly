@@ -4,3 +4,4 @@ steps:
   - que-es-una-base-de-datos
   - que-es-sql
   - bases-de-datos-nosql
+  - sql-frente-a-nosql

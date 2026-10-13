@@ -3,6 +3,7 @@ description: Las piezas de una aplicación completa, del navegador a la base de 
 steps:
   - cliente-servidor
   - que-es-http
+  - stateful-y-stateless
   - que-es-una-api
   - que-es-una-base-de-datos
   - que-es-sql
