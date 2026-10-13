@@ -25,3 +25,15 @@ pnpm-debug.log*
 
 # test coverage
 coverage/
+
+# local agent tooling (machine-specific links and settings)
+.claude/
+.agents/
+
+# Cloudflare local state and secrets
+.wrangler/
+.dev.vars*
+
+# any other env file
+.env*
+!.env.example
