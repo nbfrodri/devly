@@ -1,5 +1,6 @@
 ---
 import Icon from "@/components/icon.astro";
+import { KIND_LABELS, KINDS } from "@/lib/kinds";
 import type { Layer } from "@/lib/layers";
 import { LEVEL_LABELS, LEVELS } from "@/lib/levels";
 
@@ -10,9 +11,11 @@ type Props = {
 	/** Singular and plural noun for the count, e.g. "artículo" and "artículos". */
 	singular: string;
 	plural: string;
+	/** Adds the article type filter. */
+	showKinds?: boolean;
 };
 
-const { layers, total, singular, plural } = Astro.props;
+const { layers, total, singular, plural, showKinds = false } = Astro.props;
 ---
 
 <form
@@ -48,23 +51,30 @@ const { layers, total, singular, plural } = Astro.props;
 			}
 		</div>
 	</fieldset>
-	<fieldset class="filter-field">
-		<legend>Capa</legend>
-		<div class="chips">
-			<label>
-				<input type="radio" name="layer" value="" checked />
-				<span>Todas</span>
-			</label>
-			{
-				layers.map((layer) => (
-					<label>
-						<input type="radio" name="layer" value={layer.id} />
-						<span>{layer.name}</span>
-					</label>
-				))
-			}
+	{
+		showKinds && (
+			<div class="filter-field filter-select">
+				<label for="filtro-tipo">Tipo</label>
+				<div class="select">
+					<select id="filtro-tipo" name="kind">
+						<option value="">Todos los tipos</option>
+						{KINDS.map((kind) => (
+							<option value={kind}>{KIND_LABELS[kind]}</option>
+						))}
+					</select>
+				</div>
+			</div>
+		)
+	}
+	<div class="filter-field filter-select">
+		<label for="filtro-capa">Capa</label>
+		<div class="select">
+			<select id="filtro-capa" name="layer">
+				<option value="">Todas las capas</option>
+				{layers.map((layer) => <option value={layer.id}>{layer.name}</option>)}
+			</select>
 		</div>
-	</fieldset>
+	</div>
 	<div class="filter-summary">
 		<p role="status" data-filter-status>{total} {total === 1 ? singular : plural}</p>
 		<button class="text-button" type="reset" data-filter-reset hidden>

@@ -28,6 +28,8 @@ See [architecture](<docs/architecture.md>). Keep it current when components or f
 - Logic that can be tested without rendering goes in `src/lib/` with a Vitest test beside it.
 - Styles live in `src/styles/global.css`. Use the existing tokens; follow the design-system rules in the architecture document.
 - Articles follow the [content guide](<docs/content-guide.md>). Every article cites at least one source in `sources`; open each URL before citing it.
+- Before writing articles, read the content guide in full: it is the contract for any person or AI agent. Planned articles are listed with checkboxes in `docs/plans/content-backlog.md` and `docs/plans/content-backlog-2.md`; pick from them, tick each one when published, and add new ideas there.
+- With every batch of articles: link the new ones from existing articles that mention the concept, and add them to an existing learning path when one fits (create a new path only for a distinct journey).
 
 ## Setup choices
 

@@ -4,6 +4,8 @@ Contrato para escribir artículos. Vale igual para una persona que para un model
 
 ## Flujo
 
+Los artículos pendientes están en [`docs/plans/content-backlog.md`](plans/content-backlog.md) y [`docs/plans/content-backlog-2.md`](plans/content-backlog-2.md). Elige de ahí, marca la casilla al publicar y apunta ahí las ideas nuevas.
+
 1. Escribe el artículo en `src/content/es/articles/<slug>.mdx`.
 2. Míralo con `pnpm dev` y repasa la lista de comprobación de abajo.
 3. Ejecuta `pnpm check` y haz commit. Todo lo que llega a `main` se publica.
@@ -17,6 +19,7 @@ El esquema está en `src/content.config.ts`; si no se cumple, el build falla.
 | `title` | sí | Título tal como lo buscaría un lector. Las preguntas funcionan bien. |
 | `description` | sí | Una frase que resume la idea. Se muestra bajo el título y en buscadores. |
 | `level` | sí | `basico`, `intermedio` o `avanzado` |
+| `kind` | no | `concepto` (por defecto), `comparacion`, `definicion` o `curiosidad`. Se muestra como etiqueta y permite filtrar |
 | `layer` | sí | `ia`, `aplicaciones`, `datos`, `redes`, `programacion`, `sistemas` o `hardware` |
 | `prerequisites` | no | Lista de slugs de artículos que conviene leer antes |
 | `updated` | sí | Fecha de la última revisión, `AAAA-MM-DD` |
@@ -141,7 +144,7 @@ import { Quiz } from "@/components/quiz";
 
 Una ruta es un archivo YAML en `src/content/es/paths/` con `title`, `description`, `layer` (la capa bajo la que se agrupa en la página de rutas) y `steps` (slugs en orden). El nivel que muestra su tarjeta se calcula a partir de sus artículos. Cada paso debe poder leerse sabiendo solo los anteriores.
 
-Las rutas se crean a mano: un artículo no entra en ninguna hasta que se añade a `steps`. Una ruta puede cruzar capas y un artículo puede estar en varias rutas.
+Las rutas se crean a mano: un artículo no entra en ninguna hasta que se añade a `steps`. Antes de crear una ruta, comprueba si el artículo encaja en una que ya existe; una ruta nueva se justifica cuando hay un recorrido distinto, no por cada tanda de artículos. Una ruta puede cruzar capas y un artículo puede estar en varias rutas.
 
 ## Lista de comprobación de la revisión
 

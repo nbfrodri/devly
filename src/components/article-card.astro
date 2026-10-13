@@ -1,5 +1,6 @@
 ---
 import type { Article } from "@/lib/content";
+import { KIND_LABELS } from "@/lib/kinds";
 import { LEVEL_LABELS } from "@/lib/levels";
 import { normalizeForSearch } from "@/lib/text";
 
@@ -10,18 +11,22 @@ type Props = {
 };
 
 const { article, hidden = false } = Astro.props;
-const { title, description, level } = article.data;
+const { title, description, level, kind } = article.data;
 ---
 
 <li
 	data-item
 	data-levels={level}
+	data-kind={kind}
 	data-text={normalizeForSearch(`${title} ${description}`)}
 	hidden={hidden}
 >
 	<a class="article-card" href={`/articulos/${article.id}/`}>
 		<span class="article-card-title">{title}</span>
 		<span class="article-card-description">{description}</span>
-		<span class="article-card-level">{LEVEL_LABELS[level]}</span>
+		<span class="article-card-meta">
+			<span>{LEVEL_LABELS[level]}</span>
+			{kind !== "concepto" && <span class="tag">{KIND_LABELS[kind]}</span>}
+		</span>
 	</a>
 </li>

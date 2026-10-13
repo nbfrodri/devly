@@ -1,6 +1,7 @@
 import { defineCollection, reference } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
+import { KINDS } from "./lib/kinds";
 import { LAYER_IDS } from "./lib/layers";
 import { LEVELS } from "./lib/levels";
 
@@ -10,6 +11,7 @@ const articles = defineCollection({
 		title: z.string(),
 		description: z.string(),
 		level: z.enum(LEVELS),
+		kind: z.enum(KINDS).default("concepto"),
 		layer: z.enum(LAYER_IDS),
 		prerequisites: z.array(reference("articles")).default([]),
 		updated: z.coerce.date(),

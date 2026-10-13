@@ -19,7 +19,7 @@ devly is a static content site covering what a computing degree teaches (compute
 ## Content model
 
 - **Layer** (`src/lib/layers.ts`): seven fixed areas of computing, ordered from most abstract to closest to the machine. Layers are code, not content, because the home page and the visual system depend on their order and count.
-- **Article** (`src/content/es/articles/*.mdx`): one concept. Declares a `layer`, a `level` (`basico`, `intermedio`, `avanzado`), optional `prerequisites` and at least one entry in `sources`.
+- **Article** (`src/content/es/articles/*.mdx`): one concept. Declares a `layer`, a `level` (`basico`, `intermedio`, `avanzado`), a `kind` (concept, comparison, definition or curiosity; `src/lib/kinds.ts`), optional `prerequisites` and at least one entry in `sources`.
 - **Path** (`src/content/es/paths/*.yaml`): an ordered list of article references.
 
 Layer and level are independent axes: the layer says what an article is about, the level says how much the reader must already know.

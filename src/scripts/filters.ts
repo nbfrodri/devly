@@ -17,8 +17,9 @@ function applyFilters() {
 	const data = new FormData(form);
 	const level = String(data.get("level") ?? "");
 	const layer = String(data.get("layer") ?? "");
+	const kind = String(data.get("kind") ?? "");
 	const text = normalizeForSearch(String(data.get("text") ?? "").trim());
-	const filtering = level !== "" || layer !== "" || text !== "";
+	const filtering = level !== "" || layer !== "" || kind !== "" || text !== "";
 	const plural = form.dataset.plural ?? "";
 	let total = 0;
 
@@ -33,6 +34,7 @@ function applyFilters() {
 				layerMatches &&
 				(level === "" ||
 					(item.dataset.levels ?? "").split(" ").includes(level)) &&
+				(kind === "" || item.dataset.kind === kind) &&
 				(text === "" || (item.dataset.text ?? "").includes(text));
 
 			if (itemMatches) matches += 1;
