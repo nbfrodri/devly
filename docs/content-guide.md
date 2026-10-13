@@ -34,7 +34,9 @@ La **capa** dice de qué parte de la informática trata el artículo; el **nivel
 
 ## Alcance
 
-devly cubre lo que se estudia en ingeniería informática, ingeniería de telecomunicación, ingeniería del software, ciencias de la computación, análisis de datos e inteligencia artificial: lo que debería entender quien desarrolla software de extremo a extremo. Cada artículo pertenece a una capa:
+devly cubre lo que se estudia en ingeniería informática, ingeniería de telecomunicación, ingeniería del software, ciencias de la computación, análisis de datos e inteligencia artificial: lo que debería entender quien desarrolla software de extremo a extremo. Quedan fuera las asignaturas de matemáticas y física puras: solo entra la matemática que se usa directamente al programar (lógica, estadística básica, complejidad). A cambio, se incluye lo que va más allá del plan de estudios: principios y patrones de programación, herramientas, frameworks y práctica profesional.
+
+Cada artículo pertenece a una capa:
 
 | Capa | Qué entra |
 | --- | --- |
