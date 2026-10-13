@@ -1,0 +1,178 @@
+---
+title: "¿Qué son los principios SOLID?"
+description: "SOLID reúne cinco principios de diseño orientado a objetos para escribir código más fácil de cambiar."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - programacion-orientada-a-objetos
+updated: 2026-10-13
+sources:
+  - title: "Robert C. Martin: Design Principles and Design Patterns (2000, en inglés)"
+    url: https://web.archive.org/web/20150906155800/http://www.objectmentor.com/resources/articles/Principles_and_Patterns.pdf
+  - title: "Robert C. Martin: Solid Relevance (2020, en inglés)"
+    url: https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**SOLID** es un acrónimo que reúne cinco principios de diseño para [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/). Los formuló Robert C. Martin, y su objetivo común es que el código sea fácil de entender y, sobre todo, de cambiar.
+
+## Qué problema resuelven
+
+Un programa cambia continuamente. En un diseño descuidado, cada cambio obliga a tocar muchos sitios y rompe cosas que no tenían relación. A eso se le llama código **rígido** y **frágil**.
+
+Los cinco principios atacan la causa: las dependencias mal puestas entre las piezas del programa.
+
+| Letra | Principio |
+| --- | --- |
+| S | Responsabilidad única |
+| O | Abierto/cerrado |
+| L | Sustitución de Liskov |
+| I | Segregación de interfaces |
+| D | Inversión de dependencias |
+
+## S: responsabilidad única
+
+**Una clase debe tener un solo motivo para cambiar.**
+
+Una clase `Factura` que calcula el total, se guarda en la base de datos y se imprime en PDF tiene tres motivos para cambiar: las reglas fiscales, la forma de almacenar y el diseño del documento. Un cambio en la impresión puede romper el cálculo.
+
+La solución es separar: una clase calcula, otra guarda y otra imprime.
+
+## O: abierto/cerrado
+
+**El código debe estar abierto a la extensión y cerrado a la modificación.** Añadir un comportamiento nuevo no debería obligar a editar código que ya funciona.
+
+Esta función hay que modificarla cada vez que aparece una figura nueva:
+
+```js
+function area(figura) {
+	if (figura.tipo === "cuadrado") {
+		return figura.lado ** 2;
+	}
+	if (figura.tipo === "rectangulo") {
+		return figura.ancho * figura.alto;
+	}
+	return 0;
+}
+
+console.log(area({ tipo: "cuadrado", lado: 3 })); // 9
+```
+
+Con polimorfismo, cada figura sabe calcular su área, y añadir otra no toca nada de lo existente:
+
+```js
+class Cuadrado {
+	constructor(lado) {
+		this.lado = lado;
+	}
+
+	area() {
+		return this.lado ** 2;
+	}
+}
+
+class Rectangulo {
+	constructor(ancho, alto) {
+		this.ancho = ancho;
+		this.alto = alto;
+	}
+
+	area() {
+		return this.ancho * this.alto;
+	}
+}
+
+function areaTotal(figuras) {
+	let total = 0;
+
+	for (const figura of figuras) {
+		total = total + figura.area();
+	}
+
+	return total;
+}
+
+console.log(areaTotal([new Cuadrado(3), new Rectangulo(2, 5)])); // 19
+```
+
+`areaTotal` seguirá funcionando con un `Circulo` sin que nadie la edite.
+
+## L: sustitución de Liskov
+
+**Un objeto de una subclase debe poder usarse allí donde se espera uno de la clase original, sin que el programa deje de funcionar.**
+
+El ejemplo clásico: en geometría un cuadrado es un rectángulo, así que parece lógico que `Cuadrado` herede de `Rectangulo`. Pero un rectángulo permite cambiar el ancho sin tocar el alto, y un cuadrado no. El código que confíe en ese comportamiento fallará si recibe un cuadrado.
+
+La herencia solo es correcta cuando la subclase cumple todo lo que la clase original promete.
+
+## I: segregación de interfaces
+
+**Ninguna clase debería verse obligada a depender de métodos que no usa.**
+
+Una **interfaz** es la lista de operaciones que un objeto ofrece. Si se define una interfaz `Trabajador` con los métodos `trabajar` y `comer`, un robot que la implemente tendrá que incluir un `comer` sin sentido.
+
+Es preferible tener varias interfaces pequeñas y concretas que una grande que lo mezcle todo.
+
+## D: inversión de dependencias
+
+**El código importante no debe depender de los detalles; ambos deben depender de abstracciones.**
+
+Si la lógica de un pedido crea por dentro su propia conexión a una base de datos concreta, queda atada a ella. No se puede cambiar de base de datos ni probar la lógica sin tener una real.
+
+La solución es que reciba desde fuera el objeto que guarda, y que solo le exija tener un método `guardar`:
+
+```js
+class ServicioDePedidos {
+	constructor(almacen) {
+		this.almacen = almacen;
+	}
+
+	crear(pedido) {
+		this.almacen.guardar(pedido);
+		return "Pedido creado";
+	}
+}
+
+class AlmacenEnMemoria {
+	pedidos = [];
+
+	guardar(pedido) {
+		this.pedidos.push(pedido);
+	}
+}
+
+const almacen = new AlmacenEnMemoria();
+const servicio = new ServicioDePedidos(almacen);
+
+console.log(servicio.crear({ total: 25 })); // "Pedido creado"
+console.log(almacen.pedidos.length); // 1
+```
+
+Al servicio le da igual dónde se guarde. En producción recibirá un almacén que escribe en la base de datos; en las pruebas, uno en memoria. Entregar a un objeto las piezas que necesita, en lugar de que las cree él, se llama **inyección de dependencias**.
+
+<Quiz
+	client:visible
+	question="Una clase calcula nóminas, las guarda en la base de datos y las envía por correo. ¿Qué principio incumple?"
+	options={[
+		"Responsabilidad única",
+		"Sustitución de Liskov",
+		"Segregación de interfaces",
+	]}
+	answer={0}
+/>
+
+## Cómo usarlos
+
+Son criterios, no leyes. Aplicarlos a rajatabla desde el primer momento llena un programa pequeño de clases e interfaces innecesarias, lo que choca con [KISS](/articulos/principio-kiss/) y [YAGNI](/articulos/principio-yagni/).
+
+Son más útiles como diagnóstico. Cuando un cambio resulta más doloroso de lo que debería, suelen señalar por qué.
+
+## Lo esencial
+
+- SOLID agrupa cinco principios para que el código orientado a objetos sea fácil de cambiar.
+- Responsabilidad única: un solo motivo para cambiar.
+- Abierto/cerrado: extender sin modificar lo que funciona.
+- Liskov: una subclase debe poder sustituir a su clase original.
+- Segregación de interfaces: interfaces pequeñas y concretas.
+- Inversión de dependencias: depender de abstracciones, no de detalles.

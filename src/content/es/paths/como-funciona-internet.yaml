@@ -2,6 +2,7 @@ title: Cómo funciona internet
 description: Qué ocurre desde que escribes una dirección hasta que recibes la página.
 steps:
   - que-es-una-direccion-ip
+  - modelos-osi-y-tcp-ip
   - tcp-y-udp
   - que-es-dns
   - que-es-http

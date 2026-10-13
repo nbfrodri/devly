@@ -1,0 +1,8 @@
+title: Principios de diseño de software
+description: Criterios para escribir código que se entiende y se cambia con facilidad.
+steps:
+  - programacion-orientada-a-objetos
+  - principio-kiss
+  - principio-yagni
+  - principios-solid
+  - patron-mvc

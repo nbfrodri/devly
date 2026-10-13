@@ -1,0 +1,118 @@
+---
+title: "¿Qué son los modelos OSI y TCP/IP?"
+description: "Los modelos de red dividen la comunicación entre equipos en capas, cada una con una tarea concreta."
+level: basico
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+updated: 2026-10-13
+sources:
+  - title: "ITU-T X.200: Open Systems Interconnection, Basic Reference Model (en inglés)"
+    url: https://www.itu.int/rec/T-REC-X.200-199407-I
+  - title: "RFC 1122: Requirements for Internet Hosts, Communication Layers"
+    url: https://www.rfc-editor.org/info/rfc1122/
+  - title: "RFC 9293: Transmission Control Protocol (TCP)"
+    url: https://www.rfc-editor.org/info/rfc9293/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **modelo de red** describe la comunicación entre equipos dividiéndola en **capas**. Cada capa resuelve una parte del problema y se apoya en la de abajo. Los dos modelos de referencia son **OSI**, de siete capas, y **TCP/IP**, de cuatro.
+
+## Por qué dividir en capas
+
+Enviar un mensaje de un equipo a otro implica resolver muchos problemas a la vez: convertir bits en señales eléctricas o de radio, encontrar un camino entre redes, recuperar lo que se pierde, dar formato a los datos.
+
+Resolverlo todo en un solo bloque sería inmanejable. La solución es repartirlo:
+
+- **Cada capa hace una cosa** y no necesita saber cómo trabajan las demás.
+- **Las capas se pueden cambiar por separado.** Pasar de cable a wifi no obliga a modificar el navegador.
+- **Los fabricantes pueden entenderse**, porque todos siguen las mismas fronteras.
+
+Es la misma idea que hay detrás de una [API](/articulos/que-es-una-api/): cada capa ofrece un servicio a la de arriba y oculta cómo lo consigue.
+
+## El modelo OSI
+
+El modelo **OSI** (*Open Systems Interconnection*) es un estándar internacional que describe siete capas. Se numeran de abajo arriba:
+
+| N.º | Capa | Se ocupa de | Ejemplos |
+| --- | --- | --- | --- |
+| 7 | Aplicación | Los servicios que usan los programas | [HTTP](/articulos/que-es-http/), [DNS](/articulos/que-es-dns/) |
+| 6 | Presentación | El formato de los datos: codificación, cifrado, compresión | |
+| 5 | Sesión | Abrir, mantener y cerrar el diálogo entre dos equipos | |
+| 4 | Transporte | Llevar datos de un programa a otro | [TCP y UDP](/articulos/tcp-y-udp/) |
+| 3 | Red | Encontrar el camino entre redes distintas | IP |
+| 2 | Enlace de datos | Entregar datos entre equipos conectados directamente | Ethernet, wifi |
+| 1 | Física | Transmitir bits como señales por un medio | Cables, ondas de radio |
+
+### Las capas, de abajo arriba
+
+- **Física.** Define cómo se representa un [bit](/articulos/que-es-un-bit/) en el medio: un nivel de tensión en un cable, un pulso de luz en una fibra, una onda de radio.
+- **Enlace de datos.** Organiza los bits en bloques y los entrega al equipo vecino dentro de la misma red, identificándolo por su dirección física o MAC. También detecta errores de transmisión.
+- **Red.** Lleva los datos de una red a otra, pasando por equipos intermedios llamados **routers**. Aquí trabajan las [direcciones IP](/articulos/que-es-una-direccion-ip/).
+- **Transporte.** Entrega los datos al programa correcto mediante los puertos y, con TCP, garantiza que llegan completos y en orden.
+- **Sesión, presentación y aplicación.** Gestionan el diálogo, el formato de los datos y el servicio concreto que usa el programa.
+
+## El modelo TCP/IP
+
+Internet no se construyó siguiendo OSI. Usa la familia de protocolos **TCP/IP**, que se describe con cuatro capas:
+
+| Capa TCP/IP | Equivale en OSI a | Ejemplos |
+| --- | --- | --- |
+| Aplicación | Aplicación, presentación y sesión | HTTP, DNS |
+| Transporte | Transporte | TCP, UDP |
+| Internet | Red | IP |
+| Enlace | Enlace de datos y física | Ethernet, wifi |
+
+Las tres capas superiores de OSI se funden en una: en la práctica, cada protocolo de aplicación resuelve por su cuenta el formato y la gestión del diálogo.
+
+## Cuál se usa
+
+Los dos, para cosas distintas:
+
+- **TCP/IP** describe cómo funciona internet de verdad.
+- **OSI** se usa como vocabulario común. Cuando alguien habla de "un problema de capa 2" o de "un balanceador de capa 7", se refiere a los números de OSI.
+
+Ningún protocolo real encaja a la perfección en una sola casilla. Los modelos son mapas para orientarse, no leyes que los protocolos cumplan al pie de la letra.
+
+## La encapsulación
+
+Cuando envías datos, bajan por las capas. Cada una añade delante su propia información, la **cabecera**, y pasa el resultado a la de abajo. A eso se le llama **encapsulación**.
+
+Es como meter una carta en un sobre, ese sobre en otro mayor y así sucesivamente, cada uno con las señas que necesita quien lo va a manejar.
+
+| Capa | Añade | El bloque se llama |
+| --- | --- | --- |
+| Aplicación | | Datos o mensaje |
+| Transporte | Puertos de origen y destino | Segmento (TCP) o datagrama (UDP) |
+| Internet | Direcciones IP de origen y destino | Paquete |
+| Enlace | Direcciones físicas del tramo | Trama |
+
+En el destino ocurre lo contrario: cada capa lee y retira su cabecera y entrega el resto a la de arriba.
+
+Un router solo necesita abrir hasta la capa de red para decidir por dónde reenviar. No mira lo que hay más adentro.
+
+<Quiz
+	client:visible
+	question="¿En qué capa del modelo OSI trabajan las direcciones IP?"
+	options={["Enlace de datos", "Red", "Transporte"]}
+	answer={1}
+/>
+
+## Para qué sirve conocerlo
+
+Las capas son una guía para diagnosticar fallos, porque permiten descartar por orden:
+
+- ¿Hay conexión física? Cable enchufado, wifi conectada.
+- ¿Tiene el equipo una dirección IP y alcanza a otros?
+- ¿Responde el puerto del servicio?
+- ¿Responde bien la aplicación?
+
+Si una capa falla, no tiene sentido buscar el problema en las de encima.
+
+## Lo esencial
+
+- Un modelo de red divide la comunicación en capas con tareas separadas.
+- OSI tiene siete capas y sirve de vocabulario común; TCP/IP tiene cuatro y es el que usa internet.
+- Al enviar, cada capa añade su cabecera; al recibir, la retira.
+- Las capas ayudan a localizar en qué punto falla una comunicación.

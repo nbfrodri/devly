@@ -1,0 +1,69 @@
+---
+title: "¿Qué es el principio KISS?"
+description: "KISS es el principio de diseño que pide elegir la solución más simple que resuelva el problema."
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+sources:
+  - title: "RFC 1958: Architectural Principles of the Internet"
+    url: https://www.rfc-editor.org/info/rfc1958/
+  - title: "Martin Fowler: Yagni (en inglés)"
+    url: https://martinfowler.com/bliki/Yagni.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**KISS** es un principio de diseño que pide mantener las cosas simples: entre varias soluciones que resuelven un problema, se prefiere la más sencilla. Las siglas vienen de *Keep It Simple, Stupid*, y a menudo se suaviza como *Keep It Short and Simple*.
+
+## Qué problema resuelve
+
+El código se lee muchas más veces de las que se escribe. Una solución enrevesada cuesta más de entender, de modificar y de arreglar cuando falla, y esconde mejor los errores.
+
+La complejidad no suele entrar de golpe. Llega en pequeñas decisiones que parecían razonables: una capa de abstracción "por si acaso", una opción de configuración más, un caso especial.
+
+El principio no es exclusivo de la programación. Los criterios de diseño de internet lo recogen casi con las mismas palabras: ante la duda, elegir la solución más simple.
+
+## Un ejemplo
+
+Las dos funciones dicen si un número es par:
+
+```js
+function esParComplicado(numero) {
+	const texto = String(Math.abs(numero));
+	const ultimaCifra = texto[texto.length - 1];
+
+	return ["0", "2", "4", "6", "8"].includes(ultimaCifra);
+}
+
+function esPar(numero) {
+	return numero % 2 === 0;
+}
+
+console.log(esParComplicado(14)); // true
+console.log(esPar(14)); // true
+console.log(esPar(7)); // false
+```
+
+Las dos funcionan. La segunda se entiende de un vistazo y deja menos sitio para equivocarse.
+
+## Simple no es lo mismo que fácil
+
+- **Simple no significa escribir menos.** Una línea ingeniosa que nadie entiende no es simple. A veces la versión clara es la más larga.
+- **Simple no significa incompleto.** La solución tiene que resolver el problema entero, incluidos los casos difíciles.
+- **Llegar a lo simple suele costar más.** La primera solución que se te ocurre rara vez es la más sencilla.
+
+## Cómo aplicarlo
+
+- Antes de añadir una pieza, pregúntate qué problema real resuelve hoy.
+- Prefiere lo que ya trae el lenguaje a una construcción propia.
+- Si necesitas un comentario largo para explicar cómo funciona algo, quizá hay una forma más directa de hacerlo.
+
+## Con qué se relaciona
+
+[YAGNI](/articulos/principio-yagni/) aplica la misma idea a las funcionalidades: no construir lo que todavía no hace falta. Los dos principios actúan como freno frente a la tendencia a complicar.
+
+## Lo esencial
+
+- KISS pide la solución más simple que resuelva el problema completo.
+- La simplicidad se mide por lo fácil que es entender y cambiar el código, no por su longitud.
+- La complejidad debe justificarse con una necesidad real y presente.

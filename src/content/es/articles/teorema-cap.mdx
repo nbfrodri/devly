@@ -1,0 +1,87 @@
+---
+title: "¿Qué es el teorema CAP?"
+description: "El teorema CAP dice que un sistema distribuido no puede garantizar a la vez consistencia y disponibilidad cuando la red se parte."
+level: avanzado
+layer: datos
+prerequisites:
+  - bases-de-datos-nosql
+updated: 2026-10-13
+sources:
+  - title: "Eric Brewer: Towards Robust Distributed Systems, conferencia PODC (2000, en inglés)"
+    url: https://people.eecs.berkeley.edu/~brewer/cs262b-2004/PODC-keynote.pdf
+  - title: "Gilbert y Lynch: Brewer’s Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services (2002, en inglés)"
+    url: https://users.ece.cmu.edu/~adrian/731-sp04/readings/GL-cap.pdf
+  - title: "Eric Brewer: CAP Twelve Years Later, How the Rules Have Changed (2012, en inglés)"
+    url: https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **teorema CAP** establece un límite para los sistemas que guardan datos repartidos entre varias máquinas: cuando la comunicación entre ellas falla, hay que elegir entre responder siempre o responder siempre con el dato correcto. No se pueden garantizar las dos cosas.
+
+Lo planteó Eric Brewer en el año 2000 y lo demostraron formalmente Seth Gilbert y Nancy Lynch en 2002.
+
+## El contexto: datos en varias máquinas
+
+Un **sistema distribuido** es un conjunto de máquinas que trabajan juntas y se muestran al exterior como un solo sistema. Las bases de datos se reparten así por dos motivos: para atender más carga de la que soporta una máquina y para seguir funcionando si una se estropea.
+
+Repartir implica tener **copias** del mismo dato en varias máquinas, y mantenerlas iguales exige que se comuniquen. Ahí nace el problema.
+
+## Las tres propiedades
+
+- **Consistencia (C).** Todas las máquinas ven el mismo dato en el mismo momento. Tras una escritura, cualquier lectura devuelve el valor nuevo, se pregunte a quien se pregunte.
+- **Disponibilidad (A, de *availability*).** Toda petición que llega a una máquina que funciona recibe una respuesta, no un error.
+- **Tolerancia a particiones (P).** El sistema sigue funcionando aunque se pierdan mensajes entre algunas máquinas.
+
+Una **partición** es un corte de comunicación que deja a las máquinas separadas en grupos que no pueden hablarse, aunque cada una siga encendida.
+
+## El dilema
+
+Imagina dos máquinas, una en Madrid y otra en México, con copias de los mismos datos. Se corta el enlace entre ellas. Un cliente escribe un valor nuevo en Madrid y, acto seguido, otro cliente lee ese dato en México.
+
+La máquina de México no puede saber que el dato cambió. Solo tiene dos salidas:
+
+1. **Responder con lo que tiene**, que está desactualizado. El sistema sigue disponible, pero pierde la consistencia.
+2. **Negarse a responder** hasta recuperar el contacto. Conserva la consistencia, pero deja de estar disponible.
+
+No existe una tercera opción. Eso es lo que afirma el teorema.
+
+<Quiz
+	client:visible
+	question="Durante una partición, una base de datos rechaza las escrituras para no arriesgarse a tener copias distintas. ¿Qué está priorizando?"
+	options={["La consistencia", "La disponibilidad", "La velocidad"]}
+	answer={0}
+/>
+
+## "Elige dos de tres" es una simplificación
+
+El teorema se resume a menudo como "de las tres propiedades solo puedes tener dos". La frase es pegadiza, pero engaña, y el propio Brewer lo matizó años después.
+
+En una red real, las particiones ocurren: los cables se cortan y los equipos fallan. Renunciar a la tolerancia a particiones no es una opción que se pueda elegir, salvo que todo esté en una sola máquina.
+
+La decisión real es más estrecha: **cuando hay una partición**, ¿se sacrifica la consistencia o la disponibilidad? Mientras la red funciona, un sistema puede ofrecer las dos.
+
+## Los dos enfoques
+
+| | Prioriza consistencia (CP) | Prioriza disponibilidad (AP) |
+| --- | --- | --- |
+| Durante una partición | Rechaza algunas operaciones | Responde, quizá con datos antiguos |
+| Riesgo | El servicio deja de atender | Copias que difieren y hay que reconciliar |
+| Encaja con | Saldos, reservas, inventario | Carritos, "me gusta", contenido de redes sociales |
+
+En el segundo enfoque, las copias vuelven a igualarse cuando la comunicación se restablece. A ese comportamiento se le llama **consistencia eventual**, y es habitual en las [bases de datos NoSQL](/articulos/bases-de-datos-nosql/).
+
+La elección depende de qué es peor para el negocio. Que un banco muestre un saldo equivocado es inaceptable. Que una red social tarde unos segundos en mostrar un comentario apenas importa, mientras que no poder publicar sí molesta.
+
+## Matices importantes
+
+- **No es todo o nada.** Un mismo sistema puede tratar distintos datos de forma distinta, y muchas bases de datos permiten ajustarlo operación a operación.
+- **La consistencia de CAP no es la de las transacciones.** En CAP significa que todas las copias coinciden. En una transacción de base de datos, "consistencia" se refiere a que los datos cumplan las reglas definidas. Comparten palabra y son ideas diferentes.
+- **No habla de velocidad.** Incluso sin particiones hay un coste: mantener todas las copias iguales exige esperar a que se coordinen, y eso añade retraso.
+
+## Lo esencial
+
+- CAP relaciona consistencia, disponibilidad y tolerancia a particiones en los sistemas distribuidos.
+- Las particiones son inevitables, así que la elección real es entre consistencia y disponibilidad mientras duran.
+- Un sistema CP prefiere no responder antes que dar un dato incorrecto; uno AP prefiere responder aunque el dato sea antiguo.
+- La elección depende de qué fallo es más grave en cada caso.

@@ -1,0 +1,123 @@
+---
+title: "¿Qué es el patrón MVC?"
+description: "MVC separa una aplicación en tres partes: los datos, lo que se muestra y la lógica que los coordina."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - cliente-servidor
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: GUI Architectures (en inglés)"
+    url: https://martinfowler.com/eaaDev/uiArchs.html
+  - title: "MDN: MVC (glosario)"
+    url: https://developer.mozilla.org/es/docs/Glossary/MVC
+---
+
+import { Quiz } from "@/components/quiz";
+
+**MVC** (*Model-View-Controller*, modelo-vista-controlador) es un patrón que organiza una aplicación en tres partes con tareas separadas: los datos y sus reglas, lo que el usuario ve y la lógica que conecta ambas cosas.
+
+Un **patrón de arquitectura** es una forma probada de organizar el código que da respuesta a un problema que se repite.
+
+## Qué problema resuelve
+
+En una aplicación con interfaz es fácil acabar con todo mezclado: el mismo fragmento consulta la base de datos, aplica un descuento y genera el HTML. Funciona, pero tiene consecuencias:
+
+- Cambiar el aspecto obliga a tocar código que contiene reglas de negocio.
+- La misma regla acaba copiada en varias pantallas.
+- No se pueden probar las reglas sin levantar toda la interfaz.
+
+MVC separa esas preocupaciones para que cada una cambie sin arrastrar a las demás.
+
+## Las tres partes
+
+### Modelo
+
+Contiene los datos y las reglas de la aplicación: qué es un pedido, cómo se calcula su total, qué hace falta para que sea válido. No sabe nada de pantallas ni de cómo se muestran las cosas.
+
+### Vista
+
+Presenta la información al usuario. En una aplicación web, es lo que produce el [HTML](/articulos/que-es-html/). Recibe datos ya preparados y los muestra, sin tomar decisiones de negocio.
+
+### Controlador
+
+Recibe lo que hace el usuario, decide qué hay que hacer, pide al modelo que lo haga y elige qué vista mostrar. Es el intermediario.
+
+## Un recorrido completo
+
+En una tienda en línea, alguien pulsa "Ver mis pedidos":
+
+1. El navegador envía una petición al servidor.
+2. El **controlador** de pedidos la recibe.
+3. Pide al **modelo** los pedidos de ese usuario.
+4. El modelo los obtiene de la [base de datos](/articulos/que-es-una-base-de-datos/) y los devuelve.
+5. El controlador entrega esos datos a la **vista** de la lista de pedidos.
+6. La vista genera la página, que viaja de vuelta al navegador.
+
+## Un ejemplo mínimo
+
+```js
+const modelo = {
+	tareas: ["Estudiar", "Comprar pan"],
+
+	anadir(tarea) {
+		if (tarea.trim() === "") {
+			return false;
+		}
+		this.tareas.push(tarea);
+		return true;
+	},
+};
+
+function vista(tareas) {
+	return tareas.map((tarea, i) => `${i + 1}. ${tarea}`).join("\n");
+}
+
+function controlador(textoDelUsuario) {
+	const anadida = modelo.anadir(textoDelUsuario);
+
+	if (!anadida) {
+		return "La tarea no puede estar vacía";
+	}
+
+	return vista(modelo.tareas);
+}
+
+console.log(controlador("")); // "La tarea no puede estar vacía"
+console.log(controlador("Leer").split("\n").length); // 3
+```
+
+Cada parte se ocupa de lo suyo: la regla de que una tarea no puede estar vacía vive en el modelo, el formato de la lista en la vista, y el controlador decide qué responder.
+
+<Quiz
+	client:visible
+	question="¿En qué parte de MVC debe estar la regla que calcula el total de un pedido?"
+	options={["En el modelo", "En la vista", "En el controlador"]}
+	answer={0}
+/>
+
+## Qué se gana
+
+- **Cambios aislados.** Rediseñar una pantalla no toca las reglas.
+- **Reutilización.** El mismo modelo sirve a una página web, a una aplicación móvil y a una [API](/articulos/que-es-una-api/).
+- **Pruebas más sencillas.** El modelo se puede probar sin interfaz.
+- **Trabajo en paralelo.** Una persona puede ocuparse de las vistas mientras otra desarrolla el modelo.
+
+## Variantes
+
+MVC nació en los años setenta para interfaces de escritorio, y desde entonces se ha adaptado muchas veces. Los marcos de trabajo web que dicen seguirlo lo aplican de formas algo distintas, y existen patrones emparentados, como MVP y MVVM, que reparten las responsabilidades de otra manera.
+
+Lo que comparten todos es la idea central: **separar la presentación de las reglas de la aplicación**.
+
+## Errores comunes
+
+- **Controladores gordos.** Meter las reglas de negocio en el controlador porque es lo que queda más a mano. El controlador debe coordinar, no decidir.
+- **Vistas que deciden.** Calcular descuentos o comprobar permisos dentro de la plantilla.
+- **Aplicarlo a algo diminuto.** Para un programa de una pantalla, tres capas pueden ser más estructura que contenido.
+
+## Lo esencial
+
+- MVC divide una aplicación en modelo, vista y controlador.
+- El modelo contiene datos y reglas; la vista muestra; el controlador coordina.
+- El objetivo es separar la presentación de la lógica para que cambien por separado.
+- Las reglas de negocio pertenecen al modelo.

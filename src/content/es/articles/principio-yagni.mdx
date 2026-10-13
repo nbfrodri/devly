@@ -1,0 +1,51 @@
+---
+title: "¿Qué es el principio YAGNI?"
+description: "YAGNI es el principio que pide no construir una funcionalidad hasta que haga falta de verdad."
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Yagni (en inglés)"
+    url: https://martinfowler.com/bliki/Yagni.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**YAGNI** son las siglas de *You Aren't Gonna Need It*, "no lo vas a necesitar". Es un principio que pide no construir una funcionalidad porque quizá haga falta en el futuro, sino esperar a que haga falta de verdad.
+
+Procede de la programación extrema, una de las metodologías ágiles de desarrollo.
+
+## Qué problema resuelve
+
+Al programar es tentador adelantarse: "ya que estoy, lo dejo preparado para varios idiomas", "seguro que luego querrán exportar a PDF". Parece previsión, pero construir por adelantado tiene costes que no se ven en el momento:
+
+- **El coste de construirlo.** Tiempo que no se dedica a lo que sí hace falta ahora.
+- **El coste del retraso.** Lo necesario se entrega más tarde.
+- **El coste de cargar con ello.** Ese código hay que leerlo, probarlo y mantenerlo, se use o no. Complica todo lo que se construya después.
+- **El coste de haber acertado mal.** Cuando la necesidad llega de verdad, casi nunca tiene la forma que imaginaste, y hay que rehacerlo.
+
+Lo más frecuente es que la necesidad no llegue nunca, y entonces todos esos costes se pagaron por nada.
+
+## Un ejemplo
+
+Una tienda vende solo en euros. Alguien propone preparar el sistema para varias monedas "porque tarde o temprano abriremos en otros países".
+
+Hacerlo ahora obliga a guardar la moneda de cada precio, convertir importes, decidir qué tipo de cambio usar y probar todo eso. Mientras tanto, la tienda sigue vendiendo solo en euros.
+
+Si la expansión llega dentro de dos años, se sabrá a qué países, con qué monedas y con qué reglas. Ese es el momento de construirlo, con información real.
+
+## Lo que YAGNI no dice
+
+- **No justifica el código descuidado.** El principio habla de funcionalidades que nadie ha pedido, no de la calidad. Escribir código claro, con pruebas y fácil de modificar es justo lo que permite añadir esa funcionalidad más adelante sin dolor.
+- **No prohíbe pensar en el futuro.** Puedes saber que algo quizá llegue y evitar decisiones que lo harían imposible. Lo que no haces es construirlo ya.
+- **No se aplica a lo que es caro de cambiar después.** Algunas decisiones, como la forma de guardar los datos, merecen más reflexión inicial porque rectificarlas cuesta mucho.
+
+## Con qué se relaciona
+
+[KISS](/articulos/principio-kiss/) pide la solución más simple para lo que hay que resolver. YAGNI reduce lo que hay que resolver a lo que de verdad se necesita ahora. Juntos mantienen un sistema pequeño y comprensible.
+
+## Lo esencial
+
+- YAGNI pide no construir una funcionalidad hasta que sea necesaria.
+- Lo que se construye por adelantado cuesta aunque no se use: retrasa, estorba y suele acertar mal.
+- No es una excusa para descuidar la calidad: el código fácil de cambiar es lo que hace viable esperar.
