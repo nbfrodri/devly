@@ -1,0 +1,7 @@
+title: Cómo funciona un ordenador
+description: De los bits al programa en ejecución, de abajo arriba.
+steps:
+  - que-es-un-bit
+  - como-funciona-un-procesador
+  - que-es-un-sistema-operativo
+  - que-es-un-proceso

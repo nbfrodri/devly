@@ -1,0 +1,94 @@
+---
+title: "¿Qué es el DNS?"
+description: El DNS es el sistema que traduce nombres como ejemplo.com a direcciones IP.
+level: basico
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+updated: 2026-10-13
+sources:
+  - title: "RFC 1034: Domain names, concepts and facilities"
+    url: https://www.rfc-editor.org/info/rfc1034/
+  - title: "RFC 1035: Domain names, implementation and specification"
+    url: https://www.rfc-editor.org/info/rfc1035/
+  - title: "IANA: Root Servers (en inglés)"
+    url: https://www.iana.org/domains/root/servers
+  - title: "MDN: Cómo funciona la web"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **DNS** (*Domain Name System*, sistema de nombres de dominio) es el servicio que traduce nombres como `ejemplo.com` a [direcciones IP](/articulos/que-es-una-direccion-ip/). Es lo que permite escribir un nombre en el navegador en lugar de un número.
+
+## Qué problema resuelve
+
+Los equipos de una red se localizan por su dirección IP, pero las personas recordamos nombres. Además, la dirección de un servicio puede cambiar, por ejemplo al mudarlo de servidor, y no sería razonable avisar a todos los usuarios cada vez.
+
+El DNS separa las dos cosas: el nombre se mantiene y la dirección a la que apunta se puede actualizar. Funciona como la agenda de contactos del móvil: tú buscas un nombre y la agenda sabe el número.
+
+## Por qué no es una sola lista
+
+Al principio de internet, la correspondencia entre nombres y direcciones estaba en un único archivo que se copiaba a todas las máquinas. Con unos cientos de equipos funcionaba. Con millones, no: el archivo crecía sin parar y cada cambio tardaba en llegar a todos.
+
+El DNS lo resolvió repartiendo la información. No hay ningún servidor que conozca todos los nombres. Cada organización mantiene los suyos, y existe un método para encontrar quién sabe qué.
+
+## Un nombre se lee de derecha a izquierda
+
+Un nombre de dominio está formado por partes separadas por puntos, y la jerarquía va de derecha a izquierda. En `www.ejemplo.com`:
+
+| Parte | Qué es |
+| --- | --- |
+| `com` | Dominio de nivel superior, o TLD |
+| `ejemplo` | Dominio registrado por una organización |
+| `www` | Subdominio, definido por esa organización |
+
+Por encima de todos está la **raíz**, que no se escribe.
+
+## Cómo se resuelve un nombre
+
+Cuando escribes `www.ejemplo.com`, tu dispositivo se lo pregunta a un **resolvedor**, un servidor que normalmente pone tu proveedor de internet. Si el resolvedor no conoce la respuesta, la busca bajando por la jerarquía:
+
+1. Pregunta a un **servidor raíz**, que no sabe la dirección pero sí quién gestiona los nombres acabados en `.com`.
+2. Pregunta al servidor del **TLD** `.com`, que tampoco la sabe pero indica qué servidor es responsable de `ejemplo.com`.
+3. Pregunta a ese **servidor autoritativo**, que es el que tiene el dato y responde con la dirección IP.
+4. El resolvedor te entrega la respuesta y tu dispositivo ya puede conectarse.
+
+Todo esto ocurre en milésimas de segundo, antes de que la página empiece a cargarse.
+
+<Quiz
+	client:visible
+	question="¿Qué servidor tiene la dirección IP definitiva de www.ejemplo.com?"
+	options={[
+		"Un servidor raíz",
+		"El servidor del TLD .com",
+		"El servidor autoritativo de ejemplo.com",
+	]}
+	answer={2}
+/>
+
+## La caché
+
+Repetir esas preguntas en cada visita sería lento, así que las respuestas se guardan un tiempo. Ese almacenamiento temporal se llama **caché**, y hay una en el resolvedor, otra en tu sistema operativo y otra en el navegador.
+
+Cada respuesta lleva un número llamado **TTL** (*time to live*), que indica cuántos segundos puede guardarse antes de volver a preguntar. Por eso, cuando se cambia la dirección de un dominio, el cambio no se ve al instante en todas partes: hay que esperar a que caduquen las copias guardadas.
+
+## Tipos de registro
+
+La información de un dominio se guarda en **registros**. Cada tipo responde a una pregunta distinta:
+
+| Registro | Qué contiene |
+| --- | --- |
+| `A` | La dirección IPv4 de un nombre |
+| `AAAA` | La dirección IPv6 de un nombre |
+| `CNAME` | Otro nombre al que este equivale |
+| `MX` | El servidor que recibe el correo del dominio |
+
+## Lo esencial
+
+- El DNS traduce nombres de dominio a direcciones IP.
+- Es un sistema repartido y jerárquico: raíz, TLD y servidores autoritativos.
+- Un resolvedor hace las consultas por ti y guarda las respuestas en caché durante el tiempo que marca el TTL.
+- Cada tipo de registro guarda un dato distinto del dominio.
+
+Con la dirección ya resuelta, el navegador puede pedir la página: de eso se encarga [HTTP](/articulos/que-es-http/).

@@ -1,0 +1,124 @@
+---
+title: "¿Qué es HTTP?"
+description: HTTP es el protocolo con el que navegadores y servidores se piden y se envían páginas y datos.
+level: basico
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+  - que-es-dns
+updated: 2026-10-13
+sources:
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+  - title: "MDN: Generalidades del protocolo HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Overview
+  - title: "MDN: Mensajes HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Messages
+  - title: "MDN: Códigos de estado de respuesta HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Reference/Status
+---
+
+import { Quiz } from "@/components/quiz";
+
+**HTTP** (*Hypertext Transfer Protocol*) es el protocolo que usan los navegadores y los servidores web para comunicarse. Define cómo se pide un recurso, como una página o una imagen, y cómo se contesta.
+
+Un **protocolo** es un conjunto de reglas que dos programas acuerdan seguir para entenderse.
+
+## Qué problema resuelve
+
+Un navegador y un servidor son programas distintos, hechos por personas distintas, que se ejecutan en máquinas distintas. Para que cualquier navegador pueda hablar con cualquier servidor hace falta un idioma común. HTTP es ese idioma en la web.
+
+## Petición y respuesta
+
+HTTP funciona siempre igual: una parte pregunta y la otra contesta.
+
+- El **cliente**, normalmente el navegador, envía una **petición**.
+- El **servidor** devuelve una **respuesta**.
+
+El servidor nunca habla primero. Solo responde a lo que le piden.
+
+Cargar una página no es una sola petición. El navegador pide primero el documento y, al leerlo, descubre que necesita estilos, imágenes y programas, y hace una petición por cada uno.
+
+## Cómo es una petición
+
+Una petición es texto con una estructura fija:
+
+```
+GET /articulos/ HTTP/1.1
+Host: ejemplo.com
+Accept-Language: es
+```
+
+- La primera línea indica el **método** (`GET`), la **ruta** del recurso (`/articulos/`) y la versión del protocolo.
+- Las líneas siguientes son **cabeceras**: datos adicionales en forma de nombre y valor. `Host` dice a qué sitio va dirigida; `Accept-Language`, en qué idioma prefiere la respuesta.
+- Algunas peticiones llevan además un **cuerpo** con datos, por ejemplo lo que has escrito en un formulario.
+
+### Métodos
+
+El método expresa la intención de la petición:
+
+| Método | Intención |
+| --- | --- |
+| `GET` | Obtener un recurso |
+| `POST` | Enviar datos para que el servidor los procese |
+| `PUT` | Sustituir un recurso |
+| `DELETE` | Borrar un recurso |
+
+## Cómo es una respuesta
+
+```
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+
+<!doctype html>
+<html>...</html>
+```
+
+- La primera línea lleva el **código de estado**, que resume el resultado.
+- Después van las cabeceras. `Content-Type` indica de qué tipo es el contenido, para que el navegador sepa cómo tratarlo.
+- Tras una línea en blanco viene el cuerpo: la página, la imagen o los datos pedidos.
+
+### Códigos de estado
+
+La primera cifra indica la familia:
+
+| Códigos | Significado | Ejemplo |
+| --- | --- | --- |
+| `2xx` | La petición ha ido bien | `200 OK` |
+| `3xx` | El recurso está en otra dirección | `301 Moved Permanently` |
+| `4xx` | La petición tiene un problema | `404 Not Found` |
+| `5xx` | El servidor ha fallado | `500 Internal Server Error` |
+
+<Quiz
+	client:visible
+	question="Pides una página que no existe. ¿De qué familia será el código de estado?"
+	options={["2xx", "4xx", "5xx"]}
+	answer={1}
+/>
+
+## No tiene memoria
+
+HTTP es un protocolo **sin estado**: cada petición es independiente y el servidor no recuerda las anteriores. Por sí solo no sabría que la persona que añade un producto al carrito es la misma que inició sesión hace un minuto.
+
+Para mantener esa continuidad se usan las **cookies**: pequeños datos que el servidor entrega en una respuesta y que el navegador envía de vuelta en las peticiones siguientes. Con ellas el servidor puede reconocer quién le habla.
+
+## HTTPS
+
+Con HTTP tal cual, los mensajes viajan como texto legible. Cualquier equipo por el que pasen podría leerlos o modificarlos.
+
+**HTTPS** es HTTP enviado a través de una conexión cifrada. Añade tres garantías:
+
+- **Confidencialidad**: nadie en el camino puede leer el contenido.
+- **Integridad**: nadie puede alterarlo sin que se note.
+- **Autenticidad**: el servidor demuestra que es quien dice ser.
+
+El candado que muestra el navegador indica que la conexión usa HTTPS.
+
+## Lo esencial
+
+- HTTP es el protocolo de la web: el cliente pide y el servidor responde.
+- Una petición lleva método, ruta y cabeceras; una respuesta, código de estado, cabeceras y cuerpo.
+- No guarda estado entre peticiones; las cookies lo suplen.
+- HTTPS es HTTP sobre una conexión cifrada.
+
+Los programas también usan HTTP para intercambiar datos entre sí, mediante una [API](/articulos/que-es-una-api/).

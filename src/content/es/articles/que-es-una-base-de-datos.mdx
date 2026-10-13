@@ -1,0 +1,98 @@
+---
+title: "¿Qué es una base de datos?"
+description: Una base de datos guarda información de forma organizada para poder consultarla y modificarla con seguridad.
+level: basico
+layer: datos
+updated: 2026-10-13
+sources:
+  - title: "E. F. Codd: A Relational Model of Data for Large Shared Data Banks (1970, en inglés)"
+    url: https://www.seas.upenn.edu/~zives/03f/cis550/codd.pdf
+  - title: "PostgreSQL: Conceptos (documentación oficial, en inglés)"
+    url: https://www.postgresql.org/docs/current/tutorial-concepts.html
+  - title: "SQLite: SQLite Foreign Key Support (en inglés)"
+    url: https://www.sqlite.org/foreignkeys.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **base de datos** es un conjunto de información guardada de forma organizada, de manera que un programa pueda consultarla y modificarla con rapidez y sin estropearla.
+
+## Qué problema resuelve
+
+Lo que un programa guarda en [variables](/articulos/que-es-una-variable/) desaparece cuando el programa se cierra. Para conservar los datos hay que escribirlos en el disco.
+
+Lo más simple sería usar un archivo de texto. Funciona con pocos datos, pero pronto aparecen los problemas:
+
+- **Buscar es lento.** Para encontrar un dato hay que leer el archivo entero.
+- **Dos escrituras a la vez se pisan.** Si dos personas guardan al mismo tiempo, una pierde sus cambios.
+- **Un corte a medias deja datos rotos.** Si el programa falla mientras escribe, el archivo puede quedar incompleto.
+- **Nada impide datos sin sentido.** Una edad con letras, un pedido de un cliente que no existe.
+
+Una base de datos resuelve estos cuatro problemas. El programa que la gestiona se llama **sistema gestor de bases de datos**. PostgreSQL, MySQL y SQLite son ejemplos.
+
+## El modelo relacional
+
+El tipo de base de datos más extendido es el **relacional**, propuesto por Edgar F. Codd en 1970. Organiza la información en **tablas**.
+
+Una tabla se parece a una hoja de cálculo:
+
+| id | nombre | ciudad |
+| --- | --- | --- |
+| 1 | Ana | Madrid |
+| 2 | Luis | Sevilla |
+| 3 | Marta | Madrid |
+
+- Cada **fila** es un elemento: aquí, un cliente.
+- Cada **columna** es un dato de ese elemento y tiene un [tipo](/articulos/tipos-de-datos/) fijo: número, texto, fecha.
+
+La diferencia con una hoja de cálculo es que la estructura se define de antemano y la base de datos la hace cumplir. No deja guardar texto en una columna numérica.
+
+## Identificar cada fila
+
+Puede haber dos clientes que se llamen Ana y vivan en Madrid. Para distinguirlos, cada fila tiene un valor que no se repite: la **clave primaria**. En el ejemplo es la columna `id`.
+
+## Relacionar tablas
+
+Los pedidos de esos clientes van en otra tabla. En lugar de repetir el nombre y la ciudad en cada pedido, se guarda solo el `id` del cliente:
+
+| id | cliente_id | total |
+| --- | --- | --- |
+| 10 | 1 | 25 |
+| 11 | 1 | 40 |
+| 12 | 3 | 15 |
+
+La columna `cliente_id` es una **clave foránea**: su valor apunta a la clave primaria de otra tabla. Los pedidos 10 y 11 son de Ana; el 12, de Marta.
+
+Guardar cada dato una sola vez tiene una ventaja importante. Si Ana se muda, se cambia su ciudad en una única fila y todos sus pedidos quedan actualizados, porque nunca copiaron el dato.
+
+La base de datos también vigila estas relaciones: se le puede indicar que rechace un pedido cuyo `cliente_id` no exista. A esa garantía se le llama **integridad referencial**.
+
+<Quiz
+	client:visible
+	question="En la tabla de pedidos, ¿qué es la columna cliente_id?"
+	options={["Una clave primaria", "Una clave foránea", "Un índice"]}
+	answer={1}
+/>
+
+## Todo o nada
+
+Una transferencia bancaria tiene dos pasos: restar de una cuenta y sumar en otra. Si el sistema falla entre los dos, el dinero desaparecería.
+
+Una **transacción** agrupa varias operaciones para que se apliquen todas o ninguna. Si algo falla a mitad, la base de datos deshace lo que llevaba hecho y los datos quedan como antes de empezar.
+
+## Encontrar rápido
+
+Para no recorrer la tabla entera en cada búsqueda, se crean **índices**. Un índice funciona como el de un libro: una estructura ordenada que dice dónde está cada valor. Acelera las búsquedas a cambio de ocupar espacio y de hacer algo más lentas las escrituras, porque hay que mantenerlo al día.
+
+## Otros tipos
+
+No todas las bases de datos son relacionales. Las llamadas **NoSQL** organizan los datos de otra forma: como documentos, como pares de clave y valor o como grafos. Se eligen cuando la forma de los datos o el volumen encajan mal en tablas. Las relacionales siguen siendo la opción habitual para la mayoría de aplicaciones.
+
+## Lo esencial
+
+- Una base de datos guarda información de forma duradera, organizada y segura frente a fallos y accesos simultáneos.
+- En el modelo relacional los datos van en tablas de filas y columnas.
+- La clave primaria identifica cada fila; la clave foránea relaciona una tabla con otra.
+- Las transacciones garantizan que un grupo de cambios se aplica entero o no se aplica.
+
+Para pedir y modificar datos en una base relacional se usa un lenguaje propio: [SQL](/articulos/que-es-sql/).

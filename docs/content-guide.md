@@ -73,7 +73,8 @@ Intercala una o dos preguntas de comprobación justo después de la idea que eva
 - Explica el porqué además del qué: una regla sin motivo se olvida.
 - Cada término técnico se define la primera vez que aparece y se marca en negrita.
 - Los términos en inglés de uso habitual se conservan (`array`, `commit`) junto a su traducción la primera vez.
-- El código de ejemplo debe poder ejecutarse tal cual. El resultado se indica en un comentario al final de la línea.
+- El código de ejemplo debe poder ejecutarse tal cual. En JavaScript, el resultado se indica en un comentario al final de la línea; en SQL, se describe en el texto que sigue al bloque.
+- Los ejemplos de SQL deben funcionar en SQLite, ejecutados en el orden en que aparecen en el artículo.
 - Las analogías ayudan si son breves y se abandonan en cuanto dejan de encajar.
 - Sin relleno: nada de introducciones sobre la importancia del tema ni frases que no enseñan nada.
 
@@ -114,6 +115,8 @@ import { Quiz } from "@/components/quiz";
 ## Rutas
 
 Una ruta es un archivo YAML en `src/content/es/paths/` con `title`, `description` y `steps` (slugs en orden). Cada paso debe poder leerse sabiendo solo los anteriores.
+
+Las rutas se crean a mano: un artículo no entra en ninguna hasta que se añade a `steps`. Una ruta puede cruzar capas y un artículo puede estar en varias rutas.
 
 ## Lista de comprobación de la revisión
 

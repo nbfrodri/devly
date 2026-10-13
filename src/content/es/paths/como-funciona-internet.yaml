@@ -1,0 +1,6 @@
+title: Cómo funciona internet
+description: Qué ocurre desde que escribes una dirección hasta que recibes la página.
+steps:
+  - que-es-una-direccion-ip
+  - que-es-dns
+  - que-es-http

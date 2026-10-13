@@ -1,0 +1,120 @@
+---
+title: "¿Qué es el aprendizaje automático?"
+description: El aprendizaje automático consiste en que un programa aprenda a hacer una tarea a partir de ejemplos en lugar de reglas escritas a mano.
+level: basico
+layer: ia
+prerequisites:
+  - funciones
+updated: 2026-10-13
+sources:
+  - title: "Google: ¿Qué es el aprendizaje automático? (curso oficial)"
+    url: https://developers.google.com/machine-learning/intro-to-ml/what-is-ml?hl=es-419
+  - title: "Google: Machine Learning Crash Course (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, libro de texto libre (en inglés)"
+    url: https://www.deeplearningbook.org/
+  - title: "scikit-learn: Getting Started (documentación oficial, en inglés)"
+    url: https://scikit-learn.org/stable/getting_started.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **aprendizaje automático** (*machine learning*) es una forma de construir programas en la que no escribes las reglas: le das ejemplos al ordenador y él encuentra las reglas. Es la técnica que hay detrás de la mayor parte de lo que hoy se llama inteligencia artificial.
+
+## Qué problema resuelve
+
+Programar consiste normalmente en escribir reglas. Funciona cuando sabes describirlas: calcular un impuesto, ordenar una lista.
+
+Hay tareas para las que nadie sabe escribir las reglas. ¿Qué instrucciones exactas distinguen la foto de un gato de la de un perro? Las personas lo hacemos sin esfuerzo, pero no sabemos explicarlo paso a paso.
+
+El aprendizaje automático da la vuelta al planteamiento:
+
+| | Entrada | Resultado |
+| --- | --- | --- |
+| Programación tradicional | Datos y reglas | Respuestas |
+| Aprendizaje automático | Datos y respuestas | Reglas |
+
+En lugar de reglas, reúnes muchas fotos ya etiquetadas como "gato" o "perro" y dejas que un algoritmo encuentre qué las diferencia.
+
+## Las piezas
+
+- **Datos de entrenamiento**: los ejemplos de los que se aprende.
+- **Características**: los datos de entrada de cada ejemplo. En una vivienda, los metros y el número de habitaciones.
+- **Etiqueta**: la respuesta correcta de cada ejemplo. En la vivienda, su precio.
+- **Modelo**: el resultado del aprendizaje. Es una [función](/articulos/funciones/) con números ajustables, llamados **parámetros**, que convierte unas características en una predicción.
+
+## Entrenar
+
+**Entrenar** es ajustar los parámetros del modelo para que sus predicciones se acerquen a las etiquetas. El proceso es repetitivo:
+
+1. El modelo predice con los parámetros que tiene.
+2. Se mide cuánto se ha equivocado.
+3. Se corrigen un poco los parámetros para reducir el error.
+4. Se repite muchas veces.
+
+Un ejemplo mínimo: quieres predecir `y` a partir de `x` y supones que la relación es `y = peso * x`. El único parámetro es `peso`.
+
+```js
+const ejemplos = [
+	{ x: 1, y: 2 },
+	{ x: 2, y: 4 },
+	{ x: 3, y: 6 },
+];
+
+let sumaXY = 0;
+let sumaXX = 0;
+
+for (const { x, y } of ejemplos) {
+	sumaXY = sumaXY + x * y;
+	sumaXX = sumaXX + x * x;
+}
+
+const peso = sumaXY / sumaXX;
+console.log(peso); // 2
+
+const predecir = (x) => peso * x;
+console.log(predecir(4)); // 8
+```
+
+Nadie le ha dicho al programa que la regla es "multiplica por dos". La ha deducido de los ejemplos, y con ella responde a un caso que no había visto, `x = 4`.
+
+Aquí el mejor valor se calcula con una fórmula directa. Los modelos reales tienen millones de parámetros y los ajustan poco a poco, pero la idea es la misma.
+
+## Entrenar no es usar
+
+Hay dos fases distintas:
+
+- **Entrenamiento**: se ajustan los parámetros con los ejemplos. Es la parte costosa.
+- **Inferencia**: se usa el modelo ya entrenado para predecir sobre datos nuevos.
+
+## Tres formas de aprender
+
+- **Supervisado**: los ejemplos llevan la respuesta correcta. Sirve para predecir un número (un precio) o una categoría (correo deseado o no).
+- **No supervisado**: los ejemplos no llevan respuesta. El algoritmo busca estructura por su cuenta, por ejemplo grupos de clientes parecidos.
+- **Por refuerzo**: un programa prueba acciones y recibe recompensas o penalizaciones. Aprende qué le conviene a base de intentos.
+
+<Quiz
+	client:visible
+	question="Entrenas un modelo con correos ya marcados como deseados o no deseados. ¿Qué tipo de aprendizaje es?"
+	options={["Supervisado", "No supervisado", "Por refuerzo"]}
+	answer={0}
+/>
+
+## Aprender no es memorizar
+
+Un modelo puede acertar todos los ejemplos de entrenamiento y fallar con datos nuevos. Ocurre cuando ha memorizado los ejemplos en lugar de captar el patrón general. Se llama **sobreajuste**.
+
+Para detectarlo se reserva una parte de los datos y no se usa al entrenar. Después se evalúa el modelo con esa parte, el **conjunto de prueba**. Lo que importa es cómo responde ante lo que no ha visto.
+
+## Sus límites
+
+Un modelo solo conoce sus datos. Si son escasos, erróneos o no representan bien la realidad, sus predicciones heredarán esos defectos. Además predice a partir de patrones estadísticos: puede dar una respuesta equivocada con total seguridad.
+
+## Lo esencial
+
+- En el aprendizaje automático el programa obtiene las reglas a partir de ejemplos.
+- Un modelo es una función con parámetros que se ajustan durante el entrenamiento.
+- Entrenar ajusta el modelo; inferir es usarlo.
+- Un modelo es bueno si acierta con datos que no ha visto, no si memoriza los de entrenamiento.
+
+Uno de los tipos de modelo más usados es la [red neuronal](/articulos/que-es-una-red-neuronal/).

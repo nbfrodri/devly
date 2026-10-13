@@ -1,0 +1,84 @@
+---
+title: "¿Qué es el modelo cliente-servidor?"
+description: En el modelo cliente-servidor un programa pide un servicio y otro lo ofrece. Es la base de casi todas las aplicaciones web.
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+sources:
+  - title: "MDN: Visión general cliente-servidor"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Extensions/Server-side/First_steps/Client-Server_overview
+  - title: "MDN: Cómo funciona la web"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **modelo cliente-servidor** es una forma de organizar una aplicación en dos tipos de programas: los **clientes**, que piden cosas, y los **servidores**, que las ofrecen. Casi todo lo que usas en internet funciona así.
+
+## Qué problema resuelve
+
+Imagina una red social en la que cada persona tuviera en su móvil una copia de todas las publicaciones. Las copias no coincidirían, ocuparían demasiado y nadie podría fiarse de los datos de otro.
+
+La solución es guardar los datos y las reglas en un solo lugar, el servidor, y dejar que muchos clientes se conecten a él. Así todos ven la misma información y solo hay un sitio que mantener y proteger.
+
+## Los dos papeles
+
+Un **cliente** es el programa que inicia la comunicación. Suele ser lo que tienes delante: el navegador o una aplicación del móvil. Se encarga de mostrar la información y de recoger lo que haces.
+
+Un **servidor** es un programa que espera peticiones y las responde. Guarda los datos, aplica las reglas y decide qué puede ver cada cliente.
+
+"Servidor" se usa para dos cosas: el programa y la máquina donde se ejecuta. Lo que define a un servidor es el papel que cumple, no el tipo de ordenador. Tu propio portátil hace de servidor cuando desarrollas una web en él.
+
+## Un intercambio completo
+
+Esto es lo que ocurre cuando consultas tus pedidos en una tienda en línea:
+
+1. Pulsas "Mis pedidos". El cliente prepara una petición.
+2. La petición viaja por la red hasta el servidor mediante [HTTP](/articulos/que-es-http/).
+3. El servidor comprueba quién eres y si tienes permiso.
+4. Consulta los pedidos en la [base de datos](/articulos/que-es-una-base-de-datos/).
+5. Prepara una respuesta con esos datos y la envía.
+6. El cliente la recibe y la muestra en pantalla.
+
+El cliente siempre da el primer paso. El servidor no envía nada que no le hayan pedido.
+
+<Quiz
+	client:visible
+	question="En una tienda en línea, ¿quién comprueba si tienes permiso para ver un pedido?"
+	options={["El cliente", "El servidor", "La red"]}
+	answer={1}
+/>
+
+## Frontend y backend
+
+En desarrollo web, estas dos mitades tienen nombre:
+
+- **Frontend**: el código que se ejecuta en el cliente. Es lo que ves y con lo que interactúas.
+- **Backend**: el código que se ejecuta en el servidor. Gestiona datos, usuarios y reglas.
+
+Quien trabaja en las dos partes se llama desarrollador **full stack**.
+
+El frontend y el backend se comunican a través de una [API](/articulos/que-es-una-api/): el conjunto de peticiones que el servidor acepta.
+
+## Por qué no fiarse del cliente
+
+El cliente se ejecuta en el dispositivo de cada persona, que puede modificarlo o enviar peticiones hechas a mano. Por eso hay una regla básica: **todo lo que importa se comprueba en el servidor**.
+
+Si una web oculta el botón de borrar a quien no es administrador, eso es una comodidad, no una protección. La protección es que el servidor rechace la petición de borrado cuando no viene de un administrador.
+
+## Muchos clientes a la vez
+
+Un servidor atiende a muchos clientes simultáneamente. Cuando las peticiones superan lo que una máquina puede procesar, hay dos salidas: usar una máquina más potente o repartir el trabajo entre varias. Repartirlo es lo que permite que servicios muy grandes sigan funcionando con millones de usuarios.
+
+## No es el único modelo
+
+En una red **entre pares** o *peer-to-peer* no hay un servidor central: cada participante hace de cliente y de servidor a la vez. Se usa, por ejemplo, para compartir archivos. La mayoría de las aplicaciones web, sin embargo, siguen el modelo cliente-servidor.
+
+## Lo esencial
+
+- El cliente pide y muestra; el servidor guarda, decide y responde.
+- La comunicación siempre la inicia el cliente.
+- Frontend es el código del cliente; backend, el del servidor.
+- Las comprobaciones de seguridad se hacen en el servidor.

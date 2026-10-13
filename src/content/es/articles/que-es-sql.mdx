@@ -1,0 +1,153 @@
+---
+title: "¿Qué es SQL?"
+description: SQL es el lenguaje con el que se consultan y se modifican los datos de una base de datos relacional.
+level: basico
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: The SQL Language (documentación oficial, en inglés)"
+    url: https://www.postgresql.org/docs/current/tutorial-sql.html
+  - title: "SQLite: SELECT (en inglés)"
+    url: https://www.sqlite.org/lang_select.html
+  - title: "SQLite: CREATE TABLE (en inglés)"
+    url: https://www.sqlite.org/lang_createtable.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**SQL** (*Structured Query Language*) es el lenguaje que se usa para trabajar con [bases de datos relacionales](/articulos/que-es-una-base-de-datos/). Con él se crean tablas, se guardan datos, se consultan y se modifican.
+
+## En qué se diferencia de otros lenguajes
+
+En un lenguaje como JavaScript escribes los pasos: recorre la lista, comprueba cada elemento, guarda los que cumplan. SQL es **declarativo**: describes el resultado que quieres y la base de datos decide cómo obtenerlo.
+
+Cada orden de SQL se llama **sentencia** y termina en punto y coma. Las palabras del lenguaje suelen escribirse en mayúsculas para distinguirlas de los nombres de tablas y columnas, aunque no es obligatorio.
+
+Los ejemplos de este artículo funcionan tal cual en SQLite y, con cambios mínimos, en cualquier otra base de datos relacional.
+
+## Crear una tabla
+
+Antes de guardar datos hay que definir la tabla: sus columnas y el tipo de cada una.
+
+```sql
+CREATE TABLE clientes (
+	id INTEGER PRIMARY KEY,
+	nombre TEXT NOT NULL,
+	ciudad TEXT
+);
+```
+
+- `PRIMARY KEY` marca la columna que identifica cada fila.
+- `NOT NULL` obliga a que la columna tenga siempre valor.
+
+## Guardar datos
+
+`INSERT` añade filas. Se indican las columnas y, en el mismo orden, los valores:
+
+```sql
+INSERT INTO clientes (id, nombre, ciudad) VALUES
+	(1, 'Ana', 'Madrid'),
+	(2, 'Luis', 'Sevilla'),
+	(3, 'Marta', 'Madrid');
+```
+
+Los textos van entre comillas simples.
+
+## Consultar
+
+`SELECT` es la sentencia más usada. Su forma básica dice qué columnas quieres y de qué tabla:
+
+```sql
+SELECT nombre, ciudad FROM clientes;
+```
+
+Devuelve las tres filas con esas dos columnas. Un asterisco, `SELECT *`, pide todas las columnas.
+
+### Filtrar
+
+`WHERE` deja solo las filas que cumplen una condición:
+
+```sql
+SELECT nombre FROM clientes WHERE ciudad = 'Madrid';
+```
+
+Devuelve Ana y Marta. En SQL la igualdad se comprueba con un solo `=`.
+
+### Ordenar y limitar
+
+```sql
+SELECT nombre FROM clientes ORDER BY nombre DESC LIMIT 2;
+```
+
+`ORDER BY` ordena el resultado, `DESC` lo hace de mayor a menor y `LIMIT` se queda con las primeras filas. Devuelve Marta y Luis.
+
+<Quiz
+	client:visible
+	question="¿Qué devuelve SELECT nombre FROM clientes WHERE ciudad = 'Sevilla'?"
+	options={["Ana y Marta", "Luis", "Las tres filas"]}
+	answer={1}
+/>
+
+## Combinar tablas
+
+La fuerza del modelo relacional está en unir tablas. Añade una de pedidos, donde `cliente_id` apunta al cliente:
+
+```sql
+CREATE TABLE pedidos (
+	id INTEGER PRIMARY KEY,
+	cliente_id INTEGER REFERENCES clientes (id),
+	total INTEGER
+);
+
+INSERT INTO pedidos (id, cliente_id, total) VALUES
+	(10, 1, 25),
+	(11, 1, 40),
+	(12, 3, 15);
+```
+
+`JOIN` combina las filas de dos tablas que cumplen una condición, normalmente que la clave foránea de una coincida con la clave primaria de la otra:
+
+```sql
+SELECT clientes.nombre, pedidos.total
+FROM pedidos
+JOIN clientes ON clientes.id = pedidos.cliente_id;
+```
+
+El resultado tiene tres filas: Ana con 25, Ana con 40 y Marta con 15. Luis no aparece porque no tiene pedidos.
+
+## Resumir
+
+Las funciones de agregación calculan un valor a partir de muchas filas. Con `GROUP BY` se calcula uno por cada grupo:
+
+```sql
+SELECT clientes.nombre, SUM(pedidos.total) AS gastado
+FROM pedidos
+JOIN clientes ON clientes.id = pedidos.cliente_id
+GROUP BY clientes.nombre;
+```
+
+Devuelve Ana con 65 y Marta con 15. `AS` da nombre a la columna calculada.
+
+## Modificar y borrar
+
+```sql
+UPDATE clientes SET ciudad = 'Valencia' WHERE id = 2;
+DELETE FROM pedidos WHERE id = 12;
+```
+
+`UPDATE` cambia valores y `DELETE` elimina filas. En las dos, `WHERE` decide a qué filas afecta.
+
+## Errores comunes
+
+- **Olvidar `WHERE` en un `UPDATE` o un `DELETE`.** Sin condición, la sentencia se aplica a todas las filas de la tabla. Es el error más caro de SQL.
+- **Usar comillas dobles para los textos.** Los valores de texto van entre comillas simples.
+- **Construir una sentencia pegando texto escrito por un usuario.** Permite que alguien cuele sus propias órdenes, un ataque llamado inyección de SQL. Los valores externos se pasan siempre como parámetros, nunca dentro del texto de la sentencia.
+
+## Lo esencial
+
+- SQL es declarativo: dices qué quieres, no cómo obtenerlo.
+- `SELECT` consulta, `INSERT` añade, `UPDATE` modifica y `DELETE` borra.
+- `WHERE` filtra, `ORDER BY` ordena y `JOIN` combina tablas.
+- Un `UPDATE` o un `DELETE` sin `WHERE` afecta a toda la tabla.

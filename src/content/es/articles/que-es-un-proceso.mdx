@@ -1,0 +1,88 @@
+---
+title: "¿Qué es un proceso?"
+description: Un proceso es un programa en ejecución, con su propia memoria y su propio estado.
+level: basico
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+updated: 2026-10-13
+sources:
+  - title: "Operating Systems: Three Easy Pieces, The Abstraction: The Process (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf
+  - title: "Operating Systems: Three Easy Pieces, Interlude: Process API (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf
+  - title: "Linux man-pages: syscalls(2) (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/syscalls.2.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **proceso** es un programa en ejecución. El programa es el archivo guardado en el disco; el proceso es lo que existe mientras ese programa está funcionando, con su memoria y su estado en cada momento.
+
+## Programa y proceso no son lo mismo
+
+Un programa es algo pasivo: una lista de instrucciones en un archivo. No hace nada hasta que se ejecuta.
+
+Cuando lo abres, el [sistema operativo](/articulos/que-es-un-sistema-operativo/) lo carga en memoria y empieza a ejecutarlo. Eso es un proceso. Una receta es el programa; cocinar el plato es el proceso.
+
+De un mismo programa pueden salir varios procesos. Si abres dos veces el editor de texto, hay dos procesos del mismo programa, cada uno con su documento.
+
+## Qué tiene un proceso
+
+- **Un identificador**: un número único llamado **PID**.
+- **Su memoria**: una zona reservada con el código, los datos y el espacio para lo que vaya creando.
+- **Su estado de ejecución**: por qué instrucción va y qué valores tiene en los registros del [procesador](/articulos/como-funciona-un-procesador/).
+- **Sus recursos abiertos**: archivos, conexiones de red.
+
+## Aislamiento
+
+Cada proceso ve su memoria como si fuera el único que hay. No puede leer ni modificar la de otro. De eso se encarga el sistema operativo junto con el procesador.
+
+Este aislamiento es lo que hace que, cuando un programa falla, se cierre solo él y el resto siga funcionando.
+
+## Los estados de un proceso
+
+Hay muchos más procesos que núcleos de procesador, así que no pueden estar todos ejecutándose. En cada momento un proceso está en uno de estos estados:
+
+| Estado | Significa |
+| --- | --- |
+| En ejecución | Un núcleo está ejecutando sus instrucciones |
+| Listo | Podría ejecutarse, pero espera su turno |
+| Bloqueado | Espera a que ocurra algo: una tecla, datos del disco o de la red |
+
+Un proceso bloqueado no consume tiempo de procesador. Por eso un programa que espera a que escribas apenas gasta recursos.
+
+<Quiz
+	client:visible
+	question="Un editor de texto está esperando a que pulses una tecla. ¿En qué estado está su proceso?"
+	options={["En ejecución", "Listo", "Bloqueado"]}
+	answer={2}
+/>
+
+## Repartir el procesador
+
+El sistema operativo deja que un proceso use un núcleo durante un intervalo muy corto y después da paso a otro. La parte que decide a quién le toca es el **planificador**.
+
+Cambiar de un proceso a otro se llama **cambio de contexto**. El sistema guarda el estado del proceso que sale (por dónde iba y qué tenía en los registros) y restaura el del que entra. Cuando al primero le vuelve a tocar, continúa exactamente donde lo dejó, sin haberse enterado de la pausa.
+
+Estos cambios ocurren muchas veces por segundo. De ahí la impresión de que todo funciona a la vez aunque haya pocos núcleos.
+
+## Cómo nace y cómo termina
+
+Un proceso lo crea otro proceso, mediante una llamada al sistema. El que crea se llama **padre** y el creado, **hijo**. Al arrancar, el sistema operativo lanza un primer proceso y de él descienden todos los demás.
+
+Un proceso termina cuando acaba su trabajo, cuando falla o cuando otro con permiso lo detiene. El sistema operativo recupera entonces su memoria y cierra sus recursos.
+
+## Hilos
+
+Dentro de un proceso puede haber varios **hilos**: flujos de ejecución que avanzan por separado pero comparten la misma memoria. Un navegador puede usar un hilo para atender tus clics y otro para descargar una imagen.
+
+Al compartir memoria, los hilos se coordinan con facilidad, pero también pueden estorbarse si dos modifican el mismo dato a la vez.
+
+## Lo esencial
+
+- Un proceso es un programa en ejecución, con su memoria y su estado.
+- Cada proceso está aislado de los demás.
+- Pasa por los estados en ejecución, listo y bloqueado.
+- El planificador reparte el procesador y el cambio de contexto guarda y restaura el estado.
+- Los hilos son flujos de ejecución dentro de un mismo proceso que comparten memoria.

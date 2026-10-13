@@ -1,0 +1,8 @@
+title: Cómo funciona una aplicación web
+description: Las piezas de una aplicación completa, del navegador a la base de datos.
+steps:
+  - cliente-servidor
+  - que-es-http
+  - que-es-una-api
+  - que-es-una-base-de-datos
+  - que-es-sql
