@@ -3,12 +3,20 @@
 ---
 
 <link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
-<div id="search"></div>
+<div class="search">
+	<span id="search-label">Busca un concepto</span>
+	<div id="search" aria-labelledby="search-label"></div>
+</div>
 <script is:inline src="/pagefind/pagefind-ui.js"></script>
 <script is:inline>
 	window.addEventListener("DOMContentLoaded", () => {
 		if (window.PagefindUI) {
-			new window.PagefindUI({ element: "#search", showSubResults: true });
+			new window.PagefindUI({
+				element: "#search",
+				showSubResults: true,
+				showImages: false,
+				translations: { placeholder: "variable, DNS, proceso" },
+			});
 		}
 	});
 </script>

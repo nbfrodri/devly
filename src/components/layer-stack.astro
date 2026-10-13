@@ -1,0 +1,55 @@
+---
+import { LAYERS, type LayerId } from "@/lib/layers";
+
+type Props = {
+	/** Article count per layer; shown in the full-size stack. */
+	counts?: Partial<Record<LayerId, number>>;
+	/** Highlights one layer and renders the compact variant used beside an article. */
+	current?: LayerId;
+};
+
+const { counts, current } = Astro.props;
+const compact = current !== undefined;
+
+function countLabel(count: number): string {
+	if (count === 0) return "Próximamente";
+	return count === 1 ? "1 artículo" : `${count} artículos`;
+}
+---
+
+<ol class:list={["stack-layers", compact ? "stack-compact" : "stack-build"]}>
+	{
+		LAYERS.map((layer, depth) => {
+			const count = counts?.[layer.id] ?? 0;
+
+			return (
+				<li style={`--depth: ${depth}`}>
+					<a
+						class="layer"
+						href={`/capas/${layer.id}/`}
+						aria-current={current === layer.id ? "true" : undefined}
+						style={
+							compact
+								? undefined
+								: `--layer-bg: var(--layer-${depth + 1}); --layer-ink: var(--on-layer-${depth + 1})`
+						}
+					>
+						{compact ? (
+							layer.name
+						) : (
+							<>
+								<span>
+									<span class="layer-name">{layer.name}</span>
+									<span class="layer-description">{layer.description}</span>
+								</span>
+								<span class="layer-count" data-has-articles={count > 0 || undefined}>
+									{countLabel(count)}
+								</span>
+							</>
+						)}
+					</a>
+				</li>
+			);
+		})
+	}
+</ol>

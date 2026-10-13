@@ -1,0 +1,44 @@
+---
+import ArticleList from "@/components/article-list.astro";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { getPublishedArticles } from "@/lib/content";
+import { LAYERS, type Layer } from "@/lib/layers";
+
+export function getStaticPaths() {
+	return LAYERS.map((layer) => ({
+		params: { id: layer.id },
+		props: { layer },
+	}));
+}
+
+type Props = {
+	layer: Layer;
+};
+
+const { layer } = Astro.props;
+const articles = (await getPublishedArticles()).filter(
+	(article) => article.data.layer === layer.id,
+);
+---
+
+<BaseLayout title={layer.name} description={layer.description}>
+	<div class="container">
+		<header class="page-head">
+			<p class="article-level">Capa</p>
+			<h1>{layer.name}</h1>
+			<p class="lead">{layer.description}</p>
+		</header>
+		<section class="section">
+			{
+				articles.length > 0 ? (
+					<ArticleList articles={articles} showLayer={false} />
+				) : (
+					<p class="empty">
+						Todavía no hay artículos en esta capa. Mientras tanto, puedes
+						seguir una de las <a href="/rutas/">rutas de aprendizaje</a>.
+					</p>
+				)
+			}
+		</section>
+	</div>
+</BaseLayout>

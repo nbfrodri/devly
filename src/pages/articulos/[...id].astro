@@ -1,8 +1,11 @@
 ---
-import { getEntries, render } from "astro:content";
+import { getCollection, getEntries, getEntry, render } from "astro:content";
+import LayerStack from "@/components/layer-stack.astro";
+import PathCard from "@/components/path-card.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { type Article, getPublishedArticles } from "@/lib/content";
 import { LEVEL_LABELS } from "@/lib/levels";
+import { getStepNeighbors } from "@/lib/paths";
 
 export async function getStaticPaths() {
 	const articles = await getPublishedArticles();
@@ -20,28 +23,81 @@ type Props = {
 const { article } = Astro.props;
 const { Content } = await render(article);
 const prerequisites = await getEntries(article.data.prerequisites);
+
+const paths = (await getCollection("paths")).filter((path) =>
+	path.data.steps.some((step) => step.id === article.id),
+);
+const mainPath = paths[0];
+const neighbors = getStepNeighbors(
+	mainPath?.data.steps.map((step) => step.id) ?? [],
+	article.id,
+);
+const previous = neighbors.previous
+	? await getEntry("articles", neighbors.previous)
+	: undefined;
+const next = neighbors.next
+	? await getEntry("articles", neighbors.next)
+	: undefined;
 ---
 
 <BaseLayout title={article.data.title} description={article.data.description}>
-	<article data-pagefind-body>
-		<h1>{article.data.title}</h1>
-		<p>{LEVEL_LABELS[article.data.level]}</p>
-		{
-			prerequisites.length > 0 && (
-				<aside>
-					<h2>Antes de leer esto</h2>
-					<ul>
-						{prerequisites.map((prerequisite) => (
-							<li>
-								<a href={`/articulos/${prerequisite.id}/`}>
-									{prerequisite.data.title}
-								</a>
-							</li>
-						))}
-					</ul>
-				</aside>
-			)
-		}
-		<Content />
-	</article>
+	<div class="container article-layout">
+		<aside class="article-aside">
+			<nav class="aside-block" aria-label="Capa de este artículo">
+				<span class="aside-title">Dónde estás</span>
+				<LayerStack current={article.data.layer} />
+			</nav>
+			{
+				prerequisites.length > 0 && (
+					<div class="aside-block">
+						<span class="aside-title">Antes de leer esto</span>
+						<ul class="steps">
+							{prerequisites.map((prerequisite) => (
+								<li>
+									<a href={`/articulos/${prerequisite.id}/`}>
+										{prerequisite.data.title}
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				)
+			}
+			{
+				paths.map((path) => (
+					<div class="aside-block">
+						<span class="aside-title">Forma parte de la ruta</span>
+						<PathCard path={path} currentId={article.id} />
+					</div>
+				))
+			}
+		</aside>
+
+		<article class="article-body" data-pagefind-body>
+			<header class="article-head">
+				<p class="article-level">Nivel {LEVEL_LABELS[article.data.level].toLowerCase()}</p>
+				<h1>{article.data.title}</h1>
+				<p class="lead">{article.data.description}</p>
+			</header>
+			<div class="prose">
+				<Content />
+			</div>
+			{
+				mainPath && (
+					<nav class="path-nav" aria-label={`Ruta ${mainPath.data.title}`}>
+						{previous ? (
+							<a href={`/articulos/${previous.id}/`}>Anterior: {previous.data.title}</a>
+						) : (
+							<a href={`/rutas/${mainPath.id}/`}>Volver a la ruta</a>
+						)}
+						{next ? (
+							<a href={`/articulos/${next.id}/`}>Siguiente: {next.data.title}</a>
+						) : (
+							<span class="muted">Este es el último paso publicado.</span>
+						)}
+					</nav>
+				)
+			}
+		</article>
+	</div>
 </BaseLayout>

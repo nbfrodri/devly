@@ -1,41 +1,72 @@
 ---
 import { getCollection } from "astro:content";
+import ArticleList from "@/components/article-list.astro";
+import LayerStack from "@/components/layer-stack.astro";
+import PathCard from "@/components/path-card.astro";
 import Search from "@/components/search.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
-import { getPublishedArticles } from "@/lib/content";
-import { LEVEL_LABELS } from "@/lib/levels";
+import { countByLayer, getPublishedArticles } from "@/lib/content";
 
 const articles = await getPublishedArticles();
 const paths = await getCollection("paths");
+const firstPath = paths[0];
 ---
 
 <BaseLayout
-	title="Inicio"
+	title="La informática, capa por capa"
 	description="Explicaciones de informática, desarrollo y tecnología, de lo más básico a lo más complejo."
 >
-	<h1>devly</h1>
-	<Search />
+	<div class="container">
+		<section class="hero">
+			<div class="hero-copy">
+				<h1>La informática, capa por capa.</h1>
+				<p class="lead">
+					Explicaciones de informática, desarrollo y tecnología. Desde cómo se
+					guarda un bit hasta cómo se construye una aplicación.
+				</p>
+				<Search />
+				{
+					firstPath && (
+						<p class="muted">
+							¿No sabes por dónde empezar?{" "}
+							<a href={`/rutas/${firstPath.id}/`}>
+								Sigue la ruta de {firstPath.data.title.toLowerCase()}
+							</a>
+							.
+						</p>
+					)
+				}
+			</div>
+			<nav class="stack" aria-label="Capas de la informática">
+				<div class="stack-axis" aria-hidden="true">
+					<span>más abstracto</span>
+					<span>más cerca de la máquina</span>
+				</div>
+				<LayerStack counts={countByLayer(articles)} />
+			</nav>
+		</section>
 
-	<h2>Rutas de aprendizaje</h2>
-	<ul>
-		{
-			paths.map((path) => (
-				<li>
-					<a href={`/rutas/${path.id}/`}>{path.data.title}</a>
-				</li>
-			))
-		}
-	</ul>
+		<section class="section">
+			<div class="section-intro">
+				<h2>Rutas de aprendizaje</h2>
+				<p class="muted">
+					Una ruta ordena los artículos para que cada uno se apoye en el anterior.
+				</p>
+			</div>
+			<ul class="path-list">
+				{
+					paths.map((path) => (
+						<li>
+							<PathCard path={path} />
+						</li>
+					))
+				}
+			</ul>
+		</section>
 
-	<h2>Artículos</h2>
-	<ul>
-		{
-			articles.map((article) => (
-				<li>
-					<a href={`/articulos/${article.id}/`}>{article.data.title}</a>
-					<span>{LEVEL_LABELS[article.data.level]}</span>
-				</li>
-			))
-		}
-	</ul>
+		<section class="section">
+			<h2>Artículos</h2>
+			<ArticleList articles={articles} />
+		</section>
+	</div>
 </BaseLayout>

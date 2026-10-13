@@ -8,25 +8,27 @@ export type QuizProps = {
 
 export function Quiz({ question, options, answer }: QuizProps) {
 	const [selected, setSelected] = useState<number | null>(null);
+	const isCorrect = selected === answer;
 
 	return (
 		<fieldset className="quiz">
-			<legend>{question}</legend>
-			{options.map((option, index) => (
-				<button
-					key={option}
-					type="button"
-					aria-pressed={selected === index}
-					onClick={() => setSelected(index)}
-				>
-					{option}
-				</button>
-			))}
+			<legend>Compruébalo</legend>
+			<p className="quiz-question">{question}</p>
+			<div className="quiz-options">
+				{options.map((option, index) => (
+					<button
+						key={option}
+						type="button"
+						aria-pressed={selected === index}
+						onClick={() => setSelected(index)}
+					>
+						{option}
+					</button>
+				))}
+			</div>
 			{selected !== null && (
-				<p role="status">
-					{selected === answer
-						? "Correcto."
-						: "No es correcto, prueba otra vez."}
+				<p className="quiz-result" role="status" data-correct={isCorrect}>
+					{isCorrect ? "Correcto." : "No es correcto, prueba otra vez."}
 				</p>
 			)}
 		</fieldset>

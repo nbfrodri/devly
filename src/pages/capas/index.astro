@@ -1,0 +1,30 @@
+---
+import LayerStack from "@/components/layer-stack.astro";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { countByLayer, getPublishedArticles } from "@/lib/content";
+
+const articles = await getPublishedArticles();
+---
+
+<BaseLayout
+	title="Capas"
+	description="La informática organizada por capas de abstracción."
+>
+	<div class="container">
+		<header class="page-head">
+			<h1>Capas</h1>
+			<p class="lead">
+				Cada capa se apoya en la de abajo. Empieza por la que más curiosidad te dé.
+			</p>
+		</header>
+		<section class="section">
+			<nav class="stack" aria-label="Capas de la informática">
+				<div class="stack-axis" aria-hidden="true">
+					<span>más abstracto</span>
+					<span>más cerca de la máquina</span>
+				</div>
+				<LayerStack counts={countByLayer(articles)} />
+			</nav>
+		</section>
+	</div>
+</BaseLayout>

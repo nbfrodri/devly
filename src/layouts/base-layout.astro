@@ -1,30 +1,56 @@
 ---
+import "@/styles/global.css";
+import Logo from "@/components/logo.astro";
+
 type Props = {
 	title: string;
 	description: string;
 };
 
 const { title, description } = Astro.props;
+const { pathname } = Astro.url;
+const links = [
+	{ href: "/capas/", label: "Capas" },
+	{ href: "/rutas/", label: "Rutas" },
+	{ href: "/articulos/", label: "Artículos" },
+];
 ---
 
 <html lang="es">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={description} />
-		<title>{title} · devly</title>
+		<title>{title} | devly</title>
 	</head>
 	<body>
-		<header>
-			<nav>
-				<a href="/">devly</a>
-				<a href="/rutas/">Rutas</a>
-			</nav>
+		<a class="skip-link" href="#contenido">Saltar al contenido</a>
+		<header class="site-header">
+			<div class="container">
+				<Logo />
+				<nav class="site-nav" aria-label="Principal">
+					{
+						links.map((link) => (
+							<a
+								href={link.href}
+								aria-current={pathname.startsWith(link.href) ? "page" : undefined}
+							>
+								{link.label}
+							</a>
+						))
+					}
+				</nav>
+			</div>
 		</header>
-		<main>
+		<main id="contenido">
 			<slot />
 		</main>
+		<footer class="site-footer">
+			<div class="container">
+				<strong>devly</strong>
+				<span>Contenido generado con IA y revisado a mano antes de publicarse.</span>
+			</div>
+		</footer>
 	</body>
 </html>

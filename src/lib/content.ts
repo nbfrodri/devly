@@ -16,3 +16,15 @@ export async function getPublishedArticles(): Promise<Article[]> {
 			a.data.title.localeCompare(b.data.title, "es"),
 	);
 }
+
+export function countByLayer(
+	articles: Article[],
+): Partial<Record<Article["data"]["layer"], number>> {
+	const counts: Partial<Record<Article["data"]["layer"], number>> = {};
+
+	for (const article of articles) {
+		counts[article.data.layer] = (counts[article.data.layer] ?? 0) + 1;
+	}
+
+	return counts;
+}

@@ -1,20 +1,29 @@
 ---
 import { getCollection } from "astro:content";
+import PathCard from "@/components/path-card.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 
 const paths = await getCollection("paths");
 ---
 
-<BaseLayout title="Rutas" description="Rutas de aprendizaje ordenadas por nivel.">
-	<h1>Rutas de aprendizaje</h1>
-	<ul>
-		{
-			paths.map((path) => (
-				<li>
-					<a href={`/rutas/${path.id}/`}>{path.data.title}</a>
-					<p>{path.data.description}</p>
-				</li>
-			))
-		}
-	</ul>
+<BaseLayout title="Rutas" description="Rutas de aprendizaje ordenadas paso a paso.">
+	<div class="container">
+		<header class="page-head">
+			<h1>Rutas de aprendizaje</h1>
+			<p class="lead">
+				Una ruta ordena los artículos para que cada uno se apoye en el anterior.
+			</p>
+		</header>
+		<section class="section">
+			<ul class="path-list">
+				{
+					paths.map((path) => (
+						<li>
+							<PathCard path={path} />
+						</li>
+					))
+				}
+			</ul>
+		</section>
+	</div>
 </BaseLayout>

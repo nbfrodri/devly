@@ -1,0 +1,31 @@
+---
+import { type CollectionEntry, getEntries } from "astro:content";
+
+type Props = {
+	path: CollectionEntry<"paths">;
+	/** Article id to mark as the current step. */
+	currentId?: string;
+};
+
+const { path, currentId } = Astro.props;
+const steps = await getEntries(path.data.steps);
+---
+
+<article class="path-card">
+	<h3><a href={`/rutas/${path.id}/`}>{path.data.title}</a></h3>
+	<p class="muted">{path.data.description}</p>
+	<ol class="steps">
+		{
+			steps.map((step) => (
+				<li>
+					<a
+						href={`/articulos/${step.id}/`}
+						aria-current={step.id === currentId ? "page" : undefined}
+					>
+						{step.data.title}
+					</a>
+				</li>
+			))
+		}
+	</ol>
+</article>

@@ -1,0 +1,22 @@
+---
+import ArticleList from "@/components/article-list.astro";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { getPublishedArticles } from "@/lib/content";
+
+const articles = await getPublishedArticles();
+---
+
+<BaseLayout
+	title="Artículos"
+	description="Todos los artículos de devly, ordenados de básico a avanzado."
+>
+	<div class="container">
+		<header class="page-head">
+			<h1>Artículos</h1>
+			<p class="lead">Todos los artículos, ordenados de básico a avanzado.</p>
+		</header>
+		<section class="section">
+			<ArticleList articles={articles} />
+		</section>
+	</div>
+</BaseLayout>
