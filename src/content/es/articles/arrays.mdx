@@ -1,0 +1,140 @@
+---
+title: "¿Qué es un array?"
+description: Un array es una lista ordenada de valores a los que se accede por su posición.
+level: basico
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+  - bucles
+updated: 2026-10-13
+sources:
+  - title: "MDN: Array"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array
+  - title: "ECMAScript Language Specification (en inglés)"
+    url: https://tc39.es/ecma262/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **array** es una lista ordenada de valores guardada en una sola [variable](/articulos/que-es-una-variable/). Cada valor ocupa una posición numerada y se accede a él por ese número. En español también se le llama arreglo o vector.
+
+## Qué problema resuelve
+
+Para guardar las notas de treinta estudiantes podrías crear treinta variables. Sería incómodo, y además no podrías escribir el programa sin saber de antemano cuántos estudiantes hay.
+
+Un array agrupa todos los valores bajo un solo nombre y puede crecer o encogerse mientras el programa funciona.
+
+## Crear un array y leer sus elementos
+
+Se escribe entre corchetes, con los valores separados por comas:
+
+```js
+const frutas = ["manzana", "pera", "uva"];
+
+console.log(frutas[0]); // "manzana"
+console.log(frutas[2]); // "uva"
+console.log(frutas.length); // 3
+```
+
+Cada valor es un **elemento** y su posición es el **índice**. `length` dice cuántos elementos hay.
+
+### Se empieza a contar en cero
+
+El primer elemento tiene el índice 0, no el 1. El índice indica cuántas posiciones hay que avanzar desde el principio: para llegar al primero, ninguna.
+
+La consecuencia es que el último elemento está en `length - 1`. En un array de tres elementos, los índices válidos son 0, 1 y 2.
+
+```js
+const frutas = ["manzana", "pera", "uva"];
+
+console.log(frutas[frutas.length - 1]); // "uva"
+console.log(frutas[3]); // undefined
+```
+
+Pedir una posición que no existe no da error en JavaScript: devuelve `undefined`.
+
+<Quiz
+	client:visible
+	question="En un array de 10 elementos, ¿cuál es el índice del último?"
+	options={["9", "10", "11"]}
+	answer={0}
+/>
+
+## Modificar un array
+
+```js
+const frutas = ["manzana", "pera"];
+
+frutas[1] = "kiwi";
+frutas.push("uva");
+console.log(frutas.length); // 3
+
+const ultima = frutas.pop();
+console.log(ultima); // "uva"
+console.log(frutas.length); // 2
+```
+
+- Asignar a un índice sustituye ese elemento.
+- `push` añade un elemento al final.
+- `pop` quita el último y lo devuelve.
+
+El array está declarado con `const` y aun así se puede modificar. `const` impide asignar otro array a la variable, pero no impide cambiar el contenido del que ya tiene.
+
+## Recorrerlo
+
+Lo habitual es hacer algo con cada elemento, usando un [bucle](/articulos/bucles/):
+
+```js
+const precios = [10, 25, 5];
+let total = 0;
+
+for (const precio of precios) {
+	total = total + precio;
+}
+
+console.log(total); // 40
+```
+
+Si necesitas también la posición, se usa un `for` con contador, que va de 0 a `length - 1`.
+
+## Transformar sin bucles
+
+Los arrays traen métodos que resuelven las tareas más repetidas. Reciben una [función](/articulos/funciones/) y la aplican a cada elemento:
+
+```js
+const precios = [10, 25, 5];
+
+const conIva = precios.map((precio) => precio * 2);
+console.log(conIva.length); // 3
+console.log(conIva[1]); // 50
+
+const caros = precios.filter((precio) => precio > 8);
+console.log(caros.length); // 2
+
+console.log(precios.includes(25)); // true
+console.log(precios.indexOf(5)); // 2
+```
+
+- `map` crea un array nuevo con cada elemento transformado.
+- `filter` crea uno nuevo solo con los elementos que cumplen la condición.
+- `includes` dice si un valor está en el array.
+- `indexOf` devuelve la posición de un valor, o -1 si no está.
+
+`map` y `filter` no modifican el array original.
+
+## Cuánto cuesta cada operación
+
+Acceder a un elemento por su índice es inmediato, tenga el array diez elementos o diez millones. Buscar un valor sin conocer su posición obliga a mirar los elementos uno a uno. Esa diferencia es el punto de partida de la [complejidad algorítmica](/articulos/complejidad-algoritmica/).
+
+## Errores comunes
+
+- **Empezar a contar en 1** y saltarse el primer elemento.
+- **Pasarse por uno** en un bucle: la condición correcta es `i < array.length`, no `i <= array.length`.
+- **Esperar que `map` cambie el array original.** Devuelve uno nuevo, que hay que guardar.
+
+## Lo esencial
+
+- Un array es una lista ordenada de valores con posiciones numeradas desde 0.
+- `length` da el número de elementos; el último está en `length - 1`.
+- `push` y `pop` añaden y quitan por el final.
+- `map` y `filter` crean arrays nuevos a partir de uno existente.

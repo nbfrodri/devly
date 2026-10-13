@@ -1,0 +1,179 @@
+---
+title: "¿Qué es la programación orientada a objetos?"
+description: La programación orientada a objetos organiza un programa en objetos que agrupan datos y las operaciones que actúan sobre ellos.
+level: intermedio
+layer: programacion
+prerequisites:
+  - funciones
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "MDN: Clases"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Classes
+  - title: "MDN: Object-oriented programming (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Advanced_JavaScript_objects/Object-oriented_programming
+  - title: "ECMAScript Language Specification (en inglés)"
+    url: https://tc39.es/ecma262/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **programación orientada a objetos** (POO) es una forma de organizar un programa en **objetos**: unidades que agrupan unos datos con las operaciones que trabajan sobre ellos.
+
+## Qué problema resuelve
+
+En un programa pequeño, los datos van en variables y las operaciones en [funciones](/articulos/funciones/) sueltas. Cuando el programa crece, eso se complica: cualquier función puede modificar cualquier dato, y resulta difícil saber quién cambió qué.
+
+La POO propone juntar cada dato con las operaciones que tienen permiso para tocarlo. Una cuenta bancaria deja de ser un número suelto que cualquiera puede alterar y pasa a ser un objeto que solo cambia mediante sus propias operaciones, como ingresar y retirar.
+
+## Clases y objetos
+
+Una **clase** es una plantilla: describe qué datos tiene un tipo de objeto y qué puede hacer. Un **objeto** es un ejemplar concreto creado a partir de esa plantilla. También se le llama **instancia**.
+
+La clase es el plano de una casa; los objetos son las casas construidas con él.
+
+```js
+class Cuenta {
+	constructor(titular) {
+		this.titular = titular;
+		this.saldo = 0;
+	}
+
+	ingresar(cantidad) {
+		this.saldo = this.saldo + cantidad;
+	}
+}
+
+const cuentaDeAna = new Cuenta("Ana");
+const cuentaDeLuis = new Cuenta("Luis");
+
+cuentaDeAna.ingresar(100);
+
+console.log(cuentaDeAna.saldo); // 100
+console.log(cuentaDeLuis.saldo); // 0
+```
+
+- Los datos de un objeto se llaman **propiedades**: `titular` y `saldo`.
+- Sus funciones se llaman **métodos**: `ingresar`.
+- El **constructor** es el método que se ejecuta al crear el objeto con `new`. Prepara su estado inicial.
+- `this` se refiere al objeto concreto sobre el que se está trabajando.
+
+Los dos objetos comparten la clase, pero cada uno tiene sus propios datos. Ingresar en la cuenta de Ana no cambia la de Luis.
+
+## Los cuatro principios
+
+### Encapsulación
+
+Consiste en ocultar los datos internos y permitir cambiarlos solo a través de los métodos. Así el objeto puede proteger sus propias reglas.
+
+En JavaScript, una propiedad que empieza por `#` es privada: no se puede leer ni modificar desde fuera de la clase.
+
+```js
+class Cuenta {
+	#saldo = 0;
+
+	ingresar(cantidad) {
+		if (cantidad > 0) {
+			this.#saldo = this.#saldo + cantidad;
+		}
+	}
+
+	get saldo() {
+		return this.#saldo;
+	}
+}
+
+const cuenta = new Cuenta();
+cuenta.ingresar(50);
+cuenta.ingresar(-500);
+
+console.log(cuenta.saldo); // 50
+```
+
+Nadie puede poner el saldo en negativo saltándose la comprobación, porque el único camino para cambiarlo es `ingresar`.
+
+### Abstracción
+
+Un objeto muestra qué puede hacer y esconde cómo lo hace. Quien usa `cuenta.ingresar(50)` no necesita saber cómo se guarda el saldo. Es la misma idea que hay detrás de una [API](/articulos/que-es-una-api/).
+
+### Herencia
+
+Una clase puede basarse en otra. La nueva, la **subclase**, recibe las propiedades y los métodos de la original y añade o cambia lo que necesite.
+
+```js
+class Animal {
+	constructor(nombre) {
+		this.nombre = nombre;
+	}
+
+	presentarse() {
+		return "Soy " + this.nombre;
+	}
+
+	sonido() {
+		return "...";
+	}
+}
+
+class Perro extends Animal {
+	sonido() {
+		return "Guau";
+	}
+}
+
+const toby = new Perro("Toby");
+
+console.log(toby.presentarse()); // "Soy Toby"
+console.log(toby.sonido()); // "Guau"
+```
+
+`Perro` no define `presentarse`, pero lo tiene porque lo hereda de `Animal`.
+
+### Polimorfismo
+
+Objetos de clases distintas pueden responder al mismo método, cada uno a su manera. El código que los usa no necesita saber de qué clase es cada uno.
+
+```js
+class Animal {
+	sonido() {
+		return "...";
+	}
+}
+
+class Perro extends Animal {
+	sonido() {
+		return "Guau";
+	}
+}
+
+class Gato extends Animal {
+	sonido() {
+		return "Miau";
+	}
+}
+
+for (const animal of [new Perro(), new Gato()]) {
+	console.log(animal.sonido());
+}
+// Muestra "Guau" y "Miau"
+```
+
+<Quiz
+	client:visible
+	question="¿Qué principio impide que el saldo de una cuenta se modifique sin pasar por sus métodos?"
+	options={["Encapsulación", "Herencia", "Polimorfismo"]}
+	answer={0}
+/>
+
+## Cuándo no abusar
+
+La herencia une dos clases con fuerza: un cambio en la original afecta a todas las que heredan de ella. Por eso se suele recomendar usarla solo cuando una cosa es de verdad un tipo de otra, y en los demás casos hacer que un objeto contenga a otro, lo que se llama **composición**.
+
+La POO es una forma de organizar el código, no la única. Otros enfoques, como la programación funcional, resuelven los mismos problemas de otra manera, y muchos lenguajes permiten mezclarlos.
+
+## Lo esencial
+
+- Un objeto agrupa datos (propiedades) y operaciones (métodos).
+- Una clase es la plantilla de la que se crean los objetos.
+- La encapsulación protege los datos; la abstracción oculta los detalles.
+- La herencia reutiliza una clase en otra; el polimorfismo permite tratar igual a objetos distintos.

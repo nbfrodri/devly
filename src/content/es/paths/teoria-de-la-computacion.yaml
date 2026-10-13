@@ -1,0 +1,6 @@
+title: Teoría de la computación
+description: Qué significa calcular, qué se puede calcular y cuánto cuesta.
+steps:
+  - logica-booleana
+  - maquina-de-turing
+  - complejidad-algoritmica

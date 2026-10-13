@@ -1,0 +1,8 @@
+title: Fundamentos de desarrollo web
+description: Los lenguajes de una página, cómo llega al navegador y cómo se gestiona el código.
+steps:
+  - que-es-html
+  - que-es-css
+  - cliente-servidor
+  - que-es-http
+  - control-de-versiones-con-git

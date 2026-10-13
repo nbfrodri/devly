@@ -1,0 +1,129 @@
+---
+title: "¿Qué es una máquina de Turing?"
+description: La máquina de Turing es un modelo matemático muy simple que define con precisión qué significa calcular.
+level: intermedio
+layer: programacion
+prerequisites:
+  - condicionales
+  - bucles
+updated: 2026-10-13
+sources:
+  - title: "A. M. Turing: On Computable Numbers, with an Application to the Entscheidungsproblem (1936, en inglés)"
+    url: https://www.cs.virginia.edu/~robins/Turing_Paper_1936.pdf
+  - title: "Stanford Encyclopedia of Philosophy: Turing Machines (en inglés)"
+    url: https://plato.stanford.edu/entries/turing-machine/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **máquina de Turing** es un modelo matemático de un dispositivo de cálculo, descrito por Alan Turing en 1936. No es un aparato físico: es una definición rigurosa de qué significa seguir un procedimiento mecánico paso a paso.
+
+## Qué problema resuelve
+
+A principios del siglo XX, los matemáticos se preguntaban si existía un método mecánico capaz de resolver cualquier problema matemático. Para responder hacía falta algo previo: definir con exactitud qué es un "método mecánico". La intuición no bastaba.
+
+Turing propuso una máquina tan simple que nadie pudiera dudar de que cada paso es puramente mecánico, y a la vez lo bastante capaz para expresar cualquier cálculo. Lo hizo antes de que existieran los ordenadores.
+
+## Las piezas
+
+- **Una cinta** dividida en casillas, tan larga como haga falta. Cada casilla contiene un símbolo o está en blanco. Hace de memoria.
+- **Un cabezal** situado sobre una casilla. Puede leerla, escribir en ella y moverse una posición a la izquierda o a la derecha.
+- **Un estado**: la máquina está siempre en uno de un conjunto finito de estados. Es lo que "recuerda" aparte de la cinta.
+- **Una tabla de reglas**, que es el programa.
+
+## Cómo funciona
+
+Cada regla tiene esta forma: si estás en tal estado y lees tal símbolo, escribe este símbolo, muévete en esta dirección y pasa a este estado.
+
+La máquina repite un ciclo: lee, consulta la regla, escribe, se mueve y cambia de estado. Se detiene al llegar a un estado marcado como final.
+
+Eso es todo. No hay sumas ni multiplicaciones: solo leer, escribir y moverse.
+
+## Un ejemplo
+
+Esta máquina invierte los bits de la cinta, cambiando ceros por unos y unos por ceros. Le basta un estado de trabajo:
+
+| Estado | Lee | Escribe | Se mueve | Pasa a |
+| --- | --- | --- | --- | --- |
+| invertir | 0 | 1 | derecha | invertir |
+| invertir | 1 | 0 | derecha | invertir |
+| invertir | blanco | blanco | no se mueve | fin |
+
+Este programa la simula. Las reglas son datos que el simulador consulta en cada paso:
+
+```js
+const reglas = {
+	invertir: {
+		0: { escribe: "1", mueve: 1, pasaA: "invertir" },
+		1: { escribe: "0", mueve: 1, pasaA: "invertir" },
+		_: { escribe: "_", mueve: 0, pasaA: "fin" },
+	},
+};
+
+function ejecutar(entrada) {
+	const cinta = entrada.split("");
+	let posicion = 0;
+	let estado = "invertir";
+
+	while (estado !== "fin") {
+		const simbolo = cinta[posicion] ?? "_";
+		const regla = reglas[estado][simbolo];
+
+		cinta[posicion] = regla.escribe;
+		posicion = posicion + regla.mueve;
+		estado = regla.pasaA;
+	}
+
+	return cinta.join("").replaceAll("_", "");
+}
+
+console.log(ejecutar("1011")); // "0100"
+```
+
+El guion bajo representa una casilla en blanco. Al encontrarla, la máquina sabe que ha terminado.
+
+## Por qué importa algo tan simple
+
+### La tesis de Church-Turing
+
+Con el tiempo se propusieron otros modelos de cálculo muy diferentes, y todos resultaron equivalentes: lo que puede calcular uno lo pueden calcular los demás.
+
+De ahí la **tesis de Church-Turing**: todo lo que puede calcularse siguiendo un procedimiento mecánico puede calcularlo una máquina de Turing. No es un teorema demostrado, porque "procedimiento mecánico" es una noción intuitiva, pero nadie ha encontrado un contraejemplo.
+
+La consecuencia es llamativa. Un superordenador no puede calcular nada que no pueda esta máquina de cinta y cabezal. Lo hace muchísimo más rápido, pero el conjunto de problemas resolubles es el mismo.
+
+### La máquina universal
+
+Turing mostró además que se puede construir una máquina que recibe en su cinta la descripción de **otra** máquina y la simula. Una sola máquina sirve entonces para ejecutar cualquier programa.
+
+Es la idea que sostiene a los ordenadores actuales: el programa es un dato más, guardado en la misma memoria que los datos con los que trabaja. Lo puedes ver en cómo funciona un [procesador](/articulos/como-funciona-un-procesador/).
+
+### Turing completo
+
+De un lenguaje o sistema capaz de calcular todo lo que calcula una máquina de Turing se dice que es **Turing completo**. Los lenguajes de programación de uso general lo son. Les basta con poder guardar datos, tomar decisiones y repetir, que es lo que hacen los [condicionales](/articulos/condicionales/) y los [bucles](/articulos/bucles/).
+
+<Quiz
+	client:visible
+	question="Según la tesis de Church-Turing, ¿qué puede calcular un superordenador que no pueda una máquina de Turing?"
+	options={[
+		"Problemas con números muy grandes",
+		"Nada: calculan lo mismo, a distinta velocidad",
+		"Cualquier problema matemático",
+	]}
+	answer={1}
+/>
+
+## Lo que ninguna máquina puede hacer
+
+El resultado más profundo de Turing es negativo: hay problemas bien definidos que **ningún** programa puede resolver.
+
+El más famoso es el **problema de la parada**: dado un programa cualquiera y una entrada, decidir si terminará o se quedará funcionando para siempre. Turing demostró que no existe un algoritmo que acierte en todos los casos.
+
+No es una limitación de la tecnología actual que vaya a superarse con máquinas mejores. Es un límite matemático. Por eso ninguna herramienta puede garantizar, para cualquier programa, que no contiene un bucle infinito.
+
+## Lo esencial
+
+- Una máquina de Turing tiene una cinta, un cabezal, un estado y una tabla de reglas.
+- Define con precisión qué significa calcular.
+- Según la tesis de Church-Turing, cualquier ordenador calcula lo mismo que ella; solo cambia la velocidad.
+- Existen problemas, como el de la parada, que ningún programa puede resolver.

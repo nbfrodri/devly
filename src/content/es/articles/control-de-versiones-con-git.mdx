@@ -1,0 +1,127 @@
+---
+title: "¿Qué es el control de versiones con Git?"
+description: Git guarda el historial de cambios de un proyecto y permite que varias personas trabajen en él sin pisarse.
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+sources:
+  - title: "Pro Git, libro oficial de Git"
+    url: https://git-scm.com/book/es/v2
+  - title: "Git: gittutorial (documentación oficial, en inglés)"
+    url: https://git-scm.com/docs/gittutorial
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **control de versiones** es la práctica de registrar los cambios que se hacen en un conjunto de archivos a lo largo del tiempo. **Git** es la herramienta más usada para ello.
+
+## Qué problema resuelve
+
+Sin control de versiones, lo habitual es acabar con carpetas llamadas `proyecto-final`, `proyecto-final-2` y `proyecto-final-ahora-si`. Nadie sabe qué cambió entre una y otra, ni cuál funcionaba.
+
+Trabajar con otras personas lo empeora: dos editan el mismo archivo y quien guarda el último borra el trabajo del otro.
+
+Un sistema de control de versiones responde a esto:
+
+- **Qué cambió, cuándo y quién lo hizo.** Cada cambio queda registrado con su autor y su explicación.
+- **Volver atrás.** Se puede recuperar el estado del proyecto en cualquier momento anterior.
+- **Trabajar en paralelo.** Varias personas pueden avanzar a la vez y unir después su trabajo.
+
+## Repositorio y confirmaciones
+
+Un **repositorio** es una carpeta de proyecto cuya historia gestiona Git. Se crea con `git init`.
+
+La unidad de esa historia es la **confirmación**, o *commit*: una instantánea de todos los archivos del proyecto en un momento dado, con un mensaje que explica el cambio. Cada confirmación recuerda cuál es la anterior, y así se forma una cadena.
+
+Cada confirmación tiene un identificador único, una larga secuencia de letras y cifras calculada a partir de su contenido.
+
+## Las tres zonas
+
+En Git un cambio no se registra directamente. Pasa por tres zonas:
+
+| Zona | Qué contiene |
+| --- | --- |
+| Directorio de trabajo | Los archivos tal como los estás editando |
+| Área de preparación | Los cambios que has elegido para la próxima confirmación |
+| Repositorio | Las confirmaciones ya registradas |
+
+El área de preparación, o *staging area*, existe para que decidas qué entra en cada confirmación. Si has arreglado un error y, de paso, cambiado un texto, puedes registrar las dos cosas por separado, cada una con su explicación.
+
+El ciclo básico:
+
+```bash
+git init
+git add index.html
+git commit -m "Añade la página de inicio"
+git status
+git log --oneline
+```
+
+- `git add` lleva los cambios de un archivo al área de preparación.
+- `git commit` crea una confirmación con lo preparado.
+- `git status` muestra qué archivos han cambiado y qué está preparado.
+- `git log` muestra el historial.
+
+## Ramas
+
+Una **rama** es una línea de trabajo independiente. Permite desarrollar algo nuevo sin tocar la versión que ya funciona.
+
+La rama principal suele llamarse `main`. Para una tarea nueva se crea otra rama a partir de ella, se trabaja ahí y, cuando está lista, se une de vuelta.
+
+```bash
+git switch -c mejora-formulario
+git add formulario.html
+git commit -m "Valida el correo en el formulario"
+git switch main
+git merge mejora-formulario
+```
+
+- `git switch -c` crea una rama y se sitúa en ella.
+- `git switch main` vuelve a la rama principal.
+- `git merge` incorpora a la rama actual los cambios de otra. Esa unión se llama **fusión**.
+
+En Git una rama es muy ligera: es solo un nombre que apunta a una confirmación. Crear una es instantáneo, y por eso se crean con frecuencia, una por tarea.
+
+<Quiz
+	client:visible
+	question="¿Qué hace git add?"
+	options={[
+		"Crea una confirmación",
+		"Lleva cambios al área de preparación",
+		"Envía los cambios a un servidor",
+	]}
+	answer={1}
+/>
+
+## Conflictos
+
+Si dos ramas cambian partes distintas del proyecto, Git las fusiona solo. Si las dos cambian **las mismas líneas** de un archivo, no puede saber con cuál quedarse. Eso es un **conflicto**.
+
+Git detiene la fusión y marca en el archivo las dos versiones. Te toca editarlo, dejar el resultado correcto y confirmar. Un conflicto no significa que algo se haya roto: es Git negándose a elegir por ti.
+
+## Repositorios remotos
+
+Todo lo anterior ocurre en tu ordenador. Para colaborar se usa un **repositorio remoto**: una copia alojada en un servidor, a menudo en servicios como GitHub o GitLab.
+
+| Orden | Qué hace |
+| --- | --- |
+| `git clone` | Descarga una copia completa de un repositorio remoto |
+| `git push` | Envía tus confirmaciones al remoto |
+| `git pull` | Trae las confirmaciones nuevas del remoto y las incorpora |
+
+Git es **distribuido**: cada copia contiene el historial completo, no solo la última versión. Puedes consultar la historia y confirmar cambios sin conexión, y sincronizar más tarde.
+
+Git y GitHub no son lo mismo. Git es la herramienta; GitHub es un servicio que aloja repositorios de Git y añade funciones para colaborar.
+
+## Buenas prácticas
+
+- **Confirmaciones pequeñas y con un solo propósito.** Son más fáciles de entender y de deshacer.
+- **Mensajes que digan qué cambia y por qué.** "Arreglos" no ayuda a quien lea el historial dentro de un año.
+- **No registrar contraseñas ni claves.** Lo que entra en el historial es difícil de borrar del todo. Los archivos que no deben registrarse se listan en un archivo llamado `.gitignore`.
+
+## Lo esencial
+
+- Git registra la historia de un proyecto como una cadena de confirmaciones.
+- Los cambios pasan del directorio de trabajo al área de preparación y de ahí al repositorio.
+- Las ramas permiten trabajar en paralelo; la fusión une el trabajo.
+- Un repositorio remoto permite colaborar, y cada copia contiene el historial completo.

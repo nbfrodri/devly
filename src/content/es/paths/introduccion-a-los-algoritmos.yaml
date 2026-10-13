@@ -1,0 +1,6 @@
+title: Introducción a los algoritmos
+description: Cómo se mide la eficiencia de un algoritmo y un primer ejemplo que la aprovecha.
+steps:
+  - arrays
+  - complejidad-algoritmica
+  - busqueda-binaria

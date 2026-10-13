@@ -1,0 +1,146 @@
+---
+title: "¿Qué es la lógica booleana?"
+description: La lógica booleana trabaja con valores verdaderos y falsos y con las operaciones que los combinan.
+level: basico
+layer: programacion
+prerequisites:
+  - condicionales
+updated: 2026-10-13
+sources:
+  - title: "Stanford Encyclopedia of Philosophy: Propositional Logic (en inglés)"
+    url: https://plato.stanford.edu/entries/logic-propositional/
+  - title: "MDN: Expresiones y operadores"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Expressions_and_operators
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **lógica booleana** es la parte de la lógica que trabaja con solo dos valores, verdadero y falso, y con las operaciones que los combinan. Debe su nombre al matemático George Boole.
+
+Es la base de las [condiciones](/articulos/condicionales/) de cualquier programa y también de los circuitos de un ordenador, que trabajan con [bits](/articulos/que-es-un-bit/): un 1 hace de verdadero y un 0 de falso.
+
+## Proposiciones
+
+Una **proposición** es una afirmación que solo puede ser verdadera o falsa. "Hoy es lunes" es una proposición. "¿Qué hora es?" no lo es, porque no afirma nada.
+
+En programación, las proposiciones son expresiones que dan un [booleano](/articulos/tipos-de-datos/): `edad >= 18`, `nombre === "Ana"`.
+
+## Las tres operaciones básicas
+
+### Negación (NO)
+
+Invierte el valor. En JavaScript se escribe `!`.
+
+| A | NO A |
+| --- | --- |
+| verdadero | falso |
+| falso | verdadero |
+
+### Conjunción (Y)
+
+Es verdadera solo cuando las dos partes lo son. En JavaScript se escribe con dos signos `&`.
+
+| A | B | A Y B |
+| --- | --- | --- |
+| verdadero | verdadero | verdadero |
+| verdadero | falso | falso |
+| falso | verdadero | falso |
+| falso | falso | falso |
+
+### Disyunción (O)
+
+Es verdadera cuando al menos una parte lo es. En JavaScript se escribe con dos barras verticales.
+
+| A | B | A O B |
+| --- | --- | --- |
+| verdadero | verdadero | verdadero |
+| verdadero | falso | verdadero |
+| falso | verdadero | verdadero |
+| falso | falso | falso |
+
+Estas tablas, que recogen todas las combinaciones posibles, se llaman **tablas de verdad**.
+
+```js
+const esMayor = true;
+const tieneEntrada = false;
+
+console.log(!esMayor); // false
+console.log(esMayor && tieneEntrada); // false
+console.log(esMayor || tieneEntrada); // true
+```
+
+### El "o" no es el del lenguaje corriente
+
+Cuando alguien dice "té o café", suele querer decir uno de los dos. La disyunción lógica es **inclusiva**: también es verdadera cuando se cumplen las dos partes.
+
+El "o uno u otro, pero no ambos" existe y se llama **disyunción exclusiva** o XOR. En JavaScript, con dos booleanos, equivale a preguntar si son distintos:
+
+```js
+console.log(true !== false); // true
+console.log(true !== true); // false
+```
+
+## El orden de las operaciones
+
+Igual que la multiplicación va antes que la suma, la negación se aplica primero, después la conjunción y por último la disyunción. Los paréntesis cambian ese orden.
+
+```js
+console.log(true || false && false); // true
+console.log((true || false) && false); // false
+```
+
+En la primera línea se resuelve antes `false && false`. Cuando una condición mezcla operadores, los paréntesis evitan tener que recordar la regla y hacen el código más fácil de leer.
+
+<Quiz
+	client:visible
+	question="¿Cuánto vale false || true && false?"
+	options={["true", "false", "Depende del lenguaje"]}
+	answer={1}
+/>
+
+## Las leyes de De Morgan
+
+Dos reglas permiten reescribir una negación que afecta a varias condiciones:
+
+- NO (A Y B) equivale a (NO A) O (NO B).
+- NO (A O B) equivale a (NO A) Y (NO B).
+
+Al "repartir" la negación, la operación cambia: la conjunción pasa a disyunción y al revés.
+
+```js
+const a = true;
+const b = false;
+
+console.log(!(a && b) === (!a || !b)); // true
+console.log(!(a || b) === (!a && !b)); // true
+```
+
+Sirven para simplificar. "No es cierto que sea festivo o fin de semana" se lee mejor como "no es festivo y no es fin de semana".
+
+## Evaluación en cortocircuito
+
+JavaScript evalúa de izquierda a derecha y se detiene en cuanto conoce el resultado:
+
+- En una conjunción, si la primera parte es falsa, el resultado ya es falso y la segunda no se evalúa.
+- En una disyunción, si la primera parte es verdadera, la segunda no se evalúa.
+
+```js
+const usuario = null;
+
+console.log(usuario !== null && usuario.nombre === "Ana"); // false
+```
+
+Sin el cortocircuito, `usuario.nombre` provocaría un error, porque `usuario` no tiene valor. Como la primera parte es falsa, la segunda nunca se ejecuta.
+
+## Errores comunes
+
+- **Leer el "o" como exclusivo** y olvidar que también vale cuando se cumplen las dos partes.
+- **Negar mal una condición compuesta**: negar cada parte y olvidar cambiar la operación.
+- **Fiarse del orden de las operaciones** en lugar de usar paréntesis.
+
+## Lo esencial
+
+- La lógica booleana trabaja con dos valores y tres operaciones: negación, conjunción y disyunción.
+- Una tabla de verdad recoge el resultado para cada combinación de valores.
+- Las leyes de De Morgan permiten reescribir la negación de una condición compuesta.
+- La evaluación en cortocircuito deja sin ejecutar la parte que ya no puede cambiar el resultado.

@@ -1,0 +1,6 @@
+title: Bases de datos
+description: Del modelo relacional y SQL a las alternativas NoSQL.
+steps:
+  - que-es-una-base-de-datos
+  - que-es-sql
+  - bases-de-datos-nosql

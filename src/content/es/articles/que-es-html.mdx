@@ -1,0 +1,136 @@
+---
+title: "¿Qué es HTML?"
+description: HTML es el lenguaje que describe la estructura y el significado del contenido de una página web.
+level: basico
+layer: aplicaciones
+updated: 2026-10-13
+sources:
+  - title: "MDN: Sintaxis básica de HTML"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Core/Structuring_content/Basic_HTML_syntax
+  - title: "WHATWG: HTML Standard, introducción (en inglés)"
+    url: https://html.spec.whatwg.org/multipage/introduction.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**HTML** (*HyperText Markup Language*) es el lenguaje con el que se escribe el contenido de una página web. Indica qué es cada parte: esto es un título, esto un párrafo, esto un enlace.
+
+## No es un lenguaje de programación
+
+HTML no tiene [variables](/articulos/que-es-una-variable/), ni [condiciones](/articulos/condicionales/), ni [bucles](/articulos/bucles/). No da órdenes: describe. Es un **lenguaje de marcado**, es decir, un sistema para etiquetar un texto y decir qué papel cumple cada fragmento.
+
+En una página web trabajan tres lenguajes con tareas separadas:
+
+| Lenguaje | Se ocupa de |
+| --- | --- |
+| HTML | El contenido y su estructura |
+| [CSS](/articulos/que-es-css/) | El aspecto |
+| JavaScript | El comportamiento |
+
+## Elementos y etiquetas
+
+La pieza básica es el **elemento**. Casi todos tienen tres partes: una etiqueta de apertura, un contenido y una etiqueta de cierre.
+
+```html
+<p>Esto es un párrafo.</p>
+```
+
+- `<p>` es la etiqueta de apertura.
+- `</p>` es la de cierre, igual pero con una barra.
+- Lo que hay en medio es el contenido.
+
+Los elementos se pueden meter unos dentro de otros. Eso se llama **anidar**, y deben cerrarse en orden inverso al que se abrieron:
+
+```html
+<p>Esto es <strong>muy importante</strong>.</p>
+```
+
+Algunos elementos no tienen contenido y, por tanto, tampoco etiqueta de cierre. Es el caso de las imágenes y de los saltos de línea.
+
+## Atributos
+
+Un **atributo** añade información a un elemento. Se escribe dentro de la etiqueta de apertura, con un nombre y un valor entre comillas:
+
+```html
+<a href="https://ejemplo.com">Visitar ejemplo</a>
+<img src="gato.jpg" alt="Un gato gris durmiendo en un sofá">
+```
+
+- En el enlace, `href` indica la dirección a la que lleva.
+- En la imagen, `src` dice qué archivo mostrar y `alt` la describe con palabras.
+
+El texto de `alt` lo leen en voz alta los lectores de pantalla que usan las personas ciegas, y se muestra si la imagen no carga. Una imagen con información debe llevarlo siempre.
+
+## La estructura de un documento
+
+Toda página sigue el mismo esqueleto:
+
+```html
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8">
+		<title>Mi primera página</title>
+	</head>
+	<body>
+		<h1>Hola</h1>
+		<p>Esta es mi primera página.</p>
+	</body>
+</html>
+```
+
+- `<!doctype html>` avisa al navegador de que es un documento HTML actual.
+- `<html>` envuelve todo. Su atributo `lang` indica el idioma del contenido.
+- `<head>` contiene información sobre la página que no se muestra en ella: el título de la pestaña, la [codificación de caracteres](/articulos/codificacion-de-caracteres/).
+- `<body>` contiene lo que se ve.
+
+## Elementos habituales
+
+| Elemento | Para qué sirve |
+| --- | --- |
+| `<h1>` a `<h6>` | Títulos, del más importante al menos |
+| `<p>` | Párrafo |
+| `<a>` | Enlace |
+| `<img>` | Imagen |
+| `<ul>` y `<ol>` | Lista sin orden y lista numerada |
+| `<li>` | Cada elemento de una lista |
+| `<button>` | Botón |
+| `<form>` e `<input>` | Formulario y campo para escribir |
+
+<Quiz
+	client:visible
+	question="¿Qué parte de un documento HTML contiene lo que se ve en la página?"
+	options={["head", "body", "doctype"]}
+	answer={1}
+/>
+
+## HTML semántico
+
+Muchos elementos existen para decir qué **significa** un contenido, no cómo debe verse:
+
+| Elemento | Significado |
+| --- | --- |
+| `<header>` | Cabecera de la página o de una sección |
+| `<nav>` | Menú de navegación |
+| `<main>` | Contenido principal |
+| `<article>` | Contenido que se entiende por sí solo |
+| `<footer>` | Pie |
+
+Se podría construir toda la página con elementos genéricos y darles el aspecto deseado con CSS. Se vería igual, pero habría perdido el significado. Elegir el elemento correcto importa por tres razones:
+
+- **Accesibilidad**: los lectores de pantalla usan esa estructura para anunciar las partes de la página y permitir saltar de una a otra.
+- **Buscadores**: entienden mejor de qué trata el contenido.
+- **Mantenimiento**: el código se lee mejor.
+
+La regla es elegir el elemento por lo que el contenido es. Un título es un `<h1>` aunque quieras verlo pequeño; el tamaño se cambia con CSS.
+
+## El navegador perdona los errores
+
+Si olvidas cerrar una etiqueta, el navegador no muestra un error: intenta adivinar qué querías y dibuja la página igualmente. Parece una ventaja, pero hace que los fallos pasen desapercibidos y aparezcan como comportamientos raros. Un validador de HTML los detecta.
+
+## Lo esencial
+
+- HTML describe la estructura y el significado del contenido; no es un lenguaje de programación.
+- Un elemento se forma con etiquetas de apertura y cierre, y puede llevar atributos.
+- Todo documento tiene un `head` con información sobre la página y un `body` con lo visible.
+- El elemento se elige por el significado del contenido, no por su aspecto.

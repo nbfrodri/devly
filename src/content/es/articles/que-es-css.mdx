@@ -1,0 +1,154 @@
+---
+title: "¿Qué es CSS?"
+description: CSS es el lenguaje que define el aspecto de una página web, desde los colores hasta la disposición de los elementos.
+level: basico
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+updated: 2026-10-13
+sources:
+  - title: "MDN: ¿Qué es el CSS?"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Core/Styling_basics/What_is_CSS
+  - title: "MDN: Especificidad"
+    url: https://developer.mozilla.org/es/docs/Web/CSS/Guides/Cascade/Specificity
+  - title: "W3C: CSS Cascading and Inheritance Level 4 (en inglés)"
+    url: https://www.w3.org/TR/css-cascade-4/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**CSS** (*Cascading Style Sheets*, hojas de estilo en cascada) es el lenguaje que define cómo se ve una página web: colores, tipografías, tamaños, espacios y la colocación de cada elemento.
+
+## Por qué va separado de HTML
+
+[HTML](/articulos/que-es-html/) dice qué es cada parte del contenido. CSS dice qué aspecto tiene. Mantenerlos separados tiene ventajas prácticas:
+
+- Un mismo archivo de estilos sirve para todas las páginas de un sitio. Cambiar un color en un sitio lo cambia en todas.
+- El mismo contenido puede mostrarse de formas distintas en un móvil, en una pantalla grande o al imprimir.
+- El HTML queda limpio y conserva su significado.
+
+## Cómo es una regla
+
+Una hoja de estilos es una lista de **reglas**. Cada regla dice a qué elementos afecta y qué les hace:
+
+```css
+p {
+	color: darkblue;
+	font-size: 18px;
+}
+```
+
+- `p` es el **selector**: indica los elementos afectados, aquí todos los párrafos.
+- Entre llaves van las **declaraciones**, cada una con una **propiedad** y un **valor**, separados por dos puntos y terminadas en punto y coma.
+
+## Selectores
+
+Los tres selectores básicos son:
+
+| Selector | Ejemplo | A qué afecta |
+| --- | --- | --- |
+| De tipo | `p` | A todos los elementos de ese tipo |
+| De clase | `.aviso` | A los elementos con ese valor en el atributo `class` |
+| De identificador | `#portada` | Al único elemento con ese valor en `id` |
+
+Las clases son el más usado, porque permiten aplicar el mismo estilo a elementos de cualquier tipo:
+
+```html
+<p class="aviso">Guarda los cambios antes de salir.</p>
+```
+
+```css
+.aviso {
+	background-color: lightyellow;
+	padding: 16px;
+}
+```
+
+Los selectores se combinan. `nav a` afecta solo a los enlaces que están dentro de un menú de navegación.
+
+## Dónde se escribe
+
+Lo habitual es poner el CSS en un archivo propio y enlazarlo desde el `head` del documento:
+
+```html
+<link rel="stylesheet" href="estilos.css">
+```
+
+## La cascada
+
+A un mismo elemento le pueden afectar varias reglas que se contradicen. La **cascada** es el conjunto de normas que decide cuál gana. Las dos que más se aplican en el día a día:
+
+1. **Especificidad**: gana el selector más concreto. Un identificador pesa más que una clase, y una clase más que un tipo.
+2. **Orden**: con la misma especificidad, gana la regla que aparece después.
+
+```css
+p {
+	color: black;
+}
+
+.aviso {
+	color: red;
+}
+```
+
+Un párrafo con la clase `aviso` se verá rojo. Las dos reglas le afectan, pero el selector de clase es más específico que el de tipo, sin importar cuál esté escrita antes.
+
+<Quiz
+	client:visible
+	question="Dos reglas con el mismo selector dan colores distintos al mismo elemento. ¿Cuál se aplica?"
+	options={["La primera", "La que aparece después", "Ninguna de las dos"]}
+	answer={1}
+/>
+
+## La herencia
+
+Algunas propiedades pasan de un elemento a los que contiene. Si das un color de texto al `body`, todos los párrafos y títulos lo adoptan sin que lo repitas.
+
+Se heredan sobre todo las propiedades del texto: color, tipografía, tamaño de letra. No se heredan las de la caja, como bordes o márgenes. Tiene sentido: si un contenedor tiene borde, no quieres que cada elemento de dentro lo tenga también.
+
+## El modelo de caja
+
+El navegador trata cada elemento como una caja rectangular con cuatro zonas, de dentro afuera:
+
+| Zona | Propiedad | Qué es |
+| --- | --- | --- |
+| Contenido | `width`, `height` | El texto o la imagen |
+| Relleno | `padding` | Espacio entre el contenido y el borde |
+| Borde | `border` | La línea que rodea al relleno |
+| Margen | `margin` | Espacio entre esta caja y las vecinas |
+
+Por defecto, `width` mide solo el contenido, y el relleno y el borde se suman. Una caja de 200 píxeles de ancho con 20 de relleno a cada lado ocupa 240. La declaración `box-sizing: border-box` cambia esa cuenta para que el ancho incluya relleno y borde, y por eso se aplica en casi todos los proyectos.
+
+## Colocar los elementos
+
+Por defecto, los elementos se apilan uno debajo de otro. Para otras disposiciones existen dos sistemas:
+
+- **Flexbox** reparte elementos en una fila o en una columna.
+- **Grid** los coloca en filas y columnas a la vez, como en una cuadrícula.
+
+## Adaptarse a la pantalla
+
+Una **consulta de medios** aplica reglas solo cuando se cumple una condición, como el ancho de la ventana. Así una página se reorganiza para un móvil:
+
+```css
+@media (max-width: 600px) {
+	.menu {
+		display: none;
+	}
+}
+```
+
+Diseñar para que una página funcione en cualquier tamaño de pantalla se llama **diseño adaptable** o *responsive*.
+
+## Errores comunes
+
+- **Subir la especificidad para ganar una disputa** entre reglas. Lleva a selectores cada vez más largos. Suele ser mejor simplificar la regla que estorba.
+- **Olvidar que `width` no incluye el relleno** y ver cajas más anchas de lo esperado.
+- **Usar medidas fijas en píxeles para todo**, lo que rompe la página en pantallas pequeñas.
+
+## Lo esencial
+
+- CSS define el aspecto; HTML, el contenido.
+- Una regla une un selector con declaraciones de propiedad y valor.
+- La cascada resuelve los conflictos por especificidad y, a igualdad, por orden.
+- Cada elemento es una caja con contenido, relleno, borde y margen.

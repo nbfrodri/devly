@@ -1,0 +1,116 @@
+---
+title: "¿Qué son TCP y UDP?"
+description: TCP y UDP son los dos protocolos que llevan los datos de un programa a otro a través de internet, con garantías muy distintas.
+level: basico
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+updated: 2026-10-13
+sources:
+  - title: "RFC 9293: Transmission Control Protocol (TCP)"
+    url: https://www.rfc-editor.org/info/rfc9293/
+  - title: "RFC 768: User Datagram Protocol"
+    url: https://www.rfc-editor.org/info/rfc768/
+  - title: "RFC 9114: HTTP/3"
+    url: https://www.rfc-editor.org/info/rfc9114/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**TCP** y **UDP** son los dos protocolos que se encargan de llevar datos de un programa a otro a través de internet. Resuelven el mismo problema con prioridades opuestas: TCP garantiza que todo llega bien; UDP prefiere la rapidez.
+
+## Qué problema resuelven
+
+El protocolo IP lleva paquetes de una [dirección IP](/articulos/que-es-una-direccion-ip/) a otra, pero se queda corto en dos cosas:
+
+- **Entrega a una máquina, no a un programa.** En un ordenador hay muchos programas usando la red a la vez. Falta saber a cuál de ellos va cada paquete.
+- **No garantiza nada.** Un paquete puede perderse, llegar duplicado o llegar después de otro que se envió más tarde.
+
+TCP y UDP trabajan por encima de IP y cubren esos huecos. Forman la llamada **capa de transporte**.
+
+## Los puertos
+
+Para saber a qué programa va cada paquete se usan los **puertos**: números del 0 al 65 535 que identifican un punto de comunicación dentro de una máquina.
+
+Si la dirección IP es la dirección de un edificio, el puerto es el número del piso. Algunos servicios usan siempre el mismo:
+
+| Puerto | Servicio |
+| --- | --- |
+| 80 | [HTTP](/articulos/que-es-http/) |
+| 443 | HTTPS |
+| 53 | [DNS](/articulos/que-es-dns/) |
+
+El límite de 65 535 se debe a que el número de puerto ocupa 16 [bits](/articulos/que-es-un-bit/).
+
+```js
+console.log(2 ** 16 - 1); // 65535
+```
+
+## TCP: que llegue todo y en orden
+
+TCP (*Transmission Control Protocol*) ofrece al programa la ilusión de un canal fiable, aunque por debajo los paquetes se pierdan o se desordenen. Para conseguirlo hace varias cosas.
+
+### Establece una conexión
+
+Antes de enviar datos, las dos partes se ponen de acuerdo con un intercambio de tres mensajes:
+
+1. El cliente envía `SYN`: "quiero conectarme".
+2. El servidor responde `SYN-ACK`: "de acuerdo, yo también".
+3. El cliente confirma con `ACK`: "recibido".
+
+A partir de ahí los datos pueden circular en los dos sentidos.
+
+### Numera y confirma
+
+Cada fragmento lleva un número de secuencia. El receptor los usa para **reordenar** lo que llega desordenado y para descartar duplicados.
+
+El receptor confirma lo que recibe. Si el emisor no obtiene confirmación de un fragmento al cabo de un tiempo, **lo vuelve a enviar**.
+
+### Regula la velocidad
+
+TCP ajusta el ritmo de envío para no desbordar al receptor ni saturar la red. Si detecta pérdidas, interpreta que hay congestión y reduce la velocidad.
+
+Todo esto tiene un coste: el intercambio inicial, las confirmaciones y las esperas cuando algo se pierde añaden retraso.
+
+## UDP: enviar y ya está
+
+UDP (*User Datagram Protocol*) hace lo mínimo. Añade los puertos y una comprobación de errores, y nada más.
+
+- No establece conexión: envía directamente.
+- No confirma la recepción ni reenvía lo perdido.
+- No garantiza el orden.
+
+A cambio es rápido y ligero. Si un programa que usa UDP necesita alguna garantía, tiene que construirla él mismo.
+
+## Cuál se usa para qué
+
+| | TCP | UDP |
+| --- | --- | --- |
+| Conexión previa | Sí | No |
+| Entrega garantizada | Sí | No |
+| Orden garantizado | Sí | No |
+| Retraso añadido | Mayor | Mínimo |
+
+La elección depende de qué es peor para cada aplicación: perder datos o esperar.
+
+- **Una página web, un correo o un archivo** deben llegar completos. Un byte perdido lo estropea todo. Se usa TCP.
+- **Una videollamada o un juego en línea** necesitan inmediatez. Si se pierde un instante de sonido, no sirve de nada recibirlo medio segundo tarde: es mejor seguir adelante. Se usa UDP.
+- **Una consulta de DNS** es una pregunta corta con una respuesta corta. Montar una conexión costaría más que la propia consulta, así que normalmente va por UDP.
+
+<Quiz
+	client:visible
+	question="¿Qué protocolo encaja mejor para una videollamada?"
+	options={["TCP", "UDP", "Ninguno de los dos"]}
+	answer={1}
+/>
+
+## HTTP y la capa de transporte
+
+Las versiones clásicas de HTTP funcionan sobre TCP. La más reciente, HTTP/3, funciona sobre **QUIC**, un protocolo que se apoya en UDP y construye por encima sus propias garantías de entrega y de orden. Es un ejemplo de lo dicho antes: UDP sirve de base cuando una aplicación quiere decidir por sí misma cómo conseguir la fiabilidad.
+
+## Lo esencial
+
+- TCP y UDP llevan datos de un programa a otro; los puertos indican a qué programa.
+- TCP establece una conexión y garantiza que todo llega, completo y en orden.
+- UDP envía sin garantías, con el mínimo retraso.
+- Se elige TCP cuando no puede faltar nada y UDP cuando lo que importa es la inmediatez.

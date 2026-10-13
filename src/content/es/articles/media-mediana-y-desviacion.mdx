@@ -1,0 +1,147 @@
+---
+title: "¿Qué son la media, la mediana y la desviación típica?"
+description: "Tres medidas que resumen un conjunto de números: dónde está su centro y cuánto se dispersan."
+level: basico
+layer: datos
+prerequisites:
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "NIST/SEMATECH e-Handbook of Statistical Methods: Measures of Location (en inglés)"
+    url: https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm
+  - title: "NIST/SEMATECH e-Handbook of Statistical Methods: Measures of Scale (en inglés)"
+    url: https://www.itl.nist.gov/div898/handbook/eda/section3/eda356.htm
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **media**, la **mediana** y la **desviación típica** son tres números que resumen un conjunto de datos. Las dos primeras indican dónde está el centro; la tercera, cuánto se alejan los datos de ese centro.
+
+## Qué problema resuelven
+
+Nadie puede sacar conclusiones mirando diez mil números uno a uno. La estadística descriptiva los condensa en unos pocos valores que se pueden comparar y comunicar.
+
+Todo resumen pierde información. Por eso conviene saber qué cuenta cada medida y qué deja fuera.
+
+## La media
+
+La **media aritmética** es la suma de todos los valores dividida entre cuántos hay. Es lo que se entiende normalmente por "promedio".
+
+```js
+function media(valores) {
+	let suma = 0;
+
+	for (const valor of valores) {
+		suma = suma + valor;
+	}
+
+	return suma / valores.length;
+}
+
+console.log(media([2, 4, 4, 4, 5, 5, 7, 9])); // 5
+```
+
+Se puede ver como un reparto a partes iguales: si esos ocho valores fueran dinero y se repartiera por igual, a cada uno le tocarían 5.
+
+## La mediana
+
+La **mediana** es el valor que queda en el centro cuando los datos se ordenan. La mitad de los valores está por debajo y la otra mitad por encima.
+
+Si el número de datos es par, no hay un único valor central: se toma la media de los dos del medio.
+
+```js
+function mediana(valores) {
+	const ordenados = valores.toSorted((a, b) => a - b);
+	const centro = Math.floor(ordenados.length / 2);
+
+	if (ordenados.length % 2 === 1) {
+		return ordenados[centro];
+	}
+
+	return (ordenados[centro - 1] + ordenados[centro]) / 2;
+}
+
+console.log(mediana([3, 1, 2])); // 2
+console.log(mediana([2, 4, 4, 4, 5, 5, 7, 9])); // 4.5
+```
+
+## Por qué hacen falta las dos
+
+La media usa todos los valores, y eso la hace sensible a los **valores atípicos**: datos muy alejados del resto. Uno solo la puede desplazar mucho. A la mediana casi no le afectan.
+
+Imagina los sueldos mensuales de cinco personas de una empresa:
+
+```js
+const sueldos = [1500, 1600, 1700, 1800, 20000];
+
+const suma = sueldos.reduce((total, sueldo) => total + sueldo, 0);
+console.log(suma / sueldos.length); // 5320
+console.log(sueldos[2]); // 1700
+```
+
+La media es 5320, una cifra que no gana nadie: cuatro personas están muy por debajo y una muy por encima. La mediana, 1700, describe mucho mejor el sueldo habitual.
+
+Cuando los datos son muy desiguales, como ocurre con sueldos o precios de vivienda, la mediana suele ser el resumen más honesto. Si alguien te da solo la media, pregúntate qué forma tienen los datos.
+
+<Quiz
+	client:visible
+	question="En un barrio de casas modestas se construye una mansión carísima. ¿Qué medida del precio de las casas cambia más?"
+	options={["La media", "La mediana", "Las dos por igual"]}
+	answer={0}
+/>
+
+## La moda
+
+La **moda** es el valor que más se repite. En `[2, 4, 4, 4, 5, 5, 7, 9]` es el 4. Es la única de las tres que sirve para datos que no son números, como el color de coche más vendido.
+
+## El centro no lo dice todo
+
+Dos conjuntos pueden tener la misma media y ser muy distintos:
+
+- `[5, 5, 5, 5]` tiene media 5.
+- `[0, 0, 10, 10]` también.
+
+En el primero todos los valores coinciden con la media. En el segundo, ninguno se le acerca. Falta una medida de la **dispersión**.
+
+## La desviación típica
+
+La **desviación típica** indica cuánto se alejan los datos de la media, en promedio. Se calcula en cuatro pasos:
+
+1. Calcula la media.
+2. Resta la media a cada valor y eleva el resultado al cuadrado.
+3. Calcula la media de esos cuadrados. Ese número es la **varianza**.
+4. Haz la raíz cuadrada de la varianza.
+
+Elevar al cuadrado evita que las diferencias positivas y negativas se anulen entre sí. La raíz final devuelve el resultado a las unidades originales.
+
+```js
+function desviacionTipica(valores) {
+	const promedio = valores.reduce((a, b) => a + b, 0) / valores.length;
+
+	let sumaCuadrados = 0;
+	for (const valor of valores) {
+		sumaCuadrados = sumaCuadrados + (valor - promedio) ** 2;
+	}
+
+	return Math.sqrt(sumaCuadrados / valores.length);
+}
+
+console.log(desviacionTipica([2, 4, 4, 4, 5, 5, 7, 9])); // 2
+console.log(desviacionTipica([5, 5, 5, 5])); // 0
+console.log(desviacionTipica([0, 0, 10, 10])); // 5
+```
+
+Una desviación de 0 significa que todos los valores son iguales. Cuanto mayor es, más repartidos están.
+
+### Población y muestra
+
+La fórmula anterior divide entre el número de datos y es la correcta cuando tienes **todos** los datos que te interesan, la población completa.
+
+Si solo tienes una **muestra**, una parte con la que quieres estimar el total, se divide entre el número de datos menos uno. Con ese ajuste se compensa que una muestra tiende a parecer menos dispersa que la población de la que sale. Muchas herramientas ofrecen las dos variantes con nombres parecidos, así que conviene comprobar cuál se está usando.
+
+## Lo esencial
+
+- La media reparte el total a partes iguales y es sensible a los valores atípicos.
+- La mediana es el valor central y resiste a los valores extremos.
+- La desviación típica mide cuánto se dispersan los datos alrededor de la media.
+- Un resumen fiable da el centro y también la dispersión.

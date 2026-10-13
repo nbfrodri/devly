@@ -1,0 +1,125 @@
+---
+title: "¿Qué es la búsqueda binaria?"
+description: La búsqueda binaria encuentra un valor en una lista ordenada descartando la mitad de los elementos en cada paso.
+level: intermedio
+layer: programacion
+prerequisites:
+  - arrays
+  - complejidad-algoritmica
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare: 6.006 Introduction to Algorithms (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/
+  - title: "MDN: Array"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **búsqueda binaria** es un algoritmo para encontrar un valor en una lista **ordenada**. En cada paso descarta la mitad de los elementos que quedan, y por eso es rapidísima incluso con listas enormes.
+
+## La idea
+
+Piensa en cómo buscas una palabra en un diccionario de papel. No lees desde la primera página. Abres por la mitad, miras si tu palabra va antes o después y te quedas con esa mitad. Repites hasta dar con ella.
+
+Funciona porque el diccionario está ordenado. Al ver una palabra, sabes en qué lado está la tuya y puedes olvidarte del otro.
+
+## Frente a la búsqueda lineal
+
+La forma más simple de buscar es mirar los elementos uno a uno. Se llama **búsqueda lineal** y su [complejidad](/articulos/complejidad-algoritmica/) es O(n): en el peor caso hay que mirarlos todos.
+
+La búsqueda binaria es O(log n). Cada paso reduce el problema a la mitad, así que el número de pasos crece muy despacio:
+
+| Elementos | Búsqueda lineal | Búsqueda binaria |
+| --- | --- | --- |
+| 100 | 100 | 7 |
+| 1000 | 1000 | 10 |
+| 1 000 000 | 1 000 000 | 20 |
+
+Son los pasos del peor caso. Con un millón de elementos bastan veinte, porque dividir un millón entre dos veinte veces deja un solo elemento.
+
+## El algoritmo
+
+Se mantienen dos índices, `inicio` y `fin`, que delimitan la zona donde todavía puede estar el valor.
+
+1. Calcula la posición central de esa zona.
+2. Si el elemento central es el buscado, has terminado.
+3. Si es menor que el buscado, el valor solo puede estar a la derecha: mueve `inicio` justo después del centro.
+4. Si es mayor, solo puede estar a la izquierda: mueve `fin` justo antes del centro.
+5. Repite mientras la zona no esté vacía. Si se vacía, el valor no está en la lista.
+
+```js
+function busquedaBinaria(lista, objetivo) {
+	let inicio = 0;
+	let fin = lista.length - 1;
+
+	while (inicio <= fin) {
+		const centro = Math.floor((inicio + fin) / 2);
+
+		if (lista[centro] === objetivo) {
+			return centro;
+		}
+
+		if (lista[centro] < objetivo) {
+			inicio = centro + 1;
+		} else {
+			fin = centro - 1;
+		}
+	}
+
+	return -1;
+}
+
+const numeros = [3, 8, 15, 21, 34, 47, 52];
+
+console.log(busquedaBinaria(numeros, 34)); // 4
+console.log(busquedaBinaria(numeros, 10)); // -1
+```
+
+La función devuelve el índice donde está el valor, o -1 si no lo encuentra.
+
+## Paso a paso
+
+Buscar el 34 en `[3, 8, 15, 21, 34, 47, 52]`:
+
+| Paso | inicio | fin | centro | Elemento | Decisión |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 0 | 6 | 3 | 21 | 21 es menor: buscar a la derecha |
+| 2 | 4 | 6 | 5 | 47 | 47 es mayor: buscar a la izquierda |
+| 3 | 4 | 4 | 4 | 34 | Encontrado |
+
+Tres pasos para una lista de siete elementos. La búsqueda lineal habría necesitado cinco.
+
+<Quiz
+	client:visible
+	question="¿Qué condición debe cumplir una lista para poder aplicarle la búsqueda binaria?"
+	options={[
+		"Tener un número par de elementos",
+		"Estar ordenada",
+		"No tener valores repetidos",
+	]}
+	answer={1}
+/>
+
+## El coste de ordenar
+
+La búsqueda binaria exige una lista ordenada, y ordenar no es gratis: los buenos algoritmos de ordenación son O(n log n).
+
+Si vas a buscar una sola vez en una lista desordenada, la búsqueda lineal es mejor. Si vas a buscar muchas veces, compensa ordenar una vez y aprovechar después la búsqueda binaria.
+
+## Dónde aparece
+
+La misma idea de descartar la mitad en cada paso sostiene muchas otras técnicas. Los **índices** de una [base de datos](/articulos/que-es-una-base-de-datos/) se apoyan en ella para encontrar una fila entre millones sin recorrer la tabla.
+
+## Errores comunes
+
+- **Aplicarla a una lista sin ordenar.** El algoritmo no falla con un error: devuelve un resultado incorrecto.
+- **Escribir `inicio < fin`** en lugar de `inicio <= fin`. Con esa condición se deja de mirar el último candidato.
+- **Mover los índices a `centro`** en vez de a `centro + 1` o `centro - 1`. La zona deja de encogerse y el bucle no termina nunca.
+
+## Lo esencial
+
+- La búsqueda binaria solo funciona con datos ordenados.
+- Descarta la mitad de los candidatos en cada paso, por lo que su complejidad es O(log n).
+- Con un millón de elementos necesita como mucho veinte pasos.
+- Compensa cuando se busca muchas veces en los mismos datos.

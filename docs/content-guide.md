@@ -52,7 +52,9 @@ Si un tema toca dos capas, va en la que explica su funcionamiento y se enlaza de
 
 devly es un sitio educativo. Un artículo debe dejar al lector entendiendo el concepto, no solo conociendo su definición.
 
-**Modular**: cada artículo trata un solo concepto y se puede leer por separado. Lo que pertenece a otro concepto se enlaza (`/articulos/<slug>/`) en lugar de volver a explicarlo, y lo imprescindible para seguir el texto se declara en `prerequisites`.
+**Modular**: cada artículo trata un solo concepto y se puede leer por separado.
+
+**Enlazado en los dos sentidos**: los enlaces entre artículos se escriben a mano. Al publicar un artículo nuevo, busca en los ya existentes dónde se menciona ese concepto y enlaza la primera mención. Un test comprueba que todo enlace interno apunta a un artículo que existe. Lo que pertenece a otro concepto se enlaza (`/articulos/<slug>/`) en lugar de volver a explicarlo, y lo imprescindible para seguir el texto se declara en `prerequisites`.
 
 **A fondo**: dentro de ese concepto no se deja nada importante sin explicar. Como referencia, un artículo básico ronda entre 600 y 900 palabras.
 

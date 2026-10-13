@@ -1,0 +1,129 @@
+---
+title: "¿Qué es la complejidad algorítmica?"
+description: La complejidad algorítmica mide cómo crece el trabajo de un algoritmo cuando crecen los datos.
+level: intermedio
+layer: programacion
+prerequisites:
+  - bucles
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare: 6.006 Introduction to Algorithms (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/
+  - title: "Python Wiki: TimeComplexity, coste de las operaciones habituales (en inglés)"
+    url: https://wiki.python.org/moin/TimeComplexity
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **complejidad algorítmica** mide cómo aumenta el trabajo que hace un algoritmo a medida que aumenta la cantidad de datos. No dice cuánto tarda, sino cómo crece lo que tarda.
+
+Un **algoritmo** es una secuencia de pasos precisos para resolver un problema.
+
+## Qué problema resuelve
+
+Dos programas pueden dar el mismo resultado y comportarse de forma muy distinta. Con cien datos, los dos responden al instante. Con un millón, uno tarda un segundo y el otro, días.
+
+Medir con un cronómetro no sirve para comparar algoritmos, porque el tiempo depende del ordenador, del lenguaje y de lo que esté haciendo la máquina en ese momento. La complejidad ignora todo eso y se fija en una sola cosa: cuántos pasos hacen falta según el tamaño de la entrada, al que se llama `n`.
+
+## Contar pasos
+
+Este programa busca un valor mirando los elementos uno a uno y cuenta las comparaciones que hace:
+
+```js
+function buscar(lista, objetivo) {
+	let pasos = 0;
+
+	for (const elemento of lista) {
+		pasos = pasos + 1;
+		if (elemento === objetivo) {
+			break;
+		}
+	}
+
+	return pasos;
+}
+
+console.log(buscar([4, 8, 15, 16, 23, 42], 4)); // 1
+console.log(buscar([4, 8, 15, 16, 23, 42], 42)); // 6
+```
+
+Si el valor está al principio, basta un paso. Si está al final, o no está, hacen falta tantos pasos como elementos.
+
+Al analizar un algoritmo interesa sobre todo el **peor caso**, porque es una garantía: nunca tardará más que eso. Aquí el peor caso son `n` pasos.
+
+## La notación O grande
+
+El crecimiento se expresa con la **notación O grande**. Que la búsqueda anterior sea O(n) significa que, en el peor caso, el número de pasos crece en proporción al tamaño de la lista: el doble de datos, el doble de trabajo.
+
+La notación se queda con lo que domina cuando `n` es grande y descarta el resto:
+
+- **Las constantes no cuentan.** Un algoritmo de `2n` pasos y otro de `n` son los dos O(n): crecen igual de rápido.
+- **Solo importa el término mayor.** Un algoritmo de `n² + n` pasos es O(n²), porque con `n` grande el segundo sumando apenas pesa.
+
+## Las complejidades más habituales
+
+| Notación | Nombre | Ejemplo |
+| --- | --- | --- |
+| O(1) | Constante | Leer un elemento de un [array](/articulos/arrays/) por su índice |
+| O(log n) | Logarítmica | [Búsqueda binaria](/articulos/busqueda-binaria/) |
+| O(n) | Lineal | Recorrer una lista |
+| O(n log n) | Casi lineal | Los buenos algoritmos de ordenación |
+| O(n²) | Cuadrática | Comparar cada elemento con todos los demás |
+
+La diferencia se aprecia con números. Estos son los pasos aproximados para distintos tamaños:
+
+| n | O(log n) | O(n) | O(n log n) | O(n²) |
+| --- | --- | --- | --- | --- |
+| 10 | 3 | 10 | 33 | 100 |
+| 1000 | 10 | 1000 | 10 000 | 1 000 000 |
+| 1 000 000 | 20 | 1 000 000 | 20 000 000 | 1 000 000 000 000 |
+
+Con un millón de datos, el algoritmo cuadrático hace un billón de pasos. Ningún ordenador más rápido compensa eso; cambiar de algoritmo, sí.
+
+## Reconocer una complejidad cuadrática
+
+Un bucle dentro de otro, ambos sobre los mismos datos, suele indicar O(n²):
+
+```js
+function contarParejas(lista) {
+	let pasos = 0;
+
+	for (const a of lista) {
+		for (const b of lista) {
+			pasos = pasos + 1;
+		}
+	}
+
+	return pasos;
+}
+
+console.log(contarParejas([1, 2, 3])); // 9
+console.log(contarParejas([1, 2, 3, 4, 5, 6])); // 36
+```
+
+Al duplicar los datos, de tres a seis, el trabajo se multiplica por cuatro. Esa es la marca del crecimiento cuadrático.
+
+<Quiz
+	client:visible
+	question="Un algoritmo O(n²) tarda 1 segundo con 1000 datos. ¿Cuánto tardará aproximadamente con 2000?"
+	options={["2 segundos", "4 segundos", "1000 segundos"]}
+	answer={1}
+/>
+
+## También cuenta la memoria
+
+Lo anterior es **complejidad temporal**. La **complejidad espacial** mide lo mismo para la memoria: cuánta hace falta según crecen los datos. A menudo hay que elegir, porque un algoritmo puede ir más rápido a cambio de guardar más información.
+
+## Errores comunes
+
+- **Confundir complejidad con velocidad.** Con pocos datos, un algoritmo O(n²) sencillo puede ser más rápido que uno O(n log n). La complejidad describe qué pasa cuando los datos crecen.
+- **Olvidar los bucles ocultos.** Un método como `includes` recorre el array por dentro. Usarlo dentro de un bucle da O(n²) aunque solo se vea un bucle.
+- **Optimizar sin necesidad.** Si los datos siempre van a ser pocos, la claridad del código importa más.
+
+## Lo esencial
+
+- La complejidad mide cómo crece el trabajo con el tamaño de la entrada, no el tiempo exacto.
+- La notación O grande conserva el término que domina y descarta constantes.
+- Se analiza el peor caso porque da una garantía.
+- Un bucle dentro de otro sobre los mismos datos suele ser O(n²).

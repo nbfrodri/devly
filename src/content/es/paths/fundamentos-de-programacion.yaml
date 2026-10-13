@@ -4,5 +4,8 @@ steps:
   - que-es-una-variable
   - tipos-de-datos
   - condicionales
+  - logica-booleana
   - bucles
   - funciones
+  - arrays
+  - programacion-orientada-a-objetos
