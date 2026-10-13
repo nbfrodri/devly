@@ -19,23 +19,20 @@ const featured = featuredIds.flatMap(
 	(id) => paths.find((path) => path.id === id) ?? [],
 );
 const firstPath = featured[0];
-const latest = articles
-	.toSorted((a, b) => b.data.updated.getTime() - a.data.updated.getTime())
-	.slice(0, 6);
 ---
 
 <BaseLayout
 	title="La informática, capa por capa"
-	description="Lo que se aprende en una ingeniería informática, sin las matemáticas ni la física, y lo que va más allá: principios de programación, herramientas y cómo se construye software."
+	description="La informática que se estudia en la carrera y la que se aprende trabajando. Cada concepto explicado a fondo, con ejemplos que funcionan y fuentes para contrastar."
 >
 	<div class="container">
 		<section class="hero">
 			<div class="hero-copy">
 				<h1>La informática, capa por capa.</h1>
 				<p class="lead">
-					Lo que se aprende en una ingeniería informática, sin las
-					matemáticas ni la física, y lo que va más allá: principios de
-					programación, herramientas y cómo se construye software.
+					La informática que se estudia en la carrera y la que se aprende
+					trabajando. Cada concepto explicado a fondo, con ejemplos que
+					funcionan y fuentes para contrastar.
 				</p>
 				<Search />
 				{
@@ -79,8 +76,29 @@ const latest = articles
 		</section>
 
 		<section class="section">
-			<h2>Últimos artículos</h2>
-			<ArticleList articles={latest} />
+			<h2>Artículos al azar</h2>
+			<div class="random-articles" data-random-articles>
+				<ArticleList articles={articles} />
+			</div>
+			<script is:inline>
+				// Runs right after the list so only the chosen six are ever painted.
+				(() => {
+					const box = document.currentScript.previousElementSibling;
+					const items = [...box.querySelectorAll("li")];
+
+					for (let i = items.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[items[i], items[j]] = [items[j], items[i]];
+					}
+
+					// Re-append in shuffled order so the visible six come first.
+					items.forEach((item, index) => {
+						item.hidden = index >= 6;
+						item.parentElement.append(item);
+					});
+					box.dataset.ready = "";
+				})();
+			</script>
 			<p><a href="/articulos/">Ver los {articles.length} artículos</a></p>
 		</section>
 	</div>

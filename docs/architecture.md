@@ -10,7 +10,7 @@ devly is a static content site covering what a computing degree teaches (compute
 | Content | MDX and YAML content collections | Schemas in `src/content.config.ts` |
 | Interactivity | React 19 islands | Hydrated per component with `client:*` |
 | Search | Pagefind | Index built from `dist/` after `astro build` |
-| Styling | One global stylesheet with CSS custom properties | Light and dark themes follow `prefers-color-scheme` |
+| Styling | One global stylesheet with CSS custom properties | Light and dark themes follow `prefers-color-scheme`; a header button overrides it through `data-theme` on the root element, stored in `localStorage` |
 | Fonts | Fontsource packages, self-hosted | Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono |
 | Tooling | pnpm, TypeScript strict, Biome, Vitest, `astro check` | `pnpm check` runs all of them plus the build |
 | Hosting | Cloudflare Workers static assets | `wrangler.jsonc`; Cloudflare builds and deploys each push to `main` |
@@ -50,7 +50,7 @@ The visual direction is "layers of abstraction". Its rules:
 - Layer colour encodes depth: `--layer-1` to `--layer-7` are one cobalt hue ordered by lightness. Do not reorder them or introduce other hues for layers.
 - One accent (cobalt), one corner radius (`--radius`), no shadows.
 - Motion is limited to the layer stack building once on load and to direct feedback on press and hover. Both respect `prefers-reduced-motion`.
-- Every colour is a token with a light and a dark value. Add tokens rather than literal colours.
+- Every colour is a token with a light and a dark value. Add tokens rather than literal colours. Dark values are declared twice in `global.css` (system preference and explicit choice); change both.
 
 The design source is a Claude Design canvas kept outside the repository; `src/styles/global.css` is the source of truth for implemented values.
 

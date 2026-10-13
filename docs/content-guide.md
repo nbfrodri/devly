@@ -77,6 +77,8 @@ Una comparación no repite la explicación completa de cada lado: enlaza a los a
 
 **Definición**: aclara un término concreto que no da para un artículo largo. Puede quedarse en 200 a 400 palabras: qué significa, un ejemplo, con qué no confundirlo y enlaces a los conceptos mayores de los que forma parte.
 
+**Curiosidad**: cuenta una historia o un dato llamativo que ayuda a entender o a recordar un concepto: de dónde viene la palabra "bug", por qué los índices empiezan en cero, qué fue el efecto 2000. Título libre, que despierte la pregunta. Las mismas reglas de fuentes se aplican con más motivo, porque las anécdotas de la informática circulan a menudo deformadas: si una historia no se puede respaldar con una fuente fiable, se cuenta como leyenda o no se cuenta. Enlaza siempre al artículo de concepto relacionado.
+
 ## Estructura de un artículo de concepto
 
 Estructura habitual, que se adapta al tema:

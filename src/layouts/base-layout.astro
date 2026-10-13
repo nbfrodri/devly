@@ -23,24 +23,42 @@ const links = [
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={description} />
 		<title>{title} | devly</title>
+		<script is:inline>
+			// Applied before first paint so a stored choice never flashes the other theme.
+			try {
+				const stored = localStorage.getItem("tema");
+				if (stored === "light" || stored === "dark") {
+					document.documentElement.dataset.theme = stored;
+				}
+			} catch {}
+		</script>
 	</head>
 	<body>
 		<a class="skip-link" href="#contenido">Saltar al contenido</a>
 		<header class="site-header">
 			<div class="container">
 				<Logo />
-				<nav class="site-nav" aria-label="Principal">
-					{
-						links.map((link) => (
-							<a
-								href={link.href}
-								aria-current={pathname.startsWith(link.href) ? "page" : undefined}
-							>
-								{link.label}
-							</a>
-						))
-					}
-				</nav>
+				<div class="site-tools">
+					<nav class="site-nav" aria-label="Principal">
+						{
+							links.map((link) => (
+								<a
+									href={link.href}
+									aria-current={pathname.startsWith(link.href) ? "page" : undefined}
+								>
+									{link.label}
+								</a>
+							))
+						}
+					</nav>
+					<button class="theme-toggle" type="button" data-theme-toggle>
+						<svg viewBox="0 0 24 24" aria-hidden="true">
+							<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"
+							></circle>
+							<path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"></path>
+						</svg>
+					</button>
+				</div>
 			</div>
 		</header>
 		<main id="contenido">
@@ -54,3 +72,36 @@ const links = [
 		</footer>
 	</body>
 </html>
+
+<script>
+	const button = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+	const root = document.documentElement;
+	const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+
+	function currentTheme(): "light" | "dark" {
+		const chosen = root.dataset.theme;
+		if (chosen === "light" || chosen === "dark") return chosen;
+		return systemDark.matches ? "dark" : "light";
+	}
+
+	function updateLabel() {
+		button?.setAttribute(
+			"aria-label",
+			currentTheme() === "dark" ? "Cambiar a tema claro" : "Cambiar a tema oscuro",
+		);
+	}
+
+	button?.addEventListener("click", () => {
+		const next = currentTheme() === "dark" ? "light" : "dark";
+		root.dataset.theme = next;
+		try {
+			localStorage.setItem("tema", next);
+		} catch {
+			// Storage can be unavailable; the choice then lasts for this page only.
+		}
+		updateLabel();
+	});
+
+	systemDark.addEventListener("change", updateLabel);
+	updateLabel();
+</script>

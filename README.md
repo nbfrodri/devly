@@ -6,8 +6,8 @@
 
 **La informática, capa por capa.**
 
-Lo que se aprende en una ingeniería informática, sin las matemáticas ni la física,<br>
-y lo que va más allá: principios de programación, herramientas y cómo se construye software.
+La informática que se estudia en la carrera y la que se aprende trabajando.<br>
+Cada concepto explicado a fondo, con ejemplos que funcionan y fuentes para contrastar.
 
 [**devly.nbfrodri.workers.dev**](https://devly.nbfrodri.workers.dev)
 

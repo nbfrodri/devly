@@ -75,6 +75,15 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 - [ ] ¿Qué son los embeddings?
 - [ ] ¿Qué es el Model Context Protocol (MCP)?
 
+## Curiosidades
+
+Fuera de la cuenta de los 50, para intercalar:
+
+- [ ] ¿Por qué se llama "bug" a un error?
+- [ ] ¿Por qué los índices empiezan en cero?
+- [ ] El efecto 2000 y el problema del año 2038
+- [ ] ¿Por qué el teclado es QWERTY?
+
 ## Después de estos 50
 
 Materias del plan de estudios que seguirán sin artículo: arquitecturas en la nube, sistemas distribuidos más allá de CAP, desarrollo móvil, IoT, frameworks de front-end y back-end, blockchain, simulación, probabilidad, y los aspectos éticos y legales.

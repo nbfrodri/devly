@@ -10,11 +10,6 @@ type Props = {
 
 const { counts, current } = Astro.props;
 const compact = current !== undefined;
-
-function countLabel(count: number): string {
-	if (count === 0) return "Próximamente";
-	return count === 1 ? "1 artículo" : `${count} artículos`;
-}
 ---
 
 <ol
@@ -45,8 +40,13 @@ function countLabel(count: number): string {
 									<span class="layer-name">{layer.name}</span>
 									<span class="layer-description">{layer.description}</span>
 								</span>
-								<span class="layer-count" data-has-articles={count > 0 || undefined}>
-									{countLabel(count)}
+								<span class="layer-count">
+									{count > 0 ? count : "Pronto"}
+									{count > 0 && (
+										<span class="visually-hidden">
+											{count === 1 ? " artículo" : " artículos"}
+										</span>
+									)}
 								</span>
 							</>
 						)}
