@@ -2,21 +2,37 @@
 import ArticleList from "@/components/article-list.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { getArticles } from "@/lib/content";
+import { LAYERS } from "@/lib/layers";
 
 const articles = await getArticles();
+const groups = LAYERS.map((layer) => ({
+	layer,
+	articles: articles.filter((article) => article.data.layer === layer.id),
+})).filter((group) => group.articles.length > 0);
 ---
 
 <BaseLayout
 	title="Artículos"
-	description="Todos los artículos de devly, ordenados de básico a avanzado."
+	description="Todos los artículos de devly, agrupados por capa y ordenados de básico a avanzado."
 >
 	<div class="container">
 		<header class="page-head">
 			<h1>Artículos</h1>
-			<p class="lead">Todos los artículos, ordenados de básico a avanzado.</p>
+			<p class="lead">
+				Todos los artículos, agrupados por capa y ordenados de básico a avanzado.
+			</p>
 		</header>
-		<section class="section">
-			<ArticleList articles={articles} />
-		</section>
+		{
+			groups.map((group) => (
+				<section class="section">
+					<h2>
+						<a class="plain-link" href={`/capas/${group.layer.id}/`}>
+							{group.layer.name}
+						</a>
+					</h2>
+					<ArticleList articles={group.articles} showLayer={false} />
+				</section>
+			))
+		}
 	</div>
 </BaseLayout>

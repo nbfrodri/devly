@@ -10,6 +10,9 @@ import { countByLayer, getArticles } from "@/lib/content";
 const articles = await getArticles();
 const paths = await getCollection("paths");
 const firstPath = paths[0];
+const latest = articles
+	.toSorted((a, b) => b.data.updated.getTime() - a.data.updated.getTime())
+	.slice(0, 6);
 ---
 
 <BaseLayout
@@ -65,8 +68,9 @@ const firstPath = paths[0];
 		</section>
 
 		<section class="section">
-			<h2>Artículos</h2>
-			<ArticleList articles={articles} />
+			<h2>Últimos artículos</h2>
+			<ArticleList articles={latest} />
+			<p><a href="/articulos/">Ver los {articles.length} artículos</a></p>
 		</section>
 	</div>
 </BaseLayout>

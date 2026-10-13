@@ -151,6 +151,15 @@ a:hover {
 	color: var(--muted);
 }
 
+.plain-link {
+	color: inherit;
+	text-decoration: none;
+}
+
+.plain-link:hover {
+	color: var(--accent);
+}
+
 .skip-link {
 	position: absolute;
 	left: var(--gutter);
