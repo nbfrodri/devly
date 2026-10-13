@@ -9,7 +9,16 @@ import { countByLayer, getArticles } from "@/lib/content";
 
 const articles = await getArticles();
 const paths = await getCollection("paths");
-const firstPath = paths[0];
+const featuredIds = [
+	"fundamentos-de-programacion",
+	"fundamentos-de-desarrollo-web",
+	"como-funciona-internet",
+	"como-funciona-un-ordenador",
+];
+const featured = featuredIds.flatMap(
+	(id) => paths.find((path) => path.id === id) ?? [],
+);
+const firstPath = featured[0];
 const latest = articles
 	.toSorted((a, b) => b.data.updated.getTime() - a.data.updated.getTime())
 	.slice(0, 6);
@@ -56,15 +65,16 @@ const latest = articles
 					Una ruta ordena los artículos para que cada uno se apoye en el anterior.
 				</p>
 			</div>
-			<ul class="path-list">
+			<ul class="path-grid">
 				{
-					paths.map((path) => (
+					featured.map((path) => (
 						<li>
-							<PathCard path={path} />
+							<PathCard path={path} compact />
 						</li>
 					))
 				}
 			</ul>
+			<p><a href="/rutas/">Ver las {paths.length} rutas</a></p>
 		</section>
 
 		<section class="section">

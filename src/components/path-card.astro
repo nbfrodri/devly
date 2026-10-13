@@ -3,29 +3,36 @@ import { type CollectionEntry, getEntries } from "astro:content";
 
 type Props = {
 	path: CollectionEntry<"paths">;
-	/** Article id to mark as the current step. */
+	/** Article id to mark as the current step. Lists every step. */
 	currentId?: string;
+	/** Shows only the step count; used where many paths are listed. */
+	compact?: boolean;
 };
 
-const { path, currentId } = Astro.props;
-const steps = await getEntries(path.data.steps);
+const { path, currentId, compact = false } = Astro.props;
+const steps = compact ? [] : await getEntries(path.data.steps);
+const count = path.data.steps.length;
 ---
 
 <article class="path-card">
 	<h3><a href={`/rutas/${path.id}/`}>{path.data.title}</a></h3>
 	<p class="muted">{path.data.description}</p>
-	<ol class="steps">
-		{
-			steps.map((step) => (
-				<li>
-					<a
-						href={`/articulos/${step.id}/`}
-						aria-current={step.id === currentId ? "page" : undefined}
-					>
-						{step.data.title}
-					</a>
-				</li>
-			))
-		}
-	</ol>
+	{
+		compact ? (
+			<p class="path-count">{count === 1 ? "1 artículo" : `${count} artículos`}</p>
+		) : (
+			<ol class="steps">
+				{steps.map((step) => (
+					<li>
+						<a
+							href={`/articulos/${step.id}/`}
+							aria-current={step.id === currentId ? "page" : undefined}
+						>
+							{step.data.title}
+						</a>
+					</li>
+				))}
+			</ol>
+		)
+	}
 </article>

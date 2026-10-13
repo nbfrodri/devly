@@ -15,11 +15,11 @@ const paths = await getCollection("paths");
 			</p>
 		</header>
 		<section class="section">
-			<ul class="path-list">
+			<ul class="path-grid">
 				{
 					paths.map((path) => (
 						<li>
-							<PathCard path={path} />
+							<PathCard path={path} compact />
 						</li>
 					))
 				}
