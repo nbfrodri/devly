@@ -95,6 +95,12 @@
 	box-sizing: border-box;
 }
 
+/* Components set their own display, which would otherwise override the hidden attribute. */
+[hidden] {
+	/* biome-ignore lint/complexity/noImportantStyles: must win over any component display rule. */
+	display: none !important;
+}
+
 body {
 	margin: 0;
 	min-height: 100dvh;
@@ -627,6 +633,57 @@ a:hover {
 .article-meta {
 	font-size: 0.9375rem;
 	color: var(--muted);
+}
+
+.filters {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding-bottom: 2rem;
+}
+
+.filter-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.filter-group button,
+.filter-group a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.75rem;
+	padding-inline: 1rem;
+	font: inherit;
+	font-size: 0.9375rem;
+	font-weight: 500;
+	color: var(--ink);
+	background: var(--surface);
+	border: 2px solid var(--ink);
+	border-radius: var(--radius);
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.filter-group a {
+	border-color: var(--rule);
+	background: none;
+}
+
+.filter-group button:hover,
+.filter-group a:hover {
+	background: var(--quiet);
+	color: var(--ink);
+}
+
+.filter-group button[aria-pressed="true"] {
+	background: var(--accent-solid);
+	border-color: var(--accent-solid);
+	color: var(--on-accent);
+}
+
+[data-filter-section] {
+	scroll-margin-top: 1rem;
 }
 
 .empty {

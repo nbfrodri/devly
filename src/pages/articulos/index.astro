@@ -3,6 +3,7 @@ import ArticleList from "@/components/article-list.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { getArticles } from "@/lib/content";
 import { LAYERS } from "@/lib/layers";
+import { LEVEL_LABELS, LEVELS } from "@/lib/levels";
 
 const articles = await getArticles();
 const groups = LAYERS.map((layer) => ({
@@ -19,12 +20,35 @@ const groups = LAYERS.map((layer) => ({
 		<header class="page-head">
 			<h1>Artículos</h1>
 			<p class="lead">
-				Todos los artículos, agrupados por capa y ordenados de básico a avanzado.
+				Los {articles.length} artículos, agrupados por capa y ordenados de básico
+				a avanzado.
 			</p>
 		</header>
+
+		<div class="filters">
+			<div class="filter-group" role="group" aria-label="Filtrar por nivel">
+				<button type="button" data-level="" aria-pressed="true">Todos</button>
+				{
+					LEVELS.map((level) => (
+						<button type="button" data-level={level} aria-pressed="false">
+							{LEVEL_LABELS[level]}
+						</button>
+					))
+				}
+			</div>
+			<nav class="filter-group" aria-label="Ir a una capa">
+				{
+					groups.map((group) => (
+						<a href={`#${group.layer.id}`}>{group.layer.name}</a>
+					))
+				}
+			</nav>
+			<p class="muted" id="filter-status" role="status"></p>
+		</div>
+
 		{
 			groups.map((group) => (
-				<section class="section">
+				<section class="section" id={group.layer.id} data-filter-section>
 					<h2>
 						<a class="plain-link" href={`/capas/${group.layer.id}/`}>
 							{group.layer.name}
@@ -36,3 +60,46 @@ const groups = LAYERS.map((layer) => ({
 		}
 	</div>
 </BaseLayout>
+
+<script>
+	const buttons = document.querySelectorAll<HTMLButtonElement>(
+		".filter-group button",
+	);
+	const sections = document.querySelectorAll<HTMLElement>(
+		"[data-filter-section]",
+	);
+	const status = document.getElementById("filter-status");
+
+	function applyFilter(level: string) {
+		let visible = 0;
+
+		for (const section of sections) {
+			let visibleInSection = 0;
+
+			for (const item of section.querySelectorAll<HTMLElement>("li")) {
+				const matches = level === "" || item.dataset.level === level;
+				item.hidden = !matches;
+				if (matches) visibleInSection += 1;
+			}
+
+			section.hidden = visibleInSection === 0;
+			visible += visibleInSection;
+		}
+
+		if (status) {
+			status.textContent =
+				level === ""
+					? ""
+					: `${visible} ${visible === 1 ? "artículo" : "artículos"} de este nivel`;
+		}
+	}
+
+	for (const button of buttons) {
+		button.addEventListener("click", () => {
+			for (const other of buttons) {
+				other.setAttribute("aria-pressed", String(other === button));
+			}
+			applyFilter(button.dataset.level ?? "");
+		});
+	}
+</script>

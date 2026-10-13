@@ -15,7 +15,7 @@ const { articles, showLayer = true } = Astro.props;
 <ul class="article-list">
 	{
 		articles.map((article) => (
-			<li>
+			<li data-level={article.data.level}>
 				<a href={`/articulos/${article.id}/`}>
 					<span>
 						<span class="article-title">{article.data.title}</span>
