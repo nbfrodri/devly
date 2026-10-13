@@ -1,13 +1,61 @@
 # Architecture
 
-<!-- tack:review-needed -->
-This initial inventory is evidence from the repository, not a verified system design. Describe real component responsibilities, dependencies and important flows after inspecting the code or clarifying the intended project. Remove this marker when reviewed.
+devly is a static content site. Content lives in the repository as files, is validated at build time, and is published as plain HTML to a static host.
 
-## Detected manifests
-No recognized manifests yet. The project stack is not established.
+## Stack
 
-## Observed directories
-No application directories identified yet.
+| Concern | Choice | Notes |
+| --- | --- | --- |
+| Framework | Astro 7 | Static output, no server runtime |
+| Content | MDX and YAML content collections | Schemas in `src/content.config.ts` |
+| Interactivity | React 19 islands | Hydrated per component with `client:*` |
+| Search | Pagefind | Index built from `dist/` after `astro build` |
+| Styling | One global stylesheet with CSS custom properties | Light and dark themes follow `prefers-color-scheme` |
+| Fonts | Fontsource packages, self-hosted | Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono |
+| Tooling | pnpm, TypeScript strict, Biome, Vitest, `astro check` | `pnpm check` runs all of them plus the build |
+| Hosting | Cloudflare Pages (planned) | Not configured yet |
 
-## Decisions and flows
-Document only decisions and flows supported by the project. Add diagrams and links to existing documents when they clarify the implementation.
+## Content model
+
+- **Layer** (`src/lib/layers.ts`): five fixed areas of computing, ordered from most abstract to closest to the machine. Layers are code, not content, because the home page and the visual system depend on their order and count.
+- **Article** (`src/content/es/articles/*.mdx`): one concept. Declares a `layer`, a `level` (`basico`, `intermedio`, `avanzado`), optional `prerequisites` and a `draft` flag.
+- **Path** (`src/content/es/paths/*.yaml`): an ordered list of article references.
+
+Layer and level are independent axes: the layer says what an article is about, the level says how much the reader must already know.
+
+Drafts are rendered in development and excluded from production builds (`getPublishedArticles` in `src/lib/content.ts`). A path that references a missing or draft article fails the production build.
+
+## Routes
+
+| URL | Source |
+| --- | --- |
+| `/` | `src/pages/index.astro` |
+| `/capas/`, `/capas/<layer>/` | `src/pages/capas/` |
+| `/rutas/`, `/rutas/<path>/` | `src/pages/rutas/` |
+| `/articulos/`, `/articulos/<slug>/` | `src/pages/articulos/` |
+
+URLs are Spanish and unprefixed. Content sits under `src/content/es/` and Astro i18n is configured with `es` as the only locale, so another language can be added later as a prefixed locale without moving existing URLs.
+
+## Source layout
+
+- `src/lib/`: pure logic (levels, layers, path navigation, content queries). Unit-tested with Vitest.
+- `src/components/`: Astro components for static UI, `.tsx` for interactive islands.
+- `src/layouts/base-layout.astro`: document shell, header, footer.
+- `src/styles/global.css`: design tokens and all component styles.
+
+## Design system
+
+The visual direction is "layers of abstraction". Its rules:
+
+- Layer colour encodes depth: `--layer-1` to `--layer-5` are one cobalt hue ordered by lightness. Do not reorder them or introduce other hues for layers.
+- One accent (cobalt), one corner radius (`--radius`), no shadows.
+- Motion is limited to the layer stack building once on load and to direct feedback on press and hover. Both respect `prefers-reduced-motion`.
+- Every colour is a token with a light and a dark value. Add tokens rather than literal colours.
+
+The design source is a Claude Design canvas kept outside the repository; `src/styles/global.css` is the source of truth for implemented values.
+
+## Decisions
+
+- **Files over a CMS**: content is generated with AI and reviewed by one person. Git gives review, history and rollback without a database, auth or an admin panel.
+- **Astro over Next.js**: the site is read-only content. Astro ships no JavaScript except for interactive islands and needs no server.
+- **Not done yet**: user accounts, progress tracking, comments, a second language, deployment. Each would be a new decision, not an extension of something already built.

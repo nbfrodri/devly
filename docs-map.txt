@@ -1,3 +1,8 @@
 # code glob | documentation targets (a change to any listed document covers the rule)
-# Initial architecture coverage; refine by component after reviewing the project.
-# No source paths detected yet. Add real rules when implementation exists.
+src/content.config.ts | docs/architecture.md, docs/content-guide.md
+src/lib/layers.ts | docs/architecture.md, docs/content-guide.md
+src/lib/levels.ts | docs/content-guide.md
+src/pages/** | docs/architecture.md
+src/styles/global.css | docs/architecture.md
+astro.config.mjs | docs/architecture.md
+package.json | README.md, AGENTS.md
