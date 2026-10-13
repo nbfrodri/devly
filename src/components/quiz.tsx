@@ -27,7 +27,7 @@ export function Quiz({ question, options, answer }: QuizProps) {
 				))}
 			</div>
 			{selected !== null && (
-				<output className="quiz-result" data-correct={isCorrect}>
+				<output key={selected} className="quiz-result" data-correct={isCorrect}>
 					{isCorrect ? "Correcto." : "No es correcto, prueba otra vez."}
 				</output>
 			)}

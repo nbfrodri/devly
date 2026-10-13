@@ -202,6 +202,16 @@ a:hover {
 	padding-inline: var(--gutter);
 }
 
+.icon {
+	flex: none;
+	display: inline-flex;
+}
+
+.icon svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
 .muted {
 	color: var(--muted);
 }
@@ -317,8 +327,8 @@ a:hover {
 }
 
 .theme-toggle svg {
-	width: 1.25rem;
-	height: 1.25rem;
+	width: 1.375rem;
+	height: 1.375rem;
 }
 
 .site-nav a {
@@ -341,16 +351,65 @@ a:hover {
 	background: var(--code-bg);
 	color: var(--code-ink);
 	border-top: 1px solid var(--rule);
+	font-size: 0.9375rem;
+	line-height: 1.5;
 }
 
 .site-footer .container {
-	padding-block: 2rem;
+	padding-block: 3rem 2rem;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+	gap: 2.5rem 2rem;
+}
+
+.footer-brand {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 0.75rem 2rem;
+	flex-direction: column;
+	gap: 0.75rem;
+	max-width: 18rem;
+}
+
+.site-footer .logo {
+	color: #ffffff;
+}
+
+/* The footer is dark in both themes, so the mark always uses its light values. */
+.site-footer .logo .mark-top {
+	fill: #e3e8fd;
+}
+
+.site-footer .logo .mark-middle {
+	fill: #93a5f6;
+}
+
+.site-footer .logo .mark-bottom {
+	fill: #5b74ec;
+}
+
+.site-footer h2 {
+	margin-bottom: 0.75rem;
+	font-family: var(--font-body);
 	font-size: 0.9375rem;
+	font-weight: 600;
+	letter-spacing: 0;
+	color: #ffffff;
+}
+
+.site-footer ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.site-footer li a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 2rem;
+	text-decoration: none;
 }
 
 .site-footer a {
@@ -359,14 +418,17 @@ a:hover {
 
 .site-footer a:hover {
 	color: #ffffff;
+	text-decoration: underline;
 }
 
-.site-footer strong {
-	font-family: var(--font-display);
-	font-weight: 800;
-	font-size: 1.375rem;
-	letter-spacing: -0.03em;
-	color: #ffffff;
+.footer-legal {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid #2a3663;
 }
 
 /* Home */
@@ -637,6 +699,7 @@ a:hover {
 }
 
 .path-grid .path-card {
+	position: relative;
 	height: 100%;
 	gap: 0.625rem;
 	padding: 1.25rem 1.5rem;
@@ -644,6 +707,13 @@ a:hover {
 
 .path-grid .path-card h3 {
 	font-size: 1.375rem;
+}
+
+/* The title link covers the card, so the whole card is one target. */
+.path-grid .path-card h3 a::after {
+	content: "";
+	position: absolute;
+	inset: 0;
 }
 
 .path-meta {
@@ -703,8 +773,22 @@ a:hover {
 .filters {
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
-	padding-bottom: 2rem;
+	gap: 1.25rem;
+	padding-bottom: 2.5rem;
+}
+
+.filter-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+}
+
+.filter-label {
+	flex: none;
+	min-width: 7rem;
+	font-size: 0.9375rem;
+	font-weight: 600;
 }
 
 .filter-group {
@@ -713,10 +797,8 @@ a:hover {
 	gap: 0.5rem;
 }
 
-.filter-group button,
-.filter-group a {
-	display: inline-flex;
-	align-items: center;
+/* Buttons change what is shown; they look pressable. */
+.filter-group button {
 	min-height: 2.75rem;
 	padding-inline: 1rem;
 	font: inherit;
@@ -726,19 +808,11 @@ a:hover {
 	background: var(--surface);
 	border: 2px solid var(--ink);
 	border-radius: var(--radius);
-	text-decoration: none;
 	cursor: pointer;
 }
 
-.filter-group a {
-	border-color: var(--rule);
-	background: none;
-}
-
-.filter-group button:hover,
-.filter-group a:hover {
+.filter-group button:hover {
 	background: var(--quiet);
-	color: var(--ink);
 }
 
 .filter-group button[aria-pressed="true"] {
@@ -747,9 +821,54 @@ a:hover {
 	color: var(--on-accent);
 }
 
+/* Jump links move the page; they look like links. */
+.jump-links {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1.25rem;
+	font-size: 0.9375rem;
+}
+
+.jump-links a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.25rem;
+}
+
 /* Without JavaScript the first six stay; with it, six random ones are kept. */
 .random-articles:not([data-ready]) li:nth-child(n + 7) {
 	display: none;
+}
+
+.text-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	align-self: flex-start;
+	min-height: 2.75rem;
+	padding: 0;
+	font: inherit;
+	font-weight: 500;
+	color: var(--accent);
+	background: none;
+	border: 0;
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
+	cursor: pointer;
+}
+
+.text-button:hover {
+	color: var(--ink);
+}
+
+.section-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 1.5rem;
 }
 
 .empty {
@@ -972,6 +1091,9 @@ a:hover {
 }
 
 .path-nav a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
 	font-weight: 600;
 }
 
@@ -1086,5 +1208,87 @@ a:hover {
 
 	.stack-layers li {
 		margin-inline: calc(var(--depth) * 1%);
+	}
+}
+
+/* Motion. Everything here answers an action or a navigation; nothing loops. */
+@view-transition {
+	navigation: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 160ms;
+	}
+
+	.theme-toggle svg {
+		transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	:root[data-theme="dark"] .theme-toggle svg {
+		transform: rotate(180deg);
+	}
+
+	.path-grid .path-card {
+		transition:
+			transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+			box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.path-grid .path-card:hover {
+		transform: translate(-2px, -2px);
+		box-shadow: 4px 4px 0 var(--ink);
+	}
+
+	.path-grid .path-card:active {
+		transform: none;
+		box-shadow: none;
+	}
+
+	.article-title,
+	.site-nav a,
+	.jump-links a {
+		transition:
+			color 120ms ease,
+			background-color 120ms ease;
+	}
+
+	.filter-group button {
+		transition:
+			background-color 120ms ease,
+			border-color 120ms ease,
+			transform 120ms ease-out;
+	}
+
+	.filter-group button:active,
+	.theme-toggle:active {
+		transform: scale(0.96);
+	}
+
+	.quiz-result {
+		animation: result-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	@keyframes result-in {
+		from {
+			opacity: 0;
+			transform: translateY(0.375rem);
+		}
+	}
+}
+
+/*
+ * Colours ease during a manual theme switch only. Declared last so it wins
+ * over component transitions for that moment without needing !important.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	:root.theme-switching,
+	:root.theme-switching * {
+		transition:
+			background-color 220ms ease,
+			color 220ms ease,
+			border-color 220ms ease,
+			fill 220ms ease;
 	}
 }

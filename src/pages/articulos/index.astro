@@ -26,24 +26,32 @@ const groups = LAYERS.map((layer) => ({
 		</header>
 
 		<div class="filters">
-			<div class="filter-group" role="group" aria-label="Filtrar por nivel">
-				<button type="button" data-level="" aria-pressed="true">Todos</button>
-				{
-					LEVELS.map((level) => (
-						<button type="button" data-level={level} aria-pressed="false">
-							{LEVEL_LABELS[level]}
-						</button>
-					))
-				}
+			<div class="filter-row">
+				<span class="filter-label" id="filtro-nivel">Mostrar nivel</span>
+				<div class="filter-group" role="group" aria-labelledby="filtro-nivel">
+					<button type="button" data-level="" aria-pressed="true">Todos</button>
+					{
+						LEVELS.map((level) => (
+							<button type="button" data-level={level} aria-pressed="false">
+								{LEVEL_LABELS[level]}
+							</button>
+						))
+					}
+				</div>
+				<p class="muted" id="filter-status" role="status"></p>
 			</div>
-			<nav class="filter-group" aria-label="Ir a una capa">
-				{
-					groups.map((group) => (
-						<a href={`#${group.layer.id}`}>{group.layer.name}</a>
-					))
-				}
+			<nav class="filter-row" aria-labelledby="salto-capa">
+				<span class="filter-label" id="salto-capa">Ir a la capa</span>
+				<ul class="jump-links">
+					{
+						groups.map((group) => (
+							<li data-jump={group.layer.id}>
+								<a href={`#${group.layer.id}`}>{group.layer.name}</a>
+							</li>
+						))
+					}
+				</ul>
 			</nav>
-			<p class="muted" id="filter-status" role="status"></p>
 		</div>
 
 		{
@@ -83,6 +91,10 @@ const groups = LAYERS.map((layer) => ({
 			}
 
 			section.hidden = visibleInSection === 0;
+			const jump = document.querySelector<HTMLElement>(
+				`[data-jump="${section.id}"]`,
+			);
+			if (jump) jump.hidden = visibleInSection === 0;
 			visible += visibleInSection;
 		}
 

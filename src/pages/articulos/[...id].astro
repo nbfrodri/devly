@@ -1,5 +1,6 @@
 ---
 import { getCollection, getEntries, getEntry, render } from "astro:content";
+import Icon from "@/components/icon.astro";
 import LayerStack from "@/components/layer-stack.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { type Article, getArticles } from "@/lib/content";
@@ -131,14 +132,16 @@ const mainContext = pathContexts[0];
 					<nav class="path-nav" aria-label={`Ruta ${mainContext.path.data.title}`}>
 						{mainContext.previous ? (
 							<a href={`/articulos/${mainContext.previous.id}/`}>
-								Anterior: {mainContext.previous.data.title}
+								<Icon name="arrow-left" />
+								{mainContext.previous.data.title}
 							</a>
 						) : (
 							<a href={`/rutas/${mainContext.path.id}/`}>Volver a la ruta</a>
 						)}
 						{mainContext.next ? (
 							<a href={`/articulos/${mainContext.next.id}/`}>
-								Siguiente: {mainContext.next.data.title}
+								{mainContext.next.data.title}
+								<Icon name="arrow-right" />
 							</a>
 						) : (
 							<a href={`/rutas/${mainContext.path.id}/`}>Fin de la ruta</a>

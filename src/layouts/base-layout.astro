@@ -1,6 +1,8 @@
 ---
 import "@/styles/global.css";
+import Icon from "@/components/icon.astro";
 import Logo from "@/components/logo.astro";
+import { LAYERS } from "@/lib/layers";
 
 type Props = {
 	title: string;
@@ -52,11 +54,7 @@ const links = [
 						}
 					</nav>
 					<button class="theme-toggle" type="button" data-theme-toggle>
-						<svg viewBox="0 0 24 24" aria-hidden="true">
-							<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"
-							></circle>
-							<path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"></path>
-						</svg>
+						<Icon name="contrast" />
 					</button>
 				</div>
 			</div>
@@ -66,15 +64,67 @@ const links = [
 		</main>
 		<footer class="site-footer">
 			<div class="container">
-				<strong>devly</strong>
-				<span>
+				<div class="footer-brand">
+					<Logo />
+					<p>
+						La informática que se estudia en la carrera y la que se aprende
+						trabajando.
+					</p>
+				</div>
+				<nav aria-label="Capas">
+					<h2>Capas</h2>
+					<ul>
+						{
+							LAYERS.map((layer) => (
+								<li>
+									<a href={`/capas/${layer.id}/`}>{layer.name}</a>
+								</li>
+							))
+						}
+					</ul>
+				</nav>
+				<nav aria-label="Explorar">
+					<h2>Explorar</h2>
+					<ul>
+						<li><a href="/rutas/">Rutas de aprendizaje</a></li>
+						<li><a href="/articulos/">Todos los artículos</a></li>
+						<li><a href="/capas/">Mapa de capas</a></li>
+					</ul>
+				</nav>
+				<nav aria-label="Proyecto">
+					<h2>Proyecto</h2>
+					<ul>
+						<li>
+							<a href="https://github.com/nbfrodri/devly" rel="noopener">
+								<Icon name="github" />
+								Código en GitHub
+							</a>
+						</li>
+						<li>
+							<a
+								href="https://github.com/nbfrodri/devly/blob/main/docs/content-guide.md"
+								rel="noopener"
+							>
+								<Icon name="book" />
+								Cómo se escriben los artículos
+							</a>
+						</li>
+						<li>
+							<a href="https://github.com/nbfrodri/devly/issues" rel="noopener">
+								<Icon name="bug" />
+								Avisar de un error
+							</a>
+						</li>
+					</ul>
+				</nav>
+				<p class="footer-legal">
+					<Icon name="license" />
 					Contenido bajo licencia{" "}
 					<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" rel="license noopener">
 						CC BY-SA 4.0
 					</a>
-					. Código en{" "}
-					<a href="https://github.com/nbfrodri/devly" rel="noopener">GitHub</a>.
-				</span>
+					. Código bajo licencia MIT.
+				</p>
 			</div>
 		</footer>
 	</body>
@@ -100,6 +150,9 @@ const links = [
 
 	button?.addEventListener("click", () => {
 		const next = currentTheme() === "dark" ? "light" : "dark";
+		// Colours ease only during a manual switch, never on page load.
+		root.classList.add("theme-switching");
+		window.setTimeout(() => root.classList.remove("theme-switching"), 260);
 		root.dataset.theme = next;
 		try {
 			localStorage.setItem("tema", next);

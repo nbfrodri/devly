@@ -11,6 +11,7 @@ devly is a static content site covering what a computing degree teaches (compute
 | Interactivity | React 19 islands | Hydrated per component with `client:*` |
 | Search | Pagefind | Index built from `dist/` after `astro build` |
 | Styling | One global stylesheet with CSS custom properties | Light and dark themes follow `prefers-color-scheme`; a header button overrides it through `data-theme` on the root element, stored in `localStorage` |
+| Icons | Tabler Icons, inlined as SVG at build time | `src/components/icon.astro` lists the ones in use |
 | Fonts | Fontsource packages, self-hosted | Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono |
 | Tooling | pnpm, TypeScript strict, Biome, Vitest, `astro check` | `pnpm check` runs all of them plus the build |
 | Hosting | Cloudflare Workers static assets | `wrangler.jsonc`; Cloudflare builds and deploys each push to `main` |

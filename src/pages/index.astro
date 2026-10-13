@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import ArticleList from "@/components/article-list.astro";
+import Icon from "@/components/icon.astro";
 import LayerStack from "@/components/layer-stack.astro";
 import PathCard from "@/components/path-card.astro";
 import Search from "@/components/search.astro";
@@ -76,7 +77,7 @@ const firstPath = featured[0];
 		</section>
 
 		<section class="section">
-			<h2>Artículos al azar</h2>
+			<h2>Para leer hoy</h2>
 			<div class="random-articles" data-random-articles>
 				<ArticleList articles={articles} />
 			</div>
@@ -84,22 +85,36 @@ const firstPath = featured[0];
 				// Runs right after the list so only the chosen six are ever painted.
 				(() => {
 					const box = document.currentScript.previousElementSibling;
-					const items = [...box.querySelectorAll("li")];
 
-					for (let i = items.length - 1; i > 0; i--) {
-						const j = Math.floor(Math.random() * (i + 1));
-						[items[i], items[j]] = [items[j], items[i]];
+					function showSix() {
+						const items = [...box.querySelectorAll("li")];
+
+						for (let i = items.length - 1; i > 0; i--) {
+							const j = Math.floor(Math.random() * (i + 1));
+							[items[i], items[j]] = [items[j], items[i]];
+						}
+
+						// Re-append in shuffled order so the visible six come first.
+						items.forEach((item, index) => {
+							item.hidden = index >= 6;
+							item.parentElement.append(item);
+						});
 					}
 
-					// Re-append in shuffled order so the visible six come first.
-					items.forEach((item, index) => {
-						item.hidden = index >= 6;
-						item.parentElement.append(item);
-					});
+					showSix();
 					box.dataset.ready = "";
+					document.addEventListener("click", (event) => {
+						if (event.target.closest("[data-shuffle]")) showSix();
+					});
 				})();
 			</script>
-			<p><a href="/articulos/">Ver los {articles.length} artículos</a></p>
+			<p class="section-actions">
+				<button class="text-button" type="button" data-shuffle>
+					<Icon name="refresh" />
+					Ver otros seis
+				</button>
+				<a href="/articulos/">Ver los {articles.length} artículos</a>
+			</p>
 		</section>
 	</div>
 </BaseLayout>

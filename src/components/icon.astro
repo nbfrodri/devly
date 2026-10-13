@@ -1,0 +1,30 @@
+---
+import arrowLeft from "@tabler/icons/outline/arrow-left.svg?raw";
+import arrowRight from "@tabler/icons/outline/arrow-right.svg?raw";
+import book from "@tabler/icons/outline/book-2.svg?raw";
+import github from "@tabler/icons/outline/brand-github.svg?raw";
+import bug from "@tabler/icons/outline/bug.svg?raw";
+import contrast from "@tabler/icons/outline/contrast.svg?raw";
+import license from "@tabler/icons/outline/license.svg?raw";
+import refresh from "@tabler/icons/outline/refresh.svg?raw";
+
+// Tabler Icons, inlined at build time. Add an import here to use another one.
+const icons = {
+	"arrow-left": arrowLeft,
+	"arrow-right": arrowRight,
+	book,
+	bug,
+	contrast,
+	github,
+	license,
+	refresh,
+} as const;
+
+type Props = {
+	name: keyof typeof icons;
+};
+
+const { name } = Astro.props;
+---
+
+<span class="icon" aria-hidden="true" set:html={icons[name]} />
