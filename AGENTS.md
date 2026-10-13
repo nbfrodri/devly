@@ -39,6 +39,7 @@ Accepted on 2026-10-13:
 - `README.md`, `.editorconfig`, `.gitignore`, `docs/content-guide.md`, `.github/workflows/ci.yml`.
 - tack sets active in this project: `design`, `react`, `typescript`, `devops`, `cloudflare`, `impeccable`, `motion`, `accessibility`.
 - Collaboration: solo.
+- Licences (chosen by the user on 2026-10-13): MIT for code (`LICENSE`), CC BY-SA 4.0 for content (`src/content/LICENSE.md`).
 - Hosting: Cloudflare Workers static assets, built from the public GitHub repository `nbfrodri/devly`; configured in `wrangler.jsonc`.
 
 Deferred until needed:

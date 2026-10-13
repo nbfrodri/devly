@@ -99,3 +99,8 @@ docs/                    Arquitectura, guía y plan de contenido
 ## Despliegue
 
 Cloudflare construye y publica cada push a `main` con `pnpm build` y `npx wrangler deploy`. [`wrangler.jsonc`](wrangler.jsonc) indica que solo se sirven los archivos estáticos de `dist/`.
+
+## Licencia
+
+- **Código**: [MIT](LICENSE).
+- **Contenido** (artículos y rutas en `src/content/`): [CC BY-SA 4.0](src/content/LICENSE.md). Puedes reutilizarlo y adaptarlo citando a devly y compartiendo con la misma licencia.
