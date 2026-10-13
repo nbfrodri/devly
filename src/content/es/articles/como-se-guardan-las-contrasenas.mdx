@@ -1,0 +1,147 @@
+---
+title: "¿Cómo se guardan las contraseñas?"
+description: "Un servicio no debe guardar contraseñas, sino un resumen lento de calcular y distinto para cada usuario."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - funciones-hash
+  - autenticacion-y-autorizacion
+updated: 2026-10-13
+sources:
+  - title: "OWASP: Password Storage Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+  - title: "NIST SP 800-63B: Digital Identity Guidelines, Authentication (en inglés)"
+    url: https://pages.nist.gov/800-63-4/sp800-63b.html
+  - title: "RFC 9106: Argon2 Memory-Hard Function for Password Hashing"
+    url: https://www.rfc-editor.org/info/rfc9106/
+  - title: "Node.js: Crypto (documentación oficial, en inglés)"
+    url: https://nodejs.org/api/crypto.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un servicio bien diseñado **no guarda las contraseñas** de sus usuarios. Guarda un valor calculado a partir de cada una, que le permite comprobar si la contraseña escrita es correcta pero del que no se puede obtener la original.
+
+## El supuesto de partida
+
+Hay que diseñar pensando que la base de datos será robada algún día. Ocurre por un fallo de software, por una copia de seguridad mal protegida o por alguien de dentro.
+
+La pregunta es qué obtiene el atacante cuando eso pasa. Y el daño no se queda en ese servicio: mucha gente repite la misma contraseña, así que una filtración abre la puerta a su correo y a su banco.
+
+## Tres formas incorrectas
+
+### En texto claro
+
+Guardar la contraseña tal cual. Quien acceda a la tabla las tiene todas. No hay nada que explicar.
+
+### Cifradas
+
+Parece mejor, pero el [cifrado](/articulos/cifrado-simetrico-y-asimetrico/) es reversible. La clave para descifrar tiene que estar en algún lugar accesible para la aplicación, y quien roba la base de datos a menudo consigue también esa clave. Además, el servicio no necesita recuperar la contraseña: solo comprobarla.
+
+### Con un hash rápido
+
+Una [función hash](/articulos/funciones-hash/) no se puede revertir, lo cual va en la buena dirección. Pero usar una función como SHA-256 directamente tiene dos fallos:
+
+- **Es demasiado rápida.** Está pensada para procesar datos a gran velocidad. Con el hash robado, un atacante prueba miles de millones de contraseñas por segundo, empezando por las más comunes.
+- **Contraseñas iguales dan hashes iguales.** Si mil personas usan "123456", sus mil hashes coinciden. Basta descifrar uno. Existen además tablas ya calculadas con los hashes de millones de contraseñas frecuentes.
+
+## La forma correcta
+
+Dos ingredientes corrigen esos fallos.
+
+### Una sal
+
+Una **sal** es un valor aleatorio, distinto para cada usuario, que se combina con la contraseña antes de calcular el hash. No es secreta: se guarda junto al resultado.
+
+Con ella, dos usuarios con la misma contraseña tienen hashes distintos, y las tablas precalculadas dejan de servir. El atacante tiene que atacar cada cuenta por separado.
+
+### Una función lenta a propósito
+
+En lugar de un hash rápido, se usa una **función de derivación de claves**: un algoritmo diseñado para que cada cálculo sea costoso.
+
+Para un usuario que inicia sesión, tardar una décima de segundo no se nota. Para un atacante que necesita miles de millones de intentos, multiplica el coste hasta hacerlo inviable.
+
+| Función | Característica |
+| --- | --- |
+| Argon2id | La recomendada hoy. Cuesta tiempo y también memoria |
+| scrypt | Cuesta tiempo y memoria |
+| bcrypt | Veterana y muy extendida |
+| PBKDF2 | Aceptable cuando una norma la exige |
+
+Que cueste memoria, y no solo tiempo, dificulta los ataques con hardware especializado, capaz de hacer muchísimos cálculos en paralelo pero con poca memoria para cada uno.
+
+El coste es un parámetro ajustable. A medida que los ordenadores se vuelven más rápidos, se sube.
+
+## En código
+
+Este ejemplo usa scrypt, incluida en Node.js:
+
+```js
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+
+function crearHash(clave) {
+	const sal = randomBytes(16);
+	const hash = scryptSync(clave, sal, 64);
+
+	return { sal, hash };
+}
+
+function comprobar(clave, guardado) {
+	const hash = scryptSync(clave, guardado.sal, 64);
+
+	return timingSafeEqual(hash, guardado.hash);
+}
+
+const ana = crearHash("correcto caballo batería");
+const luis = crearHash("correcto caballo batería");
+
+console.log(comprobar("correcto caballo batería", ana)); // true
+console.log(comprobar("otra cosa", ana)); // false
+console.log(ana.hash.equals(luis.hash)); // false
+```
+
+Ana y Luis tienen la misma contraseña y hashes distintos, porque sus sales son distintas.
+
+`timingSafeEqual` compara en un tiempo que no depende de cuántos bytes coinciden. Una comparación normal se detiene en la primera diferencia, y midiendo ese tiempo un atacante podría obtener información.
+
+En un proyecto real se usa una biblioteca mantenida que elige los parámetros y guarda la sal y la configuración en un solo texto. No conviene programar esto a mano.
+
+<Quiz
+	client:visible
+	question="¿Para qué sirve la sal al guardar una contraseña?"
+	options={[
+		"Para que contraseñas iguales produzcan hashes distintos",
+		"Para poder recuperar la contraseña original",
+		"Para hacer el cálculo más rápido",
+	]}
+	answer={0}
+/>
+
+## Una capa más: la pimienta
+
+Una **pimienta** es un valor secreto, igual para todos los usuarios, que se incorpora al cálculo y se guarda fuera de la base de datos, por ejemplo en un sistema de gestión de secretos. Si solo se filtra la base de datos, al atacante le falta un dato para empezar a probar.
+
+Es un refuerzo, no un sustituto de la sal ni de la función lenta.
+
+## Qué pedir a los usuarios
+
+Las recomendaciones actuales contradicen costumbres muy arraigadas:
+
+- **Importa la longitud**, más que mezclar símbolos. Una frase larga es más fuerte y más fácil de recordar que ocho caracteres enrevesados.
+- **Permitir contraseñas largas** y aceptar cualquier carácter, incluidos los espacios, para no estorbar a los gestores de contraseñas.
+- **No obligar a cambiarla cada cierto tiempo.** Lleva a variaciones previsibles. Se cambia cuando hay indicios de que se ha filtrado.
+- **Rechazar las que ya aparecen en filtraciones conocidas.**
+- **Ofrecer un segundo factor**, como explica el artículo sobre [autenticación](/articulos/autenticacion-y-autorizacion/).
+
+## Otras medidas
+
+- **Limitar los intentos** de inicio de sesión para frenar las pruebas masivas.
+- **No decir si falló el usuario o la contraseña.** Un mensaje único no revela qué cuentas existen.
+- **Recuperar el acceso con un enlace de un solo uso**, nunca enviando la contraseña. Un servicio que te la envía por correo es que la tiene guardada de forma reversible.
+
+## Lo esencial
+
+- Las contraseñas no se guardan: se guarda un valor derivado que no se puede revertir.
+- Cada contraseña lleva su propia sal aleatoria.
+- Se usa una función lenta a propósito, como Argon2id, scrypt o bcrypt, nunca un hash rápido.
+- Se diseña suponiendo que la base de datos acabará filtrándose.

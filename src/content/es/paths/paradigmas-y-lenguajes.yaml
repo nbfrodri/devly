@@ -1,0 +1,8 @@
+title: Paradigmas y lenguajes
+description: Las formas de organizar un programa y cómo trata un lenguaje los tipos y la ejecución.
+layer: programacion
+steps:
+  - programacion-orientada-a-objetos
+  - programacion-funcional
+  - tipado-estatico-y-dinamico
+  - compilador-e-interprete

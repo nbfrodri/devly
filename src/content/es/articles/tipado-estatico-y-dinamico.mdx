@@ -1,0 +1,155 @@
+---
+title: "Diferencias entre tipado estático y dinámico"
+description: "En un lenguaje de tipado estático los tipos se comprueban antes de ejecutar; en uno dinámico, mientras el programa funciona."
+level: intermedio
+layer: programacion
+prerequisites:
+  - tipos-de-datos
+updated: 2026-10-13
+sources:
+  - title: "TypeScript Handbook: The Basics (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/2/basic-types.html
+  - title: "MDN: Tipos de datos y estructuras en JavaScript"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Data_structures
+  - title: "ECMAScript Language Specification (en inglés)"
+    url: https://tc39.es/ecma262/
+---
+
+import { Quiz } from "@/components/quiz";
+
+En un lenguaje de **tipado estático**, el [tipo](/articulos/tipos-de-datos/) de cada variable se conoce y se comprueba antes de ejecutar el programa. En uno de **tipado dinámico**, los tipos pertenecen a los valores y se comprueban mientras el programa se ejecuta.
+
+## Qué significa comprobar los tipos
+
+Cada operación tiene sentido para unos tipos y no para otros. Se puede calcular la longitud de un texto, pero no la de un número. **Comprobar los tipos** es verificar que cada operación recibe lo que espera.
+
+Todos los lenguajes lo hacen de algún modo. La diferencia está en el **cuándo**.
+
+## Tipado dinámico
+
+En JavaScript, Python o Ruby, una variable no tiene tipo fijo. El tipo lo tiene el valor que contiene en cada momento, y la misma variable puede guardar primero un número y luego un texto.
+
+```js
+let dato = 42;
+console.log(typeof dato); // "number"
+
+dato = "cuarenta y dos";
+console.log(typeof dato); // "string"
+```
+
+Los errores de tipo aparecen al ejecutar, y solo si se pasa por la línea afectada:
+
+```js
+function longitud(texto) {
+	return texto.length;
+}
+
+console.log(longitud("hola")); // 4
+console.log(longitud(42)); // undefined
+```
+
+La segunda llamada es un error de quien programa, pero JavaScript no avisa: devuelve `undefined`, porque un número no tiene `length`, y el fallo saldrá a la luz más adelante, lejos de su causa.
+
+## Tipado estático
+
+En Java, C#, Go, Rust o TypeScript, cada variable y cada parámetro tienen un tipo que se conoce antes de ejecutar. Una herramienta, el [compilador](/articulos/compilador-e-interprete/) o un verificador de tipos, revisa todo el código y rechaza lo que no encaja.
+
+La misma función en TypeScript:
+
+```ts
+function longitud(texto: string): number {
+	return texto.length;
+}
+
+longitud("hola");
+longitud(42); // Error: un número no es asignable a un parámetro de tipo texto
+```
+
+El error aparece al escribir el código, sin necesidad de ejecutarlo ni de pasar por esa línea.
+
+### No siempre hay que escribir los tipos
+
+Los lenguajes estáticos actuales deducen muchos tipos por sí mismos. A esto se le llama **inferencia de tipos**:
+
+```ts
+const edad = 30;
+const nombres = ["Ana", "Luis"];
+```
+
+No se ha anotado nada, pero el verificador sabe que `edad` es un número y `nombres` una lista de textos, y avisará si se usan de otra forma.
+
+## Comparación
+
+| | Estático | Dinámico |
+| --- | --- | --- |
+| Cuándo se comprueban los tipos | Antes de ejecutar | Durante la ejecución |
+| El tipo pertenece a | La variable | El valor |
+| Los errores de tipo se ven | Al escribir o compilar | Al ejecutar esa línea |
+| Código inicial | Más anotaciones | Más breve |
+| Ejemplos | Java, C#, Go, Rust, TypeScript | JavaScript, Python, Ruby |
+
+## Qué aporta cada uno
+
+### El tipado estático
+
+- **Detecta antes toda una clase de errores**: nombres mal escritos, argumentos en mal orden, valores que pueden faltar.
+- **Hace de documentación** que no se queda anticuada. La firma de una función dice qué recibe y qué devuelve.
+- **Mejora las herramientas.** El editor autocompleta con acierto y puede renombrar algo en todo el proyecto con seguridad.
+- **Da confianza al cambiar código.** Si modificas una función, el verificador señala todos los lugares que hay que adaptar.
+
+### El tipado dinámico
+
+- **Se empieza más rápido.** Menos texto y ningún paso previo.
+- **Es flexible** para prototipos, guiones cortos y exploración de datos.
+- **Evita pelear con el sistema de tipos** en casos legítimos que son difíciles de expresar.
+
+La ventaja del tipado estático crece con el tamaño del proyecto, con el número de personas y con el tiempo que vaya a vivir el código. En un guion de veinte líneas apenas se nota; en una aplicación mantenida durante años por un equipo, mucho.
+
+Por eso se han extendido las soluciones intermedias. TypeScript añade tipos estáticos a JavaScript, y Python admite anotaciones que se comprueban con herramientas externas. Permiten adoptar los tipos de forma gradual.
+
+<Quiz
+	client:visible
+	question="¿Cuándo detecta un lenguaje de tipado estático un error de tipos?"
+	options={[
+		"Antes de ejecutar el programa",
+		"Cuando se ejecuta la línea afectada",
+		"Nunca: los ignora",
+	]}
+	answer={0}
+/>
+
+## Otro eje: fuerte y débil
+
+Hay una segunda distinción que se confunde con la anterior. Describe cuánto convierte el lenguaje los tipos por su cuenta.
+
+- **Tipado débil**: el lenguaje convierte valores automáticamente para que la operación salga adelante.
+- **Tipado fuerte**: se niega y da un error.
+
+```js
+console.log("5" * 2); // 10
+console.log("5" + 2); // "52"
+```
+
+JavaScript convierte el texto en número en la primera línea y el número en texto en la segunda. Es dinámico y débil. Python, que también es dinámico, da un error al intentar sumar un texto y un número: es dinámico y fuerte.
+
+Los dos ejes son independientes:
+
+| | Fuerte | Débil |
+| --- | --- | --- |
+| **Estático** | Rust, Java | C |
+| **Dinámico** | Python | JavaScript |
+
+"Fuerte" y "débil" no tienen una definición única, y esta clasificación es orientativa. La distinción entre estático y dinámico sí es precisa.
+
+## Confusiones frecuentes
+
+- **"Dinámico significa sin tipos."** Los valores tienen tipo. Lo que no lo tiene fijo es la variable.
+- **"Estático obliga a escribir todos los tipos."** La inferencia deduce la mayoría.
+- **"Con tipos estáticos no hacen falta pruebas."** Los tipos comprueban que las piezas encajan, no que el resultado sea correcto. Una función que suma cuando debía restar pasa la comprobación.
+
+## Lo esencial
+
+- El tipado estático comprueba los tipos antes de ejecutar; el dinámico, durante la ejecución.
+- El estático detecta antes los errores y mejora las herramientas; el dinámico es más breve y flexible.
+- La ventaja del estático aumenta con el tamaño y la duración del proyecto.
+- Fuerte y débil es otra cuestión: cuánto convierte el lenguaje los tipos automáticamente.

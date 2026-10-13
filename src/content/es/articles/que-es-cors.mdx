@@ -1,0 +1,137 @@
+---
+title: "¿Qué es CORS?"
+description: "CORS es el mecanismo con el que un servidor indica al navegador qué otros sitios pueden leer sus respuestas."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-http
+  - cliente-servidor
+updated: 2026-10-13
+sources:
+  - title: "MDN: Intercambio de recursos de origen cruzado (CORS)"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/CORS
+  - title: "MDN: Política del mismo origen"
+    url: https://developer.mozilla.org/es/docs/Web/Security/Same-origin_policy
+  - title: "WHATWG: Fetch Standard (en inglés)"
+    url: https://fetch.spec.whatwg.org/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**CORS** (*Cross-Origin Resource Sharing*, intercambio de recursos entre orígenes) es un mecanismo que permite a un servidor decir al navegador qué otros sitios web tienen permiso para leer sus respuestas.
+
+Casi todo el mundo lo conoce por un mensaje de error en la consola. Para entenderlo hay que empezar por la regla a la que pone excepciones.
+
+## La política del mismo origen
+
+El **origen** de una página es la combinación de tres cosas: el esquema, el nombre de dominio y el puerto.
+
+| Dirección | ¿Mismo origen que `https://tienda.ejemplo`? |
+| --- | --- |
+| `https://tienda.ejemplo/carrito` | Sí: solo cambia la ruta |
+| `http://tienda.ejemplo` | No: distinto esquema |
+| `https://api.tienda.ejemplo` | No: distinto dominio |
+| `https://tienda.ejemplo:8443` | No: distinto puerto |
+
+La **política del mismo origen** es una norma de los navegadores: el código JavaScript de una página solo puede leer respuestas que vengan de su propio origen.
+
+### Por qué existe
+
+Tu navegador guarda las cookies de todos los sitios donde has iniciado sesión y las envía automáticamente. Sin esta norma, cualquier página que visitaras podría pedir datos a tu banco desde tu navegador, con tu sesión, y leer la respuesta: tus movimientos, tu correo, todo.
+
+La política lo impide. Es una de las protecciones básicas de la web.
+
+## El problema que crea
+
+La norma es demasiado estricta para muchas aplicaciones legítimas. Es habitual que la interfaz esté en `https://app.ejemplo` y los datos en una [API](/articulos/que-es-una-api/) en `https://api.ejemplo`. Son orígenes distintos, y el navegador bloquearía la lectura.
+
+CORS es la forma de relajarla de manera controlada. **El servidor que tiene los datos decide** a quién deja leerlos.
+
+## Cómo funciona
+
+El navegador añade a la petición una cabecera con el origen de la página:
+
+```
+Origin: https://app.ejemplo
+```
+
+El servidor responde indicando a quién autoriza:
+
+```
+Access-Control-Allow-Origin: https://app.ejemplo
+```
+
+Si ese valor coincide con el origen de la página, el navegador entrega la respuesta al código. Si no coincide, o la cabecera falta, la bloquea y muestra el error.
+
+Un detalle que sorprende: en este caso la petición **sí ha llegado al servidor** y se ha procesado. Lo que el navegador impide es que la página lea el resultado.
+
+## La petición previa
+
+Para peticiones que pueden modificar datos de formas que una página web tradicional no podía hacer, el navegador pregunta antes de enviarlas. Ocurre, por ejemplo, con los métodos `PUT` y `DELETE` o cuando se envía JSON.
+
+Esa pregunta es una **petición previa** (*preflight*), con el método `OPTIONS`:
+
+```
+OPTIONS /pedidos/7
+Origin: https://app.ejemplo
+Access-Control-Request-Method: DELETE
+```
+
+El servidor contesta qué permite:
+
+```
+Access-Control-Allow-Origin: https://app.ejemplo
+Access-Control-Allow-Methods: GET, POST, DELETE
+Access-Control-Allow-Headers: Content-Type
+```
+
+Solo si la respuesta lo autoriza, el navegador envía la petición real. Así se protege a servidores antiguos que no cuentan con recibir ese tipo de peticiones desde otros sitios.
+
+Las peticiones sencillas, como un `GET` normal, no llevan petición previa.
+
+## Con cookies
+
+Por defecto, las peticiones a otro origen no incluyen cookies. Para que las lleven tienen que estar de acuerdo las dos partes:
+
+- El código de la página lo pide expresamente.
+- El servidor responde con `Access-Control-Allow-Credentials: true`.
+
+En ese caso no vale el comodín `*` en `Access-Control-Allow-Origin`: hay que indicar el origen exacto. Tiene sentido, porque permitir a cualquier sitio leer respuestas con la sesión del usuario anularía la protección.
+
+<Quiz
+	client:visible
+	question="¿Quién aplica las restricciones de CORS?"
+	options={["El servidor", "El navegador", "El router"]}
+	answer={1}
+/>
+
+## Lo que CORS no es
+
+Aquí están la mayoría de las confusiones.
+
+- **No protege al servidor.** CORS lo aplican los navegadores. Un programa que haga la petición por su cuenta, sin navegador, la envía y lee la respuesta sin problema. La [autenticación y la autorización](/articulos/autenticacion-y-autorizacion/) siguen siendo imprescindibles.
+- **No impide que la petición se envíe**, salvo cuando hay petición previa. Por sí solo no evita un ataque [CSRF](/articulos/csrf/).
+- **No se arregla en el cliente.** El error aparece en el navegador, pero quien tiene que conceder el permiso es el servidor.
+
+Su función es proteger **al usuario**: evita que un sitio lea, usando su sesión, datos de otro sitio.
+
+## Resolver el error
+
+Cuando aparece el error de CORS, la solución está en el servidor al que se llama:
+
+- **Si es tuyo**, configúralo para que envíe las cabeceras con el origen de tu interfaz. Casi todos los marcos de trabajo traen una opción para ello.
+- **Si es de un tercero** y no lo permite, no puedes cambiarlo. Lo habitual es hacer la petición desde tu propio servidor, que no está sujeto a CORS, y que tu interfaz hable con él.
+
+## Errores comunes
+
+- **Poner `*` para que funcione** en una API que usa cookies o da acceso a datos privados.
+- **Devolver como permitido cualquier origen que llegue en la petición.** Equivale a no tener política.
+- **Desactivar la seguridad del navegador** para desarrollar. Oculta un problema que reaparecerá al publicar.
+- **Creer que CORS sustituye a la autenticación.**
+
+## Lo esencial
+
+- El navegador solo deja a una página leer respuestas de su mismo origen: esquema, dominio y puerto.
+- CORS permite al servidor autorizar a otros orígenes mediante cabeceras.
+- Algunas peticiones van precedidas de una consulta previa con el método `OPTIONS`.
+- Protege al usuario, no al servidor, y lo aplica el navegador.

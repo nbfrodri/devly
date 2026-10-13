@@ -1,0 +1,182 @@
+---
+title: "¿Qué es la programación funcional?"
+description: "La programación funcional construye programas combinando funciones que no modifican nada fuera de sí mismas."
+level: intermedio
+layer: programacion
+prerequisites:
+  - funciones
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "John Hughes: Why Functional Programming Matters (1990, en inglés)"
+    url: https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf
+  - title: "MDN: Array.prototype.reduce()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+  - title: "MDN: Funciones"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **programación funcional** es una forma de escribir programas en la que el trabajo se hace combinando [funciones](/articulos/funciones/) que reciben datos y devuelven resultados, sin modificar nada fuera de ellas.
+
+Es un **paradigma**: un estilo de organizar el código, igual que lo es la [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/). Hay lenguajes construidos alrededor de él, como Haskell, pero sus ideas se aplican en casi cualquiera, también en JavaScript.
+
+## Qué problema resuelve
+
+Gran parte de los errores difíciles tienen el mismo origen: un dato cambia en un punto del programa y afecta a otro punto que no lo esperaba. Para entender una línea hay que saber todo lo que pudo haber ocurrido antes.
+
+La programación funcional reduce ese problema limitando los cambios. Si una función solo depende de lo que recibe y no altera nada, se puede entender leyéndola a ella sola.
+
+## Funciones puras
+
+Una **función pura** cumple dos condiciones:
+
+- Con los mismos argumentos devuelve siempre el mismo resultado.
+- No tiene **efectos secundarios**: no modifica variables externas, no escribe en disco, no cambia sus argumentos.
+
+```js
+let contador = 0;
+
+function impura() {
+	contador = contador + 1;
+	return contador;
+}
+
+function pura(numero) {
+	return numero + 1;
+}
+
+console.log(impura()); // 1
+console.log(impura()); // 2
+console.log(pura(1)); // 2
+console.log(pura(1)); // 2
+```
+
+`impura` devuelve algo distinto cada vez porque depende de un valor externo y lo cambia. `pura` solo depende de su argumento.
+
+Las funciones puras son fáciles de probar, porque basta con comparar entrada y salida, y de combinar, porque no interfieren entre sí.
+
+Un programa útil no puede ser solo funciones puras: mostrar algo en pantalla o guardar un dato son efectos secundarios. La idea es mantenerlos en los bordes del programa y dejar puro el núcleo, donde están las reglas.
+
+## Inmutabilidad
+
+En lugar de modificar un dato, se crea uno nuevo con el cambio.
+
+```js
+const original = [3, 1, 2];
+
+const ordenado = original.toSorted((a, b) => a - b);
+const ampliado = [...original, 4];
+
+console.log(original.join(" ")); // "3 1 2"
+console.log(ordenado.join(" ")); // "1 2 3"
+console.log(ampliado.join(" ")); // "3 1 2 4"
+```
+
+El [array](/articulos/arrays/) original no cambia. Quien lo esté usando en otra parte del programa no se encuentra con sorpresas.
+
+## Las funciones son valores
+
+En los lenguajes que admiten este estilo, una función es un valor más: se puede guardar en una variable, pasar como argumento y devolver como resultado.
+
+Una función que recibe o devuelve otra función se llama **función de orden superior**.
+
+```js
+function crearMultiplicador(factor) {
+	return (numero) => numero * factor;
+}
+
+const doble = crearMultiplicador(2);
+const triple = crearMultiplicador(3);
+
+console.log(doble(5)); // 10
+console.log(triple(5)); // 15
+```
+
+`crearMultiplicador` fabrica funciones. Cada una recuerda el `factor` con el que se creó.
+
+## Transformar colecciones
+
+Tres funciones de orden superior sustituyen a la mayoría de los [bucles](/articulos/bucles/) que recorren una lista:
+
+- `map` transforma cada elemento.
+- `filter` se queda con los que cumplen una condición.
+- `reduce` combina todos en un solo valor.
+
+```js
+const pedidos = [
+	{ producto: "libro", precio: 20, pagado: true },
+	{ producto: "lápiz", precio: 2, pagado: false },
+	{ producto: "mochila", precio: 35, pagado: true },
+];
+
+const totalPagado = pedidos
+	.filter((pedido) => pedido.pagado)
+	.map((pedido) => pedido.precio)
+	.reduce((suma, precio) => suma + precio, 0);
+
+console.log(totalPagado); // 55
+```
+
+El código se lee como una descripción: de los pedidos, los pagados; de esos, el precio; de los precios, la suma. No hay contador ni variable que se vaya modificando.
+
+Este estilo, en el que se dice **qué** se quiere obtener, se llama **declarativo**. El estilo de dar los pasos uno a uno se llama **imperativo**. La misma tarea, escrita de forma imperativa:
+
+```js
+const pedidos = [
+	{ producto: "libro", precio: 20, pagado: true },
+	{ producto: "lápiz", precio: 2, pagado: false },
+	{ producto: "mochila", precio: 35, pagado: true },
+];
+
+let totalPagado = 0;
+
+for (const pedido of pedidos) {
+	if (pedido.pagado) {
+		totalPagado = totalPagado + pedido.precio;
+	}
+}
+
+console.log(totalPagado); // 55
+```
+
+<Quiz
+	client:visible
+	question="¿Cuál de estas funciones es pura?"
+	options={[
+		"Una que devuelve la hora actual",
+		"Una que suma sus dos argumentos",
+		"Una que añade un elemento al array que recibe",
+	]}
+	answer={1}
+/>
+
+## Composición
+
+Como las funciones puras no interfieren entre sí, se pueden encadenar: la salida de una es la entrada de la siguiente. Se construyen operaciones complejas juntando piezas pequeñas que hacen una sola cosa.
+
+```js
+const quitarEspacios = (texto) => texto.trim();
+const aMinusculas = (texto) => texto.toLowerCase();
+const normalizar = (texto) => aMinusculas(quitarEspacios(texto));
+
+console.log(normalizar("  Hola Mundo ")); // "hola mundo"
+```
+
+## Sus costes
+
+- **Copiar en lugar de modificar** consume más memoria y tiempo. Normalmente no se nota; con datos muy grandes hay que tenerlo en cuenta.
+- **Algunos problemas son por naturaleza un estado que cambia**, como una partida de un juego. Forzarlos a este estilo puede complicarlos.
+- **El estilo extremo cuesta de leer.** Encadenar muchas funciones en una línea es tan oscuro como un bucle enrevesado.
+
+## No hay que elegir
+
+La mayoría de los lenguajes actuales son **multiparadigma**. Es habitual organizar un programa con objetos y escribir su lógica interna con funciones puras y datos que no se modifican. Tomar de cada estilo lo que aclara el código suele dar mejor resultado que ceñirse a uno.
+
+## Lo esencial
+
+- La programación funcional construye programas combinando funciones.
+- Una función pura depende solo de sus argumentos y no modifica nada externo.
+- Los datos no se cambian: se crean versiones nuevas.
+- `map`, `filter` y `reduce` describen transformaciones sin bucles ni variables que cambian.

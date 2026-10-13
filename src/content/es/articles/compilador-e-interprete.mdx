@@ -1,0 +1,134 @@
+---
+title: "Diferencias entre compilador e intérprete"
+description: "Un compilador traduce todo el programa antes de ejecutarlo; un intérprete lo va ejecutando directamente. La mayoría de lenguajes actuales combinan ambos."
+level: intermedio
+layer: programacion
+prerequisites:
+  - como-funciona-un-procesador
+updated: 2026-10-13
+sources:
+  - title: "Robert Nystrom: Crafting Interpreters, A Map of the Territory (libro libre, en inglés)"
+    url: https://craftinginterpreters.com/a-map-of-the-territory.html
+  - title: "V8: Ignition, el intérprete de V8 (documentación oficial, en inglés)"
+    url: https://v8.dev/docs/ignition
+  - title: "Python: glosario, bytecode"
+    url: https://docs.python.org/es/3/glossary.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **compilador** traduce un programa completo a otro lenguaje, normalmente el del procesador, antes de que se ejecute. Un **intérprete** lee el programa y lo va ejecutando directamente, sin generar esa traducción previa.
+
+## El problema de fondo
+
+Un [procesador](/articulos/como-funciona-un-procesador/) solo entiende **código máquina**: instrucciones muy simples escritas en binario, distintas para cada familia de procesadores.
+
+Las personas programamos en lenguajes de alto nivel, con variables, funciones y nombres legibles. Algo tiene que salvar la distancia entre lo que escribimos, el **código fuente**, y lo que la máquina ejecuta. Compilar e interpretar son las dos estrategias básicas.
+
+## Una analogía
+
+Tienes un libro escrito en un idioma que tu público no entiende.
+
+- **Traducirlo entero** y publicar la traducción. Cuesta tiempo al principio, pero después cualquiera lo lee de corrido. Eso es compilar.
+- **Contratar a un intérprete** que lo lea en voz alta traduciendo frase a frase. Se empieza al instante, pero cada lectura repite el trabajo y va más despacio. Eso es interpretar.
+
+## El compilador
+
+Un compilador recibe el código fuente y produce un archivo ejecutable en código máquina. Ese archivo se ejecuta después tantas veces como se quiera, sin necesidad del compilador ni del código fuente.
+
+C, C++, Rust y Go funcionan así.
+
+**Ventajas:**
+
+- **Velocidad.** El programa ya está en el lenguaje del procesador. Además, el compilador ha tenido tiempo de analizarlo entero y optimizarlo.
+- **Errores detectados antes.** Muchos fallos salen al compilar, sin ejecutar nada.
+- **Se distribuye sin el código fuente.**
+
+**Inconvenientes:**
+
+- **Hay un paso previo.** Tras cada cambio hay que compilar antes de probar.
+- **El ejecutable es específico.** Uno compilado para un tipo de procesador y un sistema operativo no funciona en otros; hay que compilar para cada uno.
+
+## El intérprete
+
+Un intérprete lee el programa y lo ejecuta sobre la marcha. No deja ningún ejecutable: para volver a ejecutar el programa hace falta de nuevo el intérprete y el código fuente.
+
+**Ventajas:**
+
+- **Inmediatez.** Se escribe y se ejecuta, sin esperas.
+- **Portabilidad.** El mismo código funciona en cualquier máquina que tenga el intérprete.
+- **Interactividad.** Permite ejecutar una línea, ver el resultado y seguir.
+
+**Inconvenientes:**
+
+- **Es más lento**, porque el análisis se hace mientras el programa corre.
+- **Los errores aparecen al llegar a la línea**, quizá tras horas de ejecución.
+- **Quien ejecuta necesita el intérprete instalado.**
+
+## Comparación
+
+| | Compilador | Intérprete |
+| --- | --- | --- |
+| Cuándo traduce | Antes de ejecutar, todo de una vez | Mientras ejecuta |
+| Qué produce | Un ejecutable | Nada: ejecuta directamente |
+| Velocidad de ejecución | Mayor | Menor |
+| Tiempo hasta empezar | Hay que compilar antes | Inmediato |
+| Portabilidad | Un ejecutable por plataforma | El mismo código en todas |
+| Errores | Muchos, al compilar | Al ejecutar cada línea |
+
+## La realidad está en medio
+
+Casi ningún lenguaje actual es un caso puro. Se han impuesto dos soluciones intermedias.
+
+### Bytecode y máquina virtual
+
+El código fuente se compila a un lenguaje intermedio, el **bytecode**. No es código máquina de ningún procesador real, sino de una máquina imaginaria más sencilla.
+
+Después, un programa llamado **máquina virtual** ejecuta ese bytecode. Así se reparte el trabajo: el análisis costoso se hace una vez, y el bytecode funciona en cualquier sitio donde exista la máquina virtual.
+
+Java se compila a bytecode que ejecuta la JVM. Python también: lo que se suele llamar "el intérprete de Python" compila primero el programa a bytecode y luego lo ejecuta en su máquina virtual.
+
+### Compilación en tiempo de ejecución
+
+Un compilador **JIT** (*just in time*) traduce a código máquina mientras el programa ya está funcionando.
+
+Empieza interpretando, para arrancar rápido. Mientras tanto observa qué partes se ejecutan muchas veces, y esas las compila a código máquina optimizado. Como ve el programa en funcionamiento, puede optimizar con información que un compilador tradicional no tiene.
+
+Así trabajan los motores de JavaScript de los navegadores, y también las máquinas virtuales de Java y de C#.
+
+<Quiz
+	client:visible
+	question="¿Qué hace un compilador JIT?"
+	options={[
+		"Compila todo el programa antes de ejecutarlo",
+		"Compila a código máquina las partes más usadas mientras el programa funciona",
+		"Traduce el programa a otro lenguaje de alto nivel",
+	]}
+	answer={1}
+/>
+
+## Es cosa de la implementación
+
+"Lenguaje compilado" y "lenguaje interpretado" son atajos. Compilar o interpretar es una propiedad de la **herramienta** que ejecuta el lenguaje, no del lenguaje en sí. Para un mismo lenguaje pueden existir compiladores e intérpretes.
+
+## Otras traducciones
+
+- **Transpilador.** Traduce entre lenguajes de un nivel parecido. El de TypeScript produce JavaScript.
+- **Enlazador.** Une las distintas partes compiladas de un programa, y las bibliotecas que usa, en un solo ejecutable.
+
+## Qué ocurre dentro
+
+Compiladores e intérpretes comparten las primeras fases:
+
+1. **Análisis léxico.** El texto se divide en piezas con significado, llamadas *tokens*: palabras clave, nombres, números, símbolos.
+2. **Análisis sintáctico.** Con esas piezas se construye un [árbol](/articulos/arboles-binarios-de-busqueda/) que refleja la estructura del programa.
+3. **Análisis semántico.** Se comprueba que tiene sentido: que las variables existen y que los [tipos](/articulos/tipado-estatico-y-dinamico/) encajan.
+
+A partir de ahí divergen: el compilador genera código y el intérprete recorre el árbol o el bytecode ejecutándolo.
+
+## Lo esencial
+
+- Un compilador traduce el programa entero antes de ejecutarlo; un intérprete lo ejecuta directamente.
+- Compilar da velocidad y detección temprana de errores; interpretar da inmediatez y portabilidad.
+- La mayoría de los lenguajes actuales combinan ambas ideas mediante bytecode, máquinas virtuales y compilación JIT.
+- Es una característica de la herramienta, no del lenguaje.

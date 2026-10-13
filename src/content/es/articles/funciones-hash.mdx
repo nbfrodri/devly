@@ -76,7 +76,7 @@ En su lugar se guarda el hash. Cuando el usuario inicia sesión, se calcula el h
 
 Para esto no vale cualquier función hash, por dos razones:
 
-- **Las funciones rápidas juegan a favor del atacante.** SHA-256 está diseñada para ser veloz, lo que permite probar miles de millones de contraseñas por segundo contra un hash robado. Para contraseñas se usan funciones deliberadamente lentas y costosas, como Argon2, scrypt o bcrypt.
+- **Las funciones rápidas juegan a favor del atacante.** SHA-256 está diseñada para ser veloz, lo que permite probar miles de millones de contraseñas por segundo contra un hash robado. Para contraseñas se usan funciones deliberadamente lentas y costosas, como Argon2, scrypt o bcrypt. El detalle está en [cómo se guardan las contraseñas](/articulos/como-se-guardan-las-contrasenas/).
 - **Dos usuarios con la misma contraseña tendrían el mismo hash.** Se evita añadiendo a cada contraseña un valor aleatorio distinto, la **sal**, antes de calcular el hash. La sal se guarda junto al resultado.
 
 ### Firmas digitales

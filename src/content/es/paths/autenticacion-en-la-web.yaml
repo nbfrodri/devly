@@ -1,0 +1,8 @@
+title: Autenticación en la web
+description: Cómo una aplicación comprueba quién eres, de la contraseña al inicio de sesión con otro servicio.
+layer: aplicaciones
+steps:
+  - autenticacion-y-autorizacion
+  - como-se-guardan-las-contrasenas
+  - que-es-un-jwt
+  - oauth-2-y-openid-connect

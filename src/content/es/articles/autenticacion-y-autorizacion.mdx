@@ -39,7 +39,7 @@ Para demostrar una identidad se presenta alguna prueba. Se clasifican en tres ti
 
 ### Varios factores
 
-Una contraseña sola es frágil: se adivina, se reutiliza entre servicios o se roba con un mensaje engañoso. La **autenticación multifactor** (MFA) exige dos o más factores de tipos distintos.
+Una contraseña sola es frágil, incluso cuando el servicio [la guarda como debe](/articulos/como-se-guardan-las-contrasenas/): se adivina, se reutiliza entre servicios o se roba con un mensaje engañoso. La **autenticación multifactor** (MFA) exige dos o más factores de tipos distintos.
 
 Lo importante es que sean de tipos distintos. Una contraseña y una pregunta de seguridad son dos cosas que sabes, y quien roba una puede robar la otra. Una contraseña y un código generado en tu móvil obligan al atacante a tener además el dispositivo.
 
@@ -48,7 +48,7 @@ Lo importante es que sean de tipos distintos. Una contraseña y una pregunta de 
 [HTTP](/articulos/que-es-http/) no recuerda nada entre peticiones, así que tras comprobar la identidad hay que conservarla de algún modo. Dos formas habituales:
 
 - **Sesión**: el servidor guarda quién eres y entrega al navegador un identificador en una cookie.
-- **Token**: el servidor entrega un dato firmado que el cliente envía en cada petición.
+- **Token**: el servidor entrega un dato firmado que el cliente envía en cada petición. El formato más extendido es el [JWT](/articulos/que-es-un-jwt/).
 
 En ambos casos, quien robe ese identificador o ese token puede actuar como tú, así que hay que protegerlo igual que una contraseña.
 

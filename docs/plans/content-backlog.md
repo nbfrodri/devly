@@ -14,10 +14,10 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 - [x] ¿Qué es una inyección de SQL?
 - [x] ¿Qué es el cross-site scripting (XSS)?
 - [x] ¿Qué es un ataque CSRF?
-- [ ] Cómo se guardan las contraseñas
-- [ ] OAuth 2.0 y OpenID Connect
-- [ ] ¿Qué es un JWT?
-- [ ] ¿Qué es CORS?
+- [x] Cómo se guardan las contraseñas
+- [x] OAuth 2.0 y OpenID Connect
+- [x] ¿Qué es un JWT?
+- [x] ¿Qué es CORS?
 
 ## Programación y algoritmos
 
@@ -28,9 +28,9 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 - [x] Árboles y árboles binarios de búsqueda
 - [ ] Grafos
 - [x] Algoritmos de ordenación
-- [ ] ¿Qué es la programación funcional?
-- [ ] Diferencias entre tipado estático y dinámico
-- [ ] Diferencias entre compilador e intérprete
+- [x] ¿Qué es la programación funcional?
+- [x] Diferencias entre tipado estático y dinámico
+- [x] Diferencias entre compilador e intérprete
 
 ## Sistemas operativos y concurrencia
 
@@ -86,4 +86,4 @@ Fuera de la cuenta de los 50, para intercalar:
 
 ## Después de estos 50
 
-Materias del plan de estudios que seguirán sin artículo: arquitecturas en la nube, sistemas distribuidos más allá de CAP, desarrollo móvil, IoT, frameworks de front-end y back-end, blockchain, simulación, probabilidad, y los aspectos éticos y legales.
+Continúa en el [segundo plan](content-backlog-2.md).

@@ -6,3 +6,4 @@ steps:
   - inyeccion-sql
   - cross-site-scripting-xss
   - csrf
+  - que-es-cors

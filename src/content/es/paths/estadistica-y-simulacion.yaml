@@ -1,0 +1,6 @@
+title: Estadística y simulación
+description: Resumir datos con unas pocas medidas y estimar lo que no se puede calcular.
+layer: datos
+steps:
+  - media-mediana-y-desviacion
+  - metodo-de-monte-carlo

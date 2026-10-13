@@ -1,0 +1,138 @@
+---
+title: "¿Qué son OAuth 2.0 y OpenID Connect?"
+description: "OAuth 2.0 permite dar a una aplicación acceso limitado a tus datos sin entregarle tu contraseña. OpenID Connect añade la identidad."
+level: avanzado
+layer: aplicaciones
+prerequisites:
+  - autenticacion-y-autorizacion
+  - que-es-un-jwt
+updated: 2026-10-13
+sources:
+  - title: "RFC 6749: The OAuth 2.0 Authorization Framework"
+    url: https://www.rfc-editor.org/info/rfc6749/
+  - title: "RFC 7636: Proof Key for Code Exchange by OAuth Public Clients (PKCE)"
+    url: https://www.rfc-editor.org/info/rfc7636/
+  - title: "OpenID Connect Core 1.0 (en inglés)"
+    url: https://openid.net/specs/openid-connect-core-1_0.html
+  - title: "RFC 6750: The OAuth 2.0 Authorization Framework, Bearer Token Usage"
+    url: https://www.rfc-editor.org/info/rfc6750/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**OAuth 2.0** es un estándar que permite a una aplicación acceder a tus datos en otro servicio, con permisos limitados y sin que le des tu contraseña. **OpenID Connect** (OIDC) es una capa construida encima que sirve además para saber quién eres.
+
+Son lo que hay detrás de los botones "Continuar con Google" o "Iniciar sesión con GitHub".
+
+## Qué problema resuelve
+
+Una aplicación de impresión de fotos quiere acceder a las imágenes que tienes guardadas en otro servicio. Antes de OAuth, la única forma era darle tu usuario y tu contraseña de ese servicio.
+
+Eso tiene tres problemas graves:
+
+- La aplicación obtiene **acceso total**, no solo a las fotos.
+- Tiene que **guardar tu contraseña**, y si la roban, la tuya queda expuesta.
+- Para retirarle el acceso tienes que **cambiar la contraseña**, lo que desconecta a todas las demás aplicaciones.
+
+OAuth sustituye la contraseña por un **token**: una credencial limitada, temporal y revocable. Es como la llave de aparcacoches de algunos coches, que arranca el motor pero no abre el maletero.
+
+## Los cuatro papeles
+
+| Papel | Quién es | En el ejemplo |
+| --- | --- | --- |
+| Propietario del recurso | El usuario | Tú |
+| Cliente | La aplicación que pide acceso | La app de impresión |
+| Servidor de autorización | Quien te identifica y emite los tokens | El servicio de fotos |
+| Servidor de recursos | Quien guarda los datos | La API de fotos |
+
+## El flujo de código de autorización
+
+Es el flujo recomendado para casi todos los casos:
+
+1. **La aplicación te envía al servidor de autorización**, indicando quién es ella y qué permisos solicita.
+2. **Inicias sesión allí**, en la página del servicio de fotos. La aplicación no ve tu contraseña.
+3. **Das tu consentimiento.** El servicio te muestra qué se está pidiendo, por ejemplo "ver tus fotos".
+4. **El servicio te devuelve a la aplicación** con un **código de autorización** de un solo uso y vida muy corta.
+5. **La aplicación canjea el código** por un **token de acceso**, en una comunicación directa de servidor a servidor.
+6. **La aplicación usa el token** para pedir tus fotos a la API.
+
+### Por qué un código intermedio
+
+El código viaja por el navegador, en una dirección web, donde puede quedar expuesto en el historial o en registros. El token de acceso, que es lo valioso, se entrega en una conexión directa entre servidores y nunca pasa por ahí.
+
+### PKCE
+
+Las aplicaciones móviles y las que se ejecutan enteras en el navegador no pueden guardar un secreto: cualquiera puede inspeccionar su código. Para ellas existe **PKCE**.
+
+La aplicación genera un valor aleatorio al empezar, envía su [hash](/articulos/funciones-hash/) en el primer paso y revela el valor original al canjear el código. Quien intercepte el código no puede canjearlo, porque no conoce ese valor. Hoy se recomienda usar PKCE en todos los casos.
+
+## Tokens y permisos
+
+- **Token de acceso.** Lo que la aplicación presenta a la API. Dura poco, a menudo minutos u horas.
+- **Token de refresco.** Dura más y sirve para obtener tokens de acceso nuevos sin que tengas que volver a autorizar. Hay que guardarlo con mucho cuidado.
+- **Ámbitos** (*scopes*). Definen qué permite el token: leer fotos sí, borrarlas no. Lo correcto es pedir solo lo imprescindible.
+
+El token de acceso se envía en una cabecera en cada petición a la API:
+
+```
+Authorization: Bearer <token de acceso>
+```
+
+*Bearer* significa "portador": quien tenga el token puede usarlo, igual que el dinero en efectivo. Por eso debe viajar siempre por [HTTPS](/articulos/https-y-tls/).
+
+## OAuth no dice quién eres
+
+Es el punto que más se confunde. OAuth 2.0 trata de **autorización**: concede acceso a unos recursos. No está pensado para **autenticar**, es decir, para decirle a la aplicación quién es el usuario.
+
+Un token de acceso solo significa "quien lo presenta puede leer estas fotos". No dice de quién son ni para qué aplicación se emitió. Usarlo como prueba de identidad ha provocado fallos de seguridad reales.
+
+## OpenID Connect
+
+**OpenID Connect** resuelve eso añadiendo una capa de identidad sobre OAuth 2.0. El flujo es el mismo, con dos añadidos:
+
+- La aplicación pide el ámbito `openid`.
+- Además del token de acceso, recibe un **token de identidad** (*ID token*).
+
+El token de identidad es un [JWT](/articulos/que-es-un-jwt/) firmado que afirma quién es el usuario, quién lo ha autenticado, para qué aplicación y cuándo. La aplicación verifica la firma y con eso sabe con certeza quién ha iniciado sesión.
+
+| | OAuth 2.0 | OpenID Connect |
+| --- | --- | --- |
+| Responde a | ¿Qué puede hacer esta aplicación? | ¿Quién es el usuario? |
+| Sirve para | Autorización | Autenticación |
+| Entrega | Token de acceso | Token de identidad, además del de acceso |
+
+Cuando pulsas "Continuar con Google", lo que se usa es OpenID Connect.
+
+<Quiz
+	client:visible
+	question="Una aplicación quiere saber quién es el usuario que ha iniciado sesión. ¿Qué necesita?"
+	options={[
+		"Un token de acceso de OAuth 2.0",
+		"Un token de identidad de OpenID Connect",
+		"La contraseña del usuario",
+	]}
+	answer={1}
+/>
+
+## Ventajas para quien desarrolla
+
+- **No gestionas contraseñas.** [Guardarlas bien](/articulos/como-se-guardan-las-contrasenas/) es difícil, y así se lo dejas a un proveedor especializado.
+- **Heredas sus protecciones**, como el segundo factor de autenticación.
+- **Menos fricción**: el usuario no crea otra cuenta.
+
+A cambio dependes de un tercero: si su servicio falla, tus usuarios no entran.
+
+## Errores comunes
+
+- **Usar el token de acceso como prueba de identidad** en lugar del token de identidad.
+- **No comprobar el parámetro `state`**, un valor aleatorio que enlaza la petición con la respuesta y evita que un atacante cuele una respuesta ajena.
+- **Pedir más ámbitos de los necesarios.**
+- **Guardar tokens donde el JavaScript de la página pueda leerlos**, lo que los expone ante un [XSS](/articulos/cross-site-scripting-xss/).
+- **Usar flujos antiguos**, como el implícito, hoy desaconsejados.
+
+## Lo esencial
+
+- OAuth 2.0 permite conceder a una aplicación acceso limitado y revocable sin compartir la contraseña.
+- El flujo de código de autorización, con PKCE, es el recomendado.
+- OAuth autoriza; no identifica al usuario.
+- OpenID Connect añade un token de identidad firmado, y es lo que hace posible iniciar sesión con otro servicio.

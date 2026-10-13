@@ -5,5 +5,6 @@ steps:
   - que-es-un-bit
   - codificacion-de-caracteres
   - como-funciona-un-procesador
+  - compilador-e-interprete
   - que-es-un-sistema-operativo
   - que-es-un-proceso

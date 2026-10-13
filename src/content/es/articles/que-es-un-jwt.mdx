@@ -1,0 +1,149 @@
+---
+title: "¿Qué es un JWT?"
+description: "Un JWT es un token firmado que lleva datos sobre un usuario y que el servidor puede verificar sin consultar nada."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - autenticacion-y-autorizacion
+  - funciones-hash
+updated: 2026-10-13
+sources:
+  - title: "RFC 7519: JSON Web Token (JWT)"
+    url: https://www.rfc-editor.org/info/rfc7519/
+  - title: "RFC 7515: JSON Web Signature (JWS)"
+    url: https://www.rfc-editor.org/info/rfc7515/
+  - title: "RFC 8725: JSON Web Token Best Current Practices"
+    url: https://www.rfc-editor.org/info/rfc8725/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **JWT** (*JSON Web Token*, se pronuncia "yot") es un texto compacto que contiene datos, normalmente sobre quién es un usuario, junto con una firma que permite comprobar que nadie los ha alterado.
+
+Se usa sobre todo para que un cliente demuestre su identidad en cada petición después de haber iniciado sesión.
+
+## Qué problema resuelve
+
+[HTTP](/articulos/que-es-http/) no recuerda nada entre peticiones. Tras la [autenticación](/articulos/autenticacion-y-autorizacion/), el servidor necesita reconocer al usuario en las siguientes.
+
+La solución clásica es la **sesión**: el servidor guarda quién es cada usuario y entrega un identificador. En cada petición busca ese identificador en su almacén.
+
+Un JWT invierte el planteamiento. Los datos del usuario viajan **dentro del token**, y la firma garantiza que son auténticos. El servidor no busca nada: verifica la firma y lee. Encaja con servidores [stateless](/articulos/stateful-y-stateless/), y resulta cómodo cuando varios servicios distintos tienen que aceptar el mismo token.
+
+## Su estructura
+
+Un JWT son tres partes separadas por puntos:
+
+```
+cabecera.contenido.firma
+```
+
+- **Cabecera** (*header*): indica el tipo de token y el algoritmo de firma.
+- **Contenido** (*payload*): los datos, llamados **claims** o afirmaciones.
+- **Firma**: el resultado de firmar las dos partes anteriores.
+
+Las dos primeras son JSON codificado en **Base64URL**, una forma de escribir bytes con caracteres que no dan problemas en una dirección web.
+
+### Los claims habituales
+
+| Claim | Significado |
+| --- | --- |
+| `sub` | El sujeto: a quién se refiere el token, normalmente el identificador del usuario |
+| `iss` | Quién lo emitió |
+| `aud` | Para quién está destinado |
+| `exp` | Cuándo caduca |
+| `iat` | Cuándo se emitió |
+
+Además se pueden añadir datos propios, como el rol del usuario.
+
+## Firmado no significa cifrado
+
+Es el malentendido más importante. Base64URL no es cifrado: es otra forma de escribir los mismos datos, y **cualquiera que tenga el token puede leer su contenido**.
+
+La firma no oculta nada. Lo que garantiza es que el contenido no se ha modificado desde que el servidor lo emitió.
+
+Por eso en un JWT no deben ir contraseñas ni datos sensibles.
+
+## Construir y verificar uno
+
+Este ejemplo crea y comprueba un token con el algoritmo HS256 y Node.js:
+
+```js
+import { createHmac } from "node:crypto";
+
+const secreto = "clave-que-solo-conoce-el-servidor";
+
+function codificar(objeto) {
+	return Buffer.from(JSON.stringify(objeto)).toString("base64url");
+}
+
+function firmar(texto) {
+	return createHmac("sha256", secreto).update(texto).digest("base64url");
+}
+
+function crearToken(contenido) {
+	const base = `${codificar({ alg: "HS256", typ: "JWT" })}.${codificar(contenido)}`;
+
+	return `${base}.${firmar(base)}`;
+}
+
+function esValido(token) {
+	const [cabecera, contenido, firma] = token.split(".");
+
+	return firmar(`${cabecera}.${contenido}`) === firma;
+}
+
+const token = crearToken({ sub: "42", rol: "usuario" });
+console.log(token.split(".").length); // 3
+console.log(esValido(token)); // true
+
+const [cabecera, , firma] = token.split(".");
+const manipulado = `${cabecera}.${codificar({ sub: "42", rol: "admin" })}.${firma}`;
+console.log(esValido(manipulado)); // false
+```
+
+Alguien cambia su rol a "admin" y conserva la firma original. La verificación falla, porque la firma no corresponde al contenido nuevo, y sin el secreto no puede calcular una válida.
+
+El ejemplo muestra el mecanismo. En un proyecto real se usa una biblioteca mantenida, que además comprueba la caducidad y compara las firmas en tiempo constante.
+
+## Dos familias de algoritmos
+
+- **Simétricos**, como HS256. El mismo secreto firma y verifica. Sirve cuando quien emite y quien comprueba es el mismo sistema.
+- **Asimétricos**, como RS256 o ES256. Se firma con una clave privada y se verifica con la pública. Permite que muchos servicios verifiquen tokens sin poder emitirlos, como explica el artículo sobre [cifrado asimétrico](/articulos/cifrado-simetrico-y-asimetrico/).
+
+<Quiz
+	client:visible
+	question="Tienes un JWT firmado pero no conoces el secreto. ¿Qué puedes hacer con él?"
+	options={[
+		"Leer su contenido, pero no modificarlo sin que se detecte",
+		"Nada: está cifrado",
+		"Modificarlo libremente",
+	]}
+	answer={0}
+/>
+
+## El inconveniente: revocarlos
+
+Una sesión se cancela borrándola del servidor. Un JWT es válido hasta que caduca, porque el servidor no guarda nada con lo que anularlo. Si se roba un token, o un usuario pierde un permiso, el token sigue funcionando.
+
+Las soluciones habituales:
+
+- **Caducidad corta**, de minutos, combinada con un **token de refresco** de vida más larga que sirve para obtener otros nuevos y que sí se puede revocar.
+- **Una lista de tokens anulados** que se consulta en cada petición. Funciona, pero devuelve parte del estado que se quería evitar.
+
+Si necesitas cerrar sesiones al instante, una sesión clásica suele ser más simple.
+
+## Errores comunes
+
+- **Aceptar el algoritmo que diga el token.** La cabecera la controla quien envía el token. Hay ataques clásicos que la cambian por `none`, es decir, sin firma, o por otro algoritmo. El servidor debe exigir el que espera.
+- **No comprobar `exp`, `iss` ni `aud`.** Verificar la firma no basta: hay que comprobar que el token no ha caducado y que se emitió para ese servicio.
+- **Guardar datos sensibles en el contenido.**
+- **Secretos débiles** en los algoritmos simétricos, que se pueden adivinar probando.
+- **Tokens que no caducan.**
+
+## Lo esencial
+
+- Un JWT lleva datos y una firma que demuestra que no se han alterado.
+- Su contenido es legible por cualquiera: está firmado, no cifrado.
+- Permite verificar la identidad sin consultar un almacén de sesiones.
+- A cambio, no se puede anular antes de que caduque sin añadir mecanismos adicionales.

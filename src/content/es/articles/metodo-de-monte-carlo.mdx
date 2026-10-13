@@ -1,0 +1,149 @@
+---
+title: "¿Qué es el método de Monte Carlo?"
+description: "El método de Monte Carlo resuelve problemas difíciles de calcular repitiendo muchos experimentos al azar y observando el resultado."
+level: intermedio
+layer: datos
+prerequisites:
+  - media-mediana-y-desviacion
+  - bucles
+updated: 2026-10-13
+sources:
+  - title: "N. Metropolis: The Beginning of the Monte Carlo Method, Los Alamos Science (1987, en inglés)"
+    url: https://mcnp.lanl.gov/pdf_files/Article_1987_LAS_Metropolis_125--130.pdf
+  - title: "MDN: Math.random()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+  - title: "Python: random, generación de números pseudoaleatorios"
+    url: https://docs.python.org/es/3/library/random.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **método de Monte Carlo** es una técnica para obtener una respuesta aproximada a un problema repitiendo muchas veces un experimento con números aleatorios y analizando los resultados. Sustituye un cálculo difícil por una simulación sencilla repetida miles o millones de veces.
+
+Nació en los años cuarenta en el laboratorio de Los Álamos, de la mano de Stanislaw Ulam, John von Neumann y Nicholas Metropolis. El nombre alude al casino de Montecarlo, por el papel del azar.
+
+## La idea
+
+A Ulam se le ocurrió convaleciente, jugando al solitario. Quiso saber qué probabilidad hay de que una partida salga. Calcularla con matemáticas era muy complicado. Entonces pensó en otra vía: jugar cien partidas y contar cuántas salían.
+
+Esa es toda la idea. Si no sabes calcular algo, simúlalo muchas veces y mira qué ocurre.
+
+Funciona gracias a una propiedad del azar: al repetir un experimento aleatorio un número suficiente de veces, la proporción de resultados se acerca a la probabilidad real. Una moneda puede salir cara siete veces de diez, pero es muy raro que salga siete mil veces de diez mil.
+
+## Un ejemplo con dados
+
+¿Qué probabilidad hay de sacar un 7 al sumar dos dados?
+
+Aquí se puede calcular: de las 36 combinaciones posibles, 6 suman 7, así que es 6 entre 36, un 16,67 %. Sirve para comprobar que la simulación acierta.
+
+```js
+function tirarDado() {
+	return Math.floor(Math.random() * 6) + 1;
+}
+
+function estimarProbabilidadDeSiete(tiradas) {
+	let aciertos = 0;
+
+	for (let i = 0; i < tiradas; i++) {
+		if (tirarDado() + tirarDado() === 7) {
+			aciertos = aciertos + 1;
+		}
+	}
+
+	return aciertos / tiradas;
+}
+
+const estimacion = estimarProbabilidadDeSiete(1000000);
+console.log(Math.abs(estimacion - 1 / 6) < 0.005); // true
+```
+
+El resultado exacto cambia en cada ejecución, pero con un millón de tiradas se queda muy cerca de 0,1667. El programa no sabe nada de combinatoria: solo tira dados y cuenta.
+
+## Los cuatro pasos
+
+Toda simulación de Monte Carlo sigue el mismo esquema:
+
+1. **Definir el experimento** y qué resultado se va a medir.
+2. **Generar entradas al azar.**
+3. **Ejecutar el experimento** con esas entradas y anotar el resultado.
+4. **Repetir** muchas veces y resumir: una proporción, una [media](/articulos/media-mediana-y-desviacion/), una distribución.
+
+## Estimar pi con puntos al azar
+
+El ejemplo clásico muestra que el método sirve incluso para problemas sin azar aparente.
+
+Dibuja un cuadrado de lado 1 y, dentro, un cuarto de círculo de radio 1 con centro en una esquina. El área del cuarto de círculo es pi dividido entre 4.
+
+Si lanzas puntos al azar dentro del cuadrado, la proporción que cae dentro del cuarto de círculo se aproxima a esa área. Multiplicándola por 4, obtienes pi.
+
+Un punto está dentro si su distancia a la esquina es como mucho 1, es decir, si `x² + y²` no pasa de 1.
+
+```js
+function estimarPi(puntos) {
+	let dentro = 0;
+
+	for (let i = 0; i < puntos; i++) {
+		const x = Math.random();
+		const y = Math.random();
+
+		if (x * x + y * y <= 1) {
+			dentro = dentro + 1;
+		}
+	}
+
+	return (4 * dentro) / puntos;
+}
+
+console.log(Math.abs(estimarPi(1000000) - Math.PI) < 0.02); // true
+```
+
+## La precisión cuesta
+
+El error de una estimación de Monte Carlo disminuye con la raíz cuadrada del número de repeticiones. En la práctica:
+
+| Repeticiones | El error se reduce |
+| --- | --- |
+| 100 veces más | 10 veces |
+| 10 000 veces más | 100 veces |
+
+Cada cifra decimal adicional exige cien veces más trabajo. El método llega pronto a una respuesta razonable y muy despacio a una exacta.
+
+Por eso no es la herramienta adecuada cuando existe una fórmula: para calcular pi hay métodos muchísimo mejores. Su terreno son los problemas en los que no hay alternativa.
+
+<Quiz
+	client:visible
+	question="Quieres reducir a la décima parte el error de una simulación de Monte Carlo. ¿Cuántas repeticiones más necesitas?"
+	options={["10 veces más", "100 veces más", "1000 veces más"]}
+	answer={1}
+/>
+
+## Dónde se usa
+
+- **Finanzas.** Simular miles de evoluciones posibles del mercado para estimar el riesgo de una inversión.
+- **Física e ingeniería.** Seguir el recorrido de partículas, que fue su primer uso, o estimar la fiabilidad de un sistema con muchos componentes.
+- **Gestión de proyectos.** Si cada tarea puede durar entre un mínimo y un máximo, simular el proyecto muchas veces da la probabilidad de terminar en una fecha.
+- **Gráficos por ordenador.** Calcular la iluminación de una escena siguiendo rayos de luz en direcciones aleatorias.
+- **Inteligencia artificial.** Los programas que juegan al go exploran las jugadas simulando partidas al azar.
+
+Lo que tienen en común es que hay demasiadas variables, o demasiado enredadas, para un cálculo directo.
+
+## El azar de un ordenador
+
+Un ordenador sigue instrucciones exactas, así que no produce azar verdadero. `Math.random` genera números **pseudoaleatorios**: una secuencia calculada con una fórmula a partir de un valor inicial, la **semilla**, que parece aleatoria sin serlo.
+
+Para simular es suficiente, e incluso ventajoso: con la misma semilla se obtiene la misma secuencia, y el experimento se puede repetir de forma idéntica.
+
+No lo es para la seguridad. Una clave o un identificador de sesión no deben generarse con `Math.random`, porque su secuencia se puede predecir. Para eso existen generadores específicos.
+
+## Errores comunes
+
+- **Pocas repeticiones.** Con cien pruebas el resultado es poco más que ruido.
+- **Confiar en una sola cifra.** Conviene acompañar la estimación de su dispersión, o repetir la simulación para ver cuánto varía.
+- **Simular un modelo equivocado.** La simulación responde con exactitud a las reglas que le has dado. Si esas reglas no describen la realidad, la respuesta tampoco.
+
+## Lo esencial
+
+- Monte Carlo estima un resultado repitiendo muchas veces un experimento aleatorio.
+- Se apoya en que, con muchas repeticiones, las proporciones se acercan a las probabilidades reales.
+- El error baja con la raíz cuadrada de las repeticiones: ganar precisión es caro.
+- Es útil cuando no hay fórmula o el problema tiene demasiadas variables.
