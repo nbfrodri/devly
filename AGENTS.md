@@ -1,6 +1,6 @@
 # Project instructions
 
-devly is a static site that explains computing, development and technology in Spanish, from the basics to advanced topics. Content is MDX in the repository; everything merged to `main` is published.
+devly is a static educational site in Spanish. It covers what is taught in computer engineering, telecommunications, software engineering, computer science, data analysis and AI: what a full-stack developer should understand, from the basics to advanced topics. Articles are modular (one concept each) and explain it in depth. Content is MDX in the repository; everything merged to `main` is published.
 
 ## Commands
 

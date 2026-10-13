@@ -1,6 +1,6 @@
 # Architecture
 
-devly is a static content site. Content lives in the repository as files, is validated at build time, and is published as plain HTML to a static host.
+devly is a static content site covering what a computing degree teaches (computer and software engineering, telecommunications, computer science, data analysis and AI), from the basics up. Content lives in the repository as files, is validated at build time, and is published as plain HTML to a static host.
 
 ## Stack
 
@@ -17,7 +17,7 @@ devly is a static content site. Content lives in the repository as files, is val
 
 ## Content model
 
-- **Layer** (`src/lib/layers.ts`): five fixed areas of computing, ordered from most abstract to closest to the machine. Layers are code, not content, because the home page and the visual system depend on their order and count.
+- **Layer** (`src/lib/layers.ts`): seven fixed areas of computing, ordered from most abstract to closest to the machine. Layers are code, not content, because the home page and the visual system depend on their order and count.
 - **Article** (`src/content/es/articles/*.mdx`): one concept. Declares a `layer`, a `level` (`basico`, `intermedio`, `avanzado`), optional `prerequisites` and at least one entry in `sources`.
 - **Path** (`src/content/es/paths/*.yaml`): an ordered list of article references.
 
@@ -47,7 +47,7 @@ URLs are Spanish and unprefixed. Content sits under `src/content/es/` and Astro 
 
 The visual direction is "layers of abstraction". Its rules:
 
-- Layer colour encodes depth: `--layer-1` to `--layer-5` are one cobalt hue ordered by lightness. Do not reorder them or introduce other hues for layers.
+- Layer colour encodes depth: `--layer-1` to `--layer-7` are one cobalt hue ordered by lightness. Do not reorder them or introduce other hues for layers.
 - One accent (cobalt), one corner radius (`--radius`), no shadows.
 - Motion is limited to the layer stack building once on load and to direct feedback on press and hover. Both respect `prefers-reduced-motion`.
 - Every colour is a token with a light and a dark value. Add tokens rather than literal colours.

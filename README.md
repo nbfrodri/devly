@@ -1,6 +1,6 @@
 # devly
 
-Sitio de explicaciones de informática, desarrollo y tecnología, de lo más básico a lo más complejo. El contenido se organiza en **capas** (del hardware a las aplicaciones), **artículos** con nivel y **rutas** que ordenan artículos paso a paso.
+Sitio educativo que explica lo que se aprende en una ingeniería informática, de telecomunicación o del software, en ciencias de la computación, análisis de datos e inteligencia artificial, de lo más básico a lo más complejo. El contenido se organiza en siete **capas** (del hardware a la inteligencia artificial), **artículos** con nivel y **rutas** que ordenan artículos paso a paso.
 
 ## Requisitos
 

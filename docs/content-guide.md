@@ -17,7 +17,7 @@ El esquema está en `src/content.config.ts`; si no se cumple, el build falla.
 | `title` | sí | Título tal como lo buscaría un lector. Las preguntas funcionan bien. |
 | `description` | sí | Una frase que resume la idea. Se muestra bajo el título y en buscadores. |
 | `level` | sí | `basico`, `intermedio` o `avanzado` |
-| `layer` | sí | `aplicaciones`, `redes`, `programacion`, `sistemas` o `hardware` |
+| `layer` | sí | `ia`, `aplicaciones`, `datos`, `redes`, `programacion`, `sistemas` o `hardware` |
 | `prerequisites` | no | Lista de slugs de artículos que conviene leer antes |
 | `updated` | sí | Fecha de la última revisión, `AAAA-MM-DD` |
 | `sources` | sí | Lista de fuentes, cada una con `title` y `url`. Al menos una |
@@ -31,6 +31,22 @@ La **capa** dice de qué parte de la informática trata el artículo; el **nivel
 - `basico`: no asume conocimientos previos. Cada término técnico se explica la primera vez que aparece.
 - `intermedio`: asume los básicos de su capa. Declara en `prerequisites` lo que dé por sabido.
 - `avanzado`: asume soltura. Puede entrar en detalles de implementación y casos límite.
+
+## Alcance
+
+devly cubre lo que se estudia en ingeniería informática, ingeniería de telecomunicación, ingeniería del software, ciencias de la computación, análisis de datos e inteligencia artificial: lo que debería entender quien desarrolla software de extremo a extremo. Cada artículo pertenece a una capa:
+
+| Capa | Qué entra |
+| --- | --- |
+| `ia` | Aprendizaje automático, redes neuronales, modelos de lenguaje |
+| `aplicaciones` | Desarrollo web y móvil, API, arquitectura, pruebas, control de versiones, metodologías |
+| `datos` | Bases de datos relacionales y NoSQL, SQL, modelado, análisis y visualización, estadística aplicada |
+| `redes` | Protocolos, internet, seguridad, señales y transmisión |
+| `programacion` | Lenguajes, estructuras de datos, algoritmos, complejidad, paradigmas, teoría de la computación |
+| `sistemas` | Sistemas operativos, concurrencia, terminal, virtualización y contenedores |
+| `hardware` | Representación de datos, electrónica digital, arquitectura de computadores |
+
+Si un tema toca dos capas, va en la que explica su funcionamiento y se enlaza desde la otra.
 
 ## Profundidad y modularidad
 

@@ -5,7 +5,7 @@
 @import "@fontsource/ibm-plex-mono/400.css";
 
 /*
- * Tokens. Layer colors run from --layer-1 (most abstract) to --layer-5
+ * Tokens. Layer colors run from --layer-1 (most abstract) to --layer-7
  * (closest to the machine); lightness encodes depth, so keep the scale ordered.
  */
 :root {
@@ -26,16 +26,24 @@
 	--bad: #a8321a;
 	--quiet: #e9ecf6;
 
-	--layer-1: #1f3fe0;
-	--layer-2: #3a57e6;
-	--layer-3: #93a5f6;
-	--layer-4: #c4cefa;
-	--layer-5: #e3e8fd;
+	--layer-1: #1a34b8;
+	--layer-2: #1f3fe0;
+	--layer-3: #3a57e6;
+	--layer-4: #6f86ef;
+	--layer-5: #93a5f6;
+	--layer-6: #c4cefa;
+	--layer-7: #e3e8fd;
 	--on-layer-1: #ffffff;
 	--on-layer-2: #ffffff;
-	--on-layer-3: #101b3a;
+	--on-layer-3: #ffffff;
 	--on-layer-4: #101b3a;
 	--on-layer-5: #101b3a;
+	--on-layer-6: #101b3a;
+	--on-layer-7: #101b3a;
+
+	--mark-1: #1f3fe0;
+	--mark-2: #5b74ec;
+	--mark-3: #93a5f6;
 
 	--radius: 4px;
 	--page: 1200px;
@@ -60,16 +68,24 @@
 		--bad: #ff9b85;
 		--quiet: #1a2550;
 
-		--layer-1: #e3e8fd;
-		--layer-2: #b4c0f8;
-		--layer-3: #8094f2;
-		--layer-4: #3a57e6;
-		--layer-5: #253a9e;
+		--layer-1: #e8ecfe;
+		--layer-2: #cbd4fb;
+		--layer-3: #aebbf8;
+		--layer-4: #8fa0f4;
+		--layer-5: #6f86ef;
+		--layer-6: #3a57e6;
+		--layer-7: #253a9e;
 		--on-layer-1: #101b3a;
 		--on-layer-2: #101b3a;
 		--on-layer-3: #101b3a;
-		--on-layer-4: #ffffff;
-		--on-layer-5: #ffffff;
+		--on-layer-4: #101b3a;
+		--on-layer-5: #101b3a;
+		--on-layer-6: #ffffff;
+		--on-layer-7: #ffffff;
+
+		--mark-1: #e3e8fd;
+		--mark-2: #93a5f6;
+		--mark-3: #5b74ec;
 	}
 }
 
@@ -185,15 +201,15 @@ a:hover {
 }
 
 .logo .mark-top {
-	fill: var(--layer-1);
+	fill: var(--mark-1);
 }
 
 .logo .mark-middle {
-	fill: var(--layer-2);
+	fill: var(--mark-2);
 }
 
 .logo .mark-bottom {
-	fill: var(--layer-3);
+	fill: var(--mark-3);
 }
 
 .site-nav {
@@ -375,12 +391,12 @@ a:hover {
 }
 
 .stack-layers li {
-	margin-inline: calc(var(--depth) * 3%);
+	margin-inline: calc(var(--depth) * 2.2%);
 }
 
 .layer {
-	min-height: 5.75rem;
-	padding: 1.125rem 1.375rem;
+	min-height: 4.25rem;
+	padding: 0.625rem 1.25rem;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -405,9 +421,10 @@ a:hover {
 	display: block;
 	font-family: var(--font-display);
 	font-weight: 700;
-	font-size: clamp(1.25rem, 2.4vw, 1.625rem);
+	font-size: clamp(1.0625rem, 2vw, 1.375rem);
 	letter-spacing: -0.02em;
 	line-height: 1.15;
+	overflow-wrap: anywhere;
 }
 
 .layer-description,
@@ -415,7 +432,12 @@ a:hover {
 	font-size: 0.9375rem;
 }
 
+.layer > span:first-child {
+	min-width: 0;
+}
+
 .layer-count {
+	flex: none;
 	white-space: nowrap;
 }
 
@@ -442,7 +464,7 @@ a:hover {
 @media (prefers-reduced-motion: no-preference) {
 	.stack-build li {
 		animation: layer-in 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-		animation-delay: calc((4 - var(--depth)) * 90ms);
+		animation-delay: calc((var(--count) - 1 - var(--depth)) * 70ms);
 	}
 
 	@keyframes layer-in {
@@ -844,8 +866,9 @@ a:hover {
 	}
 
 	.layer {
-		min-height: 4.75rem;
-		padding: 0.875rem 1rem;
+		min-height: 3.5rem;
+		padding: 0.625rem 0.875rem;
+		gap: 0.625rem;
 	}
 
 	.layer-description {
@@ -853,6 +876,6 @@ a:hover {
 	}
 
 	.stack-layers li {
-		margin-inline: calc(var(--depth) * 2%);
+		margin-inline: calc(var(--depth) * 1%);
 	}
 }

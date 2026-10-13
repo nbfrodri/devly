@@ -1,19 +1,29 @@
 /** Layers of computing, ordered from most abstract to closest to the machine. */
 export const LAYERS = [
 	{
+		id: "ia",
+		name: "Inteligencia artificial",
+		description: "Aprendizaje automático, redes neuronales",
+	},
+	{
 		id: "aplicaciones",
-		name: "Aplicaciones y datos",
-		description: "Web, móvil, bases de datos, inteligencia artificial",
+		name: "Aplicaciones e ingeniería del software",
+		description: "Web, API, arquitectura, pruebas",
+	},
+	{
+		id: "datos",
+		name: "Datos y bases de datos",
+		description: "SQL, modelado, análisis de datos",
 	},
 	{
 		id: "redes",
-		name: "Redes e internet",
-		description: "Protocolos, DNS, HTTP, seguridad",
+		name: "Redes y telecomunicaciones",
+		description: "Protocolos, internet, seguridad, señales",
 	},
 	{
 		id: "programacion",
-		name: "Lenguajes y programación",
-		description: "Variables, funciones, algoritmos, paradigmas",
+		name: "Programación y algoritmos",
+		description: "Lenguajes, estructuras de datos, algoritmos",
 	},
 	{
 		id: "sistemas",
@@ -23,7 +33,7 @@ export const LAYERS = [
 	{
 		id: "hardware",
 		name: "Hardware y bits",
-		description: "Binario, procesador, memoria, almacenamiento",
+		description: "Binario, electrónica digital, procesador",
 	},
 ] as const;
 

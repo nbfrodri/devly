@@ -17,7 +17,10 @@ function countLabel(count: number): string {
 }
 ---
 
-<ol class:list={["stack-layers", compact ? "stack-compact" : "stack-build"]}>
+<ol
+	class:list={["stack-layers", compact ? "stack-compact" : "stack-build"]}
+	style={`--count: ${LAYERS.length}`}
+>
 	{
 		LAYERS.map((layer, depth) => {
 			const count = counts?.[layer.id] ?? 0;
