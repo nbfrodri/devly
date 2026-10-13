@@ -1,0 +1,99 @@
+---
+title: "¿Cómo funcionan HTTPS y TLS?"
+description: "TLS es el protocolo que cifra las conexiones de internet y permite comprobar con quién hablas. HTTPS es HTTP sobre TLS."
+level: intermedio
+layer: redes
+prerequisites:
+  - que-es-http
+  - cifrado-simetrico-y-asimetrico
+updated: 2026-10-13
+sources:
+  - title: "RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3"
+    url: https://www.rfc-editor.org/info/rfc8446/
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+  - title: "MDN: Seguridad web"
+    url: https://developer.mozilla.org/es/docs/Web/Security
+---
+
+import { Quiz } from "@/components/quiz";
+
+**TLS** (*Transport Layer Security*) es el protocolo que protege una conexión entre dos equipos: cifra lo que se envían y permite comprobar la identidad del servidor. **HTTPS** es [HTTP](/articulos/que-es-http/) enviado a través de una conexión TLS.
+
+TLS es el sucesor de un protocolo anterior, SSL, y por eso todavía se oye hablar de "certificados SSL".
+
+## Qué problema resuelve
+
+Un mensaje en internet pasa por muchos equipos antes de llegar: el router de tu casa, tu proveedor, varias redes intermedias. Con HTTP sin más, cualquiera de ellos puede leerlo o cambiarlo.
+
+TLS ofrece tres garantías:
+
+| Garantía | Qué impide |
+| --- | --- |
+| **Confidencialidad** | Que alguien en el camino lea el contenido |
+| **Integridad** | Que alguien lo modifique sin que se detecte |
+| **Autenticación** | Que alguien se haga pasar por el servidor |
+
+La tercera es tan importante como las otras. Cifrar a la perfección una conversación con un impostor no sirve de nada.
+
+## Los certificados
+
+Para demostrar quién es, un servidor presenta un **certificado digital**: un documento que une un nombre de dominio con una clave pública.
+
+Cualquiera podría fabricar un documento así. Lo que le da valor es que está firmado por una **autoridad de certificación** (CA), una organización que ha comprobado que quien lo pide controla ese dominio.
+
+Tu navegador y tu sistema operativo traen una lista de autoridades de confianza. Al recibir un certificado, el navegador comprueba:
+
+1. Que la firma procede de una autoridad de esa lista, directamente o a través de una cadena de certificados intermedios.
+2. Que el nombre del certificado coincide con el del sitio que estás visitando.
+3. Que no ha caducado ni ha sido revocado.
+
+Si algo falla, muestra una advertencia. Ignorarla es renunciar a la garantía de autenticación.
+
+## El saludo inicial
+
+Antes de enviar datos, cliente y servidor realizan un intercambio llamado **handshake**. Simplificado, en la versión actual, TLS 1.3:
+
+1. **El cliente saluda.** Indica qué versiones y algoritmos admite y envía un dato para el acuerdo de claves.
+2. **El servidor responde.** Elige los algoritmos, envía su parte del acuerdo de claves y su certificado, y demuestra con una firma que posee la clave privada de ese certificado.
+3. **Ambos calculan la misma clave secreta.** Lo hacen combinando lo que han intercambiado con un dato propio que nunca envían. Quien escuche la conversación ve los mensajes, pero no puede obtener la clave.
+4. **Empieza la comunicación cifrada.** A partir de aquí todo viaja protegido con esa clave.
+
+Este proceso combina los dos tipos de [cifrado](/articulos/cifrado-simetrico-y-asimetrico/). La criptografía asimétrica sirve para autenticar al servidor y acordar una clave sin haber compartido nada antes. Los datos se cifran después con un algoritmo simétrico, que es mucho más rápido.
+
+### Claves que no se reutilizan
+
+La clave se genera de nuevo en cada conexión y se descarta al terminar. Si alguien grabara el tráfico cifrado y años más tarde robara la clave privada del servidor, no podría descifrar lo grabado. Esta propiedad se llama **secreto hacia adelante** (*forward secrecy*).
+
+<Quiz
+	client:visible
+	question="¿Qué demuestra el certificado que presenta un servidor?"
+	options={[
+		"Que el sitio no contiene virus",
+		"Que quien responde controla ese nombre de dominio",
+		"Que la empresa es de fiar",
+	]}
+	answer={1}
+/>
+
+## Lo que TLS no protege
+
+El candado del navegador se malinterpreta a menudo. Indica que la conexión está cifrada y que el servidor es quien dice ser. No indica nada más.
+
+- **No dice que el sitio sea honesto.** Una web fraudulenta puede tener un certificado válido para su propio dominio. Conviene mirar el nombre del dominio, no solo el candado.
+- **No oculta con quién hablas.** Quien observe la red ve la [dirección IP](/articulos/que-es-una-direccion-ip/) del servidor y, por lo general, el nombre del dominio. No ve la página concreta ni su contenido.
+- **No protege los datos una vez llegan.** Si el servidor los guarda mal o los filtra, TLS ya ha terminado su trabajo.
+
+## En la práctica
+
+- HTTPS usa por defecto el puerto 443; HTTP, el 80.
+- Existen autoridades que emiten certificados gratuitos de forma automática, por lo que hoy no hay motivo para publicar un sitio sin HTTPS.
+- Los navegadores marcan como no seguras las páginas que piden datos sin HTTPS.
+- TLS no es exclusivo de la web: también protege el correo y muchos otros protocolos.
+
+## Lo esencial
+
+- TLS da confidencialidad, integridad y autenticación a una conexión; HTTPS es HTTP sobre TLS.
+- El servidor demuestra su identidad con un certificado firmado por una autoridad de confianza.
+- En el saludo inicial se acuerda una clave nueva para cada conexión, que cifra el resto de los datos.
+- El candado garantiza la conexión, no la honradez del sitio.

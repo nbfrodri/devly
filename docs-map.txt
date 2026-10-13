@@ -7,3 +7,4 @@ src/styles/global.css | docs/architecture.md
 astro.config.mjs | docs/architecture.md
 package.json | README.md, AGENTS.md
 wrangler.jsonc | docs/architecture.md, README.md
+src/content/es/articles/** | docs/plans/content-backlog.md, docs/content-guide.md

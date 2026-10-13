@@ -1,0 +1,100 @@
+---
+title: "¿Qué es la ciberseguridad?"
+description: "La ciberseguridad protege la información y los sistemas frente a accesos, cambios e interrupciones no deseados."
+level: basico
+layer: redes
+updated: 2026-10-13
+sources:
+  - title: "NIST SP 800-12 Rev. 1: An Introduction to Information Security (en inglés)"
+    url: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-12r1.pdf
+  - title: "NIST: glosario, Confidentiality (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/confidentiality
+  - title: "NIST: glosario, Vulnerability (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/vulnerability
+  - title: "OWASP Top 10: los riesgos más críticos en aplicaciones web (en inglés)"
+    url: https://owasp.org/Top10/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **ciberseguridad** es el conjunto de prácticas y técnicas que protegen la información y los sistemas informáticos frente a accesos no autorizados, modificaciones indebidas e interrupciones.
+
+No es un producto que se instala, sino una propiedad que hay que mantener: un sistema es tan seguro como su punto más débil.
+
+## Qué se protege: la tríada CIA
+
+Los objetivos de la seguridad se resumen en tres propiedades, conocidas por sus siglas en inglés:
+
+| Propiedad | Significa | Se rompe cuando |
+| --- | --- | --- |
+| **Confidencialidad** | Solo accede a la información quien está autorizado | Se filtra una base de datos de clientes |
+| **Integridad** | La información no se altera sin autorización | Alguien cambia el importe de una transferencia |
+| **Disponibilidad** | El sistema funciona cuando se necesita | Un ataque deja una web sin servicio |
+
+Cualquier incidente de seguridad afecta al menos a una de las tres. Sirven también para razonar: ante un sistema, preguntarse qué ocurriría si fallara cada una ayuda a decidir qué proteger primero.
+
+A menudo tiran en direcciones opuestas. Un archivo guardado en una caja fuerte desconectada es muy confidencial y muy poco disponible. Diseñar la seguridad es buscar el equilibrio adecuado para cada caso.
+
+## Amenaza, vulnerabilidad y riesgo
+
+Tres términos que se usan como sinónimos y no lo son:
+
+- **Vulnerabilidad**: una debilidad del sistema. Un programa sin actualizar, una contraseña débil, un formulario que no valida lo que recibe.
+- **Amenaza**: algo o alguien que puede aprovechar esa debilidad. Un delincuente, un empleado descontento, también un incendio.
+- **Riesgo**: la combinación de lo probable que es que ocurra y del daño que causaría.
+
+Una puerta sin cerradura es una vulnerabilidad. Un ladrón es una amenaza. El riesgo depende de qué haya detrás de la puerta y de cuántos ladrones pasen por la calle.
+
+No se puede eliminar todo el riesgo. Se gestiona: se reduce lo que más daño haría y se acepta de forma consciente lo que queda.
+
+## Formas habituales de ataque
+
+- **Phishing**: mensajes que se hacen pasar por una entidad de confianza para que la víctima entregue sus credenciales o instale algo.
+- **Malware**: programas maliciosos. El **ransomware**, una de sus variantes, cifra los archivos de la víctima y exige un pago para recuperarlos.
+- **Ataques a contraseñas**: probar contraseñas comunes o reutilizar las filtradas en otros servicios.
+- **Explotación de vulnerabilidades**: aprovechar un fallo en un programa, como la [inyección de SQL](/articulos/inyeccion-sql/) o el [cross-site scripting](/articulos/cross-site-scripting-xss/) en aplicaciones web.
+- **Denegación de servicio**: saturar un sistema con peticiones para que deje de atender a los usuarios legítimos.
+
+### El factor humano
+
+Muchos ataques no rompen ninguna tecnología: convencen a una persona. A esto se le llama **ingeniería social**. Es más fácil engañar a alguien para que revele su contraseña que descifrarla, y por eso la formación de las personas cuenta tanto como las medidas técnicas.
+
+## Principios de defensa
+
+### Defensa en profundidad
+
+Ninguna medida es infalible, así que se colocan varias capas independientes. Si una falla, la siguiente contiene el daño. Un atacante que roba una contraseña se encuentra con un segundo factor de autenticación; si lo supera, con permisos limitados; y lo que haga queda registrado.
+
+### Mínimo privilegio
+
+Cada persona y cada programa deben tener solo los permisos que necesitan para su tarea. Así, cuando una cuenta se ve comprometida, el daño queda limitado a lo que esa cuenta podía hacer.
+
+### Seguridad desde el diseño
+
+Es mucho más barato tener en cuenta la seguridad al diseñar un sistema que añadirla después. Una regla derivada: los valores por defecto deben ser los seguros, de modo que haga falta una decisión explícita para rebajar la protección.
+
+### No fiarse de la entrada
+
+Todo dato que llega de fuera puede estar manipulado: lo que escribe un usuario, lo que envía otro sistema, el contenido de un archivo. Hay que validarlo antes de usarlo. Es la raíz de buena parte de las vulnerabilidades de las aplicaciones web.
+
+<Quiz
+	client:visible
+	question="Un ataque deja una tienda en línea sin servicio durante horas, sin robar ni alterar datos. ¿Qué propiedad se ha visto afectada?"
+	options={["Confidencialidad", "Integridad", "Disponibilidad"]}
+	answer={2}
+/>
+
+## Las herramientas básicas
+
+- La **criptografía** protege la confidencialidad y la integridad: [cifrado](/articulos/cifrado-simetrico-y-asimetrico/) y [funciones hash](/articulos/funciones-hash/).
+- La [autenticación y la autorización](/articulos/autenticacion-y-autorizacion/) controlan quién entra y qué puede hacer.
+- Las **actualizaciones** corrigen vulnerabilidades conocidas. Buena parte de los ataques aprovechan fallos para los que ya existía solución.
+- Las **copias de seguridad** permiten recuperarse cuando todo lo demás falla.
+- Los **registros de actividad** permiten detectar un ataque y reconstruir lo ocurrido.
+
+## Lo esencial
+
+- La ciberseguridad protege la confidencialidad, la integridad y la disponibilidad.
+- Una vulnerabilidad es una debilidad; una amenaza, quien puede aprovecharla; el riesgo combina probabilidad y daño.
+- Se defiende en capas, dando a cada cual el mínimo privilegio y desconfiando de toda entrada externa.
+- Las personas son un objetivo tan frecuente como la tecnología.

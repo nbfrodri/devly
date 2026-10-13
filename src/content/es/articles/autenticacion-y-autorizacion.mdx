@@ -1,0 +1,113 @@
+---
+title: "Diferencias entre autenticación y autorización"
+description: "Autenticar es comprobar quién eres; autorizar es decidir qué puedes hacer. Son dos pasos distintos."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - cliente-servidor
+updated: 2026-10-13
+sources:
+  - title: "NIST: glosario, Authentication (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/authentication
+  - title: "NIST: glosario, Authorization (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/authorization
+  - title: "NIST SP 800-63B: Digital Identity Guidelines, Authentication (en inglés)"
+    url: https://pages.nist.gov/800-63-4/sp800-63b.html
+  - title: "OWASP: Authorization Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **autenticación** comprueba **quién eres**. La **autorización** decide **qué puedes hacer**. Son dos pasos distintos y van siempre en ese orden: primero se establece la identidad y después se consultan los permisos.
+
+## Un ejemplo cotidiano
+
+En un aeropuerto, en el control de seguridad enseñas el pasaporte: eso es autenticación, se comprueba que eres quien dices. Después, en la puerta de embarque, tu tarjeta indica a qué vuelo puedes subir y si puedes entrar en la sala VIP: eso es autorización.
+
+Tener un pasaporte válido no te da derecho a subir a cualquier avión.
+
+## Autenticación
+
+Para demostrar una identidad se presenta alguna prueba. Se clasifican en tres tipos, llamados **factores**:
+
+| Factor | Es | Ejemplos |
+| --- | --- | --- |
+| Conocimiento | Algo que sabes | Contraseña, PIN |
+| Posesión | Algo que tienes | Móvil, llave de seguridad |
+| Inherencia | Algo que eres | Huella dactilar, rostro |
+
+### Varios factores
+
+Una contraseña sola es frágil: se adivina, se reutiliza entre servicios o se roba con un mensaje engañoso. La **autenticación multifactor** (MFA) exige dos o más factores de tipos distintos.
+
+Lo importante es que sean de tipos distintos. Una contraseña y una pregunta de seguridad son dos cosas que sabes, y quien roba una puede robar la otra. Una contraseña y un código generado en tu móvil obligan al atacante a tener además el dispositivo.
+
+### Recordar al usuario
+
+[HTTP](/articulos/que-es-http/) no recuerda nada entre peticiones, así que tras comprobar la identidad hay que conservarla de algún modo. Dos formas habituales:
+
+- **Sesión**: el servidor guarda quién eres y entrega al navegador un identificador en una cookie.
+- **Token**: el servidor entrega un dato firmado que el cliente envía en cada petición.
+
+En ambos casos, quien robe ese identificador o ese token puede actuar como tú, así que hay que protegerlo igual que una contraseña.
+
+## Autorización
+
+Una vez se sabe quién hace la petición, hay que decidir si puede hacer lo que pide. Las reglas pueden organizarse de varias maneras:
+
+- **Por roles (RBAC).** Los permisos se asignan a roles, como administrador, editor o lector, y los usuarios reciben roles. Es el modelo más extendido.
+- **Por atributos.** La decisión depende de características del usuario, del recurso y del contexto: "puede editar el documento si es su autor y está dentro del horario laboral".
+- **Por propiedad.** Cada usuario accede solo a lo que le pertenece.
+
+Sea cual sea el modelo, conviene aplicar el **mínimo privilegio**: dar a cada cual solo los permisos que necesita.
+
+## Comparación
+
+| | Autenticación | Autorización |
+| --- | --- | --- |
+| Pregunta | ¿Quién eres? | ¿Puedes hacer esto? |
+| Cuándo | Primero | Después |
+| Se basa en | Credenciales | Permisos, roles, reglas |
+| Código HTTP si falla | 401 | 403 |
+| Lo cambia | El propio usuario, su contraseña | Un administrador, los permisos |
+
+### Los códigos 401 y 403
+
+Los dos códigos de estado reflejan esta diferencia:
+
+- `401` significa que la petición no trae una identidad válida. El servidor no sabe quién eres.
+- `403` significa que el servidor sabe quién eres, pero no tienes permiso.
+
+El nombre oficial del 401 es "Unauthorized", lo que contribuye a la confusión, porque en realidad indica un fallo de autenticación.
+
+<Quiz
+	client:visible
+	question="Has iniciado sesión como usuario normal e intentas abrir el panel de administración. ¿Qué código debería devolver el servidor?"
+	options={["401", "403", "404"]}
+	answer={1}
+/>
+
+## El error más frecuente
+
+En las aplicaciones web, los fallos de control de acceso figuran entre los más habituales. El patrón típico es este: se comprueba bien quién es el usuario, pero no si el recurso concreto que pide le pertenece.
+
+Estás viendo tu factura en `/facturas/1001`. Cambias el número a `1002` y aparece la de otra persona. La autenticación funcionó: has iniciado sesión. La autorización no: nadie comprobó que esa factura fuera tuya.
+
+Dos reglas lo evitan:
+
+- **Comprobar los permisos en el servidor en cada petición**, no una sola vez al entrar.
+- **No confiar en lo que oculta la interfaz.** Esconder un botón no impide que alguien envíe la petición a mano. Como explica el modelo [cliente-servidor](/articulos/cliente-servidor/), lo que importa se verifica en el servidor.
+
+## Confusiones frecuentes
+
+- **"Si ha iniciado sesión, puede."** Iniciar sesión solo establece la identidad.
+- **"Dos contraseñas son dos factores."** Son dos pruebas del mismo tipo.
+- **Usar los dos términos como sinónimos.** En inglés se abrevian *authn* y *authz* precisamente para no mezclarlos.
+
+## Lo esencial
+
+- Autenticar es comprobar la identidad; autorizar es decidir los permisos.
+- La autenticación se apoya en factores: algo que sabes, que tienes o que eres.
+- La autorización debe comprobarse en el servidor, en cada petición y para cada recurso.
+- Un 401 indica que falta identidad; un 403, que falta permiso.

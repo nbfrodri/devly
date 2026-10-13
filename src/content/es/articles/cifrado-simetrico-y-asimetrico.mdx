@@ -1,0 +1,121 @@
+---
+title: "Diferencias entre cifrado simétrico y asimétrico"
+description: "El cifrado simétrico usa una sola clave compartida; el asimétrico, un par de claves, una pública y otra privada."
+level: intermedio
+layer: redes
+prerequisites:
+  - que-es-la-ciberseguridad
+updated: 2026-10-13
+sources:
+  - title: "NIST FIPS 197: Advanced Encryption Standard (en inglés)"
+    url: https://csrc.nist.gov/pubs/fips/197/final
+  - title: "Diffie y Hellman: New Directions in Cryptography (1976, en inglés)"
+    url: https://ee.stanford.edu/~hellman/publications/24.pdf
+  - title: "Rivest, Shamir y Adleman: A Method for Obtaining Digital Signatures and Public-Key Cryptosystems (1978, en inglés)"
+    url: https://people.csail.mit.edu/rivest/Rsapaper.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Cifrar** es transformar un mensaje para que solo pueda leerlo quien tenga una clave. En el **cifrado simétrico**, la misma clave cifra y descifra. En el **cifrado asimétrico**, se usan dos claves distintas y relacionadas: lo que cifra una solo lo descifra la otra.
+
+## Vocabulario mínimo
+
+- **Texto en claro**: el mensaje original, legible.
+- **Texto cifrado**: el resultado, ilegible sin la clave.
+- **Clave**: el dato secreto que controla la transformación.
+- **Algoritmo**: el procedimiento. Es público; la seguridad depende solo de mantener en secreto la clave.
+
+Que el algoritmo sea público es una ventaja: lo han examinado miles de especialistas buscando fallos. Un algoritmo secreto no ha pasado esa prueba.
+
+## Cifrado simétrico
+
+Una sola clave sirve para cifrar y para descifrar. Quien envía y quien recibe deben tener la misma.
+
+Este ejemplo es un cifrado de juguete, el cifrado César, que desplaza cada letra unas posiciones en el alfabeto. No protege nada, pero muestra la idea: la misma clave, el 3, sirve para ir y para volver.
+
+```js
+function desplazar(texto, clave) {
+	let resultado = "";
+
+	for (const letra of texto) {
+		const codigo = letra.charCodeAt(0) - 97;
+		const nuevo = (codigo + clave + 26) % 26;
+		resultado = resultado + String.fromCharCode(nuevo + 97);
+	}
+
+	return resultado;
+}
+
+const cifrado = desplazar("hola", 3);
+console.log(cifrado); // "krod"
+console.log(desplazar(cifrado, -3)); // "hola"
+```
+
+El estándar actual es **AES**. Es muy rápido y puede cifrar grandes volúmenes de datos sin que se note.
+
+Su punto débil no está en el algoritmo, sino antes: **¿cómo haces llegar la clave a la otra persona?** Si la envías por el mismo canal que quieres proteger, quien lo esté escuchando la obtiene. Durante siglos, compartir claves exigió un canal seguro previo, como un mensajero de confianza.
+
+## Cifrado asimétrico
+
+En los años setenta apareció una idea que resolvía ese problema: usar un **par de claves** generadas juntas.
+
+- La **clave pública** se puede repartir a cualquiera.
+- La **clave privada** no sale nunca de las manos de su dueño.
+
+Lo que se cifra con una solo se puede descifrar con la otra, y conocer la pública no permite deducir la privada.
+
+Funciona como un buzón. Cualquiera puede echar una carta por la ranura, que sería la clave pública. Solo quien tiene la llave, la clave privada, puede abrirlo y leerlas.
+
+Para enviarte un mensaje secreto, alguien lo cifra con tu clave pública. Solo tu clave privada lo descifra. Ya no hace falta haber compartido antes ningún secreto.
+
+RSA y los sistemas basados en curvas elípticas son los más extendidos.
+
+### Firmas digitales
+
+El par de claves también funciona en sentido contrario. Si cifras algo con tu clave **privada**, cualquiera puede descifrarlo con la pública. No es secreto, pero demuestra dos cosas: que lo hiciste tú, porque nadie más tiene esa clave, y que el contenido no se ha modificado.
+
+Eso es una **firma digital**. En la práctica se firma el [hash](/articulos/funciones-hash/) del documento.
+
+## Comparación
+
+| | Simétrico | Asimétrico |
+| --- | --- | --- |
+| Claves | Una, compartida | Dos: pública y privada |
+| Velocidad | Muy rápido | Mucho más lento |
+| Problema principal | Hacer llegar la clave con seguridad | El coste de cálculo |
+| Además de cifrar | | Permite firmar |
+| Ejemplos | AES | RSA, curvas elípticas |
+
+<Quiz
+	client:visible
+	question="Quieres enviar un mensaje que solo pueda leer Ana. ¿Con qué clave lo cifras?"
+	options={[
+		"Con tu clave privada",
+		"Con la clave pública de Ana",
+		"Con la clave privada de Ana",
+	]}
+	answer={1}
+/>
+
+## Se usan juntos
+
+Cada uno cubre la debilidad del otro, así que los sistemas reales los combinan:
+
+1. Con criptografía asimétrica, las dos partes acuerdan una clave secreta sin haber compartido nada antes.
+2. Con esa clave, cifran el resto de la conversación con un algoritmo simétrico, que es rápido.
+
+Es lo que hace [HTTPS](/articulos/https-y-tls/) cada vez que abres una página.
+
+## Confusiones frecuentes
+
+- **"Asimétrico es más seguro."** Los dos son seguros si se usan bien. Resuelven problemas distintos.
+- **"La clave pública hay que protegerla."** No: está hecha para repartirse. Lo que se protege es la privada.
+- **"Cifrar garantiza quién envía."** El cifrado da confidencialidad. Saber quién es el autor requiere una firma.
+
+## Lo esencial
+
+- El cifrado simétrico usa una clave compartida y es rápido; su dificultad es repartir esa clave.
+- El asimétrico usa un par de claves y resuelve ese reparto, pero es lento.
+- Con la clave privada se pueden firmar mensajes.
+- En la práctica se combinan: el asimétrico para acordar una clave y el simétrico para cifrar los datos.

@@ -143,7 +143,7 @@ DELETE FROM pedidos WHERE id = 12;
 
 - **Olvidar `WHERE` en un `UPDATE` o un `DELETE`.** Sin condición, la sentencia se aplica a todas las filas de la tabla. Es el error más caro de SQL.
 - **Usar comillas dobles para los textos.** Los valores de texto van entre comillas simples.
-- **Construir una sentencia pegando texto escrito por un usuario.** Permite que alguien cuele sus propias órdenes, un ataque llamado inyección de SQL. Los valores externos se pasan siempre como parámetros, nunca dentro del texto de la sentencia.
+- **Construir una sentencia pegando texto escrito por un usuario.** Permite que alguien cuele sus propias órdenes, un ataque llamado [inyección de SQL](/articulos/inyeccion-sql/). Los valores externos se pasan siempre como parámetros, nunca dentro del texto de la sentencia.
 
 ## Lo esencial
 

@@ -1,0 +1,7 @@
+title: Seguridad en aplicaciones web
+description: Los ataques más habituales contra una aplicación web y cómo se evitan.
+steps:
+  - autenticacion-y-autorizacion
+  - inyeccion-sql
+  - cross-site-scripting-xss
+  - csrf

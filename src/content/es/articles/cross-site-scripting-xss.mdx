@@ -1,0 +1,120 @@
+---
+title: "¿Qué es el cross-site scripting (XSS)?"
+description: "El XSS es un ataque en el que una web muestra contenido de un usuario sin tratarlo y acaba ejecutando código del atacante en el navegador de otros."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+  - cliente-servidor
+updated: 2026-10-13
+sources:
+  - title: "OWASP: Cross Site Scripting Prevention Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+  - title: "MDN: Política de seguridad de contenido (CSP)"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/CSP
+  - title: "OWASP Top 10 (en inglés)"
+    url: https://owasp.org/Top10/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **cross-site scripting**, abreviado **XSS**, es un ataque en el que un sitio web incluye en sus páginas contenido aportado por un usuario sin tratarlo, y ese contenido resulta ser código que se ejecuta en el navegador de quien visita la página.
+
+Se abrevia XSS y no CSS para no confundirlo con las [hojas de estilo](/articulos/que-es-css/).
+
+## La causa
+
+Una página web es [HTML](/articulos/que-es-html/), y el HTML puede contener programas en JavaScript dentro de etiquetas `<script>`. El navegador ejecuta todo el código que encuentra en la página, sin saber quién lo escribió.
+
+Si una web inserta texto de un usuario directamente en el HTML, y ese texto contiene una etiqueta `<script>`, el navegador la tratará como parte legítima de la página.
+
+Es el mismo error que en la [inyección de SQL](/articulos/inyeccion-sql/): datos que no son de confianza acaban interpretados como código. Allí la víctima es la base de datos; aquí, el navegador de otros usuarios.
+
+## Un ejemplo
+
+Un foro permite comentar. Alguien publica este comentario:
+
+```html
+Buen artículo <script>enviarAlAtacante(document.cookie)</script>
+```
+
+Si el foro lo inserta tal cual en la página, cada persona que la abra ejecutará ese código sin ver nada extraño. El programa se ejecuta con los permisos de la víctima dentro de ese sitio.
+
+## Qué puede hacer el atacante
+
+El código inyectado puede hacer lo mismo que el código legítimo de la página:
+
+- **Robar la sesión**, leyendo las cookies y enviándolas fuera, para entrar como la víctima.
+- **Actuar en su nombre**: publicar, comprar, cambiar la contraseña.
+- **Modificar lo que ve**, por ejemplo mostrando un formulario falso que pide sus credenciales.
+- **Leer la información** que la página muestra a ese usuario.
+
+## Los tres tipos
+
+| Tipo | Dónde está el código malicioso | Ejemplo |
+| --- | --- | --- |
+| Almacenado | Guardado en el servidor | Un comentario en un foro |
+| Reflejado | En la propia petición | Un enlace con el código en la dirección |
+| Basado en DOM | Lo inserta el JavaScript de la página | Un programa que escribe en la página un dato de la URL |
+
+El **almacenado** es el más grave, porque afecta a todos los que visitan la página. El **reflejado** requiere que la víctima abra un enlace preparado, que suele llegar por correo o mensaje.
+
+## La defensa principal: codificar la salida
+
+Para que el navegador trate un texto como texto y no como HTML, hay que sustituir los caracteres que tienen significado especial por sus equivalentes inofensivos. A esto se le llama **codificar** o **escapar**.
+
+```js
+function escaparHtml(texto) {
+	return texto
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
+}
+
+console.log(escaparHtml("<script>")); // "&lt;script&gt;"
+console.log(escaparHtml("Tom & Jerry")); // "Tom &amp; Jerry"
+```
+
+Tras escaparlo, el navegador muestra en pantalla los caracteres `<script>` en lugar de ejecutar nada.
+
+En la práctica no se escribe esta función a mano. Los marcos de trabajo y los sistemas de plantillas actuales escapan automáticamente todo lo que insertan. El riesgo aparece al saltarse ese mecanismo.
+
+### Las puertas traseras
+
+Casi todas las herramientas ofrecen una forma de insertar HTML sin escapar, pensada para casos concretos. Usarla con datos de un usuario reabre el problema. En JavaScript, la más conocida es asignar a `innerHTML`:
+
+- `elemento.innerHTML = dato` interpreta el dato como HTML. Peligroso con datos externos.
+- `elemento.textContent = dato` lo trata siempre como texto. Seguro.
+
+La regla es usar la opción que trata el contenido como texto, salvo que de verdad necesites HTML y confíes en su origen.
+
+<Quiz
+	client:visible
+	question="¿Qué forma de insertar en la página un texto escrito por un usuario es segura?"
+	options={["innerHTML", "textContent", "Las dos por igual"]}
+	answer={1}
+/>
+
+## El contexto importa
+
+El escapado correcto depende de dónde se inserte el dato. No son lo mismo el contenido de un elemento, el valor de un atributo, una dirección o el interior de un bloque de JavaScript. Un dato bien escapado para un sitio puede ser peligroso en otro.
+
+Hay lugares donde ninguna codificación basta, como dentro de una etiqueta `<script>` o en un atributo de evento. Ahí no deben ponerse datos que no sean de confianza.
+
+## Defensas complementarias
+
+- **Política de seguridad de contenido (CSP).** Es una cabecera con la que el servidor indica al navegador de dónde puede cargar y ejecutar código. Bien configurada, impide que se ejecute un script inyectado aunque haya llegado a la página.
+- **Cookies con el atributo `HttpOnly`.** El JavaScript de la página no puede leerlas, así que un XSS no puede robar la sesión por esa vía.
+- **Validar la entrada.** Rechazar lo que no tiene la forma esperada reduce las oportunidades.
+- **Limpiar el HTML** con una biblioteca especializada cuando hay que aceptar contenido con formato, como en un editor de texto enriquecido.
+
+Son capas adicionales. Ninguna sustituye a codificar la salida.
+
+## Lo esencial
+
+- El XSS ocurre cuando una página incluye datos de un usuario sin tratarlos y el navegador los ejecuta como código.
+- Permite robar sesiones y actuar en nombre de la víctima.
+- La defensa principal es codificar la salida según el lugar donde se inserta.
+- CSP y las cookies `HttpOnly` limitan el daño si algo falla.

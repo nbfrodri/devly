@@ -86,7 +86,7 @@ La primera función recuerda cuántas veces se ha llamado, así que la misma lla
 
 [HTTP](/articulos/que-es-http/) no guarda estado: el servidor no relaciona una petición con la anterior. Aun así, una tienda en línea recuerda tu carrito. No hay contradicción. El estado sigue existiendo, pero se ha movido de sitio:
 
-- **Al cliente.** El navegador guarda un identificador en una **cookie** y lo envía en cada petición.
+- **Al cliente.** El navegador guarda un identificador en una **cookie** y lo envía en cada petición. Ese envío automático es cómodo y también es lo que aprovecha un ataque [CSRF](/articulos/csrf/).
 - **A un almacén compartido.** Los datos de la sesión se guardan en una [base de datos](/articulos/que-es-una-base-de-datos/) a la que acceden todos los servidores.
 
 Los servidores que atienden las peticiones siguen siendo stateless: no guardan nada propio y son intercambiables. El estado vive en un lugar pensado para conservarlo.

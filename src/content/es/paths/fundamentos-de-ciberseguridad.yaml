@@ -1,0 +1,8 @@
+title: Fundamentos de ciberseguridad
+description: Qué se protege, con qué herramientas y cómo se asegura una conexión.
+steps:
+  - que-es-la-ciberseguridad
+  - funciones-hash
+  - cifrado-simetrico-y-asimetrico
+  - https-y-tls
+  - autenticacion-y-autorizacion

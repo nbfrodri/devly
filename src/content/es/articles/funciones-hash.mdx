@@ -1,0 +1,116 @@
+---
+title: "¿Qué es una función hash?"
+description: "Una función hash convierte cualquier dato en un valor de tamaño fijo que lo identifica y del que no se puede recuperar el original."
+level: basico
+layer: redes
+prerequisites:
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "NIST FIPS 180-4: Secure Hash Standard (en inglés)"
+    url: https://csrc.nist.gov/pubs/fips/180-4/upd1/final
+  - title: "OWASP: Password Storage Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+  - title: "Node.js: Crypto (documentación oficial, en inglés)"
+    url: https://nodejs.org/api/crypto.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **función hash** toma un dato de cualquier tamaño y devuelve un valor de longitud fija, llamado **hash** o resumen. El mismo dato produce siempre el mismo hash, y a partir del hash no se puede reconstruir el dato.
+
+Funciona como una huella dactilar: identifica al original sin contenerlo.
+
+## Sus propiedades
+
+Una función hash criptográfica cumple cinco:
+
+- **Determinista.** La misma entrada da siempre la misma salida.
+- **Salida de tamaño fijo.** Da igual que la entrada sea una letra o una película entera.
+- **De un solo sentido.** Calcular el hash es rápido; obtener la entrada a partir del hash es inviable en la práctica.
+- **Efecto avalancha.** Un cambio mínimo en la entrada produce un hash completamente distinto.
+- **Resistente a colisiones.** Es inviable encontrar dos entradas distintas con el mismo hash.
+
+Una **colisión** es que dos datos distintos den el mismo hash. Tienen que existir, porque hay infinitas entradas posibles y un número finito de salidas. Lo que se exige es que nadie sea capaz de encontrarlas.
+
+## Verlo en funcionamiento
+
+**SHA-256** es una de las funciones más usadas. Produce 256 [bits](/articulos/que-es-un-bit/), que se escriben como 64 caracteres hexadecimales. Este ejemplo se ejecuta con Node.js:
+
+```js
+import { createHash } from "node:crypto";
+
+function sha256(texto) {
+	return createHash("sha256").update(texto).digest("hex");
+}
+
+console.log(sha256("hola").length); // 64
+console.log(sha256("un texto muchísimo más largo que el anterior").length); // 64
+console.log(sha256("hola") === sha256("hola")); // true
+console.log(sha256("hola") === sha256("Hola")); // false
+```
+
+La longitud es la misma para cualquier entrada, la misma entrada da el mismo resultado, y cambiar una sola letra de minúscula a mayúscula produce un hash distinto.
+
+## No es cifrado
+
+Es la confusión más habitual. El [cifrado](/articulos/cifrado-simetrico-y-asimetrico/) es reversible: con la clave se recupera el original. Un hash no tiene clave y no se puede deshacer.
+
+| | Cifrado | Hash |
+| --- | --- | --- |
+| Se puede revertir | Sí, con la clave | No |
+| Tamaño del resultado | Depende de la entrada | Fijo |
+| Sirve para | Mantener algo en secreto | Comprobar que algo no ha cambiado |
+
+## Para qué sirve
+
+### Comprobar la integridad
+
+Al descargar un archivo, a menudo se publica junto a él su hash. Calculas el hash de lo que has descargado y lo comparas: si coincide, el archivo es idéntico al original. Si un solo bit hubiera cambiado, el hash sería otro.
+
+### Guardar contraseñas
+
+Un servicio no debe guardar las contraseñas de sus usuarios tal cual. Si alguien robara la base de datos, las tendría todas.
+
+En su lugar se guarda el hash. Cuando el usuario inicia sesión, se calcula el hash de lo que escribe y se compara con el guardado. El servicio comprueba la contraseña sin conocerla.
+
+Para esto no vale cualquier función hash, por dos razones:
+
+- **Las funciones rápidas juegan a favor del atacante.** SHA-256 está diseñada para ser veloz, lo que permite probar miles de millones de contraseñas por segundo contra un hash robado. Para contraseñas se usan funciones deliberadamente lentas y costosas, como Argon2, scrypt o bcrypt.
+- **Dos usuarios con la misma contraseña tendrían el mismo hash.** Se evita añadiendo a cada contraseña un valor aleatorio distinto, la **sal**, antes de calcular el hash. La sal se guarda junto al resultado.
+
+### Firmas digitales
+
+Firmar un documento grande con criptografía asimétrica sería lento. Se firma su hash, que es pequeño y lo representa.
+
+### Identificar contenido
+
+[Git](/articulos/control-de-versiones-con-git/) identifica cada confirmación por el hash de su contenido. Si el contenido cambia, cambia el identificador.
+
+<Quiz
+	client:visible
+	question="Un servicio guarda el hash de tu contraseña. ¿Cómo comprueba que la has escrito bien?"
+	options={[
+		"Descifra el hash y compara",
+		"Calcula el hash de lo que escribes y compara",
+		"Envía la contraseña a otro servidor",
+	]}
+	answer={1}
+/>
+
+## Funciones que ya no son seguras
+
+La seguridad de una función hash depende de que nadie sepa fabricar colisiones. Con el tiempo se descubren ataques, y funciones que fueron estándar dejan de ser fiables.
+
+**MD5** y **SHA-1** están rotas en ese sentido: se han construido colisiones para ambas. Siguen apareciendo en sistemas antiguos, pero no deben usarse donde la seguridad importe. La familia SHA-2, a la que pertenece SHA-256, y SHA-3 son las opciones actuales.
+
+## No confundir con las tablas hash
+
+En programación existe una estructura de datos llamada **tabla hash**, que también usa funciones hash para localizar datos con rapidez. Ahí se busca velocidad y reparto uniforme, no seguridad. Las funciones que se usan para eso no sirven para proteger nada.
+
+## Lo esencial
+
+- Una función hash convierte cualquier dato en un valor de tamaño fijo, siempre el mismo para la misma entrada.
+- No se puede revertir: no es cifrado.
+- Sirve para verificar integridad, guardar contraseñas, firmar e identificar contenido.
+- Las contraseñas necesitan funciones lentas y una sal distinta por usuario.

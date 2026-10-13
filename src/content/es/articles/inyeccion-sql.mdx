@@ -1,0 +1,139 @@
+---
+title: "¿Qué es una inyección de SQL?"
+description: "Una inyección de SQL ocurre cuando un programa mezcla datos del usuario con una consulta y el atacante logra cambiar lo que esta hace."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-sql
+updated: 2026-10-13
+sources:
+  - title: "OWASP: SQL Injection Prevention Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+  - title: "OWASP Top 10 (en inglés)"
+    url: https://owasp.org/Top10/
+  - title: "SQLite: SQL Language Expressions, parámetros (en inglés)"
+    url: https://www.sqlite.org/lang_expr.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **inyección de SQL** es un ataque en el que alguien introduce fragmentos de [SQL](/articulos/que-es-sql/) en un campo de entrada y consigue que la base de datos los ejecute como parte de la consulta. Es uno de los fallos más antiguos y dañinos de las aplicaciones web.
+
+## La causa
+
+El problema aparece cuando un programa construye una consulta **pegando texto**: una parte fija escrita por el programador y otra que viene del usuario.
+
+La base de datos recibe una sola cadena de texto. No puede distinguir qué trozo era la orden y qué trozo era el dato. Si el dato contiene SQL, lo ejecuta.
+
+## El ataque, paso a paso
+
+Un formulario de inicio de sesión comprueba el usuario y la contraseña con una consulta construida así:
+
+```js
+function construirConsulta(usuario, clave) {
+	return (
+		"SELECT * FROM usuarios WHERE nombre = '" +
+		usuario +
+		"' AND clave = '" +
+		clave +
+		"'"
+	);
+}
+
+console.log(construirConsulta("ana", "secreto"));
+// SELECT * FROM usuarios WHERE nombre = 'ana' AND clave = 'secreto'
+
+console.log(construirConsulta("ana' --", "da igual"));
+// SELECT * FROM usuarios WHERE nombre = 'ana' --' AND clave = 'da igual'
+```
+
+En la segunda llamada, el atacante escribe como nombre `ana' --`. La comilla cierra el texto antes de tiempo y los dos guiones inician un comentario de SQL, de modo que el resto de la línea se ignora.
+
+La consulta que se ejecuta es, en la práctica, `SELECT * FROM usuarios WHERE nombre = 'ana'`. La comprobación de la contraseña ha desaparecido y el atacante entra como Ana sin conocerla.
+
+## Demostración completa
+
+Este ejemplo se ejecuta con Node.js y una base de datos en memoria. Compara la consulta vulnerable con la correcta:
+
+```js
+import { DatabaseSync } from "node:sqlite";
+
+const db = new DatabaseSync(":memory:");
+db.exec("CREATE TABLE usuarios (nombre TEXT, clave TEXT)");
+db.exec("INSERT INTO usuarios VALUES ('ana', 'secreto')");
+
+const nombre = "ana' --";
+const clave = "no la sé";
+
+const vulnerable = db
+	.prepare(
+		"SELECT * FROM usuarios WHERE nombre = '" +
+			nombre +
+			"' AND clave = '" +
+			clave +
+			"'",
+	)
+	.all();
+console.log(vulnerable.length); // 1
+
+const segura = db
+	.prepare("SELECT * FROM usuarios WHERE nombre = ? AND clave = ?")
+	.all(nombre, clave);
+console.log(segura.length); // 0
+```
+
+La primera consulta devuelve una fila: el ataque funciona. La segunda no devuelve ninguna, porque no existe ningún usuario llamado literalmente `ana' --` con esa clave.
+
+## Qué puede conseguir un atacante
+
+Saltarse un inicio de sesión es solo el principio. Según la consulta y los permisos, una inyección permite:
+
+- **Leer datos** que no debería ver, incluidas otras tablas.
+- **Modificar o borrar** información.
+- **Hacerse pasar** por otros usuarios o por un administrador.
+
+## La solución: consultas parametrizadas
+
+La defensa consiste en no mezclar nunca la orden con los datos. En una **consulta parametrizada**, la sentencia se escribe con marcadores, como `?`, y los valores se entregan aparte.
+
+La base de datos recibe la estructura de la consulta y los datos por separado. Sabe que un valor es un valor, contenga lo que contenga, y nunca lo interpreta como SQL. Es lo que hace la segunda consulta del ejemplo.
+
+No es un filtro que intente detectar ataques. Elimina la causa: deja de existir la mezcla que hacía posible la confusión.
+
+<Quiz
+	client:visible
+	question="¿Cuál es la defensa principal contra la inyección de SQL?"
+	options={[
+		"Ocultar los mensajes de error",
+		"Usar consultas parametrizadas",
+		"Cifrar la base de datos",
+	]}
+	answer={1}
+/>
+
+## Defensas complementarias
+
+Las consultas parametrizadas son la medida principal. Las siguientes añaden capas, pero no la sustituyen:
+
+- **Validar la entrada.** Si un campo debe ser un número, rechazar lo que no lo sea.
+- **Mínimo privilegio.** La cuenta con la que la aplicación se conecta a la base de datos debe tener solo los permisos imprescindibles. Si no puede borrar tablas, una inyección tampoco podrá.
+- **No mostrar los errores de la base de datos al usuario.** Dan pistas sobre la estructura interna.
+
+## Lo que no funciona
+
+- **Escapar las comillas a mano.** Es fácil olvidar un caso, y hay ataques que no necesitan comillas.
+- **Listas de palabras prohibidas.** Rechazar entradas que contengan `SELECT` o `DROP` bloquea usos legítimos y se esquiva con variaciones.
+- **Validar solo en el navegador.** El atacante puede enviar la petición sin pasar por tu formulario.
+
+Las bibliotecas que generan las consultas por ti, llamadas ORM, usan parámetros internamente. Protegen mientras no se recurra a sus funciones para escribir SQL a mano concatenando texto.
+
+## El patrón general
+
+La inyección de SQL es un caso de un problema más amplio: tratar datos que no son de confianza como si fueran código. La misma idea, aplicada al HTML en lugar de al SQL, da lugar al [cross-site scripting](/articulos/cross-site-scripting-xss/).
+
+## Lo esencial
+
+- La inyección ocurre cuando se construye una consulta pegando texto del usuario.
+- La base de datos no distingue la orden del dato y ejecuta lo que el atacante introduzca.
+- La defensa es usar consultas parametrizadas, que mantienen separados la orden y los datos.
+- Validar la entrada y limitar los permisos reducen el daño, pero no reemplazan a los parámetros.

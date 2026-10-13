@@ -1,0 +1,124 @@
+---
+title: "¿Qué es un ataque CSRF?"
+description: "Un ataque CSRF hace que el navegador de la víctima envíe, sin que ella lo sepa, una petición a un sitio en el que tiene la sesión abierta."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - autenticacion-y-autorizacion
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "OWASP: Cross-Site Request Forgery Prevention Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+  - title: "MDN: Set-Cookie"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Reference/Headers/Set-Cookie
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**CSRF** (*Cross-Site Request Forgery*, falsificación de petición entre sitios) es un ataque en el que una página maliciosa hace que tu navegador envíe una petición a otro sitio donde tienes la sesión iniciada. Ese sitio la acepta creyendo que la has hecho tú.
+
+## Por qué es posible
+
+Cuando inicias sesión en un sitio, el servidor entrega a tu navegador una cookie que te identifica. A partir de ahí, el navegador **adjunta esa cookie automáticamente** a todas las peticiones que van a ese sitio.
+
+La clave está en "todas": también a las que se originan en otra página. Al servidor le llega una petición con tu cookie válida y no tiene forma de saber, solo con eso, si la provocaste tú desde su propia web o un tercero desde otra.
+
+## El ataque, paso a paso
+
+1. Inicias sesión en tu banco. El navegador guarda la cookie de sesión.
+2. Sin cerrar sesión, visitas otra página, controlada por un atacante.
+3. Esa página contiene un formulario oculto dirigido al banco que se envía solo:
+
+```html
+<form action="https://banco.ejemplo/transferir" method="post">
+	<input type="hidden" name="destino" value="cuenta-del-atacante">
+	<input type="hidden" name="importe" value="1000">
+</form>
+<script>
+	document.forms[0].submit();
+</script>
+```
+
+4. Tu navegador envía la petición al banco y, como va a su dominio, incluye tu cookie.
+5. El banco ve una petición autenticada y hace la transferencia.
+
+No has pulsado nada ni has visto nada. El atacante tampoco ha visto tu cookie ni tu contraseña: no las necesita, porque es tu propio navegador el que envía la petición.
+
+## Qué puede y qué no puede hacer
+
+Un CSRF sirve para **provocar acciones**: cambiar el correo de una cuenta, publicar algo, hacer una compra.
+
+No sirve para **leer la respuesta**. Las normas del navegador impiden que la página del atacante vea lo que contesta el otro sitio. Por eso los objetivos son operaciones que cambian algo, no consultas.
+
+## En qué se diferencia del XSS
+
+Se confunden a menudo, pero abusan de confianzas opuestas:
+
+| | [XSS](/articulos/cross-site-scripting-xss/) | CSRF |
+| --- | --- | --- |
+| Qué se aprovecha | Que el usuario confía en el sitio | Que el sitio confía en el navegador del usuario |
+| Dónde se ejecuta el ataque | Dentro del sitio vulnerable | Desde otro sitio |
+| Puede leer datos | Sí | No |
+
+Un sitio con XSS queda además expuesto a CSRF, porque el código inyectado se ejecuta dentro del propio sitio y puede saltarse las defensas descritas abajo.
+
+## Defensas
+
+### Tokens anti-CSRF
+
+Es la defensa clásica. El servidor genera un valor secreto e impredecible, lo asocia a la sesión del usuario y lo incluye en cada formulario que sirve. Cuando llega una petición que modifica datos, comprueba que trae ese valor.
+
+La página del atacante no puede conocerlo, porque no puede leer las páginas del otro sitio. Sin el token, la petición se rechaza.
+
+La mayoría de los marcos de trabajo web incluyen esta protección y la activan por defecto.
+
+### Cookies SameSite
+
+El atributo `SameSite` de una cookie indica al navegador cuándo debe enviarla en peticiones que se originan en otro sitio:
+
+| Valor | Comportamiento |
+| --- | --- |
+| `Strict` | Nunca se envía desde otro sitio |
+| `Lax` | Se envía al navegar con un enlace, pero no en formularios `POST` ni en peticiones en segundo plano |
+| `None` | Se envía siempre; exige además el atributo `Secure` |
+
+Con `Lax` o `Strict`, el formulario oculto del ejemplo llegaría al banco sin la cookie, y por tanto sin sesión.
+
+Los navegadores actuales aplican `Lax` cuando la cookie no indica nada, lo que ha reducido mucho estos ataques. Aun así conviene declararlo de forma explícita y mantener los tokens: es un caso claro de defensa en capas.
+
+### No cambiar nada con GET
+
+El método `GET` debe usarse solo para consultar. Si una dirección como `/borrar-cuenta?confirmar=si` borrara la cuenta, bastaría con que la víctima cargase una imagen que apuntara a ella.
+
+Las operaciones que modifican datos deben usar `POST`, `PUT` o `DELETE`.
+
+### Confirmar las operaciones delicadas
+
+Para acciones críticas, como cambiar la contraseña o hacer una transferencia, pedir de nuevo la contraseña o un segundo factor impide que una petición falsificada baste.
+
+<Quiz
+	client:visible
+	question="¿Por qué funciona un ataque CSRF?"
+	options={[
+		"Porque el atacante roba la contraseña",
+		"Porque el navegador envía las cookies automáticamente",
+		"Porque el sitio no usa HTTPS",
+	]}
+	answer={1}
+/>
+
+## Lo que no protege
+
+- **HTTPS.** Cifra la conexión, pero la petición falsificada viaja por esa misma conexión cifrada.
+- **Usar solo POST.** Un formulario oculto envía peticiones `POST` sin dificultad.
+- **Comprobar que el usuario ha iniciado sesión.** Ese es justo el requisito del ataque.
+
+## Lo esencial
+
+- Un CSRF hace que el navegador de la víctima envíe una petición no deseada a un sitio donde tiene sesión.
+- Es posible porque las cookies se adjuntan automáticamente.
+- Sirve para provocar acciones, no para leer respuestas.
+- Se evita con tokens anti-CSRF, cookies `SameSite` y reservando `GET` para las consultas.
