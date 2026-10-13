@@ -1,5 +1,6 @@
 title: Cómo funciona una aplicación web
 description: Las piezas de una aplicación completa, del navegador a la base de datos.
+layer: aplicaciones
 steps:
   - cliente-servidor
   - que-es-http

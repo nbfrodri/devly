@@ -2,8 +2,13 @@
 import { getCollection } from "astro:content";
 import PathCard from "@/components/path-card.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
+import { LAYERS } from "@/lib/layers";
 
 const paths = await getCollection("paths");
+const groups = LAYERS.map((layer) => ({
+	layer,
+	paths: paths.filter((path) => path.data.layer === layer.id),
+})).filter((group) => group.paths.length > 0);
 ---
 
 <BaseLayout title="Rutas" description="Rutas de aprendizaje ordenadas paso a paso.">
@@ -14,16 +19,19 @@ const paths = await getCollection("paths");
 				Una ruta ordena los artículos para que cada uno se apoye en el anterior.
 			</p>
 		</header>
-		<section class="section">
-			<ul class="path-grid">
-				{
-					paths.map((path) => (
-						<li>
-							<PathCard path={path} compact />
-						</li>
-					))
-				}
-			</ul>
-		</section>
+		{
+			groups.map((group) => (
+				<section class="section">
+					<h2>{group.layer.name}</h2>
+					<ul class="path-grid">
+						{group.paths.map((path) => (
+							<li>
+								<PathCard path={path} />
+							</li>
+						))}
+					</ul>
+				</section>
+			))
+		}
 	</div>
 </BaseLayout>

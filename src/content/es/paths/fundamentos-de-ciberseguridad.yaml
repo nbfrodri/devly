@@ -1,5 +1,6 @@
 title: Fundamentos de ciberseguridad
 description: Qué se protege, con qué herramientas y cómo se asegura una conexión.
+layer: redes
 steps:
   - que-es-la-ciberseguridad
   - funciones-hash

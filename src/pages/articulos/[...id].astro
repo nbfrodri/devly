@@ -1,7 +1,6 @@
 ---
 import { getCollection, getEntries, getEntry, render } from "astro:content";
 import LayerStack from "@/components/layer-stack.astro";
-import PathCard from "@/components/path-card.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { type Article, getArticles } from "@/lib/content";
 import { LEVEL_LABELS } from "@/lib/levels";
@@ -27,17 +26,25 @@ const prerequisites = await getEntries(article.data.prerequisites);
 const paths = (await getCollection("paths")).filter((path) =>
 	path.data.steps.some((step) => step.id === article.id),
 );
-const mainPath = paths[0];
-const neighbors = getStepNeighbors(
-	mainPath?.data.steps.map((step) => step.id) ?? [],
-	article.id,
+const pathContexts = await Promise.all(
+	paths.map(async (path) => {
+		const stepIds = path.data.steps.map((step) => step.id);
+		const neighbors = getStepNeighbors(stepIds, article.id);
+
+		return {
+			path,
+			position: stepIds.indexOf(article.id) + 1,
+			total: stepIds.length,
+			previous: neighbors.previous
+				? await getEntry("articles", neighbors.previous)
+				: undefined,
+			next: neighbors.next
+				? await getEntry("articles", neighbors.next)
+				: undefined,
+		};
+	}),
 );
-const previous = neighbors.previous
-	? await getEntry("articles", neighbors.previous)
-	: undefined;
-const next = neighbors.next
-	? await getEntry("articles", neighbors.next)
-	: undefined;
+const mainContext = pathContexts[0];
 ---
 
 <BaseLayout title={article.data.title} description={article.data.description}>
@@ -64,11 +71,34 @@ const next = neighbors.next
 				)
 			}
 			{
-				paths.map((path) => (
-					<div class="aside-block">
-						<span class="aside-title">Forma parte de la ruta</span>
-						<PathCard path={path} currentId={article.id} />
-					</div>
+				pathContexts.map((context) => (
+					<nav class="aside-block" aria-label={`Ruta ${context.path.data.title}`}>
+						<span class="aside-title">En la ruta</span>
+						<a class="aside-path" href={`/rutas/${context.path.id}/`}>
+							{context.path.data.title}
+						</a>
+						<span class="muted">
+							Paso {context.position} de {context.total}
+						</span>
+						<ul class="aside-steps">
+							{context.previous && (
+								<li>
+									<span class="muted">Anterior</span>
+									<a href={`/articulos/${context.previous.id}/`}>
+										{context.previous.data.title}
+									</a>
+								</li>
+							)}
+							{context.next && (
+								<li>
+									<span class="muted">Siguiente</span>
+									<a href={`/articulos/${context.next.id}/`}>
+										{context.next.data.title}
+									</a>
+								</li>
+							)}
+						</ul>
+					</nav>
 				))
 			}
 		</aside>
@@ -97,17 +127,21 @@ const next = neighbors.next
 				</ul>
 			</section>
 			{
-				mainPath && (
-					<nav class="path-nav" aria-label={`Ruta ${mainPath.data.title}`}>
-						{previous ? (
-							<a href={`/articulos/${previous.id}/`}>Anterior: {previous.data.title}</a>
+				mainContext && (
+					<nav class="path-nav" aria-label={`Ruta ${mainContext.path.data.title}`}>
+						{mainContext.previous ? (
+							<a href={`/articulos/${mainContext.previous.id}/`}>
+								Anterior: {mainContext.previous.data.title}
+							</a>
 						) : (
-							<a href={`/rutas/${mainPath.id}/`}>Volver a la ruta</a>
+							<a href={`/rutas/${mainContext.path.id}/`}>Volver a la ruta</a>
 						)}
-						{next ? (
-							<a href={`/articulos/${next.id}/`}>Siguiente: {next.data.title}</a>
+						{mainContext.next ? (
+							<a href={`/articulos/${mainContext.next.id}/`}>
+								Siguiente: {mainContext.next.data.title}
+							</a>
 						) : (
-							<span class="muted">Este es el último paso publicado.</span>
+							<a href={`/rutas/${mainContext.path.id}/`}>Fin de la ruta</a>
 						)}
 					</nav>
 				)

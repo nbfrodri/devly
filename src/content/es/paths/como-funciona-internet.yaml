@@ -1,5 +1,6 @@
 title: Cómo funciona internet
 description: Qué ocurre desde que escribes una dirección hasta que recibes la página.
+layer: redes
 steps:
   - que-es-una-direccion-ip
   - modelos-osi-y-tcp-ip

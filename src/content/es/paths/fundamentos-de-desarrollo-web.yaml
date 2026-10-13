@@ -1,5 +1,6 @@
 title: Fundamentos de desarrollo web
 description: Los lenguajes de una página, cómo llega al navegador y cómo se gestiona el código.
+layer: aplicaciones
 steps:
   - que-es-html
   - que-es-css

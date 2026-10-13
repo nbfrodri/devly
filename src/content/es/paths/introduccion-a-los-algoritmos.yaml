@@ -1,5 +1,6 @@
 title: Introducción a los algoritmos
 description: Cómo se mide la eficiencia de un algoritmo y los ejemplos clásicos que la aprovechan.
+layer: programacion
 steps:
   - arrays
   - complejidad-algoritmica

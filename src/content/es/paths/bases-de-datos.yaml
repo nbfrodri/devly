@@ -1,5 +1,6 @@
 title: Bases de datos
 description: Del modelo relacional y SQL a las alternativas NoSQL.
+layer: datos
 steps:
   - que-es-una-base-de-datos
   - que-es-sql

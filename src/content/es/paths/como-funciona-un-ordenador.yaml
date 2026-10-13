@@ -1,5 +1,6 @@
 title: Cómo funciona un ordenador
 description: De los bits al programa en ejecución, de abajo arriba.
+layer: hardware
 steps:
   - que-es-un-bit
   - codificacion-de-caracteres

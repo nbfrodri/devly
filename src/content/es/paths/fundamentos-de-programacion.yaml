@@ -1,5 +1,6 @@
 title: Fundamentos de programación
 description: Los conceptos mínimos para empezar a programar, en orden.
+layer: programacion
 steps:
   - que-es-una-variable
   - tipos-de-datos

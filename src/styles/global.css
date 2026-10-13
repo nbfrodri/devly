@@ -145,6 +145,11 @@
 	display: none !important;
 }
 
+html {
+	/* Keeps anchored targets clear of the sticky header. */
+	scroll-padding-top: 5rem;
+}
+
 body {
 	margin: 0;
 	min-height: 100dvh;
@@ -227,6 +232,7 @@ a:hover {
 	background: var(--ink);
 	color: var(--bg);
 	border-radius: var(--radius);
+	z-index: 20;
 }
 
 .skip-link:focus {
@@ -237,17 +243,19 @@ a:hover {
 /* Header and footer */
 
 .site-header {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	background: var(--bg);
 	border-bottom: 1px solid var(--rule);
 }
 
 .site-header .container {
-	min-height: 4.5rem;
-	padding-block: 0.5rem;
+	min-height: 3.75rem;
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 0.5rem 1rem;
+	gap: 0.5rem;
 }
 
 .logo {
@@ -257,15 +265,15 @@ a:hover {
 	min-height: 2.75rem;
 	font-family: var(--font-display);
 	font-weight: 800;
-	font-size: 1.75rem;
+	font-size: 1.5rem;
 	letter-spacing: -0.03em;
 	color: var(--ink);
 	text-decoration: none;
 }
 
 .logo svg {
-	width: 1.75rem;
-	height: 1.75rem;
+	width: 1.5rem;
+	height: 1.5rem;
 }
 
 .logo .mark-top {
@@ -282,15 +290,13 @@ a:hover {
 
 .site-nav {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25rem;
+	gap: 0.125rem;
 }
 
 .site-tools {
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.25rem;
+	gap: 0.125rem;
 }
 
 .theme-toggle {
@@ -345,6 +351,14 @@ a:hover {
 	justify-content: space-between;
 	gap: 0.75rem 2rem;
 	font-size: 0.9375rem;
+}
+
+.site-footer a {
+	color: inherit;
+}
+
+.site-footer a:hover {
+	color: #ffffff;
 }
 
 .site-footer strong {
@@ -613,15 +627,6 @@ a:hover {
 	color: var(--accent);
 }
 
-.path-list {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-}
-
 .path-grid {
 	margin: 0;
 	padding: 0;
@@ -641,51 +646,21 @@ a:hover {
 	font-size: 1.375rem;
 }
 
-.path-count {
+.path-meta {
 	margin-top: auto;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.25rem 1rem;
 	font-size: 0.9375rem;
+}
+
+.path-meta span:first-child {
 	font-weight: 600;
 }
 
-.steps {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	counter-reset: step;
-	display: flex;
-	flex-direction: column;
-	gap: 0.625rem;
-}
-
-.steps li {
-	counter-increment: step;
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-}
-
-.steps li::before {
-	content: counter(step);
-	flex: none;
-	width: 1.75rem;
-	height: 1.75rem;
-	display: grid;
-	place-items: center;
-	border-radius: 50%;
-	background: var(--accent-solid);
-	color: var(--on-accent);
-	font-weight: 600;
-	font-size: 0.875rem;
-}
-
-.steps a {
-	color: var(--ink);
-	font-weight: 500;
-}
-
-.steps [aria-current="page"] {
-	font-weight: 600;
-	text-decoration: none;
+.path-meta span:last-child {
+	color: var(--muted);
 }
 
 .article-list {
@@ -772,10 +747,6 @@ a:hover {
 	color: var(--on-accent);
 }
 
-[data-filter-section] {
-	scroll-margin-top: 1rem;
-}
-
 /* Without JavaScript the first six stay; with it, six random ones are kept. */
 .random-articles:not([data-ready]) li:nth-child(n + 7) {
 	display: none;
@@ -829,6 +800,40 @@ a:hover {
 
 .aside-links a {
 	color: var(--ink);
+}
+
+.aside-path {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 1.125rem;
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+	color: var(--ink);
+	text-decoration: none;
+}
+
+.aside-path:hover {
+	color: var(--accent);
+}
+
+.aside-steps {
+	margin: 0.25rem 0 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+}
+
+.aside-steps li {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.aside-steps a {
+	color: var(--ink);
+	font-weight: 500;
 }
 
 .aside-title {
@@ -1046,6 +1051,20 @@ a:hover {
 
 /* Phone: the article comes first, its context (layer and path) follows. */
 @media (max-width: 48rem) {
+	.logo {
+		gap: 0.4rem;
+		font-size: 1.375rem;
+	}
+
+	.site-nav a {
+		padding-inline: 0.5rem;
+		font-size: 0.9375rem;
+	}
+
+	.theme-toggle {
+		width: 2.5rem;
+	}
+
 	.article-aside {
 		order: 2;
 		max-width: none;

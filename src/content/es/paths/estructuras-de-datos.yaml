@@ -1,5 +1,6 @@
 title: Estructuras de datos
 description: Las formas básicas de organizar la información y cuándo conviene cada una.
+layer: programacion
 steps:
   - arrays
   - pilas-y-colas

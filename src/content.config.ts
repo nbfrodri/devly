@@ -22,6 +22,7 @@ const paths = defineCollection({
 	schema: z.object({
 		title: z.string(),
 		description: z.string(),
+		layer: z.enum(LAYER_IDS),
 		steps: z.array(reference("articles")).min(1),
 	}),
 });

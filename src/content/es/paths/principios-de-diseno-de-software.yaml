@@ -1,5 +1,6 @@
 title: Principios de diseño de software
 description: Criterios para escribir código que se entiende y se cambia con facilidad.
+layer: aplicaciones
 steps:
   - programacion-orientada-a-objetos
   - principio-kiss

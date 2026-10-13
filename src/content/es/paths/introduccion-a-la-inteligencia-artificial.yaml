@@ -1,5 +1,6 @@
 title: Introducción a la inteligencia artificial
 description: Cómo aprende un programa a partir de ejemplos y qué es una red neuronal.
+layer: ia
 steps:
   - que-es-el-aprendizaje-automatico
   - que-es-una-red-neuronal

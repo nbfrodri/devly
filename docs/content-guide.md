@@ -139,7 +139,7 @@ import { Quiz } from "@/components/quiz";
 
 ## Rutas
 
-Una ruta es un archivo YAML en `src/content/es/paths/` con `title`, `description` y `steps` (slugs en orden). Cada paso debe poder leerse sabiendo solo los anteriores.
+Una ruta es un archivo YAML en `src/content/es/paths/` con `title`, `description`, `layer` (la capa bajo la que se agrupa en la página de rutas) y `steps` (slugs en orden). El nivel que muestra su tarjeta se calcula a partir de sus artículos. Cada paso debe poder leerse sabiendo solo los anteriores.
 
 Las rutas se crean a mano: un artículo no entra en ninguna hasta que se añade a `steps`. Una ruta puede cruzar capas y un artículo puede estar en varias rutas.
 
