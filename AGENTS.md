@@ -47,7 +47,7 @@ Accepted on 2026-10-13:
 Deferred until needed:
 
 - PR template, Dependabot and release automation.
-- Accounts, progress tracking, comments and an admin panel.
+- Accounts, synced progress, comments and an admin panel. Reading progress exists, stored in the browser only (2026-10-14).
 
 Not applicable: Docker (static site with no services), `.env.example` (no configuration variables).
 

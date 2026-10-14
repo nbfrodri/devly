@@ -40,6 +40,8 @@ const links = [
 			// Applied before first paint so a stored choice never flashes the other theme.
 			try {
 				const stored = localStorage.getItem("tema");
+				// Reading progress needs storage; its controls show only when it works.
+				document.documentElement.classList.add("progress-ready");
 				if (stored === "light" || stored === "dark") {
 					document.documentElement.dataset.theme = stored;
 				}
@@ -74,6 +76,15 @@ const links = [
 							))
 						}
 					</nav>
+					<a
+						class="theme-toggle"
+						href="/progreso/"
+						aria-label="Mi progreso"
+						title="Mi progreso"
+						aria-current={pathname.startsWith("/progreso/") ? "page" : undefined}
+					>
+						<Icon name="list-check" />
+					</a>
 					<button class="theme-toggle" type="button" data-theme-toggle>
 						<Icon name="moon" class="theme-icon-moon" />
 						<Icon name="sun" class="theme-icon-sun" />
@@ -111,6 +122,7 @@ const links = [
 						<li><a href="/rutas/">Rutas de aprendizaje</a></li>
 						<li><a href="/articulos/">Todos los artículos</a></li>
 						<li><a href="/capas/">Mapa de capas</a></li>
+						<li><a href="/progreso/">Mi progreso</a></li>
 					</ul>
 				</nav>
 				<nav aria-label="Proyecto">
@@ -153,6 +165,8 @@ const links = [
 </html>
 
 <script>
+	import "@/scripts/progress";
+
 	// Entrance motion is decoration: load it when the browser is idle so it
 	// never competes with first paint.
 	const loadMotion = () => import("@/scripts/reveal");

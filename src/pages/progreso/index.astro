@@ -1,0 +1,95 @@
+---
+import { getCollection } from "astro:content";
+import ArticleCard from "@/components/article-card.astro";
+import PathCard from "@/components/path-card.astro";
+import BaseLayout from "@/layouts/base-layout.astro";
+import { getArticles } from "@/lib/content";
+
+const articles = await getArticles();
+const paths = await getCollection("paths");
+const sections = [
+	{
+		title: "Rutas pendientes",
+		status: "pendiente",
+		source: "progreso-rutas",
+		list: "path-grid",
+		empty: "Ninguna ruta guardada. Usa «Guardar para después» en una ruta.",
+	},
+	{
+		title: "Artículos pendientes",
+		status: "pendiente",
+		source: "progreso-articulos",
+		list: "card-grid",
+		empty:
+			"Ningún artículo guardado. Usa «Guardar para después» en un artículo.",
+	},
+	{
+		title: "Rutas completadas",
+		status: "completa",
+		source: "progreso-rutas",
+		list: "path-grid",
+		empty:
+			"Una ruta se completa sola cuando marcas como leídos todos sus artículos.",
+	},
+	{
+		title: "Artículos leídos",
+		status: "leido",
+		source: "progreso-articulos",
+		list: "card-grid",
+		empty: "Aún no has marcado ningún artículo como leído.",
+	},
+];
+---
+
+<BaseLayout
+	title="Mi progreso"
+	description="Los artículos y rutas que has marcado como leídos o pendientes."
+>
+	<div class="container">
+		<header class="page-head">
+			<h1>Mi progreso</h1>
+			<p class="lead">
+				Lo que has leído y lo que has guardado para después. Se guarda solo en este
+				navegador: no sale de tu dispositivo y se pierde si borras los datos del sitio.
+			</p>
+		</header>
+
+		<noscript>
+			<p class="empty">Para ver tu progreso hace falta JavaScript.</p>
+		</noscript>
+
+		{
+			sections.map((section) => (
+				<section class="section" data-progress-section hidden>
+					<h2 class="section-title">
+						{section.title}
+						<span class="section-count" data-progress-total>
+							0
+						</span>
+					</h2>
+					<ul
+						class={section.list}
+						data-progress-list={section.status}
+						data-source={section.source}
+					/>
+					<p class="empty" data-progress-empty>
+						{section.empty}
+					</p>
+				</section>
+			))
+		}
+
+		<template id="progreso-rutas">
+			{
+				paths.map((path) => (
+					<li>
+						<PathCard path={path} />
+					</li>
+				))
+			}
+		</template>
+		<template id="progreso-articulos">
+			{articles.map((article) => <ArticleCard article={article} />)}
+		</template>
+	</div>
+</BaseLayout>

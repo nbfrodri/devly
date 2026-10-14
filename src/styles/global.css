@@ -322,7 +322,8 @@ a:hover {
 	cursor: pointer;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.theme-toggle[aria-current="page"] {
 	background: var(--quiet);
 }
 
@@ -1182,6 +1183,183 @@ a:hover {
 	color: var(--ink);
 	background: var(--quiet);
 	border-radius: 3px;
+}
+
+/* Reading progress: marks stored in the browser by src/scripts/progress.ts. */
+.article-card-tags {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+.progress-badge {
+	display: none;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+}
+
+.progress-badge .icon,
+.progress-badge svg {
+	width: 1.125rem;
+	height: 1.125rem;
+}
+
+.progress-badge-read {
+	color: var(--ok);
+}
+
+.progress-badge-pending {
+	color: var(--accent);
+}
+
+[data-status="leido"] .progress-badge-read,
+[data-status="completa"] .progress-badge-read,
+[data-status="pendiente"] .progress-badge-pending {
+	display: inline-flex;
+}
+
+[data-status="leido"] > .article-card,
+[data-status="completa"].path-card {
+	border-color: var(--ok);
+}
+
+.path-progress {
+	display: none;
+	flex-direction: column;
+	gap: 0.375rem;
+	font-size: 0.875rem;
+	color: var(--muted);
+}
+
+[data-started] .path-progress,
+.path-progress[data-started] {
+	display: flex;
+}
+
+.path-progress-text {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 0.75rem;
+}
+
+.path-progress-bar {
+	height: 0.375rem;
+	background: var(--quiet);
+	border-radius: var(--radius);
+	overflow: hidden;
+}
+
+.path-progress-bar::before {
+	content: "";
+	display: block;
+	height: 100%;
+	width: calc(var(--progress, 0) * 100%);
+	background: var(--accent-solid);
+}
+
+[data-status="completa"] .path-progress-bar::before,
+[data-status="completa"].path-progress .path-progress-bar::before {
+	background: var(--ok);
+}
+
+.path-progress-head {
+	max-width: 32rem;
+}
+
+.progress-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.progress-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 2.75rem;
+	padding: 0.5rem 1rem;
+	font: inherit;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--ink);
+	background: var(--surface);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	cursor: pointer;
+}
+
+.progress-button:hover {
+	border-color: var(--accent-solid);
+}
+
+.progress-button svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.progress-button .progress-icon-on,
+.progress-button[aria-pressed="true"] .progress-icon-off {
+	display: none;
+}
+
+.progress-button[aria-pressed="true"] .progress-icon-on {
+	display: inline-flex;
+}
+
+.progress-button-read[aria-pressed="true"] {
+	color: var(--ok);
+	border-color: var(--ok);
+}
+
+.progress-button-pending[aria-pressed="true"] {
+	color: var(--accent);
+	border-color: var(--accent-solid);
+}
+
+.article-finish {
+	margin-top: 2.5rem;
+	padding: 1.25rem 1.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem 1.5rem;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+}
+
+.article-finish p {
+	margin: 0;
+	color: var(--muted);
+}
+
+/* On narrow phones the header keeps the mark only, so the nav and both icon buttons fit. */
+@media (max-width: 26rem) {
+	.site-header .logo-text {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+}
+
+/* Without the script nothing can be marked, so the controls stay out of the way. */
+html:not(.progress-ready) .progress-buttons,
+html:not(.progress-ready) .article-finish {
+	display: none;
+}
+
+@media (max-width: 48rem) {
+	.progress-button {
+		flex: 1 1 auto;
+		justify-content: center;
+	}
 }
 
 .more-button {

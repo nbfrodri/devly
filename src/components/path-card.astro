@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getEntries } from "astro:content";
+import Icon from "@/components/icon.astro";
 import { describeLevelRange } from "@/lib/levels";
 
 type Props = {
@@ -11,11 +12,29 @@ const steps = await getEntries(path.data.steps);
 const count = steps.length;
 ---
 
-<article class="path-card">
+<article
+	class="path-card"
+	data-progress-path={path.id}
+	data-steps={path.data.steps.map((step) => step.id).join(" ")}
+>
 	<h3><a href={`/rutas/${path.id}/`}>{path.data.title}</a></h3>
 	<p class="muted">{path.data.description}</p>
 	<p class="path-meta">
 		<span>{count === 1 ? "1 artículo" : `${count} artículos`}</span>
 		<span>{describeLevelRange(steps.map((step) => step.data.level))}</span>
 	</p>
+	<div class="path-progress">
+		<span class="path-progress-bar" aria-hidden="true"></span>
+		<span class="path-progress-text">
+			<span class="progress-badge progress-badge-read">
+				<Icon name="circle-check-filled" />
+				Completada
+			</span>
+			<span class="progress-badge progress-badge-pending">
+				<Icon name="bookmark-filled" />
+				Pendiente
+			</span>
+			<span data-progress-count></span>
+		</span>
+	</div>
 </article>

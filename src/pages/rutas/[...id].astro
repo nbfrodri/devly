@@ -1,6 +1,8 @@
 ---
 import { type CollectionEntry, getCollection, getEntries } from "astro:content";
 import ArticleCard from "@/components/article-card.astro";
+import Icon from "@/components/icon.astro";
+import ProgressButtons from "@/components/progress-buttons.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 
 export async function getStaticPaths() {
@@ -30,6 +32,21 @@ if (steps.some((step) => step === undefined)) {
 			<p class="article-level">Ruta de aprendizaje</p>
 			<h1>{path.data.title}</h1>
 			<p class="lead">{path.data.description}</p>
+			<div
+				class="path-progress path-progress-head"
+				data-progress-path={path.id}
+				data-steps={path.data.steps.map((step) => step.id).join(" ")}
+			>
+				<span class="path-progress-bar" aria-hidden="true"></span>
+				<span class="path-progress-text">
+					<span class="progress-badge progress-badge-read">
+						<Icon name="circle-check-filled" />
+						Ruta completada
+					</span>
+					<span data-progress-count></span>
+				</span>
+			</div>
+			<ProgressButtons id={path.id} scope="path" />
 		</header>
 		<section class="section">
 			<h2>{steps.length === 1 ? "1 paso" : `${steps.length} pasos`}, en orden</h2>

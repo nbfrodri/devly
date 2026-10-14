@@ -1,0 +1,46 @@
+---
+import Icon from "@/components/icon.astro";
+
+type Props = {
+	id: string;
+	/** Paths can only be marked pending; they count as read when all their articles are. */
+	scope: "article" | "path";
+};
+
+const { id, scope } = Astro.props;
+---
+
+<div class="progress-buttons" role="group" aria-label="Tu progreso" data-pagefind-ignore>
+	{
+		scope === "article" && (
+			<button
+				class="progress-button progress-button-read"
+				type="button"
+				aria-pressed="false"
+				data-progress-toggle="leido"
+				data-progress-scope="article"
+				data-progress-id={id}
+				data-label-off="Marcar como leído"
+				data-label-on="Leído"
+			>
+				<Icon name="circle-check" class="progress-icon-off" />
+				<Icon name="circle-check-filled" class="progress-icon-on" />
+				<span data-label>Marcar como leído</span>
+			</button>
+		)
+	}
+	<button
+		class="progress-button progress-button-pending"
+		type="button"
+		aria-pressed="false"
+		data-progress-toggle="pendiente"
+		data-progress-scope={scope}
+		data-progress-id={id}
+		data-label-off="Guardar para después"
+		data-label-on="Pendiente"
+	>
+		<Icon name="bookmark" class="progress-icon-off" />
+		<Icon name="bookmark-filled" class="progress-icon-on" />
+		<span data-label>Guardar para después</span>
+	</button>
+</div>

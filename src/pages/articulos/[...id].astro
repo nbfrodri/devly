@@ -2,6 +2,7 @@
 import { getCollection, getEntries, getEntry, render } from "astro:content";
 import Icon from "@/components/icon.astro";
 import LayerStack from "@/components/layer-stack.astro";
+import ProgressButtons from "@/components/progress-buttons.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { type Article, getArticles } from "@/lib/content";
 import { LEVEL_LABELS } from "@/lib/levels";
@@ -109,6 +110,7 @@ const mainContext = pathContexts[0];
 				<p class="article-level">Nivel {LEVEL_LABELS[article.data.level].toLowerCase()}</p>
 				<h1>{article.data.title}</h1>
 				<p class="lead">{article.data.description}</p>
+				<ProgressButtons id={article.id} scope="article" />
 			</header>
 			<div class="prose">
 				<Content />
@@ -126,6 +128,10 @@ const mainContext = pathContexts[0];
 						))
 					}
 				</ul>
+			</section>
+			<section class="article-finish" aria-label="Al terminar" data-pagefind-ignore>
+				<p>¿Has terminado? Márcalo para seguir tu progreso.</p>
+				<ProgressButtons id={article.id} scope="article" />
 			</section>
 			{
 				mainContext && (

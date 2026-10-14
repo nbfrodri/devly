@@ -34,6 +34,7 @@ There is no draft state: every article in the repository is built. A path that r
 | `/capas/`, `/capas/<layer>/` | `src/pages/capas/` |
 | `/rutas/`, `/rutas/<path>/` | `src/pages/rutas/` |
 | `/articulos/`, `/articulos/<slug>/` | `src/pages/articulos/` |
+| `/progreso/` | `src/pages/progreso/index.astro` |
 
 URLs are Spanish and unprefixed. Content sits under `src/content/es/` and Astro i18n is configured with `es` as the only locale, so another language can be added later as a prefixed locale without moving existing URLs.
 
@@ -60,4 +61,5 @@ The design source is a Claude Design canvas kept outside the repository; `src/st
 - **Files over a CMS**: one person maintains the content. Git gives history and rollback without a database, auth or an admin panel.
 - **Sources are required**: the schema rejects an article without them, so the rule cannot be skipped by accident.
 - **Astro over Next.js**: the site is read-only content. Astro ships no JavaScript except for interactive islands and needs no server.
-- **Not done yet**: user accounts, progress tracking, comments, a second language. Each would be a new decision, not an extension of something already built.
+- **Reading progress lives in the browser**: visitors mark articles as read or pending, and paths as pending, in `localStorage` (`progreso`). A path counts as complete when all its articles are read, recomputed on every render, so adding a step reopens it. Rules in `src/lib/progress.ts`; `src/scripts/progress.ts` decorates elements that carry `data-progress-*` attributes, and `/progreso/` fills its lists from `<template>` copies of every card. No server, no cookies, no sync between devices; controls stay hidden when storage is unavailable.
+- **Not done yet**: user accounts (and with them, progress synced across devices), comments, a second language. Each would be a new decision, not an extension of something already built.
