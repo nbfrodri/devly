@@ -25,8 +25,8 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 
 - [x] Sobreajuste y subajuste
 - [x] El descenso del gradiente
-- [ ] Clasificación y regresión
-- [ ] Cómo se evalúa un modelo: precisión, exhaustividad y matriz de confusión
+- [x] Clasificación y regresión
+- [x] Cómo se evalúa un modelo: precisión, exhaustividad y matriz de confusión
 - [ ] Árboles de decisión
 - [ ] Aprendizaje por refuerzo
 - [ ] Redes convolucionales y visión por ordenador
@@ -35,11 +35,11 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 
 ## Datos y bases de datos (había 9)
 
-- [ ] Índices de bases de datos
+- [x] Índices de bases de datos
 - [ ] Modelo entidad-relación
-- [ ] Tipos de JOIN
+- [x] Tipos de JOIN
 - [ ] Vistas y procedimientos almacenados
-- [ ] Formatos de datos: JSON, CSV y XML
+- [x] Formatos de datos: JSON, CSV y XML
 - [ ] Almacén de datos y lago de datos
 - [ ] Procesos ETL
 - [ ] Visualización de datos: elegir el gráfico adecuado
@@ -47,8 +47,8 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 
 ## Sistemas operativos (había 9)
 
-- [ ] El planificador: cómo se reparte el procesador
-- [ ] Permisos y usuarios
+- [x] El planificador: cómo se reparte el procesador
+- [x] Permisos y usuarios
 - [ ] Señales y comunicación entre procesos
 - [ ] El arranque de un sistema operativo
 - [ ] Gestores de paquetes
@@ -75,6 +75,6 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 - [ ] ¿Qué fue el primer mensaje enviado por internet?
 - [ ] ¿Por qué el símbolo de guardar sigue siendo un disquete?
 - [ ] ¿De dónde viene el nombre "Wi-Fi"?
-- [ ] ¿Qué es la ley de Moore?
+- [x] ¿Qué es la ley de Moore?
 - [ ] El origen del símbolo @ en el correo electrónico
-- [ ] ¿Por qué "hola, mundo" es el primer programa?
+- [ ] ¿Por qué "hola, mundo" es el primer programa? Pendiente: las fuentes originales (tutoriales de Kernighan) no se dejaban abrir para comprobarlas.

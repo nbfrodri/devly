@@ -1,0 +1,146 @@
+---
+title: "¿Qué es un índice de base de datos?"
+description: "Un índice permite a la base de datos encontrar filas sin recorrer la tabla entera, a cambio de espacio y de escrituras algo más lentas."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-sql
+  - arboles-binarios-de-busqueda
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Indexes, Introduction (documentación oficial, en inglés)"
+    url: https://www.postgresql.org/docs/current/indexes-intro.html
+  - title: "SQLite: Query Planning (en inglés)"
+    url: https://www.sqlite.org/queryplanner.html
+  - title: "Markus Winand: Use The Index, Luke, guía de rendimiento de SQL"
+    url: https://use-the-index-luke.com/es
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **índice** es una estructura auxiliar que una [base de datos](/articulos/que-es-una-base-de-datos/) mantiene para encontrar filas con rapidez. Es la principal herramienta para que una consulta lenta pase a ser rápida.
+
+## Qué problema resuelve
+
+Sin índice, para encontrar las filas que cumplen una condición la base de datos solo puede hacer una cosa: leer la tabla entera, fila por fila, comprobando cada una. Se llama **recorrido completo** (*full scan*).
+
+Con mil filas no se nota. Con cien millones, una consulta que debería tardar milisegundos tarda minutos.
+
+Un índice funciona como el de un libro. Para encontrar dónde se habla de un tema no lees el libro entero: vas al índice alfabético del final, localizas la palabra y saltas a la página.
+
+## Cómo es por dentro
+
+Un índice es una copia de una o varias columnas, **ordenada**, donde cada valor lleva una referencia a la fila de la tabla en la que está.
+
+Como está ordenado, se puede buscar descartando la mitad en cada paso, igual que en la [búsqueda binaria](/articulos/busqueda-binaria/). La estructura más habitual es el **árbol B**, una variante de los [árboles de búsqueda](/articulos/arboles-binarios-de-busqueda/) con muchos hijos por nodo, pensada para necesitar muy pocas lecturas de disco.
+
+El efecto en la [complejidad](/articulos/complejidad-algoritmica/) es enorme:
+
+| | Sin índice | Con índice |
+| --- | --- | --- |
+| Complejidad | O(n) | O(log n) |
+| Con mil filas | Hasta 1000 comprobaciones | Unas 10 |
+| Con mil millones | Hasta mil millones | Unas 30 |
+
+## Verlo en funcionamiento
+
+Las bases de datos permiten preguntar **cómo** van a ejecutar una consulta. Este ejemplo usa SQLite desde Node.js:
+
+```js
+import { DatabaseSync } from "node:sqlite";
+
+const db = new DatabaseSync(":memory:");
+db.exec("CREATE TABLE usuarios (id INTEGER PRIMARY KEY, correo TEXT, ciudad TEXT)");
+
+function plan(consulta) {
+	return db.prepare(`EXPLAIN QUERY PLAN ${consulta}`).all()[0].detail;
+}
+
+const consulta = "SELECT * FROM usuarios WHERE correo = 'ana@ejemplo.com'";
+
+console.log(plan(consulta).includes("SCAN")); // true
+
+db.exec("CREATE INDEX idx_correo ON usuarios (correo)");
+
+console.log(plan(consulta).includes("USING INDEX idx_correo")); // true
+```
+
+Antes de crear el índice, el plan es recorrer la tabla. Después, la misma consulta, sin cambiar una letra, usa el índice.
+
+Eso es importante: **los índices no cambian las consultas**. Se crean aparte, y la base de datos decide por sí sola cuándo usarlos.
+
+La orden para ver el plan cambia de nombre según el sistema; en la mayoría es `EXPLAIN`. Es la herramienta básica para entender por qué una consulta es lenta.
+
+## Lo que cuesta un índice
+
+Si los índices solo tuvieran ventajas, se crearía uno por cada columna. No es así.
+
+- **Ocupan espacio.** Cada índice es una copia de datos.
+- **Ralentizan las escrituras.** Cada vez que se inserta, modifica o borra una fila, hay que actualizar también todos los índices de la tabla.
+
+Un índice es un intercambio: lecturas más rápidas a cambio de escrituras más lentas y más disco. Una tabla con diez índices se consulta muy bien y se actualiza muy mal.
+
+## Qué columnas indexar
+
+Las que aparecen en las condiciones de las consultas frecuentes:
+
+- En el `WHERE`: `WHERE correo = ...`.
+- En las combinaciones entre tablas: las claves foráneas que se usan en un `JOIN`.
+- En el `ORDER BY`: como el índice ya está ordenado, puede ahorrar la ordenación.
+
+La clave primaria tiene siempre un índice, creado automáticamente.
+
+### Cuándo no ayuda
+
+- **Tablas pequeñas.** Leerlas enteras es más rápido que consultar un índice.
+- **Columnas con pocos valores distintos.** Un índice sobre una columna que solo vale "sí" o "no" apenas descarta filas.
+- **Tablas en las que se escribe mucho y se lee poco**, como un registro de eventos.
+
+## Índices de varias columnas
+
+Un índice puede abarcar varias columnas, y **el orden importa**.
+
+Un índice sobre `(ciudad, apellido)` está ordenado primero por ciudad y, dentro de cada ciudad, por apellido. Como una guía telefónica ordenada por población y luego por nombre.
+
+| Consulta | ¿Aprovecha el índice? |
+| --- | --- |
+| Por ciudad | Sí |
+| Por ciudad y apellido | Sí |
+| Solo por apellido | No |
+
+Buscar un apellido sin saber la ciudad obligaría a mirar en todas las ciudades. La regla: el índice sirve para las consultas que usan sus primeras columnas, de izquierda a derecha.
+
+<Quiz
+	client:visible
+	question="Añades cinco índices a una tabla. ¿Qué operación se vuelve más lenta?"
+	options={["Las consultas con WHERE", "Las inserciones", "Ninguna"]}
+	answer={1}
+/>
+
+## Cuando existe y no se usa
+
+Es frecuente crear un índice y comprobar que la consulta sigue lenta. Las causas habituales:
+
+- **Aplicar una función a la columna.** `WHERE LOWER(correo) = ...` no puede usar un índice sobre `correo`, porque lo indexado es el valor original.
+- **Buscar por el final de un texto.** `LIKE '%gmail.com'` no aprovecha el orden. `LIKE 'ana%'`, sí.
+- **Que la consulta devuelva casi toda la tabla.** Si hay que leer la mayoría de las filas, el recorrido completo es más barato y la base de datos lo elige.
+
+## Índices únicos
+
+Un índice puede además imponer una regla: que no haya dos filas con el mismo valor. Es la forma de garantizar, por ejemplo, que no se registren dos usuarios con el mismo correo. La comprobación es rápida precisamente porque el índice existe.
+
+## Cómo proceder
+
+1. No crear índices "por si acaso".
+2. Localizar las consultas lentas midiendo.
+3. Ver su plan de ejecución.
+4. Crear el índice que esa consulta necesita.
+5. Volver a medir.
+
+## Lo esencial
+
+- Un índice es una copia ordenada de una o varias columnas, con referencias a las filas.
+- Convierte búsquedas de coste lineal en búsquedas de coste logarítmico.
+- Acelera las lecturas y encarece las escrituras y el espacio.
+- En un índice de varias columnas, el orden determina qué consultas lo aprovechan.
+- El plan de ejecución muestra si una consulta lo está usando.

@@ -107,7 +107,7 @@ INSERT INTO pedidos (id, cliente_id, total) VALUES
 	(12, 3, 15);
 ```
 
-`JOIN` combina las filas de dos tablas que cumplen una condición, normalmente que la clave foránea de una coincida con la clave primaria de la otra:
+`JOIN` combina las filas de dos tablas que cumplen una condición (hay [varios tipos](/articulos/tipos-de-join/)), normalmente que la clave foránea de una coincida con la clave primaria de la otra:
 
 ```sql
 SELECT clientes.nombre, pedidos.total

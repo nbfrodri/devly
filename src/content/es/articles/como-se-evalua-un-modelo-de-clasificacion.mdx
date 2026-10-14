@@ -1,0 +1,155 @@
+---
+title: "¿Cómo se evalúa un modelo de clasificación?"
+description: "El porcentaje de aciertos puede engañar. La matriz de confusión, la precisión y la exhaustividad cuentan lo que de verdad hace un modelo."
+level: intermedio
+layer: ia
+prerequisites:
+  - clasificacion-y-regresion
+updated: 2026-10-13
+sources:
+  - title: "Google: Exactitud, recuperación, precisión y métricas relacionadas (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall?hl=es-419
+  - title: "Google: Clasificación (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/classification?hl=es-419
+---
+
+import { Quiz } from "@/components/quiz";
+
+Evaluar un modelo de [clasificación](/articulos/clasificacion-y-regresion/) es medir lo bien que acierta. Parece que basta con contar el porcentaje de aciertos, pero esa cifra sola puede ocultar un modelo inútil. Hacen falta medidas que distingan **en qué** se equivoca.
+
+## El problema con el porcentaje de aciertos
+
+La medida más intuitiva es la **exactitud** (*accuracy*): de todas las predicciones, cuántas son correctas.
+
+Imagina un modelo para detectar una enfermedad que tiene una de cada cien personas. Un "modelo" que responda siempre "sano", sin mirar nada, acierta el 99 % de las veces.
+
+Tiene un 99 % de exactitud y no detecta a un solo enfermo. Es inútil para lo único que debía hacer.
+
+Ocurre siempre que las clases están **desequilibradas**: una es mucho más frecuente que la otra. Y es lo habitual en los problemas interesantes: fraudes, enfermedades, averías.
+
+## La matriz de confusión
+
+Para ver qué pasa de verdad, se cruza lo que predijo el modelo con lo que era cierto. En un problema de dos clases salen cuatro casillas:
+
+| | Predijo positivo | Predijo negativo |
+| --- | --- | --- |
+| **Era positivo** | Verdadero positivo | Falso negativo |
+| **Era negativo** | Falso positivo | Verdadero negativo |
+
+"Positivo" es la clase que se busca detectar: la enfermedad, el fraude.
+
+Hay dos formas de acertar y dos de fallar:
+
+- **Falso positivo**: una falsa alarma. Decir que alguien está enfermo sin estarlo.
+- **Falso negativo**: un caso que se escapa. Decir que está sano estando enfermo.
+
+Los dos errores no cuestan lo mismo, y casi nunca son igual de graves.
+
+## Precisión y exhaustividad
+
+De la matriz salen las dos medidas principales. Cada una responde a una pregunta distinta.
+
+### Precisión
+
+**De los casos que el modelo marcó como positivos, ¿cuántos lo eran?**
+
+Mide lo fiable que es una alarma. Una precisión baja significa muchas falsas alarmas.
+
+### Exhaustividad
+
+**De los casos que eran positivos, ¿cuántos encontró el modelo?**
+
+También se la llama **sensibilidad** o *recall*. Mide cuánto se le escapa. Una exhaustividad baja significa muchos casos sin detectar.
+
+Con un ejemplo: de 100 personas, 12 están enfermas. El modelo marca a 10; de ellas, 8 lo están de verdad.
+
+```js
+const verdaderosPositivos = 8;
+const falsosPositivos = 2;
+const falsosNegativos = 4;
+const verdaderosNegativos = 86;
+
+const total =
+	verdaderosPositivos + falsosPositivos + falsosNegativos + verdaderosNegativos;
+
+const exactitud = (verdaderosPositivos + verdaderosNegativos) / total;
+const precision = verdaderosPositivos / (verdaderosPositivos + falsosPositivos);
+const exhaustividad =
+	verdaderosPositivos / (verdaderosPositivos + falsosNegativos);
+
+console.log(exactitud); // 0.94
+console.log(precision); // 0.8
+console.log(exhaustividad.toFixed(2)); // "0.67"
+```
+
+La exactitud es del 94 %, y suena muy bien. Pero la exhaustividad es del 67 %: el modelo deja sin detectar a uno de cada tres enfermos. La exactitud escondía eso.
+
+## El equilibrio entre las dos
+
+Mejorar una suele empeorar la otra. El mando es el **umbral** de decisión:
+
+| Umbral | Precisión | Exhaustividad |
+| --- | --- | --- |
+| Más alto: el modelo exige más para marcar | Sube | Baja |
+| Más bajo: el modelo marca con más facilidad | Baja | Sube |
+
+Los dos extremos lo ilustran. Un modelo que marca a todo el mundo como enfermo tiene exhaustividad perfecta y una precisión pésima. Uno que solo marca el caso más evidente tiene precisión perfecta y apenas encuentra a nadie.
+
+### Cuál priorizar
+
+Depende de qué error es peor en cada problema:
+
+| Caso | Error más grave | Se prioriza |
+| --- | --- | --- |
+| Cribado de una enfermedad seria | Que se escape un enfermo | Exhaustividad |
+| Filtro de correo no deseado | Perder un correo importante | Precisión |
+| Detección de fraude | Depende del coste de cada uno | Un equilibrio |
+
+En el cribado médico, una falsa alarma se resuelve con otra prueba; un caso sin detectar puede ser fatal. En el correo, dejar pasar publicidad es una molestia; perder un mensaje importante es un problema.
+
+No es una decisión técnica. Es una decisión sobre consecuencias, que corresponde a quien conoce el problema.
+
+## Un solo número: F1
+
+Cuando hace falta resumir, se usa la **puntuación F1**, que combina precisión y exhaustividad.
+
+```js
+const precision = 0.8;
+const exhaustividad = 8 / 12;
+
+const f1 = (2 * precision * exhaustividad) / (precision + exhaustividad);
+
+console.log(f1.toFixed(2)); // "0.73"
+```
+
+No es una media normal: castiga el desequilibrio. Un modelo con precisión 1 y exhaustividad 0 obtiene un F1 de 0, no de 0,5. Para sacar buena nota hay que ir bien en las dos.
+
+<Quiz
+	client:visible
+	question="Un detector de una enfermedad grave deja sin detectar a muchos enfermos. ¿Qué medida es baja?"
+	options={["La precisión", "La exhaustividad", "Ninguna, si la exactitud es alta"]}
+	answer={1}
+/>
+
+## Más allá de un umbral
+
+Las medidas anteriores dependen del umbral elegido. Para valorar un modelo en conjunto se observa cómo se comporta con todos los umbrales posibles.
+
+La herramienta habitual es la **curva ROC**, y el área que queda bajo ella, el **AUC**, se usa como resumen: 1 es un modelo perfecto y 0,5 equivale a decidir al azar.
+
+## Buenas prácticas
+
+- **Mira primero cuántos casos hay de cada clase.** Si hay desequilibrio, desconfía de la exactitud.
+- **Compara con una referencia trivial**, como predecir siempre la clase más frecuente. Si tu modelo no la supera, no ha aprendido nada.
+- **Evalúa con datos que el modelo no ha visto**, para no medir un [sobreajuste](/articulos/sobreajuste-y-subajuste/).
+- **Mira la matriz entera**, no un solo número.
+- **Elige la medida según el coste real de cada error.**
+- **Comprueba el resultado por grupos.** Un modelo puede ir bien de media y mal para un grupo concreto de personas.
+
+## Lo esencial
+
+- La exactitud engaña cuando una clase es mucho más frecuente que otra.
+- La matriz de confusión separa los aciertos y los dos tipos de error.
+- La precisión mide lo fiables que son los positivos; la exhaustividad, cuántos positivos se encuentran.
+- Mover el umbral cambia una a costa de la otra.
+- Qué medida importa depende de qué error tiene peores consecuencias.

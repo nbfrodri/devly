@@ -1,0 +1,167 @@
+---
+title: "¿Cómo funcionan los usuarios y los permisos?"
+description: "Un sistema operativo decide quién puede hacer qué mediante usuarios, grupos y permisos sobre cada archivo."
+level: basico
+layer: sistemas
+prerequisites:
+  - sistema-de-archivos
+  - terminal-y-shell
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: chmod(1) (en inglés)"
+    url: https://man7.org/linux/man-pages/man1/chmod.1.html
+  - title: "Linux man-pages: credentials(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/credentials.7.html
+  - title: "GNU Coreutils: File permissions (en inglés)"
+    url: https://www.gnu.org/software/coreutils/manual/html_node/File-permissions.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un [sistema operativo](/articulos/que-es-un-sistema-operativo/) controla quién puede leer, modificar o ejecutar cada cosa mediante **usuarios**, **grupos** y **permisos**. Este artículo explica el modelo de los sistemas de tipo Unix, como Linux y macOS, que es también el de la mayoría de los servidores.
+
+## Qué problema resuelve
+
+Un ordenador lo comparten varias personas y, sobre todo, muchos programas. Sin control:
+
+- Un usuario podría leer los archivos de otro.
+- Un programa con un fallo, o uno malicioso, podría borrar el sistema entero.
+- Un servicio expuesto a internet que fuera atacado daría acceso a todo.
+
+Los permisos limitan el daño. Son la aplicación directa del principio de **mínimo privilegio** de la [ciberseguridad](/articulos/que-es-la-ciberseguridad/): cada cual, solo lo que necesita.
+
+## Usuarios y grupos
+
+Cada persona o servicio tiene una cuenta de **usuario**, identificada internamente por un número, el **UID**.
+
+Un **grupo** reúne a varios usuarios para darles permisos en común. Un usuario puede pertenecer a varios.
+
+Los programas también tienen dueño: cada [proceso](/articulos/que-es-un-proceso/) se ejecuta en nombre de un usuario y hereda sus permisos. Cuando abres un editor, el editor puede tocar lo mismo que tú, y nada más.
+
+Por eso los servicios suelen tener un usuario propio con muy pocos permisos. Si atacan el servidor web, el atacante obtiene solo lo que ese usuario podía hacer.
+
+### El superusuario
+
+Hay un usuario especial, **root**, con UID 0, que puede hacerlo todo: los permisos no se le aplican.
+
+Trabajar siempre como root es peligroso, porque cualquier error tiene consecuencias sin límite. Lo habitual es usar una cuenta normal y pedir privilegios solo para la orden que los necesita, con `sudo`:
+
+```bash
+sudo apt install git
+```
+
+## Los permisos de un archivo
+
+Cada archivo y cada directorio tiene un usuario **propietario**, un **grupo** y tres conjuntos de permisos:
+
+| Para | Se aplica a |
+| --- | --- |
+| Propietario | El usuario dueño del archivo |
+| Grupo | Los miembros del grupo del archivo |
+| Otros | Todos los demás |
+
+Cada conjunto tiene tres permisos:
+
+| Permiso | Letra | En un archivo | En un directorio |
+| --- | --- | --- | --- |
+| Lectura | `r` | Ver su contenido | Listar lo que contiene |
+| Escritura | `w` | Modificarlo | Crear y borrar archivos dentro |
+| Ejecución | `x` | Ejecutarlo como programa | Entrar en él |
+
+El significado cambia en los directorios, y trae una sorpresa: para borrar un archivo no hace falta permiso sobre el archivo, sino permiso de escritura sobre el **directorio** que lo contiene.
+
+## Cómo se leen
+
+La orden `ls -l` los muestra así:
+
+```
+-rwxr-xr-- 1 ana editores 4096 mar 12 10:30 informe.sh
+```
+
+Los diez primeros caracteres son el tipo y los permisos:
+
+| Parte | Significa |
+| --- | --- |
+| `-` | Es un archivo. Una `d` indicaría un directorio |
+| `rwx` | El propietario, ana, puede leer, escribir y ejecutar |
+| `r-x` | El grupo, editores, puede leer y ejecutar |
+| `r--` | Los demás solo pueden leer |
+
+Un guion significa que falta ese permiso.
+
+## La notación numérica
+
+Los permisos se expresan también con números. Cada permiso tiene un valor: lectura 4, escritura 2, ejecución 1. Se suman para cada conjunto.
+
+| Permisos | Suma | Número |
+| --- | --- | --- |
+| `rwx` | 4 + 2 + 1 | 7 |
+| `r-x` | 4 + 1 | 5 |
+| `r--` | 4 | 4 |
+| `---` | 0 | 0 |
+
+`rwxr-xr--` es `754`. Esos valores no son arbitrarios: cada permiso es un [bit](/articulos/que-es-un-bit/), y el número es la lectura en octal de los tres bits.
+
+```js
+function aNumero(permisos) {
+	const valores = { r: 4, w: 2, x: 1, "-": 0 };
+	let resultado = "";
+
+	for (let i = 0; i < 9; i += 3) {
+		const trio = permisos.slice(i, i + 3);
+		resultado += [...trio].reduce((suma, letra) => suma + valores[letra], 0);
+	}
+
+	return resultado;
+}
+
+console.log(aNumero("rwxr-xr--")); // "754"
+console.log(aNumero("rw-r--r--")); // "644"
+console.log(aNumero("rwxr-xr-x")); // "755"
+```
+
+Dos combinaciones aparecen constantemente:
+
+- `644`: el propietario lee y escribe; los demás solo leen. Lo normal para un archivo.
+- `755`: el propietario hace todo; los demás leen y ejecutan. Lo normal para un programa o un directorio.
+
+## Cambiarlos
+
+```bash
+chmod 644 notas.txt
+chmod u+x guion.sh
+chown ana:editores informe.txt
+```
+
+- `chmod` cambia los permisos, con números o con letras. `u+x` añade ejecución al propietario; `u`, `g` y `o` son usuario, grupo y otros.
+- `chown` cambia el propietario y el grupo.
+
+Un caso típico: escribes un [guion](/articulos/terminal-y-shell/) y, al ejecutarlo, el sistema responde "permiso denegado". Le falta el permiso de ejecución, y se arregla con `chmod u+x`.
+
+<Quiz
+	client:visible
+	question="Un archivo tiene los permisos 640. ¿Qué pueden hacer los usuarios que no son el propietario ni están en su grupo?"
+	options={["Leerlo", "Leerlo y ejecutarlo", "Nada"]}
+	answer={2}
+/>
+
+## Errores peligrosos
+
+- **`chmod 777`.** Da todos los permisos a todo el mundo. Hace desaparecer el error de permisos, y con él toda la protección. Casi nunca es la solución correcta.
+- **Ejecutar todo como root** para no tener problemas.
+- **Claves privadas legibles por otros.** Los archivos con secretos deben ser accesibles solo para su dueño, con permisos `600`.
+- **`sudo` con una orden que no se entiende**, sobre todo copiada de internet.
+
+Ante un "permiso denegado", lo primero es entender por qué: quién es el dueño, con qué usuario se está actuando y qué permiso falta. Lo último es abrirlo todo.
+
+## Otros modelos
+
+Los tres conjuntos de permisos se quedan cortos para casos finos, como dar acceso a un usuario concreto que no es el dueño ni está en el grupo. Para eso existen las **listas de control de acceso**, que permiten reglas por usuario. Windows basa su modelo en ellas.
+
+## Lo esencial
+
+- Cada proceso se ejecuta en nombre de un usuario y hereda sus permisos.
+- Cada archivo tiene propietario, grupo y permisos de lectura, escritura y ejecución para tres clases de usuarios.
+- Los permisos se escriben con letras o con tres cifras: `644` y `755` son las más habituales.
+- El usuario root no tiene límites, y por eso se usa lo menos posible.
+- Dar todos los permisos a todos resuelve el error y elimina la seguridad.

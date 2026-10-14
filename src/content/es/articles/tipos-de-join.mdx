@@ -1,0 +1,212 @@
+---
+title: "¿Qué tipos de JOIN hay en SQL?"
+description: "Un JOIN combina filas de dos tablas. Los distintos tipos se diferencian en qué hacen con las filas que no encuentran pareja."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-sql
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Joins Between Tables (documentación oficial, en inglés)"
+    url: https://www.postgresql.org/docs/current/tutorial-join.html
+  - title: "PostgreSQL: Table Expressions (documentación oficial, en inglés)"
+    url: https://www.postgresql.org/docs/current/queries-table-expressions.html
+  - title: "SQLite: SELECT (en inglés)"
+    url: https://www.sqlite.org/lang_select.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **JOIN** es la operación de [SQL](/articulos/que-es-sql/) que combina filas de dos tablas según una condición. Hay varios tipos, y la diferencia entre ellos es una sola: **qué pasa con las filas que no encuentran pareja en la otra tabla**.
+
+## Por qué hacen falta
+
+En una base de datos [normalizada](/articulos/normalizacion-de-bases-de-datos/), la información está repartida: los clientes en una tabla, los pedidos en otra. Para responder a "qué ha pedido cada cliente" hay que juntarlas.
+
+Los ejemplos usan estas dos tablas:
+
+**clientes**
+
+| id | nombre |
+| --- | --- |
+| 1 | Ana |
+| 2 | Luis |
+| 3 | Marta |
+
+**pedidos**
+
+| id | cliente_id | total |
+| --- | --- | --- |
+| 10 | 1 | 25 |
+| 11 | 1 | 40 |
+| 12 | 3 | 15 |
+| 13 | NULL | 8 |
+
+Hay dos casos sin pareja, puestos a propósito: **Luis** no tiene pedidos, y el **pedido 13** no tiene cliente.
+
+## INNER JOIN
+
+Devuelve solo las filas que tienen pareja en las dos tablas. Es el tipo por defecto: escribir `JOIN` a secas significa `INNER JOIN`.
+
+```sql
+SELECT clientes.nombre, pedidos.total
+FROM clientes
+INNER JOIN pedidos ON pedidos.cliente_id = clientes.id;
+```
+
+| nombre | total |
+| --- | --- |
+| Ana | 25 |
+| Ana | 40 |
+| Marta | 15 |
+
+Luis desaparece, porque no tiene pedidos. El pedido 13 también.
+
+Ana aparece dos veces: una fila por cada pareja encontrada.
+
+## LEFT JOIN
+
+Devuelve **todas las filas de la tabla de la izquierda**, tengan pareja o no. Cuando no la tienen, las columnas de la otra tabla se rellenan con `NULL`.
+
+La tabla de la izquierda es la que se escribe primero, tras `FROM`.
+
+```sql
+SELECT clientes.nombre, pedidos.total
+FROM clientes
+LEFT JOIN pedidos ON pedidos.cliente_id = clientes.id;
+```
+
+| nombre | total |
+| --- | --- |
+| Ana | 25 |
+| Ana | 40 |
+| Luis | NULL |
+| Marta | 15 |
+
+Luis aparece, con el total vacío. Es el tipo que se necesita para preguntas como "todos los clientes, con sus pedidos si los tienen".
+
+### Encontrar lo que no tiene pareja
+
+Un uso muy frecuente: quedarse precisamente con las filas sin correspondencia.
+
+```sql
+SELECT clientes.nombre
+FROM clientes
+LEFT JOIN pedidos ON pedidos.cliente_id = clientes.id
+WHERE pedidos.id IS NULL;
+```
+
+Devuelve a Luis: los clientes que nunca han pedido nada.
+
+## RIGHT JOIN
+
+Es el espejo del anterior: conserva todas las filas de la tabla de la **derecha**.
+
+Aparecería el pedido 13, con el nombre a `NULL`, y no aparecería Luis.
+
+Se usa poco, porque cualquier `RIGHT JOIN` se puede escribir como un `LEFT JOIN` cambiando el orden de las tablas, y leer siempre en el mismo sentido resulta más claro.
+
+## FULL JOIN
+
+Conserva **todas las filas de las dos tablas**. Donde no hay pareja, rellena con `NULL` del lado que falte.
+
+| nombre | total |
+| --- | --- |
+| Ana | 25 |
+| Ana | 40 |
+| Luis | NULL |
+| Marta | 15 |
+| NULL | 8 |
+
+Aparecen Luis y el pedido 13. Sirve para comparar dos conjuntos y ver qué sobra en cada uno.
+
+## CROSS JOIN
+
+Combina **cada fila de una tabla con cada fila de la otra**, sin condición. El resultado tiene tantas filas como el producto de las dos: aquí, 3 × 4 = 12.
+
+Tiene usos legítimos, como generar todas las combinaciones de tallas y colores. Lo habitual es encontrárselo por error, al olvidar la condición de un JOIN: con dos tablas de un millón de filas, el resultado tendría un billón.
+
+## Resumen
+
+| Tipo | Filas que devuelve |
+| --- | --- |
+| `INNER` | Solo las que tienen pareja |
+| `LEFT` | Todas las de la izquierda |
+| `RIGHT` | Todas las de la derecha |
+| `FULL` | Todas las de las dos |
+| `CROSS` | Todas las combinaciones |
+
+Este programa lo comprueba con SQLite, contando las filas de cada tipo:
+
+```js
+import { DatabaseSync } from "node:sqlite";
+
+const db = new DatabaseSync(":memory:");
+db.exec(`
+	CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT);
+	CREATE TABLE pedidos (id INTEGER PRIMARY KEY, cliente_id INTEGER, total INTEGER);
+	INSERT INTO clientes VALUES (1, 'Ana'), (2, 'Luis'), (3, 'Marta');
+	INSERT INTO pedidos VALUES (10, 1, 25), (11, 1, 40), (12, 3, 15), (13, NULL, 8);
+`);
+
+function filas(tipo) {
+	const condicion = tipo === "CROSS" ? "" : "ON pedidos.cliente_id = clientes.id";
+
+	return db
+		.prepare(`SELECT * FROM clientes ${tipo} JOIN pedidos ${condicion}`)
+		.all().length;
+}
+
+console.log(filas("INNER")); // 3
+console.log(filas("LEFT")); // 4
+console.log(filas("RIGHT")); // 4
+console.log(filas("FULL")); // 5
+console.log(filas("CROSS")); // 12
+```
+
+<Quiz
+	client:visible
+	question="Quieres una lista de todos los clientes, incluidos los que no tienen pedidos. ¿Qué JOIN usas, con clientes como primera tabla?"
+	options={["INNER JOIN", "LEFT JOIN", "CROSS JOIN"]}
+	answer={1}
+/>
+
+## Errores comunes
+
+### Filtrar en el WHERE y deshacer el LEFT JOIN
+
+```sql
+SELECT clientes.nombre, pedidos.total
+FROM clientes
+LEFT JOIN pedidos ON pedidos.cliente_id = clientes.id
+WHERE pedidos.total > 20;
+```
+
+La intención era "todos los clientes, con sus pedidos de más de 20". Pero el `WHERE` se aplica después del JOIN, y las filas de los clientes sin pedidos tienen el total a `NULL`, que no supera la comparación. Desaparecen, y el resultado es el de un `INNER JOIN`.
+
+La solución es poner la condición dentro del `ON`:
+
+```sql
+SELECT clientes.nombre, pedidos.total
+FROM clientes
+LEFT JOIN pedidos
+	ON pedidos.cliente_id = clientes.id AND pedidos.total > 20;
+```
+
+Lo que va en el `ON` decide **qué se empareja**. Lo que va en el `WHERE` decide **qué se conserva** al final.
+
+### Filas multiplicadas
+
+Si un cliente tiene tres pedidos, aparece tres veces. Al sumar o contar después, es fácil duplicar cantidades sin darse cuenta, sobre todo al encadenar varios JOIN.
+
+### Olvidar los índices
+
+Un JOIN sobre columnas sin [índice](/articulos/indices-de-bases-de-datos/) obliga a recorrer tablas enteras. Las claves foráneas que se usan para combinar suelen merecer uno.
+
+## Lo esencial
+
+- Un JOIN combina filas de dos tablas según una condición.
+- `INNER` conserva solo las filas con pareja; `LEFT`, además, todas las de la primera tabla.
+- `FULL` conserva todas las de ambas y `CROSS` genera todas las combinaciones.
+- Las filas sin pareja se completan con `NULL`.
+- En un `LEFT JOIN`, una condición sobre la segunda tabla va en el `ON`, no en el `WHERE`.

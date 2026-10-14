@@ -1,0 +1,81 @@
+---
+title: "¿Qué es la ley de Moore?"
+description: "La ley de Moore no es una ley física, sino una predicción de 1965 sobre el ritmo al que crecerían los chips. Se cumplió durante décadas."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+updated: 2026-10-13
+sources:
+  - title: "Gordon E. Moore: Cramming More Components onto Integrated Circuits, Electronics (1965, en inglés)"
+    url: https://www.cs.utexas.edu/~fussell/courses/cs352h/papers/moore.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **ley de Moore** es la observación de que el número de componentes que caben en un chip se duplica a intervalos regulares. La formuló Gordon Moore en 1965, y durante medio siglo describió con sorprendente acierto el avance de la informática.
+
+## No es una ley
+
+El nombre confunde. No es una ley de la naturaleza, como la gravedad. Es una **predicción** basada en una tendencia.
+
+En 1965, Moore, que más tarde sería cofundador de Intel, escribió un artículo en una revista de electrónica. Observó que la cantidad de componentes en un circuito integrado había venido multiplicándose por dos cada año, y se atrevió a pronosticar que ese ritmo seguiría durante al menos una década.
+
+Con el tiempo, la versión que se hizo popular alargó el plazo: una duplicación aproximadamente cada dos años.
+
+## Qué significa duplicar
+
+Lo llamativo no es duplicar una vez, sino hacerlo una y otra vez. Eso es un crecimiento **exponencial**, y sus resultados desafían la intuición:
+
+```js
+function trasDuplicar(inicial, veces) {
+	return inicial * 2 ** veces;
+}
+
+console.log(trasDuplicar(1, 10)); // 1024
+console.log(trasDuplicar(1, 20)); // 1048576
+console.log(trasDuplicar(1, 30)); // 1073741824
+```
+
+Diez duplicaciones multiplican por mil. Veinte, por un millón. Treinta, por mil millones.
+
+Por eso un teléfono actual tiene mucha más capacidad de cálculo que los ordenadores que ocupaban salas enteras hace unas décadas. Los primeros chips tenían unos pocos miles de transistores; los actuales, miles de millones.
+
+## Por qué importaba
+
+Meter más transistores en el mismo espacio exige hacerlos más pequeños. Y al encoger, todo mejora a la vez: los transistores conmutan más deprisa, gastan menos energía cada uno y salen más baratos.
+
+Durante años, eso se tradujo en algo muy cómodo para quien programaba: bastaba con esperar. El mismo programa iba más rápido en el ordenador del año siguiente, sin cambiar una línea.
+
+## Una profecía que se cumplía a sí misma
+
+La predicción se convirtió en un objetivo. La industria de los semiconductores planificaba sus inversiones para mantener ese ritmo, y cada fabricante sabía que sus competidores intentarían lo mismo. Nadie quería quedarse atrás.
+
+En buena parte, la ley se cumplió porque todos trabajaron para que se cumpliera.
+
+## Los límites
+
+Un crecimiento exponencial no puede durar para siempre. Hay barreras físicas:
+
+- **El tamaño de los átomos.** Los transistores actuales miden unos pocos nanómetros. No se puede encoger indefinidamente algo que ya es del orden de unas decenas de átomos.
+- **El calor.** Al concentrar tantos transistores, disipar la energía se vuelve un problema.
+- **El coste.** Cada nueva generación de fábricas es mucho más cara que la anterior.
+
+El ritmo se ha frenado, y desde hace tiempo se discute si la ley sigue vigente.
+
+## Lo que cambió para quien programa
+
+Hacia mediados de la década de 2000, la velocidad de cada núcleo dejó de crecer como antes, sobre todo por el calor. La industria cambió de estrategia: en lugar de un núcleo cada vez más rápido, varios núcleos en el mismo chip.
+
+Ese cambio tuvo una consecuencia directa. La mejora dejó de ser automática: para aprovechar varios núcleos, un programa tiene que repartir su trabajo, lo que obliga a aprender [concurrencia](/articulos/hilos-y-concurrencia/).
+
+La otra vía ha sido la especialización: chips diseñados para una tarea concreta, como los que se usan para entrenar [redes neuronales](/articulos/que-es-una-red-neuronal/).
+
+## Lo esencial
+
+- La ley de Moore es una predicción de 1965: el número de componentes de un chip se duplica a intervalos regulares.
+- Describe un crecimiento exponencial, que en pocas décadas multiplicó la capacidad por millones.
+- Se cumplió en parte porque la industria la adoptó como objetivo.
+- Tiene límites físicos, y su ritmo se ha frenado.
+- Cuando la velocidad de un núcleo dejó de crecer, la mejora pasó a depender de usar varios a la vez.

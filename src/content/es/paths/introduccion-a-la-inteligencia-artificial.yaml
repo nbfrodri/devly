@@ -3,7 +3,9 @@ description: Cómo aprende un programa a partir de ejemplos y qué es una red ne
 layer: ia
 steps:
   - que-es-el-aprendizaje-automatico
+  - clasificacion-y-regresion
   - sobreajuste-y-subajuste
+  - como-se-evalua-un-modelo-de-clasificacion
   - que-es-una-red-neuronal
   - descenso-del-gradiente
   - modelos-de-lenguaje

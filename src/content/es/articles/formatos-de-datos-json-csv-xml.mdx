@@ -1,0 +1,174 @@
+---
+title: "Diferencias entre JSON, CSV y XML"
+description: "Tres formatos de texto para guardar e intercambiar datos: JSON para estructuras anidadas, CSV para tablas y XML para documentos."
+level: basico
+kind: comparacion
+layer: datos
+prerequisites:
+  - tipos-de-datos
+updated: 2026-10-13
+sources:
+  - title: "RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format"
+    url: https://www.rfc-editor.org/info/rfc8259/
+  - title: "RFC 4180: Common Format and MIME Type for Comma-Separated Values (CSV) Files"
+    url: https://www.rfc-editor.org/info/rfc4180/
+  - title: "W3C: Extensible Markup Language (XML) 1.0 (en inglés)"
+    url: https://www.w3.org/TR/xml/
+  - title: "MDN: JSON"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/JSON
+---
+
+import { Quiz } from "@/components/quiz";
+
+**JSON**, **CSV** y **XML** son formatos de texto para representar datos de manera que distintos programas puedan intercambiarlos. JSON describe estructuras anidadas, CSV describe tablas y XML describe documentos con etiquetas.
+
+## Por qué hacen falta
+
+Dentro de un programa, los datos viven en la memoria como variables y objetos. Esa forma no sirve para enviarlos por la red ni para guardarlos en un archivo que abrirá otro programa, quizá escrito en otro lenguaje.
+
+Hace falta una forma acordada de escribirlos. Convertir los datos del programa a ese formato se llama **serializar**; el camino inverso, **deserializar** o analizar (*parse*).
+
+Los tres formatos de este artículo son de texto: se pueden abrir con cualquier editor.
+
+## JSON
+
+Organiza los datos en dos estructuras que se combinan libremente:
+
+- **Objetos**: pares de nombre y valor, entre llaves.
+- **Listas**: valores en orden, entre corchetes.
+
+```json
+{
+	"nombre": "Ana",
+	"edad": 30,
+	"activa": true,
+	"etiquetas": ["admin", "editora"],
+	"direccion": { "ciudad": "Madrid" }
+}
+```
+
+Admite seis tipos de valor: texto, número, booleano, `null`, objeto y lista.
+
+En JavaScript se maneja con dos funciones:
+
+```js
+const texto = '{"nombre": "Ana", "etiquetas": ["admin", "editora"]}';
+
+const datos = JSON.parse(texto);
+console.log(datos.etiquetas.length); // 2
+
+const deVuelta = JSON.stringify({ ciudad: "Madrid", poblacion: 3 });
+console.log(deVuelta); // {"ciudad":"Madrid","poblacion":3}
+```
+
+- **A favor:** ligero, fácil de leer, y encaja con las estructuras de casi todos los lenguajes. Es el formato habitual de las [API](/articulos/que-es-una-api/) web.
+- **En contra:** no admite comentarios, no tiene tipo para fechas (se escriben como texto) y sus reglas son estrictas: las claves van entre comillas dobles y no puede sobrar una coma al final.
+
+## CSV
+
+Significa "valores separados por comas". Representa una **tabla**: cada línea es una fila y las comas separan las columnas. La primera línea suele llevar los nombres.
+
+```csv
+nombre,edad,ciudad
+Ana,30,Madrid
+Luis,25,Sevilla
+```
+
+- **A favor:** es el formato más compacto y simple. Lo abre cualquier hoja de cálculo, y se procesa línea a línea, lo que permite manejar archivos enormes sin cargarlos enteros en memoria.
+- **En contra:** solo sirve para datos tabulares, no tiene tipos (todo es texto) y está poco estandarizado.
+
+### Sus trampas
+
+Esa falta de estandarización causa problemas reales:
+
+- **Comas dentro de un valor.** Si un campo contiene una coma, debe ir entre comillas dobles: `"Pérez, Ana"`. Partir cada línea por las comas, sin más, lo rompe.
+- **El separador varía.** En países donde la coma se usa para los decimales, muchos programas separan con punto y coma.
+- **La codificación no se indica.** Si no se abre con la [codificación de caracteres](/articulos/codificacion-de-caracteres/) correcta, las tildes se estropean.
+- **Las hojas de cálculo reinterpretan.** Un código como `00123` puede perder los ceros, y un texto que parezca una fecha puede convertirse en una.
+
+```js
+function leerCsv(texto) {
+	const [cabecera, ...lineas] = texto.trim().split("\n");
+	const columnas = cabecera.split(",");
+
+	return lineas.map((linea) => {
+		const valores = linea.split(",");
+		return Object.fromEntries(columnas.map((nombre, i) => [nombre, valores[i]]));
+	});
+}
+
+const filas = leerCsv("nombre,edad\nAna,30\nLuis,25");
+
+console.log(filas.length); // 2
+console.log(filas[0].nombre); // "Ana"
+console.log(typeof filas[0].edad); // "string"
+```
+
+Este lector sirve para el ejemplo y falla con valores entre comillas. Para datos reales conviene usar una biblioteca. La última línea muestra otra consecuencia: la edad llega como texto, y hay que convertirla.
+
+## XML
+
+Usa **etiquetas** de apertura y cierre, como [HTML](/articulos/que-es-html/), pero con nombres que eliges tú.
+
+```xml
+<usuario id="7">
+	<nombre>Ana</nombre>
+	<edad>30</edad>
+	<etiquetas>
+		<etiqueta>admin</etiqueta>
+		<etiqueta>editora</etiqueta>
+	</etiquetas>
+</usuario>
+```
+
+Un dato puede ir como contenido de un elemento o como **atributo**, como el `id` del ejemplo.
+
+- **A favor:** admite comentarios, permite mezclar texto con marcas (por eso es bueno para documentos) y tiene herramientas maduras para validar la estructura con un esquema.
+- **En contra:** es mucho más extenso. Cada dato va envuelto en dos etiquetas, y los archivos ocupan más y cuestan más de leer.
+
+Fue el formato dominante para intercambiar datos antes de JSON. Hoy sigue muy presente en documentos ofimáticos, fuentes de noticias, facturación electrónica y sistemas empresariales.
+
+## Comparación
+
+| | JSON | CSV | XML |
+| --- | --- | --- | --- |
+| Forma de los datos | Anidada | Tabla | Anidada, tipo documento |
+| Tamaño | Medio | Pequeño | Grande |
+| Tipos de datos | Varios | Solo texto | Solo texto, salvo con esquema |
+| Comentarios | No | No | Sí |
+| Validación con esquema | Posible | No | Sí, muy desarrollada |
+| Uso típico | API web, configuración | Exportar tablas, análisis de datos | Documentos, sistemas empresariales |
+
+<Quiz
+	client:visible
+	question="Tienes que exportar una tabla de un millón de filas para abrirla en una hoja de cálculo. ¿Qué formato encaja mejor?"
+	options={["JSON", "CSV", "XML"]}
+	answer={1}
+/>
+
+## Otros formatos
+
+- **YAML**: pensado para que lo escriban personas. Usa la sangría en lugar de llaves y admite comentarios. Es común en archivos de configuración, como los de la [integración continua](/articulos/integracion-y-despliegue-continuos/).
+- **Formatos binarios**, como Protocol Buffers o Parquet: no son legibles, pero ocupan menos y se procesan más rápido. Se usan cuando el volumen o la velocidad importan.
+
+## Cómo elegir
+
+- **Datos con estructura anidada**, o una API: JSON.
+- **Una tabla** que va a una hoja de cálculo o a un análisis: CSV.
+- **Un documento** con texto y marcas, o un sistema que lo exige: XML.
+- **Configuración que edita una persona**: YAML.
+
+## Seguridad
+
+Los datos que llegan de fuera pueden estar manipulados. Dos precauciones:
+
+- **Validar la estructura** tras analizarlos, antes de usarlos.
+- **Cuidado con XML.** Tiene funciones, como las entidades externas, que han dado lugar a ataques. Los analizadores deben configurarse para desactivarlas cuando el contenido no es de confianza.
+
+## Lo esencial
+
+- JSON representa objetos y listas anidados, y es el formato habitual de las API.
+- CSV representa tablas: compacto y universal, pero sin tipos y poco estandarizado.
+- XML usa etiquetas, es más extenso y destaca en documentos y validación.
+- Serializar es convertir los datos de un programa a uno de estos formatos.
+- El formato se elige según la forma de los datos y quién los va a leer.

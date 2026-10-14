@@ -6,6 +6,7 @@ steps:
   - que-es-http
   - stateful-y-stateless
   - que-es-una-api
+  - formatos-de-datos-json-csv-xml
   - que-es-rest
   - rest-frente-a-graphql
   - websockets

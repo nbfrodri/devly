@@ -61,7 +61,7 @@ Un proceso bloqueado no consume tiempo de procesador. Por eso un programa que es
 
 ## Repartir el procesador
 
-El sistema operativo deja que un proceso use un núcleo durante un intervalo muy corto y después da paso a otro. La parte que decide a quién le toca es el **planificador**.
+El sistema operativo deja que un proceso use un núcleo durante un intervalo muy corto y después da paso a otro. La parte que decide a quién le toca es el [**planificador**](/articulos/planificador-de-procesos/).
 
 Cambiar de un proceso a otro se llama **cambio de contexto**. El sistema guarda el estado del proceso que sale (por dónde iba y qué tenía en los registros) y restaura el del que entra. Cuando al primero le vuelve a tocar, continúa exactamente donde lo dejó, sin haberse enterado de la pausa.
 

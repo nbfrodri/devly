@@ -4,7 +4,9 @@ layer: datos
 steps:
   - que-es-una-base-de-datos
   - que-es-sql
+  - tipos-de-join
   - normalizacion-de-bases-de-datos
+  - indices-de-bases-de-datos
   - transacciones-y-acid
   - bases-de-datos-nosql
   - sql-frente-a-nosql

@@ -1,0 +1,158 @@
+---
+title: "Diferencias entre clasificación y regresión"
+description: "Un modelo de clasificación predice una categoría; uno de regresión, un número. Es la primera decisión al plantear un problema de aprendizaje automático."
+level: basico
+kind: comparacion
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+updated: 2026-10-13
+sources:
+  - title: "Google: Clasificación (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/classification?hl=es-419
+  - title: "Google: Regresión lineal (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/linear-regression?hl=es-419
+  - title: "scikit-learn: Getting Started (documentación oficial, en inglés)"
+    url: https://scikit-learn.org/stable/getting_started.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **clasificación** y la **regresión** son los dos grandes tipos de problema del aprendizaje supervisado. En la clasificación, el modelo predice una **categoría**. En la regresión, predice un **número**.
+
+Saber en cuál de los dos estás es la primera decisión al plantear un problema de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/), porque determina qué modelos sirven y cómo se mide el resultado.
+
+## La diferencia está en la respuesta
+
+No depende de los datos de entrada, sino de lo que se quiere predecir.
+
+| Pregunta | Respuesta | Tipo |
+| --- | --- | --- |
+| ¿Este correo es no deseado? | Sí o no | Clasificación |
+| ¿Qué animal sale en la foto? | Gato, perro, pájaro | Clasificación |
+| ¿Cuánto costará esta vivienda? | 215 000 | Regresión |
+| ¿Cuántos grados hará mañana? | 18,5 | Regresión |
+
+Una buena prueba: ¿tiene sentido hablar de un valor intermedio? Entre 200 000 y 220 000 euros hay un precio de 210 000. Entre "gato" y "perro" no hay nada.
+
+## Regresión
+
+El modelo aprende una relación entre las características y un valor numérico.
+
+El caso más simple es la **regresión lineal**: se busca la recta que mejor se ajusta a los ejemplos.
+
+```js
+const ejemplos = [
+	{ metros: 50, precio: 100 },
+	{ metros: 80, precio: 160 },
+	{ metros: 100, precio: 200 },
+];
+
+let sumaXY = 0;
+let sumaXX = 0;
+
+for (const { metros, precio } of ejemplos) {
+	sumaXY = sumaXY + metros * precio;
+	sumaXX = sumaXX + metros * metros;
+}
+
+const precioPorMetro = sumaXY / sumaXX;
+const predecir = (metros) => precioPorMetro * metros;
+
+console.log(precioPorMetro); // 2
+console.log(predecir(70)); // 140
+```
+
+A partir de tres viviendas, el modelo deduce un precio por metro y lo aplica a una que no había visto. Los precios están en miles.
+
+### Cómo se mide
+
+La pregunta es **cuánto se equivoca**. Se mide la distancia entre lo predicho y el valor real:
+
+- **Error absoluto medio**: la media de las diferencias, sin signo. Se lee en las unidades del problema: "se equivoca, de media, en 12 000 euros".
+- **Error cuadrático medio**: la media de las diferencias al cuadrado. Castiga mucho más los errores grandes.
+
+## Clasificación
+
+El modelo asigna cada caso a una de varias categorías, llamadas **clases**.
+
+- **Binaria**: dos clases. Fraude o no fraude.
+- **Multiclase**: más de dos. Qué dígito del 0 al 9 hay en una imagen.
+
+### Por dentro, una probabilidad
+
+Casi ningún clasificador responde directamente "sí" o "no". Calcula una **probabilidad**: "hay un 87 % de que sea no deseado".
+
+Para convertirla en una decisión se fija un **umbral**. Lo habitual es 0,5, pero se puede mover:
+
+```js
+function clasificar(probabilidad, umbral) {
+	return probabilidad >= umbral ? "no deseado" : "normal";
+}
+
+console.log(clasificar(0.87, 0.5)); // "no deseado"
+console.log(clasificar(0.6, 0.5)); // "no deseado"
+console.log(clasificar(0.6, 0.8)); // "normal"
+```
+
+Con un umbral de 0,8, un correo con probabilidad 0,6 se deja pasar. Subir el umbral hace al modelo más prudente: marca menos correos y se equivoca menos al marcarlos, a costa de dejar escapar más.
+
+Dónde poner el umbral depende de qué error sale más caro. Mandar un correo importante a la carpeta de no deseados es peor que dejar pasar publicidad.
+
+### Cómo se mide
+
+La pregunta es **cuántas veces acierta**, y hay más de una forma de contarlo. Se explica en [cómo se evalúa un modelo de clasificación](/articulos/como-se-evalua-un-modelo-de-clasificacion/).
+
+## Comparación
+
+| | Clasificación | Regresión |
+| --- | --- | --- |
+| Predice | Una categoría | Un número |
+| Valores posibles | Un conjunto finito | Un rango continuo |
+| Salida interna | Probabilidad de cada clase | El valor |
+| Se mide con | Aciertos: exactitud, precisión, exhaustividad | Distancias: error medio |
+| Ejemplos | Detección de fraude, diagnóstico | Precios, demanda, temperatura |
+
+<Quiz
+	client:visible
+	question="Quieres predecir cuántos días tardará en entregarse un paquete. ¿Qué tipo de problema es?"
+	options={["Clasificación", "Regresión", "Ninguno de los dos"]}
+	answer={1}
+/>
+
+## Casos que confunden
+
+### Un nombre engañoso
+
+La **regresión logística** es, a pesar del nombre, un modelo de **clasificación**. Calcula una probabilidad entre 0 y 1 y la compara con un umbral.
+
+### Números que son etiquetas
+
+Que la respuesta sea un número no la convierte en regresión. Un código postal o el dorsal de un jugador son etiquetas escritas con cifras: no tiene sentido sumarlos ni promediarlos. Predecirlos es clasificar.
+
+### El mismo problema, de dos formas
+
+A veces se puede elegir. Predecir la edad de una persona es regresión. Predecir si es "niño", "adulto" o "mayor" es clasificación.
+
+Convertir un número en categorías simplifica el problema, pero tira información: para ese modelo, 17 y 19 años caen en categorías distintas, y 19 y 60, en la misma.
+
+### Categorías con orden
+
+Las valoraciones de una a cinco estrellas son categorías, pero ordenadas. Tratarlas como clasificación normal ignora que confundir un 4 con un 5 es menos grave que confundirlo con un 1. Existen técnicas específicas para estos casos.
+
+## Qué tienen en común
+
+Las diferencias están en la salida y en la medida. Todo lo demás se comparte:
+
+- Los dos aprenden de ejemplos etiquetados.
+- Los dos pueden [sobreajustar](/articulos/sobreajuste-y-subajuste/).
+- Los dos se evalúan con datos reservados.
+- Muchos modelos sirven para ambos con pequeños cambios, incluidas las [redes neuronales](/articulos/que-es-una-red-neuronal/).
+
+## Lo esencial
+
+- La clasificación predice una categoría; la regresión, un número.
+- La prueba: si tiene sentido un valor intermedio, es regresión.
+- Un clasificador calcula probabilidades y decide con un umbral, que se ajusta según qué error cuesta más.
+- La regresión se mide por la distancia al valor real; la clasificación, por los aciertos.
+- La regresión logística, pese a su nombre, clasifica.

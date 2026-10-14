@@ -4,6 +4,8 @@ layer: sistemas
 steps:
   - que-es-un-sistema-operativo
   - que-es-un-proceso
+  - planificador-de-procesos
   - memoria-virtual
   - sistema-de-archivos
+  - permisos-y-usuarios
   - terminal-y-shell
