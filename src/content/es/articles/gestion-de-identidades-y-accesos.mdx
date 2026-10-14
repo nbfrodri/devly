@@ -1,0 +1,89 @@
+---
+title: "¿Qué es la gestión de identidades y accesos (IAM)?"
+description: "IAM decide quién puede hacer qué sobre cada recurso de la nube: personas, aplicaciones y servicios, con políticas de permisos y el principio de mínimo privilegio."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - autenticacion-y-autorizacion
+  - computacion-en-la-nube
+updated: 2026-10-13
+sources:
+  - title: "AWS: What is IAM? (en inglés)"
+    url: https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html
+  - title: "AWS: Security best practices in IAM (en inglés)"
+    url: https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+  - title: "Google Cloud: IAM overview (en inglés)"
+    url: https://cloud.google.com/iam/docs/overview
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **gestión de identidades y accesos**, o **IAM**, es el sistema con el que un proveedor de [nube](/articulos/computacion-en-la-nube/) controla **quién** puede hacer **qué** sobre **cada recurso**. Resuelve las dos preguntas de siempre: quién eres, la [autenticación](/articulos/autenticacion-y-autorizacion/), y qué tienes permitido hacer, la autorización.
+
+En una cuenta de nube hay mucho que proteger: servidores, bases de datos, [cubos de objetos](/articulos/almacenamiento-de-objetos/), claves. Un permiso de más puede costar una filtración o una factura enorme.
+
+## Las piezas
+
+| Pieza | Qué es | Ejemplo |
+| --- | --- | --- |
+| Identidad o principal | Quien hace la petición | Una persona, una aplicación, un servicio |
+| Grupo | Conjunto de usuarios con los mismos permisos | "Desarrollo", "Contabilidad" |
+| Rol | Un conjunto de permisos que alguien asume temporalmente | El rol del servidor que lee de la base de datos |
+| Política | Un documento que dice qué acciones se permiten o deniegan sobre qué recursos | "Leer objetos del cubo de facturas" |
+
+Una política típica tiene esta forma:
+
+```json
+{
+	"Effect": "Allow",
+	"Action": ["s3:GetObject"],
+	"Resource": "arn:aws:s3:::facturas/*"
+}
+```
+
+Permite (`Allow`) leer objetos (`s3:GetObject`) del cubo `facturas`. Nada más.
+
+## Cómo se decide
+
+La regla básica en AWS: **todo está denegado por defecto**. Una petición solo se permite si alguna política la permite expresamente, y una **denegación explícita gana siempre** a cualquier permiso.
+
+```js
+function decidir(politicas, accion, recurso) {
+	const aplica = (p) => p.acciones.includes(accion) && recurso.startsWith(p.recurso);
+	const coinciden = politicas.filter(aplica);
+
+	if (coinciden.some((p) => p.efecto === "Deny")) return "denegado";
+	if (coinciden.some((p) => p.efecto === "Allow")) return "permitido";
+	return "denegado";
+}
+
+const politicas = [
+	{ efecto: "Allow", acciones: ["leer"], recurso: "facturas/" },
+	{ efecto: "Deny", acciones: ["leer"], recurso: "facturas/confidencial/" },
+];
+
+console.log(decidir(politicas, "leer", "facturas/2026/enero.pdf")); // "permitido"
+console.log(decidir(politicas, "leer", "facturas/confidencial/sueldos.pdf")); // "denegado"
+console.log(decidir(politicas, "borrar", "facturas/2026/enero.pdf")); // "denegado"
+```
+
+## Buenas prácticas
+
+Las recomendaciones de AWS coinciden con las de cualquier sistema de [permisos](/articulos/permisos-y-usuarios/):
+
+- **Mínimo privilegio**: dar solo los permisos necesarios para la tarea, e ir recortando los que sobran.
+- **Credenciales temporales**: que las personas y las aplicaciones usen roles con credenciales que caducan, en lugar de claves permanentes. Una aplicación en un servidor de la nube recibe las credenciales de su rol automáticamente, sin guardar claves en el código ni en [variables de entorno](/articulos/variables-de-entorno-y-secretos/).
+- **Proteger la cuenta raíz**, la que lo puede todo, y no usarla para el trabajo diario.
+- **Segundo factor** para las personas, como explica [autenticación en dos factores](/articulos/que-es-la-autenticacion-en-dos-factores/).
+- **Revisar y eliminar** usuarios, roles y permisos que ya no se usan.
+
+## El error típico
+
+Durante el desarrollo, dar permisos de administrador "para que funcione" y olvidarse de quitarlos. Si esa clave se filtra, por ejemplo en un repositorio público, el atacante puede hacer cualquier cosa en la cuenta. Es uno de los fallos de [control de acceso](/articulos/owasp-top-10/) que encabezan las listas de riesgos.
+
+## Lo esencial
+
+- IAM controla quién puede hacer qué sobre cada recurso de la nube.
+- Se basa en identidades, grupos, roles y políticas.
+- Todo está denegado por defecto, y una denegación explícita gana a cualquier permiso.
+- Mínimo privilegio y credenciales temporales son las dos reglas más importantes.

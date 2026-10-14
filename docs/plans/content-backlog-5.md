@@ -40,16 +40,16 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ### Nube
 
-- [ ] Almacenamiento de objetos (computación en la nube)
-- [ ] Redes privadas virtuales en la nube, VPC (subredes y CIDR)
-- [ ] Gestión de identidades y accesos, IAM (autorización)
+- [x] Almacenamiento de objetos (computación en la nube)
+- [x] Redes privadas virtuales en la nube, VPC (subredes y CIDR)
+- [x] Gestión de identidades y accesos, IAM (autorización)
 
 ### Redes y telecomunicaciones
 
-- [ ] Cómo funciona la fibra óptica (señales)
-- [ ] Redes móviles: de 2G a 5G (modulación)
+- [x] Cómo funciona la fibra óptica (señales)
+- [x] Redes móviles: de 2G a 5G (modulación)
 - [x] Cómo funciona Bluetooth (wifi)
-- [ ] Internet por satélite (latencia)
+- [x] Internet por satélite (latencia)
 
 ### Datos
 

@@ -1,0 +1,87 @@
+---
+title: "¿Qué es el almacenamiento de objetos?"
+description: "El almacenamiento de objetos guarda archivos como objetos con una clave y unos metadatos, en un espacio plano sin carpetas. Es como se guardan las fotos, vídeos y copias de la nube."
+level: basico
+layer: sistemas
+prerequisites:
+  - computacion-en-la-nube
+  - sistema-de-archivos
+updated: 2026-10-13
+sources:
+  - title: "Google Cloud: What is object storage? (en inglés)"
+    url: https://cloud.google.com/learn/what-is-object-storage
+  - title: "AWS: ¿Qué es Amazon S3?"
+    url: https://docs.aws.amazon.com/es_es/AmazonS3/latest/userguide/Welcome.html
+  - title: "AWS: ¿Qué es el almacenamiento de objetos?"
+    url: https://aws.amazon.com/es/what-is/object-storage/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **almacenamiento de objetos** es una forma de guardar datos en la que cada archivo se trata como un **objeto**: los datos, unos **metadatos** que los describen y un **identificador único** para encontrarlo. Los objetos se guardan en un espacio **plano**, sin jerarquía de carpetas. Es el tipo de almacenamiento que usan los servicios en la [nube](/articulos/computacion-en-la-nube/) para fotos, vídeos, copias de seguridad y los archivos estáticos de las webs.
+
+El servicio más conocido es Amazon S3, y todos los proveedores tienen el suyo.
+
+## Tres formas de guardar datos
+
+| | Bloques | Archivos | Objetos |
+| --- | --- | --- | --- |
+| Unidad | Bloques de tamaño fijo | Archivos en carpetas | Objetos con clave y metadatos |
+| Organización | La decide el sistema de archivos de encima | Jerarquía de directorios | Espacio plano |
+| Acceso | Como un disco | Rutas, como en tu ordenador | Por red, con peticiones HTTP |
+| Uso típico | Discos de máquinas virtuales, bases de datos | Carpetas compartidas | Fotos, vídeos, copias, archivos de una web |
+| Modificar un trozo | Sí | Sí | No: se sustituye el objeto entero |
+
+Un [sistema de archivos](/articulos/sistema-de-archivos/) organiza los datos en carpetas. El almacenamiento de objetos renuncia a eso a cambio de escalar casi sin límite y a un coste bajo.
+
+## Cubos, claves y objetos
+
+En S3, los objetos se guardan en **buckets** (cubos), y cada objeto tiene una **clave**: su nombre dentro del cubo. En la dirección `https://mi-cubo.s3.amazonaws.com/fotos/perro.jpg`, el cubo es `mi-cubo` y la clave es `fotos/perro.jpg`.
+
+Esa barra parece una carpeta, pero no lo es: la clave entera es un texto. Las "carpetas" que muestran las consolas son una ilusión creada filtrando por **prefijo**:
+
+```js
+const cubo = new Map();
+
+function guardar(clave, datos, metadatos = {}) {
+	cubo.set(clave, { datos, metadatos, tamano: datos.length });
+}
+
+function listar(prefijo) {
+	return [...cubo.keys()].filter((clave) => clave.startsWith(prefijo));
+}
+
+guardar("fotos/perro.jpg", "...", { tipo: "image/jpeg" });
+guardar("fotos/gato.jpg", "...", { tipo: "image/jpeg" });
+guardar("documentos/factura.pdf", "...", { tipo: "application/pdf" });
+
+console.log(listar("fotos/").join(", ")); // "fotos/perro.jpg, fotos/gato.jpg"
+console.log(cubo.get("documentos/factura.pdf").metadatos.tipo); // "application/pdf"
+```
+
+Se accede a los objetos con peticiones HTTP: `PUT` para subir, `GET` para descargar, `DELETE` para borrar. Por eso se pueden servir directamente a un navegador, a menudo a través de una [CDN](/articulos/que-es-una-cdn/).
+
+## Para qué es bueno
+
+- **Datos no estructurados** en grandes cantidades: imágenes, vídeo, audio, registros, datos de sensores. Google Cloud recuerda que buena parte de los datos actuales son así y no encajan en una base de datos tradicional.
+- **Escala**: se pueden guardar miles de millones de objetos sin pensar en discos.
+- **Coste**: más barato que el almacenamiento en bloques para grandes volúmenes.
+- **Durabilidad**: el proveedor guarda varias copias en distintos lugares.
+- **Versiones**: S3 permite conservar las versiones anteriores de cada objeto, útil contra borrados accidentales y como parte de las [copias de seguridad](/articulos/copias-de-seguridad/).
+
+## Para qué no
+
+- **Datos que cambian a menudo en partes pequeñas**: para modificar un byte hay que reescribir el objeto entero.
+- **Bases de datos**: necesitan almacenamiento en bloques, con acceso rápido a posiciones concretas.
+- **Baja latencia extrema**: cada acceso es una petición por la red.
+
+## Seguridad
+
+Un cubo mal configurado, accesible públicamente sin querer, es una de las causas más repetidas de filtraciones de datos. Los proveedores permiten controlar el acceso con políticas del cubo y con [gestión de identidades y accesos](/articulos/gestion-de-identidades-y-accesos/), y lo prudente es que todo sea privado salvo lo que deba ser público.
+
+## Lo esencial
+
+- El almacenamiento de objetos guarda cada archivo como un objeto con datos, metadatos y una clave única.
+- Los objetos viven en cubos, en un espacio plano: las carpetas son prefijos de la clave.
+- Se accede por HTTP y escala casi sin límite a bajo coste.
+- Es ideal para archivos que se leen mucho y se modifican enteros, no para bases de datos.

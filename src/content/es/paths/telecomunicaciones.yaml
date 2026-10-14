@@ -4,7 +4,10 @@ layer: redes
 steps:
   - senales-analogicas-y-digitales
   - modulacion
+  - como-funciona-la-fibra-optica
   - ancho-de-banda-latencia-y-rendimiento
   - capa-de-enlace
   - como-funciona-el-wifi
+  - redes-moviles
+  - internet-por-satelite
   - como-funciona-bluetooth

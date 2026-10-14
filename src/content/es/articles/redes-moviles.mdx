@@ -1,0 +1,81 @@
+---
+title: "Redes móviles: de 2G a 5G"
+description: "La red móvil divide el territorio en celdas, cada una con su antena. Al moverte, la llamada pasa de una celda a otra sin cortarse. Cada generación ha multiplicado la velocidad."
+level: intermedio
+layer: redes
+prerequisites:
+  - modulacion
+  - como-funciona-el-wifi
+  - tipos-de-redes
+updated: 2026-10-13
+sources:
+  - title: "Explain that Stuff: How do cellphones work? (en inglés)"
+    url: https://www.explainthatstuff.com/cellphones.html
+  - title: "3GPP: About 3GPP (en inglés)"
+    url: https://www.3gpp.org/about-us
+  - title: "ITU-R: IMT-2020 (en inglés)"
+    url: https://www.itu.int/en/ITU-R/study-groups/rsg5/rwp5d/imt-2020/Pages/default.aspx
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un móvil es, en esencia, una **radio** que se comunica con la antena más cercana. Esa antena está conectada a la red del operador, que a su vez está unida a la red telefónica y a internet. La clave del sistema es dividir el territorio en **celdas**, y de ahí su nombre en inglés, *cellular*.
+
+## Celdas
+
+El territorio se reparte en zonas pequeñas, las **celdas**, cada una servida por sus antenas y su **estación base**, que coordina lo que ocurre dentro de ella. Se suelen dibujar como un mosaico de hexágonos invisibles.
+
+```mermaid
+flowchart LR
+	M["Móvil"] -- radio --> A["Antena de la celda"]
+	A --> E["Estación base"]
+	E --> R["Red del operador"]
+	R --> I["Internet y red telefónica"]
+```
+
+¿Por qué celdas pequeñas en lugar de una gran antena? Porque el espectro de radio es limitado. Cada celda usa unas frecuencias distintas de las de sus vecinas, pero celdas lejanas pueden **reutilizar** las mismas. Cuantas más celdas, más conversaciones simultáneas caben.
+
+```js
+const canalesPorCelda = 50;
+
+const capacidad = (celdas) => celdas * canalesPorCelda;
+
+console.log(capacidad(1)); // 50
+console.log(capacidad(100)); // 5000
+```
+
+Por eso en las ciudades, donde hay más gente, las celdas son más pequeñas y las antenas están más juntas.
+
+## El traspaso
+
+Si vas en coche hablando por teléfono, cruzas varias celdas. La red detecta que la señal de la siguiente antena es mejor y **traspasa** la llamada de una celda a otra sin cortarla. Ocurre igual con los datos: la conexión sigue mientras te mueves.
+
+## Las generaciones
+
+| Generación | Lo que trajo |
+| --- | --- |
+| 1G | Llamadas analógicas |
+| 2G | Voz [digital](/articulos/senales-analogicas-y-digitales/) y mensajes de texto; el estándar GSM dominó el mundo |
+| 3G | Acceso a internet y datos más rápidos |
+| 4G | Banda ancha móvil: vídeo, aplicaciones, todo sobre IP |
+| 5G | Más velocidad, menos [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/) y muchos más dispositivos conectados |
+
+Cada generación ha usado [modulaciones](/articulos/modulacion/) más eficientes, más espectro y técnicas para que varias antenas transmitan a la vez.
+
+## Quién define los estándares
+
+Para que un móvil funcione en cualquier país hacen falta estándares comunes:
+
+- **3GPP**, una asociación de organismos de normalización de todo el mundo, se creó en 1998 para desarrollar los estándares de 3G, y desde entonces define también los de 4G y 5G.
+- La **UIT**, la Unión Internacional de Telecomunicaciones, fija los requisitos que debe cumplir cada generación. Los de 5G se conocen como **IMT-2020**, y las especificaciones de las interfaces de radio que los cumplen se publicaron en 2021.
+
+## Del teléfono al ordenador de bolsillo
+
+Al principio, un móvil solo servía para hablar. Hoy la mayoría son pequeños ordenadores con un circuito de radio incorporado, y más del 90 % de la población mundial puede acceder a una red 4G. Las redes móviles son, para muchas personas, la única forma de conectarse a internet.
+
+## Lo esencial
+
+- La red móvil divide el territorio en celdas, cada una con sus antenas y su estación base.
+- Celdas lejanas reutilizan frecuencias; más celdas significa más capacidad.
+- Al moverte, la conexión se traspasa de una celda a otra sin cortarse.
+- Cada generación, de 2G a 5G, ha ganado velocidad y capacidad; 3GPP y la UIT definen los estándares.
