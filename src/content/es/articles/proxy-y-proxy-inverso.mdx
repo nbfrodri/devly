@@ -1,0 +1,134 @@
+---
+title: "Diferencias entre un proxy y un proxy inverso"
+description: "Los dos son intermediarios en una conexión. Un proxy actúa en nombre de los clientes; un proxy inverso, en nombre de los servidores."
+level: basico
+kind: comparacion
+layer: redes
+prerequisites:
+  - cliente-servidor
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+  - title: "nginx: Module ngx_http_proxy_module (en inglés)"
+    url: https://nginx.org/en/docs/http/ngx_http_proxy_module.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **proxy** es un servidor intermedio que reenvía peticiones entre un cliente y un servidor. Hay dos clases, según a quién representa. Un **proxy directo**, o simplemente proxy, actúa en nombre de los **clientes**: se sitúa delante de ellos y hace las peticiones por ellos. Un **proxy inverso** actúa en nombre de los **servidores**: se sitúa delante de ellos y recibe las peticiones que les van dirigidas.
+
+Los dos hacen técnicamente lo mismo, reenviar. Lo que cambia es de qué lado están y quién sabe que existen.
+
+## Proxy directo
+
+1. El cliente quiere acceder a un sitio.
+2. En lugar de conectarse a él, envía la petición al proxy.
+3. El proxy la hace en su propio nombre y devuelve la respuesta.
+
+El servidor de destino ve la [dirección](/articulos/que-es-una-direccion-ip/) del proxy, no la del cliente. **El cliente sabe que hay un proxy**: lo ha configurado. El servidor no tiene por qué saberlo.
+
+### Para qué se usa
+
+- **Control de salida.** Una organización hace pasar por él toda la navegación, para bloquear sitios, registrar accesos o buscar programas maliciosos.
+- **Ocultar al cliente.** El destino no ve su dirección.
+- **Caché.** Si muchos usuarios piden lo mismo, se guarda y se sirve sin repetir la petición.
+- **Saltar restricciones** por ubicación.
+- **Dar salida a una red aislada.** Servidores sin acceso directo a internet pueden descargar actualizaciones a través de un proxy que controla adónde se conectan.
+
+## Proxy inverso
+
+1. El cliente pide un sitio, como siempre.
+2. La petición llega al proxy inverso, que es lo que hay en la dirección pública.
+3. El proxy la reenvía a uno de los servidores que tiene detrás.
+4. Recibe la respuesta y se la devuelve al cliente.
+
+**El cliente no sabe que hay un proxy.** Cree hablar con el servidor. Los servidores reales quedan ocultos.
+
+### Para qué se usa
+
+Como todo el tráfico pasa por él, es el sitio natural para lo que es común a todos los servidores.
+
+- **Repartir la carga.** Un [balanceador](/articulos/balanceador-de-carga/) de capa 7 es un proxy inverso que reparte.
+- **Terminar TLS.** Descifra las conexiones [HTTPS](/articulos/https-y-tls/) en un solo punto, donde se gestionan los certificados.
+- **Caché** de respuestas. Una [CDN](/articulos/que-es-una-cdn/) es una red de proxies inversos con caché repartidos por el mundo.
+- **Enrutar.** Enviar `/api` a un servicio y `/imagenes` a otro, tras un mismo dominio. Es la base de una pasarela de API ante [microservicios](/articulos/monolito-y-microservicios/).
+- **Proteger.** Oculta los servidores, filtra peticiones maliciosas y aplica [límites de peticiones](/articulos/limitacion-de-peticiones/).
+- **Comprimir** las respuestas.
+- **Servir archivos estáticos** directamente, sin molestar a la aplicación.
+- **Autenticar** antes de dejar pasar.
+
+Poner un proxy inverso delante de una aplicación es la práctica habitual. Programas como Nginx, HAProxy, Caddy o Envoy cumplen ese papel.
+
+Una configuración mínima de Nginx:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name tienda.ejemplo;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header X-Forwarded-For $remote_addr;
+    }
+
+    location / {
+        root /var/www/tienda;
+    }
+}
+```
+
+Atiende las conexiones cifradas, sirve los archivos de la web y pasa a la aplicación solo lo que empieza por `/api/`.
+
+## Comparación
+
+| | Proxy directo | Proxy inverso |
+| --- | --- | --- |
+| Actúa en nombre de | Los clientes | Los servidores |
+| Lo configura | Quien administra los clientes | Quien administra los servidores |
+| Quién sabe que existe | El cliente | El servidor |
+| A quién oculta | Al cliente | A los servidores |
+| Uso típico | Filtrar y controlar la salida | Repartir carga, TLS, caché, enrutar |
+
+Una forma de recordarlo: el proxy directo protege y controla a quienes **salen**; el inverso, a quienes **reciben**.
+
+<Quiz
+	client:visible
+	question="Un servidor intermedio recibe las peticiones de los usuarios de una web y las reparte entre tres servidores de la aplicación. ¿Qué es?"
+	options={["Un proxy directo", "Un proxy inverso", "Una VPN"]}
+	answer={1}
+/>
+
+## La dirección del cliente
+
+Con un proxy inverso delante, la aplicación ve todas las peticiones como si vinieran del proxy. Pierde la dirección real del cliente, que necesita para los registros o para limitar peticiones.
+
+El proxy la añade en una cabecera de [HTTP](/articulos/que-es-http/). La más usada es `X-Forwarded-For`, y hay una normalizada, `Forwarded`.
+
+Aquí hay un fallo de seguridad frecuente. Esa cabecera es un texto, y **cualquier cliente puede enviarla con el valor que quiera**. Si la aplicación se la cree sin más, un atacante falsifica su dirección: esquiva los límites o aparece en los registros como otra persona.
+
+La aplicación debe aceptarla solo cuando la petición viene de un proxy que conoce, y el proxy debe sobrescribir lo que mande el cliente en lugar de añadirlo a lo que ya venía.
+
+## Lo que cuesta un intermediario
+
+- **Un punto único de fallo.** Si cae, cae todo. Se despliegan varios.
+- **Algo de [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/).**
+- **Ve el tráfico.** Un proxy que termina TLS lee todo en claro. Hay que confiar en él y protegerlo.
+- **Otra pieza que configurar.** Muchos errores vienen de ahí: tiempos de espera distintos entre el proxy y la aplicación, tamaños máximos de petición, cabeceras que se pierden.
+- **Conexiones largas.** Los [WebSockets](/articulos/websockets/) y las respuestas que se envían poco a poco necesitan configuración expresa, o el proxy las corta.
+
+## Términos cercanos
+
+- **Pasarela.** La especificación de HTTP llama así al proxy inverso: actúa como servidor de origen ante el cliente y traduce hacia los de dentro.
+- **Túnel.** Un intermediario que pasa los datos sin mirarlos ni modificarlos. Es lo que hace un proxy directo con una conexión HTTPS: no puede leerla, solo transportarla.
+- **VPN.** Trabaja más abajo: transporta todo el tráfico de red de un equipo, y no solo las peticiones de un programa. Se explica en [VPN y túneles](/articulos/vpn-y-tuneles/).
+- **Proxy transparente.** Uno directo que intercepta el tráfico sin que el cliente lo haya configurado.
+
+## Lo esencial
+
+- Un proxy es un intermediario que reenvía peticiones.
+- El directo representa a los clientes, que lo conocen; el servidor ve al proxy.
+- El inverso representa a los servidores; el cliente cree hablar con ellos.
+- El inverso reparte carga, termina TLS, guarda en caché y enruta.
+- La dirección real del cliente llega en una cabecera, que solo debe creerse si viene de un proxy conocido.

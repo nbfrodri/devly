@@ -1,0 +1,9 @@
+title: Telecomunicaciones
+description: Cómo se convierte la información en señales y viaja por cables y por el aire.
+layer: redes
+steps:
+  - senales-analogicas-y-digitales
+  - modulacion
+  - ancho-de-banda-latencia-y-rendimiento
+  - capa-de-enlace
+  - como-funciona-el-wifi

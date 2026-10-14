@@ -3,6 +3,8 @@ description: Qué ocurre desde que escribes una dirección hasta que recibes la 
 layer: redes
 steps:
   - que-es-una-direccion-ip
+  - subredes-y-cidr
+  - ipv4-frente-a-ipv6
   - modelos-osi-y-tcp-ip
   - tcp-y-udp
   - que-es-dns

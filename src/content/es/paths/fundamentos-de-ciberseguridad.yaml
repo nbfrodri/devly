@@ -7,3 +7,5 @@ steps:
   - cifrado-simetrico-y-asimetrico
   - https-y-tls
   - autenticacion-y-autorizacion
+  - cortafuegos
+  - vpn-y-tuneles

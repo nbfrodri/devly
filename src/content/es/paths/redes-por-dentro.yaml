@@ -5,4 +5,7 @@ steps:
   - modelos-osi-y-tcp-ip
   - capa-de-enlace
   - enrutamiento
+  - subredes-y-cidr
   - tcp-y-udp
+  - ancho-de-banda-latencia-y-rendimiento
+  - proxy-y-proxy-inverso

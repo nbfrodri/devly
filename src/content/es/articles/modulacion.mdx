@@ -1,0 +1,162 @@
+---
+title: "¿Qué es la modulación? Cómo viajan los bits por un medio físico"
+description: "Modular es alterar una onda para que transporte información. Es lo que convierte los bits en algo que puede viajar por el aire, un cable o una fibra."
+level: intermedio
+layer: redes
+prerequisites:
+  - senales-analogicas-y-digitales
+  - ancho-de-banda-latencia-y-rendimiento
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare 6.02: Digital Communication Systems, cap. 14 (en inglés)"
+    url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/resources/mit6_02f12_chap14/
+  - title: "MIT OpenCourseWare 6.02: Digital Communication Systems, lecturas del curso (en inglés)"
+    url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/pages/readings/
+  - title: "Claude Shannon: A Mathematical Theory of Communication (1948, en inglés)"
+    url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **modulación** es la técnica de modificar una onda, llamada **portadora**, para que lleve información. Cambiando alguna de sus características según los bits que se quieren enviar, la onda los transporta por el aire, un cable o una fibra. El receptor hace lo contrario, **demodular**, para recuperarlos.
+
+Un aparato que hace las dos cosas es un **módem**: modulador y demodulador.
+
+## Por qué hace falta
+
+Los bits son una idea. Lo que viaja es una magnitud física, y como explica el artículo sobre [señales](/articulos/senales-analogicas-y-digitales/), el medio es siempre analógico.
+
+Enviar los bits tal cual, como un voltaje que salta entre dos niveles, funciona en un cable corto. No sirve para la radio ni para distancias largas, por varias razones:
+
+- **Las antenas.** Una antena eficaz tiene un tamaño comparable a la longitud de la onda que emite. Las señales de baja frecuencia necesitarían antenas de kilómetros.
+- **Cada medio deja pasar ciertas frecuencias** y atenúa las demás.
+- **Compartir el medio.** Si todos emitieran en las mismas frecuencias, se mezclarían. Dando a cada uno una portadora distinta, conviven: es lo que hacen las emisoras de radio, y se llama **multiplexación por división de frecuencia**.
+
+La solución es trasladar la información a una onda de alta frecuencia, adecuada al medio.
+
+## La portadora
+
+Es una onda regular, una sinusoide. Tiene tres propiedades que se pueden alterar:
+
+| Propiedad | Qué es |
+| --- | --- |
+| Amplitud | La altura de la onda |
+| Frecuencia | Cuántas oscilaciones hace por segundo |
+| Fase | En qué punto del ciclo está en un instante |
+
+Modular es variar una, o varias, según los datos.
+
+## Modulación analógica
+
+Cuando lo que se transmite es una señal continua, como el sonido:
+
+- **AM**, modulación de amplitud. La altura de la portadora sigue a la señal. Es simple, y muy sensible al ruido, porque las interferencias alteran justamente la amplitud.
+- **FM**, modulación de frecuencia. La amplitud es constante, y lo que varía es la frecuencia. Resiste mejor el ruido, y por eso la radio FM suena más limpia.
+
+## Modulación digital
+
+Cuando lo que se transmite son bits, la propiedad elegida salta entre unos valores fijos.
+
+| Técnica | Qué varía | Ejemplo con dos valores |
+| --- | --- | --- |
+| ASK | La amplitud | Onda alta para 1, baja para 0 |
+| FSK | La frecuencia | Un tono para 1, otro para 0 |
+| PSK | La fase | Onda normal para 1, invertida para 0 |
+
+Cada estado distinto que puede tomar la señal se llama **símbolo**.
+
+## Más de un bit por símbolo
+
+Con dos estados, cada símbolo lleva un bit. Con cuatro, lleva dos: los estados representan 00, 01, 10 y 11. Con dieciséis, cuatro.
+
+```js
+const bitsPorSimbolo = (estados) => Math.log2(estados);
+
+console.log(bitsPorSimbolo(2)); // 1
+console.log(bitsPorSimbolo(16)); // 4
+console.log(bitsPorSimbolo(256)); // 8
+console.log(bitsPorSimbolo(1024)); // 10
+```
+
+Para tener muchos estados se combinan amplitud y fase. Es la **QAM**, modulación de amplitud en cuadratura, la técnica dominante en wifi, redes móviles, cable y televisión digital. El número que la acompaña indica los estados: 16-QAM, 256-QAM, 1024-QAM.
+
+Si se dibuja cada estado como un punto, según su amplitud y su fase, se obtiene una cuadrícula llamada **constelación**.
+
+De aquí sale una distinción:
+
+- Los **baudios** miden símbolos por segundo.
+- Los **bits por segundo** son los baudios multiplicados por los bits de cada símbolo.
+
+Una línea a 1000 baudios con 256-QAM transmite 8000 bits por segundo.
+
+## El precio: el ruido
+
+Si poner más estados da más velocidad, ¿por qué no poner un millón?
+
+Porque cuantos más puntos tiene la constelación, más juntos están. El ruido desplaza cada punto recibido un poco, al azar. Si los puntos están muy cerca, el receptor confunde uno con su vecino y lee bits equivocados.
+
+Hace falta una señal limpia para usar muchos estados. Por eso los sistemas modernos usan **modulación adaptativa**: miden la calidad del enlace y eligen sobre la marcha.
+
+- Cerca del punto de acceso, con buena señal: 1024-QAM, velocidad máxima.
+- Lejos, con paredes de por medio: una modulación de pocos estados, más lenta y más robusta.
+
+Es la razón de que la velocidad del [wifi](/articulos/como-funciona-el-wifi/) caiga al alejarse. La conexión no se corta: cambia a una modulación más conservadora.
+
+<Quiz
+	client:visible
+	question="¿Por qué la velocidad del wifi baja al alejarse del punto de acceso?"
+	options={[
+		"Porque la señal tarda más en llegar",
+		"Porque con más ruido hay que usar una modulación con menos bits por símbolo",
+		"Porque el router limita a los dispositivos lejanos",
+	]}
+	answer={1}
+/>
+
+## El límite de Shannon
+
+En 1948, Claude Shannon demostró que todo canal tiene una **capacidad máxima**, que depende de dos cosas: su [ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/), en hercios, y la relación entre la potencia de la señal y la del ruido.
+
+```js
+function capacidad(anchoDeBandaEnHercios, relacionSenalRuido) {
+	return anchoDeBandaEnHercios * Math.log2(1 + relacionSenalRuido);
+}
+
+console.log(Math.round(capacidad(3000, 1000))); // 29902
+console.log(Math.round(capacidad(20e6, 1000) / 1e6)); // 199
+```
+
+Una línea telefónica clásica, con unos 3000 hercios y una señal mil veces más potente que el ruido, no puede superar los 30 000 bits por segundo, se haga lo que se haga. Un canal de 20 megahercios con la misma calidad admite unos 199 megabits por segundo.
+
+El resultado tiene dos lecturas:
+
+- **Es un techo.** Ninguna modulación, por ingeniosa que sea, lo supera.
+- **Es alcanzable.** Por debajo de ese límite, se puede transmitir con tan pocos errores como se quiera, usando códigos de corrección adecuados.
+
+Para tener más velocidad solo hay tres caminos: más ancho de banda, más potencia o menos ruido. Los sistemas actuales están ya muy cerca del límite, y por eso las mejoras vienen de usar más espectro o varias antenas a la vez.
+
+## Muchas portadoras a la vez
+
+Una señal de radio rebota en paredes y objetos, y al receptor llegan varias copias con retrasos distintos, que se estorban.
+
+La técnica **OFDM** lo afronta dividiendo el canal en cientos o miles de portadoras estrechas, y enviando por cada una un flujo lento de datos. Los símbolos lentos toleran bien los ecos. Además, si una interferencia estropea unas pocas portadoras, el resto sigue funcionando.
+
+La usan el wifi, las redes móviles desde la cuarta generación, el ADSL y la televisión digital.
+
+## En cada medio
+
+| Medio | Qué se modula |
+| --- | --- |
+| Radio | Ondas electromagnéticas: wifi, móvil, Bluetooth, satélite |
+| Cable de cobre | Señales eléctricas: ADSL, cable, Ethernet |
+| Fibra óptica | Luz: su intensidad, y en los sistemas rápidos también su fase |
+
+Es el trabajo de la capa física del [modelo OSI](/articulos/modelos-osi-y-tcp-ip/). Por encima, la [capa de enlace](/articulos/capa-de-enlace/) ya solo ve bits.
+
+## Lo esencial
+
+- Modular es variar una onda portadora para que transporte información.
+- Se puede alterar su amplitud, su frecuencia o su fase.
+- Con más estados por símbolo se envían más bits, pero hace falta menos ruido.
+- La modulación se adapta a la calidad del enlace: por eso la velocidad cae con la distancia.
+- La capacidad de un canal tiene un máximo, que depende de su ancho de banda y de su ruido.

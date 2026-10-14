@@ -57,14 +57,14 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 
 ## Redes y telecomunicaciones (había 11)
 
-- [ ] Señales analógicas y digitales
-- [ ] Ancho de banda, latencia y rendimiento
-- [ ] Modulación: cómo viajan los bits por un medio físico
-- [ ] Cómo funciona el wifi
-- [ ] Cortafuegos
-- [ ] VPN y túneles
-- [ ] Proxy y proxy inverso
-- [ ] IPv4 frente a IPv6
+- [x] Señales analógicas y digitales
+- [x] Ancho de banda, latencia y rendimiento
+- [x] Modulación: cómo viajan los bits por un medio físico
+- [x] Cómo funciona el wifi
+- [x] Cortafuegos
+- [x] VPN y túneles
+- [x] Proxy y proxy inverso
+- [x] IPv4 frente a IPv6
 
 ## Tecnologías y herramientas concretas
 

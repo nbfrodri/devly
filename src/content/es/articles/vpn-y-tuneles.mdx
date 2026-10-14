@@ -1,0 +1,165 @@
+---
+title: "¿Qué es una VPN?"
+description: "Una VPN crea un túnel cifrado a través de internet, de modo que un equipo se comporta como si estuviera en otra red."
+level: intermedio
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+  - cifrado-simetrico-y-asimetrico
+  - cortafuegos
+updated: 2026-10-13
+sources:
+  - title: "RFC 4301: Security Architecture for the Internet Protocol"
+    url: https://www.rfc-editor.org/info/rfc4301/
+  - title: "Jason A. Donenfeld: WireGuard, Next Generation Kernel Network Tunnel (en inglés)"
+    url: https://www.wireguard.com/papers/wireguard.pdf
+  - title: "RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3"
+    url: https://www.rfc-editor.org/info/rfc8446/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **VPN**, del inglés *virtual private network* o red privada virtual, es una conexión cifrada entre un equipo y una red, o entre dos redes, que atraviesa una red pública como internet. Todo lo que viaja por ella va protegido, y el equipo se comporta como si estuviera conectado directamente a la red del otro extremo.
+
+A esa conexión se le llama **túnel**.
+
+## Qué problema resuelve
+
+Una empresa tiene servidores internos que no deben ser accesibles desde internet: están tras un [cortafuegos](/articulos/cortafuegos/), con [direcciones privadas](/articulos/que-es-una-direccion-ip/). Quien trabaja desde casa necesita llegar a ellos.
+
+Abrirlos a internet sería exponerlos a todo el mundo. Tender una línea privada hasta cada casa, imposible.
+
+Una VPN usa internet como transporte, y construye encima un camino privado.
+
+## Cómo funciona: encapsular
+
+Un túnel consiste en meter un paquete dentro de otro.
+
+1. El equipo genera un paquete normal, dirigido a un servidor interno.
+2. El programa de la VPN lo **cifra** entero, con sus cabeceras.
+3. Lo coloca como contenido de **otro paquete**, dirigido al servidor de la VPN.
+4. Ese paquete exterior viaja por internet como cualquier otro.
+5. El servidor de la VPN lo recibe, saca el contenido, lo descifra y entrega el paquete original a la red interna.
+
+Las respuestas hacen el camino inverso.
+
+```js
+const paqueteOriginal = {
+	origen: "10.8.0.2",
+	destino: "10.0.0.20",
+	datos: "consulta a la base de datos",
+};
+
+const cifrar = (objeto) => Buffer.from(JSON.stringify(objeto)).toString("base64");
+const descifrar = (texto) => JSON.parse(Buffer.from(texto, "base64").toString());
+
+const paqueteExterior = {
+	origen: "83.45.12.7",
+	destino: "203.0.113.10",
+	datos: cifrar(paqueteOriginal),
+};
+
+console.log(paqueteExterior.destino); // "203.0.113.10"
+console.log(paqueteExterior.datos.includes("10.0.0.20")); // false
+console.log(descifrar(paqueteExterior.datos).destino); // "10.0.0.20"
+```
+
+El ejemplo usa una simple codificación en lugar de cifrado real, para mostrar la estructura. Quien observe el paquete exterior ve solo que alguien habla con el servidor de la VPN. El destino verdadero y el contenido van dentro, ilegibles.
+
+Es como meter una carta, con su sobre y su dirección, dentro de otro sobre dirigido a una oficina que la reenvía.
+
+## Lo que aporta
+
+- **Confidencialidad.** El contenido va cifrado, con las técnicas del artículo sobre [cifrado](/articulos/cifrado-simetrico-y-asimetrico/).
+- **Integridad.** Si alguien altera un paquete, se detecta.
+- **Autenticación.** Cada extremo comprueba quién es el otro.
+- **Pertenencia a la red.** El equipo recibe una dirección de la red remota y accede a sus recursos.
+
+## Tipos
+
+### De acceso remoto
+
+Un equipo se conecta a una red. Es el caso de quien trabaja desde casa.
+
+### De sitio a sitio
+
+Une dos redes enteras, por ejemplo dos oficinas. El túnel lo establecen los routers, y los equipos de cada lado no necesitan ningún programa: ven la otra red como si estuviera al lado.
+
+### Comerciales
+
+Los servicios que se anuncian para particulares. El túnel va hasta un servidor del proveedor, y desde ahí el tráfico sale a internet. Los sitios que se visitan ven la dirección del proveedor, no la del usuario.
+
+## Túnel completo o dividido
+
+- **Completo.** Todo el tráfico del equipo pasa por la VPN.
+- **Dividido.** Solo lo dirigido a la red remota. El resto sale directamente a internet.
+
+El dividido es más rápido y carga menos la VPN. El completo permite a la organización aplicar sus controles a todo el tráfico, e impide que un equipo esté a la vez en la red interna y expuesto a internet sin filtro.
+
+## Protocolos
+
+| Protocolo | Características |
+| --- | --- |
+| IPsec | Un conjunto de estándares que protege en la capa de red. Muy extendido entre sedes; complejo de configurar |
+| OpenVPN | Basado en TLS. Flexible, y atraviesa bien los cortafuegos |
+| WireGuard | Reciente y deliberadamente pequeño. Rápido y sencillo de configurar |
+
+WireGuard destaca por su tamaño: unas miles de líneas de código, frente a los cientos de miles de sus alternativas. Menos código es menos lugar para errores, y más fácil de revisar.
+
+<Quiz
+	client:visible
+	question="Al usar una VPN, ¿qué ve quien observa tu conexión, como el dueño de la red wifi?"
+	options={[
+		"Todas las páginas que visitas",
+		"Que te comunicas con el servidor de la VPN, pero no el contenido ni el destino final",
+		"Nada: la conexión es invisible",
+	]}
+	answer={1}
+/>
+
+## Lo que una VPN comercial hace y no hace
+
+La publicidad de estos servicios promete más de lo que la técnica da.
+
+**Lo que hace:**
+
+- Oculta tu tráfico a la red local y a tu proveedor de internet. Útil en una [red wifi pública](/articulos/como-funciona-el-wifi/).
+- Oculta tu dirección IP a los sitios que visitas.
+- Hace que parezcas conectado desde otro país.
+
+**Lo que no hace:**
+
+- **No te hace anónimo.** Los sitios te reconocen por tu cuenta, por las [cookies](/articulos/almacenamiento-en-el-navegador/) y por las características de tu navegador.
+- **No elimina la confianza: la traslada.** Lo que antes veía tu proveedor de internet, ahora lo ve el de la VPN. Hay que fiarse de él, y de lo que dice que registra.
+- **No protege de programas maliciosos ni de engaños.** Un enlace fraudulento funciona igual.
+- **No añade mucho al tráfico que ya va cifrado.** Con [HTTPS](/articulos/https-y-tls/), hoy casi universal, el contenido ya era ilegible. Lo que se ganaba al observar era saber a qué sitios te conectas.
+
+## Costes
+
+- **Velocidad.** El cifrado y el rodeo por otro servidor añaden [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/).
+- **Tamaño de los paquetes.** La cabecera adicional deja menos sitio para datos. Mal ajustado, provoca fallos difíciles de diagnosticar: unas páginas cargan y otras se quedan a medias.
+- **Punto único.** Si la VPN cae, nadie accede.
+
+## Un riesgo de diseño
+
+Una VPN tradicional da acceso a la **red**. Quien entra, ve todo lo que hay en ella. Si roban las credenciales de un empleado, el atacante está dentro, como uno más.
+
+Por eso las organizaciones se mueven hacia el acceso **por aplicación**, dentro del enfoque de confianza cero: cada petición se autentica y se autoriza para un servicio concreto, y no se concede acceso general a una red. A menudo se hace con un [proxy](/articulos/proxy-y-proxy-inverso/) que comprueba la identidad antes de dejar pasar.
+
+En cualquier caso, el acceso por VPN debe exigir un segundo factor de [autenticación](/articulos/autenticacion-y-autorizacion/).
+
+## Otros túneles
+
+Encapsular un protocolo dentro de otro es una técnica general.
+
+- **Túneles SSH.** Una conexión de administración remota puede transportar otros tráficos. Se usa para llegar a una base de datos que no está expuesta.
+- **Túneles de transición**, que llevan paquetes de un protocolo por redes que solo entienden otro, como en el paso de [IPv4 a IPv6](/articulos/ipv4-frente-a-ipv6/).
+- **Redes superpuestas.** Las redes virtuales de [la nube](/articulos/computacion-en-la-nube/) y de [Kubernetes](/articulos/que-es-kubernetes/) son túneles entre máquinas.
+
+## Lo esencial
+
+- Una VPN crea un túnel cifrado a través de una red pública.
+- Funciona encapsulando: el paquete original, cifrado, viaja dentro de otro.
+- Puede conectar un equipo con una red, o dos redes entre sí.
+- Una VPN comercial oculta el tráfico a la red local, pero no da anonimato y exige confiar en el proveedor.
+- Da acceso a una red entera, lo que es un riesgo si se roban las credenciales.

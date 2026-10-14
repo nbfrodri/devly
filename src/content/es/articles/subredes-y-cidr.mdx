@@ -1,0 +1,178 @@
+---
+title: "¿Qué es una subred? Máscaras y notación CIDR"
+description: "Una subred es un grupo de direcciones IP que comparten el mismo prefijo. La máscara indica qué parte de la dirección es la red y cuál el equipo."
+level: intermedio
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "RFC 4632: Classless Inter-domain Routing (CIDR)"
+    url: https://www.rfc-editor.org/info/rfc4632/
+  - title: "RFC 1918: Address Allocation for Private Internets"
+    url: https://www.rfc-editor.org/info/rfc1918/
+  - title: "RFC 791: Internet Protocol"
+    url: https://www.rfc-editor.org/info/rfc791/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **subred** es un conjunto de [direcciones IP](/articulos/que-es-una-direccion-ip/) consecutivas que comparten los mismos bits iniciales. Esos bits comunes son el **prefijo**, e identifican la red. Los restantes identifican a cada equipo dentro de ella. La **máscara de subred**, o la notación **CIDR**, indican dónde está la frontera entre las dos partes.
+
+Es el concepto que permite a un equipo saber si otro está en su misma red, y a los routers decidir adónde enviar cada paquete.
+
+## Dos partes en cada dirección
+
+Una dirección IPv4 son 32 [bits](/articulos/que-es-un-bit/). Se parece a un número de teléfono con prefijo: una parte dice a qué zona pertenece y otra identifica la línea.
+
+- La **parte de red** es común a todos los equipos de la subred.
+- La **parte de equipo** distingue a cada uno.
+
+La dirección sola no dice dónde acaba una y empieza la otra. Hace falta un dato más.
+
+## La máscara y la notación CIDR
+
+La **notación CIDR** añade a la dirección una barra y un número: cuántos bits, contados desde la izquierda, forman la parte de red.
+
+```
+192.168.1.130/24
+```
+
+Los primeros 24 bits son la red; los 8 restantes, el equipo.
+
+La **máscara** expresa lo mismo de otra forma: una secuencia de 32 bits con unos en la parte de red y ceros en la de equipo, escrita como una dirección.
+
+| CIDR | Máscara | Bits de equipo | Direcciones |
+| --- | --- | --- | --- |
+| /8 | 255.0.0.0 | 24 | 16 777 216 |
+| /16 | 255.255.0.0 | 16 | 65 536 |
+| /24 | 255.255.255.0 | 8 | 256 |
+| /26 | 255.255.255.192 | 6 | 64 |
+| /30 | 255.255.255.252 | 2 | 4 |
+| /32 | 255.255.255.255 | 0 | 1 |
+
+Cada bit que se añade al prefijo divide el tamaño por dos. Un `/25` es la mitad de un `/24`.
+
+## Calcular la red
+
+La dirección de la red se obtiene poniendo a cero los bits de equipo.
+
+```js
+const aNumero = (ip) =>
+	ip.split(".").reduce((numero, parte) => numero * 256 + Number(parte), 0);
+
+const aTexto = (numero) =>
+	[24, 16, 8, 0].map((d) => Math.floor(numero / 2 ** d) % 256).join(".");
+
+function red(ip, prefijo) {
+	const tamano = 2 ** (32 - prefijo);
+	return aTexto(Math.floor(aNumero(ip) / tamano) * tamano);
+}
+
+console.log(red("192.168.1.130", 24)); // "192.168.1.0"
+console.log(red("192.168.1.130", 26)); // "192.168.1.128"
+console.log(2 ** (32 - 24) - 2); // 254
+console.log(2 ** (32 - 26) - 2); // 62
+```
+
+La misma dirección pertenece a redes distintas según el prefijo. Con `/24`, a la red `192.168.1.0`, que va de la `.0` a la `.255`. Con `/26`, a `192.168.1.128`, que va de la `.128` a la `.191`.
+
+### Dos direcciones reservadas
+
+En cada subred IPv4, dos direcciones no se asignan a equipos:
+
+- La **primera** es la dirección de la propia red.
+- La **última** es la de **difusión**: lo enviado a ella lo reciben todos los equipos de la subred.
+
+Por eso un `/24` tiene 256 direcciones y 254 utilizables, y un `/26`, 62.
+
+## Para qué sirve: ¿está en mi red?
+
+Cuando un equipo quiere enviar un paquete, lo primero que decide es si el destino está en su misma subred.
+
+```js
+const aNumero = (ip) =>
+	ip.split(".").reduce((numero, parte) => numero * 256 + Number(parte), 0);
+
+function mismaRed(a, b, prefijo) {
+	const tamano = 2 ** (32 - prefijo);
+	return Math.floor(aNumero(a) / tamano) === Math.floor(aNumero(b) / tamano);
+}
+
+console.log(mismaRed("192.168.1.130", "192.168.1.190", 26)); // true
+console.log(mismaRed("192.168.1.130", "192.168.1.200", 26)); // false
+console.log(mismaRed("192.168.1.130", "192.168.1.200", 24)); // true
+```
+
+- **Si está en la misma**, se lo entrega directamente, por la [capa de enlace](/articulos/capa-de-enlace/).
+- **Si no**, se lo envía al router, la **puerta de enlace**, para que lo encamine.
+
+Una máscara mal configurada produce un fallo característico: el equipo habla con algunos vecinos y con otros no, porque cree que están en otra red, o intenta alcanzar directamente a equipos que no lo están.
+
+<Quiz
+	client:visible
+	question="¿Cuántos equipos pueden tener dirección en una subred /24 de IPv4?"
+	options={["256", "254", "24"]}
+	answer={1}
+/>
+
+## Por qué dividir una red
+
+- **Organización.** Una subred por departamento, por planta o por función.
+- **Seguridad.** Entre subredes, el tráfico pasa por un router, donde un [cortafuegos](/articulos/cortafuegos/) puede filtrarlo. Los servidores, los puestos de trabajo y los invitados van en subredes distintas.
+- **Rendimiento.** Los mensajes de difusión llegan a toda la subred. Con miles de equipos en una sola, ese ruido pesa.
+- **Aprovechar las direcciones.** Un enlace entre dos routers necesita dos direcciones: se le da un `/30`, no un bloque de 256.
+
+En [la nube](/articulos/computacion-en-la-nube/), diseñar una red es esto: elegir un bloque de direcciones y repartirlo en subredes, unas con salida a internet y otras sin ella.
+
+## De las clases a CIDR
+
+Al principio, el tamaño de una red lo fijaba el comienzo de la dirección. Había tres tamaños: clase A, con 16 millones de direcciones; clase B, con 65 000; y clase C, con 256.
+
+No había término medio. Una organización con 2000 equipos no cabía en una clase C y recibía una B, desperdiciando más de 60 000 direcciones.
+
+En 1993 se adoptó **CIDR**, enrutamiento entre dominios sin clases: el prefijo puede tener cualquier longitud. Las clases desaparecieron, aunque todavía se oye "una clase C" para decir un `/24`.
+
+## Agrupar rutas
+
+CIDR resolvió también otro problema. Los [routers](/articulos/enrutamiento/) de internet guardan una tabla con las redes que conocen. Si cada red pequeña ocupara una línea, la tabla sería inmanejable.
+
+Como los prefijos pueden tener cualquier longitud, varias redes contiguas se anuncian como una sola más grande. Las cuatro redes `10.1.0.0/24` a `10.1.3.0/24` se resumen en `10.1.0.0/22`. Se llama **agregación de rutas**.
+
+Cuando un paquete coincide con varias entradas de la tabla, el router elige la del **prefijo más largo**, es decir, la más específica.
+
+## Los rangos privados
+
+Tres bloques están reservados para redes internas, y no circulan por internet:
+
+| Bloque | Rango | Uso habitual |
+| --- | --- | --- |
+| 10.0.0.0/8 | 10.0.0.0 a 10.255.255.255 | Empresas, nube |
+| 172.16.0.0/12 | 172.16.0.0 a 172.31.255.255 | Redes de [contenedores](/articulos/que-es-docker/) |
+| 192.168.0.0/16 | 192.168.0.0 a 192.168.255.255 | Redes domésticas |
+
+Otros bloques con un significado especial:
+
+- `127.0.0.0/8`: el propio equipo. `127.0.0.1` es *localhost*.
+- `0.0.0.0/0`: cualquier dirección. En una tabla de rutas es la **ruta por defecto**; en una regla de cortafuegos, "todo internet".
+
+Ver `0.0.0.0/0` como origen permitido en un puerto de administración es una de las configuraciones peligrosas más frecuentes.
+
+## Un error de planificación
+
+Dos redes que usan el mismo rango privado no se pueden conectar entre sí: las direcciones chocan. Pasa al unir dos sedes con una [VPN](/articulos/vpn-y-tuneles/), o dos redes en la nube, cuando ambas eligieron `10.0.0.0/16` porque era el valor por defecto.
+
+Conviene elegir los rangos pensando en lo que habrá que conectar más adelante.
+
+## En IPv6
+
+El concepto es el mismo, con prefijos sobre 128 bits. La notación es idéntica: `2001:db8::/32`. Como se explica en [IPv4 frente a IPv6](/articulos/ipv4-frente-a-ipv6/), una subred normal es un `/64`, y no hay que escatimar direcciones.
+
+## Lo esencial
+
+- Una dirección IP tiene una parte de red y una de equipo; el prefijo indica dónde se separan.
+- En la notación CIDR, `/24` significa que los primeros 24 bits son la red.
+- Cada bit más en el prefijo reduce la subred a la mitad.
+- Un equipo usa la máscara para saber si el destino está en su red o debe ir al router.
+- Dividir en subredes sirve para organizar, aislar y aprovechar las direcciones.

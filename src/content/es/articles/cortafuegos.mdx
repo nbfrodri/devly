@@ -1,0 +1,159 @@
+---
+title: "¿Qué es un cortafuegos?"
+description: "Un cortafuegos decide qué tráfico de red puede pasar y cuál no, según unas reglas. Es la primera barrera entre una red y el exterior."
+level: basico
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+  - tcp-y-udp
+  - que-es-la-ciberseguridad
+updated: 2026-10-13
+sources:
+  - title: "NIST SP 800-41 Rev. 1: Guidelines on Firewalls and Firewall Policy (en inglés)"
+    url: https://csrc.nist.gov/pubs/sp/800/41/r1/final
+  - title: "RFC 2979: Behavior of and Requirements for Internet Firewalls"
+    url: https://www.rfc-editor.org/info/rfc2979/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **cortafuegos**, en inglés *firewall*, es un sistema que examina el tráfico de red y decide, según un conjunto de reglas, qué deja pasar y qué bloquea. Se coloca entre dos redes con distinto nivel de confianza, normalmente una red propia e internet, o en el propio equipo.
+
+El nombre viene de los muros que se construyen en los edificios para que un incendio no pase de una parte a otra.
+
+## Qué problema resuelve
+
+Un ordenador conectado a internet tiene abiertos varios **puertos**: puntos por los que los programas esperan conexiones, como explica el artículo sobre [TCP y UDP](/articulos/tcp-y-udp/). Cada uno es una posible entrada.
+
+Y en internet hay programas automáticos que recorren sin descanso todas las direcciones, probando puertos y buscando servicios vulnerables o mal configurados. Un equipo recién conectado recibe intentos en cuestión de minutos.
+
+Muchos servicios no tienen por qué ser accesibles desde fuera. Una base de datos solo debe atender a la aplicación que la usa. El cortafuegos lo garantiza, aunque el servicio esté mal configurado.
+
+## Reglas
+
+Una regla dice: para el tráfico que cumpla estas condiciones, haz esto.
+
+Las condiciones habituales son la [dirección IP](/articulos/que-es-una-direccion-ip/) de origen y de destino, el puerto y el protocolo. La acción, permitir o denegar.
+
+Las reglas se evalúan en orden, y se aplica la primera que coincide.
+
+```js
+const reglas = [
+	{ puerto: 443, accion: "permitir" },
+	{ puerto: 22, origen: "10.0.0.5", accion: "permitir" },
+];
+
+function decidir(paquete) {
+	for (const regla of reglas) {
+		const mismoPuerto = regla.puerto === paquete.puerto;
+		const mismoOrigen = !regla.origen || regla.origen === paquete.origen;
+
+		if (mismoPuerto && mismoOrigen) {
+			return regla.accion;
+		}
+	}
+
+	return "denegar";
+}
+
+console.log(decidir({ puerto: 443, origen: "8.8.8.8" })); // "permitir"
+console.log(decidir({ puerto: 22, origen: "8.8.8.8" })); // "denegar"
+console.log(decidir({ puerto: 22, origen: "10.0.0.5" })); // "permitir"
+console.log(decidir({ puerto: 3306, origen: "8.8.8.8" })); // "denegar"
+```
+
+El servidor web, en el puerto 443, es accesible para todos. La administración remota, en el 22, solo desde una dirección concreta. Todo lo demás, incluida la base de datos del puerto 3306, queda cerrado.
+
+## Denegar por defecto
+
+Lo más importante del ejemplo es la última línea de la función: lo que no está permitido expresamente, se deniega.
+
+Hay dos formas de plantear las reglas:
+
+- **Permitir todo salvo lo prohibido.** Hay que prever cada amenaza. Lo que no se previó, pasa.
+- **Denegar todo salvo lo permitido.** Solo pasa lo que se ha decidido que pase. Lo imprevisto queda fuera.
+
+La segunda es la correcta, y es una aplicación del principio de **mínimo privilegio**.
+
+## Tipos
+
+### Filtrado de paquetes sin estado
+
+Examina cada paquete por separado, mirando sus cabeceras. Es rápido y simple.
+
+Su limitación: no sabe a qué conversación pertenece un paquete. Para permitir que lleguen las respuestas a las conexiones que uno inicia, hay que dejar abiertos rangos enteros de puertos.
+
+### Con estado
+
+Recuerda las conexiones en curso. Cuando un equipo de dentro inicia una conexión, lo anota, y deja pasar las respuestas que pertenecen a ella. Un paquete que llega de fuera sin corresponder a ninguna conexión abierta se descarta.
+
+Permite la regla más habitual: **dejar salir, y dejar entrar solo las respuestas**. Es el tipo estándar hoy.
+
+### De aplicación
+
+Entiende el contenido, no solo las cabeceras. Distingue una petición [HTTP](/articulos/que-es-http/) legítima de un ataque que usa el mismo puerto.
+
+Un caso particular es el **cortafuegos de aplicaciones web**, o WAF, que se coloca delante de un sitio y bloquea peticiones con patrones de ataques conocidos, como la [inyección SQL](/articulos/inyeccion-sql/) o el [XSS](/articulos/cross-site-scripting-xss/). Es una defensa adicional, no un sustituto de corregir el código.
+
+| Tipo | Qué mira | Capa del [modelo OSI](/articulos/modelos-osi-y-tcp-ip/) |
+| --- | --- | --- |
+| Sin estado | Cabeceras de cada paquete | 3 y 4 |
+| Con estado | Cabeceras y la conexión a la que pertenecen | 3 y 4 |
+| De aplicación | El contenido | 7 |
+
+<Quiz
+	client:visible
+	question="¿Qué política de partida es la recomendada para un cortafuegos?"
+	options={[
+		"Permitir todo y bloquear lo que se sepa que es peligroso",
+		"Denegar todo y permitir solo lo necesario",
+		"Permitir todo el tráfico de entrada y filtrar el de salida",
+	]}
+	answer={1}
+/>
+
+## Dónde se colocan
+
+- **De red.** En la frontera, protege a todos los equipos de detrás. El router doméstico incluye uno.
+- **De equipo.** Un programa en cada máquina, que la protege también de las demás de su misma red. Todos los [sistemas operativos](/articulos/que-es-un-sistema-operativo/) traen uno.
+- **En la nube.** Los proveedores ofrecen reglas que se asocian a cada máquina virtual, y se definen como [infraestructura como código](/articulos/infraestructura-como-codigo/).
+
+Lo sensato es combinarlos.
+
+### Entrada y salida
+
+Se suele pensar solo en lo que entra. Filtrar lo que **sale** también importa: un programa malicioso que ya está dentro necesita comunicarse con el exterior para recibir órdenes o enviar lo robado. Limitar las salidas se lo dificulta.
+
+## Segmentar
+
+Un cortafuegos no solo separa dentro de fuera. Se usa también para dividir la red interna en zonas.
+
+La disposición clásica tiene una **zona desmilitarizada**, o DMZ: una red intermedia donde están los servidores que deben ser accesibles desde internet. Si uno es comprometido, el atacante sigue separado de la red interna por otro cortafuegos.
+
+La idea se puede llevar más lejos y aislar cada servicio de los demás, permitiendo solo las comunicaciones necesarias. Así, quien entra en una máquina no puede moverse libremente a las otras.
+
+## Lo que no hace
+
+Un cortafuegos es necesario y no suficiente.
+
+- **No protege lo que deja pasar.** Si el puerto 443 está abierto y la aplicación web tiene un fallo, el ataque entra por la puerta permitida.
+- **No ve dentro del tráfico cifrado**, salvo que lo descifre.
+- **No detiene a quien ya está dentro**: un empleado, un equipo infectado por un correo.
+- **No sustituye a las actualizaciones**, ni a la [autenticación](/articulos/autenticacion-y-autorizacion/).
+
+La idea de un perímetro, con un interior de confianza y un exterior hostil, ha perdido fuerza. Con equipos portátiles, servicios en la nube y trabajo a distancia, ya no hay un "dentro" claro. El enfoque actual, llamado **confianza cero**, no se fía de una petición por venir de la red interna: cada acceso se autentica y se autoriza, venga de donde venga.
+
+## Errores habituales
+
+- **Reglas demasiado amplias**: "permitir todo desde cualquier sitio", puesto para una prueba y nunca retirado.
+- **Reglas que nadie revisa** y se acumulan.
+- **Administración expuesta a internet**: el acceso remoto o el panel de una base de datos abiertos a cualquiera.
+- **Confiar solo en él.**
+
+## Lo esencial
+
+- Un cortafuegos permite o bloquea tráfico según reglas sobre direcciones, puertos y protocolos.
+- La política correcta es denegar por defecto y permitir solo lo necesario.
+- Los de estado recuerdan las conexiones y dejan entrar solo las respuestas.
+- Los de aplicación examinan el contenido, como un WAF ante una web.
+- No protege lo que deja pasar: es una capa de defensa entre varias.

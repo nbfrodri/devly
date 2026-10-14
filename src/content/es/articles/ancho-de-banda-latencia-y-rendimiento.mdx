@@ -1,0 +1,169 @@
+---
+title: "¿Qué son el ancho de banda, la latencia y el rendimiento de una red?"
+description: "El ancho de banda es cuánto cabe, la latencia es cuánto tarda y el rendimiento es cuánto llega de verdad. Una conexión rápida necesita las tres."
+level: basico
+layer: redes
+prerequisites:
+  - tcp-y-udp
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "RFC 1242: Benchmarking Terminology for Network Interconnection Devices"
+    url: https://www.rfc-editor.org/info/rfc1242/
+  - title: "RFC 7679: A One-Way Delay Metric for IP Performance Metrics"
+    url: https://www.rfc-editor.org/info/rfc7679/
+  - title: "RFC 6349: Framework for TCP Throughput Testing"
+    url: https://www.rfc-editor.org/info/rfc6349/
+  - title: "RFC 5681: TCP Congestion Control"
+    url: https://www.rfc-editor.org/info/rfc5681/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La "velocidad" de una conexión son en realidad varias medidas distintas. El **ancho de banda** es la cantidad máxima de datos que un enlace puede transportar por segundo. La **latencia** es el tiempo que tarda un dato en llegar. El **rendimiento** es la cantidad de datos que se transmite de verdad.
+
+Confundirlas lleva a diagnósticos equivocados: contratar más megas no arregla una videollamada que se entrecorta.
+
+## Una comparación
+
+Una carretera entre dos ciudades:
+
+- El **ancho de banda** es el número de carriles: cuántos coches pueden pasar a la vez.
+- La **latencia** es lo que tarda un coche en hacer el trayecto.
+- El **rendimiento** es cuántos coches llegan por hora, contando atascos y accidentes.
+
+Añadir carriles permite que pasen más coches. No hace que cada uno llegue antes.
+
+## Ancho de banda
+
+Se mide en bits por segundo, con sus múltiplos: megabits (Mbps) y gigabits (Gbps).
+
+Una confusión frecuente: las conexiones se miden en **bits** y los archivos en **bytes**. Un byte son 8 bits.
+
+```js
+const segundos = (megabytes, megabitsPorSegundo) =>
+	(megabytes * 8) / megabitsPorSegundo;
+
+console.log(segundos(100, 100)); // 8
+console.log(segundos(100, 10)); // 80
+```
+
+Con una conexión de 100 Mbps, un archivo de 100 megabytes no tarda 1 segundo, sino 8.
+
+El término tiene además un sentido original, en [telecomunicaciones](/articulos/senales-analogicas-y-digitales/): el rango de frecuencias que ocupa una señal, medido en hercios. Los dos sentidos están relacionados: cuanto más ancho es ese rango, más bits por segundo se pueden enviar.
+
+Muchas conexiones son **asimétricas**: bajan mucho más deprisa de lo que suben.
+
+## Latencia
+
+Es el retardo: el tiempo entre que se envía un dato y se recibe. Se mide en milisegundos. A menudo se da el tiempo de **ida y vuelta**, que es lo que muestra la orden `ping`.
+
+Se compone de cuatro partes.
+
+| Retardo | Qué es | De qué depende |
+| --- | --- | --- |
+| Propagación | Lo que tarda la señal en recorrer el medio | La distancia |
+| Transmisión | Lo que se tarda en emitir todos los bits del paquete | El tamaño y el ancho de banda |
+| Procesamiento | Lo que tarda cada [router](/articulos/enrutamiento/) en decidir | El equipo |
+| Cola | Lo que el paquete espera su turno | La congestión |
+
+### El límite físico
+
+La propagación no se puede mejorar. En una fibra óptica, la luz viaja a unos 200 000 kilómetros por segundo, dos tercios de su velocidad en el vacío.
+
+```js
+const milisegundos = (kilometros) => Math.round((kilometros / 200000) * 1000);
+
+console.log(milisegundos(5800)); // 29
+console.log(milisegundos(5800) * 2); // 58
+```
+
+Entre Madrid y Nueva York hay unos 5800 kilómetros en línea recta. Solo la propagación supone 29 milisegundos de ida y 58 de ida y vuelta, y los cables reales no van en línea recta.
+
+Ninguna mejora técnica reduce eso. La única solución es acercar el servidor al usuario, que es lo que hace una [CDN](/articulos/que-es-una-cdn/).
+
+### Por qué importa tanto
+
+Cargar una página no es un viaje, sino muchos. Abrir una conexión [TCP](/articulos/tcp-y-udp/) exige un intercambio, negociar [TLS](/articulos/https-y-tls/) otro, y después se pide cada recurso. La latencia se paga en cada uno.
+
+Por eso, a partir de cierto ancho de banda, una página no carga más deprisa por tener más megas. Lo que la frena es la latencia.
+
+## Rendimiento
+
+Es lo que se consigue en la práctica, en inglés *throughput*. Siempre es menor o igual que el ancho de banda. Lo reducen:
+
+- **El enlace más lento del camino.** Una conexión de fibra no sirve de mucho si el servidor de destino sube despacio.
+- **La congestión.** El enlace se comparte.
+- **La pérdida de paquetes.**
+- **La latencia misma.**
+- **El propio protocolo**, que ocupa parte de la capacidad con cabeceras y confirmaciones.
+
+### TCP frena por prudencia
+
+TCP no envía a toda velocidad desde el principio. Empieza despacio, acelera mientras recibe confirmaciones, y **reduce bruscamente** el ritmo cuando detecta una pérdida, porque la interpreta como señal de congestión. Es el **control de congestión**, y es lo que evita que internet se colapse.
+
+Tiene dos consecuencias:
+
+- **Con latencia alta, acelera más despacio**, porque cada confirmación tarda más en volver.
+- **Con pérdidas, no llega a acelerar.** Un 1 % de paquetes perdidos puede dejar el rendimiento en una fracción del ancho de banda.
+
+De ahí que un enlace por satélite con muchos megas resulte lento, o que el wifi con mala señal rinda mucho menos de lo contratado.
+
+## Otras dos medidas
+
+### Variación del retardo
+
+En inglés, *jitter*. Mide cuánto cambia la latencia de un paquete a otro.
+
+Para descargar un archivo no importa. Para una llamada o un juego, es crítica: si los paquetes llegan a intervalos irregulares, el sonido se entrecorta aunque la latencia media sea buena. Se compensa con un pequeño almacén que los reordena, a costa de añadir retardo.
+
+### Pérdida de paquetes
+
+El porcentaje de paquetes que no llega. TCP los reenvía, lo que añade retardo. [UDP](/articulos/tcp-y-udp/) no, y la aplicación tiene que arreglárselas.
+
+<Quiz
+	client:visible
+	question="Una videollamada se entrecorta en una conexión de 600 Mbps. ¿Qué es lo más probable?"
+	options={[
+		"Falta ancho de banda",
+		"Hay latencia variable o pérdida de paquetes",
+		"El archivo es demasiado grande",
+	]}
+	answer={1}
+/>
+
+## Qué necesita cada uso
+
+| Uso | Ancho de banda | Latencia | Variación | Pérdida |
+| --- | --- | --- | --- | --- |
+| Descargar archivos | Alto | Poco importante | Indiferente | Tolerable, se reenvía |
+| Navegar | Medio | Importante | Poco | Molesta |
+| Vídeo bajo demanda | Alto | Poco importante | Poco, hay almacén | Tolerable |
+| Videollamada | Medio | Crítica | Crítica | Se nota enseguida |
+| Juego en línea | Bajo | Crítica | Crítica | Se nota enseguida |
+
+Un juego en línea transmite muy pocos datos. Lo que necesita es que lleguen pronto y a ritmo constante.
+
+## Medir
+
+- **`ping`** mide la latencia de ida y vuelta y la pérdida.
+- **`traceroute`** muestra los saltos del camino y el retardo en cada uno.
+- **Las pruebas de velocidad** miden el rendimiento contra un servidor cercano, en condiciones favorables. Lo que consigue una aplicación real con un servidor lejano suele ser menos.
+
+Al medir un servicio, importa la distribución y no la media, como explica el artículo sobre [observabilidad](/articulos/observabilidad/): unas pocas peticiones muy lentas pasan inadvertidas en un promedio.
+
+## Lo que se puede mejorar
+
+- **Acercar el contenido**: CDN, servidores en varias regiones.
+- **Reducir los viajes**: reutilizar conexiones, agrupar peticiones, usar versiones recientes de [HTTP](/articulos/que-es-http/).
+- **Enviar menos**: comprimir, usar [caché](/articulos/que-es-una-cache/).
+
+Son las mismas ideas que hay detrás del [rendimiento web](/articulos/rendimiento-web-y-core-web-vitals/).
+
+## Lo esencial
+
+- El ancho de banda es la capacidad máxima de un enlace, en bits por segundo.
+- La latencia es el retardo; su parte debida a la distancia no se puede reducir.
+- El rendimiento es lo que se transmite de verdad, y suele ser menor que el ancho de banda.
+- La pérdida de paquetes y la latencia hacen que TCP envíe más despacio.
+- Las aplicaciones interactivas dependen de la latencia y su variación, no del ancho de banda.
