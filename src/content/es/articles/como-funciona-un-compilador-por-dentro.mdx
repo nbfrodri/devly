@@ -5,7 +5,7 @@ level: avanzado
 layer: programacion
 prerequisites:
   - compilador-e-interprete
-  - arboles
+  - que-es-un-lenguaje-de-programacion
 updated: 2026-10-14
 sources:
   - title: "Robert Nystrom: Crafting Interpreters, A Map of the Territory (en inglés)"
@@ -63,7 +63,7 @@ Aquí ya se detectan los errores más básicos: un carácter que no pertenece al
 
 ## 2. Análisis sintáctico: de tokens a un árbol
 
-Los tokens son una lista plana. El **análisis sintáctico** (*parsing*) descubre su estructura según la **gramática** del lenguaje, y la representa como un [árbol](/articulos/arboles/): el **árbol sintáctico abstracto** (AST). La precedencia de los operadores, que la multiplicación va antes que la suma, queda reflejada en la forma del árbol.
+Los tokens son una lista plana. El **análisis sintáctico** (*parsing*) descubre su estructura según la **gramática** del lenguaje, y la representa como un [árbol](/articulos/arboles-binarios-de-busqueda/): el **árbol sintáctico abstracto** (AST). La precedencia de los operadores, que la multiplicación va antes que la suma, queda reflejada en la forma del árbol.
 
 ```mermaid
 flowchart TD
