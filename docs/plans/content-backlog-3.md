@@ -118,11 +118,11 @@ Pedido por el usuario el 2026-10-14: algoritmos y estructuras específicos, no s
 - [x] Programación dinámica (recursividad)
 - [x] Algoritmos voraces
 - [x] Vuelta atrás, backtracking (recursividad)
-- [ ] Árboles equilibrados: AVL y rojo-negro (árboles binarios de búsqueda)
-- [ ] Árboles B (índices de bases de datos)
-- [ ] Tries (árboles)
-- [ ] Filtros de Bloom (tablas hash)
-- [ ] Conjuntos disjuntos, union-find (grafos)
+- [x] Árboles equilibrados: AVL y rojo-negro (árboles binarios de búsqueda)
+- [x] Árboles B (índices de bases de datos)
+- [x] Tries (árboles)
+- [x] Filtros de Bloom (tablas hash)
+- [x] Conjuntos disjuntos, union-find (grafos)
 
 ## Curiosidades
 

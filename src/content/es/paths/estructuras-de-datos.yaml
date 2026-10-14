@@ -9,3 +9,8 @@ steps:
   - arboles-binarios-de-busqueda
   - monticulos-y-colas-de-prioridad
   - grafos
+  - arboles-equilibrados
+  - arboles-b
+  - tries
+  - filtros-de-bloom
+  - conjuntos-disjuntos-union-find

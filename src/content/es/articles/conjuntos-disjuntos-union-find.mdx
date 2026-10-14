@@ -1,0 +1,106 @@
+---
+title: "¿Qué es la estructura de conjuntos disjuntos (union-find)?"
+description: "Union-find mantiene elementos agrupados en conjuntos y responde muy deprisa si dos elementos están en el mismo grupo, uniendo grupos sobre la marcha."
+level: avanzado
+layer: programacion
+prerequisites:
+  - grafos
+  - arbol-de-expansion-minima
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 1.5 Case Study: Union-Find (en inglés)"
+    url: https://algs4.cs.princeton.edu/15uf/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La estructura de **conjuntos disjuntos**, más conocida como **union-find**, mantiene un grupo de elementos repartidos en conjuntos que no se solapan, y ofrece dos operaciones muy rápidas: **unir** dos conjuntos y **encontrar** a qué conjunto pertenece un elemento. Con ellas se responde a la pregunta: ¿están estos dos elementos conectados?
+
+## Qué problema resuelve
+
+Hay una red de ordenadores y se van añadiendo cables, uno a uno. En cualquier momento hay que poder responder: ¿están conectados el equipo A y el equipo F, directamente o a través de otros?
+
+Se podría recorrer el [grafo](/articulos/grafos/) cada vez, pero con millones de equipos y de consultas es demasiado lento. Union-find lo responde casi al instante.
+
+## La idea
+
+Cada conjunto se representa como un **árbol**, y su raíz es el **representante** del conjunto. Cada elemento apunta a su padre; la raíz se apunta a sí misma.
+
+- **Encontrar**: subir desde el elemento hasta la raíz. Dos elementos están en el mismo conjunto si tienen la misma raíz.
+- **Unir**: hacer que la raíz de un conjunto apunte a la raíz del otro.
+
+```js
+function crearConjuntos(elementos) {
+	const padre = Object.fromEntries(elementos.map((e) => [e, e]));
+
+	function encontrar(x) {
+		if (padre[x] !== x) {
+			padre[x] = encontrar(padre[x]);
+		}
+		return padre[x];
+	}
+
+	function unir(a, b) {
+		padre[encontrar(a)] = encontrar(b);
+	}
+
+	const conectados = (a, b) => encontrar(a) === encontrar(b);
+	const cuantos = () =>
+		new Set(elementos.map((e) => encontrar(e))).size;
+
+	return { unir, conectados, cuantos };
+}
+
+const red = crearConjuntos(["A", "B", "C", "D", "E", "F"]);
+red.unir("A", "B");
+red.unir("B", "C");
+red.unir("D", "E");
+
+console.log(red.conectados("A", "C")); // true
+console.log(red.conectados("A", "D")); // false
+console.log(red.cuantos()); // 3
+```
+
+Tras tres conexiones quedan tres grupos: A, B y C; D y E; y F solo.
+
+## Las dos mejoras
+
+Sin cuidado, los árboles pueden crecer como una cadena, y encontrar la raíz se vuelve lento. Dos técnicas lo evitan:
+
+- **Compresión de caminos.** Al buscar la raíz de un elemento, se hace que todos los nodos recorridos apunten **directamente** a ella. Es la línea `padre[x] = encontrar(padre[x])` del ejemplo. La siguiente vez, el camino es de un solo paso.
+- **Unión por tamaño o rango.** Al unir, el árbol más pequeño se cuelga del más grande, nunca al revés, para que la altura crezca lo mínimo.
+
+Con las dos, cada operación cuesta en la práctica un tiempo **casi constante**. Técnicamente, crece con una función que aumenta tan despacio que, para cualquier cantidad de datos que quepa en el universo, no pasa de 5.
+
+<Quiz
+	client:visible
+	question="¿Qué dos operaciones ofrece una estructura union-find?"
+	options={[
+		"Insertar y ordenar",
+		"Unir dos conjuntos y encontrar a qué conjunto pertenece un elemento",
+		"Buscar el mínimo y extraerlo",
+	]}
+	answer={1}
+/>
+
+## Dónde se usa
+
+- **[Árbol de expansión mínima](/articulos/arbol-de-expansion-minima/)**: el algoritmo de Kruskal la usa para saber si una arista formaría un ciclo, es decir, si sus dos extremos ya están conectados.
+- **Componentes conectados** de una red o de una imagen: qué píxeles forman una misma mancha.
+- **Agrupar duplicados**: si A es igual que B y B igual que C, los tres son lo mismo.
+- **Laberintos**: generar uno conectando celdas al azar sin formar ciclos.
+- **Redes sociales**: grupos de personas conectadas entre sí.
+
+## Sus límites
+
+Solo sabe **unir**. No puede separar un conjunto en dos ni quitar una conexión. Si las conexiones se pueden eliminar, hace falta otra estructura.
+
+Tampoco dice **cómo** están conectados dos elementos, solo **si** lo están. Para el camino concreto hay que recorrer el grafo.
+
+## Lo esencial
+
+- Union-find mantiene elementos en conjuntos disjuntos y dice si dos están en el mismo.
+- Cada conjunto es un árbol cuya raíz es su representante.
+- Con compresión de caminos y unión por tamaño, cada operación es casi instantánea.
+- Se usa en el algoritmo de Kruskal y para encontrar componentes conectados.
+- Solo permite unir: no se pueden separar conjuntos.

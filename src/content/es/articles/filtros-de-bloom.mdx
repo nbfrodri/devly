@@ -1,0 +1,123 @@
+---
+title: "¿Qué es un filtro de Bloom?"
+description: "Un filtro de Bloom responde si un elemento está en un conjunto usando muy poca memoria. Puede equivocarse diciendo que sí, pero nunca diciendo que no."
+level: intermedio
+layer: programacion
+prerequisites:
+  - tablas-hash
+  - funciones-hash
+  - probabilidad-basica
+updated: 2026-10-13
+sources:
+  - title: "Redis: Bloom filter (en inglés)"
+    url: https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/
+  - title: "Bill Mill: Bloom Filters by Example (en inglés)"
+    url: https://llimllib.github.io/bloomfilter-tutorial/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **filtro de Bloom** es una estructura de datos que responde a una pregunta, **¿está este elemento en el conjunto?**, usando muy poca memoria. A cambio, no es exacta: a veces dice que sí cuando la respuesta es no. Pero cuando dice que **no**, siempre acierta.
+
+Lo ideó Burton Bloom en 1970.
+
+## Qué problema resuelve
+
+Comprobar si algo está en un conjunto es fácil con una [tabla hash](/articulos/tablas-hash/): se guardan todos los elementos. Pero con mil millones de elementos, guardarlos todos ocupa mucho.
+
+Muchas veces no hace falta tanta precisión. Basta con saber rápidamente si algo **seguro que no** está, para evitar un trabajo caro: una consulta al disco, una petición por la red.
+
+## Cómo funciona
+
+El filtro es una fila de bits, todos a 0 al principio, y varias [funciones hash](/articulos/funciones-hash/).
+
+**Añadir** un elemento: se calcula cada hash, que da una posición, y se ponen a 1 esos bits.
+
+**Consultar**: se calculan los mismos hashes.
+
+- Si **alguno** de esos bits está a 0, el elemento **seguro que no** se añadió nunca.
+- Si **todos** están a 1, **probablemente** se añadió. Pero podrían haberlos puesto a 1 otros elementos distintos.
+
+```js
+import { createHash } from "node:crypto";
+
+const BITS = 256;
+const HASHES = 3;
+const filtro = new Array(BITS).fill(0);
+
+function posiciones(elemento) {
+	const resumen = createHash("sha256").update(elemento).digest();
+	return Array.from({ length: HASHES }, (_, i) => resumen.readUInt16BE(i * 2) % BITS);
+}
+
+const anadir = (elemento) => {
+	for (const p of posiciones(elemento)) filtro[p] = 1;
+};
+
+const quizaContiene = (elemento) =>
+	posiciones(elemento).every((p) => filtro[p] === 1);
+
+const palabras = ["manzana", "pera", "uva", "kiwi"];
+palabras.forEach(anadir);
+
+console.log(palabras.every(quizaContiene)); // true
+console.log(filtro.filter((b) => b === 1).length <= 12); // true
+```
+
+Cada palabra marca 3 bits. Todas las añadidas se encuentran: no hay **falsos negativos**. Y en lugar de guardar las palabras, solo hay 256 bits.
+
+## La probabilidad de error
+
+Un **falso positivo** ocurre cuando todos los bits de un elemento nuevo coinciden, por azar, con bits que otros pusieron a 1. Su probabilidad se puede calcular, con lo que explica [probabilidad básica](/articulos/probabilidad-basica/):
+
+```js
+function falsosPositivos(bits, elementos, hashes) {
+	return (1 - Math.exp((-hashes * elementos) / bits)) ** hashes;
+}
+
+console.log(falsosPositivos(1000, 100, 7).toFixed(3)); // "0.008"
+```
+
+Con 1000 bits, 100 elementos y 7 funciones hash, menos del 1 % de las consultas da un falso positivo. Con unos 10 bits por elemento, el error se queda por debajo del 1 %, sea cual sea el tamaño de cada elemento.
+
+| Si se aumenta | Efecto |
+| --- | --- |
+| El número de bits | Menos falsos positivos, más memoria |
+| El número de elementos | Más falsos positivos |
+| El número de hashes | Hasta cierto punto menos errores, después más |
+
+## Sus limitaciones
+
+- **Falsos positivos**: hay que tolerarlos.
+- **No se puede borrar**: poner un bit a 0 podría afectar a otros elementos. Hay variantes que lo permiten, con contadores en lugar de bits.
+- **No se puede listar** lo que contiene: solo responde sí o quizá.
+
+<Quiz
+	client:visible
+	question="Si un filtro de Bloom responde que un elemento NO está, ¿qué se puede concluir?"
+	options={[
+		"Que probablemente no está",
+		"Que seguro que no está",
+		"Nada, puede equivocarse en los dos sentidos",
+	]}
+	answer={1}
+/>
+
+## Dónde se usa
+
+Siempre como **filtro previo**, delante de algo caro:
+
+- **Bases de datos**: antes de leer un archivo del disco para buscar una clave, se pregunta al filtro si puede estar ahí. Si dice que no, se evita la lectura.
+- **[Cachés](/articulos/que-es-una-cache/) y CDN**: decidir si merece la pena guardar algo, o si un elemento ya se vio antes.
+- **Seguridad**: comprobar si una contraseña aparece en listas de contraseñas filtradas sin guardar la lista completa.
+- **Rastreadores web**: saber si una dirección ya se visitó.
+
+En todos los casos, un falso positivo solo cuesta hacer el trabajo caro de vez en cuando sin necesidad. Un falso negativo sería un error grave, y el filtro no lo comete.
+
+## Lo esencial
+
+- Un filtro de Bloom indica si un elemento está en un conjunto usando muy poca memoria.
+- Usa una fila de bits y varias funciones hash.
+- Si responde que no, es seguro; si responde que sí, puede ser un falso positivo.
+- La probabilidad de error se calcula y se ajusta con el tamaño.
+- Se usa como filtro previo para evitar operaciones caras.

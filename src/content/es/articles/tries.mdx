@@ -1,0 +1,130 @@
+---
+title: "¿Qué es un trie?"
+description: "Un trie es un árbol que guarda palabras letra a letra, de modo que las que comparten principio comparten camino. Es ideal para autocompletar."
+level: intermedio
+layer: programacion
+prerequisites:
+  - arboles-binarios-de-busqueda
+  - tablas-hash
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 5.2 Tries (en inglés)"
+    url: https://algs4.cs.princeton.edu/52trie/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **trie**, también llamado **árbol de prefijos**, es un árbol en el que cada nodo representa una letra, y cada palabra es un camino desde la raíz. Las palabras que empiezan igual comparten los primeros nodos. Eso permite encontrar muy deprisa todas las palabras que empiezan por un prefijo dado.
+
+El nombre viene de *retrieval*, recuperación. Se pronuncia como *tree* o como *try*, según a quién se pregunte.
+
+## La idea
+
+Las palabras "casa", "casco" y "cama":
+
+```
+        c
+        │
+        a
+       / \
+      s   m
+     / \   \
+    a   c   a ●
+    ●   │
+        o ●
+```
+
+El punto marca dónde termina una palabra. "Casa" y "casco" comparten "cas"; las tres comparten "ca".
+
+## Un ejemplo
+
+```js
+const crearNodo = () => ({ hijos: {}, fin: false });
+
+function insertar(raiz, palabra) {
+	let nodo = raiz;
+
+	for (const letra of palabra) {
+		nodo.hijos[letra] ??= crearNodo();
+		nodo = nodo.hijos[letra];
+	}
+
+	nodo.fin = true;
+}
+
+function conPrefijo(raiz, prefijo) {
+	let nodo = raiz;
+
+	for (const letra of prefijo) {
+		nodo = nodo.hijos[letra];
+		if (!nodo) return [];
+	}
+
+	const resultado = [];
+	const recorrer = (actual, texto) => {
+		if (actual.fin) resultado.push(texto);
+		for (const [letra, hijo] of Object.entries(actual.hijos)) {
+			recorrer(hijo, texto + letra);
+		}
+	};
+	recorrer(nodo, prefijo);
+
+	return resultado;
+}
+
+const raiz = crearNodo();
+for (const palabra of ["casa", "casco", "cama", "perro"]) {
+	insertar(raiz, palabra);
+}
+
+console.log(conPrefijo(raiz, "cas").join(" ")); // "casa casco"
+console.log(conPrefijo(raiz, "ca").join(" ")); // "casa casco cama"
+console.log(conPrefijo(raiz, "x").length); // 0
+```
+
+Para encontrar las palabras que empiezan por "cas", se baja tres niveles y se recorre lo que cuelga de ahí. El resto del diccionario no se toca.
+
+## Cuánto cuesta
+
+Buscar una palabra cuesta tanto como **su longitud**, no como el número de palabras guardadas. Da igual que haya cien palabras o diez millones: buscar "casa" son cuatro pasos.
+
+| Operación | Trie | [Tabla hash](/articulos/tablas-hash/) | [Árbol equilibrado](/articulos/arboles-equilibrados/) |
+| --- | --- | --- | --- |
+| Buscar una palabra | Según su longitud | Constante, en promedio | Logarítmica |
+| Todas las que empiezan por un prefijo | Muy rápido | Hay que recorrer todo | Posible, con un rango |
+| Recorrer en orden alfabético | Sí | No | Sí |
+| Memoria | Alta | Media | Media |
+
+La tabla hash es más rápida para buscar una palabra exacta. El trie gana cuando importan los **prefijos**.
+
+## Dónde se usa
+
+- **Autocompletar**: sugerencias mientras se escribe en un buscador o en el teclado del móvil.
+- **Correctores ortográficos**.
+- **[Enrutamiento](/articulos/enrutamiento/)**: los routers buscan el prefijo más largo de una dirección IP que coincide con su tabla, con estructuras de este tipo.
+- **Rutas de una aplicación web**: muchos frameworks localizan qué código atiende `/productos/42` con un árbol de prefijos.
+- **Diccionarios** en juegos de palabras.
+
+## El inconveniente: la memoria
+
+Cada letra es un nodo, con sus enlaces. Un trie con muchas palabras ocupa bastante más que la lista de palabras.
+
+La variante **comprimida**, o árbol radix, une en un solo nodo las cadenas de letras sin bifurcaciones: en el ejemplo, "c" y "a" serían un único nodo "ca". Ocupa mucho menos.
+
+<Quiz
+	client:visible
+	question="¿Qué operación hace especialmente bien un trie?"
+	options={[
+		"Ordenar números",
+		"Encontrar todas las palabras que empiezan por un prefijo",
+		"Calcular la media de unos valores",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Un trie guarda palabras letra a letra, y las que empiezan igual comparten camino.
+- Buscar cuesta según la longitud de la palabra, no según cuántas hay.
+- Es ideal para buscar por prefijo: autocompletar, correctores, rutas.
+- Consume mucha memoria; las versiones comprimidas lo reducen.
