@@ -94,7 +94,7 @@ docs/                    Arquitectura, guía y plan de contenido
 
 - [Arquitectura](docs/architecture.md): decisiones técnicas, modelo de contenido y sistema de diseño.
 - [Guía de contenido](docs/content-guide.md): alcance, tipos de artículo, estructura, fuentes y estilo.
-- [Plan de contenido 7](docs/plans/content-backlog-7.md): huecos del temario y próximos artículos.
+- [Plan de contenido 8](docs/plans/content-backlog-8.md): revisión editorial de las rutas y ampliaciones justificadas.
 
 ## Despliegue
 
