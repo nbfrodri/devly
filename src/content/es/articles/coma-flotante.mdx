@@ -1,0 +1,184 @@
+---
+title: "¿Qué es la coma flotante? Cómo se guardan los números con decimales"
+description: "La coma flotante representa números con decimales usando un signo, una mantisa y un exponente en binario. Es rápida y aproximada."
+level: intermedio
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - complemento-a-dos
+  - por-que-0-1-mas-0-2-no-da-0-3
+updated: 2026-10-13
+sources:
+  - title: "David Goldberg: What Every Computer Scientist Should Know About Floating-Point Arithmetic (1991, en inglés)"
+    url: https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+  - title: "Python: Aritmética de punto flotante, problemas y limitaciones"
+    url: https://docs.python.org/es/3/tutorial/floatingpoint.html
+  - title: "MDN: Number.EPSILON (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **coma flotante** es la forma habitual en que un ordenador representa números con decimales, y números muy grandes o muy pequeños. Guarda cada número en tres partes: un **signo**, unas **cifras significativas** y un **exponente** que indica dónde va la coma. Es la notación científica, en binario.
+
+El formato que usan casi todos los lenguajes y procesadores está definido en el estándar **IEEE 754**.
+
+## Qué problema resuelve
+
+Con un número fijo de [bits](/articulos/que-es-un-bit/) hay que representar cosas tan distintas como la masa de un electrón y la distancia a una galaxia.
+
+Una opción sería la **coma fija**: reservar unos bits para la parte entera y otros para la decimal. Es simple, y el rango es muy limitado. Si se reservan pocos bits a los decimales, no hay precisión para lo pequeño; si se reservan muchos, no caben los números grandes.
+
+La notación científica lo resuelve dejando que la coma se mueva:
+
+- 300 000 000 es 3 × 10⁸.
+- 0,000 000 001 es 1 × 10⁻⁹.
+
+Las cifras importantes son pocas. El exponente dice dónde colocarlas. La coma "flota".
+
+## Las tres partes
+
+Un número en doble precisión, el tipo `number` de JavaScript, ocupa 64 bits.
+
+| Parte | Bits | Qué guarda |
+| --- | --- | --- |
+| Signo | 1 | 0 para positivo, 1 para negativo |
+| Exponente | 11 | Dónde va la coma |
+| Mantisa | 52 | Las cifras significativas |
+
+El valor es: signo × 1,mantisa × 2 elevado al exponente.
+
+Dos detalles:
+
+- **El 1 inicial no se guarda.** En binario, todo número normalizado empieza por 1. Como siempre está, se omite y se gana un bit.
+- **El exponente se guarda con un desplazamiento.** Para representar exponentes negativos sin un signo aparte, se le suma 1023 antes de guardarlo.
+
+El número −6,5 en binario es −110,1, es decir, −1,101 × 2².
+
+```js
+const vista = new DataView(new ArrayBuffer(8));
+vista.setFloat64(0, -6.5);
+
+const bits = vista.getBigUint64(0).toString(2).padStart(64, "0");
+
+console.log(bits.slice(0, 1)); // "1"
+console.log(parseInt(bits.slice(1, 12), 2) - 1023); // 2
+console.log(bits.slice(12, 16)); // "1010"
+```
+
+El signo es 1, por ser negativo. El exponente, tras restar el desplazamiento, es 2. Y la mantisa empieza por 101: las cifras que siguen al 1 inicial.
+
+## Precisión simple y doble
+
+| Tipo | Bits | Cifras decimales fiables | Uso |
+| --- | --- | --- | --- |
+| Simple | 32 | Unas 7 | Gráficos, [redes neuronales](/articulos/que-es-una-red-neuronal/), donde importan memoria y velocidad |
+| Doble | 64 | Unas 15 o 16 | El tipo por defecto en casi todos los lenguajes |
+
+## Es una aproximación
+
+Con 64 bits hay una cantidad finita de valores, y entre dos números cualesquiera hay infinitos reales. La mayoría no se puede representar: se guarda el **más cercano** que sí.
+
+Además, la base es 2. Igual que 1/3 no tiene representación exacta en decimal, 0,333…, muchos números sencillos en decimal no la tienen en binario. Uno de ellos es 0,1.
+
+```js
+console.log(0.1 + 0.2); // 0.30000000000000004
+console.log(0.5 + 0.25); // 0.75
+console.log((0.1).toString(2).length > 50); // true
+```
+
+0,5 y 0,25 son potencias de 2 y se guardan sin error. 0,1 en binario tiene infinitas cifras, y se corta. El artículo [¿por qué 0,1 + 0,2 no da 0,3?](/articulos/por-que-0-1-mas-0-2-no-da-0-3/) lo explica con más detalle.
+
+## Los huecos crecen
+
+Los valores representables no están repartidos por igual. Cerca de cero hay muchísimos. Cuanto mayor es el número, más separados quedan.
+
+Es lógico: las cifras significativas son siempre las mismas, unas 16. En un número pequeño, se gastan en decimales. En uno enorme, no llegan ni a las unidades.
+
+```js
+console.log(Number.MAX_SAFE_INTEGER); // 9007199254740991
+console.log(2 ** 53 === 2 ** 53 + 1); // true
+```
+
+A partir de 2 elevado a 53, ya no se pueden representar todos los enteros. Sumar 1 no cambia nada: el resultado se redondea al mismo valor.
+
+Es un error clásico con identificadores grandes. Un identificador de 64 bits recibido en [JSON](/articulos/formatos-de-datos-json-csv-xml/) y leído como número pierde sus últimas cifras sin avisar. Se transmiten como texto, o se usa un tipo entero de precisión arbitraria.
+
+## Valores especiales
+
+El estándar reserva algunos patrones.
+
+```js
+console.log(1 / 0); // Infinity
+console.log(Number.isNaN(0 / 0)); // true
+console.log(NaN === NaN); // false
+console.log(0 === -0); // true
+```
+
+- **Infinito**, positivo y negativo: el resultado de desbordar el rango, o de dividir entre cero.
+- **NaN**, "no es un número": el resultado de operaciones sin sentido, como 0 entre 0. Se contagia: cualquier operación con un NaN da NaN. Y no es igual a nada, **ni a sí mismo**. Para detectarlo hay que usar una función específica.
+- **Cero negativo.** Existe, y se considera igual al positivo.
+
+Que una división entre cero no detenga el programa es deliberado: un cálculo largo puede continuar y revisarse al final.
+
+<Quiz
+	client:visible
+	question="¿Por qué no se pueden representar con exactitud la mayoría de los números decimales en coma flotante?"
+	options={[
+		"Porque los procesadores cometen errores al calcular",
+		"Porque hay un número finito de bits y la base es 2, así que se guarda el valor más cercano",
+		"Porque los lenguajes redondean a dos decimales",
+	]}
+	answer={1}
+/>
+
+## Reglas prácticas
+
+### No comparar con igualdad
+
+```js
+const suma = 0.1 + 0.2;
+
+console.log(suma === 0.3); // false
+console.log(Math.abs(suma - 0.3) < Number.EPSILON); // true
+```
+
+Se comprueba que la diferencia sea menor que una **tolerancia**. Cuál es la adecuada depende de la magnitud de los números y del problema.
+
+### El dinero no va en coma flotante
+
+Los errores de redondeo se acumulan, y en contabilidad un céntimo importa. Las opciones:
+
+- **Guardar en la unidad mínima**, como enteros: céntimos en lugar de euros.
+- **Usar un tipo decimal**, que muchos lenguajes y todas las bases de datos ofrecen, y que opera en base 10.
+
+### El orden de las operaciones importa
+
+En coma flotante, (a + b) + c no siempre es igual a a + (b + c). Sumar un número enorme y uno diminuto hace que el pequeño se pierda.
+
+Al sumar muchos valores de tamaños dispares, es más preciso empezar por los pequeños.
+
+### Restar números casi iguales
+
+Si dos números coinciden en casi todas sus cifras, al restarlos esas cifras se anulan y queda sobre todo el error de redondeo. Se llama **cancelación catastrófica**, y hay fórmulas que conviene reescribir para evitarla.
+
+### Mostrar no es calcular
+
+Para enseñar un resultado, se redondea al mostrarlo. No se redondea en cada paso intermedio, que acumularía más error.
+
+## Por qué se usa pese a todo
+
+- **Es rápida.** Los procesadores tienen circuitos dedicados.
+- **Cubre un rango enorme** con un tamaño fijo.
+- **El error es pequeño y conocido.** Para medir, simular, dibujar o entrenar un modelo, quince cifras sobran. Ninguna medida física es tan precisa.
+- **Es un estándar.** El mismo cálculo da el mismo resultado en casi cualquier máquina.
+
+Los problemas aparecen cuando se le pide lo que no ofrece: exactitud decimal, o enteros gigantes.
+
+## Lo esencial
+
+- La coma flotante guarda un signo, unas cifras significativas y un exponente, en binario.
+- Es una aproximación: se almacena el valor representable más cercano.
+- Tiene unas 15 cifras decimales fiables en doble precisión.
+- Los valores representables se separan al crecer: por encima de 2⁵³ no caben todos los enteros.
+- No se compara con igualdad ni se usa para dinero.

@@ -1,0 +1,206 @@
+---
+title: "¿Cómo se detectan y corrigen los errores en los datos?"
+description: "Añadiendo información redundante calculada a partir de los datos, el receptor puede saber si algo se alteró por el camino, e incluso repararlo."
+level: intermedio
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - logica-booleana
+updated: 2026-10-13
+sources:
+  - title: "RFC 1071: Computing the Internet Checksum"
+    url: https://www.rfc-editor.org/info/rfc1071/
+  - title: "RFC 1952: GZIP file format specification"
+    url: https://www.rfc-editor.org/info/rfc1952/
+  - title: "MIT OpenCourseWare 6.02: Digital Communication Systems, lecturas del curso (en inglés)"
+    url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/pages/readings/
+  - title: "Claude Shannon: A Mathematical Theory of Communication (1948, en inglés)"
+    url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Los datos se alteran: el ruido cambia [bits](/articulos/que-es-un-bit/) en una transmisión, y la radiación o el desgaste los cambian en una memoria o un disco. Para **detectar** esos errores se añade a los datos información redundante, calculada a partir de ellos, que el receptor vuelve a calcular y compara. Con suficiente redundancia, también se pueden **corregir**, sin pedir que se repita el envío.
+
+## Qué problema resuelve
+
+Un solo bit cambiado puede convertir una transferencia de 10 euros en una de 1034, o un programa en otro que se cuelga. Y los errores ocurren:
+
+- En una [señal](/articulos/senales-analogicas-y-digitales/), el ruido puede hacer que un 0 se lea como 1.
+- En la memoria, una partícula de radiación puede invertir un bit.
+- En el almacenamiento, las celdas se degradan con el tiempo.
+
+No se pueden evitar del todo. Lo que se puede es saber que han ocurrido.
+
+## La idea: añadir redundancia
+
+Enviar el mensaje dos veces permite detectar un error: si las copias no coinciden, algo falló. Pero cuesta el doble, y no dice cuál de las dos es la buena.
+
+Las técnicas reales añaden **unos pocos bits** calculados a partir de los datos. El receptor repite el cálculo. Si no coincide, hubo un error.
+
+## Paridad
+
+La más simple: un bit adicional que hace que el número total de unos sea par.
+
+```js
+const paridad = (bits) => bits.reduce((a, b) => a ^ b, 0);
+
+const dato = [1, 0, 1, 1, 0, 0, 1];
+const enviado = [...dato, paridad(dato)];
+
+console.log(paridad(enviado)); // 0
+
+enviado[2] = enviado[2] ^ 1;
+
+console.log(paridad(enviado)); // 1
+```
+
+Con el bit añadido, el total de unos es par y la comprobación da 0. Si un bit cambia por el camino, da 1: hay un error.
+
+Sus límites:
+
+- **Si cambian dos bits, no lo detecta**: la paridad vuelve a cuadrar.
+- **No dice qué bit falló.**
+
+Es barata, y se usó durante mucho tiempo en memorias y comunicaciones simples.
+
+## Sumas de comprobación
+
+Se suman los datos, en bloques, y el resultado se envía con ellos. Es la **suma de comprobación**, en inglés *checksum*.
+
+La que usan [IP, TCP y UDP](/articulos/tcp-y-udp/) suma los datos en bloques de 16 bits:
+
+```js
+function sumaDeComprobacion(bloques) {
+	let suma = 0;
+
+	for (const bloque of bloques) {
+		suma = suma + bloque;
+		suma = (suma & 0xffff) + (suma >> 16);
+	}
+
+	return ~suma & 0xffff;
+}
+
+const bloques = [0x4500, 0x0073, 0x0000, 0x4000, 0x4011];
+const comprobacion = sumaDeComprobacion(bloques);
+
+console.log(comprobacion.toString(16)); // "3a7b"
+console.log(sumaDeComprobacion([...bloques, comprobacion])); // 0
+```
+
+El receptor suma todo, comprobación incluida. Si el resultado es 0, los datos llegaron bien.
+
+Es rápida de calcular, y detecta muchos errores, pero no todos: si dos bloques se intercambian, la suma no cambia.
+
+## CRC
+
+La **comprobación de redundancia cíclica** trata los datos como un número enorme, lo divide por un valor fijo con una aritmética especial, y envía el resto.
+
+```js
+function crc32(texto) {
+	let crc = 0xffffffff;
+
+	for (const byte of Buffer.from(texto)) {
+		crc = crc ^ byte;
+
+		for (let i = 0; i < 8; i++) {
+			crc = crc & 1 ? (crc >>> 1) ^ 0xedb88320 : crc >>> 1;
+		}
+	}
+
+	return (~crc >>> 0).toString(16);
+}
+
+console.log(crc32("123456789")); // "cbf43926"
+console.log(crc32("123456789") === crc32("123456780")); // false
+```
+
+Un solo carácter distinto produce un resultado completamente diferente.
+
+Detecta todos los errores de un bit, de dos bits, y cualquier ráfaga de errores consecutivos más corta que el propio CRC. Por eso lo usan Ethernet, el wifi, los archivos ZIP y gzip, y los discos.
+
+Un CRC protege contra el **azar**, no contra un atacante. Alguien que modifique los datos a propósito puede recalcular el CRC. Para detectar manipulaciones hacen falta [funciones hash](/articulos/funciones-hash/) criptográficas y firmas.
+
+## Corregir
+
+Detectar obliga a pedir que se repita el envío. A veces no es posible: una sonda espacial a horas de distancia, un CD rayado, una memoria que hay que leer ya.
+
+Para corregir hace falta más redundancia: suficiente para saber **qué bit** falló.
+
+### El código de Hamming
+
+Richard Hamming lo ideó en 1950. Con 4 bits de datos añade 3 de control, cada uno vigilando un grupo distinto de posiciones. Los grupos se solapan de forma que cada posición queda cubierta por una combinación única de bits de control.
+
+Al recibir, se comprueba cada grupo. La combinación de grupos que fallan forma un número: la **posición del bit erróneo**.
+
+```js
+function codificar([a, b, c, d]) {
+	return [a ^ b ^ d, a ^ c ^ d, a, b ^ c ^ d, b, c, d];
+}
+
+function corregir(recibido) {
+	const bloque = [...recibido];
+	const c1 = bloque[0] ^ bloque[2] ^ bloque[4] ^ bloque[6];
+	const c2 = bloque[1] ^ bloque[2] ^ bloque[5] ^ bloque[6];
+	const c4 = bloque[3] ^ bloque[4] ^ bloque[5] ^ bloque[6];
+	const posicion = c1 + 2 * c2 + 4 * c4;
+
+	if (posicion > 0) {
+		bloque[posicion - 1] = bloque[posicion - 1] ^ 1;
+	}
+
+	return { posicion, datos: [bloque[2], bloque[4], bloque[5], bloque[6]] };
+}
+
+const bloque = codificar([1, 0, 1, 1]);
+console.log(bloque.join("")); // "0110011"
+
+bloque[4] = bloque[4] ^ 1;
+
+const resultado = corregir(bloque);
+console.log(resultado.posicion); // 5
+console.log(resultado.datos.join("")); // "1011"
+```
+
+Se envían 7 bits, uno se altera por el camino, y el receptor no solo lo detecta: averigua que fue el quinto, lo invierte y recupera los datos originales.
+
+<Quiz
+	client:visible
+	question="¿Qué permite un código corrector de errores que no permite uno detector?"
+	options={[
+		"Saber que hubo un error",
+		"Saber qué bit falló y repararlo sin volver a enviar",
+		"Evitar que se produzcan errores",
+	]}
+	answer={1}
+/>
+
+## Dónde se usa
+
+| Técnica | Dónde |
+| --- | --- |
+| Paridad | Memorias antiguas, algunos protocolos |
+| Suma de comprobación | Cabeceras de IP, TCP y UDP |
+| CRC | Ethernet, wifi, ZIP, gzip, discos |
+| Corrección de errores | Memoria ECC, SSD, CD y DVD, códigos QR, redes móviles, sondas espaciales |
+
+- **Memoria ECC.** Los servidores usan memoria con códigos que corrigen un bit erróneo por palabra y detectan dos. Con terabytes de RAM funcionando años, los errores son seguros.
+- **SSD.** Las celdas flash se degradan, y el controlador corrige constantemente bits erróneos sin que nadie lo note.
+- **Códigos QR.** Se leen aunque estén parcialmente tapados o manchados.
+- **Comunicaciones.** El wifi y las redes móviles añaden corrección a cada transmisión. Es lo que permite trabajar cerca del límite de capacidad que estableció Shannon.
+
+## El equilibrio
+
+Más redundancia permite detectar y corregir más errores, a cambio de transmitir más bits. Se elige según lo ruidoso que sea el canal y lo caro que sea repetir.
+
+- **Canal fiable, repetir es barato**: detectar y reenviar. Es lo que hace TCP.
+- **Canal ruidoso o repetir imposible**: corregir.
+
+## Lo esencial
+
+- Los errores en los datos son inevitables; lo que se puede es detectarlos.
+- Se añade información redundante calculada a partir de los datos, y el receptor la recalcula.
+- La paridad y las sumas de comprobación son simples; el CRC detecta muchos más errores.
+- Con más redundancia, como en el código de Hamming, se puede localizar y corregir el bit erróneo.
+- Estas técnicas protegen del azar, no de la manipulación intencionada.

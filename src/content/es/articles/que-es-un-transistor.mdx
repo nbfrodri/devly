@@ -1,0 +1,156 @@
+---
+title: "¿Qué es un transistor?"
+description: "Un transistor es un interruptor diminuto que se acciona con electricidad. Con miles de millones de ellos se construye un procesador."
+level: basico
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - puertas-logicas
+updated: 2026-10-13
+sources:
+  - title: "Computer History Museum: Invention of the Point-Contact Transistor (en inglés)"
+    url: https://www.computerhistory.org/siliconengine/invention-of-the-point-contact-transistor/
+  - title: "Computer History Museum: Metal Oxide Semiconductor (MOS) Transistor Demonstrated (en inglés)"
+    url: https://www.computerhistory.org/siliconengine/metal-oxide-semiconductor-mos-transistor-demonstrated/
+  - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 3, CMOS (en inglés)"
+    url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c3/
+  - title: "Nobel Prize: The Nobel Prize in Physics 1956 (en inglés)"
+    url: https://www.nobelprize.org/prizes/physics/1956/summary/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **transistor** es un componente electrónico que controla el paso de la corriente. En los circuitos digitales funciona como un **interruptor** que no se acciona con el dedo, sino con electricidad: una señal eléctrica decide si deja pasar otra o no.
+
+Es la pieza con la que se construye todo lo digital. Un procesador actual contiene miles de millones.
+
+## Para qué hace falta un interruptor
+
+Un ordenador trabaja con [bits](/articulos/que-es-un-bit/): valores que son 0 o 1. Físicamente, un 1 es un voltaje alto y un 0, uno bajo.
+
+Para **calcular** con ellos, hace falta que unas señales controlen a otras: que el resultado en un cable dependa de lo que hay en otros dos. Eso es un interruptor controlado eléctricamente. Combinando unos cuantos se obtiene una [puerta lógica](/articulos/puertas-logicas/), y combinando puertas, cualquier operación.
+
+## Antes: las válvulas
+
+Los primeros ordenadores electrónicos, en los años cuarenta, usaban **válvulas de vacío**: ampollas de cristal parecidas a bombillas. Hacían de interruptor, con serios inconvenientes:
+
+- Eran grandes.
+- Consumían mucha energía y desprendían mucho calor.
+- Se fundían con frecuencia.
+
+Una máquina con miles de válvulas ocupaba una sala y pasaba buena parte del tiempo averiada.
+
+## La invención
+
+En diciembre de 1947, en los Laboratorios Bell, John Bardeen y Walter Brattain consiguieron el primer transistor, y William Shockley desarrolló poco después un diseño más práctico. Los tres recibieron el Premio Nobel de Física en 1956.
+
+El transistor hacía lo mismo que una válvula, y era pequeño, sólido, eficiente y duradero.
+
+Se fabrica con un **semiconductor**, normalmente silicio: un material que conduce la electricidad mejor que un aislante y peor que un metal, y cuya conductividad se puede controlar añadiéndole pequeñas cantidades de otros elementos.
+
+## Cómo funciona
+
+El tipo que domina hoy es el **MOSFET**, demostrado en los Laboratorios Bell en 1960. Tiene tres terminales:
+
+| Terminal | Función |
+| --- | --- |
+| Fuente | Por donde entra la corriente |
+| Drenador | Por donde sale |
+| Puerta | La que controla |
+
+El voltaje aplicado a la **puerta** decide si hay un camino conductor entre la fuente y el drenador.
+
+Lo importante es que la puerta está aislada: controla mediante un campo eléctrico, sin que apenas circule corriente por ella. Es como un grifo que se abre o se cierra sin gastar agua en accionarlo.
+
+Hay dos variantes complementarias:
+
+- El de **tipo N** conduce cuando la puerta recibe un voltaje alto, un 1.
+- El de **tipo P** conduce cuando recibe uno bajo, un 0.
+
+## CMOS: los dos juntos
+
+Casi todos los chips usan la tecnología **CMOS**, que combina transistores de los dos tipos en parejas.
+
+La puerta más simple, el **inversor**, tiene uno de cada. Cuando la entrada es 1, el de tipo N conecta la salida a tierra: sale un 0. Cuando es 0, el de tipo P la conecta al voltaje de alimentación: sale un 1.
+
+```js
+const tipoN = (puerta) => puerta === 1;
+const tipoP = (puerta) => puerta === 0;
+
+function inversor(entrada) {
+	const unidaAlPositivo = tipoP(entrada);
+	return unidaAlPositivo ? 1 : 0;
+}
+
+function nand(a, b) {
+	const unidaAlPositivo = tipoP(a) || tipoP(b);
+	const unidaATierra = tipoN(a) && tipoN(b);
+
+	return unidaAlPositivo && !unidaATierra ? 1 : 0;
+}
+
+console.log([inversor(0), inversor(1)].join(" ")); // "1 0"
+console.log([nand(0, 0), nand(0, 1), nand(1, 0), nand(1, 1)].join(" ")); // "1 1 1 0"
+```
+
+Una puerta NAND son cuatro transistores. Dos de tipo P en paralelo: basta que uno conduzca para unir la salida al positivo. Y dos de tipo N en serie: tienen que conducir los dos para unirla a tierra.
+
+En cualquier combinación de entradas, la salida queda unida a uno de los dos extremos y nunca a ambos. Esa es la gran ventaja de CMOS: en reposo, no hay un camino directo de la alimentación a tierra, y apenas se consume. La energía se gasta sobre todo al **cambiar** de estado.
+
+Por eso un procesador consume más cuanto más rápido trabaja, y por eso un móvil puede tener miles de millones de transistores y funcionar con una batería.
+
+## El circuito integrado
+
+Los primeros transistores eran piezas sueltas, que se soldaban una a una. A finales de los años cincuenta, Jack Kilby y Robert Noyce idearon, cada uno por su lado, cómo fabricar muchos transistores y sus conexiones **en una misma pieza de silicio**. Es el **circuito integrado**, o chip.
+
+Ya no se fabrican transistores: se fabrican chips enteros de una vez, con un proceso parecido a la impresión, llamado **fotolitografía**. Se proyecta el dibujo del circuito sobre una oblea de silicio, capa a capa.
+
+Ese cambio lo hizo todo posible. El coste de un chip depende poco de cuántos transistores lleva. Hacerlos más pequeños permite meter más en el mismo espacio, casi al mismo precio.
+
+<Quiz
+	client:visible
+	question="En un circuito digital, ¿qué función cumple un transistor?"
+	options={[
+		"Almacena energía, como una batería",
+		"Actúa como un interruptor controlado por una señal eléctrica",
+		"Genera la señal de reloj",
+	]}
+	answer={1}
+/>
+
+## Más pequeños, más rápidos
+
+Al encoger un transistor, mejora en todo a la vez: conmuta más deprisa, gasta menos y caben más. Durante décadas, el número de transistores por chip se duplicó aproximadamente cada dos años, la tendencia conocida como [ley de Moore](/articulos/que-es-la-ley-de-moore/).
+
+| Época | Transistores en un procesador |
+| --- | --- |
+| Principios de los años setenta | Unos pocos miles |
+| Años noventa | Millones |
+| Hoy | Miles de millones |
+
+Los transistores actuales tienen dimensiones de unos pocos nanómetros. Un nanómetro es la millonésima parte de un milímetro.
+
+Los nombres comerciales de los procesos de fabricación, "de 5 nanómetros", "de 3 nanómetros", ya no corresponden a ninguna medida física concreta del transistor. Son etiquetas de generación.
+
+## Los límites
+
+- **Los átomos.** Algunas partes del transistor tienen ya un grosor de pocas decenas de átomos. No se puede reducir indefinidamente.
+- **Las fugas.** A esas escalas, los electrones atraviesan barreras que deberían detenerlos, por efectos cuánticos. El interruptor "apagado" deja pasar algo de corriente.
+- **El calor.** Tantos transistores conmutando en tan poco espacio generan un calor difícil de extraer. Es la razón de que la frecuencia de los procesadores dejara de subir hace años.
+- **El coste.** Cada generación de fábricas cuesta más que la anterior.
+
+La respuesta ha sido cambiar de forma: los transistores dejaron de ser planos y pasaron a tener estructuras en tres dimensiones, en las que la puerta envuelve el canal para controlarlo mejor. Y, como subir la velocidad ya no es posible, se ponen más núcleos en cada [procesador](/articulos/como-funciona-un-procesador/).
+
+## No solo interruptores
+
+En electrónica analógica, el transistor se usa como **amplificador**: una señal débil en la puerta controla una corriente mucho mayor. Así funcionan las radios y los equipos de sonido.
+
+Y también guarda datos. Las celdas de la [memoria RAM](/articulos/memoria-ram-y-almacenamiento/) y de las [unidades SSD](/articulos/discos-duros-y-ssd/) se construyen con transistores.
+
+## Lo esencial
+
+- Un transistor es un interruptor controlado por una señal eléctrica.
+- Sustituyó a las válvulas de vacío: es pequeño, eficiente y fiable.
+- En un MOSFET, el voltaje de la puerta decide si pasa corriente entre fuente y drenador.
+- La tecnología CMOS combina dos tipos complementarios y casi no consume en reposo.
+- El circuito integrado permitió fabricar miles de millones en un chip.

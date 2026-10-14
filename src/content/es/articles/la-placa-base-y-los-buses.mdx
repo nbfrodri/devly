@@ -1,0 +1,151 @@
+---
+title: "¿Qué es la placa base? Buses, puertos y periféricos"
+description: "La placa base conecta todos los componentes de un ordenador. Los buses son los caminos por los que viajan los datos entre ellos."
+level: basico
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - memoria-ram-y-almacenamiento
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 20, System-level Communication (en inglés)"
+    url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c20/
+  - title: "PCI-SIG: Specifications (en inglés)"
+    url: https://pcisig.com/specifications
+  - title: "USB Implementers Forum: About (en inglés)"
+    url: https://www.usb.org/about
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, I/O Devices (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **placa base** es la placa de circuito principal de un ordenador. Sobre ella se montan o se conectan todos los demás componentes: el [procesador](/articulos/como-funciona-un-procesador/), la [memoria](/articulos/memoria-ram-y-almacenamiento/), el almacenamiento, la tarjeta gráfica y los periféricos. Los **buses** son las conexiones por las que circulan los datos entre ellos.
+
+## Qué hay en una placa base
+
+| Componente | Función |
+| --- | --- |
+| Zócalo del procesador | Donde se instala la CPU |
+| Ranuras de memoria | Para los módulos de RAM |
+| Ranuras de expansión | Para tarjetas gráficas, de red o de almacenamiento |
+| Conectores de almacenamiento | Para [discos y SSD](/articulos/discos-duros-y-ssd/) |
+| Chipset | Gestiona la comunicación con los periféricos |
+| Firmware | El programa que arranca el equipo |
+| Conectores traseros | USB, red, audio, vídeo |
+| Regulación de energía | Adapta la alimentación a lo que necesita cada componente |
+
+La placa base no calcula nada. Su papel es conectar, alimentar y coordinar.
+
+En un móvil o en muchos portátiles no hay piezas intercambiables: casi todo está integrado en un único chip, un **sistema en un chip**. La función es la misma, en mucho menos espacio.
+
+## Qué es un bus
+
+Un **bus** es un canal de comunicación compartido, por el que varios componentes intercambian datos siguiendo unas reglas comunes.
+
+Tradicionalmente se describe con tres partes:
+
+- **Datos**: los valores que se transportan.
+- **Direcciones**: a qué posición de memoria o a qué dispositivo van.
+- **Control**: si es una lectura o una escritura, cuándo están listos los datos.
+
+### Ancho y velocidad
+
+Lo que puede transportar un bus depende de cuántos bits mueve a la vez y de cuántas veces por segundo lo hace.
+
+```js
+const megabytesPorSegundo = (bits, millonesDeTransferencias) =>
+	(bits * millonesDeTransferencias) / 8;
+
+console.log(megabytesPorSegundo(64, 3200)); // 25600
+console.log(megabytesPorSegundo(64, 3200) * 2); // 51200
+```
+
+Un módulo de memoria con un bus de 64 bits a 3200 millones de transferencias por segundo mueve unos 25 600 megabytes por segundo. Con dos canales de memoria trabajando a la vez, el doble. Por eso conviene instalar los módulos por parejas.
+
+## De paralelo a serie
+
+Los buses antiguos eran **paralelos**: muchos cables, cada uno con un bit, todos a la vez. Parece lo más rápido.
+
+Tiene un problema: a frecuencias altas, las señales de los distintos cables no llegan exactamente a la vez, y se interfieren entre sí. Hay que ir despacio para que lleguen alineadas.
+
+Las conexiones modernas son **en serie**: pocos pares de cables, cada uno enviando bits uno tras otro a velocidades altísimas. Para tener más capacidad, se usan varios canales independientes, llamados **carriles**.
+
+Es contraintuitivo, y es lo que ha permitido multiplicar la velocidad. USB, SATA y PCI Express son conexiones en serie.
+
+## PCI Express
+
+Es la conexión principal para los componentes rápidos: tarjetas gráficas, unidades de almacenamiento NVMe, tarjetas de red.
+
+- No es un bus compartido, sino **conexiones punto a punto**: cada dispositivo tiene su propio enlace.
+- Cada enlace tiene 1, 4, 8 o 16 carriles. Una tarjeta gráfica suele usar 16; una SSD, 4.
+- Cada generación duplica aproximadamente la velocidad por carril.
+
+Lo que limita al equipo no es solo cuántas ranuras hay, sino cuántos carriles ofrece el procesador para repartir entre ellas.
+
+## El chipset
+
+El procesador tiene conexiones directas con lo más rápido: la memoria y algunas ranuras PCI Express. El resto, puertos USB, más unidades, red, audio, pasa por el **chipset**, un chip auxiliar conectado al procesador con su propio enlace.
+
+Todo lo que cuelga del chipset comparte ese enlace. Es un posible cuello de botella cuando varios dispositivos rápidos trabajan a la vez.
+
+<Quiz
+	client:visible
+	question="¿Por qué las conexiones modernas son en serie y no en paralelo?"
+	options={[
+		"Porque son más baratas aunque más lentas",
+		"Porque a altas frecuencias las señales de muchos cables paralelos se desalinean y se interfieren",
+		"Porque solo hay que transmitir un bit cada vez",
+	]}
+	answer={1}
+/>
+
+## Puertos y periféricos
+
+Un **periférico** es cualquier dispositivo externo al núcleo del ordenador: teclado, ratón, impresora, pantalla. Se conectan por **puertos**.
+
+| Puerto | Uso |
+| --- | --- |
+| USB | Casi todo: periféricos, almacenamiento, carga |
+| HDMI y DisplayPort | Pantallas |
+| Ethernet | [Red por cable](/articulos/capa-de-enlace/) |
+| Audio | Auriculares y micrófono |
+
+**USB** se diseñó en los años noventa para sustituir la maraña de conectores distintos que había. Además de datos, suministra energía, y un mismo puerto admite dispositivos muy diferentes.
+
+El nombre del conector y la velocidad son cosas distintas. Un conector USB-C puede ofrecer desde la velocidad más baja de USB hasta conexiones muy rápidas, o vídeo, o solo carga. Depende de lo que admitan el puerto y el cable.
+
+Cómo habla el procesador con cada dispositivo se explica en [interrupciones y entrada y salida](/articulos/interrupciones-y-entrada-salida/).
+
+## El firmware
+
+La placa base guarda en un chip de memoria permanente un programa que se ejecuta al encenderla, antes que el [sistema operativo](/articulos/que-es-un-sistema-operativo/).
+
+Tradicionalmente se llamaba **BIOS**. Hoy es **UEFI**, su sucesor, más capaz. Hace tres cosas:
+
+1. Comprueba e inicializa el hardware: procesador, memoria, dispositivos.
+2. Busca un dispositivo desde el que arrancar.
+3. Carga el programa de arranque del sistema operativo y le cede el control.
+
+Incluye además el **arranque seguro**: solo permite cargar programas de arranque firmados por quien se considera de confianza. Protege contra programas maliciosos que se instalan antes que el propio sistema.
+
+El firmware es software, y tiene errores. Los fabricantes publican actualizaciones, a veces de seguridad.
+
+## Al elegir componentes
+
+La placa base decide qué se puede instalar y ampliar:
+
+- **El zócalo** fija qué procesadores admite.
+- **El tipo de memoria**, que cambia entre generaciones, y cuánta como máximo.
+- **Las ranuras y los carriles** disponibles.
+- **Los puertos.**
+
+Un procesador rápido con una conexión lenta a la memoria rinde por debajo de lo que podría. En un ordenador, la velocidad del conjunto la marca el componente más lento por el que pasan los datos.
+
+## Lo esencial
+
+- La placa base conecta y alimenta todos los componentes del ordenador.
+- Un bus es un canal compartido para intercambiar datos; su capacidad depende de su ancho y su velocidad.
+- Las conexiones modernas son en serie, con varios carriles para sumar capacidad.
+- PCI Express conecta lo rápido; el chipset gestiona el resto de periféricos.
+- El firmware, UEFI, inicializa el hardware y arranca el sistema operativo.

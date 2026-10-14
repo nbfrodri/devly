@@ -1,0 +1,184 @@
+---
+title: "¿Qué es la compresión de datos?"
+description: "Comprimir es representar la misma información con menos bits. Sin pérdida se recupera el original exacto; con pérdida se descarta lo que menos se nota."
+level: intermedio
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - codificacion-de-caracteres
+updated: 2026-10-13
+sources:
+  - title: "RFC 1951: DEFLATE Compressed Data Format Specification"
+    url: https://www.rfc-editor.org/info/rfc1951/
+  - title: "RFC 8878: Zstandard Compression and the application/zstd Media Type"
+    url: https://www.rfc-editor.org/info/rfc8878/
+  - title: "Claude Shannon: A Mathematical Theory of Communication (1948, en inglés)"
+    url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
+  - title: "ITU-T T.81: especificación de JPEG (en inglés)"
+    url: https://www.w3.org/Graphics/JPEG/itu-t81.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **compresión de datos** consiste en representar una información con menos [bits](/articulos/que-es-un-bit/) de los que ocupa en su forma original. Hay dos clases. La compresión **sin pérdida** permite recuperar los datos exactamente como eran. La compresión **con pérdida** descarta parte de la información, la que menos se nota, a cambio de reducir mucho más.
+
+Está en todas partes: las páginas web, las fotos, la música, el vídeo y los archivos ZIP.
+
+## Por qué se puede comprimir
+
+Porque casi todos los datos tienen **redundancia**: repeticiones y patrones.
+
+- En un texto, unas letras aparecen mucho más que otras, y las palabras se repiten.
+- En una foto, los puntos vecinos suelen tener colores parecidos.
+- En un vídeo, un fotograma se parece mucho al anterior.
+
+Comprimir es describir los datos aprovechando esos patrones, en lugar de enumerarlo todo.
+
+## Sin pérdida
+
+### Contar repeticiones
+
+La idea más simple: sustituir una serie de símbolos iguales por el símbolo y el número de veces.
+
+```js
+function comprimir(texto) {
+	return texto.replace(/(.)\1*/g, (grupo, simbolo) => `${grupo.length}${simbolo}`);
+}
+
+console.log(comprimir("AAAAAABBBCCCCCCCC")); // "6A3B8C"
+console.log(comprimir("ABCD")); // "1A1B1C1D"
+```
+
+17 caracteres pasan a 6. Pero el segundo caso enseña algo importante: sin repeticiones, el resultado es **más largo** que el original.
+
+Ningún método comprime todo. Cada uno apuesta por un tipo de patrón.
+
+### Códigos más cortos para lo frecuente
+
+Normalmente cada carácter ocupa lo mismo, como explica el artículo sobre [codificación de caracteres](/articulos/codificacion-de-caracteres/). Si en un texto la "e" aparece mil veces y la "w" dos, es un desperdicio.
+
+La **codificación de Huffman** asigna códigos cortos a los símbolos frecuentes y largos a los raros. Es la idea del código Morse, donde la "E" es un solo punto.
+
+Los códigos se construyen de modo que ninguno sea el comienzo de otro, para que no haya dudas al leerlos uno tras otro.
+
+### Referencias a lo ya visto
+
+Los métodos de la familia **LZ** buscan secuencias que ya aparecieron antes y las sustituyen por una referencia: "copia 12 caracteres de 340 posiciones atrás".
+
+En un texto, en código o en un documento [HTML](/articulos/que-es-html/), con sus etiquetas repetidas, funciona muy bien.
+
+### Combinados
+
+Los formatos reales encadenan técnicas. **DEFLATE**, la base de ZIP, gzip y PNG, aplica primero referencias a lo ya visto y después Huffman.
+
+```js
+import { randomBytes } from "node:crypto";
+import { deflateSync } from "node:zlib";
+
+const repetitivo = Buffer.from("abc".repeat(1000));
+const alAzar = randomBytes(3000);
+
+console.log(repetitivo.length); // 3000
+console.log(deflateSync(repetitivo).length < 100); // true
+console.log(deflateSync(alAzar).length >= 3000); // true
+```
+
+Tres mil bytes muy repetitivos quedan en menos de cien. Tres mil bytes al azar no se reducen nada: el resultado es incluso algo mayor.
+
+## El límite
+
+No es casualidad. En 1948, Claude Shannon definió la **entropía**: una medida de cuánta información contiene de verdad un mensaje, es decir, de lo impredecible que es.
+
+- Un mensaje predecible tiene poca entropía y se comprime mucho.
+- Un mensaje totalmente imprevisible tiene la máxima, y **no se puede comprimir**.
+
+La entropía es el suelo: ninguna compresión sin pérdida puede bajar de ahí.
+
+De aquí salen tres consecuencias prácticas:
+
+- **No existe un compresor que reduzca cualquier archivo.** Si existiera, se podría aplicar una y otra vez hasta dejarlo todo en un bit.
+- **Comprimir dos veces no sirve.** Un archivo comprimido ya no tiene patrones. Meter fotos JPEG en un ZIP apenas reduce nada.
+- **Los datos cifrados no se comprimen**, porque un buen [cifrado](/articulos/cifrado-simetrico-y-asimetrico/) produce algo indistinguible del azar. Si hay que hacer las dos cosas, **primero se comprime y después se cifra**.
+
+## Con pérdida
+
+Para imágenes, sonido y vídeo, la compresión sin pérdida se queda corta. Y no hace falta recuperar cada bit: basta con que el resultado **se perciba** igual, o casi.
+
+La compresión con pérdida explota los límites de los sentidos.
+
+- **La vista** distingue mejor los cambios de brillo que los de color, y percibe mal los detalles muy finos.
+- **El oído** no percibe un sonido débil cuando suena a la vez otro fuerte de frecuencia parecida.
+
+Lo que no se va a notar, se elimina.
+
+### En una imagen
+
+El formato JPEG sigue, a grandes rasgos, estos pasos:
+
+1. Separa el brillo del color, y guarda el color con menos resolución.
+2. Divide la imagen en bloques pequeños.
+3. Transforma cada bloque para expresarlo como una mezcla de patrones, de los más suaves a los más finos.
+4. **Redondea** con poca precisión los patrones finos, que el ojo apenas ve. Aquí es donde se pierde información.
+5. Comprime el resultado sin pérdida.
+
+El nivel de calidad que se elige al guardar regula cuánto se redondea.
+
+### En vídeo
+
+Además de comprimir cada imagen, se aprovecha que un fotograma se parece al anterior: se guarda uno completo de vez en cuando, y de los demás solo lo que **cambia**.
+
+### La calidad es una elección
+
+Se reduce diez veces sin que se note, o cien veces notándose. Cuando se abusa, aparecen defectos reconocibles: bloques cuadrados, bordes borrosos, sonido metálico.
+
+Y es irreversible. Guardar varias veces una imagen con pérdida acumula deterioro. Por eso se trabaja sobre un original sin pérdida, y se exporta al final.
+
+<Quiz
+	client:visible
+	question="¿Qué tipo de compresión hay que usar para un archivo con el código fuente de un programa?"
+	options={[
+		"Con pérdida, porque reduce más",
+		"Sin pérdida, porque hay que recuperar cada bit",
+		"Cualquiera de las dos",
+	]}
+	answer={1}
+/>
+
+## Comparación
+
+| | Sin pérdida | Con pérdida |
+| --- | --- | --- |
+| Se recupera el original | Exacto | Una aproximación |
+| Reducción habitual | A la mitad o a la tercera parte | De diez a cien veces |
+| Se usa para | Texto, código, programas, datos | Fotos, música, vídeo |
+| Ejemplos | ZIP, gzip, PNG, FLAC | JPEG, MP3, AAC, H.264 |
+
+## Velocidad frente a tamaño
+
+Dentro de un mismo método hay otro equilibrio: cuánto tiempo se invierte en comprimir.
+
+Los compresores tienen niveles. Uno alto prueba más opciones, tarda más y reduce algo más. Uno bajo es rápido y reduce menos.
+
+La elección depende del uso:
+
+- **Se comprime una vez y se descarga millones**: nivel alto. Es el caso de los archivos estáticos de una web.
+- **Se comprime al vuelo, en cada petición**: nivel bajo, o el tiempo de comprimir supera lo que se ahorra en la transferencia.
+
+Descomprimir suele ser mucho más rápido que comprimir.
+
+## En la web
+
+- **Texto.** Los servidores comprimen HTML, [CSS](/articulos/que-es-css/), JavaScript y [JSON](/articulos/formatos-de-datos-json-csv-xml/) antes de enviarlos, y el navegador los descomprime. Se negocia con cabeceras de [HTTP](/articulos/que-es-http/). Los formatos habituales son gzip, Brotli y Zstandard.
+- **Imágenes.** Formatos modernos como WebP y AVIF reducen más que JPEG y PNG.
+
+Es una de las mejoras de [rendimiento](/articulos/rendimiento-web-y-core-web-vitals/) más baratas: una opción de configuración reduce a una fracción lo que se transfiere.
+
+No se comprime lo ya comprimido: las imágenes y el vídeo se envían tal cual.
+
+## Lo esencial
+
+- Comprimir es eliminar redundancia para representar lo mismo con menos bits.
+- Sin pérdida, el original se recupera exacto; con pérdida, se descarta lo menos perceptible.
+- La entropía marca el límite: los datos al azar no se pueden comprimir.
+- Comprimir dos veces no sirve, y se comprime antes de cifrar.
+- Siempre hay un equilibrio entre tamaño, calidad y tiempo.

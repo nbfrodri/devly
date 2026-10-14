@@ -1,0 +1,149 @@
+---
+title: "¿Qué es una GPU?"
+description: "Una GPU es un procesador con miles de núcleos sencillos, pensado para hacer la misma operación sobre muchos datos a la vez. Nació para los gráficos y hoy mueve la IA."
+level: basico
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - hilos-y-concurrencia
+updated: 2026-10-13
+sources:
+  - title: "NVIDIA: CUDA C++ Programming Guide (en inglés)"
+    url: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
+  - title: "NVIDIA: GPU Gems 2, cap. 29, Streaming Architectures and Technology Trends (en inglés)"
+    url: https://developer.nvidia.com/gpugems/gpugems2/part-iv-general-purpose-computation-gpus-primer/chapter-29-streaming-architectures
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **GPU**, del inglés *graphics processing unit* o unidad de procesamiento gráfico, es un procesador diseñado para ejecutar **la misma operación sobre una enorme cantidad de datos a la vez**. Tiene miles de núcleos pequeños y sencillos, donde una CPU tiene unos pocos, grandes y versátiles.
+
+Se creó para dibujar gráficos. Hoy es además la pieza central del [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/).
+
+## Qué problema resuelve
+
+Dibujar un fotograma de un videojuego exige calcular el color de cada punto de la pantalla.
+
+```js
+const puntosPorFotograma = 1920 * 1080;
+
+console.log(puntosPorFotograma); // 2073600
+console.log(puntosPorFotograma * 60); // 124416000
+```
+
+Más de dos millones de puntos por imagen, sesenta veces por segundo: más de cien millones de cálculos de color cada segundo. Y antes hay que situar en pantalla los millones de triángulos que forman la escena.
+
+Lo particular de ese trabajo es que cada punto se calcula **sin depender de los demás**, y con la misma operación.
+
+```js
+const puntos = [10, 200, 90, 255];
+const aclarar = (valor) => Math.min(255, valor + 50);
+
+console.log(puntos.map(aclarar).join(" ")); // "60 250 140 255"
+```
+
+La función se aplica a cada valor por separado. El orden no importa, y nada impide hacerlos todos al mismo tiempo. Es un problema **paralelo por datos**.
+
+Una CPU los haría uno tras otro, o repartidos entre sus pocos núcleos. Una GPU los reparte entre miles.
+
+## CPU y GPU
+
+| | CPU | GPU |
+| --- | --- | --- |
+| Núcleos | Pocos: de unos pocos a decenas | Miles |
+| Cada núcleo | Potente, con mucha lógica de control | Sencillo |
+| Pensada para | Tareas variadas, con muchas decisiones | La misma operación sobre muchos datos |
+| Latencia | Baja: una tarea, cuanto antes | No es la prioridad |
+| Caudal | Menor | Enorme |
+
+Una comparación: la CPU es un pequeño equipo de especialistas, capaces de resolver cualquier problema, uno detrás de otro. La GPU es un ejército de miles de operarios que solo saben hacer cuentas simples, todos a la vez.
+
+Para escribir una novela, mejor los especialistas. Para hacer un millón de sumas, el ejército.
+
+Una CPU dedica gran parte de sus [transistores](/articulos/que-es-un-transistor/) a ir deprisa en código impredecible: adivinar por dónde irá un [condicional](/articulos/condicionales/), reordenar instrucciones, [memoria caché](/articulos/memoria-cache-del-procesador/) abundante. Una GPU los dedica casi todos a hacer cuentas.
+
+## Para lo que nació: los gráficos
+
+Convertir una escena en tres dimensiones en una imagen sigue una cadena de pasos:
+
+1. **Vértices.** Los objetos son mallas de triángulos. Se calcula dónde cae cada vértice en la pantalla, según la posición de la cámara.
+2. **Rasterización.** Se determina qué puntos de la pantalla cubre cada triángulo.
+3. **Píxeles.** Se calcula el color de cada punto: textura, luz, sombras.
+
+Los pequeños programas que ejecuta la GPU en los pasos 1 y 3, uno por vértice y uno por punto, se llaman **sombreadores**, en inglés *shaders*.
+
+Las primeras tarjetas gráficas hacían operaciones fijas. Cuando los sombreadores se volvieron programables, las GPU pasaron a ser máquinas de cálculo paralelo de propósito general, aunque nadie las usara todavía para otra cosa.
+
+## Más allá de los gráficos
+
+A principios de los años 2000, algunos investigadores empezaron a disfrazar cálculos científicos de problemas gráficos para ejecutarlos en la GPU. Funcionaba, y era incómodo.
+
+A partir de 2007 aparecieron plataformas, como CUDA de NVIDIA, que permiten programar la GPU directamente para cualquier cálculo. A este uso se le llama computación de propósito general en GPU.
+
+### La inteligencia artificial
+
+Una [red neuronal](/articulos/que-es-una-red-neuronal/) consiste, en lo esencial, en multiplicar matrices enormes: cada neurona multiplica sus entradas por unos pesos y suma. Son millones de multiplicaciones independientes, idénticas en forma. Justo lo que una GPU hace bien.
+
+Entrenar un modelo que llevaría meses en una CPU lleva días en GPU. Los [modelos de lenguaje](/articulos/modelos-de-lenguaje/) actuales, y la arquitectura [transformer](/articulos/que-es-un-transformer/) en la que se basan, son viables gracias a ellas.
+
+### Otros usos
+
+- **Simulación científica**: clima, fluidos, moléculas.
+- **Edición y codificación de vídeo.**
+- **Procesamiento de imagen.**
+- **Análisis de grandes volúmenes de datos.**
+
+<Quiz
+	client:visible
+	question="¿Qué tipo de tarea aprovecha mejor una GPU?"
+	options={[
+		"Una serie de pasos donde cada uno depende del anterior",
+		"La misma operación aplicada a millones de datos independientes",
+		"Abrir muchos programas distintos a la vez",
+	]}
+	answer={1}
+/>
+
+## Lo que no hace bien
+
+Una GPU no es una CPU más rápida. Es otra herramienta.
+
+- **Tareas secuenciales.** Si cada paso necesita el resultado del anterior, no hay nada que repartir, y un núcleo de GPU es mucho más lento que uno de CPU.
+- **Mucha lógica de decisión.** El código lleno de condiciones distintas para cada dato encaja mal: los núcleos trabajan en grupos que ejecutan las mismas instrucciones.
+- **Pocos datos.** Llevar los datos a la GPU y traer el resultado cuesta tiempo. Para un cálculo pequeño, ese viaje supera lo que se ahorra.
+
+Por eso no sustituye a la CPU: trabaja a sus órdenes. La CPU ejecuta el programa y le encarga los cálculos masivos.
+
+## La memoria
+
+Una tarjeta gráfica tiene su propia memoria, la **VRAM**, separada de la [RAM](/articulos/memoria-ram-y-almacenamiento/) del sistema. Lo que se va a procesar tiene que caber en ella.
+
+En el aprendizaje automático, es a menudo el límite real: un modelo cuyos parámetros no caben en la memoria de la GPU no se puede ejecutar en ella, por rápida que sea.
+
+## Integrada o dedicada
+
+- **Integrada.** Forma parte del mismo chip que la CPU y comparte la memoria del sistema. Consume poco y basta para el uso corriente.
+- **Dedicada.** Un componente aparte, con su memoria y su refrigeración. Mucho más potente, cara y con más consumo.
+
+Algunos procesadores recientes integran CPU, GPU y una memoria común de gran tamaño en un solo chip. Al compartirla, no hace falta copiar los datos de un lado a otro.
+
+## Otros aceleradores
+
+La GPU demostró que el hardware especializado puede ser miles de veces más eficiente para una tarea concreta. Han seguido otros chips, diseñados solo para redes neuronales, que hoy llevan los móviles y los centros de datos.
+
+Es una respuesta al final de la mejora automática de los procesadores que describía la [ley de Moore](/articulos/que-es-la-ley-de-moore/): ya que un núcleo no puede ser mucho más rápido, se construyen máquinas a medida de cada problema.
+
+## Lo que cuesta
+
+- **Programarla es distinto.** Hay que plantear el problema de forma paralela, y no todos se dejan.
+- **Consumo y calor.** Una GPU potente gasta cientos de vatios.
+- **Dependencia del fabricante.** Mucho software se escribe para la plataforma de uno concreto.
+- **Precio y escasez**, por la demanda de la inteligencia artificial.
+
+## Lo esencial
+
+- Una GPU tiene miles de núcleos sencillos, frente a los pocos y potentes de una CPU.
+- Está hecha para aplicar la misma operación a muchos datos independientes.
+- Nació para calcular el color de millones de puntos por fotograma.
+- Las redes neuronales son multiplicaciones de matrices, y por eso dependen de ella.
+- No sirve para tareas secuenciales o con pocos datos: complementa a la CPU.

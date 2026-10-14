@@ -1,0 +1,133 @@
+---
+title: "¿Cómo se comunica el procesador con los dispositivos? Interrupciones y E/S"
+description: "El procesador habla con teclados, discos y tarjetas de red mediante registros de los dispositivos. Las interrupciones le avisan cuando algo ocurre, sin tener que preguntar sin parar."
+level: intermedio
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - que-es-un-sistema-operativo
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 18, Devices and Interrupts (en inglés)"
+    url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c18/
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, I/O Devices (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un ordenador no es solo procesador y memoria: tiene teclado, pantalla, discos, tarjeta de red. La **entrada y salida**, o E/S, es la comunicación entre el procesador y esos dispositivos. Su mecanismo central son las **interrupciones**: señales con las que un dispositivo avisa al procesador de que ha ocurrido algo.
+
+## Qué problema resuelve
+
+Los dispositivos son lentísimos comparados con el [procesador](/articulos/como-funciona-un-procesador/). Un disco tarda milisegundos; una tecla se pulsa cuando el usuario quiere. En ese tiempo, el procesador podría ejecutar millones de instrucciones.
+
+La pregunta es cómo se entera el procesador de que el dispositivo ha terminado, o de que ha llegado algo.
+
+## Cómo se habla con un dispositivo
+
+Cada dispositivo tiene un **controlador**: un circuito propio con unos pocos **registros**.
+
+| Registro | Para qué |
+| --- | --- |
+| Estado | Si está ocupado, si ha terminado, si hubo error |
+| Órdenes | Qué debe hacer |
+| Datos | Lo que se envía o se recibe |
+
+Con frecuencia, esos registros aparecen como si fueran posiciones de memoria: el procesador los lee y escribe con las mismas instrucciones que usa para la memoria. Se llama **E/S mapeada en memoria**.
+
+## Primera opción: preguntar sin parar
+
+El procesador consulta el registro de estado una y otra vez, hasta que el dispositivo dice que ha terminado. Se llama **sondeo**, en inglés *polling*.
+
+```js
+const listoEnElInstante = 50;
+let consultas = 0;
+
+for (let instante = 0; ; instante++) {
+	consultas = consultas + 1;
+	if (instante >= listoEnElInstante) break;
+}
+
+console.log(consultas); // 51
+```
+
+Cincuenta y una consultas para enterarse de una sola cosa. Durante todo ese tiempo, el procesador no ha hecho nada útil.
+
+Es como mirar el móvil cada segundo esperando un mensaje.
+
+## Segunda opción: que avise
+
+Con interrupciones, el procesador da la orden y se dedica a otra cosa. Cuando el dispositivo termina, activa una señal especial que llega al procesador.
+
+Al recibirla, el procesador:
+
+1. Termina la instrucción en curso.
+2. Guarda su estado: por dónde iba y el contenido de algunos registros.
+3. Salta a una función del sistema operativo preparada para ese tipo de aviso: el **manejador de interrupción**.
+4. El manejador atiende al dispositivo: recoge los datos, anota que ha terminado.
+5. El procesador recupera su estado y sigue donde estaba.
+
+El programa interrumpido no se entera de nada.
+
+Es como poner el móvil con sonido: no hay que mirarlo, suena cuando llega algo.
+
+Cada tipo de interrupción tiene un número, y una tabla indica qué manejador corresponde a cada uno.
+
+### Cuándo conviene cada una
+
+| | Sondeo | Interrupciones |
+| --- | --- | --- |
+| Uso del procesador mientras espera | Lo desperdicia | Lo deja libre |
+| Coste de cada aviso | Muy bajo | Guardar y restaurar el estado |
+| Conviene cuando | El dispositivo responde enseguida | La espera es larga o impredecible |
+
+Con dispositivos muy rápidos que generan millones de eventos, como una tarjeta de red a gran velocidad, las interrupciones constantes saturan al procesador. Los sistemas combinan las dos: usan interrupciones mientras el tráfico es bajo y pasan a sondeo cuando sube.
+
+## DMA: mover datos sin el procesador
+
+Copiar los datos de un disco a la memoria byte a byte, a través del procesador, lo tendría ocupado en una tarea mecánica.
+
+Con **acceso directo a memoria**, o DMA, el procesador solo indica qué copiar, desde dónde y adónde. Un circuito especializado hace la transferencia directamente entre el dispositivo y la memoria, y lanza una interrupción al terminar.
+
+Es como encargar una mudanza en lugar de cargar las cajas uno mismo.
+
+<Quiz
+	client:visible
+	question="¿Qué ventaja tienen las interrupciones frente al sondeo?"
+	options={[
+		"Hacen que los dispositivos sean más rápidos",
+		"El procesador no malgasta tiempo preguntando y puede hacer otra cosa mientras espera",
+		"Eliminan la necesidad de un sistema operativo",
+	]}
+	answer={1}
+/>
+
+## Otros usos de las interrupciones
+
+El mecanismo sirve para más que los dispositivos.
+
+- **El temporizador.** Un reloj interrumpe al procesador muchas veces por segundo. En cada interrupción, el [planificador](/articulos/planificador-de-procesos/) decide si cambia de proceso. Así un programa no puede quedarse con el procesador para siempre.
+- **Excepciones.** Dividir entre cero o acceder a memoria prohibida provocan una interrupción interna. El sistema operativo decide qué hacer, y a menudo termina el programa.
+- **Llamadas al sistema.** Un programa que necesita un servicio del sistema operativo, abrir un archivo o enviar datos, ejecuta una instrucción especial que funciona como una interrupción y cambia a modo privilegiado. Es la frontera de seguridad entre los programas y el núcleo.
+- **Fallos de página.** Cuando un programa accede a memoria que no está cargada, la [memoria virtual](/articulos/memoria-virtual/) se apoya en esta interrupción para traerla.
+
+## Los controladores de dispositivos
+
+Cada dispositivo tiene sus registros, sus órdenes y sus rarezas. El sistema operativo no puede conocerlos todos.
+
+Por eso existen los **controladores**, en inglés *drivers*: módulos de software que saben hablar con un dispositivo concreto y ofrecen al resto del sistema una interfaz común. Para el sistema, todos los discos se leen igual, sea cual sea su fabricante.
+
+Son una parte enorme del código de un sistema operativo, y una de las fuentes más habituales de fallos: se ejecutan con todos los privilegios.
+
+## Hasta el software
+
+Este modelo, pedir algo y que te avisen al terminar, se repite en niveles superiores. El bucle de eventos de [Node.js](/articulos/que-es-nodejs/) y las [promesas](/articulos/promesas-y-async-await/) de JavaScript aplican la misma idea: iniciar una operación lenta, seguir con otra cosa y reaccionar cuando termina. Debajo, el sistema operativo hace exactamente eso con interrupciones.
+
+## Lo esencial
+
+- El procesador se comunica con los dispositivos leyendo y escribiendo los registros de sus controladores.
+- Preguntar sin parar, el sondeo, desperdicia el procesador.
+- Con interrupciones, el dispositivo avisa y el procesador atiende y vuelve a lo que hacía.
+- El acceso directo a memoria mueve datos sin ocupar al procesador.
+- El temporizador, las excepciones y las llamadas al sistema usan el mismo mecanismo.

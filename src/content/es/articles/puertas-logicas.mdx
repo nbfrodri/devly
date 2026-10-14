@@ -28,7 +28,7 @@ A partir de ahí, diseñar un circuito que calcule se convirtió en un problema 
 
 ## De qué están hechas
 
-Una puerta se construye con **transistores**. Un transistor funciona como un interruptor que no se acciona con el dedo, sino con electricidad: según la tensión que recibe en una de sus patas, deja pasar o no la corriente entre las otras dos.
+Una puerta se construye con [**transistores**](/articulos/que-es-un-transistor/). Un transistor funciona como un interruptor que no se acciona con el dedo, sino con electricidad: según la tensión que recibe en una de sus patas, deja pasar o no la corriente entre las otras dos.
 
 Combinando unos pocos transistores se obtiene una puerta. Un procesador actual contiene miles de millones.
 
@@ -124,7 +124,7 @@ console.log(semisumador(1, 1).acarreo); // 1
 console.log(semisumador(1, 0).suma); // 1
 ```
 
-Añadiendo otra entrada para el acarreo que viene de la posición anterior se obtiene un **sumador completo**. Encadenando 64 de ellos, un circuito que suma números de 64 bits.
+Añadiendo otra entrada para el acarreo que viene de la posición anterior se obtiene un **sumador completo**, pieza básica de la [ALU](/articulos/la-alu-y-la-aritmetica-binaria/). Encadenando 64 de ellos, un circuito que suma números de 64 bits.
 
 Así se construye todo. La unidad que hace las operaciones dentro de un [procesador](/articulos/como-funciona-un-procesador/) es una gran combinación de puertas.
 
@@ -141,7 +141,7 @@ Los circuitos anteriores dan una salida que depende solo de las entradas de ese 
 
 Si la salida de una puerta se conecta de vuelta a una entrada, el circuito puede mantener un valor aunque las entradas cambien. Ese circuito, llamado **biestable**, guarda un bit. Es la base de los registros del procesador y de la memoria.
 
-Los circuitos con memoria se llaman **secuenciales**, y necesitan una señal de reloj que marque cuándo deben actualizar lo que guardan.
+Los circuitos con memoria se llaman [**secuenciales**](/articulos/circuitos-secuenciales-y-biestables/), y necesitan una señal de reloj que marque cuándo deben actualizar lo que guardan.
 
 ## La escalera completa
 

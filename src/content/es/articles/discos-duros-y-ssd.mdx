@@ -1,0 +1,172 @@
+---
+title: "¿Cómo guardan los datos un disco duro y una SSD?"
+description: "Un disco duro guarda los bits como zonas magnetizadas en platos que giran. Una SSD los guarda como carga eléctrica en celdas de memoria, sin partes móviles."
+level: intermedio
+layer: hardware
+prerequisites:
+  - memoria-ram-y-almacenamiento
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Hard Disk Drives (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Flash-based SSDs (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **disco duro** y una **SSD** son los dos tipos principales de almacenamiento permanente: conservan los datos sin corriente. El disco duro los guarda de forma **magnética**, en platos que giran. La SSD, o unidad de estado sólido, los guarda como **carga eléctrica** en chips, sin ninguna pieza que se mueva.
+
+Esa diferencia física explica sus velocidades, sus puntos débiles y cómo deben tratarlos los programas.
+
+## El disco duro
+
+### Cómo está hecho
+
+Dentro de la carcasa hay uno o varios **platos** rígidos, recubiertos de un material magnético, que giran a velocidad constante: 5400 o 7200 vueltas por minuto son valores habituales.
+
+Sobre cada cara, un **cabezal** de lectura y escritura flota a una distancia mínima de la superficie, montado en un brazo que lo mueve hacia el centro o hacia el borde.
+
+Cada [bit](/articulos/que-es-un-bit/) es una zona diminuta magnetizada en un sentido o en el otro. El cabezal lee detectando ese campo y escribe cambiándolo.
+
+La superficie se organiza en círculos concéntricos, las **pistas**, divididas en **sectores**.
+
+### Por qué es lento
+
+Para leer un dato hay que llevar el cabezal al sitio. Son dos esperas mecánicas:
+
+1. **Búsqueda.** Mover el brazo hasta la pista. Unos milisegundos.
+2. **Rotación.** Esperar a que el sector pase bajo el cabezal. De media, media vuelta.
+
+```js
+const milisegundosPorVuelta = (vueltasPorMinuto) => 60000 / vueltasPorMinuto;
+
+console.log(milisegundosPorVuelta(7200).toFixed(1)); // "8.3"
+console.log((milisegundosPorVuelta(7200) / 2).toFixed(1)); // "4.2"
+```
+
+A 7200 vueltas por minuto, solo la rotación supone unos 4 milisegundos de media. Con la búsqueda, cada acceso a un lugar distinto ronda los 10 milisegundos. Eso da unas cien operaciones por segundo.
+
+Para un [procesador](/articulos/como-funciona-un-procesador/), que trabaja en nanosegundos, es una eternidad.
+
+### Secuencial y aleatorio
+
+Es la propiedad que define a un disco duro.
+
+- **Acceso secuencial.** Leer datos contiguos. El cabezal está ya colocado y los datos pasan bajo él. Es rápido: más de cien megabytes por segundo.
+- **Acceso aleatorio.** Leer datos dispersos. Cada uno exige mover el brazo y esperar. Es cientos de veces más lento.
+
+Muchas decisiones de diseño de los [sistemas de archivos](/articulos/sistema-de-archivos/) y de las bases de datos vienen de aquí: agrupar lo que se lee junto, escribir añadiendo al final, y usar estructuras de [índice](/articulos/indices-de-bases-de-datos/) que minimicen los saltos.
+
+## La SSD
+
+### Cómo guarda un bit
+
+Una SSD usa memoria **flash**. Cada celda es un [transistor](/articulos/que-es-un-transistor/) con una pieza adicional, aislada, capaz de **atrapar electrones**. Que haya carga atrapada o no representa el bit. Como está aislada, la carga permanece sin corriente durante años.
+
+No hay nada que mover. Llegar a cualquier dato cuesta lo mismo, esté donde esté: decenas de microsegundos. Las lecturas aleatorias son miles de veces más rápidas que en un disco duro.
+
+### Sus rarezas
+
+La memoria flash tiene tres limitaciones que no tiene un disco.
+
+**No se puede sobrescribir.** Para escribir en una celda que ya tiene datos, primero hay que **borrarla**.
+
+**Se lee y escribe por páginas, y se borra por bloques.** Una página son unos kilobytes. Un bloque contiene muchas páginas, y solo se puede borrar entero.
+
+| Operación | Unidad | Velocidad |
+| --- | --- | --- |
+| Leer | Página | Muy rápida |
+| Escribir | Página, en una que esté borrada | Rápida |
+| Borrar | Bloque entero | Lenta |
+
+**Se desgasta.** Cada borrado deteriora un poco la celda. Tras cierto número de ciclos, de miles a decenas de miles según el tipo, deja de retener la carga con fiabilidad.
+
+### La capa de traducción
+
+Una SSD que funcionara así directamente sería lenta y duraría poco. Por eso lleva dentro un pequeño ordenador, el **controlador**, que hace creer al sistema que es un disco normal. Su programa se llama **capa de traducción flash**.
+
+- **Escribe en otro sitio.** Para modificar un dato no borra nada: escribe la versión nueva en una página libre, y anota que la antigua ya no vale. Mantiene un mapa de dónde está realmente cada cosa.
+- **Recoge la basura.** En segundo plano, busca bloques con muchas páginas inválidas, copia las que siguen valiendo a otro sitio y borra el bloque entero.
+- **Nivela el desgaste.** Reparte las escrituras entre todas las celdas, para que ninguna se gaste antes que las demás.
+
+Una consecuencia: una escritura del sistema puede provocar varias escrituras físicas, por las copias de la recogida de basura. Se llama **amplificación de escritura**.
+
+### TRIM
+
+Cuando se borra un archivo, el sistema de archivos lo anota en sus tablas, y nada más. La SSD no se entera: cree que esas páginas siguen conteniendo datos útiles, y las sigue copiando.
+
+La orden **TRIM** permite al sistema operativo avisar a la unidad de qué zonas ya no se usan.
+
+Por la misma razón, una SSD rinde peor cuando está casi llena: al controlador le quedan pocas páginas libres con las que trabajar.
+
+### Más bits por celda
+
+Distinguiendo varios niveles de carga, una celda puede guardar más de un bit.
+
+| Tipo | Bits por celda | Capacidad y precio | Duración y velocidad |
+| --- | --- | --- | --- |
+| SLC | 1 | La más cara | Las mejores |
+| MLC | 2 | | |
+| TLC | 3 | | |
+| QLC | 4 | La más barata | Las peores |
+
+Con más niveles, las diferencias entre ellos son más pequeñas, y la celda tolera menos desgaste.
+
+<Quiz
+	client:visible
+	question="¿Por qué una SSD lee datos dispersos mucho más deprisa que un disco duro?"
+	options={[
+		"Porque gira más rápido",
+		"Porque no tiene partes móviles: no hay que desplazar un cabezal ni esperar un giro",
+		"Porque guarda menos datos",
+	]}
+	answer={1}
+/>
+
+## Comparación
+
+| | Disco duro | SSD |
+| --- | --- | --- |
+| Cómo guarda | Magnetismo en platos giratorios | Carga eléctrica en celdas |
+| Partes móviles | Sí | No |
+| Acceso aleatorio | Unos 10 milisegundos | Decenas de microsegundos |
+| Acceso secuencial | Bueno | Muy bueno |
+| Resistencia a golpes | Baja | Alta |
+| Ruido y consumo | Mayores | Menores |
+| Precio por gigabyte | Bajo | Mayor |
+| Desgaste | Mecánico | Por número de escrituras |
+
+## La conexión importa
+
+Las primeras SSD usaban la misma interfaz que los discos duros, **SATA**, pensada para un dispositivo lento que atiende una petición cada vez. Les quedaba corta.
+
+**NVMe** es una interfaz diseñada para flash, conectada directamente al bus más rápido del equipo. Admite muchas operaciones a la vez, y multiplica la velocidad.
+
+## Cuál usar
+
+- **SSD** para el sistema, los programas y los datos con los que se trabaja. Es la opción por defecto.
+- **Disco duro** para grandes volúmenes a los que se accede poco: copias de seguridad, archivos, vídeo. Su precio por gigabyte sigue siendo imbatible, y los centros de datos los usan por millones.
+
+## Los dos fallan
+
+Ninguno es eterno. Los discos duros sufren averías mecánicas, a veces con avisos previos. Las SSD pueden fallar de golpe, sin aviso.
+
+Y una SSD desconectada durante años puede ir perdiendo la carga de sus celdas: no es buen soporte para guardar algo en un cajón.
+
+La conclusión es la misma en los dos casos: lo que importa necesita **copias de seguridad**, en más de un sitio.
+
+## Borrar de verdad
+
+En un disco duro, sobrescribir un archivo destruye su contenido. En una SSD no hay garantía: la capa de traducción escribe en otra parte, y el dato original puede seguir en una página marcada como inválida.
+
+Para proteger los datos de una unidad que se va a desechar, lo fiable es haberla tenido **cifrada** desde el principio, y destruir la clave.
+
+## Lo esencial
+
+- Un disco duro guarda bits magnéticos en platos que giran, y debe mover un cabezal para leer.
+- Es rápido en acceso secuencial y muy lento en acceso aleatorio.
+- Una SSD guarda carga eléctrica en celdas flash, sin partes móviles.
+- La flash no se sobrescribe y se desgasta: un controlador lo gestiona escribiendo en otro sitio y repartiendo el uso.
+- Los dos fallan: lo importante necesita copias de seguridad.

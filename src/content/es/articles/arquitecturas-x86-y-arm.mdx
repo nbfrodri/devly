@@ -1,0 +1,148 @@
+---
+title: "Diferencias entre las arquitecturas x86 y ARM"
+description: "x86 y ARM son las dos familias de procesadores dominantes. Entienden instrucciones distintas, y un programa compilado para una no funciona en la otra."
+level: basico
+kind: comparacion
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - compilador-e-interprete
+updated: 2026-10-13
+sources:
+  - title: "Arm: Glossary, RISC (en inglés)"
+    url: https://www.arm.com/glossary/risc
+  - title: "Arm: CPU Architecture (en inglés)"
+    url: https://www.arm.com/architecture/cpu
+  - title: "RISC-V International: About RISC-V (en inglés)"
+    url: https://riscv.org/about/
+  - title: "Microsoft: Windows en Arm"
+    url: https://learn.microsoft.com/es-es/windows/arm/overview
+---
+
+import { Quiz } from "@/components/quiz";
+
+**x86** y **ARM** son las dos familias de procesadores más extendidas. Se diferencian en su **arquitectura**: el conjunto de instrucciones que el procesador entiende. Un programa compilado para una no funciona en la otra. x86 domina en ordenadores de sobremesa y servidores; ARM, en móviles, y cada vez más en portátiles y centros de datos.
+
+## Qué es una arquitectura
+
+Un [procesador](/articulos/como-funciona-un-procesador/) ejecuta instrucciones muy simples: sumar dos números, copiar un dato, saltar a otra parte del programa. El conjunto de instrucciones que entiende, y cómo se codifican en bits, es su **arquitectura del conjunto de instrucciones**.
+
+Es el contrato entre el hardware y el software. Un [compilador](/articulos/compilador-e-interprete/) traduce el código fuente a las instrucciones de una arquitectura concreta.
+
+Dos procesadores de fabricantes distintos, con diseños internos distintos, pueden compartir arquitectura y ejecutar los mismos programas. Y dos con arquitecturas diferentes no, por parecidos que sean en potencia.
+
+## x86
+
+Nace con el procesador 8086 de Intel, de 1978. Sus sucesores, hasta hoy, han mantenido la compatibilidad con él.
+
+- **64 bits.** La versión actual, llamada x86-64 o AMD64, la diseñó AMD a principios de los años 2000. Intel la adoptó después.
+- **Dos fabricantes.** Intel y AMD producen casi todos los procesadores x86.
+- **Compatibilidad hacia atrás.** Su mayor virtud y su mayor carga. Un programa de hace décadas sigue funcionando, y el procesador arrastra instrucciones y modos que nadie usaría hoy.
+
+## ARM
+
+Procede de un diseño de la empresa británica Acorn, de 1985, pensado para ser simple y consumir poco.
+
+Su modelo de negocio es distinto. La empresa Arm **no fabrica procesadores**: diseña la arquitectura y núcleos de referencia, y los licencia. Otras compañías los integran en sus propios chips, a menudo junto con gráficos, módem y otros componentes, en lo que se llama un **sistema en un chip**.
+
+Eso ha dado lugar a una enorme variedad, desde [microcontroladores](/articulos/microcontrolador-y-microprocesador/) de unos céntimos hasta procesadores de servidor.
+
+## CISC y RISC
+
+La diferencia histórica entre las dos es de filosofía.
+
+### CISC
+
+*Complex instruction set computer*: conjunto de instrucciones complejo. Es el enfoque de x86.
+
+- Muchas instrucciones, algunas muy elaboradas: una sola puede leer de memoria, operar y volver a escribir.
+- De longitud variable: de 1 a 15 bytes.
+
+Tenía sentido cuando la memoria era carísima y se programaba a mano: instrucciones potentes daban programas más cortos.
+
+### RISC
+
+*Reduced instruction set computer*: conjunto de instrucciones reducido. Es el enfoque de ARM.
+
+- Pocas instrucciones, simples y regulares.
+- Todas del mismo tamaño: 4 bytes en ARM de 64 bits.
+- Solo unas instrucciones específicas acceden a la memoria. Las demás operan con **registros**, las pequeñas memorias internas del procesador.
+
+La idea, de los años ochenta: con compiladores que generan el código, las instrucciones complicadas apenas se usan. Es mejor tener pocas, sencillas, y hacerlas rapidísimas. Un programa necesita más instrucciones, y cada una cuesta menos.
+
+Las instrucciones de tamaño fijo son además fáciles de **decodificar**: el procesador sabe dónde empieza cada una y puede preparar varias a la vez. En x86 hay que analizar cada instrucción para saber dónde acaba.
+
+| | x86 | ARM |
+| --- | --- | --- |
+| Filosofía | CISC | RISC |
+| Longitud de las instrucciones | Variable, de 1 a 15 bytes | Fija, 4 bytes |
+| Acceso a memoria | Casi cualquier instrucción | Solo cargar y guardar |
+| Quién fabrica | Intel y AMD | Muchos, bajo licencia |
+| Terreno tradicional | Sobremesa, portátiles, servidores | Móviles, dispositivos integrados |
+| Punto fuerte | Compatibilidad, software existente | Eficiencia energética |
+
+## La frontera se ha difuminado
+
+La distinción es menos tajante de lo que sugiere la tabla.
+
+- **Los x86 modernos son RISC por dentro.** Traducen cada instrucción compleja a varias **microoperaciones** simples, y ejecutan esas. La complejidad queda en la capa de traducción.
+- **ARM ha crecido.** Tiene hoy cientos de instrucciones, incluidas extensiones para cálculo vectorial y criptografía.
+
+Lo que queda de la diferencia es, sobre todo, el coste de decodificar instrucciones de longitud variable, y décadas de compatibilidad acumulada.
+
+## La eficiencia
+
+ARM se diseñó para consumir poco, y eso lo hizo dueño de los móviles, donde manda la batería.
+
+Una técnica característica es combinar núcleos de dos tipos en el mismo chip: unos **potentes**, para las tareas exigentes, y otros **eficientes**, para todo lo demás. El [sistema operativo](/articulos/que-es-un-sistema-operativo/) reparte el trabajo con su [planificador](/articulos/planificador-de-procesos/). Los procesadores x86 recientes han adoptado la misma idea.
+
+Durante años se pensó que ARM era eficiente pero lento, válido solo para móviles. Eso cambió.
+
+- **Portátiles.** En 2020, Apple empezó a sustituir los procesadores de Intel de sus ordenadores por chips propios basados en ARM, con más rendimiento y mucha más autonomía. Hay también portátiles con Windows sobre ARM.
+- **Servidores.** Los grandes proveedores de [la nube](/articulos/computacion-en-la-nube/) diseñan sus propios procesadores ARM. En un centro de datos, la electricidad y la refrigeración son buena parte del coste.
+
+<Quiz
+	client:visible
+	question="¿Por qué un programa compilado para x86 no funciona directamente en un procesador ARM?"
+	options={[
+		"Porque ARM es más lento",
+		"Porque cada arquitectura entiende un conjunto de instrucciones distinto",
+		"Porque usan sistemas operativos diferentes",
+	]}
+	answer={1}
+/>
+
+## Qué implica al desarrollar
+
+Con un lenguaje interpretado o con máquina virtual, como JavaScript, Python o Java, casi nada: el mismo código funciona en las dos, porque es el intérprete el que está compilado para cada una.
+
+Importa en estos casos:
+
+- **Programas compilados.** Hay que generar un ejecutable por arquitectura. Compilar en una máquina para otra distinta se llama **compilación cruzada**.
+- **Dependencias con código nativo.** Una biblioteca que incluye partes compiladas necesita una versión para cada arquitectura. Es una fuente habitual de errores al cambiar de máquina.
+- **Contenedores.** Una imagen de [Docker](/articulos/que-es-docker/) se construye para una arquitectura. Una hecha en un portátil ARM no arranca en un servidor x86, y da un error poco claro. La solución son las imágenes **multiarquitectura**, que agrupan una variante para cada una.
+- **Rendimiento.** El código optimizado con instrucciones específicas de una arquitectura hay que reescribirlo para la otra.
+
+### Emulación
+
+Para ejecutar programas de otra arquitectura sin recompilarlos se usa una capa que **traduce** las instrucciones. Así funcionan las aplicaciones antiguas de x86 en los ordenadores ARM.
+
+Sale bien con programas corrientes, con cierta pérdida de rendimiento. Es una ayuda para la transición, no una solución definitiva.
+
+## RISC-V
+
+Hay una tercera arquitectura que crece: **RISC-V**. Nació en 2010 en la Universidad de California en Berkeley.
+
+Su diferencia no es técnica, sino de [licencia](/articulos/licencias-de-software/): es un **estándar abierto**. Cualquiera puede diseñar y fabricar un procesador RISC-V sin pagar ni pedir permiso.
+
+Además es modular: un núcleo mínimo de instrucciones, y extensiones opcionales.
+
+Se usa ya mucho en microcontroladores y chips especializados. En ordenadores de uso general, todavía le falta software y rendimiento.
+
+## Lo esencial
+
+- La arquitectura es el conjunto de instrucciones que entiende un procesador.
+- x86 sigue la filosofía CISC, con instrucciones de longitud variable y décadas de compatibilidad.
+- ARM sigue la filosofía RISC, con instrucciones simples de tamaño fijo, y se licencia a muchos fabricantes.
+- ARM destaca en eficiencia, y ha pasado de los móviles a portátiles y servidores.
+- Los programas compilados y las imágenes de contenedor dependen de la arquitectura.

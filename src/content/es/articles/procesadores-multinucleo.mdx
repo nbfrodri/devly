@@ -1,0 +1,125 @@
+---
+title: "¿Qué es un procesador multinúcleo?"
+description: "Un procesador multinúcleo tiene varias unidades de ejecución completas en un chip. Permite hacer varias cosas a la vez, si el software sabe repartirlas."
+level: intermedio
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - hilos-y-concurrencia
+  - memoria-cache-del-procesador
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 21, Parallel Processing (en inglés)"
+    url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c21/
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Multiprocessor Scheduling (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-multi.pdf
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Concurrency: An Introduction (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **procesador multinúcleo** contiene varios **núcleos** en un mismo chip. Cada núcleo es un procesador completo: lee instrucciones, las ejecuta y tiene sus propios registros. Con varios, el equipo puede ejecutar varias tareas **literalmente al mismo tiempo**.
+
+Hoy casi todos lo son: desde un teléfono con ocho núcleos hasta un servidor con más de cien.
+
+## Por qué se pasó a varios núcleos
+
+Durante décadas, los procesadores fueron más rápidos sobre todo subiendo la frecuencia del reloj. Hacia mediados de la década de 2000 eso se detuvo.
+
+La razón es el calor. La energía que consume un chip crece con la frecuencia, y a partir de cierto punto no había forma de disiparla. Subir la frecuencia ya no compensaba.
+
+Pero los [transistores](/articulos/que-es-un-transistor/) seguían haciéndose más pequeños, y cabían más. La pregunta era en qué gastarlos. La respuesta fue **repetir el núcleo**: en lugar de uno más rápido, varios iguales.
+
+El cambio trasladó un problema del hardware al software. Antes, un programa se aceleraba solo con cada procesador nuevo. Ahora, solo se acelera si está escrito para repartir el trabajo.
+
+## Qué comparten los núcleos
+
+| Componente | ¿Compartido? |
+| --- | --- |
+| Registros y unidades de ejecución | No, cada núcleo los suyos |
+| [Caché](/articulos/memoria-cache-del-procesador/) L1 y L2 | Normalmente propias |
+| Caché L3 | Compartida |
+| Memoria RAM | Compartida |
+
+Que la memoria sea común es lo que permite que varios hilos de un programa trabajen sobre los mismos datos. Y es el origen de los problemas.
+
+## Mantener las cachés de acuerdo
+
+Si dos núcleos tienen en su caché una copia del mismo dato y uno la modifica, el otro tiene una copia obsoleta.
+
+El hardware lo resuelve con un **protocolo de coherencia**: cuando un núcleo escribe en una línea, se invalidan las copias de los demás, que tendrán que volver a pedirla.
+
+Funciona solo, pero no gratis. Si varios núcleos escriben constantemente en datos que están en la misma línea, la línea viaja de un núcleo a otro sin parar. Ocurre incluso cuando escriben en variables **distintas** que comparten línea: la **falsa compartición**.
+
+## Hilos por núcleo
+
+Muchos procesadores ejecutan dos **hilos de hardware** por núcleo. Intel lo llama *Hyper-Threading*; el nombre genérico es multihilo simultáneo.
+
+La idea: un núcleo pasa mucho tiempo esperando, sobre todo a la memoria. Si tiene dos flujos de instrucciones preparados, cuando uno se detiene puede avanzar el otro, aprovechando las unidades que quedarían ociosas.
+
+No duplica el rendimiento: los dos hilos comparten las unidades de ejecución. La mejora suele estar entre poca y moderada, según la carga. Para el [sistema operativo](/articulos/que-es-un-sistema-operativo/), cada hilo de hardware parece un procesador más.
+
+## Núcleos distintos
+
+Los procesadores de los móviles, y cada vez más los de ordenador, combinan dos tipos de núcleos:
+
+- **De rendimiento**: grandes, rápidos, con mucho consumo.
+- **De eficiencia**: pequeños, lentos, con poco consumo.
+
+El [planificador](/articulos/planificador-de-procesos/) envía las tareas exigentes a los primeros y el trabajo de fondo a los segundos. Así se combina potencia con autonomía.
+
+## El límite: la ley de Amdahl
+
+Si un programa tarda 10 segundos y el 90 % de su trabajo se puede repartir, con infinitos núcleos esa parte tardaría cero. Pero el 10 % restante, el segundo de trabajo secuencial, sigue ahí.
+
+La **ley de Amdahl** lo formula: la aceleración máxima depende de la parte que no se puede paralelizar.
+
+```js
+function aceleracion(parteParalela, nucleos) {
+	return 1 / (1 - parteParalela + parteParalela / nucleos);
+}
+
+console.log(aceleracion(0.9, 4).toFixed(2)); // "3.08"
+console.log(aceleracion(0.9, 1000).toFixed(2)); // "9.91"
+console.log(aceleracion(0.5, 1000).toFixed(2)); // "2.00"
+```
+
+Con un 90 % paralelizable, 4 núcleos dan algo más del triple de velocidad. Mil núcleos no llegan a diez veces. Y si solo la mitad es paralelizable, el techo es el doble, por muchos núcleos que haya.
+
+La parte secuencial domina enseguida. Por eso, en programas que deben escalar, se trabaja tanto en reducirla.
+
+<Quiz
+	client:visible
+	question="Un programa tiene la mitad de su trabajo imposible de repartir. ¿Cuánto puede acelerarse con muchos núcleos?"
+	options={["Sin límite", "Como mucho el doble", "Tantas veces como núcleos haya"]}
+	answer={1}
+/>
+
+## Aprovecharlos
+
+Un programa usa varios núcleos si tiene varios flujos de ejecución:
+
+- **Varios [procesos](/articulos/que-es-un-proceso/).** Un servidor web arranca uno por núcleo.
+- **Varios [hilos](/articulos/hilos-y-concurrencia/)** dentro de un proceso, que comparten memoria.
+- **Bibliotecas que reparten el trabajo** por ti: operaciones sobre colecciones, cálculo numérico, compresión.
+
+Repartir trae los riesgos de compartir datos: [condiciones de carrera y bloqueos](/articulos/condiciones-de-carrera-y-bloqueos/).
+
+Muchos programas no usan más que un núcleo, y no lo necesitan. Un navegador o un sistema operativo, en cambio, tienen tantas tareas independientes que reparten de forma natural: cada pestaña, cada programa abierto. Por eso el equipo responde mejor con varios núcleos aunque ninguna aplicación esté hecha para ellos.
+
+## Más núcleos no siempre es mejor
+
+- **Para tareas secuenciales**, importa más la velocidad de cada núcleo.
+- **La memoria es compartida**, y su ancho de banda también. Con muchos núcleos leyendo a la vez, la memoria se convierte en el límite.
+- **Repartir tiene coste**: crear hilos, coordinarlos, juntar resultados. Para tareas pequeñas, cuesta más que lo que se gana.
+
+Para trabajo masivamente paralelo, miles de operaciones idénticas, existe otro tipo de procesador, la [GPU](/articulos/que-es-una-gpu/), con miles de núcleos sencillos.
+
+## Lo esencial
+
+- Un procesador multinúcleo tiene varias unidades de ejecución completas en un chip.
+- Se adoptó cuando subir la frecuencia dejó de ser posible por el calor.
+- Los núcleos comparten memoria, y un protocolo mantiene coherentes sus cachés.
+- Un programa solo se beneficia si reparte su trabajo, y la parte secuencial limita la mejora.
+- La ley de Amdahl calcula ese límite.

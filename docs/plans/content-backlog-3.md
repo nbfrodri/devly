@@ -11,15 +11,15 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 - [x] Cómo se representan los números enteros: complemento a dos
 - [x] Memoria RAM y almacenamiento
 - [x] Diferencias entre microcontrolador y microprocesador
-- [ ] Cómo se representan los números con decimales: coma flotante
-- [ ] La jerarquía de memoria y la caché del procesador
-- [ ] ¿Qué es una GPU?
-- [ ] Buses, puertos y periféricos
+- [x] Cómo se representan los números con decimales: coma flotante
+- [x] La jerarquía de memoria y la caché del procesador
+- [x] ¿Qué es una GPU?
+- [x] Buses, puertos y periféricos
 - [ ] ¿Qué hace la BIOS o UEFI al encender un ordenador?
-- [ ] Compresión de datos: con pérdida y sin pérdida
-- [ ] Cómo se representa una imagen: píxeles, color y formatos
-- [ ] Cómo se representa el sonido: muestreo y cuantización
-- [ ] Detección y corrección de errores: paridad y sumas de comprobación
+- [x] Compresión de datos: con pérdida y sin pérdida
+- [x] Cómo se representa una imagen: píxeles, color y formatos
+- [x] Cómo se representa el sonido: muestreo y cuantización
+- [x] Detección y corrección de errores: paridad y sumas de comprobación
 
 ## Inteligencia artificial (había 5)
 
@@ -90,10 +90,10 @@ Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre pr
 
 ## Más hardware
 
-- [ ] Discos duros y SSD: cómo guardan los datos
-- [ ] La placa base y los buses
-- [ ] Arquitecturas x86 y ARM
-- [ ] ¿Qué es un transistor? (puertas lógicas)
+- [x] Discos duros y SSD: cómo guardan los datos
+- [x] La placa base y los buses
+- [x] Arquitecturas x86 y ARM
+- [x] ¿Qué es un transistor? (puertas lógicas)
 
 ## Más inteligencia artificial
 

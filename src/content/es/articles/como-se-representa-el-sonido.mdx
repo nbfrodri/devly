@@ -1,0 +1,157 @@
+---
+title: "¿Cómo se representa el sonido en un ordenador?"
+description: "El sonido digital es una serie de medidas de la onda sonora, tomadas miles de veces por segundo. Su calidad depende de cuántas se toman y con cuánta precisión."
+level: intermedio
+layer: hardware
+prerequisites:
+  - senales-analogicas-y-digitales
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "MDN: Digital audio concepts (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Audio_concepts
+  - title: "MDN: Basic concepts behind Web Audio API (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Basic_concepts_behind_Web_Audio_API
+  - title: "Claude Shannon: A Mathematical Theory of Communication (1948, en inglés)"
+    url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+El sonido es una vibración que viaja por el aire como variaciones de presión. Para guardarlo en un ordenador, un micrófono convierte esas variaciones en una señal eléctrica, y esa señal se **mide** muchas veces por segundo. Cada medida es un número. El sonido digital es esa lista de números.
+
+## El sonido como onda
+
+Un sonido tiene dos propiedades básicas:
+
+| Propiedad | Qué es | Se percibe como |
+| --- | --- | --- |
+| Frecuencia | Cuántas vibraciones por segundo, en hercios | El tono: grave o agudo |
+| Amplitud | Cuánto varía la presión | El volumen |
+
+El oído humano percibe, en el mejor de los casos, de unos 20 a unos 20 000 hercios. Con la edad, el límite superior baja.
+
+Los sonidos reales no son una sola frecuencia, sino la suma de muchas. Por eso una misma nota suena distinta en un piano y en una guitarra.
+
+## De la onda a los números
+
+Es la conversión de [analógico a digital](/articulos/senales-analogicas-y-digitales/), en dos pasos.
+
+### Muestreo
+
+Se mide la señal a intervalos regulares. El número de medidas por segundo es la **frecuencia de muestreo**.
+
+El teorema del muestreo dice cuántas hacen falta: más del doble de la frecuencia más alta que se quiere conservar. Para cubrir los 20 000 hercios del oído, más de 40 000 muestras por segundo.
+
+| Frecuencia de muestreo | Frecuencia máxima | Uso |
+| --- | --- | --- |
+| 8 000 Hz | 4 000 Hz | Telefonía clásica |
+| 44 100 Hz | 22 050 Hz | CD de audio |
+| 48 000 Hz | 24 000 Hz | Vídeo, producción |
+
+La telefonía clásica corta en 4000 hercios: la voz se entiende, pero suena "a teléfono".
+
+### Qué pasa si se muestrea poco
+
+Si una señal contiene frecuencias por encima de la mitad de la de muestreo, no solo se pierden: aparecen **disfrazadas** de otras más bajas que no estaban.
+
+```js
+const muestras = (frecuencia, deMuestreo, cuantas) =>
+	Array.from({ length: cuantas }, (_, n) =>
+		Math.cos((2 * Math.PI * frecuencia * n) / deMuestreo),
+	);
+
+const tonoAgudo = muestras(30, 40, 8);
+const tonoGrave = muestras(10, 40, 8);
+
+const iguales = tonoAgudo.every(
+	(valor, n) => Math.abs(valor - tonoGrave[n]) < 1e-9,
+);
+
+console.log(iguales); // true
+```
+
+Un tono de 30 hercios muestreado 40 veces por segundo produce exactamente las mismas muestras que uno de 10 hercios. Una vez digitalizado, es imposible distinguirlos. Se llama **aliasing**.
+
+Por eso, antes de muestrear, se filtra la señal para eliminar lo que esté por encima del límite.
+
+### Cuantización
+
+Cada muestra se redondea a uno de un número finito de valores, para poder escribirla con bits. Cuantos más bits, más fina es la escala.
+
+Cada bit añadido duplica los niveles y mejora el margen entre el sonido más fuerte y el ruido de fondo en unos 6 decibelios.
+
+```js
+const margenEnDecibelios = (bits) => 20 * Math.log10(2 ** bits);
+
+console.log(Math.round(margenEnDecibelios(8))); // 48
+console.log(Math.round(margenEnDecibelios(16))); // 96
+console.log(Math.round(margenEnDecibelios(24))); // 144
+```
+
+Con 8 bits se oye un siseo de fondo. Con 16, la calidad del CD, el margen es de 96 decibelios, suficiente para casi cualquier escucha. Con 24 bits se graba y se produce, para tener holgura al procesar.
+
+## Cuánto ocupa
+
+```js
+const bitsPorSegundo = (muestreo, bits, canales) => muestreo * bits * canales;
+
+const cd = bitsPorSegundo(44100, 16, 2);
+
+console.log(cd); // 1411200
+console.log(((cd * 60) / 8 / 1e6).toFixed(1)); // "10.6"
+```
+
+El audio de un CD, en estéreo, son algo más de 1,4 millones de bits por segundo: unos 10,6 megabytes por minuto. Este formato, sin comprimir, se llama **PCM**, y es lo que contienen los archivos WAV.
+
+<Quiz
+	client:visible
+	question="¿Qué frecuencia de muestreo hace falta para conservar sonidos de hasta 20 000 hercios?"
+	options={["Más de 20 000 muestras por segundo", "Más de 40 000 muestras por segundo", "1000 muestras por segundo"]}
+	answer={1}
+/>
+
+## Compresión
+
+### Sin pérdida
+
+Formatos como FLAC reducen el tamaño a la mitad aproximadamente, y al descomprimir se obtiene exactamente el original. Aprovechan que cada muestra se parece a las anteriores: guardan la diferencia con una predicción, que ocupa menos.
+
+### Con pérdida
+
+MP3, AAC y Opus reducen diez veces o más. Lo consiguen eliminando lo que el oído no percibe, gracias a un modelo de la audición humana:
+
+- **Enmascaramiento.** Un sonido fuerte oculta los sonidos más débiles de frecuencia parecida, que suenan a la vez o justo después. Se pueden descartar.
+- **Umbral de audición.** Hay frecuencias en las que el oído es poco sensible. Necesitan menos precisión.
+
+La calidad se ajusta con la **tasa de bits**. Con una tasa alta, la diferencia con el original es difícil de oír. Con una baja, el sonido se vuelve metálico y pierde los agudos.
+
+| Formato | Compresión | Uso |
+| --- | --- | --- |
+| WAV | Ninguna | Grabación y edición |
+| FLAC | Sin pérdida | Archivo de música |
+| MP3 | Con pérdida | Música, por compatibilidad |
+| AAC | Con pérdida | Música, vídeo |
+| Opus | Con pérdida | Llamadas y retransmisiones en directo |
+
+Los principios son los mismos que en la [compresión de datos](/articulos/compresion-de-datos/) en general, aplicados a la percepción del oído.
+
+## Reproducir
+
+El camino inverso: un **conversor digital-analógico** convierte las muestras en una señal eléctrica continua, que mueve la membrana de un altavoz.
+
+Las muestras son puntos, y entre ellos el conversor reconstruye una curva suave. El teorema del muestreo garantiza que, si se muestreó bien, la curva reconstruida es la original.
+
+## En la latencia está el problema
+
+Para escuchar música, que el sonido llegue con un segundo de retraso no importa. Para una llamada o para tocar un instrumento, sí.
+
+El audio se procesa en pequeños bloques de muestras. Bloques grandes dan estabilidad; bloques pequeños, menos retraso pero más riesgo de cortes. En una videollamada, a eso se suma la [latencia de la red](/articulos/ancho-de-banda-latencia-y-rendimiento/) y su variación.
+
+## Lo esencial
+
+- El sonido digital es una lista de medidas de la onda, tomadas a intervalos regulares.
+- Hay que muestrear a más del doble de la frecuencia más alta que se quiera conservar.
+- Muestrear de menos hace aparecer frecuencias falsas.
+- Cada bit por muestra mejora el margen frente al ruido en unos 6 decibelios.
+- La compresión con pérdida elimina lo que el oído no percibe, como los sonidos enmascarados.

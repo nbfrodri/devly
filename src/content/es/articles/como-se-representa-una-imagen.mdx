@@ -1,0 +1,183 @@
+---
+title: "¿Cómo se representa una imagen en un ordenador?"
+description: "Una imagen digital es una cuadrícula de puntos, cada uno con un color expresado en números. Los formatos se diferencian en cómo guardan y comprimen esos números."
+level: basico
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - sistema-hexadecimal
+updated: 2026-10-13
+sources:
+  - title: "W3C: Portable Network Graphics (PNG) Specification, Third Edition (en inglés)"
+    url: https://www.w3.org/TR/png-3/
+  - title: "MDN: Image file type and format guide (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types
+  - title: "ITU-T T.81: especificación de JPEG (en inglés)"
+    url: https://www.w3.org/Graphics/JPEG/itu-t81.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Para un ordenador, una imagen son números. La forma más común de representarla es como una **cuadrícula de puntos**, llamados **píxeles**, donde cada uno tiene un color expresado con unos cuantos [bits](/articulos/que-es-un-bit/). A eso se le llama imagen **de mapa de bits**. La alternativa es describir la imagen con formas geométricas: una imagen **vectorial**.
+
+## Píxeles
+
+Un **píxel** es el elemento más pequeño de una imagen: un punto de un solo color. Vistos de lejos, muchos juntos forman la imagen, como las teselas de un mosaico.
+
+La **resolución** es el número de píxeles, en ancho por alto.
+
+```js
+const pixeles = 1920 * 1080;
+
+console.log(pixeles); // 2073600
+console.log(((pixeles * 3) / 1e6).toFixed(1)); // "6.2"
+```
+
+Una imagen de 1920 por 1080 tiene algo más de dos millones de píxeles. Con 3 bytes por píxel, sin comprimir, ocupa 6,2 megabytes. Una foto de un móvil actual, con decenas de millones de píxeles, ocuparía más de cien.
+
+Por eso las imágenes casi nunca se guardan sin [comprimir](/articulos/compresion-de-datos/).
+
+## El color
+
+### Mezcla de luces
+
+Una pantalla emite luz. Cada píxel tiene tres fuentes diminutas: una roja, una verde y una azul. Variando la intensidad de cada una se obtiene casi cualquier color. Es el modelo **RGB**.
+
+- Las tres al máximo dan blanco.
+- Las tres apagadas, negro.
+- Roja y verde, amarillo.
+
+Funciona porque el ojo tiene tres tipos de células sensibles al color, y lo que se percibe depende de cuánto se estimula cada tipo.
+
+### En números
+
+Lo habitual es dedicar 8 bits a cada componente: un valor de 0 a 255. Son 24 bits por píxel, y más de 16 millones de colores.
+
+Un color se escribe a menudo en [hexadecimal](/articulos/sistema-hexadecimal/), con dos cifras por componente:
+
+```js
+function aRgb(hexadecimal) {
+	return [1, 3, 5].map((i) => parseInt(hexadecimal.slice(i, i + 2), 16));
+}
+
+console.log(aRgb("#1f3fe0").join(" ")); // "31 63 224"
+console.log(aRgb("#ffffff").join(" ")); // "255 255 255"
+console.log(256 ** 3); // 16777216
+```
+
+`#1f3fe0` es poco rojo, algo de verde y mucho azul: un azul intenso. Es la notación que se usa en [CSS](/articulos/que-es-css/).
+
+### Profundidad de color
+
+Es el número de bits por píxel.
+
+| Bits por píxel | Colores | Uso |
+| --- | --- | --- |
+| 1 | 2 | Blanco y negro puro |
+| 8 | 256 | Escala de grises, o una paleta |
+| 24 | 16,7 millones | Color habitual |
+| 32 | 16,7 millones, con transparencia | Imágenes con zonas transparentes |
+| 30 o más | Más de mil millones | Imagen de alto rango dinámico |
+
+Con pocos bits, los degradados suaves se convierten en franjas visibles.
+
+### Transparencia
+
+Un cuarto valor, el **canal alfa**, indica cuánto deja ver cada píxel lo que hay detrás: de totalmente transparente a totalmente opaco. Permite poner un logotipo sobre cualquier fondo.
+
+### Escala de grises
+
+Para pasar a grises no se hace la media de los tres componentes. El ojo es más sensible al verde que al rojo, y al rojo más que al azul, así que cada uno pesa distinto:
+
+```js
+const aGris = ([rojo, verde, azul]) =>
+	Math.round(0.299 * rojo + 0.587 * verde + 0.114 * azul);
+
+console.log(aGris([255, 0, 0])); // 76
+console.log(aGris([0, 255, 0])); // 150
+console.log(aGris([0, 0, 255])); // 29
+```
+
+Un verde puro se ve mucho más luminoso que un azul puro de la misma intensidad.
+
+## Imágenes vectoriales
+
+En lugar de píxeles, se guardan **instrucciones**: "un círculo de radio 50 en esta posición, relleno de azul".
+
+```svg
+<svg viewBox="0 0 100 100">
+	<circle cx="50" cy="50" r="40" fill="#1f3fe0" />
+</svg>
+```
+
+El formato habitual en la web es **SVG**, que es texto.
+
+| | Mapa de bits | Vectorial |
+| --- | --- | --- |
+| Guarda | El color de cada píxel | Formas y sus propiedades |
+| Al ampliar | Se ven los píxeles | Se mantiene nítida |
+| Tamaño del archivo | Depende de la resolución | Depende de la complejidad |
+| Sirve para | Fotografías | Logotipos, iconos, gráficos, tipografías |
+
+Una fotografía no se puede describir de forma razonable con formas. Un logotipo sí, y como vectorial se ve perfecto a cualquier tamaño.
+
+Para mostrarse, una imagen vectorial tiene que convertirse en píxeles. De eso se encarga el programa que la dibuja.
+
+<Quiz
+	client:visible
+	question="¿Qué tipo de imagen se puede ampliar sin perder nitidez?"
+	options={["De mapa de bits", "Vectorial", "Ninguna"]}
+	answer={1}
+/>
+
+## Formatos
+
+Un formato define cómo se guardan los píxeles en un archivo, y sobre todo cómo se comprimen.
+
+| Formato | Compresión | Transparencia | Conviene para |
+| --- | --- | --- | --- |
+| JPEG | Con pérdida | No | Fotografías |
+| PNG | Sin pérdida | Sí | Capturas, gráficos, imágenes con texto |
+| GIF | Sin pérdida, con 256 colores como máximo | Sí, sin grados | Animaciones simples |
+| WebP | Las dos | Sí | Uso general en la web |
+| AVIF | Las dos | Sí | Fotografías, con la mayor reducción |
+| SVG | Es vectorial | Sí | Iconos y logotipos |
+
+### Elegir bien
+
+La regla de siempre:
+
+- **Fotografías**, con muchos colores y transiciones suaves: compresión con pérdida. JPEG, o mejor WebP o AVIF.
+- **Gráficos**, con colores planos y bordes definidos: sin pérdida. PNG.
+- **Iconos y logotipos**: SVG.
+
+Usar el formato equivocado sale caro en los dos sentidos. Una foto en PNG ocupa varias veces más de lo necesario. Una captura de pantalla con texto en JPEG muestra manchas alrededor de las letras, porque esa compresión trata mal los bordes nítidos.
+
+## Metadatos
+
+Un archivo de imagen contiene más que píxeles. Las fotos llevan datos de la cámara: fecha, modelo, ajustes y, a menudo, las **coordenadas del lugar** donde se tomaron.
+
+Publicar una foto tal cual sale del móvil puede revelar dónde vive alguien. Muchas plataformas eliminan esos datos al subirla. Si se gestiona la subida de imágenes en una aplicación propia, conviene hacerlo: es un asunto de [privacidad](/articulos/rgpd-y-proteccion-de-datos/).
+
+## En la web
+
+Las imágenes suelen ser lo que más pesa de una página. Lo que más rinde:
+
+- **El tamaño justo.** Enviar una foto de 4000 píxeles de ancho para mostrarla a 400 es desperdiciar el 99 %.
+- **Varias versiones.** El HTML permite ofrecer distintos tamaños y formatos, y el navegador elige según la pantalla, como se explica en [diseño adaptable](/articulos/diseno-adaptable/).
+- **Formatos modernos.**
+- **Declarar las dimensiones**, para que la página no salte al cargar.
+- **Carga diferida** de las que no están a la vista.
+- **Texto alternativo**, que describe la imagen a quien no puede verla. Es un requisito de [accesibilidad](/articulos/accesibilidad-web/).
+
+Las pantallas de alta densidad tienen varios píxeles físicos por cada unidad de medida de la página. Para que una imagen se vea nítida en ellas, debe tener más píxeles de los que indica su tamaño en pantalla.
+
+Todo esto incide en las [Core Web Vitals](/articulos/rendimiento-web-y-core-web-vitals/).
+
+## Lo esencial
+
+- Una imagen de mapa de bits es una cuadrícula de píxeles, cada uno con su color.
+- El color se guarda como intensidades de rojo, verde y azul, normalmente con 8 bits cada una.
+- Una imagen vectorial guarda formas, y se amplía sin perder nitidez.
+- JPEG comprime con pérdida y sirve para fotos; PNG, sin pérdida, para gráficos y texto.
+- Las fotos llevan metadatos, como la ubicación, que conviene eliminar al publicarlas.

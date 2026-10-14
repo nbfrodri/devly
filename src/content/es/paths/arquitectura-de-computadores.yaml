@@ -1,0 +1,13 @@
+title: Arquitectura de computadores
+description: De las puertas lógicas al procesador completo y su conexión con el resto del equipo.
+layer: hardware
+steps:
+  - puertas-logicas
+  - la-alu-y-la-aritmetica-binaria
+  - circuitos-secuenciales-y-biestables
+  - como-funciona-un-procesador
+  - segmentacion-del-procesador
+  - memoria-cache-del-procesador
+  - procesadores-multinucleo
+  - interrupciones-y-entrada-salida
+  - la-placa-base-y-los-buses

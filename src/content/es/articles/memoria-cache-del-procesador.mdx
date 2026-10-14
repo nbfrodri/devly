@@ -1,0 +1,158 @@
+---
+title: "¿Qué es la memoria caché del procesador?"
+description: "La caché es una memoria pequeña y muy rápida, dentro del procesador, que guarda los datos usados hace poco para no ir a buscarlos a la RAM."
+level: intermedio
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - memoria-ram-y-almacenamiento
+  - que-es-una-cache
+updated: 2026-10-13
+sources:
+  - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 14, Caches and the Memory Hierarchy (en inglés)"
+    url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c14/
+  - title: "Ulrich Drepper: What Every Programmer Should Know About Memory (2007, en inglés)"
+    url: https://www.akkadia.org/drepper/cpumemory.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **memoria caché del procesador** es una memoria pequeña y rapidísima, situada dentro del propio [procesador](/articulos/como-funciona-un-procesador/), que guarda copias de los datos e instrucciones que se han usado hace poco. Así, la mayoría de las veces el procesador encuentra lo que necesita sin esperar a la [memoria RAM](/articulos/memoria-ram-y-almacenamiento/), que es mucho más lenta.
+
+Es una [caché](/articulos/que-es-una-cache/) en el sentido general, aplicada al nivel más bajo.
+
+## Qué problema resuelve
+
+Un procesador ejecuta varias instrucciones por nanosegundo. Leer un dato de la RAM lleva del orden de cien nanosegundos.
+
+Si cada acceso a memoria costara eso, el procesador pasaría casi todo el tiempo esperando. Se suele comparar así: si usar un dato que ya tiene a mano le lleva un segundo, ir a buscarlo a la RAM le lleva varios minutos.
+
+¿Por qué no hacer toda la memoria igual de rápida? Porque la memoria rápida es cara, ocupa mucho y consume más. No se puede tener a la vez mucha, rápida y barata.
+
+## La jerarquía de memoria
+
+La solución es combinar varios tipos: poca memoria muy rápida cerca del procesador, y cada vez más cantidad, más lenta y más barata, a medida que uno se aleja.
+
+| Nivel | Tamaño típico | Tiempo de acceso aproximado |
+| --- | --- | --- |
+| Registros | Unas decenas de valores | Inmediato |
+| Caché L1 | Decenas de kilobytes | 1 nanosegundo |
+| Caché L2 | Cientos de kilobytes a megabytes | Unos pocos nanosegundos |
+| Caché L3 | Decenas de megabytes | Decenas de nanosegundos |
+| RAM | Gigabytes | Unos 100 nanosegundos |
+| SSD | Cientos de gigabytes | Decenas de microsegundos |
+
+Las cifras cambian de un equipo a otro; lo que importa es la proporción entre niveles.
+
+Las cachés L1 y L2 suelen ser de cada núcleo. La L3 se comparte entre todos.
+
+## Por qué funciona: la localidad
+
+Una caché de unos kilobytes delante de gigabytes de RAM parece inútil. Funciona porque los programas no acceden a la memoria al azar. Siguen dos patrones.
+
+- **Localidad temporal.** Lo que se ha usado hace poco, se volverá a usar pronto. La variable de un [bucle](/articulos/bucles/) se lee en cada vuelta.
+- **Localidad espacial.** Si se usa un dato, es probable que enseguida se usen los que están a su lado. Recorrer un [array](/articulos/arrays/) es acceder a posiciones consecutivas.
+
+La caché aprovecha las dos: conserva lo reciente, y cuando trae un dato de la RAM, trae también a sus vecinos.
+
+## Cómo trabaja
+
+La memoria se maneja en bloques llamados **líneas de caché**, normalmente de 64 bytes.
+
+Cuando el procesador necesita un dato:
+
+- **Acierto.** Está en la caché. Se obtiene en un nanosegundo.
+- **Fallo.** No está. Se trae de la RAM la línea entera que lo contiene, se guarda en la caché y se entrega. Si no hay sitio, se desaloja otra línea.
+
+Este programa simula una caché mínima y mide qué proporción de accesos son aciertos:
+
+```js
+function tasaDeAciertos(direcciones, lineas = 8, tamanoDeLinea = 4) {
+	const cache = new Array(lineas).fill(null);
+	let aciertos = 0;
+
+	for (const direccion of direcciones) {
+		const bloque = Math.floor(direccion / tamanoDeLinea);
+		const posicion = bloque % lineas;
+
+		if (cache[posicion] === bloque) {
+			aciertos = aciertos + 1;
+		} else {
+			cache[posicion] = bloque;
+		}
+	}
+
+	return aciertos / direcciones.length;
+}
+
+const seguidas = Array.from({ length: 64 }, (_, i) => i);
+const aSaltos = Array.from({ length: 64 }, (_, i) => i * 32);
+
+console.log(tasaDeAciertos(seguidas)); // 0.75
+console.log(tasaDeAciertos(aSaltos)); // 0
+```
+
+Con accesos consecutivos, el primero de cada línea falla y los tres siguientes aciertan: un 75 %. Con accesos a saltos grandes, cada uno cae en una línea distinta y **todos fallan**.
+
+El mismo número de accesos, a la misma cantidad de memoria, con un rendimiento muy distinto.
+
+## Lo que implica al programar
+
+La caché es invisible, y aun así decide el rendimiento del código que maneja muchos datos.
+
+### El orden de recorrido
+
+Una tabla de dos dimensiones se guarda en memoria fila tras fila. Recorrerla **por filas** es avanzar por posiciones consecutivas. Recorrerla **por columnas** es saltar de una fila a otra en cada paso.
+
+Las dos formas leen los mismos datos y hacen las mismas operaciones. Con tablas grandes, la segunda puede ser varias veces más lenta.
+
+### Arrays frente a listas enlazadas
+
+Los elementos de un array están juntos. Los nodos de una [lista enlazada](/articulos/listas-enlazadas/) pueden estar repartidos por toda la memoria, y cada salto de uno al siguiente es un posible fallo.
+
+Por eso un array suele ser más rápido de recorrer aunque, sobre el papel, las dos estructuras tengan la misma [complejidad](/articulos/complejidad-algoritmica/). La notación O cuenta operaciones, no lo que tarda cada una.
+
+### Tamaño de los datos
+
+Cuanto más compactos, más caben en una línea, y menos fallos hay. Guardar juntos los campos que se usan juntos ayuda.
+
+### Varios hilos
+
+Si dos [hilos](/articulos/hilos-y-concurrencia/), en núcleos distintos, modifican variables diferentes que están en la **misma línea de caché**, cada escritura invalida la copia del otro núcleo. Los dos se estorban sin compartir ningún dato. Se llama **falsa compartición**, y es un problema de rendimiento difícil de detectar.
+
+<Quiz
+	client:visible
+	question="¿Por qué recorrer un array en orden es rápido para la caché?"
+	options={[
+		"Porque los arrays se guardan dentro del procesador",
+		"Porque sus elementos están contiguos y llegan juntos en la misma línea",
+		"Porque el procesador ordena los datos antes de leerlos",
+	]}
+	answer={1}
+/>
+
+## Lo que el procesador hace por su cuenta
+
+- **Precarga.** Si detecta un patrón de acceso regular, trae las líneas siguientes antes de que se pidan. Es otra razón de que el acceso secuencial sea tan rápido.
+- **Desalojo.** Cuando la caché se llena, descarta aproximadamente lo que lleva más tiempo sin usarse.
+- **Coherencia.** Con varios núcleos, cada uno con su caché, un protocolo mantiene las copias de un mismo dato de acuerdo.
+
+## No optimizar a ciegas
+
+Para la mayoría del código, nada de esto importa. Pesa en lo que procesa grandes volúmenes de datos en bucles muy ejecutados: cálculo numérico, videojuegos, bases de datos, compresión.
+
+Y antes de reorganizar los datos hay que **medir**. Existen herramientas que cuentan los fallos de caché de un programa.
+
+## Un asunto de seguridad
+
+Que un acceso tarde más o menos según esté o no en la caché es una diferencia que se puede medir. Un programa puede así deducir a qué datos accedió otro.
+
+En 2018 se dieron a conocer dos vulnerabilidades, Spectre y Meltdown, que combinaban esa medición con la ejecución anticipada de instrucciones para leer memoria ajena. Afectaban a casi todos los procesadores, y corregirlas costó rendimiento.
+
+## Lo esencial
+
+- La caché del procesador guarda datos recientes para no esperar a la RAM.
+- Hay varios niveles: cuanto más cerca del procesador, más rápidos y más pequeños.
+- Funciona porque los programas repiten accesos y usan datos contiguos.
+- La memoria se trae en líneas: al pedir un dato llegan también sus vecinos.
+- Recorrer los datos en orden, y tenerlos juntos, puede multiplicar la velocidad.
