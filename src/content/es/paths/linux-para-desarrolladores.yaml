@@ -6,6 +6,7 @@ steps:
   - distribuciones-de-linux
   - jerarquia-de-directorios-de-linux
   - terminal-y-shell
+  - variable-de-entorno-path
   - permisos-y-usuarios
   - gestores-de-paquetes
   - servicios-y-demonios

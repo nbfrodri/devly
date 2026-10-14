@@ -90,19 +90,19 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 - [x] ¿Qué es un índice compuesto?
 - [x] ¿Qué es una clave foránea?
 - [x] ¿Qué es un esquema en estrella?
-- [ ] ¿Qué es un percentil?
-- [ ] ¿Qué es la latencia de cola?
-- [ ] ¿Qué es un sistema de archivos con registro (journaling)?
-- [ ] ¿Qué es un socket?
-- [ ] ¿Qué es una variable de entorno PATH?
-- [ ] ¿Qué es la frecuencia de reloj?
-- [ ] ¿Qué es un núcleo de procesador?
-- [ ] ¿Qué es la memoria ECC?
-- [ ] ¿Qué es un token en un modelo de lenguaje? (ventana de contexto)
-- [ ] ¿Qué es una época de entrenamiento?
-- [ ] ¿Qué es una función de pérdida?
-- [ ] ¿Qué es un prototipo en diseño?
-- [ ] ¿Qué es un MVP, producto mínimo viable?
+- [x] ¿Qué es un percentil?
+- [x] ¿Qué es la latencia de cola?
+- [x] ¿Qué es un sistema de archivos con registro (journaling)?
+- [x] ¿Qué es un socket?
+- [x] ¿Qué es una variable de entorno PATH?
+- [x] ¿Qué es la frecuencia de reloj?
+- [x] ¿Qué es un núcleo de procesador? Cubierto en el artículo de procesadores multinúcleo.
+- [x] ¿Qué es la memoria ECC?
+- [x] ¿Qué es un token en un modelo de lenguaje? (ventana de contexto) Cubierto en el artículo de ventana de contexto y tokens.
+- [x] ¿Qué es una época de entrenamiento?
+- [x] ¿Qué es una función de pérdida?
+- [x] ¿Qué es un prototipo en diseño?
+- [x] ¿Qué es un MVP, producto mínimo viable?
 
 ## Comparaciones
 
@@ -111,9 +111,9 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 - [ ] Diferencias entre escalado de datos: normalizar y estandarizar
 - [ ] Diferencias entre precisión y exactitud de un modelo
 - [ ] Diferencias entre swap y memoria RAM
-- [ ] Diferencias entre shell, terminal y consola
+- [x] Diferencias entre shell, terminal y consola. Cubierta en el artículo de terminal y shell, ampliado con la consola.
 - [ ] Diferencias entre SSD SATA y NVMe
-- [ ] Diferencias entre LAN, WAN y VPN
+- [x] Diferencias entre LAN, WAN y VPN. Cubierta en el artículo de tipos de redes.
 - [ ] Diferencias entre IA generativa y discriminativa
 - [ ] Diferencias entre ancho de banda y velocidad de transferencia de un disco
 - [ ] Diferencias entre UX y UI

@@ -1,0 +1,51 @@
+---
+title: "¿Qué es un percentil?"
+description: "El percentil p es el valor por debajo del cual queda el p % de los datos. El percentil 50 es la mediana; el 99 dice cómo les va a los peores casos."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - media-mediana-y-desviacion
+updated: 2026-10-13
+sources:
+  - title: "NIST/SEMATECH e-Handbook: Percentiles (en inglés)"
+    url: https://www.itl.nist.gov/div898/handbook/prc/section2/prc262.htm
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **percentil** indica la posición de un valor dentro de un conjunto de datos ordenados. El **percentil p** es el valor que deja por debajo, como mucho, el p % de las medidas, y por encima, como mucho, el resto. El percentil 50 es la [mediana](/articulos/media-mediana-y-desviacion/).
+
+## Un ejemplo
+
+Tiempos de respuesta de diez peticiones, en milisegundos:
+
+```js
+const tiempos = [12, 15, 11, 14, 13, 16, 12, 900, 14, 13];
+const ordenados = [...tiempos].sort((a, b) => a - b);
+
+const percentil = (p) => ordenados[Math.ceil((p / 100) * ordenados.length) - 1];
+const media = tiempos.reduce((a, b) => a + b) / tiempos.length;
+
+console.log(percentil(50), percentil(90), percentil(100)); // 13 16 900
+console.log(media); // 102
+```
+
+La media, 102 ms, no describe a nadie: nueve peticiones tardaron unos 13 ms y una, 900. El percentil 50 dice cómo le va a la petición típica y el 90, a casi todas. Hay varias formas de calcular un percentil cuando cae entre dos valores; con muchos datos, la diferencia es mínima.
+
+## Dónde se usa
+
+- **Rendimiento**: los tiempos de respuesta se vigilan por percentiles, p50, p95, p99, porque la media esconde los casos lentos. Es la [latencia de cola](/articulos/latencia-de-cola/).
+- **Salud y educación**: las tablas de crecimiento infantil o las notas de un examen.
+- **Acuerdos de servicio**: "el 99 % de las peticiones responderá en menos de 200 ms".
+
+## Con qué no confundirlo
+
+- **Porcentaje**: una proporción. El percentil es un **valor** de los datos.
+- **Cuartiles**: son los percentiles 25, 50 y 75.
+
+## Lo esencial
+
+- El percentil p es el valor que deja por debajo el p % de los datos.
+- El percentil 50 es la mediana.
+- Describe mejor que la media los datos con valores extremos, como los tiempos de respuesta.

@@ -1,0 +1,58 @@
+---
+title: "¿Qué es la variable de entorno PATH?"
+description: "PATH es la lista de carpetas donde la terminal busca los programas que escribes. Por eso basta con escribir git en lugar de la ruta completa del ejecutable."
+level: basico
+kind: definicion
+layer: sistemas
+prerequisites:
+  - terminal-y-shell
+  - variables-de-entorno-y-secretos
+updated: 2026-10-13
+sources:
+  - title: "The Open Group: POSIX Environment Variables, PATH (en inglés)"
+    url: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**PATH** es una [variable de entorno](/articulos/variables-de-entorno-y-secretos/) que contiene la **lista de directorios** donde el sistema busca un programa cuando escribes solo su nombre. Gracias a ella, en la [terminal](/articulos/terminal-y-shell/) basta con escribir `git` en lugar de `/usr/bin/git`.
+
+El estándar POSIX la define como la secuencia de prefijos de ruta en los que se busca un ejecutable conocido solo por su nombre, separados por dos puntos.
+
+## Cómo se ve
+
+```bash
+echo $PATH
+# /home/ana/.local/bin:/usr/local/bin:/usr/bin:/bin
+```
+
+Al escribir `node`, la shell prueba en orden `/home/ana/.local/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`... y ejecuta el **primero** que encuentra.
+
+```js
+const ruta = "/home/ana/.local/bin:/usr/local/bin:/usr/bin:/bin";
+const instalados = new Set(["/usr/bin/node", "/usr/local/bin/node", "/usr/bin/git"]);
+
+const buscar = (programa) =>
+	ruta.split(":").map((dir) => `${dir}/${programa}`).find((c) => instalados.has(c)) ?? "no encontrado";
+
+console.log(buscar("node")); // "/usr/local/bin/node"
+console.log(buscar("python")); // "no encontrado"
+```
+
+Hay dos `node` instalados y gana el del directorio que aparece antes. Para saber cuál se ejecutará, `which node` lo dice.
+
+## Problemas típicos
+
+- **"command not found"**: el programa está instalado, pero su carpeta no está en PATH.
+- **Se ejecuta la versión equivocada**: hay dos copias y la que no quieres está antes en la lista.
+- **Añadir el directorio actual** al principio de PATH es peligroso: un programa malicioso llamado `ls` en una carpeta descargada se ejecutaría en lugar del real.
+
+Para añadir una carpeta de forma permanente, se modifica PATH en el archivo de configuración de la shell, por ejemplo `~/.bashrc`: `export PATH="$HOME/.local/bin:$PATH"`.
+
+En Windows existe la misma variable, con las carpetas separadas por punto y coma.
+
+## Lo esencial
+
+- PATH es la lista de directorios donde se buscan los programas por su nombre.
+- Se recorre en orden y se ejecuta el primero que coincide.
+- "command not found" suele significar que falta una carpeta en PATH.

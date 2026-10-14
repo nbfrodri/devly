@@ -1,0 +1,55 @@
+---
+title: "¿Qué es la memoria ECC?"
+description: "La memoria ECC guarda bits de más para detectar y corregir errores en los datos. Es habitual en servidores, donde un bit cambiado puede corromper datos sin que nadie lo note."
+level: basico
+kind: definicion
+layer: hardware
+prerequisites:
+  - memoria-ram-y-almacenamiento
+  - deteccion-y-correccion-de-errores
+updated: 2026-10-13
+sources:
+  - title: "The Linux Kernel documentation: EDAC, Error Detection And Correction (en inglés)"
+    url: https://docs.kernel.org/driver-api/edac.html
+  - title: "Schroeder, Pinheiro y Weber: DRAM Errors in the Wild, a Large-Scale Field Study (en inglés)"
+    url: https://research.google/pubs/dram-errors-in-the-wild-a-large-scale-field-study/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **memoria ECC**, de código de corrección de errores, es [memoria RAM](/articulos/memoria-ram-y-almacenamiento/) que guarda **bits adicionales** junto a los datos para **detectar y corregir** errores. Si un bit cambia por accidente, el controlador de memoria lo detecta y lo arregla al leerlo.
+
+## Por qué cambian los bits
+
+Un bit de memoria es una carga eléctrica minúscula. Defectos del chip, desgaste, temperatura o radiación pueden alterarlo. No es tan raro: un estudio de Google sobre su flota de servidores durante dos años y medio encontró que más del 8 % de los módulos de memoria sufrían errores cada año, y que la mayoría se debían a defectos del hardware, no a sucesos aleatorios.
+
+Sin ECC, un bit cambiado puede colgar el equipo o, peor, **corromper datos en silencio**: un número equivocado en una base de datos que nadie detecta.
+
+## Cómo funciona
+
+Es la idea de la [detección y corrección de errores](/articulos/deteccion-y-correccion-de-errores/) aplicada a la memoria. La documentación del kernel de Linux lo resume: el controlador espera normalmente 72 bits, 64 de datos y 8 de código de corrección. Con esos 8 bits extra puede:
+
+- **Corregir** un bit erróneo en cada palabra.
+- **Detectar**, sin corregir, dos bits erróneos.
+
+```js
+const bitsDatos = 64;
+const bitsEcc = 8;
+
+console.log(((bitsEcc / bitsDatos) * 100).toFixed(1)); // "12.5"
+```
+
+Un 12,5 % de memoria extra a cambio de no corromper datos en silencio.
+
+## Dónde se usa
+
+- **Servidores** y estaciones de trabajo, donde un error silencioso es inaceptable.
+- Necesita módulos de memoria ECC **y** un procesador y una placa base que lo admitan. La mayoría de los equipos domésticos no lo usan.
+
+El sistema operativo puede registrar los errores corregidos. Si un módulo acumula muchos, es señal de que hay que sustituirlo antes de que falle del todo.
+
+## Lo esencial
+
+- La memoria ECC añade bits de control para detectar y corregir errores.
+- Con 8 bits por cada 64, corrige un bit erróneo y detecta dos.
+- Los errores de memoria son más frecuentes de lo que parece, y sin ECC pueden corromper datos en silencio.

@@ -98,7 +98,7 @@ En un directorio, los permisos significan otra cosa: leer es listar su contenido
 
 Crear un archivo implica varios cambios en el disco: reservar bloques, escribir el inodo, añadir el nombre al directorio. Si se corta la corriente a mitad, las estructuras quedan a medias y el sistema de archivos se corrompe.
 
-Los sistemas actuales lo evitan con un **registro por diario** (*journaling*): antes de aplicar un cambio, anotan en un diario lo que van a hacer. Tras un apagón, basta con leer el diario para completar o descartar lo que quedó pendiente. Es la misma idea de atomicidad que las [transacciones](/articulos/transacciones-y-acid/) de una base de datos.
+Los sistemas actuales lo evitan con un **[registro por diario](/articulos/sistema-de-archivos-con-registro/)** (*journaling*): antes de aplicar un cambio, anotan en un diario lo que van a hacer. Tras un apagón, basta con leer el diario para completar o descartar lo que quedó pendiente. Es la misma idea de atomicidad que las [transacciones](/articulos/transacciones-y-acid/) de una base de datos.
 
 ## Sistemas de archivos habituales
 

@@ -1,0 +1,67 @@
+---
+title: "¿Qué es un socket?"
+description: "Un socket es el extremo de una conexión de red visto desde un programa: la interfaz con la que una aplicación envía y recibe datos sin ocuparse de cómo viajan."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - tcp-y-udp
+  - que-es-un-puerto
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: socket(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/socket.7.html
+  - title: "Linux man-pages: socket(2) (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/socket.2.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **socket** es el **extremo de una comunicación** visto desde un programa. Es la interfaz que ofrece el sistema operativo para que una aplicación envíe y reciba datos por la red, sin ocuparse de cómo viajan. La página de manual de Linux lo describe como la interfaz uniforme entre los procesos de usuario y las pilas de protocolos de red del núcleo.
+
+Una conexión [TCP](/articulos/tcp-y-udp/) queda identificada por dos extremos, cada uno con su IP y su [puerto](/articulos/que-es-un-puerto/): `192.168.1.20:51000` hablando con `93.184.216.34:443`.
+
+## Cómo se usa
+
+Un servidor y un cliente siguen pasos fijos:
+
+| Servidor | Cliente |
+| --- | --- |
+| Crea un socket | Crea un socket |
+| Lo asocia a un puerto | |
+| Se pone a escuchar | |
+| Acepta una conexión | Se conecta a la IP y el puerto del servidor |
+| Lee y escribe | Escribe y lee |
+| Cierra | Cierra |
+
+En Node.js, un servidor TCP mínimo:
+
+```javascript
+import net from "node:net";
+
+const servidor = net.createServer((socket) => {
+	socket.write("Hola\n");
+	socket.end();
+});
+
+servidor.listen(4000);
+```
+
+Cada conexión aceptada es un socket nuevo. Para el programa, leer y escribir en él se parece mucho a leer y escribir en un [archivo](/articulos/que-es-un-archivo/).
+
+## Tipos
+
+- **De flujo** (`SOCK_STREAM`): una conexión fiable y ordenada, normalmente TCP.
+- **De datagramas** (`SOCK_DGRAM`): mensajes sueltos, normalmente UDP.
+- **Locales**: comunican procesos del mismo equipo sin pasar por la red, como explica [señales y comunicación entre procesos](/articulos/senales-y-comunicacion-entre-procesos/).
+
+## Con qué no confundirlo
+
+- **Puerto**: un número; el socket es el objeto con el que se habla por él.
+- **WebSocket**: un protocolo concreto para la web, construido sobre una conexión TCP, como explica [WebSockets](/articulos/websockets/).
+
+## Lo esencial
+
+- Un socket es el extremo de una comunicación, la interfaz entre un programa y la red.
+- Una conexión TCP se identifica por la IP y el puerto de cada extremo.
+- Los hay de flujo (TCP), de datagramas (UDP) y locales.

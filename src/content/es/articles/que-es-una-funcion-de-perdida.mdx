@@ -1,0 +1,48 @@
+---
+title: "¿Qué es una función de pérdida?"
+description: "La función de pérdida mide cuánto se equivoca un modelo con un número. Entrenar consiste en ajustar el modelo para que ese número baje."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - clasificacion-y-regresion
+  - descenso-del-gradiente
+updated: 2026-10-13
+sources:
+  - title: "Google Machine Learning Crash Course: Loss (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/linear-regression/loss
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **función de pérdida** convierte los errores de un modelo en **un único número**: cuánto se alejan sus predicciones de los valores reales. Entrenar un modelo consiste en ajustarlo para que la pérdida sea lo más baja posible, con técnicas como el [descenso del gradiente](/articulos/descenso-del-gradiente/).
+
+## Dos pérdidas clásicas
+
+Para la [regresión](/articulos/clasificacion-y-regresion/), las más comunes son el **error absoluto medio** (MAE) y el **error cuadrático medio** (MSE):
+
+```js
+const reales = [10, 12, 11, 13];
+const predichos = [11, 12, 10, 20];
+
+const mae = reales.reduce((s, r, i) => s + Math.abs(r - predichos[i]), 0) / reales.length;
+const mse = reales.reduce((s, r, i) => s + (r - predichos[i]) ** 2, 0) / reales.length;
+
+console.log(mae, mse); // 2.25 12.75
+```
+
+La última predicción falla por 7. En el MAE cuenta 7; en el MSE, al elevarlo al cuadrado, cuenta 49 y domina el resultado. Como señala el curso de Google, la diferencia está en su sensibilidad a los valores atípicos: el MSE los castiga mucho más. Elegir una u otra es decidir qué errores importan más.
+
+## En clasificación
+
+Para la [clasificación](/articulos/clasificacion-y-regresion/) se usa sobre todo la **entropía cruzada**: castiga mucho que el modelo esté muy seguro de una respuesta equivocada.
+
+## Pérdida y métrica
+
+La pérdida es lo que el modelo **optimiza**; la métrica, lo que a nosotros nos **importa**, como la precisión de un clasificador. A veces coinciden; a menudo no, porque la pérdida necesita ser derivable para que el descenso del gradiente funcione.
+
+## Lo esencial
+
+- La función de pérdida resume en un número cuánto se equivoca un modelo.
+- Entrenar es minimizarla.
+- El MSE castiga más los errores grandes que el MAE.

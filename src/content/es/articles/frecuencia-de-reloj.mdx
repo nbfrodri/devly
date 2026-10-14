@@ -1,0 +1,54 @@
+---
+title: "¿Qué es la frecuencia de reloj de un procesador?"
+description: "La frecuencia de reloj es el número de pulsos por segundo que marcan el ritmo del procesador. Se mide en gigahercios, pero no basta para comparar procesadores."
+level: basico
+kind: definicion
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - circuitos-secuenciales-y-biestables
+updated: 2026-10-13
+sources:
+  - title: "Nand2Tetris: The Elements of Computing Systems (en inglés)"
+    url: https://www.nand2tetris.org/course
+  - title: "Remzi y Andrea Arpaci-Dusseau: Operating Systems, Three Easy Pieces (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **frecuencia de reloj** es el número de **pulsos por segundo** que genera el reloj interno de un [procesador](/articulos/como-funciona-un-procesador/). Cada pulso es un paso: en él, los [circuitos secuenciales](/articulos/circuitos-secuenciales-y-biestables/) guardan su nuevo estado y la siguiente etapa empieza a trabajar. Se mide en hercios: un procesador de 3 GHz recibe tres mil millones de pulsos por segundo.
+
+## Por qué hace falta un reloj
+
+Las señales tardan en atravesar las puertas lógicas. El reloj da a todo el circuito un compás común: cada etapa espera al siguiente pulso, cuando sus resultados ya son estables, para pasarlos a la siguiente. El pulso no puede ser más rápido que el camino más lento del circuito.
+
+## Cuánto dura un ciclo
+
+```js
+const ghz = 3;
+const nanosegundosPorCiclo = 1 / ghz;
+const centimetrosLuz = 30 * nanosegundosPorCiclo; // la luz recorre unos 30 cm por nanosegundo
+
+console.log(nanosegundosPorCiclo.toFixed(3), centimetrosLuz.toFixed(0)); // 0.333 10
+```
+
+A 3 GHz, un ciclo dura un tercio de nanosegundo: en ese tiempo, la luz recorre apenas 10 centímetros. Por eso las distancias dentro del chip importan.
+
+## No lo es todo
+
+Comparar procesadores solo por los GHz engaña:
+
+- Unos hacen **más trabajo por ciclo** que otros, gracias a la [segmentación](/articulos/segmentacion-del-procesador/) y a ejecutar varias instrucciones a la vez.
+- Tienen distinto número de [núcleos](/articulos/procesadores-multinucleo/).
+- A menudo esperan a la memoria, y la [caché](/articulos/memoria-cache-del-procesador/) pesa más que el reloj.
+
+## Por qué dejó de subir
+
+Durante mucho tiempo, la frecuencia subió con cada generación de procesadores. Después se estancó en unos pocos GHz: más frecuencia significa más consumo y más calor, y llegó un punto en que no se podía [refrigerar](/articulos/refrigeracion-de-un-ordenador/). Desde entonces, la mejora llega por más núcleos y más trabajo por ciclo. Los procesadores actuales, además, **varían** su frecuencia según la carga y la temperatura.
+
+## Lo esencial
+
+- La frecuencia de reloj es el número de pulsos por segundo que marcan el ritmo del procesador.
+- En cada pulso, los circuitos avanzan un paso.
+- Por sí sola no mide la velocidad: importan el trabajo por ciclo, los núcleos y la memoria.

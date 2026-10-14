@@ -1,0 +1,45 @@
+---
+title: "¿Qué es un sistema de archivos con registro (journaling)?"
+description: "Un sistema de archivos con registro anota cada cambio en un diario antes de aplicarlo. Si el equipo se apaga a mitad, al arrancar repasa el diario y queda coherente."
+level: basico
+kind: definicion
+layer: sistemas
+prerequisites:
+  - sistema-de-archivos
+  - atomicidad-e-idempotencia
+updated: 2026-10-13
+sources:
+  - title: "The Linux Kernel documentation: ext4 Journal (jbd2) (en inglés)"
+    url: https://docs.kernel.org/filesystems/ext4/journal.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **sistema de archivos con registro**, o con *journaling*, apunta en un **diario** lo que va a cambiar **antes** de cambiarlo en su sitio definitivo. Si el equipo se apaga de golpe a mitad de una operación, al volver a arrancar repasa el diario y deja el [sistema de archivos](/articulos/sistema-de-archivos/) en un estado coherente.
+
+ext4, el sistema de archivos más común en Linux, usa un diario, como ya hacía ext3. NTFS, en Windows, también.
+
+## El problema que resuelve
+
+Crear un archivo exige varias escrituras: reservar bloques, apuntar el archivo en su directorio, actualizar los metadatos. Si el equipo se apaga entre una y otra, el disco queda a medias: bloques reservados que nadie usa, entradas que apuntan a ninguna parte. Sin diario, había que revisar el disco entero al arrancar, lo que podía tardar horas.
+
+## Cómo funciona
+
+1. Se escribe en el diario la operación completa.
+2. Se marca en el diario que está **confirmada**.
+3. Más tarde, se aplica en su sitio definitivo y se borra del diario.
+
+Si el equipo cae antes del paso 2, la operación se ignora: nunca ocurrió. Si cae después, se vuelve a aplicar desde el diario. Según la documentación del kernel de Linux, el diario puede repetirse hasta el último registro confirmado, lo que garantiza la [atomicidad](/articulos/atomicidad-e-idempotencia/) de lo que pasa por él: todo o nada.
+
+Es la misma idea que el registro de escritura anticipada de las bases de datos con [transacciones](/articulos/transacciones-y-acid/).
+
+## Qué se protege
+
+En ext4, el diario protege sobre todo los **metadatos**: la estructura del sistema de archivos. Por defecto, el contenido de los archivos no pasa por el diario completo, para no escribirlo todo dos veces. Por eso un apagón no rompe el sistema de archivos, pero el último archivo que se estaba guardando puede quedar incompleto.
+
+## Lo esencial
+
+- Un sistema de archivos con registro anota cada cambio en un diario antes de aplicarlo.
+- Tras un apagón, repasa el diario en lugar de revisar el disco entero.
+- Garantiza que cada operación registrada se aplica entera o no se aplica.
+- Normalmente protege la estructura, no necesariamente el contenido de los archivos.

@@ -1,0 +1,55 @@
+---
+title: "¿Qué es una época de entrenamiento?"
+description: "Una época es una pasada completa por todos los ejemplos de entrenamiento. Un modelo se entrena durante varias épocas, y elegir cuántas afecta al sobreajuste."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - descenso-del-gradiente
+  - sobreajuste-y-subajuste
+updated: 2026-10-13
+sources:
+  - title: "Google: Machine Learning Glossary (en inglés)"
+    url: https://developers.google.com/machine-learning/glossary
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **época** es una **pasada completa por todo el conjunto de entrenamiento**, de forma que cada ejemplo se ha procesado una vez. Un modelo no aprende de una sola pasada: se entrena durante varias épocas, y en cada una ajusta un poco más sus [parámetros](/articulos/que-es-un-parametro-de-un-modelo/).
+
+## Épocas, lotes e iteraciones
+
+Los ejemplos no se procesan todos a la vez, sino en **lotes**. Cada lote da lugar a una **iteración**: un paso del [descenso del gradiente](/articulos/descenso-del-gradiente/). El glosario de Google lo resume con un ejemplo:
+
+```js
+const ejemplos = 1000;
+const tamanoLote = 50;
+
+const iteracionesPorEpoca = ejemplos / tamanoLote;
+console.log(iteracionesPorEpoca); // 20
+
+const epocas = 10;
+console.log(iteracionesPorEpoca * epocas); // 200
+```
+
+Con mil ejemplos en lotes de 50, una época son 20 iteraciones; diez épocas, 200 actualizaciones del modelo.
+
+## Cuántas épocas
+
+Es un [hiperparámetro](/articulos/que-es-un-hiperparametro/):
+
+- **Pocas**: el modelo no ha aprendido lo suficiente, **subajuste**.
+- **Demasiadas**: memoriza los ejemplos de entrenamiento y empeora con datos nuevos, **sobreajuste**, como explica [sobreajuste y subajuste](/articulos/sobreajuste-y-subajuste/).
+
+La práctica habitual es medir el error con datos de validación al final de cada época y **parar** cuando deja de mejorar, aunque el error de entrenamiento siga bajando.
+
+## Con qué no confundirlo
+
+- **Iteración**: un paso con un lote. Una época contiene muchas.
+- **Lote**: el grupo de ejemplos de cada iteración.
+
+## Lo esencial
+
+- Una época es una pasada completa por todos los ejemplos de entrenamiento.
+- Una época tiene tantas iteraciones como lotes caben en los datos.
+- Demasiadas épocas llevan al sobreajuste; se para cuando deja de mejorar la validación.

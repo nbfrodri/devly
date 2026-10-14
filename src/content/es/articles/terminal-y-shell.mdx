@@ -5,7 +5,7 @@ level: basico
 layer: sistemas
 prerequisites:
   - sistema-de-archivos
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "GNU Bash Reference Manual (en inglés)"
     url: https://www.gnu.org/software/bash/manual/bash.html
@@ -36,6 +36,8 @@ Se confunden porque siempre se usan juntas:
 | Terminal | La ventana que muestra texto y recoge el teclado | La aplicación Terminal, la de un editor de código |
 | Shell | El programa que interpreta lo que escribes | Bash, Zsh, PowerShell |
 | Orden | Un programa que la shell ejecuta | `ls`, `git`, `node` |
+
+¿Y la **consola**? Originalmente era el terminal físico conectado directamente a la máquina, el que usaba quien la administraba. En Linux, la consola sigue siendo la pantalla de texto que aparece sin entorno gráfico, por ejemplo al arrancar en modo de recuperación. Hoy, en el habla común, "consola", "terminal" y "línea de órdenes" se usan casi como sinónimos; y en desarrollo web, "la consola" suele ser la del navegador, donde aparecen los mensajes de `console.log`.
 
 Los ejemplos de este artículo valen para Bash y Zsh, las shells habituales en Linux y macOS.
 
@@ -120,7 +122,7 @@ NOMBRE="Ana"
 echo "Hola, $NOMBRE"
 ```
 
-Algunas las define el sistema. La más importante es `PATH`: la lista de directorios donde la shell busca los programas. Cuando escribes `git`, recorre esos directorios hasta encontrar un ejecutable con ese nombre. Si una orden recién instalada "no se encuentra", casi siempre es que su directorio no está en `PATH`.
+Algunas las define el sistema. La más importante es [`PATH`](/articulos/variable-de-entorno-path/): la lista de directorios donde la shell busca los programas. Cuando escribes `git`, recorre esos directorios hasta encontrar un ejecutable con ese nombre. Si una orden recién instalada "no se encuentra", casi siempre es que su directorio no está en `PATH`.
 
 Las variables de entorno son también la forma habitual de pasar configuración a un programa sin escribirla en el código, como la dirección de una base de datos.
 

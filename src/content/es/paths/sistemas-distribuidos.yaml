@@ -11,3 +11,4 @@ steps:
   - teorema-cap
   - consistencia-eventual
   - consenso-distribuido
+  - latencia-de-cola

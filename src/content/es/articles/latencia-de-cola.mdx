@@ -1,0 +1,49 @@
+---
+title: "¿Qué es la latencia de cola?"
+description: "La latencia de cola es el tiempo de las respuestas más lentas, como el percentil 99. En sistemas grandes, esas pocas respuestas lentas acaban afectando a casi todos los usuarios."
+level: basico
+kind: definicion
+layer: sistemas
+prerequisites:
+  - que-es-un-percentil
+  - ancho-de-banda-latencia-y-rendimiento
+updated: 2026-10-13
+sources:
+  - title: "Dean y Barroso: The Tail at Scale, Communications of the ACM (en inglés)"
+    url: https://research.google/pubs/the-tail-at-scale/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **latencia de cola** es el tiempo que tardan las respuestas **más lentas** de un sistema: la "cola" de la distribución de tiempos. Se mide con [percentiles](/articulos/que-es-un-percentil/) altos, como el 99 o el 99,9: el tiempo por debajo del cual queda el 99 % de las peticiones.
+
+## Por qué importa
+
+Que el 1 % de las peticiones sea lento parece poco. Pero una página moderna hace decenas de peticiones a muchos servicios internos, y la página entera tarda lo que tarde **la más lenta**:
+
+```js
+const probabilidadLenta = 0.01;
+
+const algunaLenta = (peticiones) => 1 - (1 - probabilidadLenta) ** peticiones;
+
+console.log(algunaLenta(1).toFixed(2)); // "0.01"
+console.log(algunaLenta(100).toFixed(2)); // "0.63"
+```
+
+Si una página consulta 100 servidores y cada uno es lento el 1 % de las veces, el 63 % de las cargas de página serán lentas. Es la idea central del artículo *The Tail at Scale*, de Jeffrey Dean y Luiz André Barroso, de Google: mantener baja la cola de la latencia es difícil a medida que el sistema crece y se usa más.
+
+## De dónde sale
+
+Pausas del recolector de basura, un disco ocupado, una [caché](/articulos/que-es-una-cache/) que falla, un servidor con más carga que los demás, la red. Son causas pequeñas e inevitables en una máquina, pero con miles de máquinas siempre hay alguna afectada.
+
+## Cómo se combate
+
+- **Medir por percentiles**, nunca solo con la media, como recomienda la [observabilidad](/articulos/observabilidad/).
+- **Peticiones de respaldo**: si una respuesta tarda más de lo normal, se pide lo mismo a otra réplica y se usa la primera que llegue.
+- **Reducir el número de servicios** que intervienen en cada respuesta.
+
+## Lo esencial
+
+- La latencia de cola es el tiempo de las respuestas más lentas, medida con percentiles altos.
+- Cuantos más servicios intervienen en una respuesta, más probable es que alguno sea lento.
+- Por eso, en sistemas grandes, la cola acaba afectando a la mayoría de los usuarios.
