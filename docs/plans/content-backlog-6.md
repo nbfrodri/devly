@@ -33,7 +33,7 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ## Revisión de los artículos existentes
 
-- [ ] Revisar los artículos con una sola fuente y añadir otra cuando aporte
-- [ ] Revisar que cada artículo de concepto enlaza a sus prerrequisitos y a los artículos que lo amplían
-- [ ] Convertir a Mermaid los diagramas que queden en texto
-- [ ] Actualizar la fecha `updated` de cada artículo que se revise
+- [x] Revisar los artículos con una sola fuente y añadir otra cuando aporte. Hecho en conceptos y comparaciones; las definiciones y curiosidades con una fuente primaria se mantienen.
+- [x] Revisar que cada artículo de concepto enlaza a sus prerrequisitos y a los artículos que lo amplían. Resuelto de forma automática: cada artículo muestra sus prerrequisitos y, en «Para seguir», los artículos que lo tienen como prerrequisito.
+- [x] Convertir a Mermaid los diagramas que queden en texto
+- [x] Actualizar la fecha `updated` de cada artículo que se revise

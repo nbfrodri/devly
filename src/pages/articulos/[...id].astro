@@ -5,23 +5,41 @@ import LayerStack from "@/components/layer-stack.astro";
 import ProgressButtons from "@/components/progress-buttons.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { type Article, getArticles } from "@/lib/content";
+import { findDependents } from "@/lib/dependents";
 import { LEVEL_LABELS } from "@/lib/levels";
 import { getStepNeighbors } from "@/lib/paths";
 
 export async function getStaticPaths() {
 	const articles = await getArticles();
+	// Concepts and comparisons first: they are the natural next step; curiosities last.
+	const kindOrder = ["concepto", "comparacion", "definicion", "curiosidad"];
+	const withPrerequisites = articles
+		.map((item) => ({
+			id: item.id,
+			title: item.data.title,
+			kind: item.data.kind,
+			prerequisites: item.data.prerequisites.map(
+				(prerequisite) => prerequisite.id,
+			),
+		}))
+		.sort((a, b) => kindOrder.indexOf(a.kind) - kindOrder.indexOf(b.kind));
 
 	return articles.map((article) => ({
 		params: { id: article.id },
-		props: { article },
+		props: {
+			article,
+			// Articles that build on this one, easiest first, so readers know where to go next.
+			dependents: findDependents(withPrerequisites, article.id, 6),
+		},
 	}));
 }
 
 type Props = {
 	article: Article;
+	dependents: { id: string; title: string }[];
 };
 
-const { article } = Astro.props;
+const { article, dependents } = Astro.props;
 const { Content } = await render(article);
 const prerequisites = await getEntries(article.data.prerequisites);
 
@@ -66,6 +84,20 @@ const mainContext = pathContexts[0];
 									<a href={`/articulos/${prerequisite.id}/`}>
 										{prerequisite.data.title}
 									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				)
+			}
+			{
+				dependents.length > 0 && (
+					<div class="aside-block">
+						<span class="aside-title">Para seguir</span>
+						<ul class="aside-links">
+							{dependents.map((dependent) => (
+								<li>
+									<a href={`/articulos/${dependent.id}/`}>{dependent.title}</a>
 								</li>
 							))}
 						</ul>
