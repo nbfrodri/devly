@@ -85,7 +85,7 @@ Casi ningún lenguaje actual es un caso puro. Se han impuesto dos soluciones int
 
 El código fuente se compila a un lenguaje intermedio, el **bytecode**. No es código máquina de ningún procesador real, sino de una máquina imaginaria más sencilla.
 
-Después, un programa llamado **máquina virtual** ejecuta ese bytecode. Así se reparte el trabajo: el análisis costoso se hace una vez, y el bytecode funciona en cualquier sitio donde exista la máquina virtual.
+Después, un programa llamado **máquina virtual** ejecuta ese bytecode, y los motores modernos compilan sobre la marcha las partes más usadas, como explica [cómo ejecuta JavaScript un motor como V8](/articulos/motores-de-javascript-y-jit/). Así se reparte el trabajo: el análisis costoso se hace una vez, y el bytecode funciona en cualquier sitio donde exista la máquina virtual.
 
 Java se compila a bytecode que ejecuta la JVM. Python también: lo que se suele llamar "el intérprete de Python" compila primero el programa a bytecode y luego lo ejecuta en su máquina virtual.
 

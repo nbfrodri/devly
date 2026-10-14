@@ -7,5 +7,6 @@ steps:
   - manejo-de-errores-y-excepciones
   - promesas-y-async-await
   - el-bucle-de-eventos
+  - motores-de-javascript-y-jit
   - expresiones-regulares
   - que-es-typescript

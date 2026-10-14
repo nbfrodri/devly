@@ -16,3 +16,4 @@ steps:
   - que-hace-un-empaquetador
   - rendimiento-web-y-core-web-vitals
   - aplicaciones-nativas-hibridas-y-pwa
+  - dom-virtual-y-reconciliacion

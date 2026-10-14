@@ -11,14 +11,14 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 - [x] Cómo funciona un compilador por dentro: análisis léxico, sintáctico y árbol (compilador e intérprete)
 - [x] Recolección de basura: cómo se libera la memoria sola (pila y montículo)
 - [x] El bucle de eventos de JavaScript (promesas y async/await)
-- [ ] Motores de JavaScript: intérprete y compilación JIT (máquina virtual de un lenguaje)
-- [ ] Del ejecutable al proceso: cómo arranca un programa (qué es un binario)
+- [x] Motores de JavaScript: intérprete y compilación JIT (máquina virtual de un lenguaje)
+- [x] Del ejecutable al proceso: cómo arranca un programa (qué es un binario)
 
 ### Herramientas
 
 - [x] Git por dentro: objetos, árboles y confirmaciones (control de versiones con Git)
-- [ ] El DOM virtual y la reconciliación (React)
-- [ ] Cómo funciona la caché HTTP: Cache-Control y ETag (caché)
+- [x] El DOM virtual y la reconciliación (React)
+- [x] Cómo funciona la caché HTTP: Cache-Control y ETag (caché)
 
 ### Datos y sistemas
 

@@ -1,0 +1,93 @@
+---
+title: "¿Cómo ejecuta JavaScript un motor como V8? Intérprete y JIT"
+description: "Un motor de JavaScript empieza interpretando bytecode y, cuando una función se usa mucho, la compila a código máquina optimizado. Si sus suposiciones fallan, vuelve atrás."
+level: avanzado
+layer: programacion
+prerequisites:
+  - compilador-e-interprete
+  - que-es-una-maquina-virtual-de-un-lenguaje
+updated: 2026-10-14
+sources:
+  - title: "V8: Launching Ignition and TurboFan (en inglés)"
+    url: https://v8.dev/blog/launching-ignition-and-turbofan
+  - title: "V8: Sparkplug, a non-optimizing JavaScript compiler (en inglés)"
+    url: https://v8.dev/blog/sparkplug
+  - title: "V8: Maglev, V8's fastest optimizing JIT (en inglés)"
+    url: https://v8.dev/blog/maglev
+---
+
+import { Quiz } from "@/components/quiz";
+
+JavaScript se distribuye como código fuente: el navegador recibe texto y tiene que ejecutarlo enseguida. Compilarlo entero a código máquina antes de empezar sería demasiado lento; interpretarlo siempre, también. Los motores modernos, como **V8**, el de Chrome y [Node.js](/articulos/que-es-nodejs/), combinan las dos cosas: empiezan **interpretando** y **compilan sobre la marcha** (*just in time*, JIT) lo que más se usa.
+
+## Por niveles
+
+```mermaid
+flowchart LR
+	F["Código fuente"] --> B["Bytecode"]
+	B --> I["Ignition<br>intérprete"]
+	I -- "función templada" --> S["Sparkplug<br>compilación rápida"]
+	S -- "función caliente" --> M["Maglev<br>optimización rápida"]
+	M -- "muy caliente" --> T["TurboFan<br>optimización máxima"]
+	T -- "suposición rota" --> I
+```
+
+Según el blog de V8, todo el código JavaScript se compila primero a **bytecode**, el lenguaje de una [máquina virtual](/articulos/que-es-una-maquina-virtual-de-un-lenguaje/), y se ejecuta interpretándolo con **Ignition**. A medida que una función se ejecuta más veces, sube de nivel:
+
+| Nivel | Qué hace | Compromiso |
+| --- | --- | --- |
+| Ignition | Interpreta el bytecode | Arranca al instante, ejecuta despacio |
+| Sparkplug | Traduce el bytecode a código máquina sin optimizar | Compila muy rápido, ejecuta algo más rápido |
+| Maglev | Optimiza deprisa | Código "suficientemente bueno", generado rápido |
+| TurboFan | Optimiza a fondo | Código muy rápido, pero tarda en compilar |
+
+Compilar cuesta tiempo, así que solo compensa con el código que se ejecuta mucho: las funciones **calientes**. Optimizar a fondo una función que se llama una vez sería tirar el esfuerzo.
+
+## Optimizar a base de suposiciones
+
+JavaScript es [dinámico](/articulos/tipado-estatico-y-dinamico/): una variable puede contener un número ahora y un texto después. Eso impide generar código máquina rápido de antemano. La solución es **observar**: mientras interpreta, el motor recoge información sobre los tipos y la forma de los objetos que ve en cada operación. El blog de V8 explica que optimizar demasiado pronto no sirve, porque aún no hay información estable sobre la forma de los objetos.
+
+Con esa información, el compilador optimizador **apuesta**: "en esta suma, `a` y `b` siempre han sido números enteros". Genera código máquina para ese caso, con una comprobación barata al principio.
+
+## Cuando la apuesta falla: desoptimizar
+
+Si un día llega un texto donde siempre hubo números, la comprobación falla. El motor **desoptimiza**: descarta el código optimizado y vuelve al intérprete para esa función, que sigue funcionando correctamente, solo que más despacio.
+
+```js
+const traza = [];
+let llamadas = 0;
+let optimizada = false;
+
+function sumar(a, b) {
+	llamadas++;
+	if (optimizada && (typeof a !== "number" || typeof b !== "number")) {
+		optimizada = false;
+		traza.push(`desoptimizada en la llamada ${llamadas}`);
+	}
+	if (!optimizada && llamadas === 1000) {
+		optimizada = true;
+		traza.push("optimizada para números");
+	}
+	return a + b;
+}
+
+for (let i = 0; i < 1500; i++) sumar(i, 1);
+sumar("hola", "mundo");
+
+console.log(traza.join("; ")); // "optimizada para números; desoptimizada en la llamada 1501"
+```
+
+Es una simulación: un motor real decide con contadores y heurísticas mucho más finos, pero la idea es la misma. El resultado siempre es correcto; lo que cambia es la velocidad.
+
+## Qué significa para quien programa
+
+- **Código predecible es código rápido**: funciones que reciben siempre los mismos tipos y objetos con la misma forma, con las mismas propiedades en el mismo orden, se optimizan mejor.
+- **No hace falta obsesionarse**: los motores son muy buenos optimizando código normal. Las microoptimizaciones rara vez compensan frente a elegir un buen [algoritmo](/articulos/complejidad-algoritmica/).
+- **Medir antes de cambiar**: el rendimiento real depende del motor y de su versión.
+
+## Lo esencial
+
+- Un motor como V8 compila el JavaScript a bytecode y empieza interpretándolo.
+- Las funciones que se usan mucho se compilan a código máquina, en varios niveles de optimización.
+- El optimizador apuesta por los tipos que ha observado; si la apuesta falla, desoptimiza.
+- Funciones con tipos estables y objetos con forma constante se optimizan mejor.
