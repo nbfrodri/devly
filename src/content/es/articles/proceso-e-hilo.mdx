@@ -1,0 +1,71 @@
+---
+title: "Diferencias entre un proceso y un hilo"
+description: "Un proceso es un programa en ejecución con su propia memoria. Un hilo es una línea de ejecución dentro de un proceso, que comparte memoria con los demás hilos."
+level: intermedio
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - que-es-un-proceso
+  - hilos-y-concurrencia
+updated: 2026-10-13
+sources:
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, The Abstraction: The Process (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Concurrency: An Introduction (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **proceso** es un programa en ejecución, con su propia memoria y sus propios recursos, aislado de los demás. Un **hilo** es una línea de ejecución **dentro** de un proceso. Un proceso puede tener varios hilos, y todos comparten su memoria.
+
+Si un proceso es una cocina, los hilos son los cocineros que trabajan en ella: comparten los ingredientes y los fogones.
+
+## Proceso
+
+Como explica el artículo sobre [procesos](/articulos/que-es-un-proceso/), el sistema operativo da a cada uno:
+
+- Su propio espacio de [memoria](/articulos/memoria-virtual/), que los demás no pueden ver.
+- Sus archivos abiertos y sus conexiones.
+- Al menos un hilo de ejecución.
+
+El aislamiento es la clave: si un proceso falla, los demás siguen funcionando.
+
+## Hilo
+
+Un [hilo](/articulos/hilos-y-concurrencia/) tiene lo mínimo para ejecutar código por su cuenta:
+
+- Su propia posición en el programa: qué instrucción viene ahora.
+- Su propia pila de llamadas y sus registros.
+
+Todo lo demás, la memoria, las variables globales, los archivos, lo comparte con los otros hilos del mismo proceso.
+
+## Comparación
+
+| | Proceso | Hilo |
+| --- | --- | --- |
+| Memoria | Propia, aislada | Compartida con los hilos de su proceso |
+| Crear uno | Más costoso | Más ligero |
+| Cambiar de uno a otro | Más costoso | Más barato |
+| Comunicarse | Mecanismos del sistema operativo | Leyendo y escribiendo la misma memoria |
+| Si falla | Solo cae él | Puede arrastrar a todo el proceso |
+| Riesgo principal | Coste | [Condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) |
+
+## Cuándo usar cada uno
+
+**Varios procesos** cuando importa el aislamiento: un fallo en uno no debe afectar al resto. Los navegadores ejecutan cada pestaña en un proceso aparte, para que una página que se cuelga no tumbe las demás. Los servidores web lanzan a menudo varios procesos iguales.
+
+**Varios hilos** cuando las tareas necesitan compartir muchos datos y comunicarse con frecuencia: un programa que procesa una imagen repartiendo partes entre varios núcleos.
+
+Lo que se gana compartiendo memoria, se paga con el riesgo de que dos hilos la modifiquen a la vez. Con procesos, ese riesgo no existe, porque no comparten nada.
+
+## Una tercera opción
+
+Algunos entornos, como [Node.js](/articulos/que-es-nodejs/), atienden muchas tareas en un solo hilo, sin esperar a ninguna, mediante un bucle de eventos. Es concurrencia sin hilos: evita sus riesgos, a cambio de no aprovechar varios núcleos con un solo proceso.
+
+## Lo esencial
+
+- Un proceso es un programa en ejecución con memoria propia y aislada.
+- Un hilo es una línea de ejecución dentro de un proceso, que comparte su memoria.
+- Los hilos son más ligeros y se comunican más fácilmente, pero se pueden estorbar.
+- Los procesos son más costosos, pero un fallo en uno no afecta a los demás.

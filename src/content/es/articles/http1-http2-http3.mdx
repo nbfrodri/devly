@@ -1,0 +1,81 @@
+---
+title: "Diferencias entre HTTP/1.1, HTTP/2 y HTTP/3"
+description: "Las tres versiones transportan las mismas peticiones y respuestas. Cambia cómo viajan: HTTP/2 las multiplexa en una conexión y HTTP/3 abandona TCP por QUIC."
+level: intermedio
+kind: comparacion
+layer: redes
+prerequisites:
+  - que-es-http
+  - tcp-y-udp
+  - https-y-tls
+updated: 2026-10-13
+sources:
+  - title: "MDN: Evolución del protocolo HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Evolution_of_HTTP
+  - title: "RFC 9112: HTTP/1.1"
+    url: https://www.rfc-editor.org/info/rfc9112/
+  - title: "RFC 9113: HTTP/2"
+    url: https://www.rfc-editor.org/info/rfc9113/
+  - title: "RFC 9114: HTTP/3"
+    url: https://www.rfc-editor.org/info/rfc9114/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**HTTP/1.1**, **HTTP/2** y **HTTP/3** son versiones del protocolo de la web. Las tres tienen el mismo significado: los mismos métodos, cabeceras y [códigos de estado](/articulos/que-es-un-codigo-de-estado-http/). Lo que cambia es **cómo viajan** los mensajes por la red, y eso afecta mucho a la velocidad.
+
+## HTTP/1.1
+
+Publicado en 1997, fue la base de la web durante casi veinte años.
+
+- Mensajes en **texto**, legibles.
+- Sobre [TCP](/articulos/tcp-y-udp/).
+- Una conexión atiende **una petición cada vez**: la siguiente espera a que llegue la respuesta anterior.
+
+Una página moderna pide decenas de archivos. Para no esperar uno tras otro, los navegadores abren varias conexiones en paralelo, unas seis por dominio, lo que cuesta tiempo y recursos.
+
+## HTTP/2
+
+Publicado en 2015, ataca ese problema.
+
+- Mensajes en **binario**, más compactos y fáciles de procesar.
+- **Multiplexación**: muchas peticiones y respuestas a la vez por **una sola conexión**, troceadas e intercaladas.
+- **Compresión de cabeceras**, que se repiten mucho entre peticiones.
+
+Ya no hace falta abrir varias conexiones.
+
+### El problema que queda
+
+Debajo sigue TCP, que entrega los datos en orden. Si se pierde un paquete, TCP retiene todo lo que llega detrás hasta recuperarlo, aunque pertenezca a otras peticiones. Una pérdida bloquea a todas. Se llama **bloqueo de cabeza de línea**, y en redes con pérdidas, como una red móvil, HTTP/2 puede ir incluso peor que HTTP/1.1.
+
+## HTTP/3
+
+Publicado en 2022, cambia la base: abandona TCP y usa **QUIC**, un protocolo que funciona sobre [UDP](/articulos/tcp-y-udp/).
+
+- Cada flujo es **independiente**: un paquete perdido solo retrasa su propia petición.
+- El cifrado [TLS](/articulos/https-y-tls/) está integrado, y establecer la conexión exige menos viajes de ida y vuelta.
+- Las conexiones **sobreviven a un cambio de red**: al pasar de la wifi a los datos móviles, no se corta.
+
+## Comparación
+
+| | HTTP/1.1 | HTTP/2 | HTTP/3 |
+| --- | --- | --- | --- |
+| Año | 1997 | 2015 | 2022 |
+| Formato | Texto | Binario | Binario |
+| Transporte | TCP | TCP | QUIC sobre UDP |
+| Peticiones por conexión | Una cada vez | Muchas a la vez | Muchas a la vez |
+| Una pérdida de paquete | Retrasa esa conexión | Retrasa todas las peticiones | Solo retrasa la suya |
+| Cifrado | Opcional | En la práctica, siempre | Integrado, obligatorio |
+
+## En la práctica
+
+No hay que elegir: el navegador y el servidor negocian la mejor versión que ambos admiten, y la aplicación no cambia. Los servidores web, los [proxies inversos](/articulos/proxy-y-proxy-inverso/) y las [CDN](/articulos/que-es-una-cdn/) suelen ofrecer las tres.
+
+Algunas técnicas de la época de HTTP/1.1, como juntar muchos archivos pequeños en uno para ahorrar peticiones, pierden sentido con las versiones nuevas. Ayudan a la [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/), que es lo que más limita a la web.
+
+## Lo esencial
+
+- Las tres versiones tienen el mismo significado; cambia cómo viajan los mensajes.
+- HTTP/1.1 atiende una petición cada vez por conexión.
+- HTTP/2 multiplexa muchas peticiones en una conexión, pero una pérdida en TCP las bloquea a todas.
+- HTTP/3 usa QUIC sobre UDP, con flujos independientes y cifrado integrado.

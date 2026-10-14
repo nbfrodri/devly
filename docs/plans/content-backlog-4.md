@@ -80,22 +80,22 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 
 ## Comparaciones
 
-- [ ] Diferencias entre compilar y transpilar
-- [ ] Diferencias entre un proceso y un hilo
-- [ ] Diferencias entre la pila y el montículo de memoria
-- [ ] Diferencias entre paso por valor y paso por referencia
-- [ ] Diferencias entre programación imperativa y declarativa
-- [ ] Diferencias entre herencia y composición
+- [x] Diferencias entre compilar y transpilar
+- [x] Diferencias entre un proceso y un hilo
+- [x] Diferencias entre la pila y el montículo de memoria
+- [x] Diferencias entre paso por valor y paso por referencia
+- [x] Diferencias entre programación imperativa y declarativa
+- [x] Diferencias entre herencia y composición
 - [ ] Diferencias entre una clase abstracta y una interfaz
 - [ ] Diferencias entre recursión e iteración
 - [ ] Diferencias entre un array y una lista enlazada
 - [ ] Diferencias entre una tabla hash y un árbol de búsqueda
 - [ ] Diferencias entre búsqueda en anchura y en profundidad
-- [ ] Diferencias entre una biblioteca y un framework
-- [ ] Diferencias entre GET y POST
+- [x] Diferencias entre una biblioteca y un framework
+- [x] Diferencias entre GET y POST
 - [ ] Diferencias entre cookies y localStorage
 - [ ] Diferencias entre autenticación por sesión y por clave de API
-- [ ] Diferencias entre HTTP/1.1, HTTP/2 y HTTP/3
+- [x] Diferencias entre HTTP/1.1, HTTP/2 y HTTP/3
 - [ ] Diferencias entre polling, long polling, Server-Sent Events y WebSockets
 - [ ] Diferencias entre JavaScript y TypeScript
 - [ ] Diferencias entre Git y GitHub

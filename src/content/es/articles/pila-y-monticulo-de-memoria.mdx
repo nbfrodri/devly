@@ -1,0 +1,94 @@
+---
+title: "Diferencias entre la pila y el montículo de memoria"
+description: "Un programa guarda sus datos en dos zonas: la pila, rápida y ordenada, para lo que dura una llamada a función, y el montículo, para lo que debe vivir más."
+level: intermedio
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - memoria-virtual
+  - funciones
+  - recursividad
+updated: 2026-10-13
+sources:
+  - title: "MDN: Gestión de memoria"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Memory_management
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Interlude: Memory API (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-api.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un programa en ejecución guarda sus datos en dos zonas de memoria principales. La **pila**, en inglés *stack*, guarda lo que pertenece a cada llamada a una función, y se libera sola cuando la función termina. El **montículo**, en inglés *heap*, guarda lo que debe sobrevivir más allá de una llamada, o cuyo tamaño no se conoce de antemano.
+
+## La pila
+
+Funciona como una pila de platos, la [estructura de datos](/articulos/pilas-y-colas/): lo último que entra es lo primero que sale.
+
+Cada vez que se llama a una función, se coloca encima un **marco** con sus variables locales y el punto al que debe volver. Cuando la función termina, su marco se retira.
+
+- **Muy rápida**: reservar y liberar es mover un indicador.
+- **Automática**: no hay que liberar nada a mano.
+- **Pequeña** y de tamaño limitado.
+
+Si se apilan demasiadas llamadas, por ejemplo con una [recursión](/articulos/recursividad/) sin fin, la pila se agota:
+
+```js
+function infinita() {
+	return infinita();
+}
+
+try {
+	infinita();
+} catch (error) {
+	console.log(error.name); // "RangeError"
+}
+```
+
+Es el famoso **desbordamiento de pila**, *stack overflow*, que da nombre a un conocido sitio de preguntas de programación.
+
+## El montículo
+
+Es una zona grande, donde se reserva espacio en cualquier orden y se libera cuando ya no hace falta.
+
+- **Flexible**: tamaños que se deciden al ejecutar, datos que viven lo que haga falta.
+- **Más lento**: hay que buscar hueco, y se fragmenta.
+- **Hay que liberarlo**: a mano, o con un recolector de basura.
+
+```js
+function crearUsuario() {
+	return { nombre: "Ana" };
+}
+
+const usuario = crearUsuario();
+console.log(usuario.nombre); // "Ana"
+```
+
+El objeto se crea dentro de la función, pero sigue existiendo después: vive en el montículo. Lo que la variable `usuario` guarda es una **referencia** a él.
+
+## Comparación
+
+| | Pila | Montículo |
+| --- | --- | --- |
+| Qué guarda | Variables locales, llamadas en curso | Objetos, datos de tamaño variable |
+| Cuánto viven | Lo que dura la función | Lo que haga falta |
+| Velocidad | Muy rápida | Más lenta |
+| Tamaño | Pequeño, fijo | Grande |
+| Liberación | Automática al volver | Manual o por recolector de basura |
+| Error típico | Desbordamiento de pila | Fugas de memoria |
+
+## Quién libera el montículo
+
+- En **C**, el programador reserva y libera a mano. Olvidarse provoca **fugas de memoria**; liberar dos veces o usar algo ya liberado provoca fallos graves y vulnerabilidades.
+- En **JavaScript, Java o Python**, un **recolector de basura** libera lo que ya nadie puede alcanzar.
+- **Rust** sigue un tercer camino: el compilador comprueba quién es el dueño de cada dato y lo libera en el momento exacto, sin recolector.
+
+## Con qué no confundirlos
+
+El montículo de memoria no tiene relación con la estructura de datos llamada [montículo](/articulos/monticulos-y-colas-de-prioridad/): comparten nombre por coincidencia.
+
+## Lo esencial
+
+- La pila guarda los datos de cada llamada a función y se libera sola al volver.
+- El montículo guarda lo que debe vivir más o tiene tamaño variable.
+- La pila es rápida y pequeña; el montículo, flexible y más lento.
+- Demasiadas llamadas desbordan la pila; olvidar liberar el montículo provoca fugas.

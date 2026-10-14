@@ -1,0 +1,84 @@
+---
+title: "Diferencias entre GET y POST"
+description: "GET pide datos sin modificar nada en el servidor. POST envía datos para que el servidor haga algo con ellos, como crear un recurso."
+level: basico
+kind: comparacion
+layer: redes
+prerequisites:
+  - que-es-http
+  - que-es-rest
+updated: 2026-10-13
+sources:
+  - title: "MDN: GET"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Methods/GET
+  - title: "MDN: POST"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Methods/POST
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**GET** y **POST** son los dos métodos más usados de [HTTP](/articulos/que-es-http/). **GET** sirve para **obtener** un recurso, y no debe modificar nada en el servidor. **POST** sirve para **enviar** datos al servidor para que los procese: crear un pedido, enviar un formulario, subir un archivo.
+
+## GET
+
+Pide algo. Los parámetros van en la [URL](/articulos/que-es-una-url/), en la parte de la consulta:
+
+```js
+const parametros = new URLSearchParams({ q: "gatos", pagina: "2" });
+
+console.log(`/buscar?${parametros}`); // "/buscar?q=gatos&pagina=2"
+```
+
+Es lo que hace el navegador al escribir una dirección o pulsar un enlace.
+
+## POST
+
+Envía datos en el **cuerpo** de la petición, no en la URL:
+
+```http
+POST /pedidos HTTP/1.1
+Content-Type: application/json
+
+{"producto": 42, "cantidad": 2}
+```
+
+Es lo que hace un formulario de registro o un botón de compra.
+
+## Comparación
+
+| | GET | POST |
+| --- | --- | --- |
+| Propósito | Obtener | Enviar para procesar |
+| Datos | En la URL | En el cuerpo |
+| Modifica el servidor | No debería | Normalmente sí |
+| Seguro, en el sentido de HTTP | Sí | No |
+| [Idempotente](/articulos/atomicidad-e-idempotencia/) | Sí | No |
+| Se puede guardar en caché | Sí | Normalmente no |
+| Se puede guardar como marcador | Sí | No |
+| Queda en el historial y los registros | Sí, con sus parámetros | Solo la dirección |
+
+## Seguro e idempotente
+
+La especificación de HTTP define dos propiedades que explican el comportamiento de los navegadores:
+
+- **Seguro**: no cambia nada en el servidor. GET lo es. Por eso un navegador o un buscador pueden pedir páginas por su cuenta, por ejemplo para precargarlas, sin causar efectos.
+- **Idempotente**: repetirlo da el mismo resultado que hacerlo una vez. GET lo es; POST no. Por eso, al recargar una página que se obtuvo con POST, el navegador avisa de que se volverá a enviar el formulario: podría hacerse el pedido dos veces.
+
+## Errores habituales
+
+- **Modificar datos con GET.** Un enlace como `/borrar?id=5` puede activarlo un rastreador, una precarga o un atacante, como en un ataque [CSRF](/articulos/csrf/).
+- **Enviar datos sensibles con GET.** La URL queda en el historial, en los registros del servidor y a veces en cabeceras que se envían a otros sitios. Las contraseñas van siempre en el cuerpo de un POST.
+- **Creer que POST es seguro por ocultar los datos.** No los cifra: solo los saca de la URL. La protección la da [HTTPS](/articulos/https-y-tls/).
+
+## Otros métodos
+
+En una API [REST](/articulos/que-es-rest/) se usan también PUT y PATCH para modificar, y DELETE para borrar.
+
+## Lo esencial
+
+- GET obtiene datos y no debe modificar nada; POST envía datos para procesarlos.
+- GET lleva los parámetros en la URL; POST, en el cuerpo.
+- GET es seguro e idempotente; POST no, y repetirlo puede duplicar efectos.
+- Ni GET ni POST cifran nada: para eso hace falta HTTPS.

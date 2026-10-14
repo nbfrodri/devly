@@ -1,0 +1,97 @@
+---
+title: "Diferencias entre herencia y composición"
+description: "La herencia reutiliza código haciendo que una clase sea un tipo de otra. La composición lo hace combinando objetos que colaboran. Se suele preferir la segunda."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - programacion-orientada-a-objetos
+  - que-es-una-clase
+updated: 2026-10-13
+sources:
+  - title: "React (documentación anterior): Composition vs Inheritance (en inglés)"
+    url: https://legacy.reactjs.org/docs/composition-vs-inheritance.html
+  - title: "MDN: Clases"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Classes
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **herencia** y la **composición** son dos formas de reutilizar código en la [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/). Con herencia, una [clase](/articulos/que-es-una-clase/) **es un tipo de** otra y recibe su comportamiento. Con composición, un objeto **tiene** otros objetos y les delega parte del trabajo.
+
+Se resume en dos preguntas: ¿"es un"? herencia. ¿"tiene un"? composición.
+
+## Herencia
+
+```js
+class Vehiculo {
+	arrancar() {
+		return "arrancado";
+	}
+}
+
+class Coche extends Vehiculo {
+	tocarClaxon() {
+		return "piii";
+	}
+}
+
+const coche = new Coche();
+console.log(coche.arrancar()); // "arrancado"
+```
+
+`Coche` hereda `arrancar` de `Vehiculo` sin escribirlo de nuevo.
+
+## Composición
+
+```js
+const motor = { arrancar: () => "arrancado" };
+const bocina = { sonar: () => "piii" };
+
+function crearCoche() {
+	return {
+		arrancar: () => motor.arrancar(),
+		tocarClaxon: () => bocina.sonar(),
+	};
+}
+
+console.log(crearCoche().tocarClaxon()); // "piii"
+```
+
+El coche no es un tipo de motor: **tiene** un motor y una bocina, y les delega.
+
+## El problema de la herencia
+
+Funciona bien mientras la jerarquía es sencilla. Con el tiempo, aparecen casos que no encajan:
+
+- Un `Vehiculo` con `arrancar`. ¿Y una bicicleta, que no arranca?
+- Un `CocheElectrico` y un `CocheAutonomo`. ¿Y un coche eléctrico y autónomo? No se puede heredar de los dos en muchos lenguajes.
+
+Las jerarquías se vuelven profundas y rígidas. Un cambio en la clase base afecta a todas las que heredan, a veces de formas inesperadas. Se llama el problema de la **clase base frágil**.
+
+Con composición, se combinan las piezas necesarias: un motor eléctrico y un sistema de conducción automática. Sin jerarquía.
+
+## Comparación
+
+| | Herencia | Composición |
+| --- | --- | --- |
+| Relación | "Es un" | "Tiene un" |
+| Se decide | Al escribir el código | Se puede cambiar al ejecutar |
+| Acoplamiento | Alto: la clase hija depende de los detalles de la base | Bajo: se depende solo de lo que ofrece cada pieza |
+| Flexibilidad | Baja, una jerarquía fija | Alta, se combinan piezas |
+| Riesgo | Jerarquías profundas y frágiles | Más piezas que conectar |
+
+## Preferir la composición
+
+Es un consejo clásico del diseño orientado a objetos: **preferir la composición a la herencia**. No porque la herencia sea mala, sino porque se usa de más.
+
+La herencia encaja cuando la relación "es un" es real y estable, y la clase hija puede sustituir a la base en cualquier sitio sin sorpresas, como pide uno de los [principios SOLID](/articulos/principios-solid/).
+
+[React](/articulos/que-es-react/), por ejemplo, desaconseja la herencia entre componentes: se construye todo combinando unos dentro de otros.
+
+## Lo esencial
+
+- La herencia expresa "es un"; la composición, "tiene un".
+- La herencia reutiliza por jerarquía; la composición, combinando objetos.
+- Las jerarquías profundas se vuelven rígidas y frágiles.
+- Se suele preferir la composición, y reservar la herencia para relaciones claras y estables.

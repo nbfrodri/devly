@@ -1,0 +1,76 @@
+---
+title: "Diferencias entre una biblioteca y un framework"
+description: "Con una biblioteca, tu código la llama cuando la necesita. Con un framework, el framework llama a tu código: él marca la estructura."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - funciones
+  - patron-mvc
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Inversion of Control (en inglés)"
+    url: https://martinfowler.com/bliki/InversionOfControl.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **biblioteca** y un **framework**, o marco de trabajo, son código ajeno que se usa para no escribirlo todo desde cero. La diferencia está en **quién manda**. Tu código llama a una biblioteca cuando la necesita. Un framework, en cambio, llama a tu código: él define la estructura de la aplicación y tú rellenas las partes.
+
+## Biblioteca
+
+Es una colección de funciones que resuelven problemas concretos: formatear fechas, hacer peticiones, procesar imágenes. Tu programa decide cuándo usarlas.
+
+```js
+const formato = new Intl.DateTimeFormat("es", { month: "long" });
+
+console.log(formato.format(new Date(2026, 9, 14))); // "octubre"
+```
+
+El programa tiene el control. Llama a la función, recibe el resultado y sigue.
+
+## Framework
+
+Proporciona el esqueleto de la aplicación. Tú escribes funciones, y el framework decide **cuándo** se ejecutan: al llegar una petición, al pulsar un botón, al cambiar un dato.
+
+```js
+const rutas = {};
+const alPedir = (ruta, manejador) => {
+	rutas[ruta] = manejador;
+};
+
+alPedir("/hola", () => "Hola desde mi código");
+
+console.log(rutas["/hola"]()); // "Hola desde mi código"
+```
+
+En esta simulación mínima, tu código solo registra lo que debe pasar en una ruta. Quien lo invoca, cuando llega la petición, es el framework.
+
+## La inversión de control
+
+Esta diferencia tiene nombre: **inversión de control**. Martin Fowler la considera la característica que define a un framework, y se resume en una frase conocida como el principio de Hollywood: "no nos llame, ya le llamaremos".
+
+| | Biblioteca | Framework |
+| --- | --- | --- |
+| Quién llama a quién | Tu código a la biblioteca | El framework a tu código |
+| Estructura de la aplicación | La decides tú | La impone el framework |
+| Alcance | Un problema concreto | La aplicación entera |
+| Sustituirlo | Relativamente fácil | Difícil: todo está construido a su alrededor |
+| Ejemplos | Una biblioteca de fechas, de gráficos | [Next.js](/articulos/que-es-nextjs/), Django, Spring |
+
+## Ventajas e inconvenientes
+
+Un **framework** da mucho hecho: estructura, convenciones, soluciones a problemas comunes. Un equipo nuevo sabe dónde está cada cosa. A cambio, hay que hacerlo a su manera, y salir de él es costoso.
+
+Una **biblioteca** da libertad y se cambia con facilidad, pero las decisiones de estructura son tuyas.
+
+## Casos dudosos
+
+[React](/articulos/que-es-react/) se presenta como biblioteca, porque se ocupa solo de la interfaz. Pero en cuanto se usan sus componentes, es React quien decide cuándo ejecutarlos: tiene algo de framework. La frontera no siempre es nítida.
+
+## Lo esencial
+
+- Una biblioteca la llama tu código; un framework llama a tu código.
+- Esa diferencia se llama inversión de control.
+- Un framework impone la estructura de la aplicación; una biblioteca resuelve problemas concretos.
+- Un framework da más hecho y ata más; una biblioteca da más libertad.

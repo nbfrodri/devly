@@ -1,0 +1,83 @@
+---
+title: "Diferencias entre programación imperativa y declarativa"
+description: "La programación imperativa dice cómo hacer algo, paso a paso. La declarativa dice qué resultado se quiere, y deja el cómo al lenguaje o a la herramienta."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - programacion-funcional
+  - que-es-sql
+updated: 2026-10-13
+sources:
+  - title: "React: Reaccionar a la entrada con el estado"
+    url: https://es.react.dev/learn/reacting-to-input-with-state
+  - title: "MDN: Funciones"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
+---
+
+import { Quiz } from "@/components/quiz";
+
+La programación **imperativa** describe **cómo** conseguir un resultado: una secuencia de órdenes que cambian el estado del programa paso a paso. La programación **declarativa** describe **qué** resultado se quiere, y deja que el lenguaje, la biblioteca o la base de datos decidan cómo obtenerlo.
+
+Una comparación: imperativo es dar indicaciones a un taxista, gira aquí, sigue recto, para en la esquina. Declarativo es darle la dirección.
+
+## El mismo problema, de las dos formas
+
+Sumar los números pares de una lista.
+
+Imperativo:
+
+```js
+const numeros = [1, 2, 3, 4];
+let suma = 0;
+
+for (let i = 0; i < numeros.length; i++) {
+	if (numeros[i] % 2 === 0) {
+		suma = suma + numeros[i];
+	}
+}
+
+console.log(suma); // 6
+```
+
+Declarativo:
+
+```js
+const numeros = [1, 2, 3, 4];
+
+const suma = numeros.filter((n) => n % 2 === 0).reduce((a, b) => a + b, 0);
+
+console.log(suma); // 6
+```
+
+El primero maneja un índice, un contador y una variable que va cambiando. El segundo dice: quédate con los pares y súmalos.
+
+## Ejemplos de lo declarativo
+
+- **[SQL](/articulos/que-es-sql/)**: `SELECT nombre FROM clientes WHERE ciudad = 'Madrid'` no dice cómo recorrer la tabla ni qué [índice](/articulos/indices-de-bases-de-datos/) usar. Eso lo decide la base de datos.
+- **[HTML](/articulos/que-es-html/) y [CSS](/articulos/que-es-css/)**: se describe qué hay en la página y qué aspecto tiene, no cómo dibujarlo.
+- **[React](/articulos/que-es-react/)**: se describe cómo debe verse la interfaz para cada estado, y React calcula qué cambiar en el [DOM](/articulos/el-dom/).
+- **[Infraestructura como código](/articulos/infraestructura-como-codigo/)**: se describe qué servidores debe haber, y la herramienta los crea.
+
+## Comparación
+
+| | Imperativa | Declarativa |
+| --- | --- | --- |
+| Describe | Cómo, paso a paso | Qué resultado |
+| Estado | Se modifica sobre la marcha | Se evita o se oculta |
+| Control | Total, sobre cada paso | Delegado en la herramienta |
+| Legibilidad | Hay que seguir los pasos | Se lee la intención |
+| Rendimiento | Se puede afinar a mano | Depende de la herramienta |
+
+## No es todo o nada
+
+Lo declarativo está construido sobre lo imperativo: alguien escribió, de forma imperativa, el motor de la base de datos que ejecuta tu consulta. Y la mayoría de los programas mezclan los dos estilos.
+
+La [programación funcional](/articulos/programacion-funcional/) y la [programación lógica](/articulos/programacion-logica/) son paradigmas declarativos; la [orientada a objetos](/articulos/programacion-orientada-a-objetos/) suele ser imperativa.
+
+## Lo esencial
+
+- La programación imperativa dice cómo hacer algo, con pasos que cambian el estado.
+- La declarativa dice qué resultado se quiere.
+- SQL, HTML, CSS y React son ejemplos de enfoque declarativo.
+- Lo declarativo es más legible y delega el cómo; lo imperativo da más control.

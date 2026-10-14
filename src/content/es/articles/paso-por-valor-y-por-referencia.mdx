@@ -1,0 +1,87 @@
+---
+title: "Diferencias entre paso por valor y paso por referencia"
+description: "Al pasar un argumento a una función, se puede entregar una copia del valor o un acceso al original. Cuál de las dos ocurre explica muchos errores."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - funciones
+  - inmutabilidad
+updated: 2026-10-13
+sources:
+  - title: "MDN: Funciones"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
+---
+
+import { Quiz } from "@/components/quiz";
+
+Cuando se llama a una [función](/articulos/funciones/) con un argumento, hay dos formas de entregárselo. Con **paso por valor**, la función recibe una **copia**: lo que haga con ella no afecta al original. Con **paso por referencia**, recibe **acceso al original**: si lo cambia, el cambio se ve fuera.
+
+## Paso por valor
+
+```js
+function duplicar(numero) {
+	numero = numero * 2;
+	return numero;
+}
+
+const x = 5;
+duplicar(x);
+
+console.log(x); // 5
+```
+
+La función trabaja con una copia. `x` sigue valiendo 5.
+
+## Paso por referencia
+
+En lenguajes como C++ se puede pasar la propia variable. Si la función la modifica, se modifica la del llamador. Es como dar las llaves de tu casa en lugar de una foto de ella.
+
+## El caso de JavaScript
+
+JavaScript, como Python o Java, hace algo intermedio que confunde: **siempre pasa por valor, pero con los objetos ese valor es una referencia**.
+
+```js
+function cambiarPropiedad(objeto) {
+	objeto.valor = 99;
+}
+
+function reasignar(objeto) {
+	objeto = { valor: 5 };
+}
+
+const datos = { valor: 1 };
+
+cambiarPropiedad(datos);
+console.log(datos.valor); // 99
+
+reasignar(datos);
+console.log(datos.valor); // 99
+```
+
+- `cambiarPropiedad` recibe una copia de la referencia, que apunta al **mismo objeto**. Al modificar una propiedad, se modifica el original.
+- `reasignar` hace que su copia apunte a un objeto nuevo. El original no se entera.
+
+A este comportamiento se le llama a veces **paso por compartición**.
+
+## Comparación
+
+| | Por valor | Por referencia | JavaScript con objetos |
+| --- | --- | --- | --- |
+| Qué recibe la función | Una copia | El original | Una copia de la referencia |
+| Modificar el contenido | No afecta fuera | Afecta fuera | Afecta fuera |
+| Reasignar la variable | No afecta fuera | Afecta fuera | No afecta fuera |
+| Coste con datos grandes | Copiarlos | Nulo | Nulo |
+
+## Por qué importa
+
+El error habitual es una función que modifica sin querer el objeto o el array que recibe, y el cambio aparece en otra parte del programa. Por ejemplo, ordenar con `sort` dentro de una función, que reordena el array del llamador.
+
+La defensa es la [inmutabilidad](/articulos/inmutabilidad/): no modificar lo que se recibe, sino devolver una copia nueva con los cambios.
+
+## Lo esencial
+
+- Por valor, la función recibe una copia; por referencia, el original.
+- JavaScript pasa siempre por valor, pero el valor de un objeto es una referencia a él.
+- Modificar una propiedad del objeto recibido afecta al original; reasignar la variable, no.
+- Para evitar sorpresas, no se modifica lo que se recibe.
