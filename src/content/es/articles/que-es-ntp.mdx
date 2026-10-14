@@ -1,0 +1,77 @@
+---
+title: "¿Qué es NTP? Cómo se sincronizan los relojes"
+description: "NTP mantiene en hora los relojes de los ordenadores a través de internet, compensando lo que tardan los mensajes en viajar. Sin relojes sincronizados fallan certificados, registros y sistemas distribuidos."
+level: basico
+layer: redes
+prerequisites:
+  - tcp-y-udp
+  - consenso-distribuido
+updated: 2026-10-13
+sources:
+  - title: "RFC 5905: Network Time Protocol Version 4 (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc5905
+  - title: "NTP.org: Documentation (en inglés)"
+    url: https://www.ntp.org/documentation/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**NTP**, protocolo de tiempo de red, sincroniza los relojes de los ordenadores a través de internet. Tu equipo y tu móvil lo usan sin que lo notes para mantener la hora correcta. Funciona sobre [UDP](/articulos/tcp-y-udp/), en el puerto 123.
+
+## Por qué hace falta
+
+Los relojes de los ordenadores se desvían: unos segundos al día no es raro. Y mucho depende de la hora:
+
+- Los [certificados](/articulos/que-es-un-certificado-digital/) tienen fecha de caducidad; con la hora mal, [HTTPS](/articulos/https-y-tls/) falla.
+- Los [tokens](/articulos/que-es-un-jwt/) y los códigos de [doble factor](/articulos/que-es-la-autenticacion-en-dos-factores/) dependen del tiempo.
+- Los registros de varios servidores son imposibles de ordenar si cada uno tiene su hora.
+- Los [sistemas distribuidos](/articulos/consenso-distribuido/) necesitan saber qué ocurrió antes.
+
+## El truco: medir el viaje
+
+El problema de pedir la hora por la red es que el mensaje tarda en llegar. NTP lo resuelve anotando **cuatro marcas de tiempo**:
+
+1. T1: el cliente envía la petición (según su reloj).
+2. T2: el servidor la recibe (según el suyo).
+3. T3: el servidor responde.
+4. T4: el cliente recibe la respuesta.
+
+Con ellas, el estándar calcula el **desfase** del reloj del cliente y el **retardo** de ida y vuelta, suponiendo que la ida y la vuelta tardan lo mismo:
+
+```js
+const T1 = 100.0; // cliente envía
+const T2 = 105.02; // servidor recibe
+const T3 = 105.021; // servidor responde
+const T4 = 100.041; // cliente recibe
+
+const desfase = ((T2 - T1) + (T3 - T4)) / 2;
+const retardo = (T4 - T1) - (T3 - T2);
+
+console.log(desfase.toFixed(3), retardo.toFixed(3)); // 5.000 0.040
+```
+
+El reloj del cliente va 5 segundos atrasado, y el viaje de ida y vuelta duró 40 milisegundos. El cliente no salta de golpe a la hora correcta: la ajusta poco a poco, acelerando o frenando su reloj, para no provocar saltos que confundan a los programas.
+
+## Los estratos
+
+NTP organiza los servidores en una jerarquía de **estratos**, siguiendo una convención de la industria telefónica:
+
+| Estrato | Qué es |
+| --- | --- |
+| 0 | Relojes de referencia: atómicos, GPS, Galileo |
+| 1 | Servidores conectados directamente a un reloj de referencia, sincronizados con la hora universal coordinada |
+| 2 | Servidores que se sincronizan con los de estrato 1 |
+| 3 y siguientes | Cada nivel, con el anterior |
+
+Según el estándar, a medida que aumenta el estrato, la precisión empeora según el camino de red y la estabilidad de cada reloj. Un equipo doméstico suele sincronizarse con servidores de estrato 2 o 3, con una precisión de milisegundos, más que suficiente.
+
+## Por qué UDP
+
+El propio estándar explica que una entrega fiable como la de TCP empeoraría NTP: los reintentos aumentarían el retardo y estropearían la medida. Para medir tiempos, es mejor perder un paquete que recibirlo tarde.
+
+## Lo esencial
+
+- NTP sincroniza los relojes de los equipos por la red.
+- Con cuatro marcas de tiempo calcula el desfase y el retardo del viaje.
+- Los servidores se organizan en estratos, desde los relojes de referencia.
+- Funciona sobre UDP porque los reintentos de TCP falsearían la medida.

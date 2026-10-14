@@ -12,3 +12,4 @@ steps:
   - consistencia-eventual
   - consenso-distribuido
   - latencia-de-cola
+  - publicador-suscriptor

@@ -10,3 +10,4 @@ steps:
   - que-es-dns
   - que-es-http
   - como-viaja-un-paquete-por-internet
+  - que-es-ntp

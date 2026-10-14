@@ -121,10 +121,10 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 ## Curiosidades
 
 - [x] ¿Por qué Unix se llama así?
-- [ ] La ley de Conway: los sistemas copian la organización que los crea
+- [x] La ley de Conway: los sistemas copian la organización que los crea
 - [x] Margaret Hamilton y el software del Apolo
 - [x] ¿Qué fue Deep Blue?
 - [x] Colossus y el descifrado en Bletchley Park
-- [ ] ¿De dónde salen los emojis?
+- [x] ¿De dónde salen los emojis?
 - [x] ¿Por qué Linux se llama Linux?
 - [x] El primer virus informático

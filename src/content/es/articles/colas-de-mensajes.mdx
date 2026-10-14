@@ -89,7 +89,7 @@ Cada mensaje lo procesa **un solo** consumidor. Si hay varios, se lo reparten. S
 
 ### Publicación y suscripción
 
-Cada mensaje llega a **todos** los que se han suscrito. El productor publica "se ha creado un pedido" y el servicio de facturas, el de correo y el de almacén reciben cada uno su copia.
+Cada mensaje llega a **todos** los que se han suscrito, como detalla [publicador/suscriptor](/articulos/publicador-suscriptor/). El productor publica "se ha creado un pedido" y el servicio de facturas, el de correo y el de almacén reciben cada uno su copia.
 
 Lo valioso es que se puede añadir un cuarto servicio sin tocar el que publica.
 

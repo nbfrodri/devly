@@ -1,0 +1,58 @@
+---
+title: "¿De dónde salen los emojis?"
+description: "Los emojis nacieron en los móviles japoneses en 1999. Cada operador tenía los suyos, incompatibles, hasta que entraron en Unicode y se volvieron universales."
+level: basico
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - codificacion-de-caracteres
+updated: 2026-10-13
+sources:
+  - title: "Unicode Technical Standard #51: Unicode Emoji (en inglés)"
+    url: https://www.unicode.org/reports/tr51/
+  - title: "Unicode: Emoji and Pictographs FAQ (en inglés)"
+    url: https://www.unicode.org/faq/emoji_dingbats.html
+  - title: "Unicode 6.0.0 (en inglés)"
+    url: https://www.unicode.org/versions/Unicode6.0.0/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Los **emojis** son caracteres con forma de dibujo: caras, comida, animales, banderas. Hoy los usan miles de millones de personas cada día, pero nacieron en un sitio muy concreto: los **teléfonos móviles japoneses**.
+
+## El nombre
+
+No viene de "emoción", aunque lo parezca. Según Unicode, la palabra es japonesa: 絵, *e*, significa dibujo, y 文字, *moji*, carácter escrito. Un emoji es un "carácter dibujo".
+
+## Un problema de compatibilidad
+
+Según el estándar de emojis de Unicode, estuvieron disponibles por primera vez en **1999** en los móviles japoneses. Se hicieron muy populares, pero cada operador de telefonía creó su propio conjunto, en parte coincidente, y cada fabricante los codificaba con sus propias extensiones, incompatibles entre sí.
+
+El resultado: un emoji enviado desde un móvil de un operador podía llegar como otro símbolo, o como un signo de sustitución, al de otro operador. Los fabricantes crearon tablas de conversión, pero los caracteres se corrompían o se perdían con facilidad. El problema creció cuando empresas de fuera de Japón empezaron a intercambiar correo con los operadores japoneses: no había forma de representar esos caracteres en Unicode, la base del texto en todos los programas modernos.
+
+## La entrada en Unicode
+
+Hubo una propuesta temprana, en el año 2000, para incluirlos en Unicode, pero entonces no estaba claro que fueran a usarse mucho, ni los operadores japoneses la apoyaban. Años después, empresas como Google empezaron a trabajar en su conversión, y en **2010**, la versión 6.0 de Unicode añadió más de mil símbolos nuevos, encabezados por los emojis, especialmente importantes para los móviles.
+
+Desde entonces, un emoji es un carácter Unicode más, o una secuencia de varios, como explica [codificación de caracteres](/articulos/codificacion-de-caracteres/):
+
+```js
+const cara = "😀";
+
+console.log(cara.codePointAt(0).toString(16)); // 1f600
+console.log(cara.length); // 2
+console.log([...cara].length); // 1
+```
+
+El emoji es el carácter U+1F600. En JavaScript, `length` dice 2, porque las cadenas se guardan en UTF-16 y este carácter ocupa dos unidades. Contar caracteres de verdad exige recorrer la cadena por puntos de código, y algunos emojis, como las familias o los tonos de piel, combinan varios.
+
+## Cómo se crean hoy
+
+Unicode tiene más de 3600 emojis. El consorcio acepta propuestas del público, y un subcomité las revisa con criterios como el uso previsto o si ya existe algo parecido. Cada sistema operativo dibuja los suyos con su propio estilo: el carácter es el mismo, el dibujo cambia.
+
+## Lo esencial
+
+- Los emojis aparecieron en 1999 en los móviles japoneses; el nombre significa "carácter dibujo".
+- Cada operador tenía los suyos, incompatibles entre sí.
+- En 2010, Unicode 6.0 los incorporó y se volvieron universales.
+- Son caracteres Unicode, a menudo varios combinados, lo que complica contarlos en el código.

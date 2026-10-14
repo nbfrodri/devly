@@ -6,6 +6,7 @@ steps:
   - tipos-de-redes
   - capa-de-enlace
   - que-es-arp
+  - que-es-dhcp
   - enrutamiento
   - puerta-de-enlace-predeterminada
   - protocolos-de-enrutamiento

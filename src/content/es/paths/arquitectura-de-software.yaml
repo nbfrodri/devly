@@ -7,3 +7,4 @@ steps:
   - patron-mvc
   - diseno-guiado-por-el-dominio
   - monolito-y-microservicios
+  - la-ley-de-conway
