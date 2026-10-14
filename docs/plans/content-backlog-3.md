@@ -66,6 +66,42 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 - [ ] Proxy y proxy inverso
 - [ ] IPv4 frente a IPv6
 
+## Tecnologías y herramientas concretas
+
+Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre propio, no solo conceptos.
+
+- [ ] ¿Qué es React? (componentes y estado)
+- [ ] ¿Qué es Next.js? (SPA, MPA y renderizado en servidor)
+- [ ] ¿Qué es Node.js? (promesas y async/await)
+- [ ] ¿Qué es TypeScript? (tipado estático y dinámico)
+- [ ] ¿Qué es Redis? (caché)
+- [ ] ¿Qué es PostgreSQL? (SQL)
+- [ ] ¿Qué es MongoDB? (bases de datos NoSQL)
+- [ ] Bases de datos de grafos (grafos)
+- [ ] Bases de datos vectoriales (embeddings)
+- [ ] ¿Qué es Nginx? (proxy inverso)
+
+## Linux
+
+- [ ] ¿Qué es Linux? El núcleo y el sistema
+- [ ] Distribuciones de Linux: qué las diferencia
+- [ ] La jerarquía de directorios de Linux (sistema de archivos)
+- [ ] ¿Qué es el software libre y el código abierto? (licencias de software)
+
+## Más hardware
+
+- [ ] Discos duros y SSD: cómo guardan los datos
+- [ ] La placa base y los buses
+- [ ] Arquitecturas x86 y ARM
+- [ ] ¿Qué es un transistor? (puertas lógicas)
+
+## Más inteligencia artificial
+
+- [ ] Retropropagación (descenso del gradiente)
+- [ ] Ajuste fino de un modelo (modelo de lenguaje)
+- [ ] Alucinaciones de los modelos de lenguaje
+- [ ] Modelos de difusión: cómo se genera una imagen
+
 ## Curiosidades
 
 - [x] ¿Por qué 0,1 + 0,2 no da 0,3?

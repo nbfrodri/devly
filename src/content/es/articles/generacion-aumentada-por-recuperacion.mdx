@@ -1,0 +1,165 @@
+---
+title: "¿Qué es la generación aumentada por recuperación (RAG)?"
+description: "RAG busca primero los documentos relevantes para una pregunta y se los entrega al modelo de lenguaje, para que responda a partir de ellos."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - embeddings
+  - ventana-de-contexto-y-tokens
+updated: 2026-10-13
+sources:
+  - title: "Lewis y otros: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (2020, en inglés)"
+    url: https://arxiv.org/abs/2005.11401
+  - title: "Anthropic: Context windows (en inglés)"
+    url: https://docs.claude.com/en/docs/build-with-claude/context-windows
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **generación aumentada por recuperación**, RAG por sus siglas en inglés, es una técnica que combina un buscador con un [modelo de lenguaje](/articulos/modelos-de-lenguaje/). Ante una pregunta, primero se **recuperan** los fragmentos de documentos más relevantes, y después se le entregan al modelo junto con la pregunta, para que **genere** la respuesta a partir de ellos.
+
+El nombre viene de un artículo de 2020.
+
+## Qué problema resuelve
+
+Un modelo de lenguaje sabe lo que había en sus datos de entrenamiento. Eso deja fuera:
+
+- **Lo reciente.** Lo ocurrido después de la fecha en que se entrenó.
+- **Lo privado.** Los documentos de tu empresa, tu base de datos, tus correos.
+- **Lo muy específico**, que aparecía poco o nada.
+
+Y cuando no sabe, no siempre lo dice. Puede generar una respuesta fluida, convincente y falsa.
+
+Hay tres formas de darle la información que le falta:
+
+| Opción | Problema |
+| --- | --- |
+| Volver a entrenarlo | Caro y lento; hay que repetirlo con cada cambio |
+| Meter todos los documentos en el contexto | No caben, y cuesta mucho en cada pregunta |
+| Buscar lo relevante y meter solo eso | Es RAG |
+
+Es como un examen con apuntes: en lugar de exigir al modelo que lo sepa todo de memoria, se le deja consultar las páginas adecuadas.
+
+## Cómo funciona
+
+Tiene dos fases.
+
+### Preparación, una vez
+
+1. **Trocear.** Los documentos se dividen en fragmentos, de unos párrafos.
+2. **Convertir.** De cada fragmento se calcula un [embedding](/articulos/embeddings/): un vector que representa su significado.
+3. **Guardar.** Los vectores se almacenan en una base de datos preparada para buscar por similitud.
+
+### Consulta, en cada pregunta
+
+1. **Convertir la pregunta** en un vector, con el mismo modelo de embeddings.
+2. **Recuperar** los fragmentos cuyos vectores más se le parecen.
+3. **Aumentar.** Se construye la instrucción para el modelo: los fragmentos, la pregunta y la indicación de responder con ese material.
+4. **Generar.** El modelo redacta la respuesta.
+
+```js
+function coseno(a, b) {
+	const producto = a.reduce((suma, x, i) => suma + x * b[i], 0);
+	return producto / (Math.hypot(...a) * Math.hypot(...b));
+}
+
+const fragmentos = [
+	{ texto: "Las devoluciones se aceptan durante 30 días", vector: [0.9, 0.1, 0] },
+	{ texto: "El envío tarda de 2 a 4 días", vector: [0.1, 0.9, 0] },
+	{ texto: "Atendemos de lunes a viernes", vector: [0, 0.2, 0.9] },
+];
+
+const pregunta = "¿Puedo devolver un pedido?";
+const vectorDeLaPregunta = [0.8, 0.2, 0.1];
+
+const ordenados = fragmentos
+	.map((f) => ({ ...f, parecido: coseno(vectorDeLaPregunta, f.vector) }))
+	.toSorted((a, b) => b.parecido - a.parecido);
+
+const instruccion = [
+	"Responde usando solo este contexto:",
+	ordenados[0].texto,
+	"",
+	`Pregunta: ${pregunta}`,
+].join("\n");
+
+console.log(ordenados[0].texto); // "Las devoluciones se aceptan durante 30 días"
+console.log(instruccion.split("\n").length); // 4
+```
+
+Los vectores están escritos a mano para el ejemplo; en un sistema real los calcula un modelo. Lo importante es el mecanismo: la pregunta no comparte ninguna palabra clave con el fragmento, "devolver" frente a "devoluciones", y aun así lo encuentra, porque se compara el significado.
+
+## Qué se gana
+
+- **Información actual y propia**, sin entrenar nada. Actualizar es cambiar un documento.
+- **Menos invenciones.** El modelo tiene el dato delante, en lugar de reconstruirlo de memoria.
+- **Fuentes.** Se puede mostrar de qué fragmento sale cada afirmación, y comprobarla.
+- **Control de acceso.** Se recuperan solo los documentos que ese usuario puede ver.
+- **Coste contenido.** Entran en el [contexto](/articulos/ventana-de-contexto-y-tokens/) unos pocos fragmentos, no todo el archivo.
+
+<Quiz
+	client:visible
+	question="En RAG, ¿de dónde saca el modelo la información para responder?"
+	options={[
+		"De un nuevo entrenamiento con tus documentos",
+		"De los fragmentos recuperados que se le entregan junto a la pregunta",
+		"De internet, navegando por su cuenta",
+	]}
+	answer={1}
+/>
+
+## Donde falla
+
+La calidad de la respuesta depende de lo recuperado. Si la búsqueda no trae el fragmento correcto, el modelo no puede responder bien, por bueno que sea. La mayoría de los problemas de un sistema RAG están en la recuperación, no en la generación.
+
+### El troceado
+
+- Fragmentos demasiado pequeños pierden el contexto: "se amplía a 60 días en ese caso" no dice nada sin lo anterior.
+- Demasiado grandes mezclan temas, y su vector no representa bien ninguno.
+
+Ayuda cortar por secciones y párrafos, y no cada cierto número de caracteres, y solapar un poco los fragmentos.
+
+### La búsqueda por significado no lo encuentra todo
+
+Los embeddings captan bien el sentido general, y mal los términos exactos: un código de producto, un nombre propio, una sigla. La búsqueda clásica por palabras hace lo contrario.
+
+Por eso se combinan las dos, en lo que se llama **búsqueda híbrida**. Y a menudo se añade un segundo paso, la **reordenación**: se recuperan muchos candidatos de forma rápida y un modelo más preciso elige los mejores.
+
+### El modelo puede no hacer caso
+
+Aunque tenga el fragmento, puede ignorarlo, mezclarlo con lo que cree saber o sacar una conclusión que el texto no sostiene. Ayuda pedirle que responda solo con el contexto, que cite, y que diga que no lo sabe si la respuesta no está.
+
+### Preguntas que no son de buscar
+
+"¿Cuántos contratos firmamos el año pasado?" no se responde con tres fragmentos: exige recorrerlos todos y contar. Para eso hace falta una consulta a una [base de datos](/articulos/que-es-sql/), no una búsqueda por similitud.
+
+## Seguridad
+
+- **Permisos.** El filtro de acceso se aplica al recuperar. Si un fragmento llega al modelo, puede acabar en la respuesta.
+- **Instrucciones escondidas.** Un documento puede contener texto como "ignora lo anterior y haz esto otro". El modelo no distingue con fiabilidad entre los datos que lee y las órdenes que recibe. Es la **inyección de instrucciones**, emparentada con la [inyección SQL](/articulos/inyeccion-sql/): en ambas, datos que se interpretan como órdenes. Lo recuperado debe tratarse como no fiable.
+
+## RAG y otras opciones
+
+| | RAG | Ajuste fino | Contexto largo |
+| --- | --- | --- | --- |
+| Qué hace | Busca y entrega lo relevante | Sigue entrenando el modelo | Lo entrega todo |
+| Sirve para | Conocimiento que cambia | Estilo, formato, tareas concretas | Pocos documentos |
+| Actualizar | Cambiar un documento | Volver a entrenar | Cambiar el texto |
+| Cita fuentes | Sí | No | Sí |
+
+No compiten. El ajuste fino enseña al modelo **cómo** responder; RAG le da **con qué**.
+
+Y cuando los documentos son pocos y caben en la ventana, no hace falta RAG: basta con incluirlos.
+
+## Más allá del esquema básico
+
+En los sistemas más recientes, la búsqueda es una herramienta más que el modelo decide cuándo usar. Puede reformular la pregunta, buscar varias veces y combinar resultados. Es el enfoque de los [agentes](/articulos/agentes-de-ia/).
+
+## Lo esencial
+
+- RAG recupera fragmentos relevantes y se los da al modelo para que responda con ellos.
+- Aporta información actual o privada sin volver a entrenar.
+- La recuperación suele hacerse comparando embeddings de la pregunta y de los fragmentos.
+- La respuesta no puede ser mejor que lo recuperado: ahí está casi todo el trabajo.
+- El contenido recuperado puede incluir instrucciones maliciosas y debe tratarse con cautela.

@@ -1,0 +1,187 @@
+---
+title: "¿Qué hace un empaquetador?"
+description: "Un empaquetador toma los muchos archivos del código de una aplicación web y produce unos pocos, optimizados para el navegador."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - compilador-e-interprete
+  - grafos
+updated: 2026-10-13
+sources:
+  - title: "Vite: Por qué Vite"
+    url: https://es.vite.dev/guide/why
+  - title: "webpack: Concepts (en inglés)"
+    url: https://webpack.js.org/concepts/
+  - title: "MDN: Módulos de JavaScript"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Modules
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **empaquetador**, en inglés *bundler*, es una herramienta que toma el código fuente de una aplicación web, repartido en muchos archivos y dependencias, y produce un conjunto reducido de archivos optimizados, listos para el navegador.
+
+Es una pieza central de lo que se llama el proceso de **construcción** de un sitio.
+
+## Qué problema resuelve
+
+El código se escribe para personas: cientos de archivos pequeños, nombres largos, comentarios, y a veces en lenguajes que el navegador no entiende. El navegador necesita lo contrario: pocos archivos, pequeños, en [HTML](/articulos/que-es-html/), [CSS](/articulos/que-es-css/) y JavaScript corrientes.
+
+Dos dificultades concretas:
+
+- **Muchas peticiones.** Un proyecto con sus dependencias puede sumar miles de módulos. Pedirlos uno a uno por [HTTP](/articulos/que-es-http/), y descubrir cada uno al leer el anterior, es lento.
+- **Código que el navegador no ejecuta.** TypeScript, JSX, sintaxis reciente, estilos con extensiones.
+
+El empaquetador convierte lo que conviene al desarrollador en lo que conviene al navegador.
+
+## Módulos
+
+Un **módulo** es un archivo que declara qué ofrece y qué necesita:
+
+```javascript
+// precios.js
+export function conIva(precio) {
+	return precio * 1.21;
+}
+
+// carrito.js
+import { conIva } from "./precios.js";
+```
+
+Cada `import` es una **dependencia**: `carrito.js` depende de `precios.js`.
+
+## El grafo de dependencias
+
+El empaquetador parte de un **punto de entrada**, el archivo principal, y sigue los `import`. Cada archivo que encuentra puede importar otros, y así hasta que no queda ninguno por visitar.
+
+El resultado es un [grafo](/articulos/grafos/): los archivos son los nodos, y las dependencias, las conexiones.
+
+```js
+const modulos = {
+	"app.js": ["carrito.js", "utiles.js"],
+	"carrito.js": ["utiles.js"],
+	"utiles.js": [],
+	"antiguo.js": [],
+};
+
+function recorrer(entrada, vistos = new Set()) {
+	if (vistos.has(entrada)) return vistos;
+
+	vistos.add(entrada);
+	for (const dependencia of modulos[entrada]) {
+		recorrer(dependencia, vistos);
+	}
+
+	return vistos;
+}
+
+const incluidos = [...recorrer("app.js")];
+
+console.log(incluidos.join(" ")); // "app.js carrito.js utiles.js"
+console.log(incluidos.includes("antiguo.js")); // false
+```
+
+Dos detalles:
+
+- `utiles.js` lo importan dos archivos, y se incluye una sola vez.
+- `antiguo.js` existe en el proyecto, pero nadie lo importa. No entra.
+
+Con el grafo, el empaquetador sabe qué archivos forman la aplicación y en qué orden van.
+
+## Qué hace con ellos
+
+### Transformar
+
+Convierte lo que el navegador no entiende: TypeScript y JSX a JavaScript, sintaxis nueva a otra que entiendan navegadores más antiguos. A esta traducción entre lenguajes del mismo nivel se le llama **transpilar**, y es pariente de lo que hace un [compilador](/articulos/compilador-e-interprete/).
+
+### Unir
+
+Combina los módulos en unos pocos archivos, cada uno llamado *bundle*.
+
+### Eliminar lo que no se usa
+
+Va un paso más allá del ejemplo anterior. Si de un módulo con veinte funciones se importan dos, las otras dieciocho se descartan. La técnica se llama *tree shaking*, "sacudir el árbol": se agita y cae lo que no está sujeto.
+
+Funciona porque los `import` y `export` son **estáticos**: se pueden analizar sin ejecutar el programa. Importar una biblioteca entera para usar una función impide aprovecharlo.
+
+### Minificar
+
+Quita lo que la máquina no necesita: espacios, saltos de línea, comentarios. Y acorta los nombres internos.
+
+```javascript
+function calcularPrecioConIva(precioBase) {
+	const tipoDeIva = 0.21;
+	return precioBase * (1 + tipoDeIva);
+}
+```
+
+se convierte en algo como:
+
+```javascript
+function a(n){return n*1.21}
+```
+
+Hace lo mismo y ocupa una fracción.
+
+### Dividir el código
+
+Un solo archivo con toda la aplicación obliga a descargar el código del panel de administración para ver la portada.
+
+La **división de código** produce varios archivos y carga cada uno cuando se necesita: por página, o cuando el usuario abre una función concreta. Es de las optimizaciones que más mejoran el [rendimiento](/articulos/rendimiento-web-y-core-web-vitals/).
+
+### Poner huellas en los nombres
+
+Añade al nombre de cada archivo una huella de su contenido, calculada con una [función hash](/articulos/funciones-hash/): `app.3f9a1c.js`. Si el contenido cambia, el nombre cambia.
+
+Eso permite que los navegadores y las [CDN](/articulos/que-es-una-cdn/) guarden los archivos en caché durante mucho tiempo sin riesgo de servir una versión antigua.
+
+### Procesar lo demás
+
+No solo JavaScript: también CSS, imágenes y tipografías. Los optimiza y reescribe las referencias.
+
+<Quiz
+	client:visible
+	question="¿Cómo sabe un empaquetador qué archivos forman parte de la aplicación?"
+	options={[
+		"Incluye todos los archivos de la carpeta del proyecto",
+		"Sigue los import desde el punto de entrada y construye un grafo",
+		"Se le indica cada archivo a mano",
+	]}
+	answer={1}
+/>
+
+## Mapas de código fuente
+
+El código que llega al navegador es ilegible. Si falla, el error dice "línea 1, columna 48 211".
+
+Un **mapa de código fuente**, o *source map*, es un archivo que relaciona cada posición del código generado con su lugar en el original. Con él, las herramientas del navegador muestran el error en tu archivo y en tu línea.
+
+## En desarrollo
+
+Mientras se programa importa otra cosa: ver el cambio al instante.
+
+- **Servidor de desarrollo.** Sirve la aplicación en tu máquina y la actualiza al guardar.
+- **Reemplazo de módulos en caliente.** Sustituye en la página solo el módulo modificado, sin recargarla y sin perder el estado. Cambias un color y lo ves sin volver a rellenar el formulario que estabas probando.
+
+Empaquetar el proyecto entero en cada cambio es lento en proyectos grandes. Las herramientas recientes lo evitan en desarrollo: aprovechan que los navegadores actuales entienden los módulos por sí mismos, y sirven cada archivo por separado, transformándolo solo cuando se pide. El empaquetado completo se deja para producción.
+
+También se han vuelto mucho más rápidas al escribirse en lenguajes compilados, en lugar de en JavaScript.
+
+## ¿Sigue haciendo falta?
+
+Los navegadores ya entienden los módulos, y las versiones actuales de HTTP llevan bien muchas peticiones a la vez. Para una página pequeña se puede escribir JavaScript y servirlo tal cual.
+
+Para una aplicación, sigue compensando: una cadena larga de módulos que se descubren uno tras otro es lenta, y nadie más elimina el código sin usar, minifica o transforma TypeScript.
+
+## Lo que cuesta
+
+- **Configuración.** Históricamente, uno de los puntos más frustrantes del desarrollo web. Las herramientas actuales traen valores por defecto sensatos.
+- **Un paso más** entre lo que escribes y lo que se ejecuta. Cuando algo falla ahí, es difícil de entender.
+- **Dependencias.** La cadena de construcción es código de terceros que se ejecuta en tu máquina y en el [pipeline](/articulos/integracion-y-despliegue-continuos/). Es un punto de entrada para ataques.
+
+## Lo esencial
+
+- Un empaquetador convierte el código fuente en pocos archivos optimizados para el navegador.
+- Parte de un punto de entrada y sigue los `import` para construir el grafo de dependencias.
+- Transforma, une, elimina lo que no se usa y minifica.
+- Divide el código para cargar cada parte cuando hace falta, y pone huellas en los nombres para la caché.
+- En desarrollo, da actualización instantánea de los cambios.

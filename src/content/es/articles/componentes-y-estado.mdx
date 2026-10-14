@@ -1,0 +1,176 @@
+---
+title: "¿Qué son los componentes y el estado en una interfaz?"
+description: "Un componente es una pieza reutilizable de interfaz. El estado son los datos que cambian. La interfaz se describe como una función del estado."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - el-dom
+  - funciones
+  - inmutabilidad
+updated: 2026-10-13
+sources:
+  - title: "React: Pensar en React"
+    url: https://es.react.dev/learn/thinking-in-react
+  - title: "React: El estado, la memoria de un componente"
+    url: https://es.react.dev/learn/state-a-components-memory
+  - title: "MDN: Web Components"
+    url: https://developer.mozilla.org/es/docs/Web/API/Web_components
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **componente** es una pieza de interfaz independiente y reutilizable: un botón, una tarjeta, un formulario. El **estado** es el conjunto de datos que pueden cambiar mientras se usa la aplicación y de los que depende lo que se ve. Casi todas las bibliotecas de interfaz actuales se basan en estas dos ideas y en una tercera que las une: **la interfaz es una función del estado**.
+
+## Qué problema resuelven
+
+Con el [DOM](/articulos/el-dom/) se puede modificar cualquier parte de una página: buscar un elemento, cambiarle el texto, añadir una clase. Para una página sencilla, basta.
+
+En una aplicación, se complica. Piensa en un carrito de compra. Al añadir un producto hay que actualizar la lista, el total, el número del icono de la cabecera y quizá el botón de pagar. Cada acción toca varios sitios, y cada sitio lo tocan varias acciones.
+
+Tarde o temprano se olvida uno. El total dice una cosa y el icono otra. Los datos y lo que se ve dejan de coincidir, y encontrar qué línea de código lo dejó así es difícil.
+
+## La idea
+
+En lugar de escribir **cómo cambiar** la página en cada caso, se describe **cómo debe ser** la página para unos datos dados. Cuando los datos cambian, se vuelve a calcular.
+
+```js
+function Contador(estado) {
+	return `<button>Pulsado: ${estado.cuenta}</button>`;
+}
+
+let estado = { cuenta: 0 };
+console.log(Contador(estado)); // "<button>Pulsado: 0</button>"
+
+estado = { ...estado, cuenta: estado.cuenta + 1 };
+console.log(Contador(estado)); // "<button>Pulsado: 1</button>"
+```
+
+La función no sabe qué había antes ni qué ha cambiado. Recibe el estado y devuelve la interfaz que le corresponde. Mismo estado, misma interfaz.
+
+Es el estilo **declarativo**. Ya no hay que acordarse de actualizar cinco sitios: se cambia el dato, y todo lo que depende de él se recalcula.
+
+La biblioteca se ocupa de la parte tediosa: comparar la interfaz nueva con la anterior y aplicar al DOM solo las diferencias.
+
+## Componentes
+
+Un componente es una función como la anterior, con nombre. Los componentes se combinan como piezas: una página contiene una cabecera y una lista; la lista contiene tarjetas; cada tarjeta, un botón.
+
+```jsx
+function Tarjeta({ titulo, precio }) {
+	return (
+		<article>
+			<h2>{titulo}</h2>
+			<p>{precio} €</p>
+		</article>
+	);
+}
+
+function Lista({ productos }) {
+	return productos.map((p) => (
+		<Tarjeta key={p.id} titulo={p.titulo} precio={p.precio} />
+	));
+}
+```
+
+El ejemplo usa JSX, la sintaxis de React que permite escribir el marcado dentro de JavaScript.
+
+Lo que se gana:
+
+- **Reutilización.** `Tarjeta` se escribe una vez y se usa en todas partes.
+- **Aislamiento.** Cada componente se entiende, y se [prueba](/articulos/pruebas-de-software/), por separado.
+- **Coherencia.** Cambiar la tarjeta la cambia en toda la aplicación.
+
+## Propiedades
+
+Un componente recibe datos de quien lo usa a través de sus **propiedades**, en inglés *props*. Son como los argumentos de una [función](/articulos/funciones/): `titulo` y `precio` en el ejemplo.
+
+Un componente no modifica sus propiedades. Las recibe y las usa.
+
+## Estado
+
+El estado es lo que un componente **recuerda** y puede cambiar: si un menú está abierto, qué hay escrito en un campo, cuántos productos lleva el carrito.
+
+Cuando cambia, la biblioteca vuelve a ejecutar el componente y actualiza la pantalla. Este programa imita el mecanismo:
+
+```js
+function crearEstado(inicial, alCambiar) {
+	let valor = inicial;
+
+	return {
+		leer: () => valor,
+		cambiar: (nuevo) => {
+			valor = nuevo;
+			alCambiar(valor);
+		},
+	};
+}
+
+const pintados = [];
+const cuenta = crearEstado(0, (valor) => pintados.push(`cuenta: ${valor}`));
+
+cuenta.cambiar(1);
+cuenta.cambiar(2);
+
+console.log(pintados.join(", ")); // "cuenta: 1, cuenta: 2"
+```
+
+El estado no se modifica asignando una variable, sino a través de una función. Así la biblioteca se entera de que algo ha cambiado. `valor` vive en una [clausura](/articulos/funciones-de-orden-superior-y-clausuras/).
+
+Por la misma razón el estado se trata como [inmutable](/articulos/inmutabilidad/): para cambiar una lista se crea otra. Si se modificara la misma, la biblioteca vería el mismo objeto de antes y no repintaría.
+
+| | Propiedades | Estado |
+| --- | --- | --- |
+| De dónde vienen | Del componente que lo usa | Del propio componente |
+| Quién las cambia | Quien las pasa | El propio componente |
+| Parecido | Los argumentos de una función | Su memoria |
+
+<Quiz
+	client:visible
+	question="En este modelo, ¿qué hay que hacer para que la pantalla muestre un dato nuevo?"
+	options={[
+		"Buscar cada elemento del DOM que lo muestra y cambiarlo a mano",
+		"Cambiar el estado; la interfaz se recalcula a partir de él",
+		"Recargar la página",
+	]}
+	answer={1}
+/>
+
+## Los datos bajan, los eventos suben
+
+Los datos fluyen en un sentido: de los componentes de arriba a los de abajo, por las propiedades. Se llama **flujo unidireccional**.
+
+Si un componente de abajo necesita cambiar algo, no lo cambia él. Recibe una función y la llama: "han pulsado este botón". El cambio lo hace quien tiene el estado.
+
+La ventaja es que, cuando algo se ve mal, hay un solo camino que seguir hacia arriba hasta encontrar de dónde viene el dato.
+
+## Dónde poner el estado
+
+Es la decisión de diseño más frecuente.
+
+- **Lo más abajo posible.** Si solo lo usa un componente, que viva en él.
+- **Subirlo cuando se comparte.** Si dos componentes necesitan el mismo dato, se coloca en el antecesor común más cercano y se pasa a ambos.
+- **Una sola fuente.** Cada dato tiene un único dueño. Las copias acaban desincronizadas, que es justo el problema de partida.
+- **No guardar lo que se puede calcular.** Si están los productos del carrito, el total no es estado: se calcula a partir de ellos.
+
+Cuando un dato lo necesitan componentes muy alejados, pasarlo de mano en mano por todos los intermedios se vuelve pesado. Para eso existen mecanismos de **estado global**, que conviene reservar para lo que de verdad es global: el usuario, el tema, el idioma.
+
+## Más allá de una biblioteca
+
+React popularizó este modelo, y con variaciones lo comparten Vue, Svelte, Angular y otras. Cambian la sintaxis y la forma de detectar los cambios; las ideas son las mismas.
+
+Los navegadores también ofrecen un sistema de componentes propio, los *Web Components*, que permite definir elementos [HTML](/articulos/que-es-html/) nuevos sin ninguna biblioteca.
+
+## Precauciones
+
+- **Componentes enormes.** Uno que hace diez cosas pierde las ventajas. Es el principio de [responsabilidad única](/articulos/principios-solid/).
+- **Demasiado estado.** Cada dato guardado es algo que mantener al día.
+- **No todo necesita esto.** Un sitio de contenido con poca interacción funciona con HTML y un poco de JavaScript, y carga más deprisa. Se trata en [SPA, MPA y renderizado en servidor](/articulos/spa-mpa-y-renderizado-en-servidor/).
+- **La accesibilidad no viene sola.** Un componente hecho con elementos genéricos pierde lo que los nativos dan gratis. Se explica en [accesibilidad web](/articulos/accesibilidad-web/).
+
+## Lo esencial
+
+- Un componente es una pieza de interfaz reutilizable, que se combina con otras.
+- El estado son los datos que cambian; la interfaz se calcula a partir de él.
+- Las propiedades llegan de fuera; el estado es propio del componente.
+- Los datos bajan por las propiedades y los cambios se piden hacia arriba.
+- Cada dato debe tener un único dueño, situado lo más abajo posible.

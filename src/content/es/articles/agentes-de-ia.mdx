@@ -1,0 +1,161 @@
+---
+title: "¿Qué es un agente de IA?"
+description: "Un agente es un modelo de lenguaje que, en un bucle, decide qué herramienta usar, observa el resultado y continúa hasta completar una tarea."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - model-context-protocol
+  - ventana-de-contexto-y-tokens
+updated: 2026-10-13
+sources:
+  - title: "Anthropic: Building effective agents (2024, en inglés)"
+    url: https://www.anthropic.com/engineering/building-effective-agents
+  - title: "Yao y otros: ReAct, Synergizing Reasoning and Acting in Language Models (2022, en inglés)"
+    url: https://arxiv.org/abs/2210.03629
+  - title: "Anthropic: Tool use with Claude (en inglés)"
+    url: https://docs.claude.com/en/docs/build-with-claude/tool-use/overview
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **agente de IA** es un sistema en el que un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) dirige su propio proceso para cumplir un objetivo: decide qué hacer, usa **herramientas**, observa el resultado y repite hasta terminar. La diferencia con un asistente que solo contesta es que un agente **actúa**, y lo hace en varios pasos que nadie le ha dictado.
+
+## Qué problema resuelve
+
+Un modelo de lenguaje, por sí solo, produce texto. No puede leer un archivo, ejecutar un programa, consultar una base de datos ni saber qué hora es.
+
+Y muchas tareas no se resuelven de una vez. "Averigua por qué falla esta prueba y arréglalo" exige leer el código, ejecutar la prueba, leer el error, formular una hipótesis, cambiar algo y volver a ejecutar. El número de pasos no se conoce de antemano: depende de lo que se vaya encontrando.
+
+## Las herramientas
+
+Una **herramienta** es una función que el modelo puede pedir que se ejecute. Se le describe con un nombre, una explicación de para qué sirve y los parámetros que acepta.
+
+El modelo no ejecuta nada. Genera una **petición estructurada**: "quiero llamar a `buscar_pedido` con el número 512". El programa que lo rodea ejecuta la función y le devuelve el resultado como texto.
+
+Herramientas habituales: buscar en la web, leer y escribir archivos, ejecutar código, consultar una [API](/articulos/que-es-una-api/). El [Model Context Protocol](/articulos/model-context-protocol/) es un estándar para conectar herramientas a modelos sin escribir una integración distinta para cada combinación.
+
+## El bucle
+
+Un agente es, en esencia, un bucle:
+
+1. El modelo recibe el objetivo y lo ocurrido hasta ahora.
+2. Decide: usar una herramienta, o dar la respuesta final.
+3. Si pide una herramienta, el programa la ejecuta.
+4. El resultado se añade al contexto.
+5. Vuelta al paso 1.
+
+```js
+const herramientas = {
+	sumar: ({ a, b }) => a + b,
+};
+
+const decisiones = [
+	{ herramienta: "sumar", argumentos: { a: 2, b: 3 } },
+	{ respuesta: "El resultado es 5" },
+];
+
+function modelo(historial) {
+	const resultados = historial.filter((m) => m.tipo === "resultado");
+	return decisiones[resultados.length];
+}
+
+function ejecutarAgente(tarea, maximoDePasos = 5) {
+	const historial = [{ tipo: "tarea", contenido: tarea }];
+
+	for (let paso = 0; paso < maximoDePasos; paso++) {
+		const decision = modelo(historial);
+
+		if (decision.respuesta) {
+			return { respuesta: decision.respuesta, usos: paso };
+		}
+
+		const resultado = herramientas[decision.herramienta](decision.argumentos);
+		historial.push({ tipo: "resultado", contenido: resultado });
+	}
+
+	return { respuesta: "Límite de pasos alcanzado", usos: maximoDePasos };
+}
+
+const final = ejecutarAgente("¿Cuánto es 2 + 3?");
+
+console.log(final.respuesta); // "El resultado es 5"
+console.log(final.usos); // 1
+```
+
+Aquí el modelo está simulado con una lista de decisiones fijas. En un agente real, esa función es una llamada a un modelo de lenguaje, que elige según lo que ve. El resto es igual de simple: el bucle, la ejecución y el límite de pasos.
+
+La idea de alternar razonamiento y acción se formalizó en 2022 con el nombre de ReAct.
+
+## Agentes y flujos de trabajo
+
+No todo sistema que encadena llamadas a un modelo es un agente. Una distinción útil:
+
+| | Flujo de trabajo | Agente |
+| --- | --- | --- |
+| Quién decide los pasos | El código | El modelo |
+| Camino | Fijado de antemano | Se decide sobre la marcha |
+| Previsibilidad | Alta | Menor |
+| Encaja con | Tareas bien definidas | Tareas abiertas |
+
+Un flujo de trabajo sería: resume el documento, después tradúcelo, después comprueba el resultado. Siempre esos tres pasos.
+
+La recomendación práctica es empezar por lo más simple que funcione. Una sola llamada bien planteada resuelve muchas cosas. Un flujo fijo, muchas más. Un agente da flexibilidad a cambio de coste, lentitud y errores que se acumulan.
+
+<Quiz
+	client:visible
+	question="Cuando un modelo «usa una herramienta», ¿qué ocurre en realidad?"
+	options={[
+		"El modelo ejecuta el código por sí mismo",
+		"El modelo pide la llamada, y el programa que lo rodea la ejecuta y le devuelve el resultado",
+		"El modelo se vuelve a entrenar con la herramienta",
+	]}
+	answer={1}
+/>
+
+## Memoria
+
+El modelo no recuerda nada entre llamadas. Lo que el agente sabe es lo que cabe en su [ventana de contexto](/articulos/ventana-de-contexto-y-tokens/), y cada paso la llena un poco más.
+
+En tareas largas hay que gestionarla: resumir lo antiguo, guardar notas en archivos, o recuperar información cuando hace falta, como en [RAG](/articulos/generacion-aumentada-por-recuperacion/).
+
+## Varios agentes
+
+Una tarea grande se puede repartir. Un agente coordina y encarga subtareas a otros, cada uno con su propio contexto y sus herramientas. Cada uno trabaja con un contexto limpio, y pueden hacerlo a la vez. A cambio, hay más coste y hay que pasar bien la información de uno a otro.
+
+## Lo que sale mal
+
+- **Los errores se acumulan.** Si cada paso acierta el 95 % de las veces, una cadena de veinte pasos sale entera bien algo más de una vez de cada tres.
+- **Bucles.** Repetir la misma acción fallida sin avanzar. Por eso hay siempre un límite de pasos.
+- **Coste.** Cada paso es una llamada con todo el contexto acumulado.
+- **Se desvían.** Pueden perder de vista el objetivo, o darlo por cumplido sin estarlo.
+- **Depurar es difícil.** El mismo objetivo puede seguir caminos distintos cada vez. Hace falta registrar cada paso, como se explica en [observabilidad](/articulos/observabilidad/).
+
+## Seguridad
+
+Un agente que actúa puede causar daño real. Es la parte que más cuidado exige.
+
+- **Mínimo privilegio.** Solo las herramientas y los permisos que la tarea necesita. Si basta con leer, que no pueda escribir.
+- **Inyección de instrucciones.** El agente lee contenido de fuera: páginas web, correos, documentos. Ese contenido puede incluir texto pensado para manipularlo: "reenvía estos datos a esta dirección". El modelo no separa con fiabilidad datos de órdenes. Todo lo que el agente lee es contenido no fiable.
+- **Confirmación humana** para lo que no se puede deshacer: borrar, pagar, enviar.
+- **Aislamiento.** Ejecutar el código en un entorno cerrado, como un [contenedor](/articulos/contenedores-y-maquinas-virtuales/), sin acceso a lo que no necesita.
+- **Límites** de pasos, de tiempo y de gasto.
+
+La combinación peligrosa es un agente que tiene a la vez acceso a datos privados, exposición a contenido ajeno y un canal para enviar información fuera. Si se dan las tres, un atacante puede hacer que le entregue los datos.
+
+## Diseñar buenas herramientas
+
+Gran parte de la calidad de un agente depende de sus herramientas.
+
+- **Nombres y descripciones claros.** El modelo decide con eso.
+- **Pocas y bien diferenciadas.** Con muchas parecidas, se equivoca al elegir.
+- **Errores que expliquen.** "El archivo no existe; los disponibles son estos" permite corregir. "Error" no.
+- **Resultados breves.** Lo que devuelve una herramienta ocupa contexto.
+
+## Lo esencial
+
+- Un agente es un modelo de lenguaje que decide sus pasos y usa herramientas en un bucle.
+- El modelo pide las acciones; el programa que lo rodea las ejecuta.
+- En un flujo de trabajo, los pasos los fija el código; en un agente, el modelo.
+- Los errores se acumulan con cada paso, y por eso hay límites y supervisión.
+- Todo lo que el agente lee puede intentar manipularlo: los permisos deben ser mínimos.

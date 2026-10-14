@@ -1,0 +1,172 @@
+---
+title: "¿Qué son los tokens y la ventana de contexto?"
+description: "Un modelo de lenguaje lee y escribe en tokens, y solo puede tener en cuenta una cantidad limitada a la vez: su ventana de contexto."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+updated: 2026-10-13
+sources:
+  - title: "Hugging Face: Summary of the tokenizers (en inglés)"
+    url: https://huggingface.co/docs/transformers/tokenizer_summary
+  - title: "Anthropic: Context windows (en inglés)"
+    url: https://docs.claude.com/en/docs/build-with-claude/context-windows
+  - title: "Vaswani y otros: Attention Is All You Need (2017, en inglés)"
+    url: https://arxiv.org/abs/1706.03762
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **token** es la unidad de texto con la que trabaja un [modelo de lenguaje](/articulos/modelos-de-lenguaje/): una palabra, un trozo de palabra o un signo. La **ventana de contexto** es la cantidad máxima de tokens que el modelo puede tener en cuenta a la vez, sumando lo que lee y lo que escribe.
+
+Los dos conceptos explican buena parte del comportamiento, y del precio, de estos modelos.
+
+## Tokens
+
+### Por qué no palabras ni letras
+
+Un modelo trabaja con números. Hay que partir el texto en piezas y asignar un número a cada una. ¿Qué piezas?
+
+- **Palabras enteras.** Hay demasiadas, y siempre aparece una que el modelo no ha visto: un nombre propio, una errata, un término nuevo.
+- **Letras.** Son pocas, pero el texto se convierte en una secuencia larguísima, y cada letra por sí sola significa poco.
+
+La solución habitual queda en medio: **fragmentos de palabra**. Las palabras frecuentes son un solo token. Las raras se componen con varios.
+
+```js
+const vocabulario = ["program", "ación", "ador", "es", " ", "la"];
+
+function tokenizar(texto) {
+	const tokens = [];
+	let resto = texto;
+
+	while (resto.length > 0) {
+		const candidatas = vocabulario.filter((pieza) => resto.startsWith(pieza));
+		const pieza =
+			candidatas.sort((a, b) => b.length - a.length)[0] ?? resto[0];
+
+		tokens.push(pieza);
+		resto = resto.slice(pieza.length);
+	}
+
+	return tokens;
+}
+
+console.log(tokenizar("programación").join("|")); // "program|ación"
+console.log(tokenizar("programadores").join("|")); // "program|ador|es"
+console.log(tokenizar("programadores").length); // 3
+```
+
+El ejemplo es una simplificación. Los tokenizadores reales construyen su vocabulario, de decenas de miles de piezas, a partir de un gran volumen de texto: empiezan por los caracteres y van uniendo las parejas que más se repiten.
+
+Con un vocabulario así, cualquier texto se puede representar, y las palabras de la misma familia comparten piezas.
+
+### Consecuencias
+
+- **Un token no es una palabra.** En inglés, un token viene a ser tres cuartos de palabra. En español y otros idiomas, el mismo texto suele ocupar más tokens, porque los vocabularios se construyen con más texto en inglés.
+- **Los modelos no ven letras.** Ven piezas. Por eso tareas que parecen triviales, como contar cuántas veces aparece una letra en una palabra, les cuestan.
+- **Cada modelo tiene su tokenizador.** El mismo texto da un número distinto de tokens según el modelo.
+- **Todo se mide en tokens.** Los límites y, en los servicios de pago, el precio, con tarifas distintas para lo que se envía y lo que se genera.
+
+## La ventana de contexto
+
+El modelo no tiene memoria entre una llamada y otra. Todo lo que sabe de la conversación es lo que se le entrega en ese momento: el **contexto**.
+
+Y el contexto tiene un tamaño máximo. En esa ventana tiene que caber todo:
+
+- Las instrucciones generales del sistema.
+- La conversación anterior completa.
+- Los documentos adjuntos.
+- Las descripciones de las herramientas y los resultados que devuelven.
+- La respuesta que el modelo va a generar.
+
+Lo que no está en la ventana no existe para el modelo.
+
+### La memoria es una ilusión
+
+Cuando un asistente recuerda lo que dijiste hace diez mensajes, es porque la aplicación **vuelve a enviar toda la conversación** en cada turno. El modelo la lee entera, desde el principio, cada vez.
+
+De ahí que las conversaciones largas se vuelvan más lentas y más caras: cada mensaje nuevo obliga a procesar todos los anteriores.
+
+### Cuando se llena
+
+Hay que quitar algo. Las estrategias habituales:
+
+- **Recortar.** Descartar los mensajes más antiguos.
+- **Resumir.** Sustituirlos por un resumen.
+- **Recuperar.** Guardar la información fuera y traer solo lo relevante para cada pregunta, como hace la [generación aumentada por recuperación](/articulos/generacion-aumentada-por-recuperacion/).
+
+Este programa aplica la primera:
+
+```js
+function recortar(mensajes, limite) {
+	const dentro = [];
+	let total = 0;
+
+	for (const mensaje of mensajes.toReversed()) {
+		if (total + mensaje.tokens > limite) break;
+
+		dentro.unshift(mensaje);
+		total = total + mensaje.tokens;
+	}
+
+	return dentro;
+}
+
+const conversacion = [
+	{ texto: "me llamo Ana", tokens: 5 },
+	{ texto: "hola Ana", tokens: 4 },
+	{ texto: "¿cómo me llamo?", tokens: 5 },
+];
+
+const visible = recortar(conversacion, 10);
+
+console.log(visible.map((m) => m.texto).join(" / ")); // "hola Ana / ¿cómo me llamo?"
+```
+
+El primer mensaje ha quedado fuera. En este caso el nombre sigue a la vista por casualidad, en la respuesta. Si no lo estuviera, el modelo no podría saberlo: no lo ha olvidado, es que ya no se lo han dado.
+
+<Quiz
+	client:visible
+	question="¿Cómo recuerda un asistente lo que le dijiste al principio de la conversación?"
+	options={[
+		"El modelo lo guarda en su memoria interna",
+		"La aplicación le reenvía la conversación completa en cada turno",
+		"Se vuelve a entrenar con cada mensaje",
+	]}
+	answer={1}
+/>
+
+## Por qué hay un límite
+
+En un [transformer](/articulos/que-es-un-transformer/), cada token atiende a todos los demás. El trabajo crece mucho más deprisa que el texto: aproximadamente con el cuadrado de su longitud. Además, el modelo se entrenó con secuencias de hasta cierto tamaño.
+
+Las ventanas han crecido muchísimo, de unos pocos miles de tokens a cientos de miles o más. Pero siguen siendo finitas.
+
+## Más grande no es siempre mejor
+
+Que algo quepa no significa que convenga meterlo.
+
+- **Cuesta más y tarda más.** Se paga por cada token, en cada llamada.
+- **La atención se reparte.** Con contextos muy largos, a los modelos les cuesta más encontrar el dato relevante, sobre todo si está en medio. La información importante rinde más al principio o al final.
+- **El ruido estorba.** Material irrelevante o contradictorio empeora la respuesta.
+
+Elegir qué entra en el contexto, y qué no, es una de las tareas principales al construir aplicaciones con modelos de lenguaje. Se le llama a veces **ingeniería de contexto**.
+
+## Límite de salida
+
+Aparte de la ventana total, hay un máximo de tokens que el modelo puede generar en una respuesta. Si se alcanza, la respuesta se corta a medias. Las API indican el motivo por el que terminó la generación, y conviene comprobarlo.
+
+## En la práctica
+
+- **Contar antes de enviar.** Los proveedores ofrecen funciones para saber cuántos tokens ocupa un texto.
+- **Poner lo estable al principio.** Muchos servicios guardan en [caché](/articulos/que-es-una-cache/) el comienzo de un contexto que se repite, y lo cobran más barato.
+- **No enviar lo que no hace falta.** Mejor tres párrafos relevantes que el documento entero.
+- **Vigilar las conversaciones largas** y resumir cuando crezcan.
+
+## Lo esencial
+
+- Un token es un fragmento de texto; los modelos leen y escriben tokens, no palabras ni letras.
+- La ventana de contexto es el máximo de tokens que el modelo considera a la vez, entrada y salida incluidas.
+- El modelo no recuerda nada entre llamadas: la conversación se reenvía entera.
+- Lo que queda fuera de la ventana no existe para él.
+- Un contexto más largo cuesta más y no siempre da mejores respuestas.

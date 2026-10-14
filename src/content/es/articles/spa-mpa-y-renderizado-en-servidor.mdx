@@ -1,0 +1,165 @@
+---
+title: "Diferencias entre SPA, MPA y renderizado en servidor"
+description: "Dónde y cuándo se genera el HTML de una página: en el servidor, en el navegador o al construir el sitio. Cada opción tiene su coste."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - cliente-servidor
+  - que-es-html
+  - el-dom
+updated: 2026-10-13
+sources:
+  - title: "web.dev: Rendering on the Web (en inglés)"
+    url: https://web.dev/articles/rendering-on-the-web
+  - title: "Astro: Arquitectura de islas"
+    url: https://docs.astro.build/es/concepts/islands/
+  - title: "MDN: Rendimiento web"
+    url: https://developer.mozilla.org/es/docs/Web/Performance
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una página web es [HTML](/articulos/que-es-html/). La pregunta es **dónde y cuándo se genera**. En una **MPA**, o aplicación de varias páginas, el servidor envía un HTML completo por cada página. En una **SPA**, o aplicación de una sola página, el navegador recibe un HTML casi vacío y lo construye con JavaScript. El **renderizado en servidor** y otras técnicas intermedias combinan los dos enfoques.
+
+Elegir entre ellas afecta a la velocidad de carga, a la interactividad y a la complejidad del proyecto.
+
+## MPA: varias páginas
+
+Es el modelo original de la web.
+
+1. El navegador pide una dirección.
+2. El servidor genera el HTML completo de esa página y lo envía.
+3. El navegador lo muestra.
+4. Al pulsar un enlace, se repite todo: página nueva, entera.
+
+**A favor:**
+
+- **El contenido llega enseguida.** Está en el HTML; no hay que esperar a ningún programa.
+- **Poco JavaScript**, o ninguno.
+- **Los buscadores lo leen sin dificultad.**
+- **Funciona en dispositivos modestos.**
+- **Es simple.**
+
+**En contra:**
+
+- **Cada navegación recarga la página**, y se pierde lo que hubiera en ella: un vídeo en marcha, un formulario a medias.
+- **Las interacciones ricas** exigen añadir JavaScript por encima.
+
+## SPA: una sola página
+
+1. El navegador pide la dirección.
+2. El servidor responde con un HTML mínimo y un programa en JavaScript.
+3. El navegador descarga y ejecuta el programa.
+4. El programa pide los datos a una [API](/articulos/que-es-una-api/) y construye la página en el [DOM](/articulos/el-dom/).
+5. Al navegar, no se carga otra página: el programa cambia lo que se ve y pide solo los datos que faltan.
+
+Generar la página en el navegador se llama **renderizado en el cliente**.
+
+**A favor:**
+
+- **Navegación fluida**, sin recargas.
+- **El estado se conserva** entre pantallas.
+- **Encaja con interfaces muy interactivas**: un editor, un panel de control, un cliente de correo.
+- **Separa bien** la interfaz del servidor, que solo ofrece datos.
+
+**En contra:**
+
+- **La primera carga es lenta.** Hasta que el JavaScript se descarga, se ejecuta y obtiene los datos, no hay nada que ver.
+- **Mucho JavaScript**, que pesa en móviles lentos.
+- **Los buscadores** y las vistas previas de las redes sociales pueden no ver el contenido.
+- **Hay que rehacer lo que el navegador daba**: el historial, el botón de atrás, la posición de la página, el foco para la [accesibilidad](/articulos/accesibilidad-web/).
+
+## Renderizado en servidor con hidratación
+
+Intenta reunir lo mejor de los dos. Se abrevia **SSR**.
+
+1. El servidor ejecuta los [componentes](/articulos/componentes-y-estado/) y envía el HTML completo. El usuario ve el contenido enseguida.
+2. El navegador descarga el JavaScript.
+3. El programa se "engancha" al HTML que ya está: asocia los eventos y recupera el estado. Este paso es la **hidratación**.
+4. Desde ahí se comporta como una SPA.
+
+**A favor:** contenido visible pronto, legible por buscadores, y navegación fluida después.
+
+**En contra:**
+
+- **Un intervalo engañoso.** Entre que la página se ve y se hidrata, parece lista y no responde: se pulsa un botón y no pasa nada.
+- **Trabajo doble.** La página se genera en el servidor y se vuelve a procesar en el navegador. El JavaScript que se envía es el mismo que en una SPA.
+- **Necesita un servidor** que ejecute el código en cada petición.
+- **Más complejidad.** El mismo código corre en dos entornos distintos.
+
+## Generación estática
+
+Si el contenido es igual para todos y cambia poco, no hace falta generarlo en cada petición. Se genera **una vez, al construir el sitio**, y se guardan los archivos HTML. Se abrevia **SSG**.
+
+**A favor:**
+
+- **Lo más rápido que hay.** Servir un archivo ya hecho, además desde una [CDN](/articulos/que-es-una-cdn/).
+- **Barato y robusto.** No hay servidor de aplicación que mantener ni base de datos que consultar en cada visita.
+- **Poca superficie de ataque.**
+
+**En contra:**
+
+- **Cambiar el contenido exige reconstruir.**
+- **No sirve para contenido personalizado** o que cambia a cada momento.
+
+Blogs, documentación y sitios de contenido encajan aquí.
+
+## Islas
+
+La mayoría de las páginas son, en su mayor parte, estáticas, con unas pocas zonas interactivas: un buscador, un carrusel, un formulario.
+
+La **arquitectura de islas** envía HTML estático y solo hidrata esas zonas, cada una por separado. El resto de la página no lleva JavaScript.
+
+Se obtiene casi la velocidad de un sitio estático con la interactividad donde hace falta.
+
+## Comparación
+
+| | MPA | SPA | SSR con hidratación | Estática |
+| --- | --- | --- | --- | --- |
+| Dónde se genera el HTML | Servidor, por petición | Navegador | Servidor, y luego navegador | Al construir |
+| Primera carga | Rápida | Lenta | Rápida de ver | La más rápida |
+| Navegación posterior | Recarga | Fluida | Fluida | Recarga |
+| JavaScript enviado | Poco | Mucho | Mucho | Poco |
+| Buscadores | Bien | Con dificultades | Bien | Bien |
+| Necesita servidor | Sí | Solo la API | Sí | No |
+| Encaja con | Sitios de contenido con datos dinámicos | Aplicaciones tras un inicio de sesión | Tiendas, sitios con contenido e interacción | Blogs, documentación |
+
+<Quiz
+	client:visible
+	question="En una SPA con renderizado en el cliente, ¿por qué tarda en verse el contenido la primera vez?"
+	options={[
+		"Porque el servidor genera el HTML muy despacio",
+		"Porque hay que descargar y ejecutar el JavaScript, y pedir los datos, antes de mostrar nada",
+		"Porque las imágenes son más grandes",
+	]}
+	answer={1}
+/>
+
+## Las fronteras se han difuminado
+
+Las herramientas actuales no obligan a elegir una opción para todo el sitio. Permiten decidir por página, o por componente:
+
+- La portada, estática.
+- La ficha de producto, generada en el servidor.
+- El panel del usuario, en el cliente.
+
+También las MPA han mejorado: los navegadores pueden animar el paso de una página a otra y cargar por adelantado el enlace que el usuario va a pulsar. Buena parte de la fluidez de una SPA se consigue hoy sin serlo.
+
+## Cómo elegir
+
+La pregunta útil es qué tipo de producto es.
+
+- **Sobre todo contenido que se lee**: estático o MPA, con islas para lo interactivo. Es la opción por defecto más sensata.
+- **Contenido que debe encontrarse en buscadores y además tiene interacción**, como una tienda: renderizado en servidor.
+- **Una herramienta que se usa durante horas tras iniciar sesión**: una SPA es razonable. La carga inicial se paga una vez y los buscadores no importan.
+
+El error frecuente es usar una SPA para un sitio de contenido: se envían cientos de kilobytes de JavaScript para mostrar texto que podía llegar como HTML. Las consecuencias se miden con las [Core Web Vitals](/articulos/rendimiento-web-y-core-web-vitals/).
+
+## Lo esencial
+
+- Una MPA recibe un HTML completo del servidor por cada página.
+- Una SPA construye la interfaz en el navegador con JavaScript y navega sin recargar.
+- El renderizado en servidor envía HTML ya hecho y después lo hidrata.
+- La generación estática produce el HTML al construir el sitio, y es lo más rápido.
+- La elección depende de cuánto contenido y cuánta interacción hay.

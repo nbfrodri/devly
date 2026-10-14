@@ -1,0 +1,168 @@
+---
+title: "¿Qué es un transformer?"
+description: "El transformer es la arquitectura de red neuronal detrás de los modelos de lenguaje actuales. Su pieza central es el mecanismo de atención."
+level: avanzado
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+  - modelos-de-lenguaje
+  - embeddings
+updated: 2026-10-13
+sources:
+  - title: "Vaswani y otros: Attention Is All You Need (2017, en inglés)"
+    url: https://arxiv.org/abs/1706.03762
+  - title: "Hugging Face: ¿Cómo funcionan los Transformers?"
+    url: https://huggingface.co/learn/llm-course/es/chapter1/4
+  - title: "Jay Alammar: The Illustrated Transformer (en inglés)"
+    url: https://jalammar.github.io/illustrated-transformer/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **transformer** es un tipo de [red neuronal](/articulos/que-es-una-red-neuronal/) diseñado para procesar secuencias, como un texto. Su pieza central es la **atención**: un mecanismo que permite que cada elemento de la secuencia tenga en cuenta a todos los demás. Es la arquitectura de casi todos los [modelos de lenguaje](/articulos/modelos-de-lenguaje/) actuales.
+
+Se presentó en 2017, en un artículo de investigadores de Google titulado *Attention Is All You Need*, "la atención es todo lo que necesitas".
+
+## Qué problema resuelve
+
+Para entender una frase hay que relacionar palabras que pueden estar lejos.
+
+> El trofeo no cabía en la maleta porque era demasiado grande.
+
+¿Qué era demasiado grande? El trofeo. Si la frase acabara en "demasiado pequeña", sería la maleta. Para saberlo hay que conectar el final de la frase con el principio.
+
+Las redes que se usaban antes, llamadas **recurrentes**, leían el texto palabra a palabra, arrastrando un resumen de lo leído. Tenían dos limitaciones:
+
+- **Olvidaban.** Tras muchas palabras, la información del principio se había diluido.
+- **Eran lentas de entrenar.** Como cada palabra dependía de haber procesado la anterior, no se podía repartir el trabajo.
+
+El transformer elimina la lectura en orden. Mira toda la secuencia a la vez.
+
+## La atención
+
+Cada token se representa con un vector, su [embedding](/articulos/embeddings/). La atención actualiza cada vector mezclándolo con los de los demás tokens, en la proporción en que cada uno le resulta relevante.
+
+Para "grande", el mecanismo aprende a dar mucho peso a "trofeo". El vector de "grande" sale de la operación llevando información del trofeo.
+
+### Cómo se calcula
+
+De cada token se obtienen tres vectores, mediante transformaciones que se aprenden durante el entrenamiento:
+
+| Vector | Papel |
+| --- | --- |
+| Consulta | Lo que este token busca |
+| Clave | Lo que este token ofrece |
+| Valor | La información que aporta si se le presta atención |
+
+Para un token:
+
+1. Se compara su consulta con la clave de todos los tokens, con un producto escalar. Cuanto más alineados, mayor la puntuación.
+2. Las puntuaciones se convierten en **pesos** que suman 1, con una función llamada *softmax*.
+3. El resultado es la suma de los valores, cada uno multiplicado por su peso.
+
+```js
+const producto = (a, b) => a.reduce((suma, x, i) => suma + x * b[i], 0);
+
+function softmax(puntuaciones) {
+	const exponenciales = puntuaciones.map(Math.exp);
+	const total = exponenciales.reduce((a, b) => a + b, 0);
+	return exponenciales.map((e) => e / total);
+}
+
+const consulta = [2, 0];
+const claves = [
+	[2, 0],
+	[0, 0],
+	[0, 2],
+];
+const valores = [
+	[1, 0],
+	[0, 0],
+	[0, 1],
+];
+
+const pesos = softmax(claves.map((clave) => producto(consulta, clave)));
+const salida = [0, 1].map((i) =>
+	valores.reduce((suma, valor, j) => suma + pesos[j] * valor[i], 0),
+);
+
+console.log(pesos.map((p) => p.toFixed(2)).join(" ")); // "0.96 0.02 0.02"
+console.log(salida.map((x) => x.toFixed(2)).join(" ")); // "0.96 0.02"
+```
+
+La consulta coincide con la primera clave, así que casi toda la atención, el 96 %, va al primer token, y la salida es casi su valor.
+
+Esto se hace para todos los tokens a la vez. Como cada token atiende a los de su misma secuencia, se llama **autoatención**.
+
+### Varias cabezas
+
+Una sola atención captaría un tipo de relación. Un transformer ejecuta varias en paralelo, llamadas **cabezas**, cada una con sus propias transformaciones. Una puede fijarse en a qué sustantivo se refiere un pronombre, otra en qué verbo va con qué sujeto. Sus resultados se combinan.
+
+Nadie programa qué mira cada cabeza: lo aprenden.
+
+## El orden
+
+La atención trata la secuencia como un conjunto: por sí sola no sabe qué token va antes. Pero "el perro muerde al hombre" y "el hombre muerde al perro" no significan lo mismo.
+
+La solución es añadir a cada vector información de su posición, la **codificación posicional**. Así el mismo token en dos lugares tiene representaciones distintas.
+
+## Un bloque
+
+El transformer apila muchas veces el mismo bloque, decenas en los modelos grandes. Cada bloque tiene:
+
+1. **Autoatención**, que mezcla información entre tokens.
+2. **Una red de avance**, pequeña, que procesa cada token por separado.
+
+Alrededor de cada parte hay dos ayudas para el entrenamiento: **conexiones residuales**, que suman la entrada a la salida para que la información no se pierda al atravesar muchas capas, y una **normalización**, que mantiene los valores en un rango manejable.
+
+La idea general es que las primeras capas captan relaciones simples y las siguientes, cada vez más abstractas.
+
+<Quiz
+	client:visible
+	question="¿Qué permite el mecanismo de atención?"
+	options={[
+		"Leer el texto palabra a palabra, en orden",
+		"Que cada token tenga en cuenta a todos los demás de la secuencia",
+		"Reducir el texto a una sola palabra",
+	]}
+	answer={1}
+/>
+
+## Codificador y decodificador
+
+El diseño original, pensado para traducir, tenía dos mitades:
+
+- **Codificador.** Lee el texto de entrada, y cada token atiende a todos, anteriores y posteriores.
+- **Decodificador.** Genera el texto de salida token a token. Cada token solo atiende a los anteriores: no puede ver el futuro que aún no ha escrito.
+
+Después surgieron variantes con una sola mitad:
+
+| Variante | Sirve para | Uso |
+| --- | --- | --- |
+| Solo codificador | Entender texto | Clasificar, buscar, crear embeddings |
+| Solo decodificador | Generar texto | Los asistentes conversacionales |
+| Ambos | Transformar un texto en otro | Traducir, resumir |
+
+Los grandes modelos de lenguaje generativos son de la segunda clase.
+
+## Por qué se impuso
+
+- **Se entrena en paralelo.** Como no hay lectura secuencial, todos los tokens se procesan a la vez. Eso encaja con las tarjetas gráficas, y permite entrenar con cantidades de texto antes impensables.
+- **Relaciona elementos lejanos.** Cualquier token está a un paso de cualquier otro.
+- **Mejora con el tamaño.** Más datos y más parámetros dan modelos mejores, de forma sostenida.
+
+Tampoco se limita al texto. Dividiendo una imagen en trozos, o un sonido en fragmentos, y tratándolos como tokens, la misma arquitectura sirve para visión y audio.
+
+## Sus límites
+
+- **El coste crece con el cuadrado de la longitud.** Cada token atiende a todos: con el doble de tokens, hay cuatro veces más comparaciones. Es la razón de que exista una [ventana de contexto](/articulos/ventana-de-contexto-y-tokens/) limitada.
+- **Necesita muchos datos y mucho cómputo** para entrenarse.
+- **Es difícil de interpretar.** Se conoce cada operación, pero no por qué miles de millones de parámetros dan una respuesta concreta.
+
+## Lo esencial
+
+- El transformer es la arquitectura de los modelos de lenguaje actuales.
+- La atención actualiza cada token mezclándolo con los que le son relevantes.
+- Usa varias cabezas de atención y muchos bloques apilados.
+- La posición de cada token se añade aparte, porque la atención no distingue el orden.
+- Se entrena en paralelo, lo que permitió modelos mucho mayores.

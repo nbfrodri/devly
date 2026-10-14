@@ -1,0 +1,165 @@
+---
+title: "¿Qué es el rendimiento web? Las Core Web Vitals"
+description: "El rendimiento web es lo rápido que una página carga y responde. Las Core Web Vitals son tres métricas que lo miden desde el punto de vista del usuario."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+  - que-es-css
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "web.dev: Web Vitals (en inglés)"
+    url: https://web.dev/articles/vitals
+  - title: "web.dev: Largest Contentful Paint (en inglés)"
+    url: https://web.dev/articles/lcp
+  - title: "web.dev: Interaction to Next Paint (en inglés)"
+    url: https://web.dev/articles/inp
+  - title: "web.dev: Cumulative Layout Shift (en inglés)"
+    url: https://web.dev/articles/cls
+  - title: "MDN: Rendimiento web"
+    url: https://developer.mozilla.org/es/docs/Web/Performance
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **rendimiento web** es la rapidez con la que una página se carga y responde a quien la usa. Las **Core Web Vitals** son tres métricas, propuestas por Google, que miden esa experiencia: cuánto tarda en aparecer el contenido principal, cuánto tarda la página en reaccionar y cuánto se mueve lo que hay en pantalla.
+
+## Por qué importa
+
+Una página lenta no es solo incómoda.
+
+- **La gente se va.** Cuanto más tarda, más visitantes abandonan antes de verla.
+- **Excluye.** No todo el mundo tiene un teléfono reciente y una conexión rápida. Lo que va fluido en el ordenador de quien desarrolla puede ser inservible en un móvil modesto con mala cobertura.
+- **Afecta a la posición en buscadores.**
+
+## Medir lo que nota el usuario
+
+Durante años se midió cuánto tardaba una página en "terminar de cargar". Es un mal indicador: una página puede mostrar lo importante en un segundo y seguir cargando cosas secundarias otros diez.
+
+Las Core Web Vitals miden tres cosas que el usuario percibe.
+
+| Métrica | Pregunta | Bueno | Malo |
+| --- | --- | --- | --- |
+| LCP | ¿Cuándo aparece el contenido principal? | Hasta 2,5 s | Más de 4 s |
+| INP | ¿Cuánto tarda en reaccionar a mis acciones? | Hasta 200 ms | Más de 500 ms |
+| CLS | ¿Se mueven las cosas de sitio? | Hasta 0,1 | Más de 0,25 |
+
+Entre "bueno" y "malo" queda una zona intermedia, que necesita mejora.
+
+```js
+const umbrales = { LCP: [2500, 4000], INP: [200, 500], CLS: [0.1, 0.25] };
+
+function valorar(metrica, valor) {
+	const [bueno, malo] = umbrales[metrica];
+
+	if (valor <= bueno) return "bueno";
+	if (valor <= malo) return "mejorable";
+	return "malo";
+}
+
+console.log(valorar("LCP", 1800)); // "bueno"
+console.log(valorar("INP", 350)); // "mejorable"
+console.log(valorar("CLS", 0.4)); // "malo"
+```
+
+Una página cumple si alcanza el nivel bueno para el 75 % de sus visitas. No se usa la media, que ocultaría a quienes peor lo pasan, por lo que se explica al hablar de percentiles en [observabilidad](/articulos/observabilidad/).
+
+## LCP: carga
+
+*Largest Contentful Paint* mide cuándo se muestra el elemento más grande de la parte visible: normalmente la imagen principal o el titular.
+
+Qué lo retrasa y cómo se arregla:
+
+- **Un servidor lento.** Usar [caché](/articulos/que-es-una-cache/) y una [CDN](/articulos/que-es-una-cdn/).
+- **Recursos que bloquean.** El navegador no dibuja nada hasta procesar el [CSS](/articulos/que-es-css/) y el JavaScript que encuentra en la cabecera. El JavaScript que no sea imprescindible se carga en diferido.
+- **Imágenes pesadas.** Tamaño ajustado al que se va a mostrar, y formatos modernos.
+- **La imagen principal se descubre tarde.** Si solo aparece tras ejecutar JavaScript, el navegador no puede adelantarse. Debe estar en el [HTML](/articulos/que-es-html/), y se le puede dar prioridad.
+- **Renderizado en el cliente.** Si el contenido lo construye JavaScript, no hay nada que pintar hasta que termina. Se trata en [SPA, MPA y renderizado en servidor](/articulos/spa-mpa-y-renderizado-en-servidor/).
+
+## INP: respuesta
+
+*Interaction to Next Paint* mide cuánto pasa desde que el usuario pulsa, toca o teclea hasta que la pantalla refleja el resultado. Observa todas las interacciones de la visita y se queda, aproximadamente, con la peor.
+
+El culpable casi siempre es el mismo: JavaScript. El navegador tiene un **hilo principal** que hace todo: ejecutar código, calcular estilos, dibujar y atender al usuario. Como explica el artículo sobre [concurrencia](/articulos/hilos-y-concurrencia/), mientras está ocupado con una tarea, no puede atender otra. Si un script tarda medio segundo, el clic espera medio segundo.
+
+Cómo se mejora:
+
+- **Enviar menos JavaScript.**
+- **Partir las tareas largas**, cediendo el control entre trozos.
+- **Posponer** lo que no es urgente.
+- **Sacar los cálculos pesados** a un hilo aparte.
+- **Dar una respuesta visual inmediata**, aunque el trabajo siga.
+
+## CLS: estabilidad
+
+*Cumulative Layout Shift* mide cuánto se desplaza el contenido de forma inesperada. Es lo que pasa cuando vas a pulsar un enlace y, justo entonces, aparece un anuncio encima, todo baja y pulsas otra cosa.
+
+No se mide en tiempo: es una puntuación que combina cuánta pantalla se ha movido y cuánta distancia.
+
+Causas y soluciones:
+
+- **Imágenes y vídeos sin dimensiones.** El navegador no sabe cuánto ocuparán hasta descargarlos. Indicar `width` y `height` le deja reservar el hueco.
+- **Contenido insertado después**: anuncios, avisos, incrustaciones. Reservarles espacio.
+- **Tipografías.** Mientras carga la fuente se usa otra, con otras medidas; al llegar, el texto cambia de tamaño. Se reduce precargándola.
+- **Animaciones** que cambian el tamaño o la posición de los elementos. Usar transformaciones, que no desplazan a los vecinos.
+
+Los movimientos que responden a una acción del usuario, como desplegar un menú, no cuentan.
+
+<Quiz
+	client:visible
+	question="Vas a pulsar un botón, carga una imagen encima y el botón se desplaza. ¿Qué métrica lo refleja?"
+	options={["LCP", "INP", "CLS"]}
+	answer={2}
+/>
+
+## Laboratorio y campo
+
+Hay dos formas de medir, y dan resultados distintos.
+
+| | Laboratorio | Campo |
+| --- | --- | --- |
+| Qué es | Una prueba en un entorno controlado | Datos de visitas reales |
+| A favor | Repetible; sirve para depurar | Refleja lo que viven los usuarios |
+| En contra | Un dispositivo y una red, no todos | Tarda en reunirse; no dice la causa |
+
+Las herramientas del navegador dan medidas de laboratorio. Los datos de campo salen de los propios visitantes.
+
+Solo los de campo dicen la verdad sobre los usuarios. INP, además, no se puede medir en una prueba sin interacción.
+
+## Otras métricas
+
+Sirven para diagnosticar:
+
+- **TTFB.** Tiempo hasta el primer byte de la respuesta: lo que tarda el servidor.
+- **FCP.** Cuándo aparece el primer contenido, sea el que sea.
+- **TBT.** Cuánto tiempo estuvo bloqueado el hilo principal durante la carga. Es la aproximación de laboratorio a INP.
+
+## Lo que más rinde
+
+Casi todo el rendimiento se reduce a tres ideas: **enviar menos, enviarlo antes y no bloquear**.
+
+- **Menos JavaScript.** Suele ser la mejora con más efecto. Cada kilobyte hay que descargarlo, analizarlo y ejecutarlo.
+- **Imágenes ajustadas**, y carga diferida para las que no están a la vista.
+- **Comprimir** el texto.
+- **Caché**, con nombres de archivo que cambian cuando cambia el contenido.
+- **Cargar bajo demanda.** Partir el código para que cada página lleve solo lo suyo, que es tarea del [empaquetador](/articulos/que-hace-un-empaquetador/).
+- **Menos terceros.** Analítica, anuncios, widgets: cada uno añade peso que no controlas.
+
+## Medir antes de optimizar
+
+Optimizar a ciegas es perder el tiempo en lo que no era el problema. Primero se mide, se encuentra lo que más pesa, se arregla eso y se mide otra vez.
+
+Y conviene probar en condiciones realistas. Las herramientas del navegador pueden simular un procesador y una red más lentos.
+
+## No es todo
+
+Las Core Web Vitals son tres números. Una página puede cumplirlos y ser confusa, o inaccesible. Son un mínimo, no la definición de una buena experiencia, y el propio conjunto de métricas se revisa con el tiempo: INP sustituyó en 2024 a una métrica anterior.
+
+## Lo esencial
+
+- El rendimiento web se mide desde lo que percibe el usuario.
+- LCP mide cuándo aparece el contenido principal.
+- INP mide cuánto tarda la página en reaccionar a una acción.
+- CLS mide cuánto se mueve el contenido sin que nadie lo pida.
+- Lo que más ayuda es enviar menos JavaScript, cuidar las imágenes y reservar el espacio de lo que carga tarde.

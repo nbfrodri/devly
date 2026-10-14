@@ -34,11 +34,11 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Desarrollo web: front-end
 
-- [ ] Componentes y estado en una interfaz (DOM)
-- [ ] Diferencias entre SPA, MPA y renderizado en servidor (cliente-servidor)
+- [x] Componentes y estado en una interfaz (DOM)
+- [x] Diferencias entre SPA, MPA y renderizado en servidor (cliente-servidor)
 - [x] Almacenamiento en el navegador: cookies, localStorage y sessionStorage (CSRF)
-- [ ] Rendimiento web y Core Web Vitals (HTML, CSS)
-- [ ] ¿Qué hace un empaquetador? (compilador e intérprete)
+- [x] Rendimiento web y Core Web Vitals (HTML, CSS)
+- [x] ¿Qué hace un empaquetador? (compilador e intérprete)
 
 ## Desarrollo web: back-end
 
@@ -78,10 +78,10 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 - [x] Sobreajuste y subajuste (aprendizaje automático)
 - [x] El descenso del gradiente (red neuronal)
-- [ ] ¿Qué es un transformer? (modelo de lenguaje)
-- [ ] Ventana de contexto y tokens (modelo de lenguaje)
-- [ ] Generación aumentada por recuperación, RAG (embeddings)
-- [ ] ¿Qué es un agente de IA? (MCP)
+- [x] ¿Qué es un transformer? (modelo de lenguaje)
+- [x] Ventana de contexto y tokens (modelo de lenguaje)
+- [x] Generación aumentada por recuperación, RAG (embeddings)
+- [x] ¿Qué es un agente de IA? (MCP)
 
 ## Hardware
 

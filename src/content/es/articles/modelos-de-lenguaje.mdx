@@ -77,7 +77,7 @@ Los tokens son la unidad en la que se mide todo: lo que el modelo puede leer, lo
 
 Predecir bien exige entender de qué habla el texto. En "Ana dejó el libro en la mesa porque estaba cansada", saber quién estaba cansada requiere relacionar palabras alejadas entre sí.
 
-La arquitectura que lo hizo posible es el **transformer**, presentada en 2017. Su mecanismo central es la **atención**: al procesar cada token, el modelo calcula cuánto debe fijarse en cada uno de los demás tokens del texto, estén cerca o lejos.
+La arquitectura que lo hizo posible es el [**transformer**](/articulos/que-es-un-transformer/), presentada en 2017. Su mecanismo central es la **atención**: al procesar cada token, el modelo calcula cuánto debe fijarse en cada uno de los demás tokens del texto, estén cerca o lejos.
 
 Además, el transformer procesa todo el texto a la vez en lugar de palabra por palabra, lo que permite entrenarlo con muchísimos más datos en menos tiempo.
 
@@ -99,7 +99,7 @@ Después, el modelo puede seguir entrenándose con datos más específicos para 
 
 ## Conceptos que conviene conocer
 
-- **Ventana de contexto.** La cantidad máxima de tokens que el modelo puede tener en cuenta a la vez. Incluye lo que le das y lo que responde. Lo que queda fuera, no existe para él.
+- **[Ventana de contexto](/articulos/ventana-de-contexto-y-tokens/).** La cantidad máxima de tokens que el modelo puede tener en cuenta a la vez. Incluye lo que le das y lo que responde. Lo que queda fuera, no existe para él.
 - **Instrucción** (*prompt*). El texto que recibe. Como el modelo continúa lo que se le da, la forma de pedir influye mucho en el resultado.
 - **Temperatura.** Regula cuánto azar hay al elegir el siguiente token. Baja, el modelo elige casi siempre lo más probable y es más previsible. Alta, se arriesga más y es más variado.
 

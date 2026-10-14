@@ -9,3 +9,7 @@ steps:
   - diseno-adaptable
   - accesibilidad-web
   - heuristicas-de-usabilidad
+  - componentes-y-estado
+  - spa-mpa-y-renderizado-en-servidor
+  - que-hace-un-empaquetador
+  - rendimiento-web-y-core-web-vitals

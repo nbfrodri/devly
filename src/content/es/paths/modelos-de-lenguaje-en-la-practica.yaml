@@ -1,0 +1,11 @@
+title: Modelos de lenguaje en la práctica
+description: Cómo funcionan por dentro y cómo se construyen aplicaciones con ellos.
+layer: ia
+steps:
+  - modelos-de-lenguaje
+  - que-es-un-transformer
+  - ventana-de-contexto-y-tokens
+  - embeddings
+  - generacion-aumentada-por-recuperacion
+  - model-context-protocol
+  - agentes-de-ia
