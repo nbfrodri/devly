@@ -1,0 +1,145 @@
+---
+title: "¿Qué es un proceso ETL?"
+description: "ETL son las siglas de extraer, transformar y cargar: el proceso que lleva datos de sus fuentes a un sistema de análisis, limpiándolos por el camino."
+level: intermedio
+layer: datos
+prerequisites:
+  - almacen-de-datos-y-lago-de-datos
+  - formatos-de-datos-json-csv-xml
+updated: 2026-10-13
+sources:
+  - title: "AWS: ¿Qué es ETL?"
+    url: https://aws.amazon.com/es/what-is/etl/
+  - title: "Microsoft: Extracción, transformación y carga (ETL)"
+    url: https://learn.microsoft.com/es-es/azure/architecture/data-guide/relational-data/etl
+---
+
+import { Quiz } from "@/components/quiz";
+
+**ETL** son las siglas de *extract, transform, load*: **extraer, transformar y cargar**. Es el proceso que toma datos de las fuentes donde se generan, los limpia y los adapta, y los deposita en un sistema de análisis como un [almacén de datos](/articulos/almacen-de-datos-y-lago-de-datos/).
+
+Es la tubería que alimenta los informes y cuadros de mando de una organización.
+
+## Qué problema resuelve
+
+Los datos que interesan están repartidos y desordenados:
+
+- Los pedidos, en la base de datos de la tienda.
+- Los clientes, en el sistema comercial.
+- Las visitas, en la analítica web.
+- Los costes, en una hoja de cálculo de contabilidad.
+
+Cada fuente tiene su formato, sus nombres y sus errores. Una ciudad puede aparecer como "Madrid", "madrid" o "MADRID ". Para analizarlo junto hay que reunirlo y ponerlo de acuerdo.
+
+## Las tres fases
+
+### Extraer
+
+Leer los datos de cada fuente: bases de datos, [API](/articulos/que-es-una-api/), archivos [CSV o JSON](/articulos/formatos-de-datos-json-csv-xml/), registros.
+
+Dos formas:
+
+- **Completa**: copiar todo cada vez. Simple, y lenta con volúmenes grandes.
+- **Incremental**: copiar solo lo nuevo o modificado desde la última vez. Exige saber qué ha cambiado, por ejemplo con una fecha de modificación.
+
+La extracción debe molestar lo menos posible a los sistemas de origen, que están atendiendo a usuarios.
+
+### Transformar
+
+La fase con más trabajo:
+
+- **Limpiar**: corregir formatos, eliminar duplicados, descartar registros imposibles.
+- **Unificar**: mismas unidades, mismas codificaciones, mismos nombres.
+- **Enriquecer**: añadir información, como la región a partir del código postal.
+- **Combinar** datos de varias fuentes.
+- **Agregar**: calcular totales, medias, recuentos.
+
+### Cargar
+
+Escribir el resultado en el destino, sustituyendo o añadiendo a lo que ya había.
+
+## Un ejemplo pequeño
+
+```js
+const csv = [
+	"fecha,ciudad,importe",
+	"2026-10-01,madrid,10.5",
+	"2026-10-01,Madrid ,4.5",
+	"2026-10-02,sevilla,",
+].join("\n");
+
+const filas = csv
+	.split("\n")
+	.slice(1)
+	.map((linea) => linea.split(","));
+
+const limpias = filas
+	.filter(([, , importe]) => importe !== "")
+	.map(([fecha, ciudad, importe]) => ({
+		fecha,
+		ciudad: ciudad.trim().toLowerCase(),
+		importe: Number(importe),
+	}));
+
+const porCiudad = {};
+for (const fila of limpias) {
+	porCiudad[fila.ciudad] = (porCiudad[fila.ciudad] ?? 0) + fila.importe;
+}
+
+console.log(limpias.length); // 2
+console.log(JSON.stringify(porCiudad)); // {"madrid":15}
+```
+
+Se extraen tres filas. La de Sevilla no tiene importe y se descarta. Las otras dos escriben la ciudad de forma distinta: tras unificar, son la misma, y suman 15.
+
+Sin la transformación, el informe mostraría dos ciudades llamadas Madrid.
+
+Descartar en silencio no siempre es buena idea. Los registros rechazados se guardan aparte, con el motivo, para revisarlos.
+
+## ETL o ELT
+
+Con el abaratamiento del almacenamiento y la potencia de los almacenes en [la nube](/articulos/computacion-en-la-nube/), se ha extendido otra variante: **ELT**, extraer, **cargar** y después transformar.
+
+| | ETL | ELT |
+| --- | --- | --- |
+| Dónde se transforma | En un sistema intermedio, antes de cargar | Dentro del destino, después de cargar |
+| Datos en bruto | No se conservan | Se conservan |
+| Cambiar una transformación | Hay que volver a extraer | Se recalcula desde lo cargado |
+| Herramienta de transformación | Programas específicos | Normalmente [SQL](/articulos/que-es-sql/) |
+
+ELT tiene una ventaja importante: si una transformación tenía un error, se corrige y se vuelve a ejecutar sobre los datos originales, que siguen ahí.
+
+<Quiz
+	client:visible
+	question="¿Qué diferencia principal hay entre ETL y ELT?"
+	options={[
+		"ELT no transforma los datos",
+		"En ELT los datos se cargan en bruto y se transforman después, dentro del destino",
+		"ETL solo funciona con archivos CSV",
+	]}
+	answer={1}
+/>
+
+## Cuándo se ejecuta
+
+- **Por lotes**: cada noche, cada hora. Lo más habitual. Los datos del análisis van algo por detrás.
+- **En continuo**: cada evento se procesa al llegar, a menudo con [colas de mensajes](/articulos/colas-de-mensajes/). Para cuadros de mando en tiempo real o detección de fraude.
+
+## Que sea fiable
+
+Un proceso ETL se ejecuta miles de veces, sin nadie mirando. Tiene que soportar fallos.
+
+- **Idempotente.** Ejecutarlo dos veces sobre los mismos datos debe dar el mismo resultado, no duplicarlos. Si falla a medias y se reintenta, no debe quedar nada contado dos veces. Se explica en [atomicidad e idempotencia](/articulos/atomicidad-e-idempotencia/).
+- **Ordenado.** Los pasos tienen dependencias: no se calculan las ventas por cliente antes de cargar los clientes. Las herramientas de orquestación los ejecutan respetando ese orden, que es una [ordenación topológica](/articulos/ordenacion-topologica/).
+- **Vigilado.** Alertas si falla, si tarda demasiado o si los datos parecen raros: de repente, cero ventas en un día laborable.
+- **Comprobado.** Recuentos y totales que deben cuadrar entre el origen y el destino.
+
+Una cifra equivocada en un informe que nadie detecta durante meses es peor que un proceso que se detiene con un error.
+
+## Lo esencial
+
+- ETL extrae datos de sus fuentes, los transforma y los carga en un sistema de análisis.
+- La transformación limpia, unifica, combina y agrega.
+- En ELT, los datos se cargan en bruto y se transforman dentro del destino, lo que permite corregir y repetir.
+- Se ejecuta por lotes o en continuo.
+- Debe ser idempotente, respetar las dependencias y estar vigilado.

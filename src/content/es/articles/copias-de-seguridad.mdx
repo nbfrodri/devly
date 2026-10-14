@@ -1,0 +1,140 @@
+---
+title: "¿Cómo se hacen bien las copias de seguridad?"
+description: "Una copia de seguridad solo sirve si se puede restaurar. La regla 3-2-1, los objetivos de recuperación y las pruebas periódicas son lo esencial."
+level: basico
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+  - discos-duros-y-ssd
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Backup and Restore (en inglés)"
+    url: https://www.postgresql.org/docs/current/backup.html
+  - title: "PostgreSQL: Continuous Archiving and Point-in-Time Recovery (en inglés)"
+    url: https://www.postgresql.org/docs/current/continuous-archiving.html
+  - title: "NIST SP 800-34 Rev. 1: Contingency Planning Guide for Federal Information Systems (en inglés)"
+    url: https://csrc.nist.gov/pubs/sp/800/34/r1/upd1/final
+  - title: "CISA: Data Backup Options (en inglés)"
+    url: https://www.cisa.gov/sites/default/files/publications/data_backup_options.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **copia de seguridad** es una copia de los datos guardada aparte, para poder **recuperarlos** si los originales se pierden o se dañan. La palabra clave es recuperar: una copia que no se puede restaurar no sirve de nada, y muchas organizaciones lo descubren el día que la necesitan.
+
+## De qué protegen
+
+Los datos se pierden de muchas formas:
+
+| Causa | Ejemplo |
+| --- | --- |
+| Fallo de hardware | Un [disco o una SSD](/articulos/discos-duros-y-ssd/) que deja de funcionar |
+| Error humano | Un borrado o una actualización sin filtro que modifica todas las filas |
+| Error de software | Un programa que corrompe los datos |
+| Ataques | Programas de secuestro que cifran los datos y piden un rescate |
+| Desastres | Incendio, inundación, robo |
+| Fallo del proveedor | Un servicio en la nube que pierde datos o cierra |
+
+## La replicación no es una copia de seguridad
+
+Es la confusión más peligrosa. La [replicación](/articulos/replicacion-y-particionado/) mantiene copias **sincronizadas** de los datos. Si alguien borra una tabla por error, el borrado se replica a todas las copias en milisegundos. Lo mismo un ataque que cifra los datos.
+
+La replicación protege contra el fallo de una máquina. Una copia de seguridad protege contra todo lo demás, porque guarda el estado de **un momento pasado**.
+
+Tampoco lo es un RAID, que combina varios discos para sobrevivir a la avería de uno, ni la papelera, ni una carpeta sincronizada con la nube.
+
+## La regla 3-2-1
+
+La recomendación clásica:
+
+- **3** copias de los datos, contando la original.
+- En **2** soportes distintos.
+- **1** de ellas fuera del lugar donde están los originales.
+
+Así, ningún suceso único se lleva todo: ni la avería de un disco, ni un incendio en la oficina.
+
+Hoy se añade una condición más: que al menos una copia sea **inmutable** o esté **desconectada**. Los ataques de secuestro buscan y cifran también las copias de seguridad a las que tienen acceso. Una copia que no se puede modificar durante un tiempo, o que no está conectada a la red, sobrevive.
+
+## Dos objetivos
+
+Antes de elegir cómo copiar, hay que decidir qué se necesita. Dos cifras lo resumen:
+
+| Objetivo | Pregunta | Ejemplo |
+| --- | --- | --- |
+| RPO, punto de recuperación | ¿Cuántos datos podemos permitirnos perder? | Como mucho una hora |
+| RTO, tiempo de recuperación | ¿Cuánto tiempo podemos estar sin servicio? | Como mucho cuatro horas |
+
+Con una copia cada noche, el RPO es de un día: si el fallo ocurre a las 23:59, se pierde todo el día.
+
+Cuanto más exigentes, más caro. Una tienda en línea y un blog personal no necesitan lo mismo.
+
+## Tipos de copia
+
+| Tipo | Qué copia | Restaurar |
+| --- | --- | --- |
+| Completa | Todo | Lo más simple: una sola copia |
+| Incremental | Lo cambiado desde la última copia, de cualquier tipo | La completa y todas las incrementales posteriores |
+| Diferencial | Lo cambiado desde la última completa | La completa y la última diferencial |
+
+Lo habitual es combinarlas: una completa a la semana e incrementales cada día.
+
+Se guardan varias, no solo la última. Si un error se descubre una semana tarde, la copia de ayer ya contiene el error. Una política de **retención** típica: las diarias de una semana, las semanales de un mes, las mensuales de un año.
+
+<Quiz
+	client:visible
+	question="¿Por qué la replicación de una base de datos no sustituye a una copia de seguridad?"
+	options={[
+		"Porque es más lenta",
+		"Porque un borrado o un ataque se copian también a las réplicas al instante",
+		"Porque las réplicas no guardan todos los datos",
+	]}
+	answer={1}
+/>
+
+## Bases de datos
+
+Copiar los archivos de una base de datos mientras funciona puede producir una copia incoherente: unos archivos de un momento y otros de otro.
+
+- **Volcado lógico.** Una herramienta de la base de datos exporta el contenido como instrucciones [SQL](/articulos/que-es-sql/) o en un formato propio, de forma coherente. Sencillo y portable, y lento con bases grandes.
+- **Copia física y registro de cambios.** Se copian los archivos y, además, se guarda continuamente el registro de cada cambio. Permite la **recuperación a un instante concreto**: devolver la base al estado de las 14:32:10, justo antes del borrado accidental.
+
+Los servicios gestionados de bases de datos en la nube suelen ofrecer esto de serie, y conviene comprobar cuánto tiempo guardan.
+
+## Una copia sin probar no es una copia
+
+El error más común es no restaurar nunca hasta que hace falta. Entonces aparecen los problemas: la copia estaba vacía, incompleta, corrupta, cifrada con una clave que nadie encuentra, o tarda tres días en restaurarse.
+
+Hay que **ensayar la restauración** con regularidad, en un entorno aparte, y medir cuánto tarda. Es la única forma de saber si se cumplen el RPO y el RTO.
+
+Como mínimo, comprobar que el contenido no se ha alterado:
+
+```js
+import { createHash } from "node:crypto";
+
+const huella = (contenido) => createHash("sha256").update(contenido).digest("hex");
+
+const original = "pedidos de octubre";
+const huellaGuardada = huella(original);
+
+const restaurado = "pedidos de octubre";
+
+console.log(huella(restaurado) === huellaGuardada); // true
+```
+
+Una [función hash](/articulos/funciones-hash/) calculada al copiar permite verificar que lo restaurado es idéntico.
+
+## Proteger las copias
+
+Las copias contienen todos los datos, así que son un objetivo tan valioso como la base de datos misma.
+
+- **Cifrarlas**, y guardar la clave en un lugar distinto de la copia. Perder la clave es perder la copia.
+- **Restringir el acceso**: pocas personas y servicios pueden leerlas o borrarlas.
+- **Cumplir las normas de conservación.** Los datos personales se guardan solo el tiempo justificado, también en las copias, como pide el [RGPD](/articulos/rgpd-y-proteccion-de-datos/).
+
+## Lo esencial
+
+- Una copia de seguridad sirve si se puede restaurar; hay que probarlo.
+- La replicación y los RAID no son copias de seguridad: replican también los errores.
+- La regla 3-2-1, con una copia inmutable o desconectada, protege contra casi todo.
+- El RPO fija cuántos datos se pueden perder; el RTO, cuánto tiempo sin servicio.
+- Las copias se cifran y se protegen como los datos originales.

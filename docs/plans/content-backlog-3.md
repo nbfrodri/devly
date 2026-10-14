@@ -36,14 +36,14 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 ## Datos y bases de datos (había 9)
 
 - [x] Índices de bases de datos
-- [ ] Modelo entidad-relación
+- [x] Modelo entidad-relación
 - [x] Tipos de JOIN
-- [ ] Vistas y procedimientos almacenados
+- [x] Vistas y procedimientos almacenados
 - [x] Formatos de datos: JSON, CSV y XML
-- [ ] Almacén de datos y lago de datos
-- [ ] Procesos ETL
-- [ ] Visualización de datos: elegir el gráfico adecuado
-- [ ] Copias de seguridad y recuperación
+- [x] Almacén de datos y lago de datos
+- [x] Procesos ETL
+- [x] Visualización de datos: elegir el gráfico adecuado
+- [x] Copias de seguridad y recuperación
 
 ## Sistemas operativos (había 9)
 
@@ -79,7 +79,7 @@ Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre pr
 - [x] ¿Qué es MongoDB? (bases de datos NoSQL)
 - [x] Bases de datos de grafos (grafos)
 - [x] Bases de datos vectoriales (embeddings)
-- [ ] ¿Qué es Nginx? (proxy inverso)
+- [x] ¿Qué es Nginx? (proxy inverso)
 
 ## Linux
 

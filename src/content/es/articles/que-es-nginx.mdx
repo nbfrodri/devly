@@ -1,0 +1,160 @@
+---
+title: "¿Qué es Nginx?"
+description: "Nginx es un servidor web y proxy inverso de código abierto, conocido por atender muchísimas conexiones con pocos recursos."
+level: intermedio
+layer: redes
+prerequisites:
+  - proxy-y-proxy-inverso
+  - que-es-http
+  - balanceador-de-carga
+updated: 2026-10-13
+sources:
+  - title: "nginx: documentación oficial (en inglés)"
+    url: https://nginx.org/en/
+  - title: "nginx: Beginner’s Guide (en inglés)"
+    url: https://nginx.org/en/docs/beginners_guide.html
+  - title: "Andrew Alexeev: nginx, The Architecture of Open Source Applications, vol. II (en inglés)"
+    url: https://aosabook.org/en/v2/nginx.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Nginx**, que se pronuncia "engine-ex", es un programa de código abierto que funciona como **servidor web**, **[proxy inverso](/articulos/proxy-y-proxy-inverso/)** y **[balanceador de carga](/articulos/balanceador-de-carga/)**. Es uno de los servidores web más usados del mundo, y está delante de una parte enorme de los sitios de internet.
+
+Lo creó Igor Sysoev, y se publicó en 2004.
+
+## Qué problema resolvió
+
+A principios de los años 2000 se hablaba del **problema C10K**: cómo atender diez mil conexiones simultáneas en un solo servidor.
+
+Los servidores de entonces dedicaban un [proceso](/articulos/que-es-un-proceso/) o un [hilo](/articulos/hilos-y-concurrencia/) a cada conexión. Diez mil conexiones eran diez mil hilos, cada uno con su memoria, casi todos esperando a que un cliente lento terminara de recibir datos. La máquina se quedaba sin memoria mucho antes que sin trabajo útil.
+
+## Cómo funciona
+
+Nginx usa un modelo **orientado a eventos**, el mismo que después popularizó [Node.js](/articulos/que-es-nodejs/):
+
+- Un **proceso maestro** lee la configuración y gestiona a los demás.
+- Unos pocos **procesos trabajadores**, normalmente uno por núcleo del procesador.
+- Cada trabajador atiende **miles de conexiones** con un solo hilo, sin bloquearse nunca: inicia una operación, atiende otras mientras tanto, y retoma cuando el sistema operativo le [avisa](/articulos/interrupciones-y-entrada-salida/) de que hay datos.
+
+El resultado es un consumo de memoria pequeño y casi constante, aunque crezca el número de conexiones.
+
+## Para qué se usa
+
+### Servir archivos estáticos
+
+[HTML](/articulos/que-es-html/), CSS, JavaScript e imágenes, directamente desde el disco, de forma muy eficiente.
+
+```nginx
+server {
+    listen 80;
+    server_name ejemplo.com;
+    root /var/www/ejemplo;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+### Proxy inverso
+
+Delante de una aplicación escrita en Node.js, Python o cualquier otro lenguaje. Nginx recibe las peticiones de internet y se las pasa a la aplicación.
+
+```nginx
+location /api/ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $remote_addr;
+}
+```
+
+Así la aplicación no tiene que ocuparse de lo demás: Nginx se encarga del cifrado, de los clientes lentos y de los archivos estáticos.
+
+### Terminar HTTPS
+
+Gestiona los certificados y el cifrado [TLS](/articulos/https-y-tls/), y habla con la aplicación por la red interna.
+
+### Balancear la carga
+
+```nginx
+upstream aplicacion {
+    server 10.0.0.11:3000;
+    server 10.0.0.12:3000;
+    server 10.0.0.13:3000;
+}
+
+server {
+    location / {
+        proxy_pass http://aplicacion;
+    }
+}
+```
+
+Reparte las peticiones entre los servidores de la lista, por turnos o con otros criterios.
+
+### Otras tareas
+
+- **Caché** de las respuestas de la aplicación.
+- **Compresión**.
+- **[Limitación de peticiones](/articulos/limitacion-de-peticiones/)** por cliente.
+- **Redirecciones**, por ejemplo de HTTP a HTTPS.
+- **Proxy de [WebSockets](/articulos/websockets/)**, con la configuración adecuada.
+
+## La configuración
+
+Se escribe en un archivo de texto, organizado en **bloques**:
+
+| Bloque | Qué define |
+| --- | --- |
+| `http` | Ajustes generales del servidor web |
+| `server` | Un sitio: puerto y nombre de dominio |
+| `location` | Qué hacer con un grupo de rutas |
+| `upstream` | Un grupo de servidores a los que reenviar |
+
+Un mismo Nginx puede atender muchos dominios, cada uno con su bloque `server`. El dominio se distingue por la cabecera `Host` de la petición [HTTP](/articulos/que-es-http/).
+
+La configuración se comprueba antes de aplicarla, y se recarga sin cortar las conexiones en curso:
+
+```bash
+nginx -t
+nginx -s reload
+```
+
+<Quiz
+	client:visible
+	question="¿Por qué Nginx atiende muchas conexiones con poca memoria?"
+	options={[
+		"Porque crea un hilo por cada conexión",
+		"Porque cada proceso trabajador atiende miles de conexiones sin bloquearse, orientado a eventos",
+		"Porque rechaza las conexiones lentas",
+	]}
+	answer={1}
+/>
+
+## Errores habituales
+
+- **Confundir el orden de los bloques `location`.** Nginx no los evalúa en el orden en que están escritos, sino con unas reglas de prioridad: las coincidencias exactas primero, luego los prefijos más largos, y las expresiones regulares en orden. Un `location` que no se aplica suele deberse a esto.
+- **La barra final en `proxy_pass`.** Con barra al final o sin ella, la ruta que recibe la aplicación cambia. Es una fuente constante de errores 404.
+- **Olvidar las cabeceras** que informan a la aplicación de la dirección real del cliente y del protocolo original.
+- **Tiempos de espera** que no coinciden entre Nginx y la aplicación, que cortan peticiones largas.
+- **Exponer archivos** que no debían ser públicos al apuntar `root` a una carpeta demasiado amplia.
+
+## Alternativas
+
+| Programa | Rasgo distintivo |
+| --- | --- |
+| Apache | El servidor web clásico, muy configurable, con módulos |
+| Caddy | Configuración sencilla y HTTPS automático |
+| HAProxy | Especializado en balanceo de carga |
+| Envoy | Pensado para microservicios, con configuración dinámica |
+
+En [la nube](/articulos/computacion-en-la-nube/), muchos de sus papeles los cubren servicios gestionados, como los balanceadores de los proveedores o las [CDN](/articulos/que-es-una-cdn/). Nginx sigue muy presente dentro de contenedores y como controlador de entrada en [Kubernetes](/articulos/que-es-kubernetes/).
+
+## Lo esencial
+
+- Nginx es un servidor web, proxy inverso y balanceador de carga de código abierto.
+- Nació para atender muchas conexiones simultáneas con pocos recursos.
+- Usa pocos procesos trabajadores, cada uno atendiendo miles de conexiones orientado a eventos.
+- Se usa para servir archivos, ponerse delante de aplicaciones, cifrar con TLS y repartir carga.
+- Su configuración se organiza en bloques, y el orden de prioridad de las `location` causa muchos errores.

@@ -1,0 +1,127 @@
+---
+title: "¿Cómo se elige el gráfico adecuado para unos datos?"
+description: "Cada tipo de gráfico responde bien a una pregunta concreta. Elegir el adecuado, y no distorsionarlo, es la base de comunicar con datos."
+level: basico
+layer: datos
+prerequisites:
+  - media-mediana-y-desviacion
+  - correlacion-y-causalidad
+updated: 2026-10-13
+sources:
+  - title: "Financial Times: Visual Vocabulary (en inglés)"
+    url: https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary
+  - title: "From Data to Viz (en inglés)"
+    url: https://www.data-to-viz.com/
+  - title: "Datawrapper Academy (en inglés)"
+    url: https://academy.datawrapper.de/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **visualización de datos** es la representación gráfica de información para que se entienda de un vistazo. Su regla fundamental es que **el gráfico depende de la pregunta**: cada tipo muestra bien una relación concreta, y mal las demás.
+
+Un buen gráfico revela en segundos lo que una tabla esconde. Uno malo confunde, o engaña.
+
+## Empezar por la pregunta
+
+Antes de elegir el gráfico hay que saber qué se quiere mostrar:
+
+| Pregunta | Tipo de relación | Gráficos adecuados |
+| --- | --- | --- |
+| ¿Cuál es mayor? | Comparación | Barras |
+| ¿Cómo ha cambiado? | Evolución en el tiempo | Líneas |
+| ¿Qué parte del total es? | Composición | Barras apiladas, a veces sectores |
+| ¿Cómo se reparten los valores? | Distribución | Histograma, diagrama de caja |
+| ¿Están relacionadas dos variables? | Correlación | Dispersión |
+| ¿Dónde ocurre? | Geografía | Mapa |
+
+## Los gráficos básicos
+
+### Barras
+
+Para **comparar cantidades** entre categorías. El ojo compara longitudes con mucha precisión.
+
+- Con nombres largos, mejor horizontales.
+- Ordenadas de mayor a menor, salvo que las categorías tengan un orden propio, como los meses.
+- **El eje empieza en cero.** Siempre. La longitud de la barra es el dato.
+
+### Líneas
+
+Para mostrar **cómo cambia algo en el tiempo**. La línea transmite continuidad y tendencia. Con varias series, conviene no pasar de unas pocas: más se convierten en una maraña.
+
+A diferencia de las barras, en un gráfico de líneas el eje puede no empezar en cero, si lo que interesa es la variación.
+
+### Dispersión
+
+Cada punto es un caso, colocado según dos variables. Muestra si están **relacionadas**, y cómo: si crecen juntas, si hay grupos, si hay casos atípicos.
+
+Es el gráfico de la [correlación](/articulos/correlacion-y-causalidad/), con su advertencia: que los puntos formen una línea no significa que una variable cause la otra.
+
+### Histograma
+
+Para ver la **distribución** de una variable: cuántos casos hay en cada tramo de valores. Muestra si los datos forman una campana como la [distribución normal](/articulos/distribucion-normal/), si están sesgados hacia un lado o si hay dos grupos.
+
+Un promedio no enseña nada de esto. Dos conjuntos con la misma media y la misma [desviación](/articulos/media-mediana-y-desviacion/) pueden tener formas completamente distintas.
+
+### Sectores
+
+El gráfico de tarta es el más usado y el más criticado. El ojo compara mal ángulos y áreas: entre un 23 % y un 27 % apenas se nota la diferencia. Solo funciona con dos o tres partes muy distintas. Para lo demás, barras.
+
+<Quiz
+	client:visible
+	question="¿Qué gráfico conviene para mostrar cómo ha evolucionado una cifra a lo largo de los meses?"
+	options={["Sectores", "Líneas", "Dispersión"]}
+	answer={1}
+/>
+
+## Cómo engaña un gráfico
+
+### El eje recortado
+
+Dos valores, 98 y 100, casi iguales. Si el eje de un gráfico de barras empieza en 95:
+
+```js
+const valores = [98, 100];
+const inicioDelEje = 95;
+
+const diferenciaReal = valores[1] / valores[0];
+const diferenciaAparente =
+	(valores[1] - inicioDelEje) / (valores[0] - inicioDelEje);
+
+console.log(diferenciaReal.toFixed(2)); // "1.02"
+console.log(diferenciaAparente.toFixed(2)); // "1.67"
+```
+
+La diferencia real es del 2 %. La barra de 100 parece un 67 % más larga. El gráfico cuenta una historia que los datos no contienen.
+
+### Otros trucos
+
+- **Escalas distintas** en dos gráficos que se colocan juntos para compararlos.
+- **Dos ejes verticales** en el mismo gráfico: ajustando sus escalas, cualquier par de series parece moverse a la vez.
+- **Áreas para cantidades**: si se dobla el lado de un icono para representar el doble, su área se cuadruplica.
+- **Elegir el intervalo** que conviene: una caída de un año parece una subida si se empieza a mirar en el punto más bajo.
+- **Efectos en tres dimensiones**, que deforman las proporciones.
+
+## Principios para un buen gráfico
+
+- **Un mensaje por gráfico.** El título puede decirlo: "Las ventas se duplicaron en 2026", no solo "Ventas".
+- **Quitar lo que sobra.** Bordes, sombras, líneas de cuadrícula densas, leyendas que se podrían sustituir por etiquetas junto a cada serie.
+- **Destacar lo importante.** La serie que importa, en color; las demás, en gris.
+- **Etiquetar.** Ejes con nombre y unidad. Fuente de los datos.
+- **Accesibilidad.** No depender solo del color para distinguir series: alrededor de una de cada doce personas tiene alguna dificultad para distinguir colores. Añadir etiquetas o formas, y un texto alternativo que resuma lo que muestra el gráfico, como explica [accesibilidad web](/articulos/accesibilidad-web/).
+
+## A veces, una tabla
+
+Si hay que consultar valores exactos o comparar muchas cifras precisas, una tabla bien ordenada es mejor que un gráfico. El gráfico sirve para ver **formas**: tendencias, diferencias, patrones.
+
+## Mirar antes de concluir
+
+Visualizar no es solo comunicar. Es también la primera forma de **entender** unos datos: un gráfico revela errores, valores atípicos y patrones que los resúmenes numéricos ocultan. Antes de calcular nada, conviene mirar los datos, como se recomienda también al [prepararlos](/articulos/preparacion-de-datos/).
+
+## Lo esencial
+
+- El gráfico se elige según la pregunta: comparar, ver evolución, composición, distribución o relación.
+- Barras para comparar, líneas para el tiempo, dispersión para relaciones, histograma para distribuciones.
+- En un gráfico de barras, el eje empieza en cero.
+- Los ejes recortados, las escalas manipuladas y los efectos 3D distorsionan los datos.
+- Un buen gráfico tiene un mensaje claro y no depende solo del color.

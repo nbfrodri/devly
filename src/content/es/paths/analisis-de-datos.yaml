@@ -1,0 +1,11 @@
+title: Análisis de datos
+description: "Del dato en bruto al gráfico que se entiende, pasando por reunir, limpiar y analizar."
+layer: datos
+steps:
+  - media-mediana-y-desviacion
+  - distribucion-normal
+  - correlacion-y-causalidad
+  - visualizacion-de-datos
+  - preparacion-de-datos
+  - procesos-etl
+  - almacen-de-datos-y-lago-de-datos

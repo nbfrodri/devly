@@ -13,3 +13,4 @@ steps:
   - limitacion-de-peticiones
   - que-es-una-cache
   - colas-de-mensajes
+  - que-es-nginx

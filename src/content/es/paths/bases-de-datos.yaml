@@ -3,10 +3,12 @@ description: Del modelo relacional y SQL a las alternativas NoSQL.
 layer: datos
 steps:
   - que-es-una-base-de-datos
+  - modelo-entidad-relacion
   - que-es-sql
   - tipos-de-join
   - normalizacion-de-bases-de-datos
   - indices-de-bases-de-datos
+  - vistas-y-procedimientos-almacenados
   - transacciones-y-acid
   - que-es-postgresql
   - bases-de-datos-nosql
@@ -17,3 +19,4 @@ steps:
   - sql-frente-a-nosql
   - teorema-cap
   - replicacion-y-particionado
+  - copias-de-seguridad

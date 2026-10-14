@@ -1,0 +1,150 @@
+---
+title: "¿Qué son las vistas y los procedimientos almacenados?"
+description: "Una vista es una consulta guardada con nombre, que se usa como una tabla. Un procedimiento almacenado es código que se ejecuta dentro de la base de datos."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-sql
+  - tipos-de-join
+  - transacciones-y-acid
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: CREATE VIEW (en inglés)"
+    url: https://www.postgresql.org/docs/current/sql-createview.html
+  - title: "PostgreSQL: Materialized Views (en inglés)"
+    url: https://www.postgresql.org/docs/current/rules-materializedviews.html
+  - title: "PostgreSQL: CREATE PROCEDURE (en inglés)"
+    url: https://www.postgresql.org/docs/current/sql-createprocedure.html
+  - title: "PostgreSQL: Triggers (en inglés)"
+    url: https://www.postgresql.org/docs/current/triggers.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **vista** es una consulta de [SQL](/articulos/que-es-sql/) guardada con un nombre, que después se usa como si fuera una tabla. Un **procedimiento almacenado** es un programa guardado dentro de la base de datos, que se ejecuta allí, cerca de los datos. Los dos permiten poner parte de la lógica en la base de datos en lugar de en la aplicación.
+
+## Vistas
+
+### Qué problema resuelven
+
+Muchas consultas se repiten, y algunas son largas: varios [JOIN](/articulos/tipos-de-join/), filtros, cálculos. Copiarlas en cada sitio que las necesita es fuente de errores: si cambia la definición de "cliente activo", hay que buscarla en veinte lugares.
+
+### Cómo se usan
+
+```sql
+CREATE VIEW clientes_activos AS
+SELECT c.id, c.nombre, c.correo, MAX(p.fecha) AS ultimo_pedido
+FROM clientes c
+JOIN pedidos p ON p.cliente_id = c.id
+WHERE p.fecha > CURRENT_DATE - INTERVAL '90 days'
+GROUP BY c.id, c.nombre, c.correo;
+```
+
+A partir de ahí, se consulta como cualquier tabla:
+
+```sql
+SELECT nombre FROM clientes_activos WHERE ultimo_pedido > '2026-10-01';
+```
+
+Una vista normal **no guarda datos**. Cada vez que se consulta, la base de datos ejecuta la consulta de la definición. Los resultados están siempre al día.
+
+### Para qué sirven
+
+- **Reutilizar**: la definición de un concepto vive en un solo sitio.
+- **Simplificar**: quien consulta no necesita conocer cómo se unen las tablas.
+- **Seguridad**: se puede dar acceso a una vista que muestra solo ciertas columnas o filas, sin dar acceso a la tabla completa. Un departamento ve los clientes de su región, sin ver datos sensibles.
+- **Estabilidad**: si cambian las tablas de debajo, se ajusta la vista y lo que la usa sigue funcionando.
+
+## Vistas materializadas
+
+Si la consulta es costosa, ejecutarla en cada lectura sale caro. Una **vista materializada** **guarda el resultado**, como una tabla.
+
+```sql
+CREATE MATERIALIZED VIEW ventas_por_mes AS
+SELECT date_trunc('month', fecha) AS mes, SUM(importe) AS total
+FROM pedidos
+GROUP BY 1;
+
+REFRESH MATERIALIZED VIEW ventas_por_mes;
+```
+
+Consultarla es instantáneo. A cambio, los datos solo están al día tras **refrescarla**. Es una [caché](/articulos/que-es-una-cache/) dentro de la base de datos, con el mismo dilema: rapidez frente a frescura.
+
+| | Vista | Vista materializada |
+| --- | --- | --- |
+| Guarda datos | No | Sí |
+| Consulta | Ejecuta la definición cada vez | Lee el resultado guardado |
+| Datos | Siempre actuales | Del último refresco |
+| Conviene para | Simplificar y controlar el acceso | Informes costosos que toleran cierto retraso |
+
+<Quiz
+	client:visible
+	question="¿Qué ocurre al consultar una vista normal?"
+	options={[
+		"Se leen datos guardados la última vez que se creó",
+		"La base de datos ejecuta la consulta que la define",
+		"Se crea una tabla nueva",
+	]}
+	answer={1}
+/>
+
+## Procedimientos y funciones almacenados
+
+Son bloques de código que se guardan y se ejecutan en el servidor de la base de datos. Se escriben en SQL o en un lenguaje propio del sistema, que añade variables, condicionales y bucles.
+
+```sql
+CREATE PROCEDURE transferir(origen INT, destino INT, cantidad NUMERIC)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+	UPDATE cuentas SET saldo = saldo - cantidad WHERE id = origen;
+	UPDATE cuentas SET saldo = saldo + cantidad WHERE id = destino;
+END;
+$$;
+
+CALL transferir(1, 2, 100);
+```
+
+Una **función** devuelve un valor y se puede usar dentro de una consulta. Un **procedimiento** se invoca por sí mismo, y puede controlar [transacciones](/articulos/transacciones-y-acid/).
+
+### Disparadores
+
+Un **disparador**, en inglés *trigger*, es una función que se ejecuta **automáticamente** cuando ocurre algo en una tabla: antes o después de insertar, modificar o borrar una fila.
+
+Se usan para:
+
+- Guardar un historial de cambios.
+- Mantener actualizado un dato calculado.
+- Impedir modificaciones que no cumplen una regla.
+
+Su peligro es que son invisibles: quien lee el código de la aplicación no ve que una inserción provoca otras tres operaciones.
+
+## Ventajas de poner lógica en la base de datos
+
+- **Menos viajes.** Una operación de muchos pasos se hace en una llamada, sin ir y volver por la red.
+- **Cerca de los datos.** Procesar millones de filas dentro de la base de datos evita transferirlas.
+- **Reglas que nadie se salta.** Si la regla está en la base de datos, se cumple venga el cambio de la aplicación que venga.
+- **Un solo sitio** para una operación que usan varias aplicaciones.
+
+## Inconvenientes
+
+- **Peor de mantener.** Más difícil de versionar, de probar y de depurar que el código de la aplicación.
+- **Dependencia del sistema.** Cada base de datos tiene su propio lenguaje. Migrar significa reescribir.
+- **Lógica repartida.** Parte del comportamiento está en la aplicación y parte en la base de datos, y hay que mirar las dos para entender qué pasa.
+- **Escala peor.** La base de datos suele ser lo más difícil de escalar, y cargarla de cálculo la convierte antes en el cuello de botella, como explica [escalado vertical y horizontal](/articulos/escalado-vertical-y-horizontal/).
+
+## Un criterio
+
+- **Vistas**: úsalas con libertad para simplificar consultas y controlar el acceso.
+- **Restricciones** en la base de datos para la integridad: claves foráneas, unicidad, comprobaciones.
+- **Procedimientos y disparadores**: con moderación, para operaciones intensivas en datos o reglas que deben cumplirse siempre. La lógica de negocio principal suele estar mejor en la aplicación.
+
+Sea cual sea el caso, el código de la base de datos se guarda en el [control de versiones](/articulos/control-de-versiones-con-git/), como cualquier otro.
+
+## Lo esencial
+
+- Una vista es una consulta con nombre que se usa como una tabla, y no guarda datos.
+- Una vista materializada guarda el resultado, y hay que refrescarla.
+- Los procedimientos y funciones almacenados ejecutan código dentro de la base de datos.
+- Los disparadores se ejecutan solos ante cambios en una tabla.
+- Acercan la lógica a los datos, a cambio de ser más difíciles de mantener y de llevar a otro sistema.
