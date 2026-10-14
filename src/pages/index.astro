@@ -84,11 +84,11 @@ const firstPath = featured[0];
 				</ul>
 			</div>
 			<script is:inline>
-				// Runs right after the list so only the chosen six are ever painted.
+				// Runs right after the list so only the chosen eight are ever painted.
 				(() => {
 					const box = document.currentScript.previousElementSibling;
 
-					function showSix() {
+					function showEight() {
 						const items = [...box.querySelectorAll("li")];
 
 						for (let i = items.length - 1; i > 0; i--) {
@@ -96,19 +96,19 @@ const firstPath = featured[0];
 							[items[i], items[j]] = [items[j], items[i]];
 						}
 
-						// Re-append in shuffled order so the visible six come first.
+						// Re-append in shuffled order so the visible eight come first.
 						items.forEach((item, index) => {
-							item.hidden = index >= 6;
+							item.hidden = index >= 8;
 							item.parentElement.append(item);
 						});
 					}
 
-					showSix();
+					showEight();
 					box.dataset.ready = "";
 					document.addEventListener("click", (event) => {
 						if (!event.target.closest("[data-shuffle]")) return;
 
-						showSix();
+						showEight();
 						box.dispatchEvent(
 							new CustomEvent("devly:content-change", { bubbles: true }),
 						);
@@ -118,7 +118,7 @@ const firstPath = featured[0];
 			<p class="section-actions">
 				<button class="text-button" type="button" data-shuffle>
 					<Icon name="refresh" />
-					Ver otros seis
+					Ver otros ocho
 				</button>
 				<a href="/articulos/">Ver los {articles.length} artículos</a>
 			</p>

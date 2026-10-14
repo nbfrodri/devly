@@ -533,7 +533,13 @@ a:hover {
  * icon button showing the Tabler "x"; the id selector outranks Pagefind's own
  * styles, which load later.
  */
+/* Declared here too, so the button is in place before Pagefind's stylesheet arrives. */
+#search .pagefind-ui__form {
+	position: relative;
+}
+
 #search .pagefind-ui__search-clear {
+	position: absolute;
 	/* Centred on the input, whose height Pagefind derives from its scale. */
 	top: calc((64px * var(--pagefind-ui-scale) - 2.5rem) / 2);
 	right: 0.5rem;
@@ -1128,8 +1134,8 @@ a:hover {
 	background: var(--quiet);
 }
 
-/* Without JavaScript the first six stay; with it, six random ones are kept. */
-.random-articles:not([data-ready]) li:nth-child(n + 7) {
+/* Without JavaScript the first eight stay; with it, eight random ones are kept. */
+.random-articles:not([data-ready]) li:nth-child(n + 9) {
 	display: none;
 }
 
