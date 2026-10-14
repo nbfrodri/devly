@@ -24,9 +24,10 @@ import { Quiz } from "@/components/quiz";
 
 Un [compilador](/articulos/compilador-e-interprete/) traduce un programa escrito para personas en instrucciones que una máquina ejecuta directamente, o en un código intermedio cercano a ellas.
 
-```
-C, Rust, Go  ──compilar──▶  código máquina
-Java         ──compilar──▶  bytecode para una máquina virtual
+```mermaid
+flowchart LR
+	A["C, Rust, Go"] -- compilar --> B["código máquina"]
+	C["Java"] -- compilar --> D["bytecode para una máquina virtual"]
 ```
 
 El resultado no está pensado para que nadie lo lea. Es un archivo ejecutable.
@@ -35,10 +36,11 @@ El resultado no está pensado para que nadie lo lea. Es un archivo ejecutable.
 
 Un transpilador, o compilador de fuente a fuente, traduce a otro lenguaje de alto nivel, que sigue siendo legible.
 
-```
-TypeScript      ──transpilar──▶  JavaScript
-JavaScript nuevo ──transpilar──▶  JavaScript que entienden navegadores antiguos
-Sass            ──transpilar──▶  CSS
+```mermaid
+flowchart LR
+	A["TypeScript"] -- transpilar --> B["JavaScript"]
+	C["JavaScript nuevo"] -- transpilar --> D["JavaScript que entienden navegadores antiguos"]
+	E["Sass"] -- transpilar --> F["CSS"]
 ```
 
 [TypeScript](/articulos/que-es-typescript/), por ejemplo, quita las anotaciones de tipos y deja JavaScript. Herramientas como Babel convierten sintaxis moderna en una equivalente más antigua:

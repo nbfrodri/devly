@@ -19,13 +19,13 @@ import { Quiz } from "@/components/quiz";
 
 **Inteligencia artificial**, **aprendizaje automático** y **aprendizaje profundo** se usan a menudo como sinónimos, y no lo son. Son tres conceptos **anidados**, uno dentro de otro:
 
-```
-┌───────────────── Inteligencia artificial ─────────────────┐
-│   ┌──────────── Aprendizaje automático ────────────┐       │
-│   │   ┌──────── Aprendizaje profundo ────────┐     │       │
-│   │   └──────────────────────────────────────┘     │       │
-│   └────────────────────────────────────────────────┘       │
-└────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+	subgraph IA["Inteligencia artificial"]
+		subgraph AA["Aprendizaje automático"]
+			AP["Aprendizaje profundo"]
+		end
+	end
 ```
 
 Todo el aprendizaje profundo es aprendizaje automático, y todo el aprendizaje automático es inteligencia artificial. Al revés, no.

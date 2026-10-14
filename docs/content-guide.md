@@ -103,6 +103,7 @@ Intercala una o dos preguntas de comprobación justo después de la idea que eva
 - Los términos en inglés de uso habitual se conservan (`array`, `commit`) junto a su traducción la primera vez.
 - El código de ejemplo debe poder ejecutarse tal cual. En JavaScript, el resultado se indica en un comentario al final de la línea; en SQL, se describe en el texto que sigue al bloque.
 - Los ejemplos de SQL deben funcionar en SQLite, ejecutados en el orden en que aparecen en el artículo.
+- Los diagramas (flujos, árboles, estructuras, secuencias, clases, entidad-relación) se escriben en un bloque `mermaid`, que la web dibuja como SVG con los colores del tema. No se dibujan cajas con caracteres como `─ │ ┌ ▶`: la fuente de código no los tiene y se descuadran. El texto anotado que depende de columnas (una línea de cron, las partes de una URL, un árbol de archivos) se queda en un bloque de texto, solo con caracteres ASCII (`|`, `+--`, `->`).
 - Las analogías ayudan si son breves y se abandonan en cuanto dejan de encajar.
 - Sin relleno: nada de introducciones sobre la importancia del tema ni frases que no enseñan nada.
 

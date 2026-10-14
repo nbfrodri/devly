@@ -36,12 +36,12 @@ No hay un archivo donde se declaren las rutas. La estructura de carpetas **es** 
 
 ```
 app/
-├── page.tsx                → /
-├── blog/
-│   ├── page.tsx            → /blog
-│   └── [slug]/
-│       └── page.tsx        → /blog/cualquier-cosa
-└── layout.tsx              → marco común de todas las páginas
+|-- page.tsx              -> /
+|-- blog/
+|   |-- page.tsx          -> /blog
+|   `-- [slug]/
+|       `-- page.tsx      -> /blog/cualquier-cosa
+`-- layout.tsx            -> marco común de todas las páginas
 ```
 
 Una carpeta entre corchetes es un **segmento dinámico**: coincide con cualquier valor, que la página recibe como parámetro.

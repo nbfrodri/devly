@@ -28,16 +28,13 @@ En muchas aplicaciones, la lógica de negocio está mezclada con los detalles t�
 
 ## La idea
 
-```
-        Adaptadores de entrada        Adaptadores de salida
-      ┌──────────────────────┐      ┌───────────────────────┐
-      │ API web, interfaz,    │      │ Base de datos, correo, │
-      │ pruebas, consola      │      │ servicios externos     │
-      └──────────┬───────────┘      └───────────┬───────────┘
-                 ▼  puerto                 puerto ▲
-              ┌──────────────────────────────────┐
-              │        Lógica de negocio          │
-              └──────────────────────────────────┘
+```mermaid
+flowchart TB
+	E["Adaptadores de entrada<br>API web, interfaz, pruebas, consola"]
+	L["Lógica de negocio"]
+	S["Adaptadores de salida<br>base de datos, correo, servicios externos"]
+	E -- puerto --> L
+	S -- puerto --> L
 ```
 
 - Los **puertos** son [interfaces](/articulos/que-es-una-interfaz/) que define la propia lógica: "necesito guardar un pedido", "necesito enviar un aviso".

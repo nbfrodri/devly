@@ -33,12 +33,16 @@ Y los datos ordenados no son un caso raro: identificadores que crecen, fechas, n
 
 Los árboles equilibrados vigilan su forma. Cuando una inserción desequilibra una zona, la corrigen con **rotaciones**: pequeños reajustes que suben un nodo y bajan otro, sin romper el orden del árbol.
 
-```
-    3                2
-   /                / \
-  2      ──▶       1   3
- /
-1
+```mermaid
+flowchart LR
+	subgraph Antes
+		A3((3)) --- A2((2)) --- A1((1))
+	end
+	subgraph Después
+		B2((2)) --- B1((1))
+		B2 --- B3((3))
+	end
+	Antes -- rotación --> Después
 ```
 
 Tres valores insertados en orden descendente forman una cadena. Una rotación los convierte en un árbol de altura 2. El orden se conserva: lo de la izquierda sigue siendo menor.

@@ -96,22 +96,45 @@ const firstPath =
 	<script is:inline>
 		// Each "random picks" list keeps a fresh random handful visible. Runs
 		// right after the lists so only the chosen ones are ever painted.
+		// What the visitor already read (an article) or finished (a path) is left
+		// out; the rules mirror src/lib/progress.ts.
+		let read = {};
+		try {
+			read = JSON.parse(localStorage.getItem("progreso") ?? "{}").articles ?? {};
+		} catch {}
+		const isDone = (item) => {
+			const article = item.dataset.progressArticle;
+			if (article) return read[article] === "leido";
+			const steps = (item.querySelector("[data-steps]")?.dataset.steps ?? "")
+				.split(" ")
+				.filter(Boolean);
+			return steps.length > 0 && steps.every((step) => read[step] === "leido");
+		};
+
 		for (const box of document.querySelectorAll("[data-random-picks]")) {
 			const list = box.querySelector("ul");
 			const count = Number(box.dataset.randomPicks);
 
 			const pick = () => {
-				const items = [...list.children];
+				const all = [...list.children];
+				const items = all.filter((item) => !isDone(item));
+				for (const item of all) {
+					if (isDone(item)) {
+						item.hidden = true;
+						list.append(item);
+					}
+				}
 
 				for (let i = items.length - 1; i > 0; i--) {
 					const j = Math.floor(Math.random() * (i + 1));
 					[items[i], items[j]] = [items[j], items[i]];
 				}
 
-				// Re-append in shuffled order so the visible ones come first.
+				// Re-insert in shuffled order, ahead of the finished ones, so the
+				// visible ones come first.
 				items.forEach((item, index) => {
 					item.hidden = index >= count;
-					list.append(item);
+					list.insertBefore(item, list.children[index] ?? null);
 				});
 			};
 

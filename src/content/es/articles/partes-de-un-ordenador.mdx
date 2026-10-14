@@ -17,16 +17,24 @@ Un ordenador hace cuatro cosas con la información: la **recibe** (entrada), la 
 
 ## El mapa
 
-```
-  Entrada                 Procesamiento               Salida
-┌──────────┐   ┌─────────────────────────────────┐  ┌──────────┐
-│ Teclado  │──▶│ Procesador ◀──▶ Memoria RAM     │─▶│ Pantalla │
-│ Ratón    │   │      ▲                          │  │ Altavoz  │
-│ Red      │   │      ▼                          │  │ Red      │
-└──────────┘   │ Almacenamiento (SSD, disco)     │  └──────────┘
-               └─────────────────────────────────┘
-        Todo conectado por la placa base, alimentado por la fuente
-                     y mantenido frío por la refrigeración
+```mermaid
+flowchart LR
+	subgraph Entrada
+		T[Teclado]
+		Ra[Ratón]
+		Re1[Red]
+	end
+	subgraph Procesamiento
+		P[Procesador] <--> M[Memoria RAM]
+		P <--> D["Almacenamiento (SSD, disco)"]
+	end
+	subgraph Salida
+		Pa[Pantalla]
+		Al[Altavoz]
+		Re2[Red]
+	end
+	Entrada --> P
+	P --> Salida
 ```
 
 ## Las piezas

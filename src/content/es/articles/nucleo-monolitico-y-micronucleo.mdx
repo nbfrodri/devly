@@ -27,12 +27,15 @@ El **núcleo** es la parte del [sistema operativo](/articulos/que-es-un-sistema-
 
 Todo el sistema operativo es un único programa grande, que se ejecuta en modo privilegiado:
 
-```
-┌───────────── modo núcleo ─────────────┐
-│ planificador · memoria · archivos      │
-│ red · controladores de dispositivos    │
-└────────────────────────────────────────┘
-        programas en modo usuario
+```mermaid
+flowchart TB
+	subgraph N["Modo núcleo"]
+		K["planificador, memoria, archivos,<br>red, controladores de dispositivos"]
+	end
+	subgraph U["Modo usuario"]
+		P["programas"]
+	end
+	P --> K
 ```
 
 Las partes se comunican con simples llamadas a funciones, dentro del mismo espacio de memoria.
@@ -46,13 +49,21 @@ Las partes se comunican con simples llamadas a funciones, dentro del mismo espac
 
 El núcleo hace lo mínimo: gestionar la memoria, repartir el procesador entre procesos y permitir que estos se envíen mensajes. Todo lo demás son **servidores**, procesos en modo usuario:
 
-```
-┌──── modo núcleo ────┐
-│ memoria · procesos  │
-│ mensajes            │
-└─────────────────────┘
-  servidor de archivos · servidor de red · controladores
-                programas
+```mermaid
+flowchart TB
+	subgraph N["Modo núcleo"]
+		K["memoria, procesos, mensajes"]
+	end
+	subgraph U["Modo usuario"]
+		F["servidor de archivos"]
+		R["servidor de red"]
+		C["controladores"]
+		P["programas"]
+	end
+	P --> K
+	F --> K
+	R --> K
+	C --> K
 ```
 
 Para leer un archivo, el programa envía un mensaje al servidor de archivos, que envía otro al controlador del disco. Todo pasando por el núcleo.

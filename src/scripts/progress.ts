@@ -51,7 +51,9 @@ function fillLists() {
 		"[data-progress-list]",
 	)) {
 		const source = document.getElementById(list.dataset.source ?? "");
-		if (!(source instanceof HTMLTemplateElement)) continue;
+		// A template still being filled keeps its list showing the skeleton.
+		if (!(source instanceof HTMLTemplateElement) || "loading" in source.dataset)
+			continue;
 
 		const wanted = list.dataset.progressList;
 		const items = [...source.content.children].filter((item) => {
@@ -67,10 +69,11 @@ function fillLists() {
 			);
 		});
 		list.replaceChildren(...items.map((item) => item.cloneNode(true)));
+		list.removeAttribute("aria-busy");
 
 		const section = list.closest<HTMLElement>("[data-progress-section]");
 		if (!section) continue;
-		section.hidden = false;
+		section.dataset.ready = "";
 		for (const count of section.querySelectorAll<HTMLElement>(
 			"[data-progress-total]",
 		)) {
@@ -159,6 +162,9 @@ document.addEventListener("click", (event) => {
 	save();
 	render();
 });
+
+// Pages that load content later ask for a new pass.
+document.addEventListener("devly:progress-refresh", render);
 
 // Keeps several open tabs in step.
 window.addEventListener("storage", (event) => {

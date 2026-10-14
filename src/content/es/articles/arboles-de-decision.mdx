@@ -25,14 +25,15 @@ Su forma es la de un diagrama de flujo, y por eso es uno de los pocos modelos qu
 
 Para decidir si se concede un préstamo:
 
-```
-¿Ingresos mayores de 2000 €?
-├── No → ¿Tiene avalista?
-│        ├── No → Rechazar
-│        └── Sí → Conceder
-└── Sí → ¿Deudas mayores que el 40 % de los ingresos?
-         ├── No → Conceder
-         └── Sí → Rechazar
+```mermaid
+flowchart TD
+	A{"¿Ingresos mayores de 2000 €?"}
+	A -->|No| B{"¿Tiene avalista?"}
+	A -->|Sí| C{"¿Deudas mayores que el 40 % de los ingresos?"}
+	B -->|No| R1[Rechazar]
+	B -->|Sí| K1[Conceder]
+	C -->|No| K2[Conceder]
+	C -->|Sí| R2[Rechazar]
 ```
 
 Para un caso nuevo, se empieza arriba y se baja respondiendo a cada pregunta hasta llegar a una **hoja**, que da la respuesta.

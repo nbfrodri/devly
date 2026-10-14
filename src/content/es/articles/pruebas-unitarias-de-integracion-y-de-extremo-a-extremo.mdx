@@ -72,9 +72,13 @@ Arrancan la aplicación completa y la manejan desde fuera, como un usuario: abre
 Una recomendación clásica, la **pirámide de pruebas**, propone tener:
 
 ```
-        ▲  pocas de extremo a extremo
-       ▲▲▲  algunas de integración
-     ▲▲▲▲▲▲▲  muchas unitarias
+        /\
+       /  \          pocas de extremo a extremo
+      /----\
+     /      \        algunas de integración
+    /--------\
+   /          \      muchas unitarias
+  /------------\
 ```
 
 Muchas pruebas pequeñas y rápidas en la base, y pocas grandes y lentas arriba. El motivo: las unitarias detectan la mayoría de los errores a un coste mínimo, y las de extremo a extremo se reservan para los flujos críticos, como pagar o registrarse.

@@ -1189,7 +1189,30 @@ a:hover {
 	border-radius: 3px;
 }
 
+/* Diagrams: ```mermaid blocks drawn as SVG by src/scripts/diagrams.ts. */
+.diagram {
+	margin: 1.5rem 0;
+	padding: 1rem;
+	overflow-x: auto;
+	background: var(--surface);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+}
+
+.diagram[data-rendered] svg {
+	display: block;
+	margin-inline: auto;
+	height: auto;
+}
+
 /* Reading progress: marks stored in the browser by src/scripts/progress.ts. */
+.icon-sprite {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+}
+
 .article-card-tags {
 	display: inline-flex;
 	flex-wrap: wrap;
@@ -1374,6 +1397,21 @@ a:hover {
 		clip-path: inset(50%);
 		white-space: nowrap;
 	}
+}
+
+/* Placeholders on the progress page until its lists are filled. */
+.skeleton-card {
+	min-height: 8rem;
+	background: var(--quiet);
+	border-radius: var(--radius);
+}
+
+.path-grid .skeleton-card {
+	min-height: 11rem;
+}
+
+.progress-section[data-ready] .skeleton-card {
+	display: none;
 }
 
 /* Without the script nothing can be marked, so the controls stay out of the way. */
@@ -1758,6 +1796,17 @@ html:not(.progress-ready) .filter-progress {
 
 	.footer-brand {
 		max-width: none;
+	}
+
+	.footer-legal {
+		display: block;
+		text-align: center;
+	}
+
+	.footer-legal .icon {
+		display: inline-flex;
+		vertical-align: -0.2em;
+		margin-right: 0.375rem;
 	}
 
 	/* Seven layer names read better in two columns than as one long list. */

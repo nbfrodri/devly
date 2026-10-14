@@ -40,10 +40,10 @@ Un middleware escribe esa tarea **una vez** y la aplica a todas las rutas que se
 
 Los middleware se colocan en fila. La petición los atraviesa en orden, hasta llegar al código que la atiende, llamado **manejador**. La respuesta recorre el camino de vuelta.
 
-```
-Petición → registro → autenticación → manejador
-                                          ↓
-Respuesta ← registro ← autenticación ←────┘
+```mermaid
+flowchart LR
+	P[Petición] --> R1[registro] --> A1[autenticación] --> H[manejador]
+	H --> A2[autenticación] --> R2[registro] --> S[Respuesta]
 ```
 
 Se suele comparar con las capas de una cebolla: la petición las cruza hacia dentro y la respuesta hacia fuera.

@@ -42,12 +42,13 @@ La organización clásica no sigue la [normalización](/articulos/normalizacion-
 - **Tabla de hechos**: los sucesos que se miden, con sus cifras. Cada venta: importe, unidades.
 - **Tablas de dimensiones**: el contexto por el que se analiza. Cuándo, qué producto, qué cliente, qué tienda.
 
-```
-              Fecha
-                │
-Producto ── Ventas ── Tienda
-                │
-             Cliente
+```mermaid
+flowchart TB
+	Fecha --- Ventas
+	Producto --- Ventas
+	Ventas --- Tienda
+	Ventas --- Cliente
+	Ventas["Ventas (hechos)"]
 ```
 
 Las preguntas se responden uniendo los hechos con las dimensiones y agrupando: ventas por mes y por categoría de producto.

@@ -1,0 +1,26 @@
+---
+import bookmarkFilled from "@tabler/icons/filled/bookmark.svg?raw";
+import circleCheckFilled from "@tabler/icons/filled/circle-check.svg?raw";
+
+/**
+ * Icons repeated on every card, defined once per page and drawn with
+ * `<use href="#icon-…">`. Inlining them in each card made long listings heavy.
+ */
+const symbols = {
+	"circle-check-filled": circleCheckFilled,
+	"bookmark-filled": bookmarkFilled,
+};
+
+const toSymbol = (id: string, svg: string) =>
+	svg
+		.replace(
+			/<svg[^>]*>/,
+			`<symbol id="icon-${id}" viewBox="0 0 24 24" fill="currentColor">`,
+		)
+		.replace("</svg>", "</symbol>")
+		.replace(/<path stroke="none" d="M0 0h24v24H0z" fill="none" \/>/, "");
+---
+
+<svg class="icon-sprite" aria-hidden="true" set:html={Object.entries(symbols)
+	.map(([id, svg]) => toSymbol(id, svg))
+	.join("")} />

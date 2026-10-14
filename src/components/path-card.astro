@@ -1,6 +1,6 @@
 ---
 import { type CollectionEntry, getEntries } from "astro:content";
-import Icon from "@/components/icon.astro";
+import SpriteIcon from "@/components/sprite-icon.astro";
 import { describeLevelRange } from "@/lib/levels";
 
 type Props = {
@@ -27,11 +27,11 @@ const count = steps.length;
 		<span class="path-progress-bar" aria-hidden="true"></span>
 		<span class="path-progress-text">
 			<span class="progress-badge progress-badge-read">
-				<Icon name="circle-check-filled" />
+				<SpriteIcon name="circle-check-filled" />
 				Completada
 			</span>
 			<span class="progress-badge progress-badge-pending">
-				<Icon name="bookmark-filled" />
+				<SpriteIcon name="bookmark-filled" />
 				Pendiente
 			</span>
 			<span data-progress-count></span>

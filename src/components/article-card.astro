@@ -1,5 +1,5 @@
 ---
-import Icon from "@/components/icon.astro";
+import SpriteIcon from "@/components/sprite-icon.astro";
 import type { Article } from "@/lib/content";
 import { KIND_LABELS } from "@/lib/kinds";
 import { LEVEL_LABELS } from "@/lib/levels";
@@ -34,11 +34,11 @@ const { title, description, level, kind } = article.data;
 			<span class="article-card-tags">
 				{kind !== "concepto" && <span class="tag">{KIND_LABELS[kind]}</span>}
 				<span class="progress-badge progress-badge-read">
-					<Icon name="circle-check-filled" />
+					<SpriteIcon name="circle-check-filled" />
 					Leído
 				</span>
 				<span class="progress-badge progress-badge-pending">
-					<Icon name="bookmark-filled" />
+					<SpriteIcon name="bookmark-filled" />
 					Pendiente
 				</span>
 			</span>

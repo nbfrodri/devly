@@ -22,16 +22,15 @@ El nombre viene de *retrieval*, recuperación. Se pronuncia como *tree* o como *
 
 Las palabras "casa", "casco" y "cama":
 
-```
-        c
-        │
-        a
-       / \
-      s   m
-     / \   \
-    a   c   a ●
-    ●   │
-        o ●
+```mermaid
+flowchart TD
+	c((c)) --> a1((a))
+	a1 --> s((s))
+	a1 --> m((m))
+	s --> a2(("a ●"))
+	s --> c2((c))
+	c2 --> o(("o ●"))
+	m --> a3(("a ●"))
 ```
 
 El punto marca dónde termina una palabra. "Casa" y "casco" comparten "cas"; las tres comparten "ca".

@@ -29,13 +29,10 @@ El instituto de normas de Estados Unidos, NIST, lo define en su informe sobre es
 
 ## Cómo funciona
 
-```
- Objeto real                            Gemelo digital
- ┌──────────┐   datos de sensores      ┌──────────────┐
- │ Turbina  │ ───────────────────────▶ │ Modelo       │
- │          │                          │ + historial  │
- │          │ ◀─────────────────────── │ + simulación │
- └──────────┘   ajustes y avisos       └──────────────┘
+```mermaid
+flowchart LR
+	R["Objeto real<br>turbina"] -- datos de sensores --> G["Gemelo digital<br>modelo, historial, simulación"]
+	G -- ajustes y avisos --> R
 ```
 
 1. **Sensores** en el objeto real miden temperatura, vibración, consumo o posición, como en el [internet de las cosas](/articulos/internet-de-las-cosas/).

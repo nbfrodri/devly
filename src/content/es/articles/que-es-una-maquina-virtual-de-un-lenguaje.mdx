@@ -23,8 +23,9 @@ Es la idea que Java resumió en su lema: escribir una vez, ejecutar en cualquier
 
 ## Cómo funciona
 
-```
-código fuente ──compilar──▶ bytecode ──máquina virtual──▶ ejecución
+```mermaid
+flowchart LR
+	A["código fuente"] -- compilar --> B["bytecode"] -- máquina virtual --> C["ejecución"]
 ```
 
 Un programa en Java se compila a bytecode. El mismo archivo funciona en Windows, Linux o macOS, sobre cualquier [arquitectura](/articulos/arquitecturas-x86-y-arm/), porque en cada uno hay una máquina virtual de Java que sabe ejecutarlo.

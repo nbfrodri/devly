@@ -44,15 +44,15 @@ Cada elemento del HTML se convierte en un **nodo**, y como los elementos se anid
 
 Ese fragmento da lugar a este árbol:
 
-```
-body
-├── h1
-│   └── "Tareas"
-└── ul
-    ├── li
-    │   └── "Estudiar"
-    └── li
-        └── "Comprar pan"
+```mermaid
+flowchart TD
+	body --> h1
+	body --> ul
+	h1 --> t1["texto: Tareas"]
+	ul --> li1[li]
+	ul --> li2[li]
+	li1 --> t2["texto: Estudiar"]
+	li2 --> t3["texto: Comprar pan"]
 ```
 
 Se usa el vocabulario de los árboles: `body` es el **padre** de `h1` y de `ul`; los dos `li` son **hijos** de `ul` y **hermanos** entre sí. El texto de cada elemento es también un nodo.

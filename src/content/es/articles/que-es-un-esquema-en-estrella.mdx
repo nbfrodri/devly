@@ -17,12 +17,13 @@ import { Quiz } from "@/components/quiz";
 
 Un **esquema en estrella** es la forma clásica de organizar un [almacén de datos](/articulos/almacen-de-datos-y-lago-de-datos/) para el análisis. Tiene una **tabla de hechos** en el centro, con las cifras que se miden, rodeada de **tablas de dimensiones**, con el contexto por el que se analizan. Dibujado, parece una estrella.
 
-```
-              Fecha
-                │
-Producto ── Ventas ── Tienda
-                │
-             Cliente
+```mermaid
+flowchart TB
+	Fecha --- Ventas
+	Producto --- Ventas
+	Ventas --- Tienda
+	Ventas --- Cliente
+	Ventas["Ventas (hechos)"]
 ```
 
 ## Las piezas

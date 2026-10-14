@@ -1,0 +1,9 @@
+---
+type Props = {
+	name: "circle-check-filled" | "bookmark-filled";
+};
+
+const { name } = Astro.props;
+---
+
+<span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href={`#icon-${name}`} /></svg></span>

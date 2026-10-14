@@ -39,8 +39,8 @@ Es la referencia más usada para empezar a pensar en la [seguridad](/articulos/q
 Que el control de acceso ocupe el primer puesto dice mucho. El caso típico:
 
 ```
-GET /api/facturas/1001   ← mi factura
-GET /api/facturas/1002   ← ¿la de otra persona?
+GET /api/facturas/1001   <- mi factura
+GET /api/facturas/1002   <- ¿la de otra persona?
 ```
 
 Si el servidor comprueba que el usuario ha iniciado sesión, pero no que la factura **es suya**, cualquiera puede leer las facturas de los demás cambiando un número. La [autorización](/articulos/autenticacion-y-autorizacion/) debe comprobarse en el servidor, en cada petición y para cada recurso.

@@ -125,10 +125,10 @@ Una **traza** registra el recorrido completo de una petición. Está formada por
 
 ```
 Petición POST /pedidos ............ 2030 ms
-├─ validar datos ..................   10 ms
-├─ servicio de pagos .............. 1950 ms
-│  └─ consulta a la base de datos . 1900 ms
-└─ servicio de almacén ............   60 ms
+|-- validar datos .................   10 ms
+|-- servicio de pagos ............. 1950 ms
+|   `-- consulta a la base de datos  1900 ms
+`-- servicio de almacén ...........   60 ms
 ```
 
 Se ve de inmediato: el tiempo se va en una consulta dentro del servicio de pagos.

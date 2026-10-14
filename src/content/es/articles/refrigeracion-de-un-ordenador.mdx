@@ -22,10 +22,10 @@ Cada vez que uno de los miles de millones de [transistores](/articulos/que-es-un
 
 ## El camino del calor
 
-```
-Chip ──▶ pasta térmica ──▶ disipador ──▶ aire ──▶ fuera de la caja
-                                         ▲
-                                     ventilador
+```mermaid
+flowchart LR
+	C[Chip] --> P[pasta térmica] --> D[disipador] --> A[aire] --> F[fuera de la caja]
+	V[ventilador] --> A
 ```
 
 1. **Pasta térmica**: rellena las imperfecciones microscópicas entre el chip y el disipador. Sin ella, quedaría aire, que conduce muy mal el calor.

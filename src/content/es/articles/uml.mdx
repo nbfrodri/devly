@@ -39,13 +39,18 @@ En la práctica se usan unos pocos.
 
 Muestra las [clases](/articulos/que-es-una-clase/), sus atributos y métodos, y cómo se relacionan: herencia, composición, asociación.
 
-```
-┌──────────────┐        ┌──────────────┐
-│ Pedido       │        │ Cliente      │
-├──────────────┤ *    1 ├──────────────┤
-│ fecha        │────────│ nombre       │
-│ total()      │        │ correo       │
-└──────────────┘        └──────────────┘
+```mermaid
+classDiagram
+	direction LR
+	class Pedido {
+		fecha
+		total()
+	}
+	class Cliente {
+		nombre
+		correo
+	}
+	Pedido "*" --> "1" Cliente
 ```
 
 Un cliente tiene muchos pedidos; cada pedido es de un cliente. Es primo del [modelo entidad-relación](/articulos/modelo-entidad-relacion/), centrado en objetos en lugar de en tablas.
@@ -54,13 +59,15 @@ Un cliente tiene muchos pedidos; cada pedido es de un cliente. Es primo del [mod
 
 Muestra cómo se comunican varias partes a lo largo del tiempo: quién llama a quién y en qué orden.
 
-```
-Navegador      Servidor      Base de datos
-    │  POST /pago  │              │
-    │─────────────▶│  INSERT      │
-    │              │─────────────▶│
-    │              │◀─────────────│
-    │◀─────────────│  201         │
+```mermaid
+sequenceDiagram
+	participant N as Navegador
+	participant S as Servidor
+	participant B as Base de datos
+	N->>S: POST /pago
+	S->>B: INSERT
+	B-->>S: correcto
+	S-->>N: 201
 ```
 
 Es el más útil para explicar un flujo, como el de un inicio de sesión con [OAuth](/articulos/oauth-2-y-openid-connect/).

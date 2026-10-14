@@ -7,6 +7,9 @@ import { getArticles } from "@/lib/content";
 
 const articles = await getArticles();
 const paths = await getCollection("paths");
+// One real card serves as the mould for the cards built from JSON.
+const prototype =
+	articles.find((article) => article.data.kind !== "concepto") ?? articles[0];
 const sections = [
 	{
 		title: "Rutas pendientes",
@@ -60,19 +63,22 @@ const sections = [
 
 		{
 			sections.map((section) => (
-				<section class="section" data-progress-section hidden>
+				<section class="section progress-section" data-progress-section>
 					<h2 class="section-title">
 						{section.title}
-						<span class="section-count" data-progress-total>
-							0
-						</span>
+						<span class="section-count" data-progress-total />
 					</h2>
 					<ul
 						class={section.list}
 						data-progress-list={section.status}
 						data-source={section.source}
-					/>
-					<p class="empty" data-progress-empty>
+						aria-busy="true"
+					>
+						<li class="skeleton-card" aria-hidden="true" />
+						<li class="skeleton-card" aria-hidden="true" />
+						<li class="skeleton-card" aria-hidden="true" />
+					</ul>
+					<p class="empty" data-progress-empty hidden>
 						{section.empty}
 					</p>
 				</section>
@@ -88,8 +94,63 @@ const sections = [
 				))
 			}
 		</template>
-		<template id="progreso-articulos">
-			{articles.map((article) => <ArticleCard article={article} />)}
+		<template id="progreso-articulos" data-loading></template>
+		<template id="progreso-molde">
+			{prototype && <ArticleCard article={prototype} />}
 		</template>
 	</div>
 </BaseLayout>
+
+<script>
+	type CardData = {
+		id: string;
+		title: string;
+		description: string;
+		level: string;
+		levelLabel: string;
+		kind: string;
+		kindLabel: string;
+	};
+
+	const target = document.getElementById("progreso-articulos");
+	const mould = document.getElementById("progreso-molde");
+
+	/** Fills a copy of the mould card with one article's data. */
+	function buildCard(card: HTMLTemplateElement, data: CardData) {
+		const item = card.content.firstElementChild?.cloneNode(true) as HTMLElement;
+		item.dataset.progressArticle = data.id;
+		item.dataset.levels = data.level;
+		item.dataset.kind = data.kind;
+		item.removeAttribute("data-text");
+		item.querySelector("a")?.setAttribute("href", `/articulos/${data.id}/`);
+		const set = (selector: string, text: string) => {
+			const element = item.querySelector(selector);
+			if (element) element.textContent = text;
+		};
+		set(".article-card-title", data.title);
+		set(".article-card-description", data.description);
+		set(".article-card-meta > span:first-child", data.levelLabel);
+		const tag = item.querySelector(".tag");
+		if (data.kindLabel) {
+			if (tag) tag.textContent = data.kindLabel;
+		} else {
+			tag?.remove();
+		}
+		return item;
+	}
+
+	if (target instanceof HTMLTemplateElement && mould instanceof HTMLTemplateElement) {
+		fetch("/progreso/articulos.json")
+			.then((response) => response.json() as Promise<CardData[]>)
+			.then((cards) => {
+				target.content.replaceChildren(...cards.map((data) => buildCard(mould, data)));
+			})
+			.catch(() => {
+				// Without the data the article lists stay empty rather than loading forever.
+			})
+			.finally(() => {
+				delete target.dataset.loading;
+				document.dispatchEvent(new CustomEvent("devly:progress-refresh"));
+			});
+	}
+</script>

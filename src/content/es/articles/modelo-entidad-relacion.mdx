@@ -115,9 +115,10 @@ A menudo esa relación tiene **sus propios atributos**: la cantidad, y el precio
 
 Hay varias notaciones. La original de Chen usa rectángulos para las entidades, rombos para las relaciones y óvalos para los atributos. La más usada hoy, llamada **pata de gallo**, dibuja solo entidades como cajas con sus atributos, y expresa la cardinalidad en los extremos de las líneas: una raya para "uno" y tres rayas abiertas, como una pata de gallo, para "muchos".
 
-```
-Cliente ──┤├──────<  Pedido  >──────┤├── Producto
-          uno         muchos  muchos       uno
+```mermaid
+erDiagram
+	CLIENTE ||--o{ PEDIDO : realiza
+	PEDIDO }o--|| PRODUCTO : incluye
 ```
 
 Lo importante no es la notación, sino que todos los que lo leen la entiendan igual.
