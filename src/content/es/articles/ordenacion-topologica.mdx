@@ -1,0 +1,178 @@
+---
+title: "¿Qué es la ordenación topológica?"
+description: "Ordenar topológicamente es poner en fila una serie de tareas de modo que cada una vaya después de aquellas de las que depende."
+level: intermedio
+layer: programacion
+prerequisites:
+  - grafos
+  - pilas-y-colas
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 4.2 Directed Graphs (en inglés)"
+    url: https://algs4.cs.princeton.edu/42digraph/
+  - title: "CP-Algorithms: Topological Sorting (en inglés)"
+    url: https://cp-algorithms.com/graph/topological-sort.html
+  - title: "Jeff Erickson: Algorithms, cap. 6, Depth-First Search (en inglés)"
+    url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/06-dfs.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **ordenación topológica** consiste en colocar en una secuencia los nodos de un [grafo dirigido](/articulos/grafos/) de modo que, para cada arista de A a B, A aparezca antes que B. Dicho de otra forma: es poner en fila un conjunto de tareas respetando sus dependencias.
+
+## Qué problema resuelve
+
+Muchas cosas tienen que hacerse en cierto orden.
+
+- Hay que cursar Programación I antes que Programación II.
+- Hay que compilar una biblioteca antes que el programa que la usa.
+- Hay que ponerse los calcetines antes que los zapatos.
+
+Cada requisito es una arista: "A antes que B". El conjunto forma un grafo dirigido, y la pregunta es en qué orden hacerlo todo sin incumplir ninguno.
+
+## La condición: sin ciclos
+
+Si A necesita a B y B necesita a A, no hay solución: ninguna puede ir primero. A eso se le llama **dependencia circular**.
+
+La ordenación topológica existe solo si el grafo no tiene ciclos. Un grafo dirigido sin ciclos se conoce como **DAG**, por sus siglas en inglés.
+
+Esto da al algoritmo un segundo uso: si no consigue ordenar, es que hay un ciclo. Es una forma de detectarlos.
+
+## Puede haber varias soluciones
+
+Si dos tareas no dependen una de otra, da igual cuál vaya antes. Para "calcetines antes que zapatos" y "camisa antes que chaqueta" valen muchas secuencias.
+
+El algoritmo devuelve una válida, no la única.
+
+## El algoritmo de Kahn
+
+La idea es directa:
+
+1. Buscar las tareas que **no dependen de nada** pendiente. Se pueden hacer ya.
+2. Ponerlas en el resultado y darlas por hechas.
+3. Al quitarlas, otras tareas se quedan sin dependencias pendientes.
+4. Repetir hasta que no quede ninguna.
+
+Si en algún momento quedan tareas y ninguna está libre, hay un ciclo.
+
+```js
+const dependencias = {
+	instalar: [],
+	compilar: ["instalar"],
+	probar: ["compilar"],
+	empaquetar: ["compilar"],
+	desplegar: ["probar", "empaquetar"],
+};
+
+function ordenar(dependencias) {
+	const pendientes = new Map(
+		Object.entries(dependencias).map(([tarea, requisitos]) => [
+			tarea,
+			new Set(requisitos),
+		]),
+	);
+	const orden = [];
+
+	while (pendientes.size > 0) {
+		const libres = [...pendientes.keys()].filter(
+			(tarea) => pendientes.get(tarea).size === 0,
+		);
+
+		if (libres.length === 0) {
+			throw new Error("Hay una dependencia circular");
+		}
+
+		for (const tarea of libres) {
+			orden.push(tarea);
+			pendientes.delete(tarea);
+		}
+
+		for (const requisitos of pendientes.values()) {
+			for (const tarea of libres) {
+				requisitos.delete(tarea);
+			}
+		}
+	}
+
+	return orden;
+}
+
+console.log(ordenar(dependencias).join(" ")); // "instalar compilar probar empaquetar desplegar"
+
+try {
+	ordenar({ a: ["b"], b: ["a"] });
+} catch (error) {
+	console.log(error.message); // "Hay una dependencia circular"
+}
+```
+
+El código es deliberadamente simple. La versión eficiente lleva la cuenta de cuántas dependencias le quedan a cada nodo y usa una [cola](/articulos/pilas-y-colas/) con los que llegan a cero, para no recorrerlos todos cada vez. Así cuesta O(V + E): proporcional al número de nodos más el de aristas.
+
+### Tareas en paralelo
+
+En el ejemplo, `probar` y `empaquetar` quedan libres en la misma ronda. No dependen entre sí, así que pueden ejecutarse **a la vez**.
+
+Cada ronda del algoritmo es un grupo de tareas simultáneas. Es lo que aprovechan las herramientas de construcción para repartir el trabajo entre varios [procesadores](/articulos/como-funciona-un-procesador/).
+
+## Con búsqueda en profundidad
+
+Hay otro método, basado en el recorrido en profundidad:
+
+1. Desde cada nodo no visitado, se sigue un camino hasta el final.
+2. Un nodo se añade al resultado cuando se ha terminado con **todo lo que cuelga de él**.
+3. Al final, se invierte la lista.
+
+Funciona porque un nodo termina después de todos los que dependen de él. Al invertir, queda delante.
+
+Los ciclos se detectan si, durante el recorrido, se llega a un nodo que está todavía en curso.
+
+| | Kahn | Búsqueda en profundidad |
+| --- | --- | --- |
+| Idea | Ir quitando lo que no tiene dependencias | Añadir cada nodo al terminar con sus descendientes |
+| Detecta ciclos | Quedan nodos sin procesar | Se encuentra un nodo en curso |
+| Da los grupos paralelos | Sí, de forma natural | No directamente |
+| Complejidad | O(V + E) | O(V + E) |
+
+<Quiz
+	client:visible
+	question="¿Cuándo no existe una ordenación topológica de un grafo dirigido?"
+	options={[
+		"Cuando tiene más de cien nodos",
+		"Cuando tiene un ciclo",
+		"Cuando algún nodo no tiene aristas",
+	]}
+	answer={1}
+/>
+
+## Dónde aparece
+
+Está en muchas herramientas de uso diario, aunque no se vea.
+
+- **Gestores de paquetes.** Para instalar un paquete, instalan antes sus dependencias, en orden.
+- **Sistemas de construcción y [empaquetadores](/articulos/que-hace-un-empaquetador/).** Compilan cada módulo después de los que importa. El mensaje "dependencia circular" viene de aquí.
+- **[Pipelines de CI/CD](/articulos/integracion-y-despliegue-continuos/).** Los trabajos declaran de cuáles dependen, y el sistema decide el orden y qué puede ir en paralelo.
+- **Hojas de cálculo.** Al cambiar una celda, se recalculan las que dependen de ella, en el orden correcto. Una referencia circular es un ciclo.
+- **Migraciones de bases de datos.** Crear las tablas en un orden que respete las claves foráneas.
+- **[Infraestructura como código](/articulos/infraestructura-como-codigo/).** Crear la red antes que el servidor que va en ella.
+- **Planificación de proyectos** y planes de estudios.
+- **Arranque de servicios** de un sistema operativo.
+
+En todos, lo que hace el usuario es **declarar dependencias**. El orden lo calcula la herramienta.
+
+## Qué hacer con un ciclo
+
+Cuando aparece una dependencia circular, no hay orden posible y hay que romperla:
+
+- **Extraer lo común.** Si A y B se necesitan mutuamente, mover lo que comparten a un tercer módulo, C, del que dependan los dos.
+- **Invertir una dependencia.** Hacer que una de las partes dependa de una abstracción y no de la otra, como propone uno de los [principios SOLID](/articulos/principios-solid/).
+- **Fusionar.** Si dos módulos están tan ligados, quizá son uno.
+
+Un ciclo suele indicar un problema de diseño, no solo técnico.
+
+## Lo esencial
+
+- La ordenación topológica pone los nodos en fila respetando las dependencias.
+- Solo existe si el grafo dirigido no tiene ciclos.
+- El algoritmo de Kahn va retirando los nodos sin dependencias pendientes.
+- Los nodos que quedan libres a la vez se pueden procesar en paralelo.
+- La usan gestores de paquetes, sistemas de construcción, pipelines y hojas de cálculo.

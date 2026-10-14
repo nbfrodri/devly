@@ -1,0 +1,10 @@
+title: Algoritmos sobre grafos
+description: Caminos más cortos, dependencias y redes de coste mínimo.
+layer: programacion
+steps:
+  - grafos
+  - monticulos-y-colas-de-prioridad
+  - algoritmo-de-dijkstra
+  - algoritmo-a-estrella
+  - ordenacion-topologica
+  - arbol-de-expansion-minima

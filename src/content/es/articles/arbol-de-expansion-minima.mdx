@@ -1,0 +1,167 @@
+---
+title: "¿Qué es un árbol de expansión mínima? Kruskal y Prim"
+description: "El árbol de expansión mínima conecta todos los nodos de un grafo con el menor coste total posible, sin ciclos."
+level: avanzado
+layer: programacion
+prerequisites:
+  - grafos
+  - algoritmos-voraces
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 4.3 Minimum Spanning Trees (en inglés)"
+    url: https://algs4.cs.princeton.edu/43mst/
+  - title: "Jeff Erickson: Algorithms, cap. 7, Minimum Spanning Trees (en inglés)"
+    url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/07-mst.pdf
+  - title: "Sedgewick y Wayne: Algorithms, 1.5 Union-Find (en inglés)"
+    url: https://algs4.cs.princeton.edu/15uf/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **árbol de expansión mínima** es el subconjunto de aristas de un [grafo](/articulos/grafos/) con pesos que conecta **todos** los nodos con el **menor coste total** posible. Como no tiene ninguna arista de más, no contiene ciclos: es un árbol.
+
+Los dos algoritmos clásicos para encontrarlo son el de **Kruskal** y el de **Prim**.
+
+## Qué problema resuelve
+
+Hay que unir varios edificios con fibra óptica. Tender cable entre dos cualesquiera tiene un coste. No hace falta conectar cada edificio con todos los demás: basta con que desde cualquiera se pueda llegar a cualquier otro. ¿Qué tramos se tienden para gastar lo mínimo?
+
+Es el mismo problema para una red eléctrica, de tuberías o de carreteras.
+
+## Términos
+
+- Un **árbol de expansión** de un grafo conecta todos sus nodos sin formar ciclos.
+- Con N nodos, tiene siempre **N − 1** aristas. Con una menos, algo queda desconectado. Con una más, aparece un ciclo, y una arista sobra.
+- Un grafo tiene muchos árboles de expansión. El **mínimo** es el de menor suma de pesos.
+
+No es lo mismo que el camino más corto. El [algoritmo de Dijkstra](/articulos/algoritmo-de-dijkstra/) minimiza la distancia desde un origen a cada nodo. El árbol de expansión mínima minimiza el coste total de la red. En el segundo, el trayecto entre dos nodos concretos puede dar un rodeo.
+
+## La propiedad que lo hace fácil
+
+Si se dividen los nodos en dos grupos cualesquiera, la arista más barata que cruza de un grupo al otro pertenece al árbol de expansión mínima.
+
+Tiene sentido: los dos grupos deben quedar unidos por algo, y no hay motivo para elegir una arista más cara.
+
+Esta propiedad permite construir el árbol con decisiones locales, cogiendo cada vez la arista más barata que sea segura. Es un caso en que un [algoritmo voraz](/articulos/algoritmos-voraces/) da el resultado óptimo. Kruskal y Prim la aplican de dos formas.
+
+## Kruskal
+
+1. Ordenar todas las aristas de menor a mayor peso.
+2. Recorrerlas en ese orden.
+3. Añadir cada una **si no forma un ciclo** con las ya elegidas.
+4. Parar al tener N − 1.
+
+Al principio hay muchos fragmentos sueltos, que se van uniendo hasta formar un solo árbol.
+
+### Detectar ciclos
+
+Una arista forma un ciclo si sus dos extremos **ya están conectados**. Para saberlo deprisa se usa una estructura llamada **conjuntos disjuntos**, o *union-find*, que mantiene los nodos agrupados y hace dos cosas:
+
+- **Buscar**: a qué grupo pertenece un nodo.
+- **Unir**: fundir dos grupos.
+
+Cada grupo tiene un representante. Dos nodos están conectados si su representante es el mismo.
+
+```js
+const aristas = [
+	{ de: "A", a: "B", peso: 4 },
+	{ de: "A", a: "C", peso: 2 },
+	{ de: "B", a: "C", peso: 1 },
+	{ de: "B", a: "D", peso: 5 },
+	{ de: "C", a: "D", peso: 8 },
+	{ de: "C", a: "E", peso: 10 },
+	{ de: "D", a: "E", peso: 2 },
+];
+
+function kruskal(nodos, aristas) {
+	const representante = Object.fromEntries(nodos.map((n) => [n, n]));
+
+	function buscar(nodo) {
+		if (representante[nodo] !== nodo) {
+			representante[nodo] = buscar(representante[nodo]);
+		}
+
+		return representante[nodo];
+	}
+
+	const elegidas = [];
+
+	for (const arista of aristas.toSorted((x, y) => x.peso - y.peso)) {
+		const grupoDe = buscar(arista.de);
+		const grupoA = buscar(arista.a);
+
+		if (grupoDe !== grupoA) {
+			representante[grupoDe] = grupoA;
+			elegidas.push(arista);
+		}
+	}
+
+	return elegidas;
+}
+
+const arbol = kruskal(["A", "B", "C", "D", "E"], aristas);
+
+console.log(arbol.map((a) => `${a.de}-${a.a}`).join(" ")); // "B-C A-C D-E B-D"
+console.log(arbol.reduce((suma, a) => suma + a.peso, 0)); // 10
+console.log(arbol.length); // 4
+```
+
+La arista A-B, de peso 4, se descarta: cuando le llega el turno, A y B ya están unidos a través de C. Con 5 nodos, el árbol tiene 4 aristas, y su coste es 10.
+
+En `buscar`, cada nodo consultado queda apuntando directamente a su representante. Ese detalle, la **compresión de caminos**, hace que las consultas siguientes sean casi instantáneas.
+
+El coste lo domina la ordenación: O(E log E).
+
+## Prim
+
+En lugar de mirar todas las aristas, hace crecer un solo árbol desde un nodo.
+
+1. Empezar con un nodo cualquiera.
+2. De todas las aristas que unen el árbol con un nodo que aún no está en él, elegir la **más barata**.
+3. Añadir ese nodo.
+4. Repetir hasta tenerlos todos.
+
+Se parece mucho a Dijkstra: los dos van incorporando el nodo "más cercano". Cambia qué significa cerca. En Dijkstra, la distancia acumulada desde el origen. En Prim, el peso de la arista que lo une al árbol.
+
+Con una [cola de prioridad](/articulos/monticulos-y-colas-de-prioridad/) para obtener la arista mínima, cuesta O(E log V).
+
+## Comparación
+
+| | Kruskal | Prim |
+| --- | --- | --- |
+| Cómo avanza | Une fragmentos sueltos | Hace crecer un único árbol |
+| Recorre | Las aristas, ordenadas | Los nodos, desde uno inicial |
+| Estructura auxiliar | Conjuntos disjuntos | Cola de prioridad |
+| Complejidad | O(E log E) | O(E log V) |
+| Conviene con | Pocas aristas | Muchas aristas |
+
+Los dos dan un árbol del mismo coste. Si hay pesos repetidos puede haber varios árboles mínimos, y cada algoritmo puede devolver uno distinto.
+
+<Quiz
+	client:visible
+	question="Un grafo conexo tiene 10 nodos. ¿Cuántas aristas tiene su árbol de expansión mínima?"
+	options={["10", "9", "Depende de los pesos"]}
+	answer={1}
+/>
+
+## Dónde se usa
+
+- **Diseño de redes**: cableado, electricidad, tuberías, carreteras.
+- **Agrupar datos.** Si se construye el árbol y se eliminan sus aristas más largas, los nodos quedan divididos en grupos de elementos cercanos entre sí. Es una técnica de [aprendizaje no supervisado](/articulos/que-es-el-aprendizaje-automatico/).
+- **Aproximar problemas difíciles.** Sirve de punto de partida para dar soluciones razonables al problema del viajante, que consiste en hallar el recorrido más corto que pasa por una serie de ciudades.
+- **Generar laberintos.** Un árbol de expansión de una cuadrícula con pesos al azar es un laberinto con un único camino entre dos puntos cualesquiera.
+- **Redes de ordenadores.** Los conmutadores de la [capa de enlace](/articulos/capa-de-enlace/) usan un protocolo de árbol de expansión para desactivar enlaces redundantes y evitar que las tramas circulen en bucle.
+
+## Sus límites
+
+- **Sin redundancia.** Un árbol no tiene caminos alternativos: si falla una arista, la red se parte. Una red real añade enlaces de reserva.
+- **No minimiza trayectos.** Solo el coste total.
+- **Solo para grafos no dirigidos.** Con aristas de un solo sentido, el problema es otro y más difícil.
+
+## Lo esencial
+
+- El árbol de expansión mínima conecta todos los nodos con el menor coste total.
+- Tiene siempre un nodo menos de aristas, y ningún ciclo.
+- Kruskal añade las aristas de menor a mayor, saltándose las que cierran un ciclo.
+- Prim hace crecer un árbol añadiendo cada vez la arista más barata que sale de él.
+- Los dos son algoritmos voraces que dan el resultado óptimo.

@@ -7,3 +7,4 @@ steps:
   - busqueda-binaria
   - recursividad
   - algoritmos-de-ordenacion
+  - quicksort

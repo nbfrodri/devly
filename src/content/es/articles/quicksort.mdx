@@ -1,0 +1,198 @@
+---
+title: "¿Qué es quicksort?"
+description: "Quicksort ordena eligiendo un pivote, separando los elementos menores y mayores, y repitiendo con cada parte. Es uno de los algoritmos de ordenación más usados."
+level: intermedio
+layer: programacion
+prerequisites:
+  - algoritmos-de-ordenacion
+  - recursividad
+  - complejidad-algoritmica
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 2.3 Quicksort (en inglés)"
+    url: https://algs4.cs.princeton.edu/23quicksort/
+  - title: "MDN: Array.prototype.sort()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Quicksort** es un [algoritmo de ordenación](/articulos/algoritmos-de-ordenacion/) que elige un elemento de la lista, llamado **pivote**, coloca a un lado los menores y al otro los mayores, y repite lo mismo con cada una de las dos partes. Lo inventó Tony Hoare alrededor de 1960.
+
+Es, en la práctica, de los más rápidos, y la base de las funciones de ordenación de muchos lenguajes.
+
+## La idea
+
+Aplica la estrategia de **divide y vencerás**:
+
+1. **Elegir un pivote.**
+2. **Particionar**: poner los menores que el pivote a su izquierda y los mayores a su derecha. El pivote queda en su posición definitiva.
+3. **Repetir** con la parte izquierda y con la derecha, por separado.
+
+Una lista de cero o un elemento ya está ordenada. Ese es el caso base de la [recursividad](/articulos/recursividad/).
+
+La versión más fácil de leer:
+
+```js
+function quicksort(lista) {
+	if (lista.length <= 1) return lista;
+
+	const [pivote, ...resto] = lista;
+	const menores = resto.filter((x) => x < pivote);
+	const mayores = resto.filter((x) => x >= pivote);
+
+	return [...quicksort(menores), pivote, ...quicksort(mayores)];
+}
+
+console.log(quicksort([5, 3, 8, 1, 9, 2]).join(" ")); // "1 2 3 5 8 9"
+```
+
+Con el 5 como pivote, quedan `[3, 1, 2]` a un lado y `[8, 9]` al otro. Cada parte se ordena igual.
+
+Esta versión es clara, pero crea listas nuevas en cada paso. Gasta memoria que el algoritmo original no necesita.
+
+## En el propio array
+
+La versión real reorganiza los elementos **dentro del mismo [array](/articulos/arrays/)**, intercambiándolos. Toda la gracia está en la partición.
+
+Un esquema sencillo toma como pivote el último elemento y mantiene una **frontera**: a su izquierda está lo que ya se sabe que es menor que el pivote.
+
+```js
+function particionar(lista, inicio, fin) {
+	const pivote = lista[fin];
+	let frontera = inicio;
+
+	for (let i = inicio; i < fin; i++) {
+		if (lista[i] < pivote) {
+			[lista[i], lista[frontera]] = [lista[frontera], lista[i]];
+			frontera = frontera + 1;
+		}
+	}
+
+	[lista[frontera], lista[fin]] = [lista[fin], lista[frontera]];
+	return frontera;
+}
+
+function ordenar(lista, inicio = 0, fin = lista.length - 1) {
+	if (inicio < fin) {
+		const posicion = particionar(lista, inicio, fin);
+		ordenar(lista, inicio, posicion - 1);
+		ordenar(lista, posicion + 1, fin);
+	}
+
+	return lista;
+}
+
+const numeros = [5, 3, 8, 1, 9, 2];
+
+console.log(particionar([...numeros], 0, 5)); // 1
+console.log(ordenar(numeros).join(" ")); // "1 2 3 5 8 9"
+```
+
+En la primera partición, el pivote es el 2. Solo el 1 es menor, así que el 2 acaba en la posición 1: su sitio definitivo. A partir de ahí no se vuelve a mover.
+
+No se usa memoria adicional para los datos. Solo la de las llamadas recursivas.
+
+## Cuánto cuesta
+
+Depende de cómo de equilibradas salgan las particiones.
+
+### Caso bueno
+
+Si el pivote cae cerca de la mitad, cada partición divide el problema en dos partes parecidas. Hay unos log n niveles, y en cada uno se recorren los n elementos: **O(n log n)**, como explica el artículo sobre [complejidad](/articulos/complejidad-algoritmica/).
+
+### Caso malo
+
+Si el pivote es siempre el menor o el mayor, una parte queda vacía y la otra con todos menos uno. Hay n niveles: **O(n²)**.
+
+```js
+function comparaciones(lista) {
+	if (lista.length <= 1) return 0;
+
+	const [pivote, ...resto] = lista;
+	const menores = resto.filter((x) => x < pivote);
+	const mayores = resto.filter((x) => x >= pivote);
+
+	return resto.length + comparaciones(menores) + comparaciones(mayores);
+}
+
+const yaOrdenada = Array.from({ length: 100 }, (_, i) => i);
+
+console.log(comparaciones(yaOrdenada)); // 4950
+console.log(comparaciones([4, 2, 6, 1, 3, 5, 7])); // 10
+```
+
+Con el primer elemento como pivote, una lista **ya ordenada** de 100 elementos es el peor caso: 4950 comparaciones. Con particiones equilibradas harían falta unas 600.
+
+Es una ironía conocida: la versión ingenua de quicksort es lentísima justo con los datos que ya están en orden, que en la práctica son frecuentes.
+
+| Caso | Complejidad | Cuándo ocurre |
+| --- | --- | --- |
+| Mejor y medio | O(n log n) | Particiones razonablemente equilibradas |
+| Peor | O(n²) | El pivote es siempre un extremo |
+
+## Elegir bien el pivote
+
+Todo depende de esa elección.
+
+- **Al azar.** Ninguna entrada concreta provoca el peor caso de forma sistemática. Sigue siendo posible, con una probabilidad despreciable.
+- **Mediana de tres.** Se miran el primero, el del medio y el último, y se toma el de valor intermedio. Evita el problema con datos ordenados.
+
+Elegir siempre el primero o el último solo vale para explicar el algoritmo.
+
+Hay además un aspecto de [seguridad](/articulos/que-es-la-ciberseguridad/): si un atacante sabe cómo se elige el pivote, puede enviar datos preparados para provocar el peor caso y saturar un servidor. Elegirlo al azar lo impide.
+
+<Quiz
+	client:visible
+	question="¿Cuándo tiene quicksort su peor rendimiento, O(n²)?"
+	options={[
+		"Cuando la lista tiene muchos elementos",
+		"Cuando el pivote elegido es siempre el menor o el mayor",
+		"Cuando los datos están desordenados al azar",
+	]}
+	answer={1}
+/>
+
+## Frente a la ordenación por mezcla
+
+| | Quicksort | Ordenación por mezcla |
+| --- | --- | --- |
+| Caso medio | O(n log n) | O(n log n) |
+| Peor caso | O(n²) | O(n log n) |
+| Memoria adicional | O(log n) | O(n) |
+| Estable | No | Sí |
+| El trabajo está en | Dividir | Combinar |
+
+Las dos dividen el problema, de formas opuestas. La mezcla parte por la mitad sin pensar y trabaja al juntar. Quicksort trabaja al partir, y después no tiene nada que juntar.
+
+Si quicksort tiene peor caso, ¿por qué se usa tanto?
+
+- **Es rápido de verdad.** Hace pocos movimientos de datos y recorre la memoria de forma consecutiva, lo que aprovecha bien la caché del [procesador](/articulos/como-funciona-un-procesador/).
+- **Casi no usa memoria extra.**
+- **El peor caso se evita** con una buena elección de pivote.
+
+### No es estable
+
+Un algoritmo **estable** conserva el orden relativo de los elementos iguales. Quicksort no: al intercambiar elementos lejanos, dos personas con la misma edad pueden salir en otro orden que el que tenían.
+
+Importa al ordenar por varios criterios. Cuando hace falta estabilidad, se usa la mezcla.
+
+## En la práctica
+
+Las bibliotecas no usan un quicksort puro. Combinan:
+
+- **Ordenación por inserción para trozos pequeños.** Con pocos elementos es más rápida, por su sencillez.
+- **Tres zonas.** Con muchos valores repetidos, se separa en menores, iguales y mayores, y los iguales no se vuelven a tocar.
+- **Vigilancia de la profundidad.** Si la recursión se alarga demasiado, se cambia a otro algoritmo con garantía de O(n log n).
+
+Algunos lenguajes prefieren algoritmos derivados de la mezcla, porque son estables. La función `sort` de JavaScript está obligada a serlo.
+
+Rara vez hay que escribir un quicksort. Conocerlo sirve para entender qué hace la biblioteca, y porque su idea central, particionar alrededor de un pivote, resuelve otros problemas: por ejemplo, encontrar el elemento que ocuparía cierta posición sin ordenar la lista entera.
+
+## Lo esencial
+
+- Quicksort elige un pivote, separa menores y mayores, y repite con cada parte.
+- La partición coloca el pivote en su posición definitiva.
+- En promedio es O(n log n); con malos pivotes, O(n²).
+- Elegir el pivote al azar o por mediana de tres evita el peor caso.
+- Ordena en el propio array, con poca memoria extra, y no es estable.

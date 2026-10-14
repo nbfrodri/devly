@@ -1,0 +1,205 @@
+---
+title: "¿Qué es la vuelta atrás (backtracking)?"
+description: "La vuelta atrás construye una solución paso a paso y, cuando un camino no puede llevar a nada, deshace el último paso y prueba otra opción."
+level: intermedio
+layer: programacion
+prerequisites:
+  - recursividad
+  - grafos
+updated: 2026-10-13
+sources:
+  - title: "Jeff Erickson: Algorithms, cap. 2, Backtracking (en inglés)"
+    url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/02-backtracking.pdf
+  - title: "Jeff Erickson: Algorithms, libro libre (en inglés)"
+    url: https://jeffe.cs.illinois.edu/teaching/algorithms/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **vuelta atrás**, en inglés *backtracking*, es una técnica para resolver problemas explorando sus posibles soluciones de forma ordenada. Construye una solución decisión a decisión. Cuando detecta que el camino elegido no puede llevar a una solución válida, **deshace la última decisión** y prueba la siguiente alternativa.
+
+Es la forma organizada de hacer prueba y error.
+
+## Qué problema resuelve
+
+Hay problemas en los que no se conoce ningún atajo: hay que buscar entre muchas combinaciones.
+
+- Colocar piezas sin que se ataquen.
+- Rellenar un sudoku.
+- Encontrar la salida de un laberinto.
+- Elegir, de una lista de números, los que suman una cantidad.
+
+La forma más simple sería generar **todas** las combinaciones y comprobar cada una. Se llama **fuerza bruta**, y casi nunca es viable: el número de combinaciones crece de forma exponencial.
+
+La vuelta atrás mejora la fuerza bruta con una observación: muchas combinaciones se pueden descartar **antes de terminarlas**.
+
+## La idea
+
+En un laberinto, uno avanza por un pasillo. En cada cruce elige un camino. Si llega a un callejón sin salida, vuelve al último cruce y toma otro.
+
+No hace falta recorrer hasta el final un camino que ya se sabe que está cerrado.
+
+En general:
+
+1. **Elegir** una opción para la siguiente decisión.
+2. **Comprobar** si lo construido hasta ahora todavía puede acabar en una solución. Si no, descartar.
+3. **Avanzar** a la siguiente decisión, de forma [recursiva](/articulos/recursividad/).
+4. **Deshacer** la elección al volver, y probar la siguiente.
+
+Descartar un camino a medias se llama **poda**. Es lo que da su eficacia a la técnica: al descartar una decisión temprana se eliminan de golpe todas las combinaciones que la incluían.
+
+## El árbol de decisiones
+
+Las opciones forman un árbol. La raíz es el punto de partida, sin nada decidido. Cada nivel es una decisión. Cada hoja, una combinación completa.
+
+La vuelta atrás recorre ese árbol en profundidad, como la búsqueda en profundidad de un [grafo](/articulos/grafos/). La diferencia es que el árbol no existe en memoria: se va generando al explorarlo, y se cortan las ramas que no interesan.
+
+## Un ejemplo: elegir números que sumen
+
+De una lista de números, encontrar algunos que sumen exactamente una cantidad.
+
+```js
+function buscarSuma(numeros, objetivo, desde = 0, elegidos = []) {
+	if (objetivo === 0) return elegidos;
+
+	for (let i = desde; i < numeros.length; i++) {
+		if (numeros[i] > objetivo) continue;
+
+		const resultado = buscarSuma(numeros, objetivo - numeros[i], i + 1, [
+			...elegidos,
+			numeros[i],
+		]);
+
+		if (resultado) return resultado;
+	}
+
+	return null;
+}
+
+console.log(buscarSuma([3, 34, 4, 12, 5, 2], 9).join(" ")); // "3 4 2"
+console.log(buscarSuma([3, 34, 4, 12, 5, 2], 30)); // null
+```
+
+Para sumar 9:
+
+- Coge el 3. Faltan 6.
+- El 34 no cabe: **se poda**, sin explorar nada de lo que vendría con él.
+- Coge el 4. Faltan 2.
+- El 12 y el 5 no caben. Se podan.
+- Coge el 2. Faltan 0: solución.
+
+La línea `if (numeros[i] > objetivo) continue` es la poda. Sin ella el resultado sería el mismo, tras explorar muchas más combinaciones.
+
+Para 30 no hay solución. El algoritmo lo descubre tras agotar las opciones, y devuelve `null`.
+
+## El ejemplo clásico: las reinas
+
+Colocar ocho reinas en un tablero de ajedrez de modo que ninguna ataque a otra: no puede haber dos en la misma fila, columna o diagonal.
+
+Hay más de cuatro mil millones de formas de poner ocho reinas en el tablero. Probarlas todas no es razonable.
+
+Con vuelta atrás, se coloca una reina por fila. En cada fila se prueba cada columna, y **solo se sigue si no ataca a las anteriores**.
+
+```js
+function contarSoluciones(tamano) {
+	const columnas = [];
+	let total = 0;
+
+	const esSegura = (fila, columna) =>
+		columnas.every(
+			(otraColumna, otraFila) =>
+				otraColumna !== columna &&
+				Math.abs(otraColumna - columna) !== fila - otraFila,
+		);
+
+	function colocar(fila) {
+		if (fila === tamano) {
+			total = total + 1;
+			return;
+		}
+
+		for (let columna = 0; columna < tamano; columna++) {
+			if (esSegura(fila, columna)) {
+				columnas.push(columna);
+				colocar(fila + 1);
+				columnas.pop();
+			}
+		}
+	}
+
+	colocar(0);
+	return total;
+}
+
+console.log(contarSoluciones(4)); // 2
+console.log(contarSoluciones(8)); // 92
+```
+
+Las tres líneas centrales son la técnica entera:
+
+- `columnas.push(columna)`: **elegir**.
+- `colocar(fila + 1)`: **avanzar**.
+- `columnas.pop()`: **deshacer**.
+
+Hay 92 soluciones para el tablero normal. El programa las encuentra examinando unos miles de posiciones parciales, no miles de millones.
+
+Dos reinas están en la misma diagonal cuando la diferencia entre sus columnas es igual a la diferencia entre sus filas. Eso es lo que comprueba `esSegura`.
+
+<Quiz
+	client:visible
+	question="¿Qué es la poda en un algoritmo de vuelta atrás?"
+	options={[
+		"Ordenar las opciones antes de empezar",
+		"Abandonar un camino en cuanto se ve que no puede llevar a una solución",
+		"Guardar los resultados para reutilizarlos",
+	]}
+	answer={1}
+/>
+
+## Cómo hacerla más rápida
+
+Lo que se explora depende mucho de los detalles.
+
+- **Podar pronto.** Cuanto antes se detecta un camino inútil, más se ahorra.
+- **Elegir primero lo más restringido.** En un sudoku conviene empezar por la casilla con menos valores posibles: si solo admite uno, no hay nada que probar, y si no admite ninguno, se descarta ya.
+- **Propagar restricciones.** Al tomar una decisión, eliminar las opciones que deja inválidas en otras partes. A veces eso revela enseguida que no hay salida.
+- **Acotar.** En problemas de optimización, si lo mejor que podría dar una rama es peor que una solución ya encontrada, se abandona. Se llama **ramificación y poda**.
+
+## Lo que cuesta
+
+En el peor caso sigue siendo **exponencial**. La poda reduce mucho el trabajo en la práctica, y no cambia esa naturaleza: hay entradas con las que casi no se puede podar.
+
+Por eso se reserva para:
+
+- Problemas sin algoritmo eficiente conocido.
+- Tamaños moderados.
+- Casos en los que se necesita la solución exacta, o todas.
+
+## Frente a otras técnicas
+
+| Técnica | Qué hace con las opciones |
+| --- | --- |
+| Fuerza bruta | Las prueba todas, completas |
+| Vuelta atrás | Las prueba todas, abandonando las que no pueden valer |
+| [Programación dinámica](/articulos/programacion-dinamica/) | Evita repetir subproblemas, recordando resultados |
+| [Voraz](/articulos/algoritmos-voraces/) | Sigue un solo camino y no rectifica |
+
+Se combinan. Si en una vuelta atrás se repiten los mismos estados, se les añade memoria.
+
+## Dónde se usa
+
+- **Rompecabezas**: sudokus, crucigramas, laberintos.
+- **Planificación con restricciones**: horarios, turnos, asignación de aulas.
+- **[Programación lógica](/articulos/programacion-logica/).** Prolog responde a las consultas con vuelta atrás.
+- **[Expresiones regulares](/articulos/expresiones-regulares/).** Muchos motores prueban una forma de encajar el patrón y retroceden si falla. De ahí que ciertos patrones tarden muchísimo con ciertos textos.
+- **Analizadores sintácticos.**
+- **Resolutores de satisfacibilidad**, usados para verificar circuitos y programas.
+- **Juegos**, para explorar jugadas posibles.
+
+## Lo esencial
+
+- La vuelta atrás construye soluciones paso a paso y retrocede cuando un camino no sirve.
+- Su esquema es elegir, avanzar y deshacer.
+- La poda descarta de golpe todas las combinaciones que comparten un comienzo inválido.
+- Sigue siendo exponencial en el peor caso, aunque en la práctica explora mucho menos.
+- Se usa en rompecabezas, planificación con restricciones y motores de expresiones regulares.

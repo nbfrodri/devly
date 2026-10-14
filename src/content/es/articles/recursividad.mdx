@@ -124,7 +124,7 @@ console.log(fibonacci(10)); // 55
 
 Funciona, pero es muy ineficiente. Para calcular `fibonacci(5)` se calcula `fibonacci(3)` dos veces y `fibonacci(2)` tres. Cada llamada genera dos más, y el trabajo crece de forma exponencial: con valores de `n` cercanos a 50, el programa tarda minutos.
 
-La solución es no repetir cálculos. Guardar cada resultado la primera vez que se obtiene y reutilizarlo después se llama **memorización**:
+La solución es no repetir cálculos. Guardar cada resultado la primera vez que se obtiene y reutilizarlo después se llama **memorización**, la base de la [programación dinámica](/articulos/programacion-dinamica/):
 
 ```js
 const calculados = new Map();

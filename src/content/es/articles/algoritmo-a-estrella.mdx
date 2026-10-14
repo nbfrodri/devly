@@ -1,0 +1,191 @@
+---
+title: "¿Qué es el algoritmo A*?"
+description: "A* busca el camino más corto como Dijkstra, pero usa una estimación de lo que falta para explorar primero en la dirección del destino."
+level: intermedio
+layer: programacion
+prerequisites:
+  - algoritmo-de-dijkstra
+  - grafos
+updated: 2026-10-13
+sources:
+  - title: "Red Blob Games: Introduction to the A* Algorithm (en inglés)"
+    url: https://www.redblobgames.com/pathfinding/a-star/introduction.html
+  - title: "Amit Patel: Heuristics, Stanford Game Programming (en inglés)"
+    url: https://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+  - title: "Sedgewick y Wayne: Algorithms, 4.4 Shortest Paths (en inglés)"
+    url: https://algs4.cs.princeton.edu/44sp/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**A\***, que se lee "A estrella", es un algoritmo que encuentra el camino más corto entre dos puntos de un [grafo](/articulos/grafos/). Hace lo mismo que el [algoritmo de Dijkstra](/articulos/algoritmo-de-dijkstra/), con una mejora: usa una **estimación** de la distancia que falta hasta el destino para explorar antes los caminos prometedores.
+
+Se publicó en 1968, dentro de un proyecto para que un robot planificara sus movimientos. Hoy es el algoritmo habitual de búsqueda de rutas en videojuegos, robótica y mapas.
+
+## Qué problema resuelve
+
+Dijkstra no sabe dónde está el destino. Explora en todas direcciones, por orden de distancia al origen, como una mancha que se extiende. Para ir de Madrid a Barcelona, examina también todo lo que hay hacia Lisboa a la misma distancia.
+
+Encuentra la respuesta correcta haciendo mucho trabajo inútil.
+
+Si se conoce la posición del destino, se puede aprovechar: los caminos que se acercan a él merecen probarse antes.
+
+## La idea
+
+Dijkstra elige en cada paso el nodo con menor coste desde el origen. A\* elige el que tiene menor valor de esta suma:
+
+**f = g + h**
+
+| Término | Significado |
+| --- | --- |
+| g | El coste real desde el origen hasta este nodo |
+| h | La estimación del coste desde este nodo hasta el destino |
+| f | La estimación del coste total de un camino que pase por aquí |
+
+La función que da `h` es la **heurística**: una regla rápida para estimar, sin calcular el camino.
+
+Un nodo cercano al origen pero en dirección contraria al destino tiene una `g` pequeña y una `h` grande. Queda relegado.
+
+## Comparación con Dijkstra
+
+En una cuadrícula de 6 por 6, sin obstáculos, se va de una esquina a la casilla que está 5 posiciones a la derecha. El programa cuenta cuántas casillas examina cada algoritmo.
+
+```js
+function buscar(tamano, inicio, meta, heuristica) {
+	const clave = (p) => `${p[0]},${p[1]}`;
+	const coste = new Map([[clave(inicio), 0]]);
+	const prioridad = (p) => coste.get(clave(p)) + heuristica(p, meta);
+	const abiertos = [inicio];
+	let examinados = 0;
+
+	while (abiertos.length > 0) {
+		let mejor = 0;
+		for (let i = 1; i < abiertos.length; i++) {
+			if (prioridad(abiertos[i]) < prioridad(abiertos[mejor])) {
+				mejor = i;
+			}
+		}
+
+		const [actual] = abiertos.splice(mejor, 1);
+		examinados = examinados + 1;
+
+		if (clave(actual) === clave(meta)) {
+			return { pasos: coste.get(clave(actual)), examinados };
+		}
+
+		for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+			const vecino = [actual[0] + dx, actual[1] + dy];
+			const fuera = vecino.some((v) => v < 0 || v >= tamano);
+			if (fuera) continue;
+
+			const nuevo = coste.get(clave(actual)) + 1;
+			const conocido = coste.get(clave(vecino));
+
+			if (conocido === undefined || nuevo < conocido) {
+				coste.set(clave(vecino), nuevo);
+				abiertos.push(vecino);
+			}
+		}
+	}
+
+	return null;
+}
+
+const manhattan = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+const sinEstimacion = () => 0;
+
+const aEstrella = buscar(6, [0, 0], [5, 0], manhattan);
+const dijkstra = buscar(6, [0, 0], [5, 0], sinEstimacion);
+
+console.log(aEstrella.pasos); // 5
+console.log(dijkstra.pasos); // 5
+console.log(aEstrella.examinados); // 6
+console.log(dijkstra.examinados > aEstrella.examinados); // true
+```
+
+Los dos encuentran el mismo camino, de 5 pasos. A\* examina 6 casillas: las del camino. Dijkstra examina muchas más, porque se extiende también hacia abajo.
+
+Y el código es **el mismo**. Lo único que cambia es la heurística. Con una que devuelve siempre 0, A\* es Dijkstra.
+
+## La heurística lo decide todo
+
+### Admisible
+
+Para que A\* dé siempre el camino más corto, la heurística debe ser **admisible**: nunca debe **sobrestimar** el coste real que falta.
+
+Si exagera, puede descartar el camino bueno creyéndolo peor de lo que es. Si se queda corta, lo peor que pasa es que explora de más.
+
+La distancia en línea recta es admisible: ningún camino real es más corto que la recta.
+
+### El equilibrio
+
+| Heurística | Efecto |
+| --- | --- |
+| Siempre 0 | Es Dijkstra: correcto y lento |
+| Menor que el coste real | Correcto; cuanto más se acerca, más rápido |
+| Igual al coste real | Va directo al destino, sin desviarse |
+| Mayor que el coste real | Más rápido, pero el camino puede no ser el mejor |
+
+A veces se sobrestima a propósito. En un videojuego, un camino casi óptimo calculado al instante vale más que el óptimo calculado tarde.
+
+### Cuál usar
+
+Depende de cómo se puede uno mover.
+
+| Movimiento | Heurística |
+| --- | --- |
+| Cuadrícula, en 4 direcciones | Distancia Manhattan: suma de las diferencias en horizontal y vertical |
+| Cuadrícula, con diagonales | Distancia diagonal |
+| Cualquier dirección | Distancia en línea recta |
+| Mapa de carreteras, peso en tiempo | Distancia en línea recta dividida entre la velocidad máxima |
+
+La distancia Manhattan toma su nombre del trazado en cuadrícula de las calles de esa isla: no se puede atravesar las manzanas en diagonal.
+
+<Quiz
+	client:visible
+	question="¿Qué debe cumplir una heurística para que A* encuentre siempre el camino más corto?"
+	options={[
+		"No sobrestimar nunca el coste real que falta",
+		"Devolver siempre cero",
+		"Ser mayor que el coste real",
+	]}
+	answer={0}
+/>
+
+## Con obstáculos
+
+En una cuadrícula vacía, A\* parece magia. Con muros, tiene que rodearlos, y explora más: la estimación en línea recta apunta a un sitio por el que no se puede pasar.
+
+Aun así, sigue examinando menos que Dijkstra en casi todos los casos. En el peor, un laberinto donde la estimación no ayuda en nada, hace el mismo trabajo.
+
+## Lo que cuesta
+
+- **Memoria.** Guarda todos los nodos descubiertos. En espacios muy grandes, es su mayor límite. Hay variantes que gastan menos memoria a cambio de repetir trabajo.
+- **Necesita una buena heurística.** Sin información sobre dónde está el destino, no aporta nada sobre Dijkstra.
+- **Un solo destino.** Dijkstra calcula las distancias a todos los nodos; A\* se dirige a uno.
+
+## Dónde se usa
+
+- **Videojuegos.** Es el estándar para mover personajes por un mapa.
+- **Robótica.** Planificar el recorrido de un robot o un vehículo.
+- **Mapas.** Como base, con mucho trabajo previo para acelerarlo.
+- **Rompecabezas y planificación.** El "grafo" no tiene por qué ser un mapa. Los nodos pueden ser estados de un problema, y las aristas, acciones. Resolver un puzle de piezas deslizantes es buscar un camino desde la posición inicial hasta la resuelta.
+
+## Dijkstra, A\* y búsqueda en anchura
+
+Son el mismo esquema, con distinta forma de decidir qué nodo va a continuación.
+
+| Algoritmo | Elige el nodo con menor | Camino óptimo |
+| --- | --- | --- |
+| Búsqueda en anchura | Número de pasos | Solo sin pesos |
+| Dijkstra | Coste desde el origen | Sí |
+| Voraz, solo con heurística | Estimación hasta el destino | No |
+| A\* | Coste desde el origen más estimación | Sí, con heurística admisible |
+
+## Lo esencial
+
+- A\* busca el camino más corto guiándose por una estimación de lo que falta.
+- Ordena los nodos por el coste recorrido más el coste estimado restante.
+- Con una heurística que no sobrestima, el camino que encuentra es óptimo.
+- Cuanto mejor es la estimación, menos nodos examina.
+- Con una heurística nula, se comporta como Dijkstra.

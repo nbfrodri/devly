@@ -1,0 +1,9 @@
+title: Técnicas de diseño de algoritmos
+description: Las estrategias generales con las que se ataca un problema nuevo.
+layer: programacion
+steps:
+  - recursividad
+  - quicksort
+  - algoritmos-voraces
+  - programacion-dinamica
+  - vuelta-atras

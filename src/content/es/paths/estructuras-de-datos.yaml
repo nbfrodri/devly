@@ -7,4 +7,5 @@ steps:
   - listas-enlazadas
   - tablas-hash
   - arboles-binarios-de-busqueda
+  - monticulos-y-colas-de-prioridad
   - grafos

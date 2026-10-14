@@ -1,0 +1,198 @@
+---
+title: "¿Qué es un algoritmo voraz?"
+description: "Un algoritmo voraz construye la solución eligiendo en cada paso lo que parece mejor en ese momento, sin volver atrás. Es rápido, y no siempre acierta."
+level: intermedio
+layer: programacion
+prerequisites:
+  - complejidad-algoritmica
+  - algoritmos-de-ordenacion
+updated: 2026-10-13
+sources:
+  - title: "Jeff Erickson: Algorithms, cap. 4, Greedy Algorithms (en inglés)"
+    url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/04-greedy.pdf
+  - title: "Sedgewick y Wayne: Algorithms, 4.3 Minimum Spanning Trees (en inglés)"
+    url: https://algs4.cs.princeton.edu/43mst/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **algoritmo voraz**, en inglés *greedy*, resuelve un problema paso a paso, tomando en cada uno la opción que **parece mejor en ese momento**, y sin replantearse nunca las decisiones ya tomadas.
+
+Son simples y rápidos. Su dificultad es otra: saber si el resultado es de verdad el mejor, porque muchas veces no lo es.
+
+## La idea
+
+Dar el cambio con el menor número de monedas. Lo que hace cualquiera: coger la moneda más grande que quepa, restarla, y repetir.
+
+```js
+function cambio(monedas, cantidad) {
+	const elegidas = [];
+	let restante = cantidad;
+
+	for (const moneda of monedas) {
+		while (restante >= moneda) {
+			elegidas.push(moneda);
+			restante = restante - moneda;
+		}
+	}
+
+	return elegidas;
+}
+
+console.log(cambio([50, 20, 10, 5, 2, 1], 87).join(" ")); // "50 20 10 5 2"
+```
+
+Cinco monedas, y es lo óptimo. No se ha probado ninguna alternativa ni se ha mirado más allá del paso actual.
+
+## Cuando falla
+
+El mismo algoritmo, con otras monedas:
+
+```js
+function cambio(monedas, cantidad) {
+	const elegidas = [];
+	let restante = cantidad;
+
+	for (const moneda of monedas) {
+		while (restante >= moneda) {
+			elegidas.push(moneda);
+			restante = restante - moneda;
+		}
+	}
+
+	return elegidas;
+}
+
+console.log(cambio([4, 3, 1], 6).join(" ")); // "4 1 1"
+```
+
+Tres monedas. Con dos de 3 habría bastado.
+
+Coger la de 4 era la mejor decisión **inmediata**, y condenó al resto: quedaban 2, que solo se pueden dar con dos monedas de 1. El algoritmo no puede darse cuenta, porque no revisa.
+
+Este es el riesgo de fondo: **una decisión óptima en cada paso no garantiza un resultado óptimo en conjunto**. Los sistemas de monedas reales están diseñados para que la estrategia voraz funcione. Uno arbitrario, no. Para el caso general hace falta [programación dinámica](/articulos/programacion-dinamica/).
+
+## Cuándo sí funciona
+
+Hacen falta dos propiedades.
+
+- **Elección voraz.** Existe una solución óptima que empieza por la elección que parece mejor. Es decir, cogerla no cierra el camino al óptimo.
+- **Subestructura óptima.** Tras esa elección, lo que queda es un problema del mismo tipo, y resolverlo bien completa una solución óptima.
+
+La primera es la que falla en el ejemplo de las monedas.
+
+No hay forma de saberlo a simple vista. **Hay que demostrarlo.** Un algoritmo voraz sin demostración es una conjetura.
+
+La demostración habitual es un **argumento de intercambio**: se toma una solución óptima cualquiera y se muestra que, cambiando su primera decisión por la voraz, no empeora. Repitiendo el argumento, la solución voraz es tan buena como cualquiera.
+
+Para desmentir uno, basta un contraejemplo, como el de las monedas.
+
+## Un caso donde funciona
+
+Hay una sola sala y varias actividades, cada una con hora de inicio y de fin. ¿Cuál es el mayor número de actividades que caben sin solaparse?
+
+Varias reglas voraces parecen razonables:
+
+| Regla | ¿Funciona? |
+| --- | --- |
+| La que empieza antes | No: puede ser una que dure todo el día |
+| La más corta | No: puede estar en medio y pisar a dos |
+| La que tiene menos conflictos | No |
+| **La que termina antes** | Sí |
+
+La que termina antes deja libre la sala lo más pronto posible, que es lo que más opciones da para el resto.
+
+```js
+const actividades = [
+	{ nombre: "A", inicio: 9, fin: 11 },
+	{ nombre: "B", inicio: 10, fin: 12 },
+	{ nombre: "C", inicio: 11, fin: 13 },
+	{ nombre: "D", inicio: 12, fin: 14 },
+	{ nombre: "E", inicio: 13, fin: 15 },
+	{ nombre: "F", inicio: 9, fin: 15 },
+];
+
+function elegir(actividades) {
+	const elegidas = [];
+	let libreDesde = 0;
+
+	for (const actividad of actividades.toSorted((x, y) => x.fin - y.fin)) {
+		if (actividad.inicio >= libreDesde) {
+			elegidas.push(actividad.nombre);
+			libreDesde = actividad.fin;
+		}
+	}
+
+	return elegidas;
+}
+
+console.log(elegir(actividades).join(" ")); // "A C E"
+```
+
+Tres actividades, y no caben más. La F, que empieza a primera hora y dura todo el día, queda fuera.
+
+El ejemplo enseña algo general: para un mismo problema hay varias reglas voraces plausibles, y normalmente solo una, o ninguna, es correcta.
+
+## La forma habitual
+
+Casi todos siguen el mismo esquema:
+
+1. **Ordenar** los candidatos según un criterio.
+2. **Recorrerlos** en ese orden.
+3. **Aceptar** cada uno si es compatible con lo ya elegido.
+
+Por eso su coste suele ser el de la [ordenación](/articulos/algoritmos-de-ordenacion/), O(n log n). Es lo que los hace atractivos frente a alternativas mucho más lentas.
+
+<Quiz
+	client:visible
+	question="¿Qué caracteriza a un algoritmo voraz?"
+	options={[
+		"Prueba todas las combinaciones posibles",
+		"Elige en cada paso la mejor opción inmediata y no la revisa",
+		"Guarda los resultados de los subproblemas para reutilizarlos",
+	]}
+	answer={1}
+/>
+
+## Voraces que dan el óptimo
+
+| Algoritmo | Problema | Elección voraz |
+| --- | --- | --- |
+| [Dijkstra](/articulos/algoritmo-de-dijkstra/) | Caminos más cortos | El nodo pendiente más cercano |
+| [Kruskal y Prim](/articulos/arbol-de-expansion-minima/) | Árbol de expansión mínima | La arista más barata que sea segura |
+| Huffman | Compresión | Unir los dos símbolos menos frecuentes |
+| Selección de actividades | Planificación | La que termina antes |
+
+Dijkstra ilustra bien los límites. Es correcto mientras no haya pesos negativos. Con ellos, deja de cumplirse la propiedad en que se apoya, y falla.
+
+## Cuando no dan el óptimo, y aun así sirven
+
+Muchos problemas importantes no tienen ningún algoritmo eficiente conocido que dé la solución exacta: el del viajante, que busca el recorrido más corto por una serie de ciudades, o el de repartir objetos en el menor número de cajas.
+
+Para ellos, un algoritmo voraz se usa como **heurística**: da una solución razonable, deprisa.
+
+- **Viajante**: ir siempre a la ciudad más cercana que no se haya visitado.
+- **Cajas**: meter cada objeto en la primera caja donde quepa.
+
+No es lo mejor posible, y a menudo es suficiente. En algunos casos se puede demostrar cuánto se aleja como mucho del óptimo; entonces se habla de un **algoritmo de aproximación**.
+
+También el [balanceador de carga](/articulos/balanceador-de-carga/) que envía cada petición al servidor menos ocupado toma una decisión voraz.
+
+## Frente a otras técnicas
+
+| | Voraz | Programación dinámica | Vuelta atrás |
+| --- | --- | --- | --- |
+| Opciones que considera | Una por paso | Todas, sin repetir trabajo | Todas, descartando ramas |
+| Revisa decisiones | No | Sí, de hecho las compara | Sí |
+| Rapidez | La mayor | Intermedia | La menor |
+| Da el óptimo | Solo en ciertos problemas | Sí | Sí |
+
+Ante un problema de optimización, un orden sensato: buscar una regla voraz e intentar romperla con un contraejemplo. Si resiste y se puede justificar, se usa. Si no, se pasa a programación dinámica o a [vuelta atrás](/articulos/vuelta-atras/).
+
+## Lo esencial
+
+- Un algoritmo voraz elige en cada paso lo mejor en ese momento y no rectifica.
+- Es simple y rápido, normalmente con el coste de una ordenación.
+- Solo da el óptimo si el problema cumple ciertas propiedades, y eso hay que demostrarlo.
+- Un contraejemplo basta para descartar una regla voraz.
+- En problemas muy difíciles se usa como heurística, para obtener soluciones aceptables.

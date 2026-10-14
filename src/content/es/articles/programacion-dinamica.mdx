@@ -1,0 +1,221 @@
+---
+title: "¿Qué es la programación dinámica?"
+description: "La programación dinámica resuelve un problema combinando las soluciones de subproblemas más pequeños, y guardando cada una para no calcularla dos veces."
+level: avanzado
+layer: programacion
+prerequisites:
+  - recursividad
+  - complejidad-algoritmica
+  - tablas-hash
+updated: 2026-10-13
+sources:
+  - title: "Jeff Erickson: Algorithms, cap. 3, Dynamic Programming (en inglés)"
+    url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/03-dynprog.pdf
+  - title: "MIT OpenCourseWare 6.006: Lecture 15, Recursive Algorithms (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/mit6_006s20_lec15/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **programación dinámica** es una técnica para resolver problemas que se pueden descomponer en subproblemas más pequeños **que se repiten**. Consiste en resolver cada subproblema una sola vez, guardar su resultado y reutilizarlo cada vez que haga falta.
+
+El nombre no describe la técnica. Lo eligió su creador, el matemático Richard Bellman, en los años cincuenta, en parte porque sonaba bien. "Programación" se refiere aquí a planificar, no a escribir código.
+
+## Qué problema resuelve
+
+La sucesión de Fibonacci: cada número es la suma de los dos anteriores.
+
+```js
+let llamadas = 0;
+
+function fibonacci(n) {
+	llamadas = llamadas + 1;
+	if (n < 2) return n;
+
+	return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(25)); // 75025
+console.log(llamadas); // 242785
+```
+
+Casi un cuarto de millón de llamadas para un resultado que depende de 26 valores.
+
+El motivo es que calcula lo mismo una y otra vez. Para `fibonacci(25)` hace falta `fibonacci(24)` y `fibonacci(23)`. Y para `fibonacci(24)`, otra vez `fibonacci(23)`. El trabajo se duplica en cada nivel: el coste es exponencial, como se explica en [complejidad algorítmica](/articulos/complejidad-algoritmica/).
+
+A esto se le llama tener **subproblemas solapados**.
+
+## La solución: recordar
+
+Si cada resultado se guarda la primera vez, las siguientes es una consulta.
+
+```js
+let llamadas = 0;
+const recordados = new Map();
+
+function fibonacci(n) {
+	llamadas = llamadas + 1;
+	if (n < 2) return n;
+	if (recordados.has(n)) return recordados.get(n);
+
+	const resultado = fibonacci(n - 1) + fibonacci(n - 2);
+	recordados.set(n, resultado);
+
+	return resultado;
+}
+
+console.log(fibonacci(25)); // 75025
+console.log(llamadas); // 49
+```
+
+De 242 785 llamadas a 49. El coste pasa de exponencial a lineal, añadiendo tres líneas.
+
+Guardar resultados de una función para no recalcularlos es la **memorización**, que se apoya en una [tabla hash](/articulos/tablas-hash/).
+
+## Cuándo se puede aplicar
+
+Hacen falta dos propiedades.
+
+- **Subproblemas solapados.** Los mismos subproblemas aparecen varias veces. Si no se repiten, no hay nada que reutilizar: es el caso de la ordenación por mezcla, donde cada mitad es distinta.
+- **Subestructura óptima.** La mejor solución del problema se construye con las mejores soluciones de sus subproblemas.
+
+## Dos formas de escribirla
+
+### De arriba abajo
+
+Se escribe la solución [recursiva](/articulos/recursividad/) natural y se le añade memoria. Es el ejemplo anterior.
+
+- Se parece a la definición del problema.
+- Solo calcula los subproblemas que hacen falta.
+- La recursión muy profunda puede agotar la pila de llamadas.
+
+### De abajo arriba
+
+Se rellenan los resultados en orden, empezando por los casos más pequeños, con un [bucle](/articulos/bucles/). Se llama también **tabulación**.
+
+```js
+function fibonacci(n) {
+	const tabla = [0, 1];
+
+	for (let i = 2; i <= n; i++) {
+		tabla[i] = tabla[i - 1] + tabla[i - 2];
+	}
+
+	return tabla[n];
+}
+
+console.log(fibonacci(25)); // 75025
+console.log(fibonacci(50)); // 12586269025
+```
+
+- Sin recursión, y normalmente más rápida.
+- Hay que decidir en qué orden rellenar, para que cada valor encuentre ya calculados los que necesita.
+- Permite ahorrar memoria: aquí solo hacen falta los dos últimos valores, no toda la tabla.
+
+Las dos calculan lo mismo. La primera suele ser más fácil de escribir; la segunda, más eficiente.
+
+## Un problema de verdad: el cambio
+
+Hay que dar una cantidad con el menor número de monedas posible.
+
+Con las monedas habituales, basta ir cogiendo siempre la mayor que quepa. Con otras, esa estrategia falla. Con monedas de 1, 3 y 4, y 6 de cantidad:
+
+- Cogiendo siempre la mayor: 4 + 1 + 1, tres monedas.
+- Lo óptimo: 3 + 3, dos monedas.
+
+La estrategia de coger lo mejor en cada momento es un [algoritmo voraz](/articulos/algoritmos-voraces/), y aquí no sirve. La programación dinámica sí.
+
+### El razonamiento
+
+La pregunta clave es: **¿cuál es la última moneda?**
+
+Si la última es de valor m, antes de ella había que dar la cantidad menos m, con el mínimo de monedas. Ese es un subproblema del mismo tipo.
+
+No se sabe cuál es la última, así que se prueban todas y se elige la mejor:
+
+**mínimo(cantidad) = 1 + el menor de mínimo(cantidad − m), para cada moneda m**
+
+```js
+function minimoDeMonedas(monedas, cantidad) {
+	const mejor = [0];
+
+	for (let c = 1; c <= cantidad; c++) {
+		mejor[c] = Infinity;
+
+		for (const moneda of monedas) {
+			if (moneda <= c && mejor[c - moneda] + 1 < mejor[c]) {
+				mejor[c] = mejor[c - moneda] + 1;
+			}
+		}
+	}
+
+	return mejor[cantidad];
+}
+
+console.log(minimoDeMonedas([1, 3, 4], 6)); // 2
+console.log(minimoDeMonedas([1, 2, 5], 11)); // 3
+```
+
+`mejor[c]` guarda el mínimo de monedas para la cantidad c. Se calcula para cada cantidad desde 1, y cada una se apoya en las anteriores.
+
+El coste es el número de cantidades por el número de monedas. Probar todas las combinaciones sería exponencial.
+
+## Cómo plantear un problema
+
+1. **Definir el subproblema.** Qué significa exactamente cada casilla de la tabla. Es el paso difícil; si está bien, lo demás sale.
+2. **Encontrar la relación.** Cómo se obtiene un subproblema a partir de otros más pequeños. Suele ayudar pensar en la última decisión.
+3. **Fijar los casos base.**
+4. **Decidir el orden** de cálculo.
+5. **Localizar la respuesta**: qué casilla contiene la solución.
+
+<Quiz
+	client:visible
+	question="¿Qué debe ocurrir para que la programación dinámica aporte una mejora?"
+	options={[
+		"Que el problema no se pueda resolver con recursión",
+		"Que los mismos subproblemas aparezcan repetidas veces",
+		"Que los datos estén ordenados",
+	]}
+	answer={1}
+/>
+
+## Problemas clásicos
+
+| Problema | Qué se busca |
+| --- | --- |
+| Mochila | Los objetos de más valor que caben en un peso máximo |
+| Subsecuencia común más larga | Lo que comparten dos textos, en el mismo orden |
+| Distancia de edición | Cuántos cambios convierten un texto en otro |
+| Caminos en una cuadrícula | De cuántas formas se llega de una esquina a la opuesta |
+| Cadena de matrices | En qué orden multiplicarlas para hacer menos operaciones |
+
+Varios tienen uso directo:
+
+- **Comparar archivos.** La orden `diff`, y lo que muestra [Git](/articulos/control-de-versiones-con-git/) al comparar versiones, se basa en la subsecuencia común más larga.
+- **Correctores ortográficos.** Sugieren las palabras a menor distancia de edición.
+- **Bioinformática.** Alinear secuencias de ADN.
+- **Caminos más cortos.** El algoritmo de Bellman-Ford, que admite pesos negativos, es programación dinámica.
+- **Reconocimiento de voz** y otros modelos que buscan la secuencia más probable.
+
+## Frente a otras técnicas
+
+| Técnica | Subproblemas | Qué hace |
+| --- | --- | --- |
+| Divide y vencerás | Independientes | Los resuelve y combina |
+| Programación dinámica | Solapados | Los resuelve una vez y los recuerda |
+| Voraz | Uno solo | Toma la mejor decisión inmediata, sin revisar |
+| [Vuelta atrás](/articulos/vuelta-atras/) | Explora todos | Prueba y retrocede |
+
+## Lo que cuesta
+
+- **Memoria.** Se cambia tiempo por espacio. Una tabla de dos dimensiones para dos textos largos puede ser enorme.
+- **No siempre se puede.** Si el número de subproblemas distintos es exponencial, guardar los resultados no arregla nada.
+- **Cuesta verla.** La dificultad no está en programarla, sino en dar con la definición del subproblema.
+
+## Lo esencial
+
+- La programación dinámica resuelve cada subproblema una vez y guarda el resultado.
+- Sirve cuando los subproblemas se repiten y la solución óptima se compone de soluciones óptimas menores.
+- Se puede escribir con recursión y memoria, o rellenando una tabla en orden.
+- Convierte muchos problemas de coste exponencial en polinómico.
+- Lo difícil es definir bien qué subproblema se guarda.

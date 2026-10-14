@@ -1,0 +1,217 @@
+---
+title: "¿Qué son un montículo y una cola de prioridad?"
+description: "Una cola de prioridad entrega siempre el elemento más importante. El montículo es la estructura que lo hace de forma eficiente."
+level: intermedio
+layer: programacion
+prerequisites:
+  - pilas-y-colas
+  - arboles-binarios-de-busqueda
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 2.4 Priority Queues (en inglés)"
+    url: https://algs4.cs.princeton.edu/24pq/
+  - title: "MIT OpenCourseWare 6.006: Lecture 8, Binary Heaps (en inglés)"
+    url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/mit6_006s20_lec8/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **cola de prioridad** es una estructura de datos de la que siempre se extrae el elemento de **mayor prioridad**, sin importar cuándo se insertó. Un **montículo**, en inglés *heap*, es la forma habitual de implementarla: un árbol con una regla sencilla que permite insertar y extraer muy deprisa.
+
+## Qué problema resuelve
+
+En una [cola](/articulos/pilas-y-colas/) normal sale primero lo que entró primero. A menudo eso no es lo que hace falta.
+
+- En urgencias se atiende antes al paciente más grave, no al que llegó antes.
+- Un [planificador](/articulos/planificador-de-procesos/) ejecuta antes el proceso más prioritario.
+- El [algoritmo de Dijkstra](/articulos/algoritmo-de-dijkstra/) necesita, en cada paso, el nodo más cercano.
+
+Se necesitan dos operaciones: **insertar** un elemento y **extraer el mínimo**, o el máximo.
+
+Con estructuras simples, una de las dos sale cara:
+
+| Estructura | Insertar | Extraer el mínimo |
+| --- | --- | --- |
+| Array sin ordenar | O(1) | O(n): hay que buscarlo |
+| Array ordenado | O(n): hay que hacer hueco | O(1) |
+| Montículo | O(log n) | O(log n) |
+
+El montículo reparte el coste. Con un millón de elementos, cada operación son unos 20 pasos.
+
+## Qué es un montículo
+
+Es un árbol binario que cumple dos condiciones.
+
+- **Forma.** Está completo: todos los niveles llenos, salvo quizá el último, que se rellena de izquierda a derecha.
+- **Orden.** Cada nodo es menor o igual que sus hijos.
+
+Ese es un **montículo de mínimos**: el menor está siempre en la raíz. En uno de máximos, cada nodo es mayor o igual que sus hijos.
+
+```
+        1
+      /   \
+     3     2
+    / \   /
+   5   9 8
+```
+
+No está ordenado del todo. El 3 y el 2 son hermanos y no guardan relación entre sí. Solo se garantiza el orden entre un nodo y sus descendientes.
+
+Esa es la diferencia con un [árbol binario de búsqueda](/articulos/arboles-binarios-de-busqueda/), que ordena izquierda y derecha. El montículo exige menos, y por eso es más barato de mantener. A cambio, solo da acceso rápido a la raíz.
+
+## Guardado en un array
+
+Como el árbol es completo, no tiene huecos, y se puede guardar en un [array](/articulos/arrays/) leyéndolo por niveles:
+
+```
+índice:  0  1  2  3  4  5
+valor:   1  3  2  5  9  8
+```
+
+Las relaciones se calculan con aritmética:
+
+| Para el nodo en la posición i | Posición |
+| --- | --- |
+| Hijo izquierdo | 2i + 1 |
+| Hijo derecho | 2i + 2 |
+| Padre | (i − 1) / 2, sin decimales |
+
+No hacen falta punteros. Es compacto y aprovecha bien la memoria.
+
+## Las operaciones
+
+### Insertar
+
+1. Se coloca el elemento al final, para conservar la forma.
+2. Se compara con su padre. Si es menor, se intercambian.
+3. Se repite hacia arriba hasta que esté en su sitio.
+
+Se dice que el elemento **flota**.
+
+### Extraer el mínimo
+
+1. El mínimo es la raíz. Se guarda para devolverlo.
+2. Se pone en la raíz el último elemento.
+3. Se compara con sus hijos y se intercambia con el **menor** de ellos.
+4. Se repite hacia abajo hasta que esté en su sitio.
+
+Se dice que el elemento **se hunde**.
+
+En los dos casos se recorre como mucho un camino de la raíz a una hoja. La altura de un árbol completo es log n.
+
+```js
+class Monticulo {
+	#datos = [];
+
+	get tamano() {
+		return this.#datos.length;
+	}
+
+	insertar(valor) {
+		const datos = this.#datos;
+		datos.push(valor);
+		let i = datos.length - 1;
+
+		while (i > 0) {
+			const padre = Math.floor((i - 1) / 2);
+			if (datos[padre] <= datos[i]) break;
+
+			[datos[padre], datos[i]] = [datos[i], datos[padre]];
+			i = padre;
+		}
+	}
+
+	extraer() {
+		const datos = this.#datos;
+		const minimo = datos[0];
+		const ultimo = datos.pop();
+
+		if (datos.length > 0) {
+			datos[0] = ultimo;
+			let i = 0;
+
+			while (true) {
+				const izquierdo = 2 * i + 1;
+				const derecho = 2 * i + 2;
+				let menor = i;
+
+				if (izquierdo < datos.length && datos[izquierdo] < datos[menor]) {
+					menor = izquierdo;
+				}
+				if (derecho < datos.length && datos[derecho] < datos[menor]) {
+					menor = derecho;
+				}
+				if (menor === i) break;
+
+				[datos[menor], datos[i]] = [datos[i], datos[menor]];
+				i = menor;
+			}
+		}
+
+		return minimo;
+	}
+}
+
+const monticulo = new Monticulo();
+
+for (const numero of [5, 3, 8, 1, 9, 2]) {
+	monticulo.insertar(numero);
+}
+
+const salida = [];
+while (monticulo.tamano > 0) {
+	salida.push(monticulo.extraer());
+}
+
+console.log(salida.join(" ")); // "1 2 3 5 8 9"
+```
+
+Los números salen de menor a mayor, sea cual sea el orden de entrada.
+
+## Ordenar con un montículo
+
+El ejemplo acaba de ordenar una lista: meterlo todo y sacarlo. Eso es el algoritmo **heapsort**.
+
+Cuesta O(n log n) **siempre**, sin el caso malo de [quicksort](/articulos/quicksort/), y puede hacerse sin memoria adicional. En la práctica suele ser algo más lento, porque salta por el array en lugar de recorrerlo de forma consecutiva.
+
+Un detalle: construir un montículo a partir de n elementos ya existentes se puede hacer en O(n), más rápido que insertarlos uno a uno.
+
+<Quiz
+	client:visible
+	question="En un montículo de mínimos, ¿dónde está siempre el elemento menor?"
+	options={["En la última posición", "En la raíz", "En la hoja de más a la izquierda"]}
+	answer={1}
+/>
+
+## Dónde se usa
+
+- **Algoritmos de grafos.** Dijkstra, [A\*](/articulos/algoritmo-a-estrella/) y el [árbol de expansión mínima](/articulos/arbol-de-expansion-minima/) de Prim dependen de una cola de prioridad para ser eficientes.
+- **Planificación.** Elegir el siguiente proceso, o la siguiente tarea de una cola de trabajos.
+- **Temporizadores.** Un sistema con miles de temporizadores pendientes necesita saber cuál vence antes. El bucle de eventos de [Node.js](/articulos/que-es-nodejs/) los gestiona así.
+- **Simulaciones**, que procesan los sucesos por orden de tiempo.
+- **Los k mayores.** Para quedarse con los 10 valores más altos entre mil millones, sin ordenarlos todos, se mantiene un montículo de mínimos con 10 elementos. Cada valor nuevo se compara con el menor de los 10; si lo supera, lo sustituye.
+- **Mezclar listas ordenadas**, tomando cada vez el menor de sus cabezas.
+- **Compresión.** El algoritmo de Huffman construye sus códigos uniendo repetidamente los dos símbolos menos frecuentes.
+
+## Lo que no hace bien
+
+- **Buscar** un elemento cualquiera: O(n), hay que recorrerlo.
+- **Recorrer en orden**: hay que ir extrayendo.
+- **Cambiar la prioridad** de un elemento exige saber dónde está, lo que requiere una estructura adicional.
+
+Si hace falta buscar y recorrer en orden, es mejor un árbol de búsqueda equilibrado.
+
+## Un nombre con dos sentidos
+
+En inglés, *heap* designa también la zona de memoria donde un programa reserva espacio de forma dinámica. No tiene relación con esta estructura. Es una coincidencia de nombres.
+
+Muchos lenguajes traen una cola de prioridad en su biblioteca. JavaScript no, y hay que escribirla o usar un paquete.
+
+## Lo esencial
+
+- Una cola de prioridad entrega siempre el elemento más prioritario.
+- Un montículo es un árbol completo en el que cada nodo es menor o igual que sus hijos.
+- Se guarda en un array, y las posiciones de padres e hijos se calculan.
+- Insertar y extraer el mínimo cuestan O(log n).
+- Es la pieza que hace eficientes a Dijkstra, a los planificadores y a los temporizadores.

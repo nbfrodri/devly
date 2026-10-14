@@ -106,18 +106,18 @@ Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre pr
 
 Pedido por el usuario el 2026-10-14: algoritmos y estructuras específicos, no solo las ideas generales.
 
-- [ ] Búsqueda en anchura, BFS (grafos)
-- [ ] Búsqueda en profundidad, DFS (grafos, recursividad)
-- [ ] El algoritmo de Dijkstra (grafos)
-- [ ] El algoritmo A* (Dijkstra)
-- [ ] Ordenación topológica (grafos)
-- [ ] Árbol de expansión mínima: Kruskal y Prim (grafos)
-- [ ] Quicksort (algoritmos de ordenación)
-- [ ] Mergesort y divide y vencerás (recursividad)
-- [ ] Montículos y colas de prioridad (árboles)
-- [ ] Programación dinámica (recursividad)
-- [ ] Algoritmos voraces
-- [ ] Vuelta atrás, backtracking (recursividad)
+- [x] Búsqueda en anchura, BFS (grafos). Cubierta en el artículo de grafos.
+- [x] Búsqueda en profundidad, DFS (grafos, recursividad). Cubierta en el artículo de grafos.
+- [x] El algoritmo de Dijkstra (grafos)
+- [x] El algoritmo A* (Dijkstra)
+- [x] Ordenación topológica (grafos)
+- [x] Árbol de expansión mínima: Kruskal y Prim (grafos)
+- [x] Quicksort (algoritmos de ordenación)
+- [x] Mergesort y divide y vencerás (recursividad). Cubierto en algoritmos de ordenación.
+- [x] Montículos y colas de prioridad (árboles)
+- [x] Programación dinámica (recursividad)
+- [x] Algoritmos voraces
+- [x] Vuelta atrás, backtracking (recursividad)
 - [ ] Árboles equilibrados: AVL y rojo-negro (árboles binarios de búsqueda)
 - [ ] Árboles B (índices de bases de datos)
 - [ ] Tries (árboles)
