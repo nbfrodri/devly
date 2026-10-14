@@ -1658,12 +1658,18 @@ html:not(.progress-ready) .filter-progress {
 	transition:
 		background-color 160ms ease,
 		color 160ms ease,
-		border-color 160ms ease;
+		border-color 160ms ease,
+		transform 120ms ease;
 }
 
 .button:hover {
-	color: var(--ink);
+	color: var(--accent);
 	background: var(--quiet);
+	border-color: var(--accent-solid);
+}
+
+.button:active {
+	transform: scale(0.98);
 }
 
 .button-primary {
@@ -1672,10 +1678,11 @@ html:not(.progress-ready) .filter-progress {
 	border-color: var(--accent-solid);
 }
 
+/* Darkening the accent works on both themes and raises the text contrast. */
 .button-primary:hover {
 	color: var(--on-accent);
-	background: var(--layer-1);
-	border-color: var(--layer-1);
+	background: color-mix(in srgb, var(--accent-solid) 72%, black);
+	border-color: color-mix(in srgb, var(--accent-solid) 72%, black);
 }
 
 .button svg {
