@@ -12,6 +12,7 @@ const paths = await Promise.all(
 
 		return {
 			path,
+			count: steps.length,
 			levels: [...new Set(steps.map((step) => step.data.level))].join(" "),
 			text: normalizeForSearch(`${path.data.title} ${path.data.description}`),
 		};
@@ -21,6 +22,12 @@ const groups = LAYERS.map((layer) => ({
 	layer,
 	paths: paths.filter(({ path }) => path.data.layer === layer.id),
 })).filter((group) => group.paths.length > 0);
+// Position of each path as listed by layer, to restore it after sorting.
+const order = new Map(
+	groups
+		.flatMap((group) => group.paths)
+		.map(({ path }, index) => [path.id, index]),
+);
 ---
 
 <BaseLayout title="Rutas" description="Rutas de aprendizaje ordenadas paso a paso.">
@@ -33,6 +40,7 @@ const groups = LAYERS.map((layer) => ({
 		</header>
 
 		<FilterBar
+			showSort
 			progressLabels={["Completadas", "Pendientes", "Sin completar"]}
 			layers={groups.map((group) => group.layer)}
 			total={paths.length}
@@ -49,8 +57,15 @@ const groups = LAYERS.map((layer) => ({
 							<span class="section-count">{group.paths.length}</span>
 						</h2>
 						<ul class="path-grid">
-							{group.paths.map(({ path, levels, text }) => (
-								<li data-item data-levels={levels} data-text={text}>
+							{group.paths.map(({ path, levels, text, count }) => (
+								<li
+									data-item
+									data-levels={levels}
+									data-text={text}
+									data-count={count}
+									data-home={group.layer.id}
+									data-order={order.get(path.id)}
+								>
 									<PathCard path={path} />
 								</li>
 							))}
@@ -58,6 +73,10 @@ const groups = LAYERS.map((layer) => ({
 					</section>
 				))
 			}
+			<section class="section" data-layer="" data-sorted hidden>
+				<h2 class="section-title">Ordenadas por número de artículos</h2>
+				<ul class="path-grid"></ul>
+			</section>
 			<p class="empty" data-filter-empty hidden>
 				Ninguna ruta coincide con esos filtros.
 			</p>

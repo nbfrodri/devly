@@ -13,6 +13,8 @@ type Props = {
 	plural: string;
 	/** Adds the article type filter. */
 	showKinds?: boolean;
+	/** Adds ordering by number of articles (learning paths). */
+	showSort?: boolean;
 	/** Labels for the reading progress filter: read or complete, pending, neither. */
 	progressLabels: readonly [string, string, string];
 };
@@ -23,6 +25,7 @@ const {
 	singular,
 	plural,
 	showKinds = false,
+	showSort = false,
 	progressLabels,
 } = Astro.props;
 const [readLabel, pendingLabel, untouchedLabel] = progressLabels;
@@ -85,6 +88,20 @@ const [readLabel, pendingLabel, untouchedLabel] = progressLabels;
 			</select>
 		</div>
 	</div>
+	{
+		showSort && (
+			<div class="filter-field filter-select">
+				<label for="filtro-orden">Ordenar</label>
+				<div class="select">
+					<select id="filtro-orden" name="sort">
+						<option value="">Por capa</option>
+						<option value="asc">Menos artículos primero</option>
+						<option value="desc">Más artículos primero</option>
+					</select>
+				</div>
+			</div>
+		)
+	}
 	<div class="filter-field filter-select filter-progress">
 		<label for="filtro-estado">Mi progreso</label>
 		<div class="select">
