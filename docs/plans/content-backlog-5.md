@@ -60,11 +60,11 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ### Probabilidad, estadística y simulación
 
-- [ ] El teorema de Bayes (probabilidad básica)
-- [ ] Intervalos de confianza (distribución normal)
-- [ ] Contraste de hipótesis y valor p
-- [ ] Pruebas A/B (correlación y causalidad)
-- [ ] Simulación de eventos discretos (Monte Carlo)
+- [x] El teorema de Bayes (probabilidad básica)
+- [x] Intervalos de confianza (distribución normal)
+- [x] Contraste de hipótesis y valor p
+- [x] Pruebas A/B (correlación y causalidad)
+- [x] Simulación de eventos discretos (Monte Carlo)
 
 ### Hardware
 

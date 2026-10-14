@@ -3,8 +3,13 @@ description: Resumir datos con unas pocas medidas y estimar lo que no se puede c
 layer: datos
 steps:
   - probabilidad-basica
+  - teorema-de-bayes
   - media-mediana-y-desviacion
   - distribucion-normal
+  - intervalos-de-confianza
+  - contraste-de-hipotesis-y-valor-p
   - correlacion-y-causalidad
+  - pruebas-a-b
   - numeros-aleatorios-y-pseudoaleatorios
   - metodo-de-monte-carlo
+  - simulacion-de-eventos-discretos

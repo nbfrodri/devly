@@ -1,0 +1,82 @@
+---
+title: "¿Qué son el contraste de hipótesis y el valor p?"
+description: "Un contraste de hipótesis comprueba si un resultado puede explicarse por azar. El valor p mide lo raro que sería ese resultado si no hubiera ningún efecto real."
+level: avanzado
+layer: datos
+prerequisites:
+  - probabilidad-basica
+  - distribucion-normal
+  - intervalos-de-confianza
+updated: 2026-10-13
+sources:
+  - title: "NIST/SEMATECH e-Handbook: Critical values and p values (en inglés)"
+    url: https://www.itl.nist.gov/div898/handbook/prc/section1/prc131.htm
+  - title: "American Statistical Association: Statement on p-values (en inglés)"
+    url: https://www.amstat.org/asa/files/pdfs/p-valuestatement.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **contraste de hipótesis** es un método para decidir si lo que se ha observado en unos datos refleja un **efecto real** o puede explicarse por **azar**. El **valor p** es el número que resume esa decisión, y probablemente la cifra peor entendida de toda la estadística.
+
+## El razonamiento
+
+Se lanza una moneda 100 veces y salen 60 caras. ¿Está trucada?
+
+1. Se plantea la **hipótesis nula**: no hay efecto. La moneda es justa.
+2. Se calcula lo raro que sería un resultado **al menos tan extremo** como el observado **si la hipótesis nula fuera cierta**. Ese es el **valor p**.
+3. Si es muy raro, se **rechaza** la hipótesis nula. Si no, no hay pruebas suficientes para rechazarla.
+
+```js
+function combinaciones(n, k) {
+	let r = 1;
+	for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
+	return r;
+}
+
+let colaSuperior = 0;
+for (let caras = 60; caras <= 100; caras++) {
+	colaSuperior += combinaciones(100, caras) * 0.5 ** 100;
+}
+
+const valorP = 2 * colaSuperior;
+console.log(valorP.toFixed(4)); // "0.0569"
+```
+
+Con una moneda justa, obtener 60 caras o más, o 40 o menos, ocurre un 5,7 % de las veces. Se multiplica por dos porque se buscaba un desvío en cualquier sentido.
+
+## El umbral
+
+Antes de mirar los datos se fija un **nivel de significación**, α, a menudo 0,05. Si el valor p es menor, se rechaza la hipótesis nula. Según el manual del NIST, un α de 0,05 implica que se rechaza la hipótesis nula un 5 % de las veces en que en realidad es cierta.
+
+Aquí, 0,0569 es mayor que 0,05: no se puede afirmar que la moneda esté trucada. Eso **no** demuestra que sea justa; solo que estos datos no bastan para decir lo contrario.
+
+## Dos formas de equivocarse
+
+| | La hipótesis nula es cierta | La hipótesis nula es falsa |
+| --- | --- | --- |
+| Se rechaza | Error de tipo I: falso positivo (probabilidad α) | Acierto |
+| No se rechaza | Acierto | Error de tipo II: falso negativo |
+
+Bajar α reduce los falsos positivos, pero aumenta los falsos negativos. Con más datos, se reducen los dos.
+
+## Lo que el valor p no es
+
+En 2016, la Asociación Estadounidense de Estadística publicó una declaración con seis principios sobre el valor p, por el mal uso tan extendido. Entre ellos:
+
+- El valor p **no** mide la probabilidad de que la hipótesis estudiada sea cierta, ni la probabilidad de que los datos se deban solo al azar.
+- Las decisiones científicas o de negocio **no** deberían basarse solo en si el valor p supera un umbral.
+- Un valor p no mide el **tamaño** del efecto ni su importancia. Con muestras enormes, una diferencia minúscula e irrelevante puede dar un valor p diminuto.
+
+Por eso conviene acompañarlo de un [intervalo de confianza](/articulos/intervalos-de-confianza/), que dice cuánto vale el efecto, no solo si existe.
+
+## La trampa de buscar hasta encontrar
+
+Si se prueban 20 cosas distintas con α = 0,05, es esperable que una salga "significativa" por puro azar. Probar muchas hipótesis y publicar solo la que funcionó se llama, en la declaración de la asociación, *p-hacking* o "dragado de datos". Es la misma trampa que acecha a las [pruebas A/B](/articulos/pruebas-a-b/) cuando se miran los resultados cada día y se paran en cuanto parecen buenos.
+
+## Lo esencial
+
+- Un contraste de hipótesis comprueba si un resultado puede explicarse por azar.
+- El valor p es la probabilidad de un resultado al menos tan extremo si no hubiera efecto.
+- Un valor p bajo no dice que la hipótesis sea cierta ni lo grande que es el efecto.
+- Probar muchas hipótesis y quedarse con la que sale garantiza falsos positivos.

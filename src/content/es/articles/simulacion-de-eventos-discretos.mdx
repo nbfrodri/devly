@@ -1,0 +1,85 @@
+---
+title: "¿Qué es la simulación de eventos discretos?"
+description: "Una simulación de eventos discretos modela un sistema como una sucesión de eventos en el tiempo, como clientes que llegan y son atendidos, para predecir colas y esperas."
+level: avanzado
+layer: datos
+prerequisites:
+  - metodo-de-monte-carlo
+  - monticulos-y-colas-de-prioridad
+updated: 2026-10-13
+sources:
+  - title: "SimPy: Discrete event simulation for Python (en inglés)"
+    url: https://simpy.readthedocs.io/en/latest/
+  - title: "Python: heapq, Heap queue algorithm (en inglés)"
+    url: https://docs.python.org/3/library/heapq.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **simulación de eventos discretos** modela un sistema como una sucesión de **eventos** que ocurren en momentos concretos: un cliente llega, empieza a ser atendido, se va. Entre un evento y el siguiente no pasa nada relevante, así que la simulación **salta** directamente de uno a otro en lugar de avanzar segundo a segundo.
+
+Sirve para responder preguntas como: ¿cuántas cajas hacen falta en un supermercado para que nadie espere más de cinco minutos? ¿Cuántos servidores necesita un servicio para atender las peticiones de la hora punta?
+
+## Las piezas
+
+- **Reloj**: el tiempo actual de la simulación.
+- **Lista de eventos futuros**: ordenada por tiempo. Se saca siempre el más próximo; es una [cola de prioridad](/articulos/monticulos-y-colas-de-prioridad/).
+- **Estado**: lo que hay en cada momento, por ejemplo cuántos clientes esperan y si el empleado está ocupado.
+- **Recursos** limitados: cajas, servidores, camas de un hospital.
+
+## Un ejemplo: una ventanilla
+
+Clientes que llegan a una ventanilla con un solo empleado. Cada uno tarda 1,5 minutos en ser atendido.
+
+```js
+function simular(llegadas, duracionServicio) {
+	const eventos = llegadas.map((tiempo, cliente) => ({ tiempo, tipo: "llegada", cliente }));
+	const cola = [];
+	const esperas = [];
+	let ocupado = false;
+
+	const empezar = (cliente, ahora) => {
+		ocupado = true;
+		esperas.push(ahora - llegadas[cliente]);
+		eventos.push({ tiempo: ahora + duracionServicio, tipo: "salida", cliente });
+	};
+
+	while (eventos.length > 0) {
+		eventos.sort((a, b) => a.tiempo - b.tiempo);
+		const evento = eventos.shift();
+
+		if (evento.tipo === "llegada") {
+			if (ocupado) cola.push(evento.cliente);
+			else empezar(evento.cliente, evento.tiempo);
+		} else {
+			ocupado = false;
+			if (cola.length > 0) empezar(cola.shift(), evento.tiempo);
+		}
+	}
+	return esperas;
+}
+
+const esperas = simular([0, 1, 2, 3, 4], 1.5);
+console.log(esperas.join(" ")); // "0 0.5 1 1.5 2"
+```
+
+Los clientes llegan cada minuto, pero cada uno tarda un minuto y medio. La cola crece y cada cliente espera medio minuto más que el anterior: el sistema está **saturado**. Con dos empleados, o con un servicio más rápido, la espera no crecería.
+
+La simulación no avanza minuto a minuto: salta de evento en evento. Si entre dos clientes pasan tres horas, se resuelve en un paso.
+
+## Con azar
+
+En la realidad, las llegadas y las duraciones varían. Se generan con [números aleatorios](/articulos/numeros-aleatorios-y-pseudoaleatorios/) que siguen distribuciones realistas, y se repite la simulación muchas veces, como en el [método de Monte Carlo](/articulos/metodo-de-monte-carlo/), para obtener no solo la espera media, sino cuánto puede variar.
+
+Un resultado típico de estas simulaciones: cuando un recurso se acerca al 100 % de ocupación, las esperas no crecen poco a poco, sino que se disparan. Por eso los sistemas se dimensionan con margen, como recuerda [escalado vertical y horizontal](/articulos/escalado-vertical-y-horizontal/).
+
+## Herramientas
+
+Para modelos reales hay bibliotecas especializadas. SimPy, en Python, define cada componente activo, un cliente, un vehículo, como un proceso, y ofrece recursos compartidos de capacidad limitada, como servidores o ventanillas. La propia documentación avisa de que es excesivo para simulaciones de paso fijo sin interacción entre procesos.
+
+## Lo esencial
+
+- Una simulación de eventos discretos modela un sistema como eventos en momentos concretos.
+- Salta de evento en evento usando una cola de prioridad ordenada por tiempo.
+- Sirve para dimensionar recursos y predecir colas y esperas.
+- Con azar se repite muchas veces, como en Monte Carlo, para conocer también la variabilidad.

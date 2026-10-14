@@ -1,0 +1,82 @@
+---
+title: "¿Qué son las pruebas A/B?"
+description: "En una prueba A/B, los usuarios se reparten al azar entre dos versiones y se mide cuál funciona mejor. El reparto al azar permite hablar de causa, no solo de correlación."
+level: intermedio
+layer: datos
+prerequisites:
+  - correlacion-y-causalidad
+  - contraste-de-hipotesis-y-valor-p
+updated: 2026-10-13
+sources:
+  - title: "Optimizely: What is A/B testing? (en inglés)"
+    url: https://www.optimizely.com/optimization-glossary/ab-testing/
+  - title: "American Statistical Association: Statement on p-values (en inglés)"
+    url: https://www.amstat.org/asa/files/pdfs/p-valuestatement.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **prueba A/B** compara dos versiones de algo, una página, un botón, un correo, mostrando cada una a un grupo de usuarios elegido **al azar**, y mide cuál consigue mejor resultado: más compras, más registros, menos abandonos. La versión A suele ser la actual y la B, el cambio que se quiere probar.
+
+## Por qué al azar
+
+Comparar "las ventas de este mes con el botón nuevo" con "las del mes pasado" no sirve: entre medias han cambiado muchas cosas, la temporada, las campañas, la competencia. Es el problema de confundir [correlación con causalidad](/articulos/correlacion-y-causalidad/).
+
+Si en cambio cada usuario se asigna al azar a A o a B, **en el mismo periodo**, los dos grupos son iguales en todo lo demás. Cualquier diferencia que aparezca se debe al cambio o al azar. Es un **experimento controlado**, la herramienta más fiable para establecer una causa.
+
+## Cómo se hace
+
+1. **Una hipótesis y una métrica**: "un botón más visible aumentará la tasa de compra".
+2. **Calcular la muestra necesaria** antes de empezar, según el efecto mínimo que interese detectar.
+3. **Repartir al azar** y de forma estable: un mismo usuario debe ver siempre la misma versión.
+4. **Esperar** a tener la muestra planificada.
+5. **Analizar** con un [contraste de hipótesis](/articulos/contraste-de-hipotesis-y-valor-p/).
+
+## El análisis
+
+```js
+function cdfNormal(z) {
+	const t = 1 / (1 + 0.3275911 * Math.abs(z / Math.SQRT2));
+	const y =
+		1 -
+		((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) *
+			t *
+			Math.exp(-((z / Math.SQRT2) ** 2));
+	return 0.5 * (1 + (z >= 0 ? y : -y));
+}
+
+const a = { visitas: 4000, compras: 200 };
+const b = { visitas: 4000, compras: 260 };
+
+const tasaA = a.compras / a.visitas;
+const tasaB = b.compras / b.visitas;
+const conjunta = (a.compras + b.compras) / (a.visitas + b.visitas);
+const error = Math.sqrt(conjunta * (1 - conjunta) * (1 / a.visitas + 1 / b.visitas));
+const z = (tasaB - tasaA) / error;
+const valorP = 2 * (1 - cdfNormal(Math.abs(z)));
+
+console.log(tasaA, tasaB); // 0.05 0.065
+console.log(`z = ${z.toFixed(2)}, p = ${valorP.toFixed(4)}`); // "z = 2.88, p = 0.0040"
+```
+
+La versión B convierte un 6,5 % frente al 5 % de A. Si no hubiera diferencia real, una diferencia así de grande saldría por azar un 0,4 % de las veces. Es una prueba sólida a favor de B.
+
+## Los errores que la estropean
+
+- **Mirar cada día y parar cuando sale bien.** Con muchas miradas, alguna saldrá "significativa" por azar. Es la trampa de buscar hasta encontrar que describe el [contraste de hipótesis](/articulos/contraste-de-hipotesis-y-valor-p/). Se fija la duración antes y se respeta.
+- **Muestras pequeñas.** Detectan solo efectos enormes; los cambios reales suelen ser pequeños.
+- **Demasiadas métricas a la vez.** Alguna mejorará por casualidad.
+- **Olvidar las métricas de control.** Un cambio puede subir las compras y disparar las devoluciones o las quejas.
+- **Ignorar el efecto novedad.** Lo nuevo atrae al principio y luego se normaliza.
+- **Ignorar el tamaño del efecto.** Una mejora "significativa" del 0,01 % puede no compensar el coste del cambio.
+
+## Más allá de A y B
+
+Se pueden probar varias versiones a la vez (A/B/n) o combinaciones de cambios. Y hay un enfoque alternativo, **bayesiano**, que en lugar de un valor p da directamente la probabilidad de que B sea mejor que A, usando el [teorema de Bayes](/articulos/teorema-de-bayes/).
+
+## Lo esencial
+
+- Una prueba A/B muestra dos versiones a usuarios repartidos al azar y compara una métrica.
+- El reparto al azar hace que la diferencia observada se deba al cambio o al azar, no a otros factores.
+- Se planifica la muestra antes y se analiza con un contraste de hipótesis.
+- Parar en cuanto sale bien, o medir demasiadas cosas, produce falsos positivos.
