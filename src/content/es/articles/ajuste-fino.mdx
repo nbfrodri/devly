@@ -1,0 +1,138 @@
+---
+title: "¿Qué es el ajuste fino de un modelo?"
+description: "Ajustar un modelo es seguir entrenando uno ya entrenado con datos más específicos, para adaptarlo a una tarea o a un estilo."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - que-es-el-aprendizaje-automatico
+  - generacion-aumentada-por-recuperacion
+updated: 2026-10-13
+sources:
+  - title: "Hugging Face: Ajuste fino de un modelo preentrenado"
+    url: https://huggingface.co/learn/llm-course/es/chapter3/1
+  - title: "Hu y otros: LoRA, Low-Rank Adaptation of Large Language Models (2021, en inglés)"
+    url: https://arxiv.org/abs/2106.09685
+  - title: "Ouyang y otros: Training language models to follow instructions with human feedback (2022, en inglés)"
+    url: https://arxiv.org/abs/2203.02155
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **ajuste fino**, en inglés *fine-tuning*, consiste en tomar un modelo ya entrenado y seguir entrenándolo con un conjunto de datos más pequeño y específico. Así se adapta a una tarea, un dominio o un estilo concretos, aprovechando todo lo que ya sabía.
+
+## Qué problema resuelve
+
+Entrenar un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) desde cero exige cantidades enormes de texto y de cálculo, al alcance de muy pocas organizaciones.
+
+Pero lo que el modelo aprende en ese entrenamiento, la gramática, el vocabulario, conocimiento general, sirve para casi cualquier tarea. No tiene sentido repetirlo.
+
+Es como formar a un médico especialista: no se le vuelve a enseñar a leer. Se parte de alguien con formación general y se le especializa.
+
+## Dos fases
+
+| Fase | Datos | Resultado |
+| --- | --- | --- |
+| Preentrenamiento | Enormes cantidades de texto general | Un modelo que predice texto y sabe mucho, pero no sigue instrucciones |
+| Ajuste fino | Un conjunto pequeño y específico | Un modelo adaptado a un uso |
+
+El ajuste fino necesita mucho menos: de cientos a miles de ejemplos, en lugar de billones de palabras.
+
+La idea no es exclusiva de los modelos de lenguaje. Una [red convolucional](/articulos/redes-convolucionales/) entrenada con millones de fotos de todo tipo se ajusta con unos cientos de radiografías para detectar una lesión. A esto se le llama en general **aprendizaje por transferencia**.
+
+## Cómo se ajusta un modelo de lenguaje
+
+Un modelo recién preentrenado solo sabe continuar texto. Si se le escribe una pregunta, puede responder con más preguntas, porque es lo que ha visto en internet.
+
+Los asistentes que se usan hoy pasan por más etapas.
+
+### Con ejemplos
+
+Se preparan pares de instrucción y respuesta, escritos o revisados por personas:
+
+```
+Instrucción: Resume este texto en una frase.
+Respuesta:   ...
+```
+
+Entrenando con ellos, el modelo aprende el **formato** de una conversación: responder a lo que se pide. Se llama ajuste fino supervisado.
+
+### Con preferencias
+
+Para muchas preguntas no hay una respuesta correcta, sino respuestas mejores y peores. Se generan varias, personas indican cuál prefieren, y se entrena al modelo para producir las preferidas.
+
+Es el **aprendizaje por refuerzo a partir de comentarios humanos**, o RLHF, y fue clave para que los asistentes se volvieran útiles. Un artículo de 2022 mostró que un modelo mucho más pequeño, ajustado así, era preferido por las personas a uno cien veces mayor sin ajustar. Se apoya en el [aprendizaje por refuerzo](/articulos/aprendizaje-por-refuerzo/).
+
+## Ajustar sin tocarlo todo
+
+Un modelo grande tiene miles de millones de parámetros. Ajustarlos todos exige casi la misma memoria que entrenarlo, y produce otra copia completa del modelo.
+
+Las técnicas **eficientes** congelan el modelo original y entrenan solo un pequeño añadido. La más extendida, **LoRA**, de 2021, añade a cada matriz de pesos una corrección pequeña, expresada como el producto de dos matrices estrechas.
+
+```js
+const original = 4096 * 4096;
+const rango = 8;
+const conLora = 2 * 4096 * rango;
+
+console.log(original); // 16777216
+console.log(conLora); // 65536
+console.log(((conLora / original) * 100).toFixed(2)); // "0.39"
+```
+
+Para una matriz de 4096 por 4096, en lugar de casi 17 millones de parámetros se entrenan unos 65 000: menos del 0,4 %. El resultado se acerca mucho al de un ajuste completo.
+
+Además, el añadido ocupa poco y se puede intercambiar: un mismo modelo base con un ajuste distinto para cada tarea.
+
+<Quiz
+	client:visible
+	question="¿Qué se aprovecha al ajustar un modelo en lugar de entrenarlo desde cero?"
+	options={[
+		"Nada: se empieza de nuevo con otros datos",
+		"Todo lo que el modelo ya aprendió en su entrenamiento general",
+		"Solo su vocabulario",
+	]}
+	answer={1}
+/>
+
+## Qué consigue y qué no
+
+**Sirve bien para:**
+
+- **El formato y el estilo.** Responder siempre con una estructura concreta, un tono de marca, un idioma.
+- **Tareas muy concretas y repetitivas**: clasificar textos en unas categorías, extraer ciertos campos.
+- **Comportamientos difíciles de explicar con instrucciones**, pero fáciles de mostrar con ejemplos.
+- **Reducir costes.** Un modelo pequeño ajustado puede igualar a uno grande en una tarea estrecha, y es más barato de ejecutar.
+
+**Sirve mal para:**
+
+- **Añadir conocimientos que cambian.** Si los datos se actualizan, hay que volver a ajustar. Y el modelo no cita de dónde sale lo que dice.
+- **Garantizar hechos.** Un modelo ajustado con tus documentos puede seguir inventando, con más seguridad.
+
+## Frente a otras opciones
+
+Antes de ajustar conviene probar lo más barato.
+
+| Opción | Qué cambia | Coste | Conviene para |
+| --- | --- | --- | --- |
+| [Instrucciones](/articulos/como-escribir-instrucciones-para-un-modelo/) | Lo que se le pide | Mínimo | Casi todo, para empezar |
+| [RAG](/articulos/generacion-aumentada-por-recuperacion/) | La información que recibe | Medio | Conocimiento propio o actual |
+| Ajuste fino | El propio modelo | Alto | Formato, estilo, tareas estrechas |
+
+El orden razonable: primero instrucciones bien escritas, después RAG si falta información, y ajuste fino si lo que falla es el comportamiento. RAG le da al modelo **con qué** responder; el ajuste fino cambia **cómo** responde. Se pueden combinar.
+
+## Riesgos
+
+- **Olvido.** Al especializarse, el modelo puede perder capacidades generales. Se llama **olvido catastrófico**.
+- **Los datos lo son todo.** Pocos ejemplos, malos o inconsistentes enseñan errores. Un conjunto pequeño y cuidado vale más que uno grande y descuidado.
+- **[Sobreajuste](/articulos/sobreajuste-y-subajuste/).** Con pocos datos, el modelo puede memorizarlos y no generalizar.
+- **Seguridad.** Un ajuste puede debilitar las salvaguardas del modelo original, incluso sin pretenderlo.
+- **Datos personales.** Lo que se usa para ajustar puede acabar reproducido en las respuestas.
+- **Hay que evaluarlo**, con ejemplos que no se usaron para entrenar.
+
+## Lo esencial
+
+- El ajuste fino sigue entrenando un modelo ya entrenado con datos específicos.
+- Aprovecha lo aprendido en el entrenamiento general y necesita pocos datos.
+- Los asistentes se obtienen ajustando con ejemplos de instrucciones y con preferencias humanas.
+- Técnicas como LoRA entrenan solo una pequeña fracción de los parámetros.
+- Sirve para cambiar el comportamiento; para aportar conocimiento actualizado es mejor RAG.

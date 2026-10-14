@@ -5,8 +5,12 @@ steps:
   - modelos-de-lenguaje
   - que-es-un-transformer
   - ventana-de-contexto-y-tokens
+  - como-escribir-instrucciones-para-un-modelo
+  - alucinaciones-de-los-modelos-de-lenguaje
   - embeddings
   - bases-de-datos-vectoriales
   - generacion-aumentada-por-recuperacion
+  - ajuste-fino
   - model-context-protocol
   - agentes-de-ia
+  - modelos-de-difusion

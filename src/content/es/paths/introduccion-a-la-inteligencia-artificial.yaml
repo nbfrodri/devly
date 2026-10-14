@@ -4,11 +4,13 @@ layer: ia
 steps:
   - que-es-el-aprendizaje-automatico
   - clasificacion-y-regresion
+  - arboles-de-decision
+  - agrupamiento-y-k-medias
   - sobreajuste-y-subajuste
   - como-se-evalua-un-modelo-de-clasificacion
   - que-es-una-red-neuronal
   - descenso-del-gradiente
-  - modelos-de-lenguaje
-  - embeddings
-  - model-context-protocol
+  - retropropagacion
+  - redes-convolucionales
+  - aprendizaje-por-refuerzo
   - sesgos-en-los-algoritmos

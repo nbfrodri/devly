@@ -1,0 +1,135 @@
+---
+title: "¿Qué es un modelo de difusión? Cómo se genera una imagen"
+description: "Un modelo de difusión aprende a quitar ruido de una imagen. Para crear una nueva, parte de ruido puro y lo va limpiando paso a paso, guiado por un texto."
+level: avanzado
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+  - como-se-representa-una-imagen
+  - embeddings
+updated: 2026-10-13
+sources:
+  - title: "Ho, Jain y Abbeel: Denoising Diffusion Probabilistic Models (2020, en inglés)"
+    url: https://arxiv.org/abs/2006.11239
+  - title: "Sohl-Dickstein y otros: Deep Unsupervised Learning using Nonequilibrium Thermodynamics (2015, en inglés)"
+    url: https://arxiv.org/abs/1503.03585
+  - title: "Rombach y otros: High-Resolution Image Synthesis with Latent Diffusion Models (2021, en inglés)"
+    url: https://arxiv.org/abs/2112.10752
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **modelo de difusión** es un tipo de modelo generativo que crea imágenes, y también audio o vídeo, **eliminando ruido**. Se entrena para quitar un poco de ruido a una imagen. Para crear una nueva, parte de ruido puro, como la nieve de un televisor sin señal, y lo va limpiando paso a paso hasta que aparece una imagen.
+
+Es la técnica detrás de la mayoría de los generadores de imágenes a partir de texto.
+
+## Qué problema resuelve
+
+Generar una imagen es mucho más difícil que reconocerla. Una [imagen](/articulos/como-se-representa-una-imagen/) de 512 por 512 píxeles son casi ochocientos mil números, y casi todas las combinaciones posibles son ruido sin sentido. Las fotografías reales ocupan una parte minúscula de ese espacio.
+
+Un modelo tiene que aprender cómo son las imágenes reales y producir otras nuevas que lo parezcan. Hacerlo de un golpe es muy difícil. La difusión lo divide en muchos pasos pequeños, cada uno fácil.
+
+## Destruir es fácil
+
+El proceso tiene dos sentidos.
+
+**Hacia delante**: se toma una imagen y se le añade un poco de ruido aleatorio. Luego otro poco. Tras cientos de pasos, no queda nada de la imagen original: solo ruido.
+
+No hay que aprender nada para esto: es una fórmula. En cada paso, la imagen pesa menos y el ruido más.
+
+```js
+const pesoDeLaImagen = [1, 0.5, 0.01].map((restante) =>
+	Math.sqrt(restante).toFixed(2),
+);
+
+console.log(pesoDeLaImagen.join(" ")); // "1.00 0.71 0.10"
+```
+
+Al principio la imagen está entera. A mitad del proceso, pesa algo más del 70 % y el ruido ya se nota. Al final apenas queda un 10 % de señal, enterrado en ruido.
+
+## Reconstruir es lo que se aprende
+
+**Hacia atrás**: dada una imagen con ruido, quitar un poco de ese ruido. Esto es lo que hace la [red neuronal](/articulos/que-es-una-red-neuronal/).
+
+El entrenamiento es sencillo:
+
+1. Se toma una imagen real.
+2. Se le añade una cantidad de ruido elegida al azar.
+3. Se le pide a la red que **adivine qué ruido se añadió**.
+4. Se compara con el ruido verdadero, y la red se ajusta con el [descenso del gradiente](/articulos/descenso-del-gradiente/).
+
+Se repite con millones de imágenes y todos los niveles de ruido. La red aprende cómo es una imagen real, porque es lo que necesita para distinguir qué parte es ruido.
+
+## Generar
+
+Una vez entrenada:
+
+1. Se crea ruido puro, al azar.
+2. La red estima qué parte es ruido, y se resta un poco.
+3. Se repite, decenas o cientos de veces.
+
+En los primeros pasos aparecen formas difusas y la distribución general de colores. En los siguientes, la composición. En los últimos, los detalles finos.
+
+Como el punto de partida es aleatorio, cada vez sale una imagen distinta.
+
+## Guiar con texto
+
+Sin más, el modelo genera imágenes plausibles cualesquiera. Para que genere lo que se le pide, el texto se convierte en un [embedding](/articulos/embeddings/), y la red lo recibe en cada paso. Aprende a quitar ruido **de forma coherente con la descripción**.
+
+Una técnica adicional amplifica la influencia del texto: en cada paso se calcula lo que haría el modelo con la descripción y sin ella, y se exagera la diferencia. Así la imagen se ajusta más a lo pedido, a costa de variedad.
+
+## Trabajar en pequeño
+
+Quitar ruido a una imagen grande, píxel a píxel, cientos de veces, es muy costoso.
+
+Los **modelos de difusión latente**, de 2021, lo resuelven trabajando en un espacio comprimido:
+
+1. Una red aparte aprende a comprimir imágenes en una representación mucho más pequeña, y a reconstruirlas.
+2. La difusión ocurre en ese espacio reducido.
+3. Al final, la representación se descomprime a una imagen completa.
+
+Es mucho más barato, y fue lo que permitió generar imágenes de calidad en ordenadores corrientes.
+
+<Quiz
+	client:visible
+	question="¿Qué aprende a hacer la red de un modelo de difusión durante el entrenamiento?"
+	options={[
+		"Dibujar imágenes a partir de un boceto",
+		"Estimar el ruido que se ha añadido a una imagen para poder quitarlo",
+		"Copiar imágenes de su conjunto de entrenamiento",
+	]}
+	answer={1}
+/>
+
+## Más que imágenes
+
+La misma idea funciona con cualquier dato que se pueda representar como números:
+
+- **Vídeo**, donde además hay que mantener la coherencia entre fotogramas.
+- **Audio** y voz.
+- **Edición de imágenes**: rellenar una zona borrada, ampliar una foto, cambiar un estilo.
+- **Ciencia**: generar estructuras de proteínas o moléculas candidatas.
+
+## Frente a otros modelos
+
+Antes dominaban las **redes generativas antagónicas**, en las que dos redes compiten: una genera y otra intenta distinguir lo generado de lo real. Producían imágenes nítidas, y eran inestables y difíciles de entrenar.
+
+La difusión es más estable y cubre mejor la variedad de los datos. Su inconveniente es la **lentitud**: muchos pasos por imagen. Buena parte de la investigación busca reducir esos pasos.
+
+Los [modelos de lenguaje](/articulos/modelos-de-lenguaje/), en cambio, generan token a token, de izquierda a derecha. Son dos estrategias distintas de generar, y se han empezado a combinar.
+
+## Problemas
+
+- **Detalles incoherentes.** Manos con dedos de más, texto ilegible, objetos que se funden. El modelo aprende el aspecto general mejor que la estructura exacta.
+- **Datos de entrenamiento.** Se entrenan con cantidades enormes de imágenes, muchas con derechos de autor y sin permiso de sus autores. Es objeto de litigios.
+- **Memorización.** Con imágenes muy repetidas en los datos, el modelo puede reproducirlas casi exactas.
+- **Imágenes falsas.** Facilitan crear fotografías creíbles de cosas que no ocurrieron, con usos de desinformación y suplantación. Se trabaja en marcas que identifiquen el contenido generado.
+- **[Sesgos](/articulos/sesgos-en-los-algoritmos/).** Reproducen los estereotipos de sus datos: qué aspecto tiene "un médico" o "un directivo".
+
+## Lo esencial
+
+- Un modelo de difusión genera eliminando ruido paso a paso.
+- Se entrena añadiendo ruido a imágenes reales y aprendiendo a estimar ese ruido.
+- Para crear, parte de ruido aleatorio y lo limpia gradualmente.
+- Un texto, convertido en embedding, guía la limpieza hacia lo que se describe.
+- Trabajar en un espacio comprimido lo hace mucho más barato.

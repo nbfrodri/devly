@@ -1,0 +1,139 @@
+---
+title: "¿Qué es el aprendizaje por refuerzo?"
+description: "En el aprendizaje por refuerzo, un agente aprende a actuar probando acciones y recibiendo recompensas, sin que nadie le diga cuál era la correcta."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - probabilidad-basica
+updated: 2026-10-13
+sources:
+  - title: "Sutton y Barto: Reinforcement Learning, An Introduction, 2.ª edición, libro libre (en inglés)"
+    url: http://incompleteideas.net/book/the-book-2nd.html
+  - title: "Mnih y otros: Playing Atari with Deep Reinforcement Learning (2013, en inglés)"
+    url: https://arxiv.org/abs/1312.5602
+  - title: "Silver y otros: Mastering the game of Go with deep neural networks and tree search (2016, en inglés)"
+    url: https://www.nature.com/articles/nature16961
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **aprendizaje por refuerzo** es una rama del [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) en la que un programa, llamado **agente**, aprende a tomar decisiones **probando acciones** en un entorno y recibiendo **recompensas** o penalizaciones. Nadie le dice qué acción era la correcta: solo cómo le fue.
+
+Es como se enseña un truco a un perro: no se le explica, se le premia cuando lo hace bien.
+
+## En qué se diferencia
+
+| Tipo | Qué recibe | Ejemplo |
+| --- | --- | --- |
+| Supervisado | Ejemplos con la respuesta correcta | Fotos etiquetadas como gato o perro |
+| No supervisado | Datos sin etiquetas | [Agrupar clientes parecidos](/articulos/agrupamiento-y-k-medias/) |
+| Por refuerzo | Recompensas por sus acciones | Ganar o perder una partida |
+
+Dos rasgos lo hacen más difícil:
+
+- **La recompensa llega tarde.** En el ajedrez, la recompensa es ganar, al final. ¿Cuál de los cuarenta movimientos fue el bueno? Repartir el mérito entre decisiones pasadas es el problema central.
+- **Las acciones cambian lo que se ve después.** El agente genera sus propios datos al actuar.
+
+## Las piezas
+
+| Pieza | Qué es | En un videojuego |
+| --- | --- | --- |
+| Agente | Quien decide | El jugador automático |
+| Entorno | Aquello con lo que interactúa | El juego |
+| Estado | La situación actual | Lo que hay en pantalla |
+| Acción | Lo que puede hacer | Moverse, saltar |
+| Recompensa | La señal de cómo le va | Los puntos |
+| Política | Su estrategia: qué hace en cada estado | Lo que aprende |
+
+El ciclo se repite: el agente observa el estado, elige una acción, el entorno cambia y le da una recompensa.
+
+El objetivo no es la recompensa inmediata, sino la **acumulada** a lo largo del tiempo. A veces conviene sacrificar algo ahora para ganar más después.
+
+## El valor de un estado
+
+Para decidir bien, el agente estima el **valor** de cada estado: cuánta recompensa espera obtener a partir de ahí si actúa bien.
+
+Las recompensas futuras cuentan algo menos que las inmediatas. Se multiplican por un **factor de descuento**, por ejemplo 0,9, por cada paso de espera. Así, llegar antes a la meta vale más que llegar tarde.
+
+Un pasillo de cinco casillas, con la meta al final, que da una recompensa de 1:
+
+```js
+const casillas = 5;
+const descuento = 0.9;
+let valor = Array(casillas).fill(0);
+
+for (let ronda = 0; ronda < 50; ronda++) {
+	const nuevo = [...valor];
+
+	for (let s = 0; s < casillas - 1; s++) {
+		const destinos = [s - 1, s + 1].filter((d) => d >= 0);
+		const opciones = destinos.map((d) =>
+			d === casillas - 1 ? 1 : descuento * valor[d],
+		);
+		nuevo[s] = Math.max(...opciones);
+	}
+
+	valor = nuevo;
+}
+
+console.log(valor.slice(0, 4).map((v) => v.toFixed(3)).join(" ")); // "0.729 0.810 0.900 1.000"
+```
+
+La casilla junto a la meta vale 1: un paso y llega. La anterior, 0,9. Cada paso más lejos vale un 10 % menos. Con estos valores, la política es evidente: moverse siempre hacia la casilla de más valor.
+
+El agente no ha recibido ninguna instrucción sobre adónde ir. Ha deducido el camino a partir de la recompensa, propagando su valor hacia atrás. La idea, actualizar cada estimación a partir de la del estado siguiente, es la base de muchos algoritmos de refuerzo.
+
+En este ejemplo el agente conoce las reglas del entorno. Normalmente no: tiene que aprender esos valores probando. El algoritmo **Q-learning** lo hace estimando el valor de cada pareja de estado y acción a partir de la experiencia.
+
+## Explorar o aprovechar
+
+Es el dilema que define el aprendizaje por refuerzo.
+
+- **Aprovechar**: hacer lo que mejor ha funcionado hasta ahora.
+- **Explorar**: probar algo nuevo, que quizá sea mejor.
+
+Si solo aprovecha, se queda con la primera opción aceptable y nunca descubre una mejor. Si solo explora, nunca saca partido de lo que sabe.
+
+Es la duda de volver al restaurante de siempre o probar uno nuevo. La solución habitual es explorar mucho al principio e ir reduciendo con el tiempo, o elegir al azar una pequeña parte de las veces.
+
+<Quiz
+	client:visible
+	question="¿Qué recibe un agente de aprendizaje por refuerzo para aprender?"
+	options={[
+		"La acción correcta en cada situación",
+		"Una recompensa que indica cómo le fue, a menudo con retraso",
+		"Datos sin ninguna señal",
+	]}
+	answer={1}
+/>
+
+## Con redes neuronales
+
+En un juego real, el número de estados es inmenso: no se puede guardar una tabla con el valor de cada uno. La solución es que una [red neuronal](/articulos/que-es-una-red-neuronal/) **estime** ese valor, generalizando a estados que nunca ha visto.
+
+- En 2013, un sistema aprendió a jugar a varios juegos de la consola Atari con solo los píxeles de la pantalla y la puntuación, sin conocer las reglas.
+- En 2016 se publicó AlphaGo, el primer programa que venció a un jugador profesional de go en un tablero completo y sin ventaja. El go tiene más posiciones posibles que átomos hay en el universo observable. AlphaGo combinaba redes neuronales, búsqueda y aprendizaje jugando contra sí mismo.
+
+## Dónde se usa
+
+- **Juegos**, el banco de pruebas clásico.
+- **Robótica**: aprender a andar o a agarrar objetos, a menudo primero en simulación.
+- **Control**: la refrigeración de centros de datos, la gestión de redes eléctricas.
+- **Sistemas de recomendación**, que deciden qué mostrar a largo plazo.
+- **Modelos de lenguaje.** Los asistentes se [ajustan](/articulos/ajuste-fino/) con refuerzo a partir de las preferencias de personas, y se entrenan para razonar premiando las respuestas que resultan correctas.
+
+## Las dificultades
+
+- **Necesita muchísima experiencia.** Millones de intentos, que en el mundo real son caros o peligrosos. Por eso se entrena en simulación.
+- **Diseñar la recompensa es difícil.** El agente optimiza exactamente lo que se le premia, no lo que se pretendía. Un agente de carreras premiado por recoger objetos aprendió a dar vueltas en círculo recogiéndolos, sin terminar nunca la carrera. Se llama **trucar la recompensa**.
+- **Inestable.** El entrenamiento puede no converger, o empeorar de repente.
+- **Del simulador al mundo real** hay diferencias que el agente no ha visto.
+
+## Lo esencial
+
+- Un agente aprende a actuar probando acciones y recibiendo recompensas.
+- Busca maximizar la recompensa acumulada, no la inmediata.
+- Estima el valor de los estados, propagando las recompensas hacia atrás.
+- Debe equilibrar explorar opciones nuevas y aprovechar lo que ya sabe.
+- Optimiza lo que se premia, que no siempre es lo que se pretendía.

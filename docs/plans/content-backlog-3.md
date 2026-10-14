@@ -27,11 +27,11 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 - [x] El descenso del gradiente
 - [x] Clasificación y regresión
 - [x] Cómo se evalúa un modelo: precisión, exhaustividad y matriz de confusión
-- [ ] Árboles de decisión
-- [ ] Aprendizaje por refuerzo
-- [ ] Redes convolucionales y visión por ordenador
-- [ ] Cómo escribir instrucciones para un modelo de lenguaje
-- [ ] Ajuste fino frente a RAG
+- [x] Árboles de decisión
+- [x] Aprendizaje por refuerzo
+- [x] Redes convolucionales y visión por ordenador
+- [x] Cómo escribir instrucciones para un modelo de lenguaje
+- [x] Ajuste fino frente a RAG
 
 ## Datos y bases de datos (había 9)
 
@@ -97,10 +97,10 @@ Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre pr
 
 ## Más inteligencia artificial
 
-- [ ] Retropropagación (descenso del gradiente)
-- [ ] Ajuste fino de un modelo (modelo de lenguaje)
-- [ ] Alucinaciones de los modelos de lenguaje
-- [ ] Modelos de difusión: cómo se genera una imagen
+- [x] Retropropagación (descenso del gradiente)
+- [x] Ajuste fino de un modelo (modelo de lenguaje)
+- [x] Alucinaciones de los modelos de lenguaje
+- [x] Modelos de difusión: cómo se genera una imagen
 
 ## Algoritmos y estructuras de datos concretos
 

@@ -1,0 +1,129 @@
+---
+title: "¿Qué son las alucinaciones de los modelos de lenguaje?"
+description: "Un modelo de lenguaje alucina cuando genera información falsa con apariencia de verdadera. No es un fallo ocasional, sino una consecuencia de cómo funciona."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - ventana-de-contexto-y-tokens
+updated: 2026-10-13
+sources:
+  - title: "Huang y otros: A Survey on Hallucination in Large Language Models (2023, en inglés)"
+    url: https://arxiv.org/abs/2311.05232
+  - title: "Kalai y otros: Why Language Models Hallucinate (2025, en inglés)"
+    url: https://arxiv.org/abs/2509.04664
+  - title: "Anthropic: Reduce hallucinations (en inglés)"
+    url: https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-hallucinations
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) **alucina** cuando genera algo falso o inventado presentándolo como cierto: un dato erróneo, una cita que nadie dijo, un artículo científico que no existe, una función de una biblioteca que no está.
+
+El término es una metáfora discutida, porque el modelo no percibe nada. Pero se ha impuesto.
+
+## Por qué ocurre
+
+### El modelo genera texto plausible
+
+Un modelo de lenguaje predice, token a token, una continuación **probable** del texto. No consulta una base de datos de hechos: produce lo que se parece a lo que ha visto.
+
+La mayoría de las veces, lo probable coincide con lo cierto: la capital de Francia aparece miles de veces en sus datos. Cuando no lo sabe, el mecanismo no se detiene. Sigue produciendo texto con la forma correcta: un nombre que suena a investigador, un año verosímil, un título de artículo convincente.
+
+La elección de cada token depende de unas probabilidades. La **temperatura** regula cuánto se concentran:
+
+```js
+function probabilidades(puntuaciones, temperatura) {
+	const exponenciales = puntuaciones.map((p) => Math.exp(p / temperatura));
+	const total = exponenciales.reduce((a, b) => a + b, 0);
+
+	return exponenciales.map((e) => e / total);
+}
+
+const puntuaciones = [2, 1, 0.5];
+
+console.log(probabilidades(puntuaciones, 1)[0].toFixed(2)); // "0.63"
+console.log(probabilidades(puntuaciones, 0.2)[0].toFixed(2)); // "0.99"
+```
+
+Con temperatura baja, el modelo elige casi siempre la opción más probable. Eso reduce la variedad, pero **no garantiza la verdad**: si la opción más probable es falsa, la elegirá con seguridad.
+
+### Se le premia por adivinar
+
+Una explicación reciente apunta a cómo se entrenan y evalúan los modelos. En un examen tipo test donde no se resta por fallar, contestar al azar es mejor estrategia que dejar en blanco.
+
+Muchas evaluaciones funcionan así: puntúan los aciertos y tratan igual una respuesta errónea que un "no lo sé". Un modelo optimizado para esas pruebas aprende a responder siempre.
+
+### Lo que no sabe
+
+- **Datos recientes.** Todo lo posterior a su entrenamiento.
+- **Hechos poco frecuentes.** Lo que apareció pocas veces en sus datos se recuerda mal.
+- **Información privada**, que nunca vio.
+- **Detalles exactos**: cifras, fechas, citas literales, referencias.
+
+### El contexto
+
+Si la información relevante no está en su [ventana de contexto](/articulos/ventana-de-contexto-y-tokens/), o está enterrada entre mucho texto, el modelo la rellena con lo que le parece probable.
+
+## Tipos
+
+| Tipo | Ejemplo |
+| --- | --- |
+| Hechos falsos | Una fecha o una cifra equivocada |
+| Fuentes inventadas | Un artículo, un libro o una sentencia que no existe |
+| Código inventado | Una función o un paquete que no existen |
+| Infidelidad al texto | Un resumen que afirma algo que el documento no dice |
+| Razonamiento erróneo | Pasos que parecen lógicos y no lo son |
+
+El código inventado tiene un riesgo concreto: si un modelo sugiere instalar un paquete que no existe, alguien puede registrar ese nombre con código malicioso y esperar a que lo instalen.
+
+<Quiz
+	client:visible
+	question="¿Por qué un modelo de lenguaje puede inventar una cita bibliográfica que parece auténtica?"
+	options={[
+		"Porque intenta engañar al usuario",
+		"Porque genera texto con la forma de lo que ha visto, sin comprobar que exista",
+		"Porque su base de datos tiene errores",
+	]}
+	answer={1}
+/>
+
+## Lo engañoso: la seguridad
+
+Una persona que no sabe algo suele dudar. Un modelo puede escribir un dato inventado con la misma fluidez y aplomo que uno cierto. El tono no indica nada sobre la fiabilidad.
+
+Por eso las alucinaciones son peligrosas: no se distinguen a simple vista.
+
+## Cómo reducirlas
+
+No se pueden eliminar por completo, pero sí reducir mucho.
+
+### Al usar un modelo
+
+- **Darle la información.** Con [RAG](/articulos/generacion-aumentada-por-recuperacion/), el modelo responde a partir de documentos que tiene delante, en lugar de recordar.
+- **Pedirle que cite** de dónde sale cada afirmación, y comprobarlo.
+- **Permitirle no saber.** Indicar expresamente que, si no está seguro o la respuesta no está en el material, lo diga.
+- **Pedir citas literales** antes de una conclusión, para anclarla al texto.
+- **Usar herramientas.** Un modelo con acceso a una búsqueda, una calculadora o una base de datos, como un [agente](/articulos/agentes-de-ia/), puede consultar en lugar de suponer.
+- **Escribir buenas [instrucciones](/articulos/como-escribir-instrucciones-para-un-modelo/)**, claras y con contexto.
+
+### Al construir una aplicación
+
+- **Verificar lo verificable.** Que una función exista se comprueba ejecutando el código o sus [pruebas](/articulos/pruebas-de-software/). Que una cita exista, buscándola.
+- **Validar la salida** con reglas: formato, rangos, coherencia.
+- **Medir.** Preparar preguntas con respuesta conocida y comprobar cuántas acierta.
+- **Supervisión humana** en lo que tenga consecuencias.
+
+## Usarlos bien
+
+Un modelo de lenguaje es muy útil para redactar, resumir, explicar, transformar texto, programar o generar ideas. Es poco fiable como fuente única de datos concretos.
+
+Un criterio práctico: cuanto más cuesta un error y más difícil es detectarlo, más hay que verificar. Un borrador de correo se revisa leyéndolo. Una referencia legal, una dosis o una cifra financiera se comprueban siempre en una fuente fiable.
+
+## Lo esencial
+
+- Un modelo alucina cuando genera información falsa presentada como cierta.
+- Ocurre porque produce texto plausible, no texto verificado.
+- El entrenamiento y la evaluación pueden premiar responder antes que admitir que no sabe.
+- Una respuesta errónea suena igual de segura que una correcta.
+- Se reducen dándole las fuentes, permitiéndole no saber y verificando lo importante.

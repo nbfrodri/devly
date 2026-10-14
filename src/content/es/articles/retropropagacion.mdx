@@ -1,0 +1,178 @@
+---
+title: "¿Qué es la retropropagación?"
+description: "La retropropagación calcula cuánto contribuye cada peso de una red neuronal al error, recorriendo la red de la salida hacia la entrada. Es lo que permite entrenarla."
+level: avanzado
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+  - descenso-del-gradiente
+updated: 2026-10-13
+sources:
+  - title: "Michael Nielsen: Neural Networks and Deep Learning, cap. 2 (en inglés)"
+    url: http://neuralnetworksanddeeplearning.com/chap2.html
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, cap. 6 (en inglés)"
+    url: https://www.deeplearningbook.org/contents/mlp.html
+  - title: "Stanford CS231n: Backpropagation, Intuitions (en inglés)"
+    url: https://cs231n.github.io/optimization-2/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **retropropagación**, en inglés *backpropagation*, es el algoritmo que calcula cuánto influye cada peso de una [red neuronal](/articulos/que-es-una-red-neuronal/) en su error. Recorre la red desde la salida hacia la entrada, repartiendo la responsabilidad del error capa a capa. Con ese dato, el [descenso del gradiente](/articulos/descenso-del-gradiente/) ajusta cada peso en la dirección que reduce el error.
+
+Las dos piezas juntas son la forma en que aprenden casi todas las redes neuronales. Se popularizó con un artículo de 1986 de David Rumelhart, Geoffrey Hinton y Ronald Williams.
+
+## Qué problema resuelve
+
+Entrenar una red es ajustar sus pesos para que se equivoque menos. Para saber hacia dónde mover cada peso hace falta su **gradiente**: cuánto cambia el error si el peso cambia un poco.
+
+La forma ingenua sería probar: mover un peso una cantidad diminuta, volver a calcular la salida de la red y ver cuánto cambia el error. Funciona, pero hay que hacerlo para cada peso por separado. Con mil millones de pesos, son mil millones de pasadas por la red **para un solo paso** de entrenamiento.
+
+La retropropagación obtiene todos los gradientes con una sola pasada hacia delante y una hacia atrás. Es lo que hace viable entrenar redes grandes.
+
+## La idea: la regla de la cadena
+
+Una red es una cadena de operaciones. Si el peso cambia, cambia la salida de su neurona; eso cambia la entrada de la siguiente capa; y así hasta el error.
+
+Para saber cuánto afecta el peso al error, se multiplican los efectos de cada eslabón. Es la **regla de la cadena** del cálculo.
+
+Un ejemplo sin matemáticas: si cada euro de más en publicidad trae 3 clientes, y cada cliente deja 20 euros, cada euro en publicidad trae 60. Se multiplican los efectos de cada paso.
+
+## Un ejemplo completo
+
+Una red mínima: una entrada, una neurona oculta con activación ReLU, que deja pasar los positivos y convierte en cero los negativos, y una salida.
+
+```js
+const relu = (z) => Math.max(0, z);
+
+function perdida(w1, w2, x, objetivo) {
+	const oculta = relu(w1 * x);
+	const salida = w2 * oculta;
+
+	return (salida - objetivo) ** 2;
+}
+
+const x = 2;
+const objetivo = 1;
+let w1 = 0.5;
+let w2 = 3;
+
+const z = w1 * x;
+const oculta = relu(z);
+const salida = w2 * oculta;
+
+const dSalida = 2 * (salida - objetivo);
+const dW2 = dSalida * oculta;
+const dOculta = dSalida * w2;
+const dZ = z > 0 ? dOculta : 0;
+const dW1 = dZ * x;
+
+console.log(perdida(w1, w2, x, objetivo)); // 4
+console.log(dW2); // 4
+console.log(dW1); // 24
+```
+
+Las tres primeras líneas tras los pesos son la **pasada hacia delante**: se calcula la salida, guardando los valores intermedios. Las siguientes son la **pasada hacia atrás**:
+
+1. El error depende de la salida: se calcula cuánto.
+2. La salida depende de `w2` y de la neurona oculta: se reparte.
+3. La neurona oculta depende de `z`: ReLU deja pasar el gradiente si `z` era positivo.
+4. `z` depende de `w1`: se llega al primer peso.
+
+Cada paso reutiliza el anterior. Ese es el ahorro.
+
+### Comprobarlo
+
+El gradiente calculado se puede verificar con el método ingenuo:
+
+```js
+const relu = (z) => Math.max(0, z);
+const perdida = (w1, w2) => (w2 * relu(w1 * 2) - 1) ** 2;
+
+const h = 1e-5;
+const aproximado = (perdida(0.5 + h, 3) - perdida(0.5 - h, 3)) / (2 * h);
+
+console.log(aproximado.toFixed(3)); // "24.000"
+```
+
+Coincide. Es una prueba habitual al programar estas cosas a mano.
+
+### Y aprender
+
+Con los gradientes, cada peso se mueve un poco en la dirección contraria:
+
+```js
+const relu = (z) => Math.max(0, z);
+const perdida = (w1, w2) => (w2 * relu(w1 * 2) - 1) ** 2;
+
+let w1 = 0.5;
+let w2 = 3;
+const inicial = perdida(w1, w2);
+
+for (let paso = 0; paso < 20; paso++) {
+	const oculta = relu(w1 * 2);
+	const dSalida = 2 * (w2 * oculta - 1);
+	const dW2 = dSalida * oculta;
+	const dW1 = w1 * 2 > 0 ? dSalida * w2 * 2 : 0;
+
+	w1 = w1 - 0.01 * dW1;
+	w2 = w2 - 0.01 * dW2;
+}
+
+console.log(inicial); // 4
+console.log(perdida(w1, w2) < 0.01); // true
+```
+
+En veinte pasos, el error pasa de 4 a casi nada. Una red real hace lo mismo con millones de pesos y millones de ejemplos.
+
+## Por qué hacia atrás
+
+El error es un solo número, y hay muchísimos pesos. Ir de la salida a la entrada permite calcular en una pasada el efecto de ese único número sobre todos ellos.
+
+Ir hacia delante serviría si hubiera una sola entrada y muchas salidas. En una red neuronal es al revés.
+
+<Quiz
+	client:visible
+	question="¿Qué calcula la retropropagación?"
+	options={[
+		"La salida de la red para una entrada",
+		"Cuánto contribuye cada peso al error, para poder ajustarlo",
+		"Cuántas capas necesita la red",
+	]}
+	answer={1}
+/>
+
+## En la práctica, automático
+
+Nadie escribe hoy estas derivadas a mano. Las bibliotecas de aprendizaje automático registran cada operación de la pasada hacia delante y calculan los gradientes solas. Se llama **diferenciación automática**.
+
+Quien construye un modelo define la red y el error. La retropropagación ocurre por debajo.
+
+## Problemas conocidos
+
+### Gradientes que se desvanecen
+
+En una red muy profunda, el gradiente se multiplica por muchos factores al retroceder. Si son menores que 1, se hace diminuto: las primeras capas apenas aprenden. Durante años fue el gran obstáculo para entrenar redes profundas.
+
+Lo aliviaron funciones de activación como ReLU, mejores formas de inicializar los pesos y las **conexiones residuales**, que dejan pasar el gradiente por un atajo. Las usan los [transformers](/articulos/que-es-un-transformer/).
+
+### Gradientes que explotan
+
+El problema opuesto: si los factores son mayores que 1, el gradiente crece sin control y el entrenamiento se rompe. Se limita su tamaño máximo.
+
+### Memoria
+
+La pasada hacia atrás necesita los valores intermedios de la pasada hacia delante. Con redes grandes y muchos ejemplos a la vez, eso ocupa mucha memoria, a menudo más que los propios pesos. Es uno de los límites al entrenar en una [GPU](/articulos/que-es-una-gpu/).
+
+## Lo que no es
+
+- **No es el aprendizaje entero.** Calcula los gradientes; el descenso del gradiente los usa.
+- **No es como aprende el cerebro.** No hay pruebas de que las neuronas biológicas hagan algo así. Es una técnica matemática eficaz, no un modelo de la biología.
+
+## Lo esencial
+
+- La retropropagación calcula el gradiente del error respecto a todos los pesos de la red.
+- Aplica la regla de la cadena, de la salida hacia la entrada, reutilizando cada cálculo.
+- Necesita una pasada hacia delante y una hacia atrás, en lugar de una por peso.
+- El descenso del gradiente usa esos gradientes para ajustar los pesos.
+- Hoy se hace de forma automática, con diferenciación automática.

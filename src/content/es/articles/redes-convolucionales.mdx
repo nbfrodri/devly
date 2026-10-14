@@ -1,0 +1,152 @@
+---
+title: "¿Qué es una red convolucional? Visión por ordenador"
+description: "Una red convolucional analiza imágenes con pequeños filtros que recorren la imagen buscando patrones, de los más simples a los más complejos."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+  - como-se-representa-una-imagen
+updated: 2026-10-13
+sources:
+  - title: "Stanford CS231n: Convolutional Neural Networks (en inglés)"
+    url: https://cs231n.github.io/convolutional-networks/
+  - title: "LeCun, Bottou, Bengio y Haffner: Gradient-Based Learning Applied to Document Recognition (1998, en inglés)"
+    url: http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf
+  - title: "Krizhevsky, Sutskever y Hinton: ImageNet Classification with Deep Convolutional Neural Networks (2012, en inglés)"
+    url: https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **red convolucional**, o CNN por sus siglas en inglés, es un tipo de [red neuronal](/articulos/que-es-una-red-neuronal/) diseñada para trabajar con imágenes. En lugar de mirar cada píxel por separado, aplica pequeños **filtros** que recorren la imagen buscando patrones: bordes, texturas, formas. Capa a capa, combina esos patrones en otros cada vez más complejos.
+
+Son la base de la **visión por ordenador**: que una máquina reconozca lo que hay en una imagen.
+
+## Qué problema resuelven
+
+Una red neuronal corriente conecta cada entrada con cada neurona. Con imágenes, eso no funciona.
+
+```js
+const pixeles = 1000 * 1000;
+const neuronas = 1000;
+
+console.log(pixeles * neuronas); // 1000000000
+console.log(3 * 3 * 32); // 288
+```
+
+Una imagen de un megapíxel conectada a mil neuronas son mil millones de pesos, en una sola capa. Una capa convolucional con 32 filtros de 3 por 3 tiene 288.
+
+Y hay un problema de fondo. Una red corriente no sabe que dos píxeles vecinos están relacionados, ni que un gato es un gato esté arriba o abajo. Tendría que aprender a reconocerlo **en cada posición** por separado.
+
+## La convolución
+
+Un **filtro** es una pequeña cuadrícula de números, por ejemplo de 3 por 3. Se coloca sobre una zona de la imagen, se multiplica cada número del filtro por el píxel que tiene debajo y se suma todo. El resultado indica **cuánto se parece esa zona al patrón** del filtro.
+
+Después se desplaza el filtro una posición y se repite, hasta recorrer toda la imagen.
+
+```js
+function convolucionar(imagen, filtro) {
+	return imagen.map((fila) =>
+		fila.slice(0, fila.length - filtro.length + 1).map((_, x) =>
+			filtro.reduce((suma, peso, i) => suma + peso * fila[x + i], 0),
+		),
+	);
+}
+
+const imagen = [
+	[0, 0, 9, 9],
+	[0, 0, 9, 9],
+	[0, 0, 9, 9],
+];
+
+const bordeVertical = [-1, 1];
+
+const mapa = convolucionar(imagen, bordeVertical);
+
+console.log(mapa[0].join(" ")); // "0 9 0"
+```
+
+La imagen es oscura a la izquierda y clara a la derecha. El filtro resta cada píxel de su vecino de la derecha: da 0 donde no hay cambio y un valor alto justo en la frontera. Ha **detectado un borde vertical**.
+
+El resultado es un **mapa de características**: una imagen nueva que marca dónde aparece el patrón.
+
+### Dos ideas clave
+
+- **Conexiones locales.** Cada salida depende solo de una zona pequeña. Los píxeles cercanos son los que importan.
+- **Pesos compartidos.** El mismo filtro recorre toda la imagen. Si sabe detectar un borde en una esquina, lo detecta en todas partes.
+
+Por eso tiene tan pocos parámetros, y por eso reconoce un objeto esté donde esté.
+
+### Los filtros se aprenden
+
+En el ejemplo, el filtro estaba escrito a mano. En una red convolucional, los números de cada filtro son pesos, y se ajustan durante el entrenamiento con [retropropagación](/articulos/retropropagacion/). La red descubre por sí misma qué patrones le sirven.
+
+## Capas
+
+Una red convolucional encadena varias capas.
+
+- **Primeras capas**: bordes, líneas, cambios de color.
+- **Intermedias**: combinan los anteriores en texturas, esquinas, círculos.
+- **Profundas**: combinan esos en partes de objetos: ojos, ruedas, hojas.
+- **Finales**: una red corriente que decide la respuesta a partir de todo lo anterior.
+
+Es una jerarquía: cada capa construye sobre la anterior. Visualizar lo que detecta cada filtro de una red entrenada muestra exactamente esa progresión.
+
+### Reducir
+
+Entre capas se suele **reducir el tamaño** de los mapas, por ejemplo quedándose con el valor máximo de cada cuadrado de 2 por 2. Disminuye el cálculo, y hace que la red tolere pequeños desplazamientos: importa que haya un ojo, no su posición exacta al píxel.
+
+<Quiz
+	client:visible
+	question="¿Por qué una red convolucional reconoce un objeto en cualquier posición de la imagen?"
+	options={[
+		"Porque se entrena con el objeto en cada posición posible",
+		"Porque el mismo filtro recorre toda la imagen con los mismos pesos",
+		"Porque recorta la imagen alrededor del objeto",
+	]}
+	answer={1}
+/>
+
+## Historia breve
+
+- **1998.** LeNet, de Yann LeCun y su equipo, reconocía dígitos escritos a mano, y se usó para leer cheques.
+- **2012.** AlexNet ganó un concurso de clasificación de imágenes con más de un millón de fotos, con una ventaja enorme sobre los métodos anteriores. Combinaba redes más profundas, muchos datos y el entrenamiento en [GPU](/articulos/que-es-una-gpu/). Se considera el inicio del auge actual del aprendizaje profundo.
+
+## Para qué se usan
+
+| Tarea | Qué hace |
+| --- | --- |
+| Clasificación | Decir qué hay en la imagen |
+| Detección | Localizar cada objeto con un recuadro |
+| Segmentación | Marcar a qué objeto pertenece cada píxel |
+
+Aplicaciones:
+
+- **Medicina**: detectar lesiones en radiografías, escáneres o imágenes de la piel.
+- **Vehículos**: reconocer peatones, señales y carriles.
+- **Teléfonos**: desbloqueo facial, mejora de fotos, búsqueda en la galería.
+- **Industria**: detectar defectos en una cadena de montaje.
+- **Lectura de texto** en imágenes.
+
+La convolución no se limita a imágenes: también se aplica a sonido, en una dimensión, o a vídeo, en tres.
+
+## Su relevo parcial
+
+Desde 2020, los [transformers](/articulos/que-es-un-transformer/) se han aplicado también a imágenes, dividiéndolas en trozos y tratándolos como tokens. Con muchísimos datos rinden igual o mejor, y permiten combinar imagen y texto en un mismo modelo.
+
+Las redes convolucionales siguen muy presentes, sobre todo en dispositivos con pocos recursos, donde su eficiencia es una ventaja.
+
+## Limitaciones
+
+- **Necesitan muchas imágenes etiquetadas.** Se alivia partiendo de una red ya entrenada y [ajustándola](/articulos/ajuste-fino/) con pocos ejemplos.
+- **Se dejan engañar.** Cambios en la imagen imperceptibles para una persona pueden cambiar por completo la respuesta.
+- **Aprenden atajos.** Si en los datos todos los barcos aparecen sobre agua, la red puede aprender a reconocer el agua.
+- **[Sesgos](/articulos/sesgos-en-los-algoritmos/).** Funcionan peor con lo que está poco representado en sus datos, como mostraron los estudios sobre reconocimiento facial.
+
+## Lo esencial
+
+- Una red convolucional procesa imágenes con filtros pequeños que recorren toda la imagen.
+- Cada filtro detecta un patrón, y produce un mapa de dónde aparece.
+- Las conexiones locales y los pesos compartidos reducen mucho los parámetros.
+- Las capas forman una jerarquía: de bordes a texturas, partes y objetos.
+- Los filtros no se programan: se aprenden con el entrenamiento.

@@ -1,0 +1,142 @@
+---
+title: "¿Qué es el agrupamiento? El algoritmo de k-medias"
+description: "El agrupamiento organiza datos en grupos de elementos parecidos sin que nadie diga cuáles son esos grupos. K-medias es el algoritmo más conocido."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - media-mediana-y-desviacion
+updated: 2026-10-13
+sources:
+  - title: "scikit-learn: Clustering (en inglés)"
+    url: https://scikit-learn.org/stable/modules/clustering.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **agrupamiento**, en inglés *clustering*, es una técnica de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) **no supervisado**: organiza un conjunto de datos en grupos de elementos parecidos entre sí, sin que nadie haya indicado de antemano cuáles son esos grupos. El algoritmo más conocido para hacerlo es **k-medias**, en inglés *k-means*.
+
+## Qué problema resuelve
+
+En el aprendizaje supervisado, los datos llevan la respuesta: esta foto es un gato, este correo es spam. A menudo no hay respuestas. Hay muchos datos y la pregunta es qué estructura tienen.
+
+- Una tienda tiene millones de clientes. ¿Hay tipos de clientes con hábitos distintos?
+- Un servicio recibe miles de incidencias. ¿Cuáles tratan del mismo problema?
+- Un conjunto de documentos. ¿De qué temas hablan?
+
+Nadie sabe de antemano cuáles son los grupos. El agrupamiento los descubre.
+
+## K-medias
+
+La idea es representar cada grupo por su **centro**, y asignar cada elemento al centro más cercano.
+
+1. Se elige cuántos grupos se quieren: **k**.
+2. Se colocan k centros iniciales, por ejemplo en k elementos al azar.
+3. **Asignar**: cada elemento se une al grupo del centro más próximo.
+4. **Actualizar**: cada centro se mueve a la [media](/articulos/media-mediana-y-desviacion/) de los elementos de su grupo.
+5. Se repiten los pasos 3 y 4 hasta que nada cambia.
+
+```js
+function kMedias(puntos, centros) {
+	let actuales = [...centros];
+
+	while (true) {
+		const grupos = actuales.map(() => []);
+
+		for (const punto of puntos) {
+			const distancias = actuales.map((c) => Math.abs(punto - c));
+			const cercano = distancias.indexOf(Math.min(...distancias));
+			grupos[cercano].push(punto);
+		}
+
+		const nuevos = grupos.map(
+			(grupo) => grupo.reduce((a, b) => a + b, 0) / grupo.length,
+		);
+
+		if (nuevos.every((c, i) => c === actuales[i])) {
+			return { centros: nuevos, grupos };
+		}
+
+		actuales = nuevos;
+	}
+}
+
+const resultado = kMedias([1, 2, 3, 10, 11, 12], [1, 2]);
+
+console.log(resultado.centros.join(" ")); // "2 11"
+console.log(resultado.grupos.map((g) => g.join(",")).join(" | ")); // "1,2,3 | 10,11,12"
+```
+
+Los centros empiezan mal colocados, los dos en la zona baja. En la primera vuelta, el segundo centro atrae casi todos los puntos y se desplaza hacia arriba. En la segunda, cada centro queda en el medio de un grupo natural. En la tercera ya no cambia nada.
+
+El ejemplo usa números sueltos para que se siga a mano. Con datos reales, cada elemento tiene muchas características, y la distancia se calcula en muchas dimensiones a la vez.
+
+## Decisiones que hay que tomar
+
+### Cuántos grupos
+
+K-medias necesita que se le diga k. Y no hay una respuesta correcta: los datos se pueden ver en 3 grupos o en 10.
+
+Una técnica habitual es probar varios valores y observar cuánto se reduce la dispersión dentro de los grupos. Al principio cae mucho; a partir de cierto k, poco. Ese punto de inflexión, llamado **codo**, suele ser una buena elección.
+
+Pero a menudo decide el uso: si el equipo de marketing puede manejar cinco campañas, se buscan cinco grupos.
+
+### Dónde empezar
+
+El resultado depende de los centros iniciales. Unos malos pueden dejar el algoritmo atascado en una solución pobre.
+
+Lo habitual es ejecutarlo varias veces con inicios distintos y quedarse con la mejor, o usar una inicialización que reparte los centros iniciales lejos unos de otros.
+
+### Escalar las características
+
+Si una característica se mide en euros, con valores de miles, y otra en años, con valores de decenas, la primera domina por completo la distancia. Hay que llevarlas a escalas comparables antes de agrupar.
+
+<Quiz
+	client:visible
+	question="¿Qué tiene de particular el agrupamiento frente a la clasificación?"
+	options={[
+		"Que necesita más datos",
+		"Que no se le dan las categorías: las descubre a partir de los datos",
+		"Que solo funciona con números enteros",
+	]}
+	answer={1}
+/>
+
+## Limitaciones de k-medias
+
+- **Supone grupos redondeados y de tamaño parecido.** Falla con grupos alargados, con formas irregulares o muy desiguales.
+- **Todo elemento acaba en un grupo**, incluidos los valores atípicos, que además desplazan los centros.
+- **Hay que fijar k de antemano.**
+
+## Otros algoritmos
+
+| Algoritmo | Idea | Conviene cuando |
+| --- | --- | --- |
+| K-medias | Grupos alrededor de centros | Grupos compactos, muchos datos |
+| Basado en densidad | Grupos como zonas densas, separadas por zonas vacías | Formas irregulares, con ruido |
+| Jerárquico | Ir uniendo los grupos más cercanos, formando un árbol | Se quiere ver la estructura a varios niveles |
+
+El agrupamiento basado en densidad no necesita k y deja sin grupo los puntos aislados, lo que lo hace útil para detectar anomalías.
+
+## Dónde se usa
+
+- **Segmentación de clientes**, para adaptar ofertas o comunicación.
+- **Organizar documentos** o noticias por tema, a partir de sus [embeddings](/articulos/embeddings/).
+- **Detección de anomalías.** Lo que no encaja en ningún grupo es sospechoso: una transacción, un acceso, una lectura de un sensor.
+- **Compresión de imágenes**: agrupar los colores parecidos y usar solo el del centro de cada grupo.
+- **Biología**: genes con comportamiento similar.
+- **Preparar datos** para otros modelos, o explorar un conjunto nuevo.
+
+## Interpretar es trabajo humano
+
+El algoritmo devuelve grupos, no su significado. Decir que el grupo 3 son "clientes jóvenes que compran de noche" lo hace una persona, examinando qué tienen en común.
+
+Y siempre encontrará grupos, aunque los datos no tengan ninguna estructura real. Que existan no prueba que signifiquen algo.
+
+## Lo esencial
+
+- El agrupamiento organiza datos en grupos parecidos sin conocer las categorías de antemano.
+- K-medias alterna dos pasos: asignar cada elemento al centro más cercano y mover cada centro a la media de su grupo.
+- Hay que elegir el número de grupos y escalar las características.
+- K-medias supone grupos compactos; para otras formas hay algoritmos basados en densidad.
+- Los grupos los interpreta una persona, y su existencia no garantiza que tengan sentido.

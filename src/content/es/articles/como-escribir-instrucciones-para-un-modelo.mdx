@@ -1,0 +1,162 @@
+---
+title: "¿Cómo se escriben buenas instrucciones para un modelo de lenguaje?"
+description: "La calidad de la respuesta de un modelo depende mucho de cómo se le pide. Claridad, contexto, ejemplos y estructura marcan la diferencia."
+level: basico
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - ventana-de-contexto-y-tokens
+updated: 2026-10-13
+sources:
+  - title: "Anthropic: Prompt engineering overview (en inglés)"
+    url: https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview
+  - title: "Anthropic: Be clear, direct, and detailed (en inglés)"
+    url: https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct
+  - title: "Wei y otros: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (2022, en inglés)"
+    url: https://arxiv.org/abs/2201.11903
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las **instrucciones**, o *prompts*, son el texto con el que se le pide algo a un [modelo de lenguaje](/articulos/modelos-de-lenguaje/). Escribirlas bien es la forma más barata y rápida de mejorar sus respuestas: el mismo modelo puede dar un resultado mediocre o excelente según cómo se le pida.
+
+A la práctica de diseñarlas y probarlas se le llama **ingeniería de instrucciones**.
+
+## Por qué importa tanto
+
+Un modelo solo sabe lo que hay en su [ventana de contexto](/articulos/ventana-de-contexto-y-tokens/) y lo que aprendió en su entrenamiento. No conoce tu proyecto, tu público, tus gustos ni lo que ya has probado.
+
+Una comparación útil: trata al modelo como a una persona muy capaz que **acaba de llegar** y no sabe nada de tu situación. Si a esa persona le dices solo "escribe un correo", el resultado será genérico. Si le explicas a quién, para qué y en qué tono, acertará.
+
+Una prueba práctica: si un compañero leyera tus instrucciones sin más contexto, ¿sabría exactamente qué hacer?
+
+## Ser claro y concreto
+
+Lo que más mejora una respuesta.
+
+Instrucción vaga:
+
+```
+Resume este informe.
+```
+
+Instrucción concreta:
+
+```
+Resume este informe para el equipo directivo, que no tiene formación técnica.
+Máximo cinco frases. Empieza por la conclusión principal y termina
+con la decisión que tienen que tomar. Evita la jerga.
+```
+
+La segunda dice para quién es, qué longitud, qué orden y qué evitar. No deja al modelo adivinar.
+
+Ayuda indicar:
+
+- **El objetivo**: para qué se va a usar el resultado.
+- **El público.**
+- **El formato**: longitud, estructura, idioma.
+- **Las restricciones**: qué no hacer.
+- **Qué es un buen resultado.**
+
+Y conviene decir **qué hacer**, no solo qué no hacer. "Escribe en párrafos de prosa" funciona mejor que "no uses listas".
+
+## Dar contexto y explicar por qué
+
+Explicar el motivo de una indicación ayuda al modelo a aplicarla con criterio, incluso en casos que no se previeron.
+
+"No uses puntos suspensivos" es una regla. "La respuesta se leerá con un sintetizador de voz, que no sabe pronunciar puntos suspensivos" es una razón, y el modelo deducirá también que debe evitar otros símbolos que no se pronuncian.
+
+## Mostrar ejemplos
+
+A veces es más fácil enseñar que describir. Unos pocos ejemplos de entrada y salida transmiten el formato y el estilo mejor que un párrafo de explicación.
+
+```
+Clasifica cada comentario como positivo, negativo o neutro.
+
+Comentario: Llegó a tiempo y funciona perfecto.
+Clasificación: positivo
+
+Comentario: El envío tardó, pero el producto está bien.
+Clasificación: neutro
+
+Comentario: Se rompió a los dos días.
+Clasificación:
+```
+
+Conviene que los ejemplos sean **variados**. Si todos se parecen, el modelo puede copiar rasgos accidentales, como la longitud o una palabra concreta.
+
+## Estructurar
+
+Cuando la instrucción incluye varias partes, documentos, ejemplos, la pregunta, conviene separarlas con claridad. Marcar cada parte con etiquetas evita que el modelo confunda el material con las órdenes:
+
+```
+<contrato>
+...texto del contrato...
+</contrato>
+
+<pregunta>
+¿Qué plazo de preaviso exige para cancelarlo?
+</pregunta>
+```
+
+Con documentos largos, suele funcionar mejor colocar el material al principio y la pregunta al final.
+
+## Dejar pensar
+
+En problemas que requieren varios pasos, como cálculos o razonamientos, pedir al modelo que **razone antes de responder** mejora mucho los resultados. Un artículo de 2022 mostró que bastaba con incluir ejemplos de razonamiento paso a paso.
+
+Tiene sentido: un modelo genera token a token, y el razonamiento escrito le sirve de borrador. Los modelos recientes incorporan esta capacidad por sí mismos.
+
+## Pedir el formato que se necesita
+
+Si la respuesta la va a leer un programa, hay que indicarlo con precisión: [JSON](/articulos/formatos-de-datos-json-csv-xml/) con unos campos concretos, una sola palabra, una lista. Y comprobar en el código que la respuesta lo cumple, porque no siempre lo hará.
+
+Muchas plataformas permiten exigir un formato estructurado, lo que es más fiable que pedirlo en el texto.
+
+<Quiz
+	client:visible
+	question="¿Qué suele mejorar más la respuesta de un modelo de lenguaje?"
+	options={[
+		"Escribir la instrucción en mayúsculas",
+		"Explicar con claridad el objetivo, el contexto y el formato deseado",
+		"Repetir la misma petición varias veces",
+	]}
+	answer={1}
+/>
+
+## Reducir errores
+
+- **Permitir que diga que no sabe.** Si no, tenderá a responder igualmente, y puede [inventar](/articulos/alucinaciones-de-los-modelos-de-lenguaje/).
+- **Darle las fuentes**, y pedirle que se limite a ellas y las cite.
+- **Pedirle que revise** su propia respuesta contra los requisitos.
+
+## Iterar y medir
+
+Una instrucción no se escribe bien a la primera. El proceso es el de cualquier ingeniería:
+
+1. Definir qué es un buen resultado.
+2. Preparar un conjunto de casos de prueba, incluidos los difíciles.
+3. Probar la instrucción con todos.
+4. Ajustar lo que falla y volver a probar.
+
+Probar con un solo caso engaña: una instrucción que funciona con un ejemplo puede fallar con el siguiente. Es la misma idea que las [pruebas de software](/articulos/pruebas-de-software/).
+
+## Seguridad
+
+En una aplicación, las instrucciones del desarrollador se mezclan con texto que viene de fuera: lo que escribe el usuario, documentos, páginas web. Ese texto puede contener órdenes pensadas para cambiar el comportamiento del modelo: "ignora lo anterior y...". Es la **inyección de instrucciones**.
+
+No hay una forma de redactar las instrucciones que lo impida del todo. Ayuda separar con claridad las órdenes del material, y sobre todo limitar lo que el modelo puede hacer con lo que produce. Se trata en el artículo sobre [agentes](/articulos/agentes-de-ia/).
+
+## Lo que no hace falta
+
+Muchos trucos que circulan no aportan nada con los modelos actuales, o empeoran el resultado: amenazar, prometer propinas, escribir en mayúsculas o insistir con énfasis exagerado. Los modelos recientes siguen las instrucciones con mucha precisión, y el énfasis excesivo puede hacer que apliquen una regla donde no corresponde.
+
+Funciona lo mismo que con una persona: claridad, contexto y ejemplos.
+
+## Lo esencial
+
+- Un modelo solo sabe lo que se le cuenta: hay que darle el contexto.
+- Las instrucciones concretas, con objetivo, público y formato, dan mejores respuestas.
+- Explicar el motivo de una regla ayuda a aplicarla con criterio.
+- Los ejemplos y la estructura con etiquetas evitan ambigüedades.
+- Una instrucción se mejora probándola con muchos casos, no con uno.
