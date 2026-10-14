@@ -841,43 +841,6 @@ a:hover {
 	color: var(--muted);
 }
 
-.article-list {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.article-list li + li {
-	border-top: 1px solid var(--rule);
-}
-
-.article-list a {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.25rem 1.5rem;
-	padding-block: 1.125rem;
-	color: var(--ink);
-	text-decoration: none;
-}
-
-.article-list a:hover .article-title {
-	color: var(--accent);
-	text-decoration: underline;
-}
-
-.article-title {
-	display: block;
-	font-weight: 600;
-	font-size: 1.1875rem;
-}
-
-.article-meta {
-	font-size: 0.9375rem;
-	color: var(--muted);
-}
-
 .filter-bar {
 	display: flex;
 	flex-wrap: wrap;
@@ -930,6 +893,23 @@ a:hover {
 	border-color: var(--ink);
 }
 
+/* The browser's own clear button, restyled to match and to show it is clickable. */
+.filter-search input::-webkit-search-cancel-button {
+	appearance: none;
+	width: 1.125rem;
+	height: 1.125rem;
+	margin-left: 0.5rem;
+	background-color: var(--muted);
+	mask:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6l-12 12'/%3E%3Cpath d='M6 6l12 12'/%3E%3C/svg%3E")
+		center / contain no-repeat;
+	cursor: pointer;
+}
+
+.filter-search input::-webkit-search-cancel-button:hover {
+	background-color: var(--ink);
+}
+
 /* A native select with its own arrow, so it matches the other controls. */
 .select {
 	position: relative;
@@ -938,7 +918,89 @@ a:hover {
 .select select {
 	appearance: none;
 	padding-right: 2.5rem;
+	font-weight: 500;
 	cursor: pointer;
+}
+
+/* A select with a filter applied stands out from one showing everything. */
+.select select:not(:has(option[value=""]:checked)) {
+	color: var(--on-accent);
+	background: var(--accent-solid);
+	border-color: var(--accent-solid);
+}
+
+.select:has(select:not(:has(option[value=""]:checked)))::after {
+	background-color: var(--on-accent);
+}
+
+.select select:focus-visible {
+	outline: 3px solid var(--accent);
+	outline-offset: 2px;
+}
+
+/*
+ * Customisable select: where supported, the list of options is styled too,
+ * on desktop and on phones. Elsewhere the system picker is used as before.
+ */
+@supports (appearance: base-select) {
+	.select select,
+	.select select::picker(select) {
+		appearance: base-select;
+	}
+
+	.select select {
+		display: flex;
+		align-items: center;
+	}
+
+	.select select::picker-icon {
+		display: none;
+	}
+
+	.select select::picker(select) {
+		margin-top: 0.375rem;
+		padding: 0.25rem;
+		min-width: anchor-size(width);
+		color: var(--ink);
+		background: var(--surface);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
+		box-shadow: 0 10px 30px rgb(16 27 58 / 0.18);
+	}
+
+	.select select option {
+		min-height: 2.75rem;
+		padding: 0.5rem 0.75rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.9375rem;
+		font-weight: 500;
+		color: var(--ink);
+		border-radius: 3px;
+		cursor: pointer;
+	}
+
+	.select select option:hover,
+	.select select option:focus-visible {
+		background: var(--quiet);
+		outline: none;
+	}
+
+	.select select option:checked {
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	.select select option::checkmark {
+		order: 1;
+		margin-left: auto;
+		color: var(--accent);
+	}
+
+	.select:has(select:open)::after {
+		transform: translateY(-50%) rotate(180deg);
+	}
 }
 
 .select::after {
@@ -1079,6 +1141,12 @@ a:hover {
 	color: var(--accent);
 }
 
+.article-card-step {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--accent);
+}
+
 .article-card-title {
 	font-weight: 600;
 	font-size: 1.0625rem;
@@ -1134,8 +1202,8 @@ a:hover {
 	background: var(--quiet);
 }
 
-/* Without JavaScript the first eight stay; with it, eight random ones are kept. */
-.random-articles:not([data-ready]) li:nth-child(n + 9) {
+/* Without JavaScript the first few stay; with it, a random handful is kept. */
+.random-picks:not([data-ready]) li:nth-child(n + 7) {
 	display: none;
 }
 
@@ -1595,9 +1663,10 @@ a:hover {
 		transition: color 120ms ease;
 	}
 
-	.article-title,
 	.site-nav a,
 	.segmented span,
+	.select select,
+	.filter-search input,
 	.more-button {
 		transition:
 			color 120ms ease,
@@ -1633,5 +1702,36 @@ a:hover {
 			color 220ms ease,
 			border-color 220ms ease,
 			fill 220ms ease;
+	}
+}
+
+/* The option list eases in where the customisable select is available. */
+@supports (appearance: base-select) {
+	@media (prefers-reduced-motion: no-preference) {
+		.select::after {
+			transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.select select::picker(select) {
+			opacity: 0;
+			transform: translateY(-0.25rem);
+			transition:
+				opacity 140ms ease,
+				transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+				overlay 140ms allow-discrete,
+				display 140ms allow-discrete;
+		}
+
+		.select select:open::picker(select) {
+			opacity: 1;
+			transform: none;
+		}
+
+		@starting-style {
+			.select select:open::picker(select) {
+				opacity: 0;
+				transform: translateY(-0.25rem);
+			}
+		}
 	}
 }

@@ -10,16 +10,8 @@ import { countByLayer, getArticles } from "@/lib/content";
 
 const articles = await getArticles();
 const paths = await getCollection("paths");
-const featuredIds = [
-	"fundamentos-de-programacion",
-	"fundamentos-de-desarrollo-web",
-	"como-funciona-internet",
-	"como-funciona-un-ordenador",
-];
-const featured = featuredIds.flatMap(
-	(id) => paths.find((path) => path.id === id) ?? [],
-);
-const firstPath = featured[0];
+const firstPath =
+	paths.find((path) => path.id === "fundamentos-de-programacion") ?? paths[0];
 ---
 
 <BaseLayout
@@ -64,57 +56,33 @@ const firstPath = featured[0];
 					Una ruta ordena los artículos para que cada uno se apoye en el anterior.
 				</p>
 			</div>
-			<ul class="path-grid">
-				{
-					featured.map((path) => (
-						<li>
-							<PathCard path={path} />
-						</li>
-					))
-				}
-			</ul>
-			<p><a href="/rutas/">Ver las {paths.length} rutas</a></p>
+			<div class="random-picks" data-random-picks="6">
+				<ul class="path-grid">
+					{
+						paths.map((path) => (
+							<li>
+								<PathCard path={path} />
+							</li>
+						))
+					}
+				</ul>
+			</div>
+			<p class="section-actions">
+				<button class="text-button" type="button" data-shuffle>
+					<Icon name="refresh" />
+					Ver otras seis
+				</button>
+				<a href="/rutas/">Ver las {paths.length} rutas</a>
+			</p>
 		</section>
 
 		<section class="section">
 			<h2>Para leer hoy</h2>
-			<div class="random-articles" data-random-articles>
+			<div class="random-picks" data-random-picks="8">
 				<ul class="card-grid">
 					{articles.map((article) => <ArticleCard article={article} />)}
 				</ul>
 			</div>
-			<script is:inline>
-				// Runs right after the list so only the chosen eight are ever painted.
-				(() => {
-					const box = document.currentScript.previousElementSibling;
-
-					function showEight() {
-						const items = [...box.querySelectorAll("li")];
-
-						for (let i = items.length - 1; i > 0; i--) {
-							const j = Math.floor(Math.random() * (i + 1));
-							[items[i], items[j]] = [items[j], items[i]];
-						}
-
-						// Re-append in shuffled order so the visible eight come first.
-						items.forEach((item, index) => {
-							item.hidden = index >= 8;
-							item.parentElement.append(item);
-						});
-					}
-
-					showEight();
-					box.dataset.ready = "";
-					document.addEventListener("click", (event) => {
-						if (!event.target.closest("[data-shuffle]")) return;
-
-						showEight();
-						box.dispatchEvent(
-							new CustomEvent("devly:content-change", { bubbles: true }),
-						);
-					});
-				})();
-			</script>
 			<p class="section-actions">
 				<button class="text-button" type="button" data-shuffle>
 					<Icon name="refresh" />
@@ -124,4 +92,39 @@ const firstPath = featured[0];
 			</p>
 		</section>
 	</div>
+
+	<script is:inline>
+		// Each "random picks" list keeps a fresh random handful visible. Runs
+		// right after the lists so only the chosen ones are ever painted.
+		for (const box of document.querySelectorAll("[data-random-picks]")) {
+			const list = box.querySelector("ul");
+			const count = Number(box.dataset.randomPicks);
+
+			const pick = () => {
+				const items = [...list.children];
+
+				for (let i = items.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[items[i], items[j]] = [items[j], items[i]];
+				}
+
+				// Re-append in shuffled order so the visible ones come first.
+				items.forEach((item, index) => {
+					item.hidden = index >= count;
+					list.append(item);
+				});
+			};
+
+			pick();
+			box.dataset.ready = "";
+			box.parentElement
+				.querySelector("[data-shuffle]")
+				?.addEventListener("click", () => {
+					pick();
+					box.dispatchEvent(
+						new CustomEvent("devly:content-change", { bubbles: true }),
+					);
+				});
+		}
+	</script>
 </BaseLayout>

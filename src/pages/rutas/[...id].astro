@@ -1,6 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, getEntries } from "astro:content";
-import ArticleList from "@/components/article-list.astro";
+import ArticleCard from "@/components/article-card.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 
 export async function getStaticPaths() {
@@ -33,7 +33,9 @@ if (steps.some((step) => step === undefined)) {
 		</header>
 		<section class="section">
 			<h2>{steps.length === 1 ? "1 paso" : `${steps.length} pasos`}, en orden</h2>
-			<ArticleList articles={steps} />
+			<ol class="card-grid">
+				{steps.map((step, index) => <ArticleCard article={step} step={index + 1} />)}
+			</ol>
 		</section>
 	</div>
 </BaseLayout>

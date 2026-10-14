@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
  * they scroll into view. Anything already on screen when the page loads is
  * left alone, so nothing waits for this script and nothing flashes.
  */
-const ITEMS = ".article-list li, .path-card, .article-card";
+const ITEMS = ".path-card, .article-card";
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 function reveal(targets: Element[]) {

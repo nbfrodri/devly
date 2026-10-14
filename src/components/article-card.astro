@@ -8,9 +8,11 @@ type Props = {
 	article: Article;
 	/** Hidden until the section is expanded or a filter is active. */
 	hidden?: boolean;
+	/** Position in a learning path; shown above the title. */
+	step?: number;
 };
 
-const { article, hidden = false } = Astro.props;
+const { article, hidden = false, step } = Astro.props;
 const { title, description, level, kind } = article.data;
 ---
 
@@ -22,6 +24,7 @@ const { title, description, level, kind } = article.data;
 	hidden={hidden}
 >
 	<a class="article-card" href={`/articulos/${article.id}/`}>
+		{step !== undefined && <span class="article-card-step">Paso {step}</span>}
 		<span class="article-card-title">{title}</span>
 		<span class="article-card-description">{description}</span>
 		<span class="article-card-meta">
