@@ -1,0 +1,160 @@
+---
+title: "¿Qué es Next.js?"
+description: "Next.js es un framework construido sobre React que añade rutas, renderizado en servidor y carga de datos."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-react
+  - spa-mpa-y-renderizado-en-servidor
+updated: 2026-10-13
+sources:
+  - title: "Next.js: documentación oficial (en inglés)"
+    url: https://nextjs.org/docs
+  - title: "Next.js: Server and Client Components (en inglés)"
+    url: https://nextjs.org/docs/app/getting-started/server-and-client-components
+  - title: "React: Componentes de servidor"
+    url: https://es.react.dev/reference/rsc/server-components
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Next.js** es un framework para construir aplicaciones web con [React](/articulos/que-es-react/). React se ocupa de la interfaz; Next.js añade lo que falta para tener una aplicación completa: las rutas, la generación de páginas en el servidor, la carga de datos y el proceso de construcción.
+
+Lo desarrolla la empresa Vercel, y es de código abierto.
+
+## Qué problema resuelve
+
+Con React solo, se obtiene una [aplicación de una sola página](/articulos/spa-mpa-y-renderizado-en-servidor/): el navegador recibe un HTML vacío y lo construye con JavaScript. Eso tiene costes conocidos: la primera carga es lenta y los buscadores pueden no ver el contenido.
+
+Y quedan decisiones por tomar: cómo se definen las rutas, cómo se piden los datos, cómo se divide el código, cómo se optimizan las imágenes.
+
+Next.js responde a todo eso con una estructura ya decidida.
+
+## Rutas a partir de carpetas
+
+No hay un archivo donde se declaren las rutas. La estructura de carpetas **es** el mapa del sitio:
+
+```
+app/
+├── page.tsx                → /
+├── blog/
+│   ├── page.tsx            → /blog
+│   └── [slug]/
+│       └── page.tsx        → /blog/cualquier-cosa
+└── layout.tsx              → marco común de todas las páginas
+```
+
+Una carpeta entre corchetes es un **segmento dinámico**: coincide con cualquier valor, que la página recibe como parámetro.
+
+Un archivo `layout` define lo que comparten varias páginas, como la cabecera. Al navegar entre ellas, se conserva y no se vuelve a dibujar.
+
+## Componentes de servidor y de cliente
+
+Es la idea central del Next.js actual, y la que más cuesta al principio.
+
+Por defecto, un componente es **de servidor**: se ejecuta en el servidor y envía al navegador solo el resultado.
+
+```tsx
+export default async function Pagina() {
+	const articulos = await baseDeDatos.articulos.todos();
+
+	return (
+		<ul>
+			{articulos.map((articulo) => (
+				<li key={articulo.id}>{articulo.titulo}</li>
+			))}
+		</ul>
+	);
+}
+```
+
+El componente es una función asíncrona que consulta la base de datos directamente. No hay una API intermedia. Y su código, con las bibliotecas que use, no se envía al navegador.
+
+Un componente de servidor no puede tener estado ni responder a clics. Para eso se marca un archivo con `"use client"`:
+
+```tsx
+"use client";
+
+import { useState } from "react";
+
+export function BotonMeGusta() {
+	const [activo, setActivo] = useState(false);
+
+	return <button onClick={() => setActivo(!activo)}>Me gusta</button>;
+}
+```
+
+| | De servidor | De cliente |
+| --- | --- | --- |
+| Dónde se ejecuta | Solo en el servidor | En el servidor y en el navegador |
+| Acceso a base de datos y secretos | Sí | No |
+| Estado y eventos | No | Sí |
+| Envía su código al navegador | No | Sí |
+
+La regla práctica: de servidor por defecto, y de cliente solo las piezas interactivas, lo más pequeñas posible. El resultado se parece a la arquitectura de islas: una página generada en el servidor con zonas interactivas.
+
+Un error grave es poner un secreto en un componente de cliente. Todo lo que va ahí llega al navegador, como recuerda el artículo sobre [variables de entorno y secretos](/articulos/variables-de-entorno-y-secretos/).
+
+## Cuándo se genera cada página
+
+Next.js decide por ruta.
+
+- **Estática.** Se genera al construir el sitio y se sirve como un archivo. Lo más rápido.
+- **Dinámica.** Se genera en cada petición, cuando depende de quién la pide: sus cookies, su sesión.
+- **Estática con revalidación.** Se genera una vez y se vuelve a generar cada cierto tiempo, o cuando se le indica.
+
+Una página puede además enviarse por partes: lo que está listo llega enseguida, y lo que tarda se muestra cuando termina, con un indicador de carga mientras tanto.
+
+## Código de servidor sin un back-end aparte
+
+- **Manejadores de ruta.** Archivos que responden a peticiones [HTTP](/articulos/que-es-http/), para ofrecer una [API](/articulos/que-es-una-api/).
+- **Funciones de servidor.** Funciones que se ejecutan en el servidor y se pueden llamar desde un formulario o un componente de cliente, como si fueran locales. Next.js crea la petición por debajo.
+
+Lo segundo es cómodo, y tiene una trampa: una función de servidor es un punto de entrada público. Cualquiera puede llamarla con los datos que quiera. Hay que [comprobar permisos](/articulos/autenticacion-y-autorizacion/) y validar la entrada dentro de ella, igual que en cualquier API.
+
+<Quiz
+	client:visible
+	question="En Next.js, ¿qué puede hacer un componente de servidor que no puede uno de cliente?"
+	options={[
+		"Responder a un clic del usuario",
+		"Consultar la base de datos directamente, sin enviar su código al navegador",
+		"Guardar estado con useState",
+	]}
+	answer={1}
+/>
+
+## Qué más incluye
+
+- **Optimización de imágenes**: tamaños adaptados, formatos modernos y carga diferida.
+- **Tipografías** alojadas con el sitio, sin saltos de texto al cargar.
+- **División de código** automática por ruta.
+- **Precarga** de las páginas a las que apuntan los enlaces visibles.
+- **Middleware**, código que se ejecuta antes de servir una ruta, como explica el artículo sobre [middleware](/articulos/que-es-un-middleware/).
+
+Buena parte se dirige a las [Core Web Vitals](/articulos/rendimiento-web-y-core-web-vitals/).
+
+## Dónde se despliega
+
+- **Como servidor de [Node.js](/articulos/que-es-nodejs/)**, en cualquier máquina o [contenedor](/articulos/que-es-docker/).
+- **En plataformas [serverless](/articulos/que-es-serverless/)**, que es su entorno más habitual.
+- **Como sitio estático**, exportando solo archivos, si no se usan las funciones que necesitan servidor.
+
+## Lo que cuesta
+
+- **Complejidad.** Hay que tener claro qué se ejecuta dónde y cuándo. El mismo proyecto mezcla código de servidor, de cliente y de construcción.
+- **La caché.** Next.js guarda resultados en varios niveles. Cuando una página muestra datos antiguos, averiguar qué capa los retiene lleva tiempo.
+- **Cambia deprisa.** Las formas recomendadas de hacer las cosas han variado bastante entre versiones, y mucha documentación de terceros queda anticuada.
+- **Cercanía a una plataforma.** Funciona en cualquier sitio, pero algunas funciones encajan mejor en la de su creador.
+- **Puede ser demasiado.** Para un sitio de contenido, un generador estático es más simple. Para una aplicación interna tras un inicio de sesión, una SPA también.
+
+## Alternativas
+
+Hay otros frameworks con objetivos parecidos: Remix y React Router, también sobre React; Nuxt, sobre Vue; SvelteKit, sobre Svelte; y Astro, orientado a sitios de contenido con poco JavaScript.
+
+## Lo esencial
+
+- Next.js es un framework que completa a React con rutas, renderizado en servidor y carga de datos.
+- Las rutas se definen con la estructura de carpetas.
+- Los componentes son de servidor por defecto; los interactivos se marcan como de cliente.
+- Cada ruta puede ser estática, dinámica o revalidarse cada cierto tiempo.
+- Aporta mucho a cambio de una complejidad que no todo proyecto necesita.

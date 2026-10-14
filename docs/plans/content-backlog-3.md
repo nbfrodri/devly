@@ -70,21 +70,21 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 
 Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre propio, no solo conceptos.
 
-- [ ] ¿Qué es React? (componentes y estado)
-- [ ] ¿Qué es Next.js? (SPA, MPA y renderizado en servidor)
-- [ ] ¿Qué es Node.js? (promesas y async/await)
+- [x] ¿Qué es React? (componentes y estado)
+- [x] ¿Qué es Next.js? (SPA, MPA y renderizado en servidor)
+- [x] ¿Qué es Node.js? (promesas y async/await)
 - [ ] ¿Qué es TypeScript? (tipado estático y dinámico)
-- [ ] ¿Qué es Redis? (caché)
-- [ ] ¿Qué es PostgreSQL? (SQL)
-- [ ] ¿Qué es MongoDB? (bases de datos NoSQL)
-- [ ] Bases de datos de grafos (grafos)
+- [x] ¿Qué es Redis? (caché)
+- [x] ¿Qué es PostgreSQL? (SQL)
+- [x] ¿Qué es MongoDB? (bases de datos NoSQL)
+- [x] Bases de datos de grafos (grafos)
 - [ ] Bases de datos vectoriales (embeddings)
 - [ ] ¿Qué es Nginx? (proxy inverso)
 
 ## Linux
 
-- [ ] ¿Qué es Linux? El núcleo y el sistema
-- [ ] Distribuciones de Linux: qué las diferencia
+- [x] ¿Qué es Linux? El núcleo y el sistema
+- [x] Distribuciones de Linux: qué las diferencia
 - [ ] La jerarquía de directorios de Linux (sistema de archivos)
 - [ ] ¿Qué es el software libre y el código abierto? (licencias de software)
 

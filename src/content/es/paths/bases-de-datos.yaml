@@ -8,7 +8,11 @@ steps:
   - normalizacion-de-bases-de-datos
   - indices-de-bases-de-datos
   - transacciones-y-acid
+  - que-es-postgresql
   - bases-de-datos-nosql
+  - que-es-mongodb
+  - que-es-redis
+  - bases-de-datos-de-grafos
   - sql-frente-a-nosql
   - teorema-cap
   - replicacion-y-particionado

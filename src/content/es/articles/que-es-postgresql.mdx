@@ -1,0 +1,152 @@
+---
+title: "¿Qué es PostgreSQL?"
+description: "PostgreSQL es un sistema de bases de datos relacional, libre y muy completo, conocido por su fiabilidad y por lo mucho que se puede ampliar."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+  - que-es-sql
+  - transacciones-y-acid
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: About (en inglés)"
+    url: https://www.postgresql.org/about/
+  - title: "PostgreSQL: A Brief History of PostgreSQL (en inglés)"
+    url: https://www.postgresql.org/docs/current/history.html
+  - title: "PostgreSQL: Introduction to MVCC (en inglés)"
+    url: https://www.postgresql.org/docs/current/mvcc-intro.html
+  - title: "PostgreSQL: JSON Types (en inglés)"
+    url: https://www.postgresql.org/docs/current/datatype-json.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**PostgreSQL**, a menudo llamado Postgres, es un sistema gestor de [bases de datos relacionales](/articulos/que-es-una-base-de-datos/) de código abierto. Guarda los datos en tablas, se consulta con [SQL](/articulos/que-es-sql/) y es conocido por tres cosas: su fiabilidad, su fidelidad al estándar y lo mucho que se puede ampliar.
+
+Es una de las bases de datos más usadas, y una opción por defecto razonable para casi cualquier aplicación.
+
+## De dónde viene
+
+Desciende de POSTGRES, un proyecto de investigación que empezó en 1986 en la Universidad de California en Berkeley, dirigido por Michael Stonebraker. En 1994 se le añadió un intérprete de SQL, y en 1996 tomó el nombre actual.
+
+No pertenece a ninguna empresa. Lo desarrolla una comunidad, y su licencia es de las permisivas: se puede usar, modificar y distribuir sin coste, también en productos comerciales.
+
+## Qué ofrece
+
+### Lo que se espera de una base relacional
+
+- **Transacciones [ACID](/articulos/transacciones-y-acid/).** Un conjunto de cambios se aplica entero o no se aplica.
+- **Integridad.** Claves primarias y foráneas, restricciones de unicidad y comprobaciones que la base de datos hace cumplir.
+- **[JOIN](/articulos/tipos-de-join/)**, subconsultas, vistas, funciones de ventana.
+- **[Índices](/articulos/indices-de-bases-de-datos/)** de varios tipos.
+
+Que las reglas las imponga la base de datos, y no solo la aplicación, es lo que impide que un error en el código deje datos incoherentes.
+
+### Tipos de datos ricos
+
+Además de números, texto y fechas:
+
+| Tipo | Para qué sirve |
+| --- | --- |
+| `jsonb` | Documentos [JSON](/articulos/formatos-de-datos-json-csv-xml/), consultables e indexables |
+| Arrays | Varias valores en una columna |
+| `uuid` | Identificadores únicos |
+| Rangos | Intervalos de fechas o números |
+| Geométricos y de red | Puntos, [direcciones IP](/articulos/que-es-una-direccion-ip/) |
+
+## JSON dentro de una base relacional
+
+El tipo `jsonb` guarda documentos y permite consultarlos:
+
+```sql
+CREATE TABLE productos (
+	id SERIAL PRIMARY KEY,
+	nombre TEXT NOT NULL,
+	atributos JSONB
+);
+
+INSERT INTO productos (nombre, atributos)
+VALUES ('Camiseta', '{"talla": "M", "color": "azul"}');
+
+SELECT nombre FROM productos WHERE atributos->>'color' = 'azul';
+```
+
+El operador `->>` extrae un campo del documento como texto.
+
+Esto permite combinar los dos mundos: columnas normales para lo que tiene estructura fija, y un documento para lo que varía. Buena parte de los motivos para elegir una [base de datos de documentos](/articulos/que-es-mongodb/) se cubren así, sin renunciar a las transacciones ni a los JOIN.
+
+## Concurrencia sin bloqueos de lectura
+
+Cuando muchos usuarios leen y escriben a la vez, hay que evitar que se estorben. PostgreSQL usa **control de concurrencia multiversión**, MVCC.
+
+Al modificar una fila no se sobrescribe: se crea **una versión nueva**, y la antigua se conserva un tiempo. Cada transacción ve una instantánea coherente de los datos, la del momento en que empezó.
+
+La consecuencia práctica: **los que leen no bloquean a los que escriben, ni al revés**. Un informe largo no detiene las ventas.
+
+El coste es que las versiones antiguas ocupan sitio. Un proceso llamado `VACUUM` las elimina cuando ya nadie las necesita. Funciona solo, pero en bases con muchas modificaciones conviene vigilarlo.
+
+## No perder datos
+
+Antes de modificar los datos, PostgreSQL anota el cambio en un **registro de escritura anticipada**, o WAL. Si la máquina se apaga a mitad de una operación, al arrancar lee ese registro y deja la base en un estado coherente.
+
+El mismo registro sirve para la [replicación](/articulos/replicacion-y-particionado/): las réplicas lo reciben y aplican los mismos cambios. Y para recuperar la base en un instante concreto del pasado.
+
+## Ampliable
+
+Es su rasgo más distintivo. PostgreSQL permite añadir tipos, funciones, operadores y tipos de índice mediante **extensiones**, sin tocar el núcleo.
+
+- **PostGIS** añade datos geográficos: distancias, áreas, "qué hay a menos de un kilómetro".
+- **pgvector** añade vectores y búsqueda por similitud, para trabajar con [embeddings](/articulos/embeddings/).
+- **Búsqueda de texto completo**, ya incluida, con soporte para varios idiomas.
+
+Así una sola base de datos cubre necesidades que de otro modo exigirían varios sistemas.
+
+<Quiz
+	client:visible
+	question="En PostgreSQL, ¿qué ocurre cuando una transacción lee una tabla mientras otra la modifica?"
+	options={[
+		"La lectura espera a que termine la escritura",
+		"Cada una ve su propia versión coherente de los datos, sin bloquearse",
+		"La base de datos devuelve un error",
+	]}
+	answer={1}
+/>
+
+## Entender una consulta lenta
+
+`EXPLAIN` muestra el **plan de ejecución**: cómo va a obtener la base de datos el resultado.
+
+```sql
+EXPLAIN ANALYZE SELECT * FROM pedidos WHERE cliente_id = 42;
+```
+
+Dice si recorre la tabla entera o usa un índice, y cuánto tarda cada paso. Es la herramienta principal para diagnosticar una consulta lenta, y casi siempre la respuesta es un índice que falta.
+
+## Sus puntos débiles
+
+- **Las conexiones son caras.** Cada una es un [proceso](/articulos/que-es-un-proceso/) del sistema operativo. Unos cientos ya pesan. Las aplicaciones usan un **agrupador de conexiones**, que reparte unas pocas entre muchas peticiones. Es imprescindible con [serverless](/articulos/que-es-serverless/).
+- **Escalar las escrituras es difícil.** Se escala bien en vertical y con réplicas de lectura. Repartir los datos entre varias máquinas no viene incluido, y exige extensiones o sistemas derivados.
+- **Requiere mantenimiento**: vigilar `VACUUM`, los índices, las copias de seguridad. Los servicios gestionados de la nube quitan buena parte.
+- **Cambiar el esquema de una tabla grande** puede bloquearla. Hay que hacerlo con cuidado, como se explica en [estrategias de despliegue](/articulos/estrategias-de-despliegue/).
+
+## Frente a otras
+
+| | PostgreSQL | MySQL | SQLite |
+| --- | --- | --- | --- |
+| Funcionamiento | Servidor | Servidor | Un archivo, dentro de la aplicación |
+| Punto fuerte | Funciones, extensiones, estándar | Sencillez, muy extendida | Sin instalación ni administración |
+| Encaja con | Casi cualquier aplicación | Aplicaciones web clásicas | Móviles, programas de escritorio, pruebas |
+
+## Cuándo elegirla
+
+Casi siempre es una buena respuesta. Empezar con PostgreSQL y añadir otra cosa solo cuando haya un problema concreto que no resuelva es un criterio sensato: una [caché](/articulos/que-es-redis/) para aliviar lecturas, un buscador especializado para búsquedas muy exigentes.
+
+Deja de serlo cuando se necesita repartir un volumen enorme de escrituras entre muchas máquinas, o cuando la base de datos debe ir incrustada en la aplicación.
+
+## Lo esencial
+
+- PostgreSQL es una base de datos relacional de código abierto, fiable y fiel al estándar SQL.
+- Ofrece transacciones ACID, integridad y tipos de datos ricos, incluido JSON.
+- Con MVCC, las lecturas y las escrituras no se bloquean entre sí.
+- Sus extensiones le añaden datos geográficos, vectores y más.
+- Escala muy bien en una máquina; repartir las escrituras entre varias es su límite.

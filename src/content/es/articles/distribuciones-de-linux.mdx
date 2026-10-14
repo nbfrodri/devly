@@ -1,0 +1,151 @@
+---
+title: "¿Qué es una distribución de Linux y en qué se diferencian?"
+description: "Una distribución reúne el núcleo de Linux con el resto del software en un sistema instalable. Se distinguen por su gestor de paquetes, su ritmo de actualización y su público."
+level: basico
+layer: sistemas
+prerequisites:
+  - que-es-linux
+updated: 2026-10-13
+sources:
+  - title: "Debian: Acerca de Debian"
+    url: https://www.debian.org/intro/about.es.html
+  - title: "Debian: Versiones de Debian"
+    url: https://www.debian.org/releases/index.es.html
+  - title: "ArchWiki: Arch Linux"
+    url: https://wiki.archlinux.org/title/Arch_Linux_(Espa%C3%B1ol)
+  - title: "Fedora: Fedora Project documentation (en inglés)"
+    url: https://docs.fedoraproject.org/en-US/project/
+  - title: "Ubuntu: Release cycle (en inglés)"
+    url: https://ubuntu.com/about/release-cycle
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **distribución de Linux**, o *distro*, es un sistema operativo completo y listo para instalar, formado por el núcleo de [Linux](/articulos/que-es-linux/) y una selección de software alrededor: utilidades, gestor de paquetes, servicios y, a menudo, un escritorio. Debian, Ubuntu, Fedora y Arch son distribuciones.
+
+Existen cientos porque casi todas las piezas son libres e intercambiables, y cada proyecto las elige y las configura según sus prioridades.
+
+## Por qué existen
+
+El núcleo solo no se puede usar. Montar un sistema a partir de sus componentes exige descargar el código de cientos de programas, compilarlos, configurarlos y lograr que funcionen juntos.
+
+Una distribución hace ese trabajo: selecciona, compila, prueba, empaqueta y mantiene actualizado el conjunto. Es lo que diferencia un montón de piezas de un sistema que se instala en media hora.
+
+## Qué las distingue
+
+Todas comparten núcleo. Se diferencian en unas pocas decisiones.
+
+### El gestor de paquetes
+
+Un **paquete** es un programa preparado para instalarse, con la lista de lo que necesita. El **gestor de paquetes** lo descarga de un **repositorio**, un almacén mantenido por la distribución, junto con sus dependencias, y lo mantiene al día.
+
+```bash
+sudo apt install git        # Debian, Ubuntu
+sudo dnf install git        # Fedora
+sudo pacman -S git          # Arch
+```
+
+Tres órdenes distintas para lo mismo. El gestor y el formato de paquete son lo que más separa a una familia de otra.
+
+Instalar desde los repositorios de la distribución es, además, una medida de [seguridad](/articulos/que-es-la-ciberseguridad/): los paquetes están firmados y revisados, a diferencia de un instalador bajado de una web cualquiera.
+
+### El ritmo de publicación
+
+| Modelo | Cómo funciona | A favor | En contra |
+| --- | --- | --- | --- |
+| Versiones fijas | Una versión cada cierto tiempo; entre medias, solo correcciones | Estable y previsible | El software envejece |
+| Publicación continua | Actualizaciones constantes, sin versiones | Siempre lo más reciente | Más riesgo de que algo cambie o falle |
+
+En inglés, la publicación continua se llama *rolling release*.
+
+Muchas distribuciones de versiones fijas ofrecen además versiones **de soporte prolongado**, LTS, que reciben correcciones de seguridad durante años. Son lo habitual en servidores.
+
+### El resto
+
+- **El escritorio** que traen por defecto, o ninguno.
+- **Quién está detrás**: una comunidad de voluntarios o una empresa.
+- **Su postura sobre el software no libre**, como ciertos controladores.
+- **Cuánto deciden por ti**: desde un sistema listo para usar hasta uno que montas pieza a pieza.
+
+## Las familias principales
+
+La mayoría de las distribuciones derivan de unas pocas.
+
+### Debian
+
+Una de las más antiguas, de 1993, y mantenida íntegramente por voluntarios. Prioriza la estabilidad y el software libre. Usa paquetes `.deb` y el gestor `apt`.
+
+Mantiene tres ramas: **estable**, la que se publica, muy probada y con software algo antiguo; **en pruebas**, donde se prepara la siguiente; e **inestable**, donde entra lo nuevo.
+
+De Debian deriva **Ubuntu**, de la empresa Canonical, que la hizo más accesible y se convirtió en una de las más usadas, tanto en escritorio como en servidores y en la nube. Publica una versión cada seis meses y una de soporte prolongado cada dos años. De Ubuntu derivan a su vez otras, como **Linux Mint**.
+
+### Red Hat
+
+**Fedora** es la distribución comunitaria, patrocinada por Red Hat. Incorpora pronto las novedades, con una versión nueva cada seis meses aproximadamente.
+
+**Red Hat Enterprise Linux**, RHEL, es el producto comercial, con soporte de pago durante muchos años, muy presente en grandes empresas. **Rocky Linux** y **AlmaLinux** son alternativas gratuitas compatibles con él.
+
+Usan paquetes `.rpm` y el gestor `dnf`.
+
+### Arch
+
+**Arch Linux** es de publicación continua y sigue un principio de simplicidad: instala un sistema mínimo, y el usuario añade y configura lo que quiere. Exige más, y a cambio se entiende lo que hay instalado. Su documentación, la ArchWiki, es una referencia útil con cualquier distribución.
+
+Usa el gestor `pacman`. Hay derivadas que la entregan ya configurada.
+
+### Otras
+
+- **openSUSE**, con una variante de versiones fijas y otra continua.
+- **Alpine**, diminuta. Muy usada como base de imágenes de [contenedores](/articulos/que-es-docker/), porque ocupa unos pocos megabytes.
+- **NixOS**, en la que todo el sistema se describe en un archivo de configuración, de forma declarativa, como en la [infraestructura como código](/articulos/infraestructura-como-codigo/).
+
+| | Debian | Ubuntu | Fedora | Arch |
+| --- | --- | --- | --- | --- |
+| Gestor | apt | apt | dnf | pacman |
+| Modelo | Versiones fijas | Versiones fijas, con LTS | Versiones fijas, frecuentes | Continuo |
+| Detrás | Comunidad | Canonical | Comunidad, con Red Hat | Comunidad |
+| Prioridad | Estabilidad | Facilidad | Novedades | Simplicidad y control |
+
+<Quiz
+	client:visible
+	question="¿Qué comparten todas las distribuciones de Linux?"
+	options={[
+		"El gestor de paquetes",
+		"El núcleo",
+		"El escritorio",
+	]}
+	answer={1}
+/>
+
+## El escritorio no es la distribución
+
+Algo que confunde al llegar: el aspecto del sistema no lo decide la distribución, sino el **entorno de escritorio**, que es un componente más.
+
+GNOME y KDE Plasma son los más extendidos. Hay otros más ligeros, y gestores de ventanas mínimos que solo colocan las ventanas en pantalla.
+
+La misma distribución puede tener un aspecto completamente distinto según el escritorio, y el mismo escritorio se ve casi igual en distribuciones diferentes.
+
+## Paquetes universales
+
+Que cada familia tenga su formato obliga a quien publica un programa a empaquetarlo varias veces. Para evitarlo han surgido formatos que funcionan en cualquier distribución, como Flatpak, Snap y AppImage. Incluyen con el programa lo que necesita y lo ejecutan con cierto aislamiento.
+
+Ocupan más y arrancan algo más despacio. A cambio, el programa llega igual a todas partes y directamente de quien lo hace.
+
+## Cómo elegir
+
+Importa menos de lo que parece. Lo que se aprende en una, la [terminal](/articulos/terminal-y-shell/), los [permisos](/articulos/permisos-y-usuarios/), los [procesos](/articulos/que-es-un-proceso/), sirve en todas.
+
+- **Para empezar en el escritorio**: una con mucha comunidad y documentación, como Ubuntu, Linux Mint o Fedora.
+- **Para un servidor**: una versión de soporte prolongado de Debian o Ubuntu, o una compatible con RHEL. Se busca estabilidad y años de correcciones.
+- **Para un contenedor**: una imagen mínima, como Alpine o las variantes reducidas de Debian.
+- **Para aprender cómo se monta un sistema**: Arch.
+
+En un servidor, la continuidad pesa más que la novedad: nadie quiere que una actualización cambie el comportamiento de algo en producción.
+
+## Lo esencial
+
+- Una distribución reúne el núcleo de Linux y el software necesario en un sistema instalable.
+- Se diferencian sobre todo en el gestor de paquetes y en el ritmo de publicación.
+- Las principales familias son Debian, Red Hat y Arch.
+- Las versiones fijas dan estabilidad; la publicación continua, software reciente.
+- El escritorio es un componente aparte, que no depende de la distribución.

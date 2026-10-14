@@ -1,0 +1,180 @@
+---
+title: "¿Qué es React?"
+description: "React es una biblioteca de JavaScript para construir interfaces a partir de componentes: describes cómo debe verse la interfaz y React actualiza la página."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - componentes-y-estado
+  - el-dom
+  - funciones-de-orden-superior-y-clausuras
+updated: 2026-10-13
+sources:
+  - title: "React: Describir la UI"
+    url: https://es.react.dev/learn/describing-the-ui
+  - title: "React: useState"
+    url: https://es.react.dev/reference/react/useState
+  - title: "React: Sincronizar con Efectos"
+    url: https://es.react.dev/learn/synchronizing-with-effects
+  - title: "React: Pensar en React"
+    url: https://es.react.dev/learn/thinking-in-react
+---
+
+import { Quiz } from "@/components/quiz";
+
+**React** es una biblioteca de JavaScript para construir interfaces de usuario. Su idea es que la interfaz se describe con **componentes**, funciones que devuelven lo que debe verse según unos datos, y que React se encarga de actualizar la página cuando esos datos cambian.
+
+La creó Facebook y la publicó como código abierto en 2013. Es la biblioteca de interfaz más extendida.
+
+## Qué problema resuelve
+
+Modificar el [DOM](/articulos/el-dom/) a mano funciona hasta que la interfaz crece. Entonces cada acción obliga a actualizar varios sitios, y es fácil que lo que se ve deje de coincidir con los datos.
+
+React aplica el modelo que explica el artículo sobre [componentes y estado](/articulos/componentes-y-estado/): no dices **cómo cambiar** la página, sino **cómo debe ser** para el estado actual. De llevarla hasta ahí se ocupa React.
+
+## Componentes y JSX
+
+Un componente es una función de JavaScript que devuelve marcado.
+
+```jsx
+function Saludo({ nombre }) {
+	return <h1>Hola, {nombre}</h1>;
+}
+
+function Pagina() {
+	return (
+		<main>
+			<Saludo nombre="Ana" />
+			<Saludo nombre="Luis" />
+		</main>
+	);
+}
+```
+
+Esa mezcla de etiquetas y JavaScript es **JSX**. No es [HTML](/articulos/que-es-html/): es una sintaxis que una herramienta de construcción convierte en llamadas a funciones normales. Las llaves insertan valores de JavaScript.
+
+`nombre` es una **propiedad**: un dato que el componente recibe de quien lo usa.
+
+Los nombres de los componentes empiezan por mayúscula. Así React los distingue de las etiquetas nativas.
+
+## Estado
+
+Para que un componente recuerde algo entre un dibujado y otro se usa `useState`:
+
+```jsx
+import { useState } from "react";
+
+function Contador() {
+	const [cuenta, setCuenta] = useState(0);
+
+	return (
+		<button onClick={() => setCuenta(cuenta + 1)}>
+			Pulsado {cuenta} veces
+		</button>
+	);
+}
+```
+
+`useState` devuelve el valor actual y una función para cambiarlo. Al llamar a `setCuenta`, React vuelve a ejecutar el componente con el valor nuevo y actualiza la pantalla.
+
+Dos reglas que causan los errores más frecuentes al empezar:
+
+- **El estado no se modifica directamente.** Se usa siempre la función. Asignar a la variable no avisa a React.
+- **Se trata como [inmutable](/articulos/inmutabilidad/).** Para añadir un elemento a una lista se crea otra lista. Si se modifica la misma, React ve el mismo objeto y no repinta.
+
+## Cómo actualiza la página
+
+Volver a ejecutar un componente no reconstruye el DOM entero, que sería lento.
+
+1. El componente devuelve una **descripción** ligera de la interfaz: objetos de JavaScript, no elementos reales.
+2. React la compara con la descripción anterior.
+3. Aplica al DOM solo lo que ha cambiado.
+
+```js
+function diferencias(antes, despues) {
+	return Object.keys(despues).filter((clave) => antes[clave] !== despues[clave]);
+}
+
+const antes = { titulo: "Carrito", total: "10 €" };
+const despues = { titulo: "Carrito", total: "25 €" };
+
+console.log(diferencias(antes, despues).join(" ")); // "total"
+```
+
+El ejemplo reduce la idea al mínimo: de dos descripciones, solo el total es distinto, y solo eso se tocaría. A la descripción en memoria se le ha llamado tradicionalmente **DOM virtual**, y al proceso de comparar, **reconciliación**.
+
+### Las claves
+
+Al dibujar una lista, React necesita saber qué elemento es cuál entre un dibujado y el siguiente. Para eso se da a cada uno una `key` estable y única, normalmente el identificador del dato.
+
+Usar la posición en la lista como clave provoca fallos sutiles cuando los elementos se reordenan o se borran: React cree que el tercero sigue siendo el tercero.
+
+## Hooks
+
+`useState` es un **hook**: una función que conecta un componente con una capacidad de React. Otros habituales:
+
+| Hook | Para qué sirve |
+| --- | --- |
+| `useState` | Recordar un valor |
+| `useEffect` | Sincronizar con algo externo a React |
+| `useRef` | Guardar un valor sin provocar un dibujado, o acceder a un elemento |
+| `useContext` | Leer un dato compartido sin pasarlo por todos los niveles |
+| `useMemo` | Evitar repetir un cálculo costoso |
+
+Tienen una regla: se llaman siempre en el nivel superior del componente, nunca dentro de condiciones o bucles. React los identifica por el orden en que se llaman, y ese orden debe ser el mismo en cada dibujado.
+
+Se pueden escribir hooks propios, que combinan los anteriores, para reutilizar lógica entre componentes.
+
+### Efectos
+
+`useEffect` ejecuta código después del dibujado, para sincronizar el componente con algo que React no controla: una conexión, un temporizador, una biblioteca externa.
+
+Es el hook del que más se abusa. No hace falta un efecto para calcular un dato a partir de otro, ni para reaccionar a un clic: lo primero se calcula durante el dibujado y lo segundo va en el manejador del evento. Un efecto de más suele significar un dibujado de más y un fallo en potencia.
+
+<Quiz
+	client:visible
+	question="¿Qué ocurre al llamar a la función que devuelve useState para cambiar un valor?"
+	options={[
+		"Se modifica el DOM directamente",
+		"React vuelve a ejecutar el componente y aplica al DOM las diferencias",
+		"Se recarga la página",
+	]}
+	answer={1}
+/>
+
+## Una biblioteca, no un framework
+
+React se ocupa de la interfaz. No trae rutas, ni carga de datos, ni un proceso de construcción. Eso lo aporta el ecosistema:
+
+- **Un [empaquetador](/articulos/que-hace-un-empaquetador/)**, para transformar el JSX y preparar el código.
+- **Un framework**, como [Next.js](/articulos/que-es-nextjs/), que añade rutas, renderizado en servidor y carga de datos.
+
+La propia documentación de React recomienda empezar un proyecto nuevo con un framework.
+
+## En el servidor
+
+Los componentes pueden ejecutarse también en el servidor y enviar [HTML](/articulos/spa-mpa-y-renderizado-en-servidor/) ya hecho. Además, React distingue hoy dos clases:
+
+- **Componentes de servidor.** Se ejecutan solo en el servidor. Pueden leer una base de datos directamente y no envían su código al navegador.
+- **Componentes de cliente.** Se ejecutan también en el navegador, y son los que pueden tener estado y responder a eventos.
+
+Necesitan un framework que los soporte.
+
+## Fuera de la web
+
+El mismo modelo sirve para otras plataformas. **React Native** usa componentes de React para producir interfaces nativas en iOS y Android.
+
+## Sus puntos débiles
+
+- **Envía JavaScript.** Una página que podía ser HTML pasa a depender de un programa. Afecta al [rendimiento](/articulos/rendimiento-web-y-core-web-vitals/), sobre todo en móviles modestos.
+- **Hay que elegir muchas cosas.** Rutas, estado, datos, estilos: varias opciones para cada una.
+- **Curva de aprendizaje.** Las [clausuras](/articulos/funciones-de-orden-superior-y-clausuras/), la inmutabilidad y los efectos exigen entender bien JavaScript.
+- **Dibujados de más.** Un cambio de estado en lo alto del árbol vuelve a ejecutar todo lo que cuelga de él. Suele dar igual, hasta que no.
+- **No siempre hace falta.** Para un sitio de contenido con poca interacción, es más de lo necesario.
+
+## Lo esencial
+
+- React es una biblioteca para construir interfaces con componentes.
+- Un componente es una función que devuelve marcado, escrito en JSX.
+- El estado se declara con `useState` y se cambia con su función, nunca directamente.
+- React compara la descripción nueva con la anterior y aplica solo las diferencias.
+- Se ocupa de la interfaz; las rutas y la carga de datos las pone un framework.

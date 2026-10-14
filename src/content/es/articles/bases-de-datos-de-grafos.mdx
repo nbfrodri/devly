@@ -1,0 +1,167 @@
+---
+title: "¿Qué es una base de datos de grafos?"
+description: "Una base de datos de grafos guarda entidades y las relaciones entre ellas como elementos de primera clase, para recorrer conexiones con rapidez."
+level: intermedio
+layer: datos
+prerequisites:
+  - grafos
+  - que-es-una-base-de-datos
+  - tipos-de-join
+updated: 2026-10-13
+sources:
+  - title: "Neo4j: What is a graph database (en inglés)"
+    url: https://neo4j.com/docs/getting-started/graph-database/
+  - title: "Neo4j: Cypher Manual, introduction (en inglés)"
+    url: https://neo4j.com/docs/cypher-manual/current/introduction/
+  - title: "W3C: RDF 1.1 Primer (en inglés)"
+    url: https://www.w3.org/TR/rdf11-primer/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **base de datos de grafos** guarda la información como un [grafo](/articulos/grafos/): un conjunto de **nodos**, que representan cosas, y de **relaciones** que los conectan. Las relaciones no se deducen al consultar, como en una base relacional: se almacenan directamente, y recorrerlas es rápido.
+
+Son un tipo de [base de datos NoSQL](/articulos/bases-de-datos-nosql/), pensado para datos en los que las conexiones importan tanto como los datos mismos.
+
+## Qué problema resuelve
+
+En una red social, la pregunta "¿quiénes son los amigos de los amigos de Ana?" es natural. En una base relacional, las amistades están en una tabla, y cada salto es un [JOIN](/articulos/tipos-de-join/) de esa tabla consigo misma:
+
+- Amigos: un JOIN.
+- Amigos de amigos: dos.
+- Tres niveles: tres.
+
+Cada JOIN busca coincidencias en un índice, y el número de filas intermedias se multiplica en cada salto. A partir de tres o cuatro niveles, la consulta se vuelve lenta y difícil de escribir. Y si la profundidad no se conoce de antemano, como en "¿hay algún camino entre estas dos personas?", SQL se resiste.
+
+En una base de grafos, cada nodo tiene acceso directo a sus vecinos. Saltar de uno a otro cuesta lo mismo sea cual sea el tamaño total de la base: el coste depende de la parte del grafo que se recorre, no de cuántos datos hay.
+
+## El modelo
+
+El más extendido es el **grafo de propiedades**. Tiene tres elementos:
+
+| Elemento | Qué es | Ejemplo |
+| --- | --- | --- |
+| Nodo | Una entidad | Una persona, un producto |
+| Relación | Una conexión con dirección y tipo | `SIGUE`, `COMPRÓ` |
+| Propiedad | Un dato en un nodo o en una relación | El nombre; la fecha de la compra |
+
+Los nodos llevan **etiquetas** que indican qué son: `Persona`, `Producto`.
+
+Que las relaciones tengan propiedades es importante. "Ana compró un teclado el 3 de marzo por 40 euros": la fecha y el precio pertenecen a la compra, no a Ana ni al teclado.
+
+## Consultar dibujando
+
+El lenguaje más conocido es **Cypher**. Sus consultas describen un **patrón**, con una sintaxis que imita un dibujo: los nodos van entre paréntesis y las relaciones son flechas.
+
+```cypher
+MATCH (ana:Persona {nombre: "Ana"})-[:SIGUE]->(amigo)-[:SIGUE]->(otro)
+RETURN otro.nombre
+```
+
+"Encuentra a Ana, a quienes sigue, y a quienes siguen estos." La base de datos busca en el grafo todo lo que encaje con ese dibujo.
+
+Para una profundidad variable basta con indicarla:
+
+```cypher
+MATCH (ana:Persona {nombre: "Ana"})-[:SIGUE*1..4]->(otro)
+RETURN DISTINCT otro.nombre
+```
+
+De uno a cuatro saltos. El equivalente en SQL sería largo y lento.
+
+Por debajo ocurre un recorrido como este:
+
+```js
+const sigue = {
+	ana: ["luis", "marta"],
+	luis: ["pablo"],
+	marta: ["pablo", "sara"],
+	pablo: [],
+	sara: [],
+};
+
+function amigosDeAmigos(persona) {
+	const directos = new Set(sigue[persona]);
+	const resultado = new Set();
+
+	for (const amigo of directos) {
+		for (const otro of sigue[amigo]) {
+			if (otro !== persona && !directos.has(otro)) {
+				resultado.add(otro);
+			}
+		}
+	}
+
+	return [...resultado];
+}
+
+console.log(amigosDeAmigos("ana").join(" ")); // "pablo sara"
+```
+
+Solo se visitan los vecinos de Ana y los vecinos de estos. Da igual que la red tenga cinco personas o cinco millones.
+
+## Para qué se usan
+
+- **Redes sociales.** Quién conoce a quién, sugerencias de contactos.
+- **Recomendaciones.** "Quienes compraron esto también compraron aquello" es un recorrido de dos saltos.
+- **Detección de fraude.** Cuentas que comparten teléfono, dirección o dispositivo forman patrones que en tablas pasan inadvertidos y en un grafo saltan a la vista.
+- **Grafos de conocimiento.** Conceptos y sus relaciones, para buscadores y asistentes. Se combinan con [RAG](/articulos/generacion-aumentada-por-recuperacion/) para dar a un modelo de lenguaje datos conectados, y no solo fragmentos sueltos.
+- **Redes e infraestructura.** Qué depende de qué: si cae este servidor, ¿qué servicios se ven afectados?
+- **Permisos.** Un usuario pertenece a un grupo, que pertenece a otro, que tiene acceso a una carpeta.
+- **Rutas y logística**, con los [algoritmos clásicos de grafos](/articulos/grafos/), como el camino más corto.
+
+<Quiz
+	client:visible
+	question="¿En qué tipo de consulta destaca una base de datos de grafos frente a una relacional?"
+	options={[
+		"Sumar una columna de millones de filas",
+		"Recorrer relaciones a varios saltos de distancia",
+		"Buscar un registro por su clave primaria",
+	]}
+	answer={1}
+/>
+
+## Otro modelo: tripletas
+
+Existe una segunda familia, basada en **RDF**, un estándar del W3C. Todo se expresa como afirmaciones de tres partes: sujeto, predicado y objeto.
+
+```
+Ana    conoce      Luis
+Ana    viveEn      Madrid
+Madrid esCapitalDe España
+```
+
+Se consulta con un lenguaje llamado SPARQL. Está pensado para publicar y enlazar datos entre organizaciones distintas, y se usa en datos abiertos y grafos de conocimiento.
+
+## Frente a una base relacional
+
+| | Relacional | De grafos |
+| --- | --- | --- |
+| Unidad | Fila en una tabla | Nodo y relación |
+| Las relaciones | Se calculan al consultar, con JOIN | Están almacenadas |
+| Esquema | Fijo | Flexible |
+| Destaca en | Agregar y filtrar grandes conjuntos | Recorrer conexiones |
+| Flojea en | Relaciones profundas o de profundidad variable | Agregaciones sobre todos los datos |
+
+## Sus límites
+
+- **No sirven para todo.** "El total de ventas por mes" no es un recorrido: es una agregación sobre todos los datos, y una base relacional lo hace mejor.
+- **Los supernodos.** Un nodo con millones de relaciones, como una celebridad en una red social, hace lento todo recorrido que pase por él.
+- **Repartirlas es difícil.** Cortar un grafo entre máquinas, como en el [particionado](/articulos/replicacion-y-particionado/), obliga a que muchos recorridos crucen de una a otra.
+- **Menos extendidas.** Menos herramientas, menos gente que las conozca, y varios lenguajes de consulta, aunque ya existe un estándar internacional, GQL.
+
+## ¿Hace falta una?
+
+Muchos datos tienen relaciones, y eso no basta para necesitar una base de grafos. Una tienda tiene clientes, pedidos y productos conectados, y funciona bien en tablas.
+
+La señal está en las **preguntas**. Si lo que se pregunta son caminos, alcances y patrones de conexión, a varios saltos o a profundidad desconocida, un grafo encaja. Si son filtros y totales, no.
+
+Hay opciones intermedias: SQL permite consultas recursivas, y existen extensiones que añaden consultas de grafos a bases relacionales como [PostgreSQL](/articulos/que-es-postgresql/). Para un grafo pequeño dentro de una aplicación mayor suelen bastar.
+
+## Lo esencial
+
+- Una base de datos de grafos guarda nodos y relaciones, con propiedades en ambos.
+- Las relaciones están almacenadas, así que recorrerlas no requiere JOIN.
+- Las consultas describen patrones de conexión, como en Cypher.
+- Destacan en redes sociales, recomendaciones, fraude y dependencias.
+- No convienen para agregaciones sobre todos los datos.

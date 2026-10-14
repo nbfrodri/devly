@@ -1,0 +1,165 @@
+---
+title: "¿Qué es Node.js?"
+description: "Node.js es un entorno que ejecuta JavaScript fuera del navegador. Atiende muchas conexiones a la vez con un solo hilo, sin bloquearse al esperar."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - promesas-y-async-await
+  - hilos-y-concurrencia
+  - que-es-un-proceso
+updated: 2026-10-13
+sources:
+  - title: "Node.js: Acerca de Node.js"
+    url: https://nodejs.org/es/about
+  - title: "Node.js: The Node.js Event Loop (en inglés)"
+    url: https://nodejs.org/es/learn/asynchronous-work/event-loop-timers-and-nexttick
+  - title: "Node.js: Don’t Block the Event Loop (en inglés)"
+    url: https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Node.js** es un entorno de ejecución que permite usar JavaScript fuera del navegador: en un servidor, en la [terminal](/articulos/terminal-y-shell/) o en herramientas de desarrollo. No es un lenguaje ni un framework. Es el programa que ejecuta el código.
+
+Lo creó Ryan Dahl en 2009.
+
+## Qué problema resuelve
+
+JavaScript nació dentro del navegador, y durante años no salió de ahí. Node.js lo sacó, uniendo dos piezas:
+
+- **V8**, el motor que ejecuta JavaScript en el navegador Chrome.
+- **Acceso al sistema**: archivos, red, [procesos](/articulos/que-es-un-proceso/). Lo que un navegador prohíbe por seguridad y un servidor necesita.
+
+Pero su aportación principal fue la forma de atender conexiones.
+
+### El modelo anterior
+
+Un servidor web tradicional dedicaba un [hilo](/articulos/hilos-y-concurrencia/) a cada conexión. Si la petición necesitaba consultar una base de datos, ese hilo se quedaba **esperando** la respuesta, sin hacer nada.
+
+Cada hilo ocupa memoria. Con diez mil conexiones abiertas a la vez hacen falta diez mil hilos, casi todos parados.
+
+### El modelo de Node.js
+
+Un solo hilo, que nunca espera. Cuando una operación tarda, Node.js la inicia, anota qué hacer cuando termine y pasa a otra cosa.
+
+Es como un camarero que atiende muchas mesas: toma nota, la lleva a cocina y sigue con otra mesa. No se queda junto a los fogones hasta que el plato sale.
+
+## El bucle de eventos
+
+El mecanismo que lo hace posible es el **bucle de eventos**. Es un ciclo que repite:
+
+1. ¿Hay alguna operación terminada? Ejecuta la función que se dejó pendiente para ella.
+2. ¿Hay temporizadores vencidos? Ejecuta los suyos.
+3. Vuelta a empezar.
+
+```js
+const orden = [];
+
+setTimeout(() => orden.push("temporizador"), 0);
+Promise.resolve().then(() => orden.push("promesa"));
+orden.push("código principal");
+
+await new Promise((resolver) => setTimeout(resolver, 10));
+
+console.log(orden.join(", ")); // "código principal, promesa, temporizador"
+```
+
+El temporizador es de cero milisegundos, y aun así se ejecuta el último. Primero termina el código en curso; después, las [promesas](/articulos/promesas-y-async-await/) resueltas; después, los temporizadores. Nada interrumpe al código que se está ejecutando.
+
+Las operaciones lentas no las hace ese hilo. Las delega: la red, en el [sistema operativo](/articulos/que-es-un-sistema-operativo/); el acceso a archivos, en un pequeño grupo de hilos auxiliares que gestiona una biblioteca llamada libuv. El hilo principal solo recoge los resultados.
+
+## La regla: no bloquear
+
+Un solo hilo significa que, mientras ejecuta algo, no atiende nada más.
+
+Para lo que consiste en esperar, es ideal. Para lo que consiste en calcular, no. Un cálculo que tarda dos segundos detiene el servidor entero dos segundos: todas las demás peticiones esperan.
+
+| Tipo de trabajo | Ejemplo | Encaja |
+| --- | --- | --- |
+| Entrada y salida | Consultar una base de datos, llamar a una API, leer archivos | Muy bien |
+| Cálculo intensivo | Procesar vídeo, cifrar grandes volúmenes, cálculo numérico | Mal |
+
+Para el cálculo existen los **hilos de trabajo**, que lo ejecutan aparte. O se envía a otro servicio mediante una [cola de mensajes](/articulos/colas-de-mensajes/).
+
+Por lo mismo, casi todas las funciones tienen dos versiones, y la que acaba en `Sync` bloquea. En un servidor no se usa.
+
+<Quiz
+	client:visible
+	question="Un servidor de Node.js ejecuta un cálculo de tres segundos en su hilo principal. ¿Qué les pasa a las demás peticiones?"
+	options={[
+		"Se atienden en otros hilos automáticamente",
+		"Esperan: el único hilo está ocupado",
+		"Se rechazan con un error",
+	]}
+	answer={1}
+/>
+
+## Un servidor mínimo
+
+Node.js trae módulos para lo esencial. Con el de HTTP, un servidor son unas líneas:
+
+```javascript
+import { createServer } from "node:http";
+
+const servidor = createServer((peticion, respuesta) => {
+	respuesta.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+	respuesta.end("Hola desde Node.js");
+});
+
+servidor.listen(3000);
+```
+
+La función se ejecuta en cada petición. En la práctica se usa un framework encima, que añade rutas y [middleware](/articulos/que-es-un-middleware/).
+
+Otros módulos integrados: archivos, rutas, criptografía, procesos.
+
+```js
+import path from "node:path";
+
+console.log(path.extname("informe.final.pdf")); // ".pdf"
+console.log(path.basename("/datos/2026/ventas.csv")); // "ventas.csv"
+```
+
+## Módulos y paquetes
+
+El código se organiza en módulos. Conviven dos sistemas:
+
+- **Módulos ES**, con `import` y `export`. El estándar del lenguaje, igual que en el navegador.
+- **CommonJS**, con `require`. El original de Node.js, todavía en mucho código.
+
+Las bibliotecas de terceros se instalan desde **npm**, el registro de paquetes de Node.js, uno de los mayores que existen. El archivo `package.json` declara las dependencias del proyecto, y un archivo de bloqueo fija las versiones exactas para que todos instalen lo mismo.
+
+Esa abundancia es también un riesgo. Un proyecto pequeño puede arrastrar cientos de dependencias indirectas, y cada una es código ajeno que se ejecuta con tus permisos. Los ataques a través de paquetes maliciosos o comprometidos son un problema real de [seguridad](/articulos/que-es-la-ciberseguridad/).
+
+## Para qué se usa
+
+- **Servidores y [API](/articulos/que-es-una-api/)**, sobre todo las que manejan muchas conexiones con poco cálculo.
+- **Tiempo real**: chats, notificaciones, con [WebSockets](/articulos/websockets/).
+- **Herramientas de desarrollo.** Casi todo el instrumental del front-end, [empaquetadores](/articulos/que-hace-un-empaquetador/) incluidos, se ejecuta sobre Node.js. Se usa aunque el servidor esté en otro lenguaje.
+- **Renderizado en servidor** de frameworks como [Next.js](/articulos/que-es-nextjs/).
+- **Scripts y utilidades** de línea de comandos.
+
+## Qué se gana
+
+- **Un solo lenguaje** en el navegador y en el servidor. Se comparte código y conocimiento.
+- **Muchas conexiones con pocos recursos.**
+- **Un ecosistema enorme.**
+
+## Sus puntos débiles
+
+- **El cálculo intensivo**, por lo ya dicho.
+- **Un solo núcleo por proceso.** Para aprovechar una máquina con varios [procesadores](/articulos/como-funciona-un-procesador/) se lanzan varios procesos, lo que encaja con el [escalado horizontal](/articulos/escalado-vertical-y-horizontal/).
+- **JavaScript no comprueba tipos.** Los errores aparecen al ejecutar. Por eso casi todos los proyectos serios usan TypeScript, como explica [tipado estático y dinámico](/articulos/tipado-estatico-y-dinamico/).
+- **Un error sin tratar detiene el proceso.** Hay que [manejar los errores](/articulos/manejo-de-errores-y-excepciones/), y en especial las promesas rechazadas.
+
+## Alternativas
+
+Existen otros entornos para ejecutar JavaScript en el servidor, como Deno, del mismo creador, y Bun. Buscan más velocidad, permisos más estrictos o TypeScript sin configuración, y son en buena medida compatibles con el código de Node.js.
+
+## Lo esencial
+
+- Node.js ejecuta JavaScript fuera del navegador, sobre el motor V8.
+- Usa un solo hilo y un bucle de eventos: inicia las operaciones lentas y no espera a que terminen.
+- Es muy eficiente para la entrada y salida, y malo para el cálculo intensivo.
+- Bloquear el hilo principal detiene todo el servidor.
+- npm le da un ecosistema enorme, que hay que usar con cuidado.

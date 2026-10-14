@@ -1,0 +1,186 @@
+---
+title: "¿Qué es Redis?"
+description: "Redis es un almacén de datos que vive en memoria. Es rapidísimo y se usa para cachés, sesiones, contadores y colas."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-una-cache
+  - bases-de-datos-nosql
+  - tablas-hash
+updated: 2026-10-13
+sources:
+  - title: "Redis: Data types (en inglés)"
+    url: https://redis.io/docs/latest/develop/data-types/
+  - title: "Redis: Persistence (en inglés)"
+    url: https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/
+  - title: "Redis: Get started (en inglés)"
+    url: https://redis.io/docs/latest/develop/get-started/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Redis** es un almacén de datos que guarda la información en la memoria [RAM](/articulos/memoria-ram-y-almacenamiento/), en lugar de en disco. Funciona como un gran diccionario: a cada **clave** le corresponde un **valor**. Eso lo hace extremadamente rápido, y lo convierte en la herramienta habitual para cachés, sesiones, contadores y colas.
+
+Es una [base de datos NoSQL](/articulos/bases-de-datos-nosql/) del tipo clave-valor.
+
+## Qué problema resuelve
+
+Una base de datos tradicional guarda los datos en disco y está pensada para consultas complejas. Es fiable, y cada operación cuesta del orden de milisegundos.
+
+Hay datos que se leen miles de veces por segundo y que no necesitan nada de eso: la sesión de un usuario, el resultado de una consulta cara, un contador de visitas. Para ellos, lo que importa es la velocidad.
+
+La memoria es miles de veces más rápida que el disco. Redis guarda todo ahí y responde en menos de un milisegundo.
+
+## Claves y valores
+
+Las operaciones básicas son guardar, leer y borrar por clave:
+
+```
+SET usuario:42:nombre "Ana"
+GET usuario:42:nombre
+DEL usuario:42:nombre
+```
+
+Los dos puntos en las claves son una convención para organizarlas. Redis no los interpreta.
+
+Por dentro, la búsqueda por clave es la de una [tabla hash](/articulos/tablas-hash/): cuesta lo mismo con mil claves que con mil millones.
+
+## Más que texto: las estructuras
+
+Lo que distingue a Redis de un simple diccionario es que los valores pueden ser estructuras de datos, con operaciones propias que se ejecutan en el servidor.
+
+| Tipo | Qué es | Uso típico |
+| --- | --- | --- |
+| Cadena | Texto, número o datos binarios | Caché, contadores |
+| Lista | Secuencia ordenada | Colas, últimos elementos |
+| Conjunto | Elementos sin repetir | Etiquetas, usuarios únicos |
+| Hash | Campos y valores, como un objeto | Los datos de un usuario |
+| Conjunto ordenado | Elementos con una puntuación | Clasificaciones, prioridades |
+| Flujo | Registro de eventos al que se añade | Mensajería |
+
+Un contador:
+
+```
+INCR visitas:portada
+```
+
+`INCR` suma uno y devuelve el resultado. Es **atómico**: si mil clientes lo ejecutan a la vez, el contador sube exactamente mil. Sin esa garantía, dos clientes podrían leer el mismo valor y escribir el mismo resultado, la [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) clásica.
+
+Una clasificación, con un conjunto ordenado:
+
+```
+ZADD puntos 150 "ana" 90 "luis" 210 "marta"
+ZREVRANGE puntos 0 1
+```
+
+Devuelve los dos primeros, Marta y Ana, ya ordenados. Redis mantiene el orden a medida que cambian las puntuaciones.
+
+## Caducidad
+
+A cualquier clave se le puede poner un tiempo de vida. Cuando vence, Redis la borra.
+
+```
+SET sesion:8f3a "usuario 42" EX 3600
+```
+
+Esa sesión desaparece al cabo de una hora. Este programa imita el mecanismo:
+
+```js
+const almacen = new Map();
+
+function guardar(clave, valor, segundos, ahora) {
+	almacen.set(clave, { valor, caduca: ahora + segundos });
+}
+
+function leer(clave, ahora) {
+	const entrada = almacen.get(clave);
+
+	if (!entrada || entrada.caduca <= ahora) {
+		almacen.delete(clave);
+		return null;
+	}
+
+	return entrada.valor;
+}
+
+guardar("sesion:42", "ana", 60, 0);
+
+console.log(leer("sesion:42", 30)); // "ana"
+console.log(leer("sesion:42", 61)); // null
+```
+
+La caducidad es lo que hace a Redis tan adecuado para una [caché](/articulos/que-es-una-cache/): los datos antiguos se eliminan solos.
+
+## Para qué se usa
+
+- **Caché.** Se guarda el resultado de una operación cara. La siguiente vez se lee de Redis y no se repite.
+- **Sesiones.** Con varios servidores tras un [balanceador](/articulos/balanceador-de-carga/), las [sesiones](/articulos/sesiones-y-tokens/) deben estar en un sitio común y rápido.
+- **Limitación de peticiones.** Un contador por cliente, con caducidad, como se describe en [limitación de peticiones](/articulos/limitacion-de-peticiones/).
+- **Colas de trabajo.** Las listas permiten añadir por un extremo y retirar por el otro, la base de una [cola de mensajes](/articulos/colas-de-mensajes/) sencilla.
+- **Publicación y suscripción**, para avisar en el momento a los clientes conectados.
+- **Clasificaciones y contadores** en tiempo real.
+- **Bloqueos** entre varios servidores, para que solo uno haga una tarea.
+
+<Quiz
+	client:visible
+	question="¿Por qué Redis responde mucho más rápido que una base de datos tradicional?"
+	options={[
+		"Porque comprime los datos",
+		"Porque guarda los datos en memoria en lugar de en disco",
+		"Porque solo admite un usuario a la vez",
+	]}
+	answer={1}
+/>
+
+## Un solo hilo
+
+Redis ejecuta las órdenes de una en una, en un solo [hilo](/articulos/hilos-y-concurrencia/). Parece un límite, y es una ventaja:
+
+- **Cada orden es atómica.** No hay dos ejecutándose a la vez, así que no necesita bloqueos.
+- **Es rápido de todos modos**, porque las operaciones en memoria duran microsegundos.
+
+La consecuencia es la misma que en [Node.js](/articulos/que-es-nodejs/): una orden lenta detiene a todas las demás. Pedir todas las claves de una base grande con `KEYS *` puede dejar el servidor sin responder. En producción se evita.
+
+## ¿Y si se apaga?
+
+La memoria se pierde al cortarse la corriente. Redis ofrece dos formas de guardar en disco:
+
+| Mecanismo | Cómo funciona | Qué se puede perder |
+| --- | --- | --- |
+| Instantáneas | Vuelca toda la memoria a un archivo cada cierto tiempo | Lo escrito desde la última |
+| Registro de órdenes | Anota cada escritura en un archivo | Como mucho, el último segundo |
+
+Se pueden combinar. Aun así, la durabilidad de Redis es más débil que la de una base de datos con [transacciones ACID](/articulos/transacciones-y-acid/).
+
+Para una caché no importa: si se pierde, se reconstruye. Para datos que no existen en ningún otro sitio, hay que pensarlo.
+
+## Cuando la memoria se llena
+
+La memoria es limitada, y más cara que el disco. Se configura un máximo y una **política de expulsión**: qué borrar para hacer sitio. Lo habitual en una caché es eliminar lo que lleva más tiempo sin usarse.
+
+Sin esa configuración, Redis rechaza las escrituras cuando se llena.
+
+## Varias máquinas
+
+- **Réplicas.** Copias que siguen a un servidor principal, para repartir lecturas y sustituirlo si falla.
+- **Clúster.** Los datos se reparten entre varias máquinas según la clave.
+
+Son la [replicación y el particionado](/articulos/replicacion-y-particionado/) de cualquier base de datos distribuida.
+
+## Lo que no es
+
+- **No sustituye a la base de datos principal.** No tiene consultas flexibles ni relaciones: se busca por clave, y poco más. La información importante vive en una base como [PostgreSQL](/articulos/que-es-postgresql/), y Redis la acompaña.
+- **No es gratis.** Todo ocupa RAM.
+- **Introduce datos duplicados.** Una caché puede quedar desactualizada respecto al original. Decidir cuándo invalidarla es la parte difícil.
+
+## Licencia y alternativas
+
+Redis cambió sus condiciones de licencia en 2024, y de ahí surgió Valkey, una bifurcación mantenida por la Linux Foundation. Hay otros almacenes compatibles con su protocolo. Para quien los usa, las órdenes son las mismas.
+
+## Lo esencial
+
+- Redis guarda los datos en memoria, como pares de clave y valor.
+- Sus valores pueden ser listas, conjuntos, hashes y otras estructuras.
+- Las claves pueden caducar solas, lo que lo hace ideal como caché.
+- Ejecuta las órdenes de una en una, así que cada una es atómica.
+- Acompaña a la base de datos principal; no la reemplaza.
