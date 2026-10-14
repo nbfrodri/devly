@@ -26,6 +26,18 @@ Eso tampoco permite representar cualquier separación de entradas sin cambiar el
 
 El artículo original estudia una arquitectura y un marco más amplios que una fórmula aislada de un manual moderno; no conviene tratarlos como descripciones idénticas en todos sus detalles.
 
+## Una corrección y un límite visible
+
+En una versión elemental moderna, la salida vale uno cuando la suma ponderada más un sesgo supera un umbral. Si el resultado es incorrecto, una regla de aprendizaje modifica los pesos según la entrada y el error. Para una entrada activa clasificada como cero cuando debía ser uno, aumentar su contribución puede acercar la próxima respuesta al resultado deseado.
+
+Con dos entradas binarias, la operación AND admite una frontera lineal: solo el punto `(1, 1)` debe producir uno y puede separarse de los otros tres con una recta. XOR exige uno para `(0, 1)` y `(1, 0)`, y cero para `(0, 0)` y `(1, 1)`. Ninguna recta separa esas dos parejas diagonales.
+
+El fallo con XOR no se arregla esperando más iteraciones de la misma unidad lineal. Falta capacidad de representación. Añadir características transformadas o utilizar una arquitectura con unidades intermedias cambia el espacio de decisiones posible; también cambia el problema que se está resolviendo.
+
+Esto distingue dos dificultades que suelen confundirse: no haber encontrado todavía buenos parámetros y no existir parámetros capaces de representar la respuesta con ese modelo. La primera puede depender del entrenamiento; la segunda requiere cambiar la representación o la arquitectura. Es una forma concreta de entender qué significa conocer los límites de un aprendiz.
+
+El ejemplo de AND y XOR explica el modelo elemental actual. No pretende reconstruir todos los componentes del sistema experimental descrito por Rosenblatt en 1958.
+
 ## Un límite no es toda una historia
 
 Que un modelo tenga límites no elimina el valor de lo que puede aprender. Tampoco basta una limitación del perceptrón para explicar por sí sola los [inviernos de la IA](/articulos/los-inviernos-de-la-ia/), donde intervinieron expectativas, recursos y decisiones de financiación.

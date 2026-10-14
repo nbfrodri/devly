@@ -23,6 +23,16 @@ El plan incluía instalaciones previas, servicios que debían estar disponibles,
 
 Esa dificultad también aparece cuando hoy migras una API o un formato de mensajes. Hay que identificar productores, consumidores y servicios auxiliares, además de probar qué ocurre al retirar el mecanismo viejo.
 
+## Qué se estaba cambiando
+
+NCP servía para la comunicación entre hosts de ARPANET. TCP/IP respondía a una necesidad más amplia: comunicar equipos a través de distintas redes. IP proporcionaba un servicio de datagramas entre redes y TCP podía construir sobre él una comunicación fiable para las aplicaciones que la necesitaran.
+
+La transición afectaba a más que el programa que enviaba paquetes. Hacían falta implementaciones en los sistemas operativos y servicios utilizables, como transferencia de archivos y acceso remoto, para que una máquina no estuviera «migrada» solo en una prueba aislada.
+
+El RFC 801 establecía etapas anteriores a la fecha final y periodos de prueba sin NCP. Retirar temporalmente el mecanismo viejo permitía descubrir dependencias que permanecían ocultas mientras ambos funcionaban. Si una aplicación seguía utilizándolo sin que su equipo lo supiera, una prueba de TCP satisfactoria en otro servicio no demostraba que pudiera retirarse NCP.
+
+Es la diferencia entre comprobar que existe una alternativa y comprobar que ya no necesitas la anterior. En una migración actual de API, probar el endpoint nuevo responde la primera pregunta; observar consumidores y ensayar la retirada responde la segunda. La fecha común coordina el corte, pero la preparación previa es lo que permite llegar a ella con evidencia.
+
 ## Una fecha no es toda la historia
 
 El RFC documenta un plan, no un registro exhaustivo del estado final de cada máquina. Tampoco significa que aquel día nacieran de golpe todas las redes o todos los servicios de internet. Existían desarrollos anteriores y siguieron cambiando después.

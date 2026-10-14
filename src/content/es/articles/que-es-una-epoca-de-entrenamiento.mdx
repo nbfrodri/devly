@@ -15,7 +15,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Una **época** es una **pasada completa por todo el conjunto de entrenamiento**, de forma que cada ejemplo se ha procesado una vez. Un modelo no aprende de una sola pasada: se entrena durante varias épocas, y en cada una ajusta un poco más sus [parámetros](/articulos/que-es-un-parametro-de-un-modelo/).
+Una **época** es una **pasada completa por todo el conjunto de entrenamiento**, de forma que cada ejemplo se ha procesado una vez en el recorrido ordinario. Un modelo puede entrenarse durante varias épocas, ajustando sus [parámetros](/articulos/que-es-un-parametro-de-un-modelo/) a medida que procesa los ejemplos. Necesitar más de una depende del modelo, del procedimiento y de los datos.
 
 ## Épocas, lotes e iteraciones
 
@@ -42,12 +42,14 @@ Un lote mayor suele exigir más memoria para las activaciones y puede aprovechar
 
 Si la cantidad de ejemplos no es divisible por el tamaño de lote, hay que decidir si se conserva un último lote más pequeño o se descarta. Además, la **acumulación de gradientes** puede combinar varios minilotes antes de actualizar. En ese caso, «lotes procesados» y «actualizaciones del optimizador» dejan de coincidir uno a uno. Declara siempre qué convención utiliza tu entrenamiento.
 
+Con 103 ejemplos y lotes de veinte, conservar el último produce seis lotes: cinco de veinte y uno de tres. Si descartas ese último, procesas cien ejemplos y debes precisar qué significa entonces tu contador de épocas. Si acumulas dos minilotes por actualización, los seis lotes pueden producir tres actualizaciones; combinar sus gradientes requiere ponderar correctamente el lote pequeño para no darle el mismo peso que a uno de veinte sin querer.
+
 ## Cuántas épocas
 
 Es un [hiperparámetro](/articulos/que-es-un-hiperparametro/):
 
-- **Pocas**: el modelo no ha aprendido lo suficiente, **subajuste**.
-- **Demasiadas**: memoriza los ejemplos de entrenamiento y empeora con datos nuevos, **sobreajuste**, como explica [sobreajuste y subajuste](/articulos/sobreajuste-y-subajuste/).
+- **Pocas** pueden dejar un ajuste insuficiente si el aprendizaje todavía mejora.
+- **Demasiadas** pueden aumentar el **sobreajuste**: mejora el entrenamiento y empeoran los datos nuevos, como explica [sobreajuste y subajuste](/articulos/sobreajuste-y-subajuste/).
 
 La práctica habitual es medir el error con datos de validación al final de cada época y **parar** cuando deja de mejorar, aunque el error de entrenamiento siga bajando.
 
@@ -60,4 +62,4 @@ La práctica habitual es medir el error con datos de validación al final de cad
 
 - Una época es una pasada completa por todos los ejemplos de entrenamiento.
 - Una época tiene tantas iteraciones como lotes caben en los datos.
-- Demasiadas épocas llevan al sobreajuste; se para cuando deja de mejorar la validación.
+- La validación ayuda a decidir cuándo continuar y cuándo detener el entrenamiento; más épocas no garantizan mejor generalización.

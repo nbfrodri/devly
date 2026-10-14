@@ -52,6 +52,16 @@ No basta con revisar el total al terminar el mes. La **tasa de consumo** muestra
 
 La política debe incluir excepciones razonadas, como corregir una vulnerabilidad urgente. El presupuesto informa una decisión de ingeniería; no es una prohibición automática de cualquier despliegue.
 
+## Leer la velocidad de consumo
+
+Si el objetivo permite un 0,1 % de peticiones malas y en la última hora falla un 1 %, la tasa de consumo es diez veces la sostenible: `1 / 0,1 = 10`. Se suele llamar **burn rate** a esa relación entre la proporción observada de eventos malos y la permitida por el SLO.
+
+Con tráfico uniforme y un objetivo de treinta días, mantener ese ritmo agotaría en tres días el presupuesto completo de esa ventana. Si solo quedaba la mitad, se gastaría antes. El cálculo no predice el futuro: muestra las consecuencias de sostener el ritmo actual bajo esas condiciones.
+
+Una alerta muy corta responde rápido, pero puede dispararse por pocos errores; una ventana larga estabiliza la señal, pero tarda en reaccionar. Comparar ventanas corta y larga permite distinguir un pico ya terminado de un deterioro que continúa. Los umbrales deben considerar volumen y experiencia del usuario, no copiarse como constantes universales.
+
+También puedes tener un SLO de éxito y otro de latencia. Una petición correcta que tarda demasiado puede consumir el segundo sin consumir el primero. Cada presupuesto necesita su definición de evento bueno; sumarlos sin distinguir unidades oculta qué compromiso se ha incumplido.
+
 ## Elegir un objetivo útil
 
 Prometer el 100 % deja presupuesto cero y no elimina los fallos reales. Un objetivo extremadamente alto puede exigir una complejidad y un coste que no aporten valor proporcional. Debe basarse en necesidades de quienes utilizan el servicio y en lo que se puede medir de forma fiable.

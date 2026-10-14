@@ -17,6 +17,18 @@ El **Therac-25** era una máquina de radioterapia implicada en varios accidentes
 
 Su investigación describe problemas de sincronización en software con acceso concurrente a variables compartidas. Las comprobaciones y modificaciones no siempre formaban operaciones indivisibles; ciertas secuencias de edición podían dejar estados incompatibles con la configuración real de la máquina.
 
+## Reconstruir los accidentes de Tyler
+
+En marzo y abril de 1986 hubo dos accidentes en Tyler, Texas. La investigación describe una secuencia de edición rápida: la operadora introducía un modo de tratamiento y después lo corregía de rayos X a electrones. Cambiar el dato en pantalla no garantizaba que todas las tareas de configuración volvieran a ejecutarse de forma coherente.
+
+El físico del hospital, Fritz Hager, trabajó con la operadora para reproducir la secuencia. La rapidez de edición resultó decisiva. Una prueba realizada despacio podía terminar con los mismos valores visibles y no provocar el fallo. Esa diferencia permitió acotar un problema que las comprobaciones anteriores no habían reproducido.
+
+El software coordinaba entrada de datos y preparación del equipo mediante tareas y variables compartidas. La sincronización defectuosa permitía avanzar con una combinación incompatible de parámetros y estado físico. No era simplemente que la persona hubiese elegido una dosis excesiva: una operación habitual de corrección podía llevar al sistema a una configuración peligrosa.
+
+La consola mostró el mensaje «Malfunction 54», cuya explicación no ofrecía a la operadora una descripción útil de la sobredosis. El monitor también podía mostrar una dosis aparentemente baja. Esa información favorecía interpretar la parada como otra interrupción recuperable, en lugar de reconocer lo ocurrido.
+
+Estos dos casos no explican mediante una única carrera todos los accidentes del Therac-25. El estudio distingue diferentes defectos y muestra por qué hay que reconstruir cada secuencia antes de generalizar una causa.
+
 ## El orden también es una entrada
 
 Dos interacciones con los mismos valores pueden producir resultados distintos si cambian el orden y el momento de los pasos. Esa es una razón por la que una [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) no se descubre necesariamente probando una lista de datos válidos una vez.

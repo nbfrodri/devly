@@ -150,10 +150,16 @@ Un snapshot puede compartir bloques, cuenta o infraestructura con el origen, o a
 
 Puedes combinar las tres técnicas. La decisión se comprueba restaurando y midiendo los objetivos de pérdida de datos y tiempo de recuperación, no únicamente verificando que existe un archivo llamado copia.
 
+Supón una tabla borrada por error a las diez. La réplica aplica el borrado segundos después: puede seguir ofreciendo servicio y carecer ya de la tabla. Un snapshot de las nueve conserva un punto anterior, si su implementación y retención permiten restaurarlo. Una copia independiente de la noche anterior conserva otro punto, quizá más antiguo, pero fuera del alcance del fallo que afectó al almacenamiento principal.
+
+Ahora cambia el incidente: falla el servidor, pero los datos siguen correctos en otra réplica. Promocionarla puede recuperar el servicio antes que restaurar una copia completa. Son fallos diferentes y las técnicas aportan ventajas distintas.
+
+La recuperación necesita comprobar también lo que se pierde entre el punto conservado y el incidente. Una copia más un registro de cambios puede permitir avanzar hasta un instante anterior al borrado. Sin ese historial, restaurar a las nueve recupera la tabla y pierde cambios válidos posteriores. La decisión debe incluir cómo se reconciliarán.
+
 ## Lo esencial
 
 - Una copia de seguridad sirve si se puede restaurar; hay que probarlo.
 - La replicación y los RAID no son copias de seguridad: replican también los errores.
-- La regla 3-2-1, con una copia inmutable o desconectada, protege contra casi todo.
+- La regla 3-2-1 y copias inmutables o desconectadas reducen riesgos distintos; hay que comprobar su independencia y restauración.
 - El RPO fija cuántos datos se pueden perder; el RTO, cuánto tiempo sin servicio.
 - Las copias se cifran y se protegen como los datos originales.

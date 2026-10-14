@@ -63,6 +63,16 @@ Observar durante más tiempo permite una rejilla más fina manteniendo la frecue
 
 **¿Una FFT más larga siempre descubre dos tonos cercanos?** No. Importan la duración real observada, el ruido, la ventana y la separación de los tonos.
 
+## Leer amplitud y fase en el cálculo
+
+En cada componente, el código multiplica la señal por un coseno y por un seno, y acumula los productos. Si la oscilación de referencia coincide con una componente de la señal, los productos refuerzan una contribución; si no coincide, las partes positivas y negativas pueden cancelarse. Es una forma de medir semejanza con oscilaciones de frecuencia conocida.
+
+La parte real y la imaginaria guardan dos proyecciones complementarias. Su combinación permite representar también un tono desplazado en el tiempo, no solo un coseno que empieza en su máximo. La magnitud resume su tamaño; la fase conserva ese desplazamiento relativo.
+
+Para ver el efecto de la duración, supón una grabación a 8000 muestras por segundo. Con 800 muestras observas 0,1 segundos y la separación entre componentes es de 10 Hz. Con 8000 muestras observas un segundo y baja a 1 Hz. Añadir 7200 ceros al primer fragmento produce más posiciones en la gráfica, pero sigue habiendo solo 0,1 segundos de señal observada.
+
+Dos picos que aparecen más suaves tras añadir ceros no son evidencia de mayor resolución física. Debes distinguir la rejilla calculada del intervalo real durante el que obtuviste información.
+
 ## Ventanas y fuga espectral
 
 Una grabación es un fragmento finito. Si su final y su inicio no encajan con la extensión periódica implícita del análisis, la energía de una componente se reparte entre varias posiciones. Se llama **fuga espectral**.

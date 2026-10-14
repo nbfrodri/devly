@@ -45,6 +45,16 @@ Cuando transcurre la espera, no conviene enviar de golpe toda la carga acumulada
 
 **¿Qué significa un circuito cerrado?** Que deja pasar las llamadas, no que bloquea. La metáfora eléctrica puede resultar confusa si olvidas esa convención.
 
+## Una política con números
+
+Supón una política didáctica: observar veinte resultados, abrir cuando al menos diez sean fallos de dependencia, esperar treinta segundos y admitir una prueba en estado semiabierto. Un error de validación del cliente no cuenta como fallo de salud; un timeout sí. Estas decisiones forman parte de la configuración, no de la definición universal del patrón.
+
+Si se registran doce timeouts entre veinte llamadas, abre el circuito. La siguiente petición falla inmediatamente o utiliza la alternativa acordada; no espera otro timeout. Tras treinta segundos se admite una prueba. Si todavía falla, vuelve a comenzar la espera. Si tiene éxito, esta política concreta cierra el circuito; otra podría exigir varios éxitos antes de recuperar toda la carga.
+
+Durante la apertura aún pueden terminar llamadas iniciadas antes. Su resultado no debe provocar transiciones accidentales: una implementación necesita coordinar el estado y distinguir esas observaciones de las pruebas de recuperación. Por esa razón un booleano global que se activa ante cualquier excepción no implementa todo el patrón.
+
+Mide por separado llamadas reales fallidas y llamadas rechazadas por el circuito. Si mezclas ambas, parecerá que la dependencia sigue fallando miles de veces aunque ya no estés enviándole peticiones. Si no registras rechazos, parecerá que el problema desapareció al dejar de observarla.
+
 ## Elegir la degradación
 
 Una **alternativa de respaldo**, o *fallback*, debe respetar el significado del producto. Mostrar recomendaciones genéricas puede servir. Responder «pago completado» cuando no pudiste comprobar el pago sería inventar un resultado.

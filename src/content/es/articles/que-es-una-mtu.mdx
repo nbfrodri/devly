@@ -30,3 +30,5 @@ Si los mensajes necesarios no llegan, pueden aparecer fallos extraños: una cone
 ## MTU no es MSS
 
 La **MSS** de TCP limita los datos de un segmento TCP; no incluye sus cabeceras ni las de IP. La MTU se refiere al paquete transportado por el enlace. Restar las cabeceras relaciona ambos valores, pero debes tener en cuenta opciones y encapsulaciones: no siempre basta con memorizar una resta fija.
+
+Con MTU 1500, una cabecera IPv4 de 20 bytes y otra TCP de 20, caben 1460 bytes de datos TCP en ese caso simple. No son 1500 bytes de contenido de aplicación: si encima hay TLS u otro protocolo, sus datos de control también ocupan espacio. Un túnel añade otra capa exterior y puede reducir el tamaño interior disponible. Antes de restar, identifica a qué capa pertenece el límite que estás midiendo.

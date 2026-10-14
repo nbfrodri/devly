@@ -54,6 +54,10 @@ Si A pasa diez milisegundos esperando una respuesta, el único núcleo puede apr
 
 Añadir núcleos tampoco garantiza una aceleración proporcional: la [ley de Amdahl](/articulos/la-ley-de-amdahl/) recuerda que el trabajo secuencial sigue limitando el conjunto.
 
+La elección también depende del objetivo. Un editor puede querer seguir respondiendo al teclado mientras espera un archivo: organizar el trabajo concurrentemente mejora la respuesta aunque no reduzca la cantidad total de cálculo. Un conversor de imágenes puede querer terminar cien transformaciones antes: repartir imágenes independientes entre núcleos ofrece paralelismo útil.
+
+Para el conversor, crear cien hilos en un equipo con cuatro núcleos no proporciona cien cálculos simultáneos de CPU. Hay que repartir recursos, considerar memoria y evitar que el coste de coordinación supere lo ganado. Para el editor, ejecutar un cálculo largo en una función llamada asíncrona tampoco libera automáticamente el hilo de la interfaz. Primero se identifica qué trabajo espera y cuál consume CPU; después se elige cómo organizarlo.
+
 ## Qué es un hilo
 
 Un proceso tiene al menos un hilo, el principal. Puede crear más.

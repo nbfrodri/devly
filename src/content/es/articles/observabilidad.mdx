@@ -185,6 +185,12 @@ Un gráfico sin una definición clara no garantiza un indicador útil. Un SLO no
 
 El [presupuesto de error](/articulos/presupuestos-de-error/) convierte el margen admitido por el SLO en una herramienta de decisión. No debes deducir consecuencias contractuales de ese cálculo interno: son responsabilidades diferentes.
 
+Supón cien mil solicitudes válidas y doscientas que incumplen el criterio de éxito. El SLI es `99.800 / 100.000 = 99,8 %`. Si el SLO era 99,9 % para esa ventana, no se cumple. El gráfico puede mostrar la medida; el objetivo permite interpretarla. Ninguna de las dos cosas dice todavía si corresponde una compensación contractual.
+
+El SLA puede utilizar otra ventana, excluir ciertas operaciones o establecer un procedimiento para reclamar. Esas condiciones deben leerse en el acuerdo. No conviene asumir que cualquier alerta interna equivale a incumplirlo, ni esperar a incumplirlo para atender un problema de usuario.
+
+También cambia el resultado si solo mides respuestas del servidor y omites peticiones que nunca llegaron a él. Un indicador visto desde fuera puede descubrir fallos de resolución o conectividad invisibles para esa métrica interna. Definir dónde se observa el evento forma parte del SLI, no es un detalle del panel.
+
 ## Lo esencial
 
 - La observabilidad es poder entender un sistema en producción por los datos que emite.

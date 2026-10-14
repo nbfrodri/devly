@@ -24,6 +24,16 @@ Si dos participantes intentaban transmitir a la vez, sus señales podían colisi
 
 No era necesario imaginar que cada estación disponía de una conexión física independiente hasta todas las demás. La [capa de enlace](/articulos/capa-de-enlace/) proporcionaba reglas para que los equipos utilizaran un soporte común.
 
+## Por qué no bastaba con escuchar antes de hablar
+
+Dos estaciones pueden escuchar un medio y encontrarlo libre casi al mismo tiempo. La señal de una tarda en propagarse hasta la otra. Si ambas empiezan dentro de ese intervalo, escuchar no ha evitado la colisión. El diseño necesita tratar también lo que ocurre después de comenzar a transmitir.
+
+En el Ethernet clásico de medio compartido, las estaciones detectaban la colisión, abandonaban ese intento y esperaban antes de repetir. La variación aleatoria de las esperas ayudaba a que no volvieran a coincidir una y otra vez. No se buscaba impedir físicamente toda simultaneidad, sino recuperarse de ella mediante reglas comunes.
+
+La inspiración en redes de radio se entiende mejor así: el problema central era compartir un canal entre participantes que no recibían un turno fijo de antemano. «Éter» evocaba ese espacio común por el que podían comunicarse, aunque la implementación utilizara un cable y no ondas de radio libres.
+
+Esto también explica por qué no conviene aprender el nombre como si fijara el comportamiento de toda Ethernet posterior. La organización del medio y el protocolo de acceso son decisiones que evolucionaron. Un enlace actual entre una estación y un switch, en dúplex completo, permite transmitir y recibir simultáneamente sin aquella competición sobre un único cable compartido.
+
 ## El nombre permanece; la implementación cambia
 
 No debes trasladar cada detalle de aquella red a cualquier conexión Ethernet actual. En redes con switches y enlaces de dúplex completo, la organización y el tratamiento de colisiones no funcionan como en el cable compartido original.

@@ -22,6 +22,18 @@ Si no conoces la edad de una persona, guardar cero no deja el dato «vacío»: a
 
 La dificultad aparece al comparar. Si no sabes dos edades, no puedes concluir que sean iguales por el hecho de que ambas sean desconocidas. Tampoco puedes afirmar necesariamente que sean diferentes. Esa es la motivación de un tercer resultado lógico.
 
+## Por qué la ausencia cambia la lógica
+
+Imagina una tabla de personas con edades `20`, `35` y una edad desconocida. La condición `edad >= 30` es falsa para la primera, verdadera para la segunda y desconocida para la tercera. Negarla no resuelve la duda: si no sabes si una persona tiene treinta años, tampoco sabes si tiene menos.
+
+En el filtrado SQL solo pasan las filas cuya condición es verdadera. Por eso la consulta que selecciona mayores de treinta y la que selecciona quienes no son mayores de treinta pueden dejar fuera ambas a la persona sin edad conocida. No forman automáticamente dos grupos que cubran todas las filas.
+
+Esta decisión evita afirmar información que no existe, pero obliga a cambiar hábitos de lógica binaria. Para preguntar por la ausencia se utiliza `IS NULL`; comparar con `= NULL` no convierte el desconocimiento en un valor ordinario que pueda igualarse.
+
+También aparece una decisión de modelado. Si el teléfono de una persona no se conoce, un marcador puede bastar. Si debes distinguir que no tiene teléfono, que se negó a darlo y que todavía no se le preguntó, conviene guardar el motivo. Esas situaciones pueden exigir acciones distintas aunque ninguna aporte un número telefónico.
+
+La historia del diseño permite entender el coste de la solución: representar información incompleta sin inventar valores requiere reglas adicionales tanto en la consulta como en el programa que interpreta sus resultados.
+
 ## Un marcador no explica todos los motivos
 
 En SQL, [NULL](/articulos/null-en-sql/) obliga a utilizar reglas específicas de comparación y filtrado. Pero un único marcador no distingue por sí solo «no preguntado», «no aplicable» y «pendiente de verificar».

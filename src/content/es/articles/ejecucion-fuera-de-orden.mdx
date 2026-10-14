@@ -30,6 +30,22 @@ También hay interferencias por reutilizar un nombre de registro para valores di
 
 El renombrado no borra dependencias verdaderas. Si la multiplicación necesita el resultado de la suma, sigue sin poder ejecutarse antes de que ese resultado exista.
 
+## Separar dependencia de valor y de nombre
+
+Considera estas operaciones conceptuales, donde cada línea lee sus entradas antes de producir su resultado:
+
+```text
+R1 = cargar(A)
+R2 = R1 + 1
+R1 = R3 * R4
+```
+
+La suma necesita el resultado de la carga: es una dependencia verdadera. La multiplicación no necesita ese valor, pero reutiliza el nombre `R1`. Sin más cuidado, ejecutarla pronto sobrescribiría el valor que aún necesita la suma.
+
+El renombrado puede asignar la primera escritura de `R1` a un registro físico y la segunda a otro. La suma mantiene una referencia al primero; las instrucciones posteriores que deban ver la multiplicación se conectan al segundo. Así pueden avanzar operaciones independientes sin confundir sus versiones del mismo nombre arquitectónico.
+
+La carga y la suma siguen unidas. Si A tarda en llegar de memoria, renombrar no inventa su contenido. Tampoco elimina las dependencias entre accesos a memoria que puedan referirse a la misma ubicación: el procesador debe detectarlas o especular con un mecanismo de comprobación y recuperación.
+
 ## Planificar operaciones listas
 
 El procesador mantiene una ventana de trabajo y selecciona operaciones cuyos datos están disponibles y para las que hay recursos. La ventana, las unidades y los registros físicos son finitos: una espera larga todavía puede llenar estructuras y limitar el avance.

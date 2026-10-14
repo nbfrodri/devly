@@ -27,3 +27,9 @@ La **cardinalidad estimada** se calcula antes de ejecutar, a partir de estadíst
 En el [modelo entidad-relación](/articulos/modelo-entidad-relacion/), cardinalidad describe restricciones como uno a muchos. Al hablar de una columna, también se utiliza para la cantidad de valores distintos. Conviene aclarar cuál de estos sentidos estás usando.
 
 No es lo mismo cardinalidad que **selectividad**, la proporción de filas que satisface una condición. Un filtro que conserva el 1 % puede devolver diez o un millón de filas según la tabla. Para interpretar el coste de una consulta necesitas tanto proporciones como cantidades.
+
+## Un JOIN puede multiplicar filas
+
+Si un cliente tiene tres pedidos, combinar su fila con pedidos produce tres filas, no una. Si después combinas cada pedido con cuatro líneas, puedes obtener doce. El número de clientes originales no describe la cardinalidad de los pasos intermedios.
+
+Por eso una suma calculada después de una combinación puede repetir importes si la relación no era la supuesta. Antes de atribuir la cantidad de filas a un fallo del optimizador, comprueba qué relación expresa el `JOIN` y cuál es la unidad de cada fila del resultado.

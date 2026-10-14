@@ -65,6 +65,16 @@ Alternar muchas escrituras de estilos con lecturas que necesitan geometría actu
 
 Utiliza las herramientas de rendimiento del navegador para distinguir ejecución de JavaScript, layout y pintura. Un problema visual lento no se arregla necesariamente reduciendo el tiempo de una función: puede estar en el trabajo de renderizado que provoca.
 
+## Seguir una actualización concreta
+
+Una tarjeta contiene una imagen, un título y un párrafo. Al cargar una imagen sin dimensiones reservadas cambia la altura de la tarjeta. El navegador recalcula su geometría y puede desplazar las tarjetas siguientes. Reservar el espacio con dimensiones o una proporción conocida evita ese cambio geométrico cuando llega el recurso; no acelera necesariamente la descarga.
+
+Después cambias solo el color del título. El contenido y sus medidas permanecen, así que el cambio puede limitarse a recalcular estilo y repintar lo afectado. Si en lugar del color cambias el tamaño de la fuente, el título puede ocupar dos líneas y obligar a recalcular posiciones.
+
+Por último, un script cambia el ancho y consulta inmediatamente su tamaño renderizado. Para devolver un valor actualizado, el navegador puede tener que completar cálculos pendientes en ese momento. Repetir escritura y lectura para cada tarjeta multiplica las oportunidades de trabajo forzado. Preparar lecturas y agrupar cambios permite al navegador organizar mejor las actualizaciones cuando la interacción lo admite.
+
+Estos tres casos muestran por qué «cambió el DOM» no describe el coste. La propiedad modificada, las dependencias geométricas y cuándo se exige un resultado determinan qué parte del recorrido se repite.
+
 ## Lo esencial
 
 - DOM y CSS son entradas para construir la representación visual.

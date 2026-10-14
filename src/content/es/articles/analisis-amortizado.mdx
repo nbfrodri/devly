@@ -87,6 +87,14 @@ En una [tabla hash](/articulos/tablas-hash/) pueden aparecer ambas ideas: coste 
 
 El **método contable** cobra un pequeño extra en cada inserción barata y lo guarda como crédito para pagar futuras copias. El **método del potencial** asigna a cada estado una cantidad de trabajo acumulado; relaciona el coste real con el cambio de esa cantidad. Son otras formas de justificar la misma cota, no optimizaciones nuevas de la estructura.
 
+## Pagar una ampliación con crédito
+
+El método contable puede verse en una fase completa del array. Justo después de ampliar de capacidad `k` a `2k`, quedan aproximadamente `k` inserciones antes de la siguiente ampliación. Si cada una reserva dos unidades además de pagar su escritura, se acumulan unas `2k` unidades: suficientes para copiar los `2k` elementos al crecer otra vez. Los primeros pasos se tratan como un coste inicial constante.
+
+El crédito no es dinero que la implementación almacene. Es una herramienta de demostración: asignas costes a las operaciones y compruebas que nunca estás pagando una copia futura con trabajo que todavía no has cobrado. Una prueba completa cuida el estado inicial y los extremos de cada fase.
+
+Si amplías solo una posición, desaparece esa fase larga de inserciones baratas. Tras llenar el nuevo hueco hay que copiar de nuevo. Para `n` inserciones, las copias suman `1 + 2 + ... + (n - 1) = n(n - 1)/2`. El contraste muestra que la garantía amortizada sale de una política concreta de crecimiento, no de llamar dinámico al array.
+
 ## Límites prácticos
 
 Crecer de uno en uno obliga a copiar 1 + 2 + 3… elementos y lleva a un coste total cuadrático. Duplicar evita ese patrón, a cambio de reservar espacio libre. Si además reduces capacidad al borrar, necesitas umbrales separados para no alternar ampliaciones y reducciones continuamente.

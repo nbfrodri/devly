@@ -24,6 +24,16 @@ El RFC 791 documenta las direcciones de cuatro octetos de IPv4. El espacio era f
 
 El cálculo de combinaciones es directo: cada bit duplica las posibilidades. Añadir unos pocos bits cambia mucho el total, pero cambiar un formato desplegado exige actualizar protocolos, implementaciones y operaciones, no solo una cifra escrita en una especificación.
 
+## Contar combinaciones no es contar dispositivos disponibles
+
+Cuatro octetos son `4 × 8 = 32` bits. Cada uno de los 32 bits admite dos valores, de modo que hay `2^32 = 4.294.967.296` combinaciones. La escritura decimal con puntos no aumenta ese espacio: solo agrupa los bits para que las personas puedan leerlos.
+
+El RFC 791 describía clases de direcciones con diferentes repartos entre identificación de red y de host. Esa organización no asignaba todas las combinaciones como una lista plana de dispositivos. También existen usos especiales y bloques que no equivalen a direcciones públicas asignables libremente. Por eso «cuatro mil millones» es un límite de combinaciones del formato, no un inventario exacto de conexiones posibles.
+
+Una dirección IP tampoco identifica necesariamente un aparato de manera permanente. Un equipo puede tener varias interfaces y direcciones; una dirección puede reasignarse. La traducción de direcciones permite además que varios equipos compartan una dirección pública, sin convertir el espacio de IPv4 en infinito.
+
+Pasar a un tamaño mayor afecta a cabeceras, tablas, herramientas y configuraciones. Aunque el cálculo de bits sea sencillo, los participantes deben acordar cómo representar y transportar esas direcciones. Esa dependencia entre formato y despliegue explica por qué la transición se extiende mucho más que la redacción de una especificación nueva.
+
 ## El experimento y la transición
 
 [IPv6](/articulos/ipv4-frente-a-ipv6/) amplió el espacio a 128 bits y requiere mecanismos de transición y convivencia. El tamaño mayor no convierte los formatos en intercambiables de forma automática.

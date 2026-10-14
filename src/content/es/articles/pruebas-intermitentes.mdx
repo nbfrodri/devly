@@ -29,3 +29,5 @@ Repetir una prueba puede ayudar a medir su frecuencia de fallo, pero una ejecuci
 Una prueba intermitente no debe ignorarse simplemente por ser incómoda. Si hace que el equipo deje de confiar en CI, también puede ocultar fallos auténticos.
 
 Para investigarla, conserva el error original, el orden de las pruebas y las condiciones de ejecución. Aislar datos, controlar reloj y azar y limpiar los recursos suele aportar más que añadir esperas fijas.
+
+Por ejemplo, una prueba A crea un usuario llamado Ana y no lo elimina. Una prueba B espera una lista vacía. B pasa sola y falla después de A: el orden ha revelado que ambas comparten una base de datos sin aislamiento suficiente. Repetir B hasta que pase oculta esa dependencia; preparar datos propios y limpiar el estado la elimina. Si el defecto está en el producto, en cambio, aislar la prueba no debe borrar el escenario concurrente que permite reproducirlo.

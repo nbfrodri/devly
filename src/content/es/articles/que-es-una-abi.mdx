@@ -27,3 +27,9 @@ Si cambias la disposición de una estructura pública y conservas un programa co
 Una [API](/articulos/que-es-una-api/) describe cómo utilizar una funcionalidad desde el código o mediante un protocolo. La ABI aborda cómo encajan componentes en su representación binaria. Una actualización puede mantener una API y obligar a recompilar, o conservar compatibilidad binaria para programas existentes.
 
 No existe una ABI universal. Depende de la arquitectura, el sistema y las convenciones del entorno; algunas reglas se especifican en documentos complementarios para cada procesador. Que dos programas estén escritos en C no garantiza por sí solo que sus binarios sean compatibles.
+
+## Por qué recompilar puede arreglarlo
+
+Supón que una biblioteca cambia una estructura de dos enteros a tres. Un programa antiguo reservó espacio y calculó desplazamientos según la versión anterior. Sustituir solo la biblioteca puede hacer que lea el tercer campo fuera de la región que preparó el programa. Si recompilas ambos con la nueva declaración, pueden volver a coincidir sin cambiar cómo se llama la función en el código fuente.
+
+Ese caso conserva parte de la API, pero rompe la compatibilidad binaria. En cambio, cambiar un algoritmo interno sin alterar los acuerdos binarios puede permitir sustituir la biblioteca sin recompilar a sus consumidores.

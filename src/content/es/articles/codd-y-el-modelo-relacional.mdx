@@ -22,6 +22,16 @@ Imagina una aplicación que necesita obtener los pedidos de un cliente. Si conoc
 
 Con una descripción lógica, la pregunta puede mantenerse mientras el sistema cambia sus índices o su forma de acceder a las filas. Esa **independencia de los datos** ayuda a explicar por qué tiene sentido separar el SQL del plan que lo ejecuta.
 
+## La consulta deja de ser una ruta
+
+Piensa en clientes y pedidos guardados en archivos enlazados. Un programa podría empezar en la ficha del cliente, seguir un puntero al primer pedido y continuar por una cadena. Su lógica depende de esa organización: si cambian los enlaces o la forma de agrupar registros, hay que revisar el recorrido.
+
+En el modelo relacional describes una relación de clientes y otra de pedidos, con atributos que permiten relacionarlas. La pregunta «pedidos del cliente 7» expresa una condición sobre los datos. El sistema puede resolverla leyendo todos los pedidos o utilizando un índice sobre el identificador del cliente. El resultado lógico no debería depender de cuál de esos accesos elija.
+
+La independencia no significa que el diseño físico carezca de importancia. Crear un índice puede acelerar una consulta y encarecer escrituras; la aplicación sigue teniendo requisitos de rendimiento. Lo que se evita es incrustar cada decisión física en la forma de expresar la pregunta.
+
+Tampoco cualquier tabla de una interfaz es una relación matemática sin diferencias. SQL permite, por ejemplo, resultados con filas duplicadas y trata información ausente mediante NULL. Distinguir el modelo y el lenguaje ayuda a entender por qué «relacional» no equivale a que unas tablas tengan enlaces visibles ni a que todo comportamiento de SQL esté descrito en el artículo de 1970.
+
 ## Del modelo al sistema
 
 La investigación posterior de IBM, incluido System R, exploró cómo convertir estas ideas en sistemas utilizables. SQL se desarrolló en ese contexto, pero no es sinónimo de modelo relacional ni el artículo de Codd era un manual de SQL.

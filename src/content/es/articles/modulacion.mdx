@@ -167,6 +167,12 @@ Supón un sistema que utiliza 20 kHz y transporta 40 kbit/s. Su eficiencia espec
 
 Tampoco confundas tasa de símbolos con tasa de bits: un símbolo puede representar varios bits, y parte de lo transmitido puede destinarse a control o redundancia. Para calcular datos útiles, necesitas conocer esas convenciones además de las cifras del enlace.
 
+Por ejemplo, 1000 símbolos por segundo y cuatro estados posibles por símbolo permiten representar dos bits por símbolo: una tasa bruta de 2000 bit/s. Con dieciséis estados son cuatro bits por símbolo y 4000 bit/s a la misma tasa de símbolos. No has demostrado que el canal pueda distinguir esos estados con la misma fiabilidad: al acercarlos, el ruido puede provocar más errores.
+
+Si una cuarta parte de lo transmitido se utiliza en redundancia y control, la tasa útil será menor que la bruta. Tampoco puedes deducir directamente la banda ocupada solo contando estados: intervienen la forma de los pulsos, el filtrado y el esquema de transmisión.
+
+El ancho en hercios sirve para describir qué intervalo espectral se utiliza; los bits por segundo, cuánto se transmite; los símbolos por segundo, a qué ritmo se eligen estados. Mantener las tres unidades separadas permite localizar qué promete realmente una especificación de enlace.
+
 La [transformada de Fourier](/articulos/transformada-de-fourier/) permite estudiar las componentes de frecuencia de una señal y relacionarlas con su banda.
 
 ## Lo esencial

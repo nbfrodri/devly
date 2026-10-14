@@ -23,6 +23,18 @@ Una unidad aritmética no resuelve necesariamente una operación compleja median
 
 El informe explica tanto el mecanismo como un análisis de su frecuencia bajo determinados supuestos. Es importante separar esas preguntas: que un error sea poco frecuente para unas entradas no convierte un resultado incorrecto en correcto ni describe todas las cargas de trabajo.
 
+## Dividir mediante decisiones parciales
+
+Una división binaria puede construirse eligiendo sucesivamente partes del cociente. En el algoritmo utilizado por aquella unidad, una tabla ayudaba a seleccionar esas partes a partir de información sobre el divisor y el resto parcial. La tabla no guardaba todas las divisiones posibles: orientaba pasos de un procedimiento repetido.
+
+Si una combinación consultaba una de las entradas defectuosas, podía elegirse una contribución incorrecta al cociente. Las operaciones posteriores no garantizaban reparar esa decisión. El resultado final podía alejarse de la precisión que debía proporcionar la instrucción, aunque otras operaciones con los mismos números funcionaran correctamente.
+
+El informe concreta el defecto: un script que trasladaba la tabla calculada a la estructura de consulta del hardware omitió entradas. En los cinco casos críticos, la consulta podía devolver cero donde debía seleccionar una contribución de +2. El algoritmo matemático de división no necesitaba estar equivocado para que una implementación con una tabla incompleta produjera una respuesta incorrecta.
+
+Esta estructura explica dos características del incidente. Primero, repetir siempre las mismas divisiones sencillas no ejercita todas las combinaciones internas de la tabla. Segundo, que falle una pareja de operandos no significa que fallen todas las divisiones del procesador. La cobertura relevante depende de los estados del algoritmo, no solo del número de pruebas ejecutadas.
+
+Una comprobación conceptual compara `x / y` con una referencia independiente de suficiente precisión. Multiplicar después el resultado por `y` puede revelar un error importante, pero no exige igualdad exacta en todos los casos: incluso un procesador correcto redondea. El criterio debe separar el margen numérico permitido del defecto de implementación que se intenta detectar.
+
 ## Qué recuerda al probar software
 
 Comparar resultados con otra implementación o con identidades numéricas puede ayudar a descubrir diferencias, pero tampoco cualquier identidad se conserva exactamente en aritmética finita. Necesitas distinguir tolerancias esperadas de incumplimientos reales del contrato.

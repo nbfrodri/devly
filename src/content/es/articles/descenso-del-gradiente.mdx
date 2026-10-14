@@ -82,8 +82,8 @@ El tamaño de cada paso lo fija la **tasa de aprendizaje**. Es el ajuste más de
 
 | Tasa | Qué ocurre |
 | --- | --- |
-| Demasiado pequeña | Avanza con tanta lentitud que el entrenamiento no acaba |
-| Adecuada | Baja de forma constante hasta el mínimo |
+| Demasiado pequeña | Puede avanzar demasiado poco dentro del presupuesto de pasos |
+| Adecuada | Puede reducir la pérdida de forma útil para el problema |
 | Demasiado grande | Se pasa de largo, rebota de un lado a otro y puede alejarse |
 
 ```js
@@ -109,6 +109,10 @@ La tasa de aprendizaje no la aprende el modelo: la elige quien lo entrena. A los
 No es una duración ni un porcentaje de ejemplos procesados. Multiplica el gradiente para decidir el desplazamiento de los parámetros, de modo que su efecto depende también de la escala de los datos y de la pérdida. Un valor adecuado para una configuración no tiene por qué servir al cambiar de modelo o de optimizador.
 
 La tasa puede variar durante el entrenamiento siguiendo una programación. Eso no elimina la necesidad de evaluar: una pérdida que baja lentamente puede indicar una tasa pequeña, pero también datos mal escalados o un problema en el modelo. Aumentarla sin diagnosticar la causa puede hacer que el entrenamiento diverja.
+
+En la función cuadrática del ejemplo, si el error del peso es `e = w - 3`, el siguiente error es `(1 - 2 × tasa) × e`. Con tasa 0,1 se multiplica por 0,8 y se acerca a cero; con 1,1 se multiplica por -1,2, cambia de signo y crece en magnitud. Esta cuenta explica la diferencia de las ejecuciones, en lugar de atribuirla a que una cifra es buena por sí misma.
+
+Si multiplicas la pérdida por cien, su gradiente también se multiplica por cien. Mantener la misma tasa equivale a dar pasos cien veces mayores en ese ejemplo. El valor necesita interpretarse junto con la escala y el optimizador; no existe un número que sirva siempre por llamarse tasa de aprendizaje.
 
 <Quiz
 	client:visible

@@ -158,6 +158,12 @@ Para probar una compra, un stub de inventario puede responder «hay tres unidade
 
 Elige un stub si necesitas controlar una respuesta; un fake si varios casos necesitan un comportamiento coherente; un mock si la interacción forma parte del requisito. Comprobar llamadas internas que no importan para el resultado puede volver frágil una prueba ante refactorizaciones.
 
+En la compra de dos unidades, el stub responde siempre que hay tres. Permite probar la rama de compra aceptada, pero una segunda consulta podría seguir devolviendo tres: no modela automáticamente una reserva. El fake puede restar dos y devolver una en la consulta posterior. Esa coherencia entre operaciones ayuda a probar un flujo completo sin instalar el almacén real.
+
+Un mock puede fallar si la reserva se solicita dos veces aunque el resultado presentado parezca correcto. Esa expectativa tiene valor si duplicar la llamada duplicaría el efecto. Si simplemente compruebas cuántas veces se consulta una función interna sin que ese número forme parte del comportamiento, una optimización legítima puede romper la prueba.
+
+El fake también necesita límites explícitos: un almacén en memoria puede no reproducir transacciones, restricciones o conflictos del real. Que permita guardar un dato no demuestra que la base real lo acepte. Escoge qué confianza proporciona cada doble y verifica aparte el acuerdo que no reproduce.
+
 Ningún doble demuestra por sí solo que la dependencia real se comporta igual. Las [pruebas de contrato](/articulos/pruebas-de-contrato/) ayudan a conectar esa simulación con un proveedor real. Conserva también las comprobaciones de integración que necesite el sistema.
 
 Las [pruebas basadas en propiedades](/articulos/pruebas-basadas-en-propiedades/) exploran reglas generales mediante entradas generadas y buscan contraejemplos pequeños.

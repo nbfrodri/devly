@@ -17,6 +17,21 @@ El primer vuelo de Ariane 5, el 4 de junio de 1996, terminó en un fallo. El inf
 
 El valor excedía el rango de destino. El software procedía de un contexto de Ariane 4 cuyas condiciones y suposiciones no eran las mismas que las del nuevo lanzador. El sistema redundante utilizaba el mismo software y sufrió el mismo problema.
 
+## La cadena que llevó al fallo
+
+El sistema de referencia inercial calculaba orientación y movimiento y enviaba sus datos al ordenador que controlaba las toberas. Había dos unidades iguales: una activa y otra preparada para sustituirla. Esa duplicación protegía frente a ciertos fallos de una unidad, pero ambas procesaban la trayectoria con el mismo programa.
+
+Una función de alineación seguía ejecutándose durante el vuelo aunque sus resultados solo eran necesarios antes del despegue. Esa permanencia procedía de requisitos de Ariane 4. Dentro de ella se calculaba una magnitud relacionada con la velocidad horizontal. La trayectoria de Ariane 5 produjo valores mayores que los previstos para aquella conversión.
+
+La secuencia descrita por la comisión fue esta:
+
+1. El valor quedó fuera del rango del entero de destino y se produjo una excepción.
+2. La política de tratamiento detuvo la unidad inercial. La de respaldo había fallado en el ciclo anterior por la misma causa.
+3. El ordenador de a bordo interpretó un patrón de diagnóstico como datos de vuelo.
+4. Ordenó desviaciones extremas de las toberas; las cargas aerodinámicas provocaron la desintegración y se activó la autodestrucción.
+
+Así se entiende por qué «hubo un desbordamiento» es una descripción insuficiente. La conversión fue el desencadenante, pero la función innecesaria en vuelo, la respuesta ante excepciones y la interpretación de datos inválidos permitieron que se propagara hasta el control físico.
+
 ## Probado no significa válido en cualquier entorno
 
 Un componente puede haber funcionado durante años dentro de cierto rango y fallar cuando cambia ese rango. La reutilización conserva código; no conserva automáticamente las condiciones que justificaban sus decisiones.

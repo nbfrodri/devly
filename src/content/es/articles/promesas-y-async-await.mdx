@@ -206,10 +206,16 @@ Usa la forma que corresponda a la interfaz y al entorno. Para operaciones con es
 
 La concurrencia que consigues al solapar esperas se distingue del paralelismo en [hilos y concurrencia](/articulos/hilos-y-concurrencia/).
 
+Supón dos lecturas independientes que tardan 200 y 300 ms. Si inicias la segunda después de recibir la primera, el recorrido necesita aproximadamente 500 ms, sin contar otros costes. Si las inicias ambas antes de esperar, puede acercarse a 300 ms. La ganancia viene del solapamiento: no has acelerado ninguna lectura individual.
+
+En cambio, si la primera devuelve la dirección que necesitas para solicitar la segunda, existe una dependencia real y no puedes iniciarlas de la misma forma. `await` expresa dónde la función necesita el resultado; no decide por sí solo qué operaciones son independientes.
+
+`Promise.all` reúne los resultados de promesas que recibe. Las operaciones se inician según las funciones que las producen, a menudo al evaluar los argumentos antes de llamar a `Promise.all`. Tampoco cancela por sí mismo las demás cuando una rechaza. Esas diferencias importan si cada operación tiene efectos o consume recursos.
+
 ## Lo esencial
 
 - Una promesa representa un resultado futuro, y está pendiente, cumplida o rechazada.
 - `then` y `catch` indican qué hacer cuando termina.
-- `await` espera el resultado dentro de una función `async`, sin bloquear el programa.
+- `await` suspende la función `async` mientras permite que el hilo atienda otro trabajo.
 - Los errores se tratan con `try` y `catch`.
-- `Promise.all` ejecuta varias operaciones a la vez en lugar de una tras otra.
+- `Promise.all` reúne varias promesas; iniciar operaciones independientes antes de esperarlas permite solapar sus esperas.

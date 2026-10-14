@@ -78,6 +78,22 @@ Considera la regla `E -> E + E | E * E | Numero`. La cadena `2+3*2` admite dos a
 
 El lenguaje debe resolverlo, por ejemplo dando prioridad a la multiplicación mediante categorías separadas para expresiones y términos. No basta con que quien programa «sepa» qué resultado quería: las herramientas necesitan reglas precisas.
 
+## Escribir la precedencia en las reglas
+
+Para evitar aquella ambigüedad, podemos separar los niveles:
+
+```text
+E -> E + T | T
+T -> T * F | F
+F -> Numero | ( E )
+```
+
+`E` representa una expresión completa, `T` un término multiplicativo y `F` un factor. Para construir `2+3*2`, la suma separa una expresión izquierda y un término derecho. Dentro de ese término puede aparecer la multiplicación. No se puede generar con esas reglas un árbol donde la suma de `2+3` sea un factor de la multiplicación sin escribir paréntesis.
+
+Los paréntesis permiten volver desde un factor a una expresión completa: `(2+3)*2` sí tiene la agrupación alternativa. La precedencia deja así de depender de una explicación externa y pasa a estar representada por las categorías de la gramática.
+
+Estas reglas usan recursión por la izquierda. Son una descripción válida del lenguaje, pero un analizador descendente sencillo no puede aplicarlas ingenuamente sin entrar en recursión infinita. Transformar una gramática para un algoritmo concreto no debería cambiar las cadenas que admite ni el significado de sus agrupaciones. Esa separación entre especificación y procedimiento de análisis es parte del trabajo de construir un lenguaje.
+
 ## Su relación con los autómatas
 
 En una **gramática libre de contexto**, cada producción tiene un único no terminal a la izquierda. Es suficiente para muchas estructuras sintácticas anidadas. Los [autómatas finitos](/articulos/automatas-finitos/) reconocen los lenguajes regulares, una familia más limitada; para reconocer los libres de contexto se estudian autómatas con pila.

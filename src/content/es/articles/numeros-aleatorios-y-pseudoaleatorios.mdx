@@ -76,15 +76,19 @@ Los generadores actuales usan fórmulas mucho mejores, pero el principio es idé
 Que sean reproducibles es a menudo lo que se busca.
 
 - **Depurar.** Un fallo que aparece con ciertos números se puede repetir.
-- **[Pruebas](/articulos/pruebas-de-software/).** Una prueba que usa azar da siempre el mismo resultado si se fija la semilla.
+- **[Pruebas](/articulos/pruebas-de-software/).** Fijar la semilla permite repetir la secuencia aleatoria con un generador compatible; otras fuentes de variación deben controlarse aparte.
 - **Ciencia.** Otra persona puede repetir una simulación y obtener lo mismo.
 - **Juegos.** Un mundo entero generado a partir de un número corto, que se puede compartir.
 
-Cuando no se indica semilla, el sistema elige una que cambia en cada ejecución.
+Cuando no se indica semilla, muchas bibliotecas inicializan el generador con una fuente del sistema. El contrato concreto depende de la biblioteca.
 
 La garantía de repetir una secuencia requiere conservar también el algoritmo y su implementación compatible, además del orden de las llamadas. Dos bibliotecas distintas no tienen por qué producir los mismos números con la misma semilla. Para repetir un experimento, registra el generador, su versión y la configuración; en entrenamiento paralelo pueden intervenir además operaciones no deterministas.
 
 La API `Math.random()` de JavaScript no permite fijar o restablecer su semilla mediante un argumento. Si necesitas controlar la secuencia de una simulación, utiliza una implementación que exponga ese control. La función didáctica anterior lo hace, pero no debe utilizarse para seguridad.
+
+Imagina que un juego utiliza una misma secuencia para crear el terreno y elegir colores. Si una actualización añade una elección de color antes de generar una montaña, consume un número adicional: todas las lecturas posteriores quedan desplazadas. La semilla sigue siendo la misma, pero el terreno puede cambiar. Separar generadores por responsabilidad ayuda a evitar esa dependencia, siempre que también se conserve cómo se inicializa cada uno.
+
+Para recuperar una ejecución a mitad de camino puede ser necesario guardar el **estado del generador**, no solo su semilla inicial. Volver a sembrar empieza la secuencia desde el principio; restaurar el estado continúa desde el punto guardado. Esta distinción importa en simulaciones largas y al recuperar entrenamientos desde un checkpoint.
 
 ## El problema: son predecibles
 

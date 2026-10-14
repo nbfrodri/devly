@@ -96,6 +96,12 @@ Para una foto, una avería de red puede impedir verla sin destruirla. Borrar su 
 
 Las garantías dependen de la clase de almacenamiento y su configuración. Replicar datos no sustituye protegerlos frente a cambios autorizados por error o conservar versiones históricas. Una estrategia de [copias de seguridad](/articulos/copias-de-seguridad/) necesita contemplar también esos casos.
 
+Imagina que los datos de una foto se conservan en varias ubicaciones, pero una avería impide autenticar peticiones durante veinte minutos. La foto no se ha perdido: hay un problema de disponibilidad. Si después vuelve el acceso y el contenido original está intacto, no hubo por ese hecho una pérdida de durabilidad.
+
+En otro incidente, un cliente autorizado sustituye la foto por un archivo equivocado y no existe ninguna versión recuperable. El servicio puede devolver respuestas rápidas y exitosas con ese nuevo archivo. La disponibilidad del servicio no recupera el contenido anterior; hace falta una política de versiones o recuperación adecuada a ese tipo de cambio.
+
+Por eso, al elegir almacenamiento, pregunta separadamente cuánto tiempo puede estar inaccesible un objeto y qué mecanismos protegen su conservación frente a cada fallo. Una cifra de durabilidad de diseño no significa que cualquier borrado legítimamente autorizado pueda deshacerse. El contrato debe aclarar qué pérdida modela y qué responsabilidades quedan en la configuración del sistema.
+
 ## Lo esencial
 
 - El almacenamiento de objetos guarda cada archivo como un objeto con datos, metadatos y una clave única.

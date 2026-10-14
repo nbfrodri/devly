@@ -66,6 +66,25 @@ Cuando aparece un fallo, la **reducción**, o *shrinking*, intenta encontrar una
 
 Conviene conservar la semilla y la información de reproducción que proporciona la herramienta. Así puedes recuperar la ejecución concreta y convertir el contraejemplo en una prueba de regresión legible.
 
+## Encontrar un fallo y hacerlo pequeño
+
+La ordenación predeterminada de JavaScript compara representaciones textuales. Para ordenar números hay que proporcionar un comparador. Una prueba con `[1, 2, 3]` no descubre esa diferencia, pero esta entrada sí:
+
+```js
+const entrada = [2, 10];
+const ordenada = (lista) => lista.every((n, i) => i === 0 || lista[i - 1] <= n);
+const incorrecta = entrada.toSorted();
+const correcta = entrada.toSorted((a, b) => a - b);
+
+console.log(incorrecta.join(" ")); // "10 2"
+console.log(ordenada(incorrecta)); // false
+console.log(ordenada(correcta)); // true
+```
+
+Imagina que el fallo aparece primero en una lista de doscientos enteros. La reducción prueba quitar fragmentos y simplificar valores conservando el fallo. Puede llegar a un par como `[2, 10]`: quitar cualquiera de sus elementos deja una lista de longitud uno, que siempre está ordenada, así que ese paso ya no reproduce el problema.
+
+El contraejemplo permite explicar la causa: el carácter `1` de `10` se ordena antes que `2`. Después de corregir el comparador conservas ese par como regresión y vuelves a ejecutar la propiedad sobre muchas listas. La propiedad sigue aportando exploración; el caso pequeño aporta una explicación estable del defecto.
+
 ## Propiedades útiles
 
 Una codificación y su decodificación pueden recuperar el original dentro de un dominio definido. Normalizar dos veces puede dar lo mismo que normalizar una. Transferir dinero entre dos cuentas puede conservar el total. Cada regla necesita precisar sus condiciones: una compresión con pérdida no promete reconstrucción exacta.

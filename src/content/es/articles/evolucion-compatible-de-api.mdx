@@ -38,6 +38,21 @@ Una vez completada la migración y cumplida la política de retirada, puedes eli
 
 **¿Que no haya llamadas hoy demuestra que un cliente desapareció?** No. Puede ejecutarse con poca frecuencia. Considera ventanas de uso y compromisos de soporte acordados.
 
+## La compatibilidad depende de la dirección
+
+Supón que el servidor empieza a aceptar un parámetro opcional `idioma`, cuyo valor por defecto conserva el comportamiento anterior. Un cliente viejo que no lo envía puede seguir funcionando. Pero desplegar primero un cliente nuevo que lo necesita no asegura que todos los servidores antiguos lo acepten. «Compatible» debe precisar qué versión habla con cuál y en qué orden se despliega.
+
+| Cambio | Cliente antiguo con servidor nuevo | Qué comprobar |
+| --- | --- | --- |
+| Nuevo parámetro opcional | Puede conservar su comportamiento | Valor por defecto y validación |
+| Nuevo campo de respuesta | Depende del lector | Tolerancia a campos desconocidos |
+| Nuevo valor de estado | Puede romper decisiones existentes | Ramas por defecto y enumeraciones |
+| Mismo número, unidad distinta | Puede funcionar y calcular mal | Significado, no solo esquema |
+
+Por ejemplo, un cliente distingue pedidos `pendiente` y `entregado`. Añadir `cancelado` puede ser correcto para el servidor y peligroso para un cliente que interprete cualquier estado distinto de `pendiente` como entregado. El consumidor necesita tratar valores desconocidos sin inventar un significado. El proveedor necesita definir si su contrato permitía ampliar esa lista.
+
+Una transición segura prueba las combinaciones que realmente convivirán: cliente viejo con servidor nuevo y cliente nuevo con servidor todavía viejo cuando el despliegue permita esa situación. Esa matriz convierte una promesa general de compatibilidad en casos verificables.
+
 ## Versionar ayuda a coordinar
 
 Una versión permite expresar un contrato distinto y conservar temporalmente el anterior. Puedes distinguirla en la ruta, las cabeceras u otro mecanismo documentado. Ninguna ubicación convierte por sí sola un cambio en compatible.

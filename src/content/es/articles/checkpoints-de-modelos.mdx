@@ -31,3 +31,9 @@ Conviene guardar también la configuración, versiones y procedencia de los dato
 Un checkpoint no sustituye la evaluación ni garantiza reproducibilidad exacta entre equipos y bibliotecas. Tampoco constituye por sí solo una copia de seguridad de todo el sistema: puede faltar el código, el preprocesamiento o los datos necesarios para reconstruirlo.
 
 Mantén separados el objetivo de recuperar el entrenamiento, el de distribuir un modelo para inferencia y el de conservar un historial verificable. Cada uno necesita información distinta.
+
+## Cuánto trabajo puedes perder
+
+Si guardas cada mil pasos y el proceso falla en el 2750, el último checkpoint completo puede corresponder al 2000. Recuperarlo evita repetir los primeros dos mil, pero quedan 750 pasos por rehacer. Guardar más a menudo reduce esa pérdida potencial y aumenta el coste de escritura.
+
+Comprueba además que el archivo terminó de guardarse. Un checkpoint parcial con el nombre del último puede ser menos útil que el anterior completo. La política debe distinguir archivos en preparación, instantáneas válidas y cuál corresponde al mejor resultado de validación.

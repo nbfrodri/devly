@@ -41,6 +41,16 @@ El productor adquiere un hueco, inserta y libera un elemento. El consumidor adqu
 
 El orden importa. No debes mantener ocupado el cerrojo de la cola mientras esperas un elemento que solo puede insertar otro hilo adquiriendo ese mismo cerrojo: impedirías el progreso que necesitas.
 
+## Seguir los permisos de una cola
+
+Con capacidad tres, el estado inicial es `huecos = 3`, `elementos = 0`. El productor adquiere un hueco: queda `2, 0`; inserta A bajo el cerrojo y después anuncia el elemento: queda `2, 1`. El consumidor adquiere ese elemento: queda `2, 0`; extrae A y devuelve el hueco: vuelve a `3, 0`.
+
+Entre adquirir y anunciar hay un permiso reservado para una operación en curso. Por eso no debes esperar que la suma de los contadores públicos sea siempre tres en cada instante intermedio. Los permisos representan disponibilidad y reservas, no una copia instantánea del contenido de la cola.
+
+Si el productor adquiere un hueco pero falla antes de insertar, debe devolver ese hueco. No debe anunciar un elemento que no existe. Si el consumidor adquirió un elemento, la recuperación debe precisar si lo extrajo y quién conserva la responsabilidad sobre él. Liberar indiscriminadamente ambos semáforos en cualquier excepción puede fabricar disponibilidad falsa.
+
+Un semáforo iniciado en cero también sirve para señalización: una tarea espera y otra libera cuando termina una preparación. Ese uso muestra por qué la liberación puede corresponder a una tarea distinta de quien adquiere, a diferencia del contrato habitual de propiedad de un mutex.
+
 ## Mutex frente a semáforo
 
 Un **mutex** representa exclusión mutua y normalmente tiene un propietario: el hilo que lo adquiere debe liberarlo. Un semáforo cuenta permisos y puede coordinar señales entre tareas diferentes. Un semáforo binario permite comportamientos de exclusión, pero no es automáticamente equivalente a cualquier mutex.

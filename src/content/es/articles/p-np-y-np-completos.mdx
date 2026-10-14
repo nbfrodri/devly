@@ -61,6 +61,16 @@ Importa la dirección. Para demostrar que B es difícil, reduces un problema dif
 
 Si se encontrara un algoritmo polinómico para un NP-completo, las reducciones darían algoritmos polinómicos para todos los problemas de NP. Esa es la razón de agruparlos.
 
+## Comprobar un certificado no es comprobar todas las respuestas
+
+Para la fórmula `(a o b) y (no a o b)`, una asignación como `a = falso`, `b = verdadero` permite verificar cada cláusula y confirmar la respuesta sí. El certificado solo necesita indicar los valores de las variables; su tamaño crece con el número de variables, no con todas las combinaciones posibles.
+
+Si alguien afirma que ninguna asignación funciona, presentar una asignación fallida no demuestra esa respuesta no. Ha descartado un candidato, no todos. La definición de NP garantiza certificados eficientes para respuestas afirmativas; no incorpora automáticamente la misma garantía para las negativas.
+
+Una reducción tampoco consiste en probar algunos ejemplos similares. Debe transformar cualquier instancia de A en una de B de modo que A tenga respuesta sí exactamente cuando la instancia transformada de B la tenga. Además, la transformación debe ser eficiente y no escribir una salida de tamaño exponencial. Si necesitara resolver A para construirla, no nos habría dado la herramienta que buscamos.
+
+Estas condiciones explican el alcance de la NP-completitud: conecta problemas enteros mediante transformaciones generales. No afirma que todas sus instancias sean igual de difíciles ni impide que una restricción particular del problema admita un algoritmo más rápido.
+
 ## Qué haces ante uno
 
 No significa abandonar. Puedes resolver entradas pequeñas con búsqueda exacta, aprovechar restricciones, usar heurísticas sin garantía de óptimo o estudiar aproximaciones cuando el problema lo permita. También puedes reformular el requisito: quizá no necesitas la mejor solución, sino una que cumpla un umbral útil.

@@ -30,6 +30,14 @@ Además, al buscar una división, cada árbol considera un subconjunto aleatorio
 
 La combinación de muestreo y selección de características reduce la correlación entre árboles. Los detalles configurables y sus valores predeterminados dependen de la implementación; «bosque» no implica que cualquier biblioteca tenga exactamente la misma configuración.
 
+## Un remuestreo concreto
+
+Con cuatro observaciones identificadas como A, B, C y D, una muestra bootstrap de tamaño cuatro podría ser `A, C, C, D`. Otra podría ser `B, B, C, A`. El primer árbol no ve B y el segundo no ve D; C aparece dos veces en el primero y tiene más peso en su ajuste.
+
+Para un conjunto de tamaño `n`, la probabilidad de no seleccionar una observación en un sorteo es `1 - 1/n`. En `n` sorteos independientes resulta `(1 - 1/n)^n`, que se aproxima al 36,8 % cuando el conjunto crece. Esto explica por qué cada árbol deja fuera una fracción apreciable de ejemplos, aunque se realicen tantos sorteos como observaciones originales.
+
+Imagina que intentas detectar fraude con importe, país y antigüedad de la cuenta. Si el importe domina todas las primeras divisiones, los árboles pueden acabar pareciéndose mucho. Limitar aleatoriamente las características candidatas en cada división obliga a algunos a explorar otras señales. Hay un equilibrio: demasiada similitud reduce el beneficio de combinar; muy poca información puede debilitar los árboles.
+
 ## Agregar resultados
 
 Para regresión se promedian habitualmente valores predichos. Para clasificación se combinan votos o probabilidades según la implementación.

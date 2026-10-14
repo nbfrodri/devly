@@ -19,6 +19,16 @@ sources:
 
 El guion publicado contiene patrones para reconocer palabras y estructuras y reglas para reorganizar fragmentos de la entrada. No era una red neuronal entrenada sobre grandes corpus como un modelo de lenguaje actual.
 
+## Una regla real, paso a paso
+
+El guion DOCTOR contiene la palabra clave `ALIKE`, con prioridad 10, que remite a un grupo de respuestas llamado `DIT`. En el intercambio publicado, una frase que afirma que los hombres son todos iguales recibe la respuesta «IN WHAT WAY» —«¿en qué sentido?»—. La regla no necesita decidir si aquella generalización es verdadera.
+
+El recorrido es mecánico: localizar una palabra clave, seleccionar sus reglas según la prioridad, buscar una descomposición aplicable y construir una respuesta mediante una plantilla. En ese grupo concreto se alternan distintas preguntas. La variación evita repetir siempre la misma salida sin que haga falta aprender una idea nueva durante la conversación.
+
+Otras reglas pueden separar la entrada en fragmentos y reutilizarlos, cambiando pronombres para devolver una pregunta al interlocutor. Así, parte del contenido que parece aportar el programa procede en realidad de la frase de la persona. El guion y el mecanismo de procesamiento son piezas distintas: otro guion puede producir un comportamiento diferente sobre el mismo intérprete.
+
+La elección de un contexto terapéutico también ayuda al efecto. Una pregunta abierta o una repetición pueden parecer una invitación deliberada a explicarse. En un sistema que debiera verificar una reserva o resolver una suma, la misma respuesta evasiva mostraría antes sus límites. La impresión depende tanto de las reglas como de las expectativas del diálogo.
+
 ## El interlocutor aporta parte del sentido
 
 Imagina una regla que detecta una frase sobre «mi trabajo» y responde con una pregunta sobre ese trabajo. El programa puede reutilizar parte de la entrada sin mantener una comprensión general de la situación.

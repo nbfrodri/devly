@@ -56,6 +56,14 @@ En análisis fuera de línea puedes utilizar muestras posteriores para centrar l
 
 En los extremos debes decidir qué hacer: producir menos salidas, extender valores o usar otra regla. La elección cambia el resultado. Documentarla evita que dos implementaciones llamadas igual difieran en las primeras muestras.
 
+## Probar un escalón y dos frecuencias
+
+Si la entrada pasa de cero a seis y permanece allí, la media de tres muestras produce primero dos, luego cuatro y finalmente seis. No elimina el cambio: tarda varias muestras en reflejarlo por completo. Si aumentas la ventana, alargas esa transición. Para una alarma, suavizar puede reducir falsos avisos, pero también retrasar un aviso real.
+
+Ahora considera una señal alternante `1, -1, 1, -1…`. Una media de dos posiciones la cancela porque cada pareja suma cero. La media de tres no: suma `1 - 1 + 1` o `-1 + 1 - 1` y deja una oscilación de magnitud un tercio. Dos filtros descritos informalmente como «promedios que suavizan» no tienen la misma respuesta frecuencial.
+
+La prueba con un **impulso**, una muestra uno rodeada de ceros, revela los coeficientes de un filtro FIR lineal e invariante en el tiempo. En la media de tres, aparecen tres contribuciones de un tercio, teniendo en cuenta cómo se representen el inicio y los bordes. Esa respuesta permite anticipar cómo se superpondrán las contribuciones de una señal más compleja.
+
 ## FIR e IIR
 
 Un filtro **FIR**, de respuesta finita al impulso, combina un número finito de entradas recientes. La media móvil es un ejemplo. Un filtro **IIR**, de respuesta infinita al impulso, utiliza realimentación de salidas anteriores y puede mantener una respuesta más larga con pocos coeficientes.

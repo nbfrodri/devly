@@ -17,6 +17,16 @@ La **Mars Climate Orbiter** se perdió en septiembre de 1999. El informe de inve
 
 La interfaz exigía unidades métricas, pero un archivo entregaba datos de impulso en unidades inglesas. El consumidor asumía que el contrato se cumplía. Los valores podían tener un formato legible y ser números válidos; su significado era distinto.
 
+## Cómo una unidad cambió la trayectoria calculada
+
+La sonda utilizaba pequeños encendidos para controlar su orientación. Esos encendidos también alteraban ligeramente su movimiento, y el equipo de navegación debía incorporarlos al cálculo de la trayectoria. El software de tierra producía un archivo con información del **impulso**, la fuerza aplicada multiplicada por el tiempo de actuación.
+
+La especificación exigía newton-segundo, pero el archivo entregaba libra-fuerza-segundo. Una libra-fuerza equivale aproximadamente a 4,45 newtons. Leer un impulso de una libra-fuerza-segundo como si fuera un newton-segundo subestima su magnitud por ese factor. No se trataba de confundir directamente una distancia en millas con otra en kilómetros.
+
+El efecto acumulado entró en el modelo utilizado para estimar la órbita. El programa podía leer el archivo sin errores de sintaxis y completar todos sus cálculos: estaba calculando sobre una interpretación incorrecta de las entradas. El informe sitúa el desacuerdo en el software de tierra; no afirma que todo el software de la nave utilizara las mismas unidades equivocadas.
+
+Ese detalle cambia dónde buscar una prueba útil. Un caso de referencia que compare el impulso producido y consumido por ambos componentes, con una actuación conocida, puede detectar el factor de escala. Probar cada componente con datos preparados bajo su propia suposición puede dejar pasar la incompatibilidad.
+
 ## El contrato ya existía
 
 Esta parte importa: el informe no cuenta simplemente que nadie hubiese pensado en especificar unidades. Había documentación de interfaz, y aun así el desacuerdo no se detectó a tiempo.

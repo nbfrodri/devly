@@ -83,6 +83,16 @@ La implementación rechaza los símbolos ajenos al alfabeto. Para una entrada de
 	answer={1}
 />
 
+## Combinar dos condiciones sin guardar el historial
+
+Supón que ahora exiges dos cosas: una cantidad par de unos y que la cadena termine en cero. La paridad ya no basta, porque `11` y `110` tienen la misma paridad y solo una termina en cero. El estado debe recordar ambas propiedades.
+
+Puedes formar estados compuestos: par con último símbolo cero, par sin último cero, impar con último cero e impar sin último cero. Al leer cero conservas la paridad y marcas el final como cero; al leer uno inviertes la paridad y marcas que el final no es cero. El estado inicial tiene paridad par, pero todavía no termina en cero: así la cadena vacía queda rechazada por la nueva condición.
+
+Aceptas únicamente en el estado «par y último cero». Por ejemplo, `110` llega a él, mientras `10` acaba en «impar y último cero». No guardas la cadena entera ni el número exacto de unos: conservas la información que puede cambiar decisiones futuras.
+
+Esta construcción muestra también un coste. Combinar propiedades puede multiplicar estados, aunque algunos resulten inalcanzables o equivalentes y puedan simplificarse. Diseñar el estado no consiste en poner un nombre a cada pantalla: consiste en decidir qué información del pasado necesita recordar el futuro.
+
 ## Determinismo y límites
 
 El ejemplo es un **autómata finito determinista**: cada pareja de estado y símbolo tiene un único destino. Un autómata no determinista permite varias alternativas. Es otra forma de describir patrones; no significa que el ordenador adivine mágicamente. Puede convertirse en uno determinista, aunque la conversión puede aumentar mucho los estados.

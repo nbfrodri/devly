@@ -33,6 +33,16 @@ console.log((100 * 39 / 120).toFixed(1)); // "32.5"
 
 No hay una contradicción aritmética. Cambian los pesos con los que se combinan las tasas.
 
+## Repetir la comparación con los mismos pesos
+
+La tasa de A es `90 % × 100/110 + 10 % × 10/110`. La de B es `95 % × 20/120 + 20 % × 100/120`. No estamos mezclando los resultados en la misma proporción: A se evalúa sobre todo con casos fáciles y B, con difíciles.
+
+Si el objetivo didáctico es comparar una población con mitad de casos fáciles y mitad difíciles, podemos aplicar esas proporciones a las tasas de cada sistema. A tendría `0,5 × 90 + 0,5 × 10 = 50 %`; B, `0,5 × 95 + 0,5 × 20 = 57,5 %`. La inversión desaparece porque ahora ambos se ponderan con la misma mezcla.
+
+Esa **estandarización** responde una pregunta definida: qué tasa obtendríamos usando esas tasas por grupo con aquellos pesos. No demuestra por sí sola que asignar un caso a B cause más aciertos. Puede haber diferencias no observadas dentro de cada grupo o una asignación que dependa de factores relevantes.
+
+En un panel de producto ocurre algo parecido si llega una población más fácil de atender. El éxito total puede subir sin mejorar ninguna tasa por segmento. Para distinguir cambios del sistema y cambios de población, conserva denominadores, tasas por grupo y una referencia de mezcla comparable. Un único porcentaje borra precisamente la información necesaria para explicarlo.
+
 ## Agrupar o separar no es una receta automática
 
 El análisis de Pearl destaca que decidir qué comparación responde a una pregunta causal necesita conocer cómo se generaron los datos. Separar por cualquier variable disponible tampoco garantiza una conclusión correcta.

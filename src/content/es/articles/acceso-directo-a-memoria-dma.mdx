@@ -49,6 +49,16 @@ Incluso una región coherente puede necesitar barreras para que la publicación 
 
 La documentación de Linux distingue, entre otros usos, mapeos coherentes y mapeos de transferencia que requieren un ciclo de preparación y sincronización. El tipo adecuado depende de la duración, la dirección y la forma de compartir los datos.
 
+## El descriptor también debe estar listo
+
+Una tarjeta de red puede recibir una lista de descriptores. Cada uno identifica un búfer, su tamaño y un estado de propiedad. La CPU prepara dirección y longitud y, al final, publica que el dispositivo puede utilizarlo. Si publica primero ese permiso, el dispositivo podría leer un descriptor todavía incompleto.
+
+Por eso hay que distinguir visibilidad de datos y orden de publicación. Una plataforma coherente puede evitar que CPU y dispositivo conserven indefinidamente copias incompatibles, pero no hace que varias escrituras independientes formen automáticamente una operación indivisible. Las barreras y la API del controlador expresan cuándo una descripción está lista.
+
+Al terminar una recepción ocurre el recorrido inverso: comprobar la finalización, realizar la sincronización que corresponda y solo después interpretar los datos. Devolver el búfer a la tarjeta antes de que el programa acabe de leerlo permite que la siguiente recepción sobrescriba el contenido en uso.
+
+Estos pasos explican por qué DMA reduce las copias de CPU sin eliminar la coordinación. La unidad transferida puede ser grande, pero su propiedad cambia en momentos concretos que el controlador debe respetar.
+
 ## DMA e interrupciones no son alternativas
 
 DMA mueve datos. Una **interrupción** avisa de un evento. Puedes utilizar DMA y recibir una interrupción al terminar, o consultar descriptores completados mediante sondeo.

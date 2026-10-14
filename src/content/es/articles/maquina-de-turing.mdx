@@ -146,6 +146,10 @@ Ejecutar un programa hasta un límite de tiempo responde otra pregunta: «¿ha t
 
 Las herramientas de análisis pueden restringir los casos que aceptan, devolver «desconocido» o emitir advertencias conservadoras. Son útiles precisamente porque no prometen decidir siempre el problema general.
 
+Una forma de demostrar un bucle concreto es encontrar una **cantidad decreciente**: un entero que nunca baja de cero y que disminuye estrictamente en cada vuelta. Si empieza en diez, no puede disminuir para siempre sin terminar o abandonar las condiciones del argumento. Hay que comprobar tanto que disminuye como que permanece acotado; observar que suele bajar en unos ejemplos no es una demostración.
+
+Esta técnica no contradice el problema de la parada. Resuelve una familia de programas para la que has encontrado una prueba, y puede no decir nada sobre otros. Del mismo modo, limitar una búsqueda a mil pasos permite simular cualquier programa durante ese tramo, pero no decidir qué ocurriría después. El límite general prohíbe una promesa universal; no elimina las pruebas particulares ni las comprobaciones útiles con un alcance explícito.
+
 No confundas este límite con el coste de los [problemas NP-completos](/articulos/p-np-y-np-completos/). Allí se discute cuánto cuesta resolver problemas que sí tienen algoritmos generales; aquí, si tal algoritmo puede existir.
 
 ## Modelos más restringidos

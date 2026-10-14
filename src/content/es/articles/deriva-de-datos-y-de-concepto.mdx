@@ -46,6 +46,16 @@ Después revisa si el cambio corresponde a un fenómeno conocido, como estaciona
 
 Solo entonces decide entre corregir una canalización, ajustar un umbral, conseguir nuevas etiquetas, reentrenar o retirar el modelo. Cada acción responde a una causa distinta.
 
+## Seguir una alerta hasta su causa
+
+Supón que el porcentaje de compras con importe superior a 500 pasa del 5 % al 30 %. Una alerta detecta el cambio comparando la última semana con un periodo de referencia. Antes de concluir que hay nuevos hábitos, desglosas por origen: el aumento solo aparece en una aplicación que acaba de actualizarse. Al revisar registros descubres que envía céntimos donde antes enviaba euros. Reentrenar con esos datos enseñaría al modelo a compensar una interfaz defectuosa.
+
+En otro caso las unidades son correctas y acaba de abrirse una tienda con productos caros. Hay deriva de entradas, pero las predicciones de fraude mantienen su calidad cuando llegan las etiquetas. Puedes actualizar la referencia y seguir observando ese segmento sin reemplazar inmediatamente el modelo.
+
+Finalmente, los importes apenas cambian, pero los estafadores empiezan a usar cuentas antiguas que antes eran una señal de confianza. Ahora cambia la relación entre entrada y etiqueta. Comparar solo histogramas de importes no descubre ese deterioro: necesitas resultados reales, separados por antigüedad de cuenta y periodo.
+
+La ventana de referencia también es una decisión. Comparar un fin de semana con días laborables puede generar alertas repetidas sin revelar un problema nuevo. Documenta qué periodos, segmentos y retrasos de etiquetas estás comparando para poder interpretar la señal.
+
 ## Reentrenar también necesita evaluación
 
 Un modelo nuevo puede aprender datos recientes que contienen errores o representar peor a usuarios menos frecuentes. Valídalo con divisiones apropiadas, incluidos cortes temporales cuando corresponda, y conserva una referencia para comparar.

@@ -145,7 +145,7 @@ interruptores.nuevoCarrito = true;
 console.log(verCarrito()); // "carrito nuevo"
 ```
 
-Encenderlo no requiere desplegar, y apagarlo tampoco: es la vuelta atrás más rápida que hay. Se puede encender para el equipo, luego para unos pocos, luego para todos.
+Si la configuración puede cambiar en ejecución, encenderlo o apagarlo no requiere desplegar otra versión. La rapidez depende de cómo se propague esa configuración. Se puede encender para el equipo, luego para unos pocos, luego para todos.
 
 | Criterio | Desplegar | Lanzar |
 | --- | --- | --- |
@@ -157,6 +157,10 @@ Encenderlo no requiere desplegar, y apagarlo tampoco: es la vuelta atrás más r
 En el mismo ejemplo, puedes desplegar el lunes con la bandera apagada, comprobar el sistema y lanzar el martes para un grupo. También puedes lanzar directamente durante el despliegue si la funcionalidad es sencilla y ese control adicional no aporta nada. Separarlos es una herramienta para coordinar cambios y reducir exposición, no una obligación para cada modificación.
 
 Desactivar no siempre basta: las compras ya guardadas, los mensajes enviados o los cambios de esquema no desaparecen. Y si una rama antigua deja de ser compatible con los datos nuevos, la bandera ya no ofrece una reversión segura. Verifica qué se puede recuperar antes de tratarla como un botón universal de deshacer.
+
+Para seguir el mismo carrito, separa dos fallos. Si la versión nueva no arranca, afecta al despliegue aunque la bandera esté apagada: el proceso contiene y carga código nuevo. Si arranca bien, pero el cálculo del carrito falla solo cuando se activa, retirar el acceso mediante la bandera puede reducir la exposición sin cambiar la versión instalada.
+
+Un despliegue canary limita qué instancias reciben la versión; un lanzamiento gradual limita quién ve el comportamiento. Pueden coincidir o combinarse, pero no miden exactamente lo mismo. Un problema de arranque se detecta con la salud de las instancias; un error de precio necesita comprobar resultados del recorrido de compra.
 
 Su coste es que cada interruptor añade una rama al código. Los que ya no se usan se eliminan; si no, se acumulan y nadie sabe qué combinaciones están probadas.
 

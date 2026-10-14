@@ -29,6 +29,16 @@ console.log(aceleracion(0.1, 100).toFixed(2)); // "9.17"
 
 Incluso con una cantidad idealmente ilimitada de núcleos, los diez segundos no desaparecen. Para este trabajo fijo, la aceleración no puede superar diez.
 
+## Dónde merece la pena optimizar
+
+Con ocho núcleos, el caso anterior tarda idealmente `10 + 90/8 = 21,25` segundos. Con dieciséis, `15,625`. Duplicar de ocho a dieciséis no reduce el tiempo a la mitad porque los diez segundos secuenciales no se reparten. Cada ampliación se acerca más al límite y aporta menos mejora absoluta.
+
+En cambio, reducir la preparación de diez a cinco segundos cambia el límite ideal de diez a veinte veces la velocidad original. A veces merece más la pena quitar una dependencia secuencial o preparar datos una sola vez que duplicar otra vez la parte paralela.
+
+La misma cuenta sirve fuera del paralelismo. Si una función ocupa el 5 % del tiempo y consigues hacerla infinitamente rápida, el programa todavía conserva el 95 % restante. La aceleración máxima sería `1 / 0,95`, aproximadamente `1,053`: apenas un 5,3 %. Una mejora local espectacular no garantiza una mejora global parecida.
+
+Por eso primero se mide un recorrido completo y se identifica su coste dominante. Después de optimizar, hay que medir otra vez: el cuello de botella puede haberse desplazado. En programas reales también puede aparecer más coordinación al aumentar núcleos, así que ni siquiera la fracción secuencial inicial tiene por qué permanecer constante al cambiar la implementación.
+
 ## El modelo tiene condiciones
 
 El cálculo supone reparto perfecto de la parte paralela y omite comunicaciones, sincronización y costes de coordinación. En una implementación real, esos costes pueden empeorar el resultado. El ejemplo no es una medición de un programa concreto.

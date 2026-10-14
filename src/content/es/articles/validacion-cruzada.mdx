@@ -114,6 +114,12 @@ Si miras la prueba, ves que la profundidad 8 sale peor y vuelves a elegir 3 por 
 
 La separación no consiste solo en apartar filas. El escalado, la imputación y la selección de variables también deben aprenderse sin utilizar información del conjunto que se está evaluando. En series temporales o datos agrupados, la división necesita además respetar tiempo o grupos.
 
+Por ejemplo, reservas primero el 20 % para prueba final y haces validación cruzada solo dentro del 80 % restante. En cada partición vuelves a aprender el escalador con sus filas de entrenamiento y lo aplicas a las de validación. Si ajustas el escalador una vez con todo el 80 % antes de separar las particiones, estas ya han influido en la transformación con la que se evaluarán.
+
+Después de seleccionar la profundidad, puedes entrenar el procedimiento elegido con aquel 80 % completo y evaluarlo una vez en el 20 % reservado. Esa prueba responde sobre el procedimiento fijado. Si su resultado provoca nuevos cambios, ya forma parte del desarrollo y necesitas conservar otra evaluación independiente para una estimación final.
+
+El porcentaje no es una receta: debe dejar suficientes casos relevantes en cada conjunto. Con pocos positivos, una partición puede no permitir estimar el error que importa. La independencia y la representatividad importan más que reproducir una proporción habitual.
+
 <Quiz
 	client:visible
 	question="En validación cruzada con 5 partes, ¿cuántas veces se usa cada dato para evaluar?"

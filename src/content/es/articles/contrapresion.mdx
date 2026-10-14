@@ -35,6 +35,16 @@ Con una capacidad de dos, el productor entrega A y B. Antes de insertar C encuen
 
 **¿Has hecho más rápido al consumidor?** No. Has limitado lo que se acumula y trasladado parte de la espera al productor. La capacidad máxima sigue siendo la del cuello de botella, salvo que cambies sus recursos o reduzcas el trabajo.
 
+## La presión debe atravesar toda la tubería
+
+Considera lectura de archivo, descompresión y escritura en red. Si la red se ralentiza, el escritor deja de aceptar más trabajo; el descompresor debe detener su producción y, a su vez, dejar de pedir fragmentos al lector. Si el descompresor sigue leyendo y guarda todas sus salidas en un array, solo has movido la acumulación a una etapa intermedia.
+
+El tamaño de los elementos también importa. Una cola limitada a cien mensajes no limita a cien kilobytes si cada mensaje puede ocupar varios megabytes. Puedes necesitar un presupuesto de bytes además del número de elementos, especialmente si una transformación aumenta el tamaño de la entrada.
+
+En el ejemplo de cien eventos entrantes y sesenta procesados por segundo, una capacidad de doscientos eventos se llena en cinco segundos si empieza vacía. Después hay que pausar, rechazar o perder trabajo: ninguna estructura de datos elimina esa decisión. Si más tarde la entrada baja a cuarenta, quedan veinte eventos por segundo de capacidad para vaciar la cola, siempre que el consumidor mantenga su ritmo de sesenta.
+
+Ese cálculo permite distinguir un pico absorbible de un déficit sostenido de capacidad. También explica por qué la edad del elemento más antiguo puede ser una señal más útil que «el proceso sigue vivo».
+
 ## Cuando el origen no puede esperar
 
 No toda fuente admite pausa. Un sensor puede seguir midiendo, y una aplicación no siempre puede conservar indefinidamente una petición abierta. Necesitas una política explícita: descartar, muestrear, combinar eventos, rechazar trabajo o guardarlo de forma duradera con un límite y una estrategia de recuperación.

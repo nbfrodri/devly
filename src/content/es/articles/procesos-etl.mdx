@@ -107,7 +107,7 @@ Con el abaratamiento del almacenamiento y la potencia de los almacenes en [la nu
 | Cambiar una transformación | Se reprocesa el origen o una copia conservada | Se puede recalcular desde lo cargado si se conservó |
 | Herramienta de transformación | Programas específicos | Normalmente [SQL](/articulos/que-es-sql/) |
 
-ELT tiene una ventaja importante: si una transformación tenía un error, se corrige y se vuelve a ejecutar sobre los datos originales, que siguen ahí.
+Si ELT conserva los datos originales cargados, permite corregir una transformación y volver a ejecutarla sobre ellos. Esa posibilidad depende de su política de retención.
 
 ### El mismo informe de dos formas
 
@@ -116,6 +116,10 @@ Para sumar ventas por ciudad, un flujo ETL puede leer los registros, normalizar 
 ETL encaja cuando necesitas retirar campos antes de entrar en el destino, aplicar una transformación que este no soporta o utilizar un motor específico. ELT encaja cuando el destino dispone de recursos de cálculo adecuados y quieres volver a transformar los datos cargados para usos diferentes.
 
 No debes convertir esa elección en una regla absoluta sobre conservar originales: un flujo ETL también puede archivarlos antes de transformar. Del mismo modo, ELT no garantiza retención indefinida ni exime de limpiar datos. Ambos necesitan controles de acceso, calidad, coste y conservación. El orden de las letras no sustituye esas decisiones.
+
+Supón que las ventas llegan como `ciudad = "lima"`, importe `1000` y unidad `centimos`. En ETL, un proceso intermedio puede convertir la ciudad a `Lima` y el importe a diez euros antes de cargar el resultado. En ELT, la tabla inicial conserva los campos recibidos y una transformación dentro del destino construye una tabla analítica con ese mismo resultado.
+
+Si descubres que otra fuente ya enviaba euros, necesitas revisar la regla en ambos enfoques. En ETL podrás recalcular si conservaste la entrada; en ELT, si no la eliminaste y registraste su procedencia. El lugar de transformación cambia dónde se consumen recursos y qué datos entran al destino, pero no elimina la necesidad de distinguir unidades y fuentes.
 
 <Quiz
 	client:visible

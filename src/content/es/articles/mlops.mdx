@@ -56,6 +56,16 @@ Puedes introducir un modelo de forma gradual, comparar con el anterior y conserv
 
 Después del despliegue, observa datos, predicciones, rendimiento y calidad cuando llegan etiquetas. La [deriva](/articulos/deriva-de-datos-y-de-concepto/) puede revelar que el entorno cambió. También puede haber una diferencia entre cómo se preparan características al entrenar y al servir.
 
+## Una versión que se pueda recuperar
+
+Imagina un modelo que estima retrasos de entrega. La versión 12 se entrenó con una instantánea identificada de pedidos, convierte distancias a kilómetros y rellena distancias desconocidas con una regla concreta. En producción, una actualización empieza a pasar metros. El servidor sigue aceptando números y devuelve resultados, pero el sistema completo ya no es el evaluado.
+
+Un paquete de despliegue debe vincular modelo y transformaciones. Su evaluación puede incluir una entrada conocida con la predicción esperada dentro de una tolerancia: detecta, por ejemplo, que el escalador equivocado está acompañando a los pesos correctos. Las pruebas de esquema por sí solas no encuentran un número válido expresado en otra unidad.
+
+Si promocionas la versión 13, registra qué versión sustituye y cómo volver a ella. Para inferencia nocturna necesitas además identificar los resultados generados: cambiar el servicio no retira automáticamente las predicciones ya escritas en una tabla. Para tiempo real, conservar el artefacto anterior permite revertir el servicio, siempre que sus dependencias y el formato de entrada sigan disponibles.
+
+Una puerta de promoción concreta podría exigir que no empeore la métrica principal en el conjunto reservado, que ningún segmento crítico cruce un límite acordado y que la latencia cumpla el plazo. Esos límites dependen del producto; lo esencial es fijarlos antes de elegir el candidato, para que el proceso no se adapte retrospectivamente al resultado favorito.
+
 ## Automatizar con criterios
 
 Entrenar periódicamente o ante una señal es una decisión del sistema. El entrenamiento automático no obliga a publicar automáticamente cualquier resultado. Puedes automatizar comprobaciones y mantener una aprobación cuando el impacto o la incertidumbre lo justifiquen.

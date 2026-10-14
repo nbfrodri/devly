@@ -40,6 +40,16 @@ Si mil clientes fallan juntos y todos esperan exactamente un segundo, producen u
 
 **¿Basta con esperar para hacer segura una escritura?** No. La espera controla la carga; la idempotencia y el protocolo controlan sus efectos. Resuelven problemas diferentes.
 
+## Repartir un plazo concreto
+
+Supón que una operación dispone de 900 milisegundos. El primer intento tiene un límite de 300 y termina por timeout. Esperas 100 antes de repetir. Quedan como máximo 500 para el resto, descontando además el tiempo de preparación y transporte que no esté incluido en aquellas cifras.
+
+Si el segundo intento consume otros 300 y decides esperar 200, ya no queda margen para una tercera llamada útil. Contar únicamente «hasta tres intentos» escondería este agotamiento. Antes de cada intento y de cada espera comprueba el tiempo restante; utiliza un reloj monotónico para medir duraciones, porque los ajustes del reloj civil no deberían alargar el plazo.
+
+Una variante llamada *full jitter* elige una espera uniforme entre cero y un techo que crece exponencialmente hasta un máximo. En el segundo reintento el techo podría ser 200 ms, pero dos clientes podrían esperar 37 y 164. No hay que confundir ese intervalo con la duración del timeout del intento: uno separa llamadas y el otro limita cuánto tarda cada llamada.
+
+La clave de idempotencia tampoco debe reutilizarse para un pedido nuevo. Identifica una intención concreta, con una política de caducidad y una asociación al contenido solicitado. De lo contrario puedes evitar duplicados y devolver por error el resultado de otra operación.
+
 ## El peligro de multiplicar intentos
 
 Si tres capas hacen hasta tres intentos cada una, una solicitud puede provocar hasta 27 llamadas en la capa final. Durante un fallo, precisamente cuando menos capacidad hay, el sistema recibe más trabajo.

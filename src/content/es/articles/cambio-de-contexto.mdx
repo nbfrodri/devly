@@ -29,3 +29,5 @@ Por eso crear muchos más hilos de los necesarios puede empeorar el rendimiento.
 ## No es cualquier salto del programa
 
 Llamar a una función no cambia automáticamente la tarea planificada. Entrar en el núcleo mediante una llamada al sistema tampoco obliga a seleccionar otro hilo: puede volver al mismo. Del mismo modo, una interrupción puede atenderse y devolver el control a la ejecución interrumpida sin un cambio entre tareas.
+
+Por ejemplo, A solicita una lectura que no puede completarse todavía. El sistema la deja esperando, conserva su contexto y ejecuta B. Cuando llegan los datos, A pasa a estar preparada, pero no tiene por qué recuperar inmediatamente la CPU: el planificador decide cuándo. Al reanudarla, se restaura el punto desde el que debe continuar. Estar preparada, estar ejecutándose y haber terminado una operación de entrada/salida son estados distintos.

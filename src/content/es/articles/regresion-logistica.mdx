@@ -47,6 +47,31 @@ Si perder un mensaje legítimo resulta muy costoso, quizá exijas una probabilid
 
 **¿Cambiar el umbral cambia los pesos aprendidos?** No por sí solo. Cambia cómo conviertes sus probabilidades en decisiones. Debes evaluar ese procedimiento completo con datos adecuados.
 
+## Una actualización de los pesos
+
+Para entender qué significa aprender, toma dos mensajes: uno con cero señales sospechosas y etiqueta cero, y otro con dos señales y etiqueta uno. La etiqueta uno significa spam. Partimos de peso e intercepto cero: ambos reciben probabilidad 0,5.
+
+Para esta pérdida, el gradiente del peso es el promedio de `(probabilidad - etiqueta) × entrada`. El del intercepto es el promedio de `probabilidad - etiqueta`. El gradiente indica hacia dónde aumenta la pérdida; restarlo mueve los parámetros en la dirección contraria.
+
+```js
+const datos = [{ x: 0, y: 0 }, { x: 2, y: 1 }];
+let peso = 0;
+let intercepto = 0;
+const sigmoid = (z) => 1 / (1 + Math.exp(-z));
+const errores = datos.map(({ x, y }) => sigmoid(intercepto + peso * x) - y);
+const gradientePeso = errores.reduce((s, e, i) => s + e * datos[i].x, 0) / datos.length;
+const gradienteIntercepto = errores.reduce((s, e) => s + e, 0) / datos.length;
+peso -= 0.4 * gradientePeso;
+intercepto -= 0.4 * gradienteIntercepto;
+
+console.log(peso.toFixed(1)); // "0.2"
+console.log(sigmoid(intercepto + peso * 2).toFixed(3)); // "0.599"
+```
+
+Tras un paso, el segundo mensaje pasa de 0,5 a aproximadamente 0,599. El primero continúa en 0,5 porque el intercepto aún no cambió. En los pasos siguientes se recalculan ambas probabilidades: no se reutilizan los errores iniciales. Con solo dos ejemplos no obtenemos un clasificador fiable, pero sí vemos cómo las etiquetas modifican una predicción.
+
+La pérdida de un positivo es `-log(p)`: con `p = 0,5` vale aproximadamente 0,693; con `p = 0,599`, 0,513. Para un negativo se usa `-log(1 - p)`. Por eso una respuesta segura pero equivocada resulta tan costosa. En entrenamiento real también puede añadirse **regularización**, una penalización que limita pesos excesivos.
+
 ## Una probabilidad no es certeza
 
 Que el modelo produzca 0,9 no demuestra que tenga razón en el 90 % de cualquier grupo o entorno. La **calibración** estudia si los valores predichos corresponden a frecuencias observadas en datos representativos.

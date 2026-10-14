@@ -60,6 +60,16 @@ Los [valores atípicos](/articulos/valores-atipicos/) pueden influir mucho porqu
 
 **¿Un ajuste perfecto con los datos de entrenamiento garantiza buenas predicciones?** No. Puede haber pocos datos, una selección sesgada o un uso fuera del rango observado. La evaluación con datos independientes sigue siendo necesaria.
 
+## Un ajuste con errores reales
+
+Ahora cambia los tiempos observados a `3, 5, 8`. La recta de mínimos cuadrados tiene pendiente `2,5` e intercepto aproximadamente `0,333`. Sus predicciones son `2,833`, `5,333` y `7,833`. Los residuos son aproximadamente `0,167`, `-0,333` y `0,167`: ya no hay una recta que pase por todos los puntos.
+
+El **error cuadrático medio**, o MSE, promedia sus cuadrados: aproximadamente `0,056`. Se expresa en unidades de tiempo al cuadrado. Su raíz, RMSE, vale aproximadamente `0,236` y vuelve a las unidades originales. Así puedes comparar el error con un requisito como «toleramos medio segundo», aunque el promedio no describe el peor caso.
+
+¿Cómo sabemos si la recta aporta algo? Una referencia sencilla predice siempre el tiempo medio, aquí `5,333`. Su MSE en estos tres datos ronda `4,222`. La recta mejora ese ajuste porque utiliza la relación con el tamaño. La comparación que importa para el uso real se hace también con observaciones que no participaron en el ajuste.
+
+Con varias características aparece otro problema: si dos entradas contienen casi la misma información, distintos pesos pueden compensarse y producir predicciones parecidas. No conviene interpretar cada coeficiente como una medida independiente de importancia. La **regularización** penaliza ciertos tamaños de los pesos y puede estabilizar el ajuste, a cambio de introducir otra decisión que debe validarse.
+
 ## Predecir no es explicar causas
 
 Un peso positivo describe una asociación en este modelo. No demuestra que intervenir sobre esa característica cause el cambio previsto. Variables omitidas, correlaciones entre entradas y sesgos de selección pueden alterar la interpretación.

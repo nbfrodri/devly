@@ -63,6 +63,8 @@ devly es un sitio educativo. Un artículo debe dejar al lector entendiendo el co
 
 **A fondo**: dentro de ese concepto no se deja nada importante sin explicar. Como referencia, un artículo de concepto o de comparación ronda entre 600 y 900 palabras.
 
+La cantidad y la calidad del contenido tienen prioridad sobre completar tareas del plan. Una casilla no se considera resuelta por mencionar el tema ni por alcanzar una longitud: el lector debe poder seguir un ejemplo, explicar el mecanismo y reconocer cuándo se aplica. Amplía lo necesario para conseguirlo; no recortes una explicación útil para cerrar una tanda ni añadas texto para cumplir una cifra. Las comprobaciones técnicas no sustituyen esta revisión editorial.
+
 ## Tipos de artículo
 
 **Concepto**: explica una idea a fondo. Es el tipo habitual y sigue la estructura de abajo. Título en forma de pregunta: "¿Qué es un proceso?".

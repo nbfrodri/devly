@@ -8,11 +8,25 @@ El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 
 
 ## Estado de ejecución
 
-**99 de 99 tareas implementadas** en `feat/content-plan-7`: 72 artículos nuevos; las otras 27 tareas se cubren con ampliaciones y apartados de comparación dentro de los conceptos correspondientes. El sitio pasa de 461 a 533 artículos. Las casillas registran la implementación en esta rama; la publicación del sitio depende de su integración en `main`.
+La primera implementación se integró en `main` mediante `78f706a`: 72 artículos nuevos y cobertura de las 99 propuestas, incluidas ampliaciones y comparaciones dentro de artículos existentes. El sitio pasó de 461 a 533 artículos. Las casillas registran esa cobertura temática; no constituyen una evaluación de profundidad didáctica.
 
 Se ampliaron las rutas existentes y se añadió «Modelos de IA en producción» porque cubre un recorrido propio de evaluación, despliegue y seguimiento, distinto de la introducción a los modelos. Verificación: `pnpm check`, 558 tests, auditoría de prerrequisitos y enlaces entrantes y 35 ejemplos ejecutados (34 bloques JavaScript/SQL y uno de Python con SQLite).
 
 Pendiente de revisión manual: apariencia y comportamiento en navegador, incluidos los cuatro diagramas Mermaid nuevos. No hay un navegador conectado en esta sesión; se hizo una comprobación HTTP puntual con Astro y se verificó la construcción estática completa. La comprobación adicional del parser de Mermaid en Node no pudo ejecutarse por la dependencia de DOMPurify de un DOM de navegador.
+
+### Segunda pasada editorial
+
+Revisión del 14 de octubre de 2026, preparada en `docs/plan-7-depth-review`. La primera versión presentaba demasiados mecanismos sin desarrollarlos y varias curiosidades apenas contaban la historia. Esta pasada revisa los 72 artículos nuevos y las ampliaciones del plan, sin añadir artículos para aumentar la cobertura.
+
+- Los 31 conceptos nuevos desarrollan un caso adicional: construcción de estados y gramáticas, costes amortizados, ejecución de consultas, anomalías transaccionales, coordinación de recursos, señales, arquitectura y aprendizaje de modelos. Los ejemplos muestran estados intermedios, cálculos o decisiones que antes solo se nombraban.
+- Las dos comparaciones nuevas y los apartados comparativos existentes siguen el mismo problema con ambas opciones. Se explican consecuencias observables: cuándo una réplica conserva un borrado, qué antigüedad tiene un resultado materializado o qué ejecución evalúa realmente un conjunto de prueba.
+- Las 16 curiosidades amplían el mecanismo o la historia documentada. Los accidentes reconstruyen la cadena de fallos; ELIZA recorre una regla de DOCTOR; SQL incorpora el testimonio de Chamberlin sobre el cambio de nombre; Simpson, cumpleaños y Amdahl desarrollan los cálculos y sus supuestos.
+- Se amplían 16 definiciones con ejemplos y distinciones concretas. Se conservan las siete definiciones breves cuyo ejemplo y alcance ya eran suficientes: ámbito, endianness, NULL, generador, iterador, aserción y clave candidata. También se revisan las definiciones integradas en artículos anteriores.
+- Se corrigen afirmaciones absolutas sobre aprendizaje en una época, tasa de aprendizaje, reproducibilidad mediante semillas, conservación de originales en ELT, activación de banderas y ejecución de promesas.
+
+La revisión modifica 84 artículos: 65 de los nuevos y 19 existentes. El criterio editorial es que cada ampliación enseñe un mecanismo o permita resolver un caso; la extensión por sí sola no acredita calidad. La guía incorpora expresamente que cantidad y calidad de contenido prevalecen sobre completar tareas.
+
+Verificación de los ejemplos: 39 bloques JavaScript/SQL ejecutados, más el ejemplo Python de aislamiento con SQLite; comprobación independiente de los cálculos numéricos desarrollados y auditoría de prerrequisitos, ciclos y enlaces entrantes de los 72 artículos. La revisión visual continúa pendiente: la herramienta de navegador no ofrece ninguna sesión disponible. Esta pasada no modifica componentes, estilos ni los cuatro diagramas Mermaid.
 
 ## Huecos detectados
 

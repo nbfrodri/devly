@@ -86,6 +86,10 @@ Utiliza un enlace duro cuando necesitas varios nombres para un mismo archivo den
 
 No los uses como sustituto de una copia de seguridad. Editar el archivo por cualquiera de sus nombres duros cambia el mismo contenido; seguir un simbólico también puede llevarte al dato original. Para conservar un estado anterior necesitas otra estrategia.
 
+También hay que distinguir editar de sustituir. Si un editor modifica el archivo existente, los dos nombres duros ven el contenido cambiado. Si guarda un archivo nuevo y después lo renombra sobre `informe.txt`, ese nombre pasa a identificar el nuevo inodo; el otro nombre duro puede seguir identificando el anterior. «Guardar» no describe por sí solo qué operación hizo el programa.
+
+Un enlace simbólico relativo guarda una ruta que se interpreta desde el directorio donde está el enlace, no desde cualquier directorio de trabajo del proceso que lo utiliza. Mover el enlace a otra carpeta puede cambiar a qué apunta aunque su texto sea idéntico. Al diagnosticarlo, inspecciona la ruta guardada y la ubicación del enlace, además de comprobar si existe un archivo con un nombre parecido.
+
 ## Cómo se reparte el disco
 
 El disco se divide en **bloques** de tamaño fijo, a menudo de 4 kilobytes. Un archivo ocupa un número entero de bloques, aunque le sobre sitio en el último.

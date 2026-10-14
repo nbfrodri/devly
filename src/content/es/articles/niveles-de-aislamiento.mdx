@@ -38,6 +38,14 @@ El estándar distingue Read Uncommitted, Read Committed, Repeatable Read y Seria
 
 En PostgreSQL, Read Committed utiliza una nueva instantánea por sentencia; dos consultas dentro de la misma transacción pueden observar confirmaciones diferentes. Repeatable Read mantiene una instantánea para la transacción y, en ese motor, también evita los fantasmas descritos por el estándar. Serializable añade garantías equivalentes a algún orden secuencial de las transacciones confirmadas, pudiendo abortar trabajos que deben reintentarse.
 
+## Una regla global puede romperse sin tocar la misma fila
+
+Dos personas están de guardia y la regla exige que siempre quede al menos una. Las transacciones A y B leen una instantánea donde ambas están disponibles. A desactiva la guardia de la primera persona; B desactiva la de la segunda. Cada una vio otra persona de guardia y cada una modifica una fila diferente.
+
+Si el aislamiento permite confirmar ambos cambios, el resultado deja cero personas disponibles. No ha hecho falta leer datos sin confirmar ni sobrescribir la misma fila. Esta anomalía se conoce como **sesgo de escritura**, o *write skew*, y explica por qué una instantánea estable no equivale a serialización.
+
+En un orden serial, la segunda transacción vería el efecto de la primera y ya no podría tomar aquella decisión. Un nivel serializable debe impedir que ambas confirmen con ese resultado, por ejemplo abortando una. También pueden diseñarse restricciones o bloqueos apropiados para expresar la regla. La solución depende de qué conjunto de datos protege la invariante, no solo de bloquear la fila que cada operación escribe.
+
 ## Una instantánea en SQLite
 
 Este ejemplo de Python usa únicamente SQLite y un directorio temporal. En modo WAL, muestra cómo una lectura conserva su instantánea mientras otra conexión confirma un cambio:

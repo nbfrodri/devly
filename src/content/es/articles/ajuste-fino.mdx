@@ -147,6 +147,14 @@ No son opciones completamente excluyentes: un alumno puede empezar de una base e
 
 La destilación no garantiza que el alumno conserve todas las capacidades, y puede transmitir errores del maestro. Evalúa la tarea real con datos independientes. Ajustar tampoco crea por sí solo conocimiento siempre actualizado ni elimina la necesidad de recuperación de información cuando esa es la necesidad del producto.
 
+Para clasificar documentos en cinco categorías internas, entrenar desde cero significa que el modelo debe aprender con su inicialización y los datos aportados, sin heredar los pesos de una base. Si dispones de pocos ejemplos, aprender también buenas representaciones del lenguaje puede ser la parte más difícil.
+
+Ajustar una base preentrenada permite partir de representaciones ya aprendidas y adaptar la clasificación a tus etiquetas. Aun así, necesitas ejemplos representativos, incluidas fronteras entre categorías. Si tus etiquetas son ambiguas, los pesos previos no resuelven ese desacuerdo.
+
+Para destilar, un maestro puede proporcionar puntuaciones o respuestas sobre documentos y servir de señal para entrenar un alumno más barato de ejecutar. Dos documentos que el maestro considera casi empatados contienen información diferente de una única etiqueta rígida. Pero el alumno necesita una evaluación con referencias independientes: coincidir mucho con el maestro no demuestra que ambos clasifiquen bien.
+
+Así, compara qué capacidad se hereda, de dónde procede la señal de aprendizaje y qué coste necesita la inferencia final. Son preguntas más útiles que ordenar las tres técnicas como si una sustituyera universalmente a las otras.
+
 ## Lo esencial
 
 - El ajuste fino sigue entrenando un modelo ya entrenado con datos específicos.

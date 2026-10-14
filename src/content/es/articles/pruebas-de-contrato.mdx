@@ -42,6 +42,28 @@ Un simple archivo JSON escrito a mano no realiza automáticamente esos pasos. La
 
 **Si la respuesta simulada tiene el formato correcto, ¿ya está probada la integración?** No. Falta comprobar que el proveedor real pueda satisfacer ese formato y significado en el estado requerido.
 
+## Ver un contrato que se rompe
+
+Podemos representar una parte del acuerdo con una función ejecutable. No genera un pacto de una biblioteca ni levanta un proveedor: aísla las restricciones para ver exactamente qué cambio detectan.
+
+```js
+const respuestaCompatible = (respuesta) =>
+	respuesta.estado === 200 &&
+	Number.isInteger(respuesta.cuerpo.id) &&
+	typeof respuesta.cuerpo.total === "number" &&
+	respuesta.cuerpo.moneda === "EUR";
+
+const anterior = { estado: 200, cuerpo: { id: 42, total: 1250, moneda: "EUR" } };
+const cambiada = { estado: 200, cuerpo: { id: 42, total: "1250", moneda: "EUR" } };
+
+console.log(respuestaCompatible(anterior)); // true
+console.log(respuestaCompatible(cambiada)); // false
+```
+
+La segunda respuesta rompe el tipo de `total`. Para convertir este ejemplo en una verificación de proveedor, la respuesta debe proceder de una petición a su implementación con el pedido 42 preparado, en lugar de escribirla a mano. En la prueba del consumidor, el doble devuelve la primera forma y se comprueba que el cliente calcula o presenta el importe correctamente. Son dos comprobaciones conectadas por el mismo acuerdo.
+
+Hay una ruptura que la función no detecta: que `1250` pase de significar céntimos a significar euros. Sigue siendo un número y satisface las restricciones. Por eso el contrato necesita ejemplos cuyo significado se compruebe: un pedido preparado con precio conocido debe devolver el importe esperado en la unidad documentada. La compatibilidad incluye semántica, no solo tipos.
+
 ## Qué debe fijarse
 
 Ser demasiado estricto vuelve frágil el contrato. Exigir una fecha exacta cuando basta una fecha válida puede impedir cambios inocuos. Ser demasiado permisivo deja pasar cambios importantes: aceptar cualquier texto como moneda no comprueba que el consumidor reciba una divisa reconocida.

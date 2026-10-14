@@ -79,6 +79,14 @@ En una consulta con varios `JOIN`, SQLite muestra recorridos anidados. El orden 
 
 No basta, por tanto, con buscar la palabra `INDEX`. Pregunta cuántas veces se repite una operación, qué condiciones puede aprovechar y cuántos datos tendrá que visitar. La cantidad de filas producida es su [cardinalidad](/articulos/cardinalidad-de-una-consulta/). Un `SCAN` tampoco significa siempre un error: para una tabla pequeña o una consulta que necesita casi todas las filas, recorrer puede ser la mejor elección.
 
+## Por qué invertir el índice cambia la pregunta
+
+El índice `(cliente_id, total)` coloca juntos los pedidos de cada cliente y los ordena por total dentro del grupo. Un índice `(total, cliente_id)` comienza por agrupar el total. Puede ser útil para otras preguntas, pero ya no ofrece el mismo acceso directo a un único grupo de cliente. Tener las mismas columnas en un índice no implica tener el mismo orden útil.
+
+Ahora imagina un `JOIN` que encuentra cien clientes y consulta sus pedidos mediante un índice. Si cada cliente tiene tres pedidos, el trabajo interior se repite cien veces y entrega unas trescientas filas. Si hay un cliente con un millón de pedidos, la distribución cambia radicalmente el coste aunque el esquema sea idéntico. Las estimaciones basadas en promedios pueden no reflejar ese caso.
+
+Por eso, al leer un plan, separa cuántas filas visita una operación, cuántas produce y cuántas veces se ejecuta. Un filtro puede devolver pocas filas después de leer muchas. Un acceso individual muy rápido puede costar mucho al repetirse. El objetivo no es acumular palabras como `SEARCH`, sino explicar dónde se consume el trabajo de la consulta real.
+
 ## Plan y medición son cosas distintas
 
 `EXPLAIN QUERY PLAN` describe la estrategia, pero no mide cuánto tarda ni cuántas filas reales procesa cada paso. Otros motores tienen herramientas como `EXPLAIN ANALYZE`, que ejecutan la consulta y añaden mediciones. No las confundas con una inspección que solo planifica, especialmente si la sentencia modifica datos.

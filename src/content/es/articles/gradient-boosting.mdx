@@ -48,6 +48,16 @@ console.log(mse(nuevas)); // 0.25
 
 El código ilustra la actualización suponiendo que ya se obtuvo la corrección. No implementa el entrenamiento de un árbol ni demuestra cómo generalizará a ejemplos nuevos.
 
+## De dónde sale la corrección de un árbol
+
+El ejemplo anterior recibe residuos ya separados. Para construir realmente un árbol, este necesita características con las que distinguir casos. Supón cuatro viviendas de `40, 50, 80, 90` metros cuadrados, con alquileres didácticos de `400, 500, 800, 900`. La predicción inicial es su media: `650`.
+
+Los residuos son `-250, -150, 150, 250`. Un árbol de una sola división puede preguntar si la superficie es menor que 65. Su hoja izquierda predice el residuo medio de los dos primeros casos, `-200`; la derecha, `200`. Estos valores se aprenden de los residuos de cada grupo, no de una lista de correcciones elegidas para cada vivienda.
+
+Con tasa `0,5`, la nueva predicción es `550` para las pequeñas y `750` para las grandes. Los residuos pasan a `-150, -50, 50, 150`. El siguiente árbol se ajusta a esos errores nuevos. Puede elegir otra división, por ejemplo para distinguir dentro del grupo de viviendas pequeñas.
+
+Al predecir una vivienda no vista, primero se obtiene `650` y después se recorren los árboles aprendidos, sumando sus hojas multiplicadas por la tasa. No se necesita conocer el alquiler real de esa vivienda para aplicar las correcciones: la superficie determina qué hoja usar. Esa diferencia es lo que convierte una actualización numérica en un modelo capaz de predecir entradas nuevas.
+
 ## Por qué reducir la contribución
 
 La **tasa de aprendizaje** controla cuánto aporta cada etapa. Una tasa menor suele necesitar más etapas para conseguir el mismo ajuste. Eso puede ayudar a controlar el aprendizaje, pero también cuesta más tiempo y no evita por sí solo el sobreajuste.

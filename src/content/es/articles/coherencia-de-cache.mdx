@@ -55,6 +55,14 @@ Si un hilo escribe datos y luego una bandera, otro no puede deducir automáticam
 
 Utiliza primitivas del lenguaje, como bloqueos o operaciones atómicas con el contrato apropiado. No sustituyas ese contrato por una suposición sobre lo rápido que se comunicarán las cachés.
 
+## El límite se ve con dos ubicaciones
+
+Supón dos variables, `dato = 0` y `listo = 0`. Un hilo escribe primero `dato = 42` y después `listo = 1`. Otro espera a observar `listo` y entonces consulta `dato`. El protocolo de coherencia puede coordinar cada ubicación sin que esa secuencia constituya, por sí sola, una publicación válida según el lenguaje.
+
+Para expresar la dependencia necesitas sincronización: por ejemplo, una publicación con semántica de liberación y una lectura de adquisición que observe esa publicación, siguiendo las reglas del lenguaje. Esa relación permite razonar sobre qué escrituras anteriores deben hacerse visibles. No se obtiene añadiendo una espera arbitraria ni suponiendo que «ya habrá llegado a RAM».
+
+La diferencia también aclara qué no hace una invalidación. Invalidar la copia de una línea no resuelve automáticamente todos los órdenes entre otras líneas, todas las transformaciones del compilador ni todas las carreras del programa. El hardware proporciona mecanismos sobre los que el lenguaje construye su contrato de concurrencia; quien programa debe utilizar ese contrato.
+
 ## Falso compartido
 
 Cuando dos hilos actualizan variables distintas dentro de una misma línea, la propiedad puede desplazarse entre núcleos continuamente. Se llama **falso compartido**: la unidad física de coordinación es mayor que el dato lógico que cada hilo necesita.

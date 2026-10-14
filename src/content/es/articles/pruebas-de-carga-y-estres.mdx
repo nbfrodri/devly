@@ -55,6 +55,16 @@ Comprueba también que el generador puede mantener la demanda. Si se satura prim
 
 Una cifra máxima sin condiciones reproducibles no permite comparar versiones. Conserva escenario, entorno, datos, configuración y duración.
 
+## Interpretar dos resultados del mismo escenario
+
+En una prueba de carga didáctica envías cien solicitudes por segundo durante diez minutos y exiges que el 99 % termine en menos de 400 ms, con menos del 0,1 % de errores. Si el promedio es 100 ms pero el percentil 99 llega a dos segundos, no se cumple el objetivo de latencia. El promedio no puede sustituir el criterio que fijaste.
+
+Después aumentas gradualmente a doscientas y trescientas solicitudes por segundo. A partir de cierto nivel, la tasa completada deja de crecer y la cola envejece. Ese punto muestra saturación para esa mezcla y ese entorno. Mantener la llegada por encima de la salida no demuestra más capacidad: acumula trabajo pendiente.
+
+Al bajar de nuevo a cien, compruebas si el sistema vuelve al estado inicial o sigue atendiendo solicitudes antiguas. Un límite de cola que rechaza pronto puede mejorar la recuperación aunque produzca más errores inmediatos durante el pico. Debes evaluar qué comportamiento necesita el producto, además del máximo rendimiento observado.
+
+El informe útil conserva la curva de demanda, la completada, errores, percentiles y recuperación en el tiempo. Publicar solo «alcanzó trescientas solicitudes por segundo» eliminaría la diferencia entre recibir, completar y cumplir los objetivos.
+
 ## Cuándo utilizar cada una
 
 La carga ayuda a comprobar requisitos para un lanzamiento o un cambio de implementación. El estrés ayuda a diseñar límites de admisión, aislamiento y recuperación. Una prueba prolongada busca problemas que aparecen con el tiempo; una de picos estudia cambios bruscos. No son nombres intercambiables para ejecutar la misma secuencia.

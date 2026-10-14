@@ -47,6 +47,14 @@ Los formatos de pocos bits y los algoritmos concretos no son intercambiables. Pa
 
 **¿Un archivo más pequeño prueba que las respuestas conservarán su calidad?** No. Solo has comprobado una propiedad de almacenamiento. La calidad y el rendimiento necesitan medidas separadas.
 
+## Por qué un valor extremo afecta a los demás
+
+Supón que casi todos los pesos están entre `-1` y `1`, pero uno vale `100`. Si una sola escala debe cubrir de `-100` a `100` con códigos de `-127` a `127`, el paso entre valores representables ronda `0,787`. Un peso de `0,1` terminaría en cero; otro de `0,5`, cerca de `0,787`. El problema no es solo el peso extremo: ha consumido resolución que necesitaban los demás.
+
+Usar escalas por grupos puede aislar parte de ese efecto. A cambio, cada grupo necesita guardar su escala y el cálculo debe aplicarla correctamente. Recortar el extremo conserva resolución en el centro, pero introduce un error grande en ese valor. La calibración sirve para tomar estas decisiones con distribuciones representativas, especialmente cuando se cuantizan activaciones que dependen de las entradas.
+
+También importa dónde ocurre la aritmética. Un sistema puede almacenar pesos con pocos bits, recuperarlos para calcular en otra precisión y acumular productos en una tercera. El ahorro en transferencias puede ser útil incluso sin multiplicaciones enteras completas. Por eso «modelo de cuatro bits» no describe por sí solo todo el recorrido de una operación ni permite deducir su aceleración.
+
 ## Después del entrenamiento o durante él
 
 La **cuantización posterior al entrenamiento** convierte un modelo ya aprendido, a veces utilizando datos de calibración para elegir representaciones adecuadas. El **entrenamiento consciente de cuantización** incorpora aproximaciones de ese efecto durante el aprendizaje para que el modelo pueda adaptarse.

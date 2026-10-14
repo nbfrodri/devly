@@ -80,6 +80,24 @@ Para saber si dos variables comparten un objeto, compara identidad. Para comprob
 
 No utilices una comparación profunda automáticamente. Puede ser costosa y su significado necesita reglas para fechas, conjuntos, objetos anidados o referencias cíclicas. Tampoco serializar con JSON ofrece una igualdad universal: ciertos valores se omiten, algunas estructuras no se representan y la serialización puede fallar.
 
+## Una copia superficial conserva identidades interiores
+
+Crear otro objeto no garantiza independencia en todos sus niveles. El operador de expansión de JavaScript copia propiedades, pero una propiedad que contiene una referencia sigue apuntando al mismo objeto interior:
+
+```js
+const ficha = { direccion: { ciudad: "Lima" } };
+const copia = { ...ficha };
+copia.direccion.ciudad = "Quito";
+
+console.log(ficha === copia); // false
+console.log(ficha.direccion === copia.direccion); // true
+console.log(ficha.direccion.ciudad); // "Quito"
+```
+
+Hay dos fichas exteriores y una única dirección compartida. Para cambiar la ciudad conservando la dirección anterior debes crear también una dirección nueva, por ejemplo mediante otra copia en ese nivel. Esta distinción permite explicar un error frecuente: comparar solo los objetos exteriores y concluir que ya no comparten estado.
+
+También importa en colecciones. Un `Set` de JavaScript conserva dos objetos recién creados con las mismas propiedades porque sus identidades son distintas. Si quieres eliminar usuarios duplicados por identificador, debes expresar esa regla de dominio, por ejemplo utilizando el identificador como clave. No se deduce de una igualdad estructural automática.
+
 ## Particularidades numéricas
 
 En JavaScript, `Object.is` y `===` tampoco son idénticos para todos los valores:

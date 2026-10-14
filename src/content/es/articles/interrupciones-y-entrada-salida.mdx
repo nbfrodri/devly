@@ -141,10 +141,16 @@ Por eso existen estrategias híbridas: utilizar avisos para detectar actividad y
 
 Este sondeo consulta estado de dispositivos. No es la misma capa que el polling de una API HTTP, aunque comparta la idea de preguntar periódicamente. Y [DMA](/articulos/acceso-directo-a-memoria-dma/) resuelve mover datos, no decidir cuál de estas formas avisa de su finalización.
 
+Con un evento por segundo, consultar un millón de veces en ese segundo produce casi todas las consultas vacías. Una interrupción permite dedicar ese tiempo a otras tareas y atender el evento cuando llega el aviso. En cambio, con una secuencia intensa de eventos, entrar y salir de un manejador para cada uno puede consumir una parte significativa del procesador.
+
+Un diseño híbrido puede recibir una interrupción que indica actividad y después sondear una cola de completados para procesar varios elementos. Al agotarse el trabajo, vuelve a depender de avisos. Es una manera de adaptar el coste al patrón de carga, siempre que se coordinen correctamente el último sondeo y la reactivación de avisos para no perder un evento.
+
+La decisión debe medir latencia y CPU juntas. Una espera activa puede ser razonable en un contexto dedicado con un plazo muy corto y resultar un desperdicio en otro donde casi nunca llega trabajo.
+
 ## Lo esencial
 
 - El procesador se comunica con los dispositivos leyendo y escribiendo los registros de sus controladores.
-- Preguntar sin parar, el sondeo, desperdicia el procesador.
+- El sondeo consume CPU para comprobar estado; su utilidad depende de la carga y la latencia requerida.
 - Con interrupciones, el dispositivo avisa y el procesador atiende y vuelve a lo que hacía.
-- El acceso directo a memoria mueve datos sin ocupar al procesador.
+- DMA evita que la CPU copie cada unidad, pero requiere preparación y coordinación.
 - El temporizador, las excepciones y las llamadas al sistema usan el mismo mecanismo.

@@ -57,6 +57,14 @@ Supón que el receptor admite 64 kilobytes, pero el emisor tiene una ventana de 
 
 Aumentar búferes sin medir puede crear colas más largas en vez de resolver el cuello de botella. Observa rendimiento, pérdidas y latencia bajo carga, no solo el máximo de una transferencia aislada.
 
+## Relacionar ventana y tiempo de ida y vuelta
+
+Con una ventana de 16 KiB y un tiempo de ida y vuelta de 100 ms, renovar una ventana completa cada ronda corresponde aproximadamente a 160 KiB por segundo, si ignoramos otros límites. Con el mismo margen y 20 ms, la estimación sube a 800 KiB por segundo. La ventana no ha cambiado; ha cambiado el tiempo necesario para recibir confirmaciones y poder avanzar.
+
+Para llenar un camino de gran capacidad y retardo hacen falta suficientes datos en vuelo. Ese volumen se relaciona con el producto entre capacidad y tiempo de ida y vuelta. Pero aumentar indiscriminadamente lo pendiente también puede llenar colas y elevar la latencia sin aumentar lo que el enlace entrega.
+
+En el control clásico, una fase idealizada de arranque puede pasar de una ventana de dos segmentos a cuatro y después a ocho por rondas. No significa que la implementación deba empezar siempre con dos ni que cada confirmación duplique la ventana. El crecimiento depende de cuántos bytes se confirman y de las reglas aplicadas. Separar el ejemplo conceptual de los parámetros concretos evita interpretar el algoritmo como una receta fija para todas las conexiones.
+
 ## Lo esencial
 
 - Flujo y congestión controlan recursos diferentes.

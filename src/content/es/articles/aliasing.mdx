@@ -46,6 +46,14 @@ El límite exacto requiere tratar condiciones matemáticas de la señal; en la p
 
 **Si solo te interesan frecuencias de hasta cien hercios, ¿puedes ignorar el resto antes de medir?** No. Una componente mayor puede plegarse precisamente dentro de la banda que te interesa.
 
+## Localizar la frecuencia aparente
+
+Con muestreo a 1000 Hz, restar o sumar múltiplos de 1000 a una frecuencia no cambia sus valores en los instantes de muestreo, una vez considerada la periodicidad. Para señales reales puedes plegar después el resultado a la banda entre cero y 500 Hz. Por eso un coseno de 700 Hz aparece como uno de 300 Hz, y uno de 1100 Hz como uno de 100 Hz.
+
+Imagina un sensor que debe conservar vibraciones hasta 100 Hz. Muestrear a 1000 Hz deja margen, pero una interferencia de 900 Hz puede entrar como 100 Hz. Un filtro digital que elimine las frecuencias superiores a 100 no la quitaría: después de adquirir, ya está dentro de la banda que quieres conservar.
+
+El filtro anterior al muestreo debe atenuar suficientemente las componentes capaces de plegarse a la banda útil. «Suficientemente» depende del error tolerable y de la amplitud de esas interferencias. No existe un corte físico ideal que pase todo hasta un límite y anule inmediatamente lo demás. Elegir margen entre banda útil y frecuencia de Nyquist permite construir una transición realizable.
+
 ## Filtrar antes de perder información
 
 Un **filtro antialiasing** atenúa las componentes que no deben entrar en la banda muestreada. Antes de una conversión analógica a digital actúa en la parte analógica, aunque una cadena de adquisición pueda combinar técnicas analógicas y digitales.

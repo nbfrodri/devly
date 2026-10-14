@@ -61,6 +61,16 @@ Una tabla pequeña oculta costes. Actualizar millones de filas puede generar blo
 
 La estrategia depende del motor y del cambio. Que una operación sea rápida en SQLite local no demuestra que otra base de datos pueda aplicarla sin bloquear en producción.
 
+## Evitar que la copia pise un cambio reciente
+
+La copia inicial, o **backfill**, también puede competir con la aplicación. Un proceso lee `nombre = Ana`; después, una petición cambia ambas columnas a `Ana María`; finalmente, el proceso escribe su copia antigua en `nombre_visible`. El resultado vuelve a ser incoherente aunque la aplicación ya escriba los dos campos.
+
+Una estrategia es hacer la copia dentro de actualizaciones que comprueben el estado actual y solo rellenen filas todavía pendientes. Otra utiliza versiones para detectar que una fila cambió desde su lectura. La elección depende de qué significa un valor nulo y de qué escritores siguen activos: añadir `WHERE nombre_visible IS NULL` no basta si un escritor antiguo continúa modificando solo `nombre` después de la copia.
+
+Por eso el orden de despliegue es parte de la migración. Primero se prepara el esquema; después se actualizan los escritores y se espera a que desaparezcan los antiguos; luego se completa y verifica la copia con una estrategia compatible con esos escritores. Solo entonces se cambian definitivamente los lectores y se retira la columna anterior.
+
+Para una tarea larga, registra progreso por una clave estable y comprueba filas pendientes al terminar. Un reinicio no debería obligar a adivinar qué lotes se aplicaron. Las verificaciones deben buscar tanto valores ausentes como divergencias: contar filas copiadas no demuestra que sus contenidos coincidan.
+
 ## Contraer y recuperar
 
 La retirada llega después de migrar lectores y escritores, comprobar datos y cumplir la ventana de compatibilidad. Algunas modificaciones en SQLite requieren reconstruir tablas; su documentación describe las capacidades y limitaciones de `ALTER TABLE`.

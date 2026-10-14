@@ -96,6 +96,12 @@ Un evento puede llevar una hora de origen distinta de la hora en que llega al si
 
 Los sistemas también pueden ejecutar streaming mediante microlotes. El mecanismo interno no elimina la semántica de flujo continuo. Elige según la frescura requerida, las posibilidades de reproceso y la complejidad que el producto pueda justificar.
 
+Supón que un pedido se confirmó a las 23:59, pero llega al sistema a las 00:03. Un informe diario puede asignarlo al día de confirmación o al de recepción; son preguntas diferentes. Un lote que cierre a medianoche necesitará esperar, corregirse o dejarlo fuera según su contrato. Un flujo necesita una regla equivalente sobre ventanas y datos tardíos.
+
+En streaming, un total mostrado a las 00:01 puede ser provisional y actualizarse después. Si el resultado ya activó una decisión —por ejemplo, una alerta—, también debes definir qué hacer con una corrección. En lotes, repetir el día completo simplifica ciertos recálculos, pero puede tardar más y duplicar efectos si la salida no se sustituye de forma controlada.
+
+Ninguna opción garantiza por su nombre resultados exactos una sola vez. Hay que estudiar lectura, estado y escritura de salida como un recorrido: reanudar desde una posición sin coordinar los efectos puede repetirlos.
+
 ## Lo esencial
 
 - MapReduce reparte un cálculo entre muchas máquinas en dos fases: map y reduce.

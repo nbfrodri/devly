@@ -22,6 +22,16 @@ El número hexadecimal `0x1234` puede escribirse como los bytes `12 34` o `34 12
 
 La historia ayuda a recordar que [endianness](/articulos/endianness/) no describe dos valores matemáticos distintos. Describe dos representaciones del mismo valor. El orden debe conocerse antes de interpretar el mensaje.
 
+## Ver el mismo mensaje desde ambos lados
+
+Supón que un archivo guarda `0x1234` en dos bytes, primero `0x12` y después `0x34`. Un lector que interprete el primero como el más significativo calcula `0x12 × 256 + 0x34 = 4660`. Si lo interpreta como el menos significativo obtiene `0x34 × 256 + 0x12 = 13330`.
+
+Los dos lectores han recibido exactamente los mismos bytes y sus operaciones aritméticas pueden ser correctas. Lo que difiere es la regla para reconstruir el valor. Este tipo de fallo puede pasar inadvertido con cero o con patrones simétricos: invertir dos bytes iguales no cambia el resultado. Un ejemplo de prueba con bytes distintos descubre mejor el desacuerdo.
+
+La comparación con los huevos de Swift satiriza lo fácil que resulta convertir una convención en una disputa sobre cuál es la forma natural. Para el intercambio, la pregunta útil es qué orden exige el formato. Convertir al entrar y salir permite conservar órdenes nativos distintos sin cambiar el significado de los datos.
+
+No hay que invertir indiscriminadamente cualquier secuencia. Un texto ASCII está compuesto por caracteres de un byte; el orden de sus letras pertenece al contenido, no a la representación de un entero multibyte. Primero identifica el tipo del campo y después aplica la regla de serialización que le corresponda.
+
 ## Acordar la frontera
 
 No hace falta que todas las máquinas tengan el mismo orden nativo para intercambiar datos. Un protocolo o un formato puede establecer uno, y cada participante convierte al escribir y al leer.

@@ -29,3 +29,5 @@ Necesitarás condiciones adicionales para un filtro vacío, una combinación con
 Tampoco equivale a una definición general de terminado, que puede exigir revisión, documentación o accesibilidad para cualquier cambio. Las condiciones de aceptación concretan el comportamiento de esta funcionalidad.
 
 Lo útil es acordarlas antes de implementar, junto con quienes conocen el problema. Las [pruebas de aceptación](/articulos/pruebas-de-software/) comprueban esos criterios; automatizarlas ayuda a detectar regresiones, pero no sustituye conversar sobre un requisito ambiguo.
+
+Una condición negativa también aporta precisión: «si el mínimo supera al máximo, se informa del error y no se aplica un filtro parcial». Aquí se acuerdan tanto la respuesta visible como lo que ocurre con el estado. «Mostrar un error» a secas dejaría sin resolver si la lista conserva el filtro anterior, se vacía o utiliza uno de los extremos. Esas diferencias afectan a la experiencia aunque el código incluya un mensaje en todos los casos.

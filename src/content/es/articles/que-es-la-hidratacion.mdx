@@ -28,3 +28,5 @@ La intención es reutilizar el HTML existente. En React, el resultado inicial de
 El [renderizado solo en cliente](/articulos/spa-mpa-y-renderizado-en-servidor/) crea la interfaz desde JavaScript sin partir de ese HTML ya renderizado. La hidratación tampoco significa que todo el documento necesite JavaScript.
 
 En una arquitectura de **islas**, solo se hidratan componentes concretos. Por ejemplo, un artículo puede conservar su texto como HTML y cargar lógica únicamente para un cuestionario. Reducir las zonas hidratadas reduce el código y el trabajo que necesita el navegador, aunque cada componente sigue teniendo su propio coste.
+
+Una discordancia típica aparece si el servidor representa una fecha en UTC y el primer render del cliente utiliza la zona local. Ambos parten de la misma fecha, pero generan textos distintos. Puedes fijar una representación inicial común y actualizarla después cuando corresponda. La clave es acordar qué contenido debe coincidir al conectar el código; renderizar HTML en el servidor no proporciona por sí solo ese acuerdo sobre reloj, idioma o datos.
