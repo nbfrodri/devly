@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - complejidad-algoritmica
   - maquina-de-turing
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Clay Mathematics Institute: P vs NP (en inglés)"
     url: https://www.claymath.org/millennium/p-vs-np/
@@ -47,7 +47,11 @@ La pregunta es si la inclusión es estricta: ¿hay problemas cuyas soluciones se
 <Quiz
 	client:visible
 	question="Si un problema pertenece a P, ¿puede pertenecer también a NP?"
-	options={["Sí: P está incluida en NP", "No: son clases opuestas", "Solo si utiliza azar"]}
+	options={[
+		"Sí: P está incluida en NP",
+		"No: son clases opuestas",
+		"Solo si utiliza azar",
+	]}
 	answer={0}
 />
 
@@ -67,6 +71,8 @@ Para la fórmula `(a o b) y (no a o b)`, una asignación como `a = falso`, `b = 
 
 Si alguien afirma que ninguna asignación funciona, presentar una asignación fallida no demuestra esa respuesta no. Ha descartado un candidato, no todos. La definición de NP garantiza certificados eficientes para respuestas afirmativas; no incorpora automáticamente la misma garantía para las negativas.
 
+### Las condiciones de una reducción
+
 Una reducción tampoco consiste en probar algunos ejemplos similares. Debe transformar cualquier instancia de A en una de B de modo que A tenga respuesta sí exactamente cuando la instancia transformada de B la tenga. Además, la transformación debe ser eficiente y no escribir una salida de tamaño exponencial. Si necesitara resolver A para construirla, no nos habría dado la herramienta que buscamos.
 
 Estas condiciones explican el alcance de la NP-completitud: conecta problemas enteros mediante transformaciones generales. No afirma que todas sus instancias sean igual de difíciles ni impide que una restricción particular del problema admita un algoritmo más rápido.
@@ -76,6 +82,11 @@ Estas condiciones explican el alcance de la NP-completitud: conecta problemas en
 No significa abandonar. Puedes resolver entradas pequeñas con búsqueda exacta, aprovechar restricciones, usar heurísticas sin garantía de óptimo o estudiar aproximaciones cuando el problema lo permita. También puedes reformular el requisito: quizá no necesitas la mejor solución, sino una que cumpla un umbral útil.
 
 No debes confundir NP-completo con [indecidible](/articulos/maquina-de-turing/). Un problema NP-completo se puede resolver con suficiente tiempo; el problema de la parada no tiene un algoritmo general que siempre responda correctamente.
+
+## Errores comunes
+
+- **Interpretar NP como «no polinómico».** NP contiene también los problemas de P.
+- **Invertir la reducción.** Para demostrar difícil B, se transforma un problema difícil conocido en B.
 
 ## Lo esencial
 

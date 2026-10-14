@@ -5,13 +5,15 @@ level: intermedio
 layer: sistemas
 prerequisites:
   - observabilidad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google SRE: Embracing Risk (en inglés)"
     url: https://sre.google/sre-book/embracing-risk/
   - title: "Google SRE: Service Level Objectives (en inglés)"
     url: https://sre.google/sre-book/service-level-objectives/
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Un **presupuesto de error** es la cantidad de incumplimiento compatible con un objetivo de fiabilidad durante una ventana definida. Permite hablar de riesgo con una medida compartida y decidir cuándo conviene priorizar estabilidad frente a otros cambios.
 
@@ -42,7 +44,16 @@ El redondeo evita presentar residuos de coma flotante como fracciones artificial
 
 Un objetivo de disponibilidad medido como proporción de tiempo permite calcular minutos de incumplimiento. Uno medido por peticiones calcula peticiones malas. Una caída durante tráfico alto y otra durante tráfico bajo pueden durar lo mismo y consumir presupuestos muy distintos en el segundo modelo.
 
-**¿Puedes convertir siempre el 0,1 % en una cantidad fija de minutos?** No. Solo si la definición del indicador y su ventana están basadas en tiempo. El denominador forma parte del contrato.
+<Quiz
+	client:visible
+	question="¿Cuándo puede expresarse un presupuesto directamente en minutos?"
+	options={[
+		"Siempre que el SLO sea un porcentaje",
+		"Cuando el indicador y la ventana se definen en tiempo",
+		"Solo si no hay tráfico",
+	]}
+	answer={1}
+/>
 
 ## Una política para utilizarlo
 
@@ -58,6 +69,8 @@ Si el objetivo permite un 0,1 % de peticiones malas y en la última hora falla u
 
 Con tráfico uniforme y un objetivo de treinta días, mantener ese ritmo agotaría en tres días el presupuesto completo de esa ventana. Si solo quedaba la mitad, se gastaría antes. El cálculo no predice el futuro: muestra las consecuencias de sostener el ritmo actual bajo esas condiciones.
 
+### Elegir ventanas de observación
+
 Una alerta muy corta responde rápido, pero puede dispararse por pocos errores; una ventana larga estabiliza la señal, pero tarda en reaccionar. Comparar ventanas corta y larga permite distinguir un pico ya terminado de un deterioro que continúa. Los umbrales deben considerar volumen y experiencia del usuario, no copiarse como constantes universales.
 
 También puedes tener un SLO de éxito y otro de latencia. Una petición correcta que tarda demasiado puede consumir el segundo sin consumir el primero. Cada presupuesto necesita su definición de evento bueno; sumarlos sin distinguir unidades oculta qué compromiso se ha incumplido.
@@ -67,6 +80,11 @@ También puedes tener un SLO de éxito y otro de latencia. Una petición correct
 Prometer el 100 % deja presupuesto cero y no elimina los fallos reales. Un objetivo extremadamente alto puede exigir una complejidad y un coste que no aporten valor proporcional. Debe basarse en necesidades de quienes utilizan el servicio y en lo que se puede medir de forma fiable.
 
 Un agregado también puede ocultar desigualdad: la mayoría recibe buen servicio mientras un grupo pequeño falla siempre. Revisa segmentos relevantes y no utilices el promedio para ignorar un problema concentrado.
+
+## Errores comunes
+
+- **Mezclar peticiones malas y minutos de caída.** Cada presupuesto conserva la unidad de su indicador.
+- **Revisar solo al final del mes.** Un consumo rápido exige atención antes de agotar el total.
 
 ## Lo esencial
 

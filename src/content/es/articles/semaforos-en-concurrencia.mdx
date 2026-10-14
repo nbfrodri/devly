@@ -6,11 +6,13 @@ layer: sistemas
 prerequisites:
   - hilos-y-concurrencia
   - condiciones-de-carrera-y-bloqueos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "OSTEP: Semaphores (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-sema.pdf
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Un **semáforo** es un mecanismo de sincronización que administra una cantidad de permisos. Una tarea adquiere un permiso para continuar y otra operación lo libera. Si no hay permisos disponibles, adquirir puede bloquear la tarea hasta que aparezca alguno.
 
@@ -28,7 +30,16 @@ La **liberación** devuelve un permiso y puede despertar a una tarea que esperab
 
 Con capacidad dos, A y B adquieren los permisos. C espera. Cuando A libera, C puede entrar. Si B falla y nunca libera, la capacidad efectiva queda reducida. Por eso la liberación debe estar asociada a una salida garantizada, también ante excepciones.
 
-**Si hay cero permisos, ¿significa que no quedan tareas?** No. Puede significar justamente que todos los recursos están ocupados y muchas tareas esperan.
+<Quiz
+	client:visible
+	question="¿Qué puede significar que un semáforo tenga cero permisos?"
+	options={[
+		"Que no existe trabajo pendiente",
+		"Que todos los permisos están ocupados y otras tareas esperan",
+		"Que todas las tareas terminaron",
+	]}
+	answer={1}
+/>
 
 ## Productor y consumidor
 
@@ -43,9 +54,19 @@ El orden importa. No debes mantener ocupado el cerrojo de la cola mientras esper
 
 ## Seguir los permisos de una cola
 
-Con capacidad tres, el estado inicial es `huecos = 3`, `elementos = 0`. El productor adquiere un hueco: queda `2, 0`; inserta A bajo el cerrojo y después anuncia el elemento: queda `2, 1`. El consumidor adquiere ese elemento: queda `2, 0`; extrae A y devuelve el hueco: vuelve a `3, 0`.
+Con una cola de capacidad tres, el ciclo es:
+
+| Paso | Huecos | Elementos disponibles |
+| --- | --- | --- |
+| Estado inicial | 3 | 0 |
+| El productor adquiere un hueco | 2 | 0 |
+| Inserta A y anuncia el elemento | 2 | 1 |
+| El consumidor adquiere un elemento | 2 | 0 |
+| Extrae A y devuelve el hueco | 3 | 0 |
 
 Entre adquirir y anunciar hay un permiso reservado para una operación en curso. Por eso no debes esperar que la suma de los contadores públicos sea siempre tres en cada instante intermedio. Los permisos representan disponibilidad y reservas, no una copia instantánea del contenido de la cola.
+
+### Recuperar un permiso tras un fallo
 
 Si el productor adquiere un hueco pero falla antes de insertar, debe devolver ese hueco. No debe anunciar un elemento que no existe. Si el consumidor adquirió un elemento, la recuperación debe precisar si lo extrajo y quién conserva la responsabilidad sobre él. Liberar indiscriminadamente ambos semáforos en cualquier excepción puede fabricar disponibilidad falsa.
 
@@ -69,6 +90,11 @@ Para el mismo almacén de impresoras, el mutex protege la lista de impresoras li
 Un semáforo no garantiza por sí solo orden justo, ausencia de inanición ni ausencia de bloqueos mutuos. Tampoco limita cuántas tareas esperan si tu programa sigue creándolas sin control: solo limita las que consiguen permisos.
 
 Liberar dos veces puede admitir más trabajo del previsto. Cancelar una tarea exige saber si ya adquirió el permiso para no devolver uno inexistente. Una biblioteca con gestores de recursos reduce errores, pero no elimina la necesidad de entender ese ciclo de vida.
+
+## Errores comunes
+
+- **Liberar un permiso que no se adquirió.** Puede admitir más tareas de las previstas.
+- **Esperar un elemento manteniendo el cerrojo de la cola.** El productor puede necesitar ese mismo cerrojo para permitir el progreso.
 
 ## Lo esencial
 

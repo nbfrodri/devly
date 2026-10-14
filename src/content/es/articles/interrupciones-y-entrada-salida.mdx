@@ -6,7 +6,7 @@ layer: hardware
 prerequisites:
   - como-funciona-un-procesador
   - que-es-un-sistema-operativo
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 18, Devices and Interrupts (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c18/
@@ -141,7 +141,11 @@ Por eso existen estrategias híbridas: utilizar avisos para detectar actividad y
 
 Este sondeo consulta estado de dispositivos. No es la misma capa que el polling de una API HTTP, aunque comparta la idea de preguntar periódicamente. Y [DMA](/articulos/acceso-directo-a-memoria-dma/) resuelve mover datos, no decidir cuál de estas formas avisa de su finalización.
 
+### Comparar poca y mucha actividad
+
 Con un evento por segundo, consultar un millón de veces en ese segundo produce casi todas las consultas vacías. Una interrupción permite dedicar ese tiempo a otras tareas y atender el evento cuando llega el aviso. En cambio, con una secuencia intensa de eventos, entrar y salir de un manejador para cada uno puede consumir una parte significativa del procesador.
+
+### Combinar aviso y sondeo
 
 Un diseño híbrido puede recibir una interrupción que indica actividad y después sondear una cola de completados para procesar varios elementos. Al agotarse el trabajo, vuelve a depender de avisos. Es una manera de adaptar el coste al patrón de carga, siempre que se coordinen correctamente el último sondeo y la reactivación de avisos para no perder un evento.
 

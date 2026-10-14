@@ -5,11 +5,13 @@ level: intermedio
 layer: redes
 prerequisites:
   - transformada-de-fourier
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Steven W. Smith: The Scientist and Engineer's Guide to DSP, capítulo 15 (en inglés)"
     url: https://www.dspguide.com/CH15.PDF
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Un **filtro digital** transforma una secuencia de muestras para modificar ciertas características de una señal. Puede suavizar variaciones, atenuar bandas de frecuencia, resaltar cambios o compensar efectos de un sistema de adquisición.
 
@@ -46,7 +48,16 @@ En tiempo, el filtro combina valores vecinos. En frecuencia, tiene una **respues
 
 La media móvil suele describirse como suavizado o paso bajo porque conserva variaciones lentas y atenúa algunas rápidas. Pero su respuesta no es un corte perfecto: atenúa de manera desigual y puede dejar pasar componentes que querrías eliminar. No basta con nombrarla «paso bajo» para usarla como cualquier filtro antialiasing.
 
-**Si aumentas la ventana, ¿solo quitas más ruido?** No. También extiendes la mezcla entre instantes y puedes borrar o retrasar detalles útiles.
+<Quiz
+	client:visible
+	question="¿Qué puede ocurrir al ampliar una media móvil?"
+	options={[
+		"Solo desaparece ruido",
+		"También se retrasan o se atenúan cambios útiles",
+		"La señal original se reconstruye exactamente",
+	]}
+	answer={1}
+/>
 
 ## Retardo y bordes
 
@@ -60,7 +71,11 @@ En los extremos debes decidir qué hacer: producir menos salidas, extender valor
 
 Si la entrada pasa de cero a seis y permanece allí, la media de tres muestras produce primero dos, luego cuatro y finalmente seis. No elimina el cambio: tarda varias muestras en reflejarlo por completo. Si aumentas la ventana, alargas esa transición. Para una alarma, suavizar puede reducir falsos avisos, pero también retrasar un aviso real.
 
+### Comparar dos y tres muestras
+
 Ahora considera una señal alternante `1, -1, 1, -1…`. Una media de dos posiciones la cancela porque cada pareja suma cero. La media de tres no: suma `1 - 1 + 1` o `-1 + 1 - 1` y deja una oscilación de magnitud un tercio. Dos filtros descritos informalmente como «promedios que suavizan» no tienen la misma respuesta frecuencial.
+
+### Observar la respuesta a un impulso
 
 La prueba con un **impulso**, una muestra uno rodeada de ceros, revela los coeficientes de un filtro FIR lineal e invariante en el tiempo. En la media de tres, aparecen tres contribuciones de un tercio, teniendo en cuenta cómo se representen el inicio y los bordes. Esa respuesta permite anticipar cómo se superpondrán las contribuciones de una señal más compleja.
 
@@ -73,6 +88,11 @@ La realimentación exige estudiar estabilidad y precisión numérica. No hace fa
 ## Elegir y comprobar
 
 Define frecuencia de muestreo, banda que quieres conservar, atenuación necesaria, retardo admisible y tratamiento de bordes. Prueba señales constantes, impulsos y componentes de frecuencia conocidas. Después comprueba datos representativos del uso real.
+
+## Errores comunes
+
+- **Suavizar sin medir el retardo.** El filtro puede retrasar también cambios auténticos.
+- **Usar datos futuros en un proceso en directo.** Una ventana centrada fuera de línea no es equivalente a un filtro causal.
 
 ## Lo esencial
 

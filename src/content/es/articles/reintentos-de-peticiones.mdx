@@ -6,11 +6,13 @@ layer: sistemas
 prerequisites:
   - atomicidad-e-idempotencia
   - limitacion-de-peticiones
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Amazon Builders' Library: Timeouts, Retries and Backoff with Jitter (en inglés)"
     url: https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Un **reintento** repite una operación que no ha terminado con una respuesta utilizable. Puede recuperar fallos transitorios, pero también duplicar efectos o agravar una sobrecarga. Diseñarlo consiste en decidir qué repetir, cuánto esperar y cuándo dejar de hacerlo.
 
@@ -38,13 +40,33 @@ El **backoff exponencial** aumenta la espera entre intentos, por ejemplo 100, 20
 
 Si mil clientes fallan juntos y todos esperan exactamente un segundo, producen una segunda oleada sincronizada. Distribuir los intentos reduce ese pico, aunque no crea capacidad nueva en el servidor.
 
-**¿Basta con esperar para hacer segura una escritura?** No. La espera controla la carga; la idempotencia y el protocolo controlan sus efectos. Resuelven problemas diferentes.
+<Quiz
+	client:visible
+	question="¿Qué hace segura la repetición de una escritura?"
+	options={[
+		"Esperar un segundo exacto",
+		"Un contrato de idempotencia adecuado a la operación",
+		"Cambiar la clave en cada intento",
+	]}
+	answer={1}
+/>
 
 ## Repartir un plazo concreto
 
-Supón que una operación dispone de 900 milisegundos. El primer intento tiene un límite de 300 y termina por timeout. Esperas 100 antes de repetir. Quedan como máximo 500 para el resto, descontando además el tiempo de preparación y transporte que no esté incluido en aquellas cifras.
+Supón un plazo total de 900 milisegundos:
 
-Si el segundo intento consume otros 300 y decides esperar 200, ya no queda margen para una tercera llamada útil. Contar únicamente «hasta tres intentos» escondería este agotamiento. Antes de cada intento y de cada espera comprueba el tiempo restante; utiliza un reloj monotónico para medir duraciones, porque los ajustes del reloj civil no deberían alargar el plazo.
+| Paso | Tiempo consumido en el paso | Plazo restante máximo |
+| --- | --- | --- |
+| Primer intento hasta timeout | 300 ms | 600 ms |
+| Espera antes de repetir | 100 ms | 500 ms |
+| Segundo intento hasta timeout | 300 ms | 200 ms |
+| Otra espera de 200 ms | 200 ms | 0 ms |
+
+La tabla omite preparación y transporte no incluidos en esos límites; en la práctica podrían reducir aún más el margen.
+
+Contar únicamente «hasta tres intentos» escondería que el plazo se ha agotado. Antes de cada intento y de cada espera, comprueba el tiempo restante. Para medir duraciones utiliza un **reloj monotónico**, que no retrocede con los ajustes del reloj civil.
+
+### Repartir la espera entre clientes
 
 Una variante llamada *full jitter* elige una espera uniforme entre cero y un techo que crece exponencialmente hasta un máximo. En el segundo reintento el techo podría ser 200 ms, pero dos clientes podrían esperar 37 y 164. No hay que confundir ese intervalo con la duración del timeout del intento: uno separa llamadas y el otro limita cuánto tarda cada llamada.
 
@@ -61,6 +83,11 @@ Conviene decidir dónde vive la política, limitar el número y la tasa de reint
 Para un pedido con clave de idempotencia K, el primer intento termina sin respuesta. El cliente comprueba que queda plazo, espera un intervalo con jitter y repite con K. Si el servidor ya completó el pedido, recupera el resultado asociado; si no, el contrato debe garantizar cómo evita ejecuciones simultáneas duplicadas.
 
 Al agotarse el presupuesto, el cliente comunica incertidumbre o inicia una consulta de estado según el producto. Inventar una respuesta de éxito o crear otra clave ocultaría el problema.
+
+## Errores comunes
+
+- **Cambiar la clave de idempotencia en cada intento.** El servidor puede interpretar cada repetición como una operación nueva.
+- **Reintentar en varias capas sin un presupuesto común.** Los intentos se multiplican cuando la dependencia tiene menos capacidad.
 
 ## Lo esencial
 

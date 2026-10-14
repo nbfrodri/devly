@@ -6,7 +6,7 @@ kind: definicion
 layer: aplicaciones
 prerequisites:
   - que-es-una-url
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Origin, origen (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Glossary/Origin
@@ -37,5 +37,7 @@ La **política del mismo origen** restringe qué puede leer un documento de otro
 El origen también ayuda a delimitar [almacenamiento del navegador](/articulos/almacenamiento-en-el-navegador/), como `localStorage`. Las cookies siguen reglas propias de dominio, ruta y otros atributos; no debes trasladarles sin más el modelo de almacenamiento por origen.
 
 No confundas **origen** con **sitio**: las reglas de mismo sitio utilizadas en cookies agrupan direcciones de otra manera. Esa diferencia explica que dos subdominios puedan ser del mismo sitio y, aun así, tener orígenes distintos.
+
+## Enviar y leer son permisos distintos
 
 La restricción de lectura tampoco equivale a impedir cualquier envío. Un documento puede provocar ciertas solicitudes a otro origen aunque no pueda leer la respuesta con JavaScript. Por eso CORS no sustituye las defensas frente a solicitudes no deseadas ni los permisos del servidor. Al diagnosticar un problema, separa tres preguntas: si la solicitud se envió, si el servidor la aceptó y si el navegador permite entregar la respuesta al código que la pidió.

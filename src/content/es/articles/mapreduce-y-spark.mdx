@@ -7,7 +7,7 @@ prerequisites:
   - escalado-vertical-y-horizontal
   - programacion-funcional
   - replicacion-y-particionado
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Apache Spark: Structured Streaming Programming Guide (en inglés)"
     url: https://spark.apache.org/docs/latest/streaming/index.html
@@ -95,6 +95,8 @@ Para calcular ventas diarias, un lote puede leer todos los pedidos del día y pr
 Un evento puede llevar una hora de origen distinta de la hora en que llega al sistema. Para cerrar una ventana debes definir cuánto retraso admites y qué harás con datos posteriores. Ignorarlo puede cambiar un total sin que nadie sepa si es definitivo.
 
 Los sistemas también pueden ejecutar streaming mediante microlotes. El mecanismo interno no elimina la semántica de flujo continuo. Elige según la frescura requerida, las posibilidades de reproceso y la complejidad que el producto pueda justificar.
+
+### Un pedido que llega después de medianoche
 
 Supón que un pedido se confirmó a las 23:59, pero llega al sistema a las 00:03. Un informe diario puede asignarlo al día de confirmación o al de recepción; son preguntas diferentes. Un lote que cierre a medianoche necesitará esperar, corregirse o dejarlo fuera según su contrato. Un flujo necesita una regla equivalente sobre ventanas y datos tardíos.
 

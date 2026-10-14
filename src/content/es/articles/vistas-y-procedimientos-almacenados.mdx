@@ -7,7 +7,7 @@ prerequisites:
   - que-es-sql
   - tipos-de-join
   - transacciones-y-acid
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: CREATE VIEW (en inglés)"
     url: https://www.postgresql.org/docs/current/sql-createview.html
@@ -158,9 +158,13 @@ No describas una vista materializada como «instantánea de consultar»: leer mu
 
 La vista normal tampoco evita el [aislamiento transaccional](/articulos/niveles-de-aislamiento/): «actual» significa lo visible según la consulta y su transacción, no necesariamente todos los cambios ocurridos en cualquier otra sesión.
 
+### El mismo informe cinco minutos después
+
 Imagina que a las diez el total vendido es 100 y se actualiza la vista materializada. A las diez y cinco se confirma otra venta de 20. Una consulta normal del informe, con una instantánea que incluya esa venta, calcula 120. La materializada puede seguir devolviendo 100 hasta que se refresque. Ambas pueden estar funcionando exactamente según su diseño.
 
 Si el panel admite diez minutos de retraso, reutilizar ese total puede ahorrar muchas agregaciones. Si decide cuánto crédito queda para autorizar una operación, el retraso podría incumplir el requisito. «La consulta es lenta» no basta para decidir: hay que acordar qué antigüedad del resultado se tolera y cómo se presenta.
+
+### Contar también el coste de mantenimiento
 
 Refrescar también consume trabajo y puede interferir con lecturas según el motor y el mecanismo. Si se exige una actualización frecuente de un resultado enorme, el coste de mantenimiento puede anular el ahorro. La comparación debe incluir tanto las consultas como la regeneración.
 

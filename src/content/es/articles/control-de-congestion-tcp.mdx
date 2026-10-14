@@ -6,11 +6,13 @@ layer: redes
 prerequisites:
   - tcp-y-udp
   - ancho-de-banda-latencia-y-rendimiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RFC 5681: TCP Congestion Control (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc5681.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 El **control de congestión de TCP** regula cuánto tráfico mantiene un emisor en vuelo para adaptarse a la capacidad de la red. Intenta aprovecharla sin alimentar indefinidamente colas y pérdidas cuando varios flujos compiten por recursos limitados.
 
@@ -33,7 +35,16 @@ El envío de datos nuevos queda condicionado por ambos límites, además de lo q
 | Responsable principal | Receptor comunica espacio | Emisor ajusta su comportamiento |
 | Puede limitar aunque el otro permita más | Sí | Sí |
 
-**Si el receptor anuncia mucho espacio, ¿puede ignorarse una ventana de congestión pequeña?** No. El cuello de botella puede estar en un enlace intermedio.
+<Quiz
+	client:visible
+	question="Si rwnd es grande y cwnd es pequeña, ¿qué limita el envío en ese caso?"
+	options={[
+		"Solo rwnd",
+		"Ninguna ventana",
+		"La ventana de congestión",
+	]}
+	answer={2}
+/>
 
 ## Empezar y explorar
 
@@ -63,7 +74,14 @@ Con una ventana de 16 KiB y un tiempo de ida y vuelta de 100 ms, renovar una ven
 
 Para llenar un camino de gran capacidad y retardo hacen falta suficientes datos en vuelo. Ese volumen se relaciona con el producto entre capacidad y tiempo de ida y vuelta. Pero aumentar indiscriminadamente lo pendiente también puede llenar colas y elevar la latencia sin aumentar lo que el enlace entrega.
 
+### Seguir el crecimiento por rondas
+
 En el control clásico, una fase idealizada de arranque puede pasar de una ventana de dos segmentos a cuatro y después a ocho por rondas. No significa que la implementación deba empezar siempre con dos ni que cada confirmación duplique la ventana. El crecimiento depende de cuántos bytes se confirman y de las reglas aplicadas. Separar el ejemplo conceptual de los parámetros concretos evita interpretar el algoritmo como una receta fija para todas las conexiones.
+
+## Errores comunes
+
+- **Tomar cwnd como una tasa en bytes por segundo.** El tiempo de ida y vuelta influye en cuánto tarda en renovarse.
+- **Aumentar búferes esperando crear capacidad.** Puede crecer la latencia sin mejorar lo entregado por el enlace.
 
 ## Lo esencial
 

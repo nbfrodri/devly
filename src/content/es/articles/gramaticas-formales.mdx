@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - automatas-finitos
   - como-funciona-un-compilador-por-dentro
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Boaz Barak: Restricted Computational Models (en inglés)"
     url: https://introtcs.org/public/lec_08a_restricted_models.html
@@ -62,7 +62,11 @@ Este **árbol de derivación** conserva la estructura, no solo la sucesión de c
 <Quiz
 	client:visible
 	question="¿Qué parte de una gramática representa una categoría todavía por desarrollar?"
-	options={["Un terminal", "Un no terminal", "Un espacio en blanco"]}
+	options={[
+		"Un terminal",
+		"Un no terminal",
+		"Un espacio en blanco",
+	]}
 	answer={1}
 />
 
@@ -78,7 +82,7 @@ Considera la regla `E -> E + E | E * E | Numero`. La cadena `2+3*2` admite dos a
 
 El lenguaje debe resolverlo, por ejemplo dando prioridad a la multiplicación mediante categorías separadas para expresiones y términos. No basta con que quien programa «sepa» qué resultado quería: las herramientas necesitan reglas precisas.
 
-## Escribir la precedencia en las reglas
+### Escribir la precedencia en las reglas
 
 Para evitar aquella ambigüedad, podemos separar los niveles:
 
@@ -99,6 +103,11 @@ Estas reglas usan recursión por la izquierda. Son una descripción válida del 
 En una **gramática libre de contexto**, cada producción tiene un único no terminal a la izquierda. Es suficiente para muchas estructuras sintácticas anidadas. Los [autómatas finitos](/articulos/automatas-finitos/) reconocen los lenguajes regulares, una familia más limitada; para reconocer los libres de contexto se estudian autómatas con pila.
 
 No todas las gramáticas sirven directamente para cualquier algoritmo de análisis. Una herramienta puede exigir transformar reglas, eliminar recursión izquierda o declarar precedencias. La gramática describe el lenguaje; el algoritmo determina cómo analizarlo.
+
+## Errores comunes
+
+- **Dar por válida cualquier expresión que tenga caracteres permitidos.** La gramática exige también una estructura.
+- **Resolver la precedencia solo de palabra.** El analizador necesita reglas que determinen la agrupación.
 
 ## Lo esencial
 

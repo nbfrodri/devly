@@ -7,7 +7,7 @@ layer: ia
 prerequisites:
   - el-test-de-turing
   - modelos-de-lenguaje
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Finding ELIZA: transcripción del guion DOCTOR publicado por Weizenbaum en 1966 (en inglés)"
     url: https://findingeliza.org/doctor.html
@@ -23,9 +23,20 @@ El guion publicado contiene patrones para reconocer palabras y estructuras y reg
 
 El guion DOCTOR contiene la palabra clave `ALIKE`, con prioridad 10, que remite a un grupo de respuestas llamado `DIT`. En el intercambio publicado, una frase que afirma que los hombres son todos iguales recibe la respuesta «IN WHAT WAY» —«¿en qué sentido?»—. La regla no necesita decidir si aquella generalización es verdadera.
 
-El recorrido es mecánico: localizar una palabra clave, seleccionar sus reglas según la prioridad, buscar una descomposición aplicable y construir una respuesta mediante una plantilla. En ese grupo concreto se alternan distintas preguntas. La variación evita repetir siempre la misma salida sin que haga falta aprender una idea nueva durante la conversación.
+### Seleccionar una regla y construir la respuesta
+
+El recorrido es mecánico:
+
+1. Localizar una palabra clave en la entrada.
+2. Seleccionar sus reglas según la prioridad.
+3. Buscar una descomposición aplicable a la frase.
+4. Construir una respuesta mediante una plantilla.
+
+En ese grupo concreto se alternan distintas preguntas. La variación evita repetir siempre la misma salida sin que haga falta aprender una idea nueva durante la conversación.
 
 Otras reglas pueden separar la entrada en fragmentos y reutilizarlos, cambiando pronombres para devolver una pregunta al interlocutor. Así, parte del contenido que parece aportar el programa procede en realidad de la frase de la persona. El guion y el mecanismo de procesamiento son piezas distintas: otro guion puede producir un comportamiento diferente sobre el mismo intérprete.
+
+### El papel del contexto
 
 La elección de un contexto terapéutico también ayuda al efecto. Una pregunta abierta o una repetición pueden parecer una invitación deliberada a explicarse. En un sistema que debiera verificar una reserva o resolver una suma, la misma respuesta evasiva mostraría antes sus límites. La impresión depende tanto de las reglas como de las expectativas del diálogo.
 
@@ -44,3 +55,9 @@ La restauración del programa original, documentada por investigadores en 2025, 
 Compararlo con [modelos de lenguaje](/articulos/modelos-de-lenguaje/) no implica que ambos calculen igual. Ayuda a mantener una pregunta de evaluación: ¿qué capacidad demuestra realmente una respuesta y qué estamos infiriendo nosotros a partir de su apariencia?
 
 Una conversación convincente es un comportamiento que se puede observar. La capacidad de resolver tareas, conservar hechos o generalizar necesita pruebas adicionales y bien definidas.
+
+## Lo esencial
+
+- DOCTOR utilizaba palabras clave, reglas de descomposición y plantillas.
+- Una respuesta podía reutilizar el texto de la persona sin comprender la situación de forma general.
+- La impresión de comprensión dependía también del contexto y de las expectativas del diálogo.

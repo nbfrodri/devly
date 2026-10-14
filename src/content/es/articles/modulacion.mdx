@@ -6,7 +6,7 @@ layer: redes
 prerequisites:
   - senales-analogicas-y-digitales
   - ancho-de-banda-latencia-y-rendimiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.02: Digital Communication Systems, cap. 14 (en inglés)"
     url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/resources/mit6_02f12_chap14/
@@ -166,6 +166,8 @@ En señales, el **ancho de banda** expresa un intervalo de frecuencias y se mide
 Supón un sistema que utiliza 20 kHz y transporta 40 kbit/s. Su eficiencia espectral es dos bits por segundo y hercio. Es un ejemplo de unidades, no una ley que convierta cada hercio en dos bits. Otra modulación, otra codificación o un nivel de ruido distinto pueden cambiar la tasa alcanzable y la fiabilidad.
 
 Tampoco confundas tasa de símbolos con tasa de bits: un símbolo puede representar varios bits, y parte de lo transmitido puede destinarse a control o redundancia. Para calcular datos útiles, necesitas conocer esas convenciones además de las cifras del enlace.
+
+### Calcular símbolos, bits y datos útiles
 
 Por ejemplo, 1000 símbolos por segundo y cuatro estados posibles por símbolo permiten representar dos bits por símbolo: una tasa bruta de 2000 bit/s. Con dieciséis estados son cuatro bits por símbolo y 4000 bit/s a la misma tasa de símbolos. No has demostrado que el canal pueda distinguir esos estados con la misma fiabilidad: al acercarlos, el ruido puede provocar más errores.
 

@@ -7,11 +7,13 @@ prerequisites:
   - arboles-de-decision
   - que-es-una-funcion-de-perdida
   - descenso-del-gradiente
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "scikit-learn: Gradient Boosting, documentación oficial (en inglés)"
     url: https://scikit-learn.org/stable/modules/ensemble.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 El **gradient boosting** es un método que construye un modelo aditivo por etapas. Cada modelo nuevo aproxima una dirección que reduce la pérdida de la combinación actual. Los árboles pequeños son una elección frecuente para esas correcciones.
 
@@ -23,7 +25,7 @@ No se entrenan todos los árboles para luego promediarlos sin más. La etapa sig
 
 ## Empezar con una predicción sencilla
 
-En regresión con error cuadrático, puedes empezar prediciendo la media de las respuestas para todos los casos. Después calculas los residuos: valor real menos predicción.
+En regresión con error cuadrático, puedes empezar prediciendo la media de las respuestas para todos los casos. Después calculas los **residuos**: valor real menos predicción.
 
 Entrenas un modelo pequeño para aproximar esos residuos y añades una fracción de su salida a la predicción actual. Repites el proceso con los errores que quedan.
 
@@ -52,9 +54,27 @@ El código ilustra la actualización suponiendo que ya se obtuvo la corrección.
 
 El ejemplo anterior recibe residuos ya separados. Para construir realmente un árbol, este necesita características con las que distinguir casos. Supón cuatro viviendas de `40, 50, 80, 90` metros cuadrados, con alquileres didácticos de `400, 500, 800, 900`. La predicción inicial es su media: `650`.
 
-Los residuos son `-250, -150, 150, 250`. Un árbol de una sola división puede preguntar si la superficie es menor que 65. Su hoja izquierda predice el residuo medio de los dos primeros casos, `-200`; la derecha, `200`. Estos valores se aprenden de los residuos de cada grupo, no de una lista de correcciones elegidas para cada vivienda.
+El primer cálculo queda así:
+
+| Superficie | Alquiler real | Predicción inicial | Residuo |
+| --- | --- | --- | --- |
+| 40 | 400 | 650 | -250 |
+| 50 | 500 | 650 | -150 |
+| 80 | 800 | 650 | 150 |
+| 90 | 900 | 650 | 250 |
+
+Un árbol de una sola división pregunta si la superficie es menor que 65:
+
+- **Hoja izquierda:** aprende el residuo medio de las dos viviendas pequeñas, -200.
+- **Hoja derecha:** aprende el de las dos grandes, 200.
+
+La corrección sale de los residuos de cada grupo, no de asignar a mano un valor distinto a cada vivienda.
+
+### Aplicar la corrección y recalcular
 
 Con tasa `0,5`, la nueva predicción es `550` para las pequeñas y `750` para las grandes. Los residuos pasan a `-150, -50, 50, 150`. El siguiente árbol se ajusta a esos errores nuevos. Puede elegir otra división, por ejemplo para distinguir dentro del grupo de viviendas pequeñas.
+
+### Predecir una entrada nueva
 
 Al predecir una vivienda no vista, primero se obtiene `650` y después se recorren los árboles aprendidos, sumando sus hojas multiplicadas por la tasa. No se necesita conocer el alquiler real de esa vivienda para aplicar las correcciones: la superficie determina qué hoja usar. Esa diferencia es lo que convierte una actualización numérica en un modelo capaz de predecir entradas nuevas.
 
@@ -64,7 +84,16 @@ La **tasa de aprendizaje** controla cuánto aporta cada etapa. Una tasa menor su
 
 La cantidad de árboles, su profundidad y la tasa interactúan. No conviene juzgar un ajuste cambiando una cifra sin considerar las otras. Para elegirlos se utilizan datos de validación, nunca una inspección repetida del conjunto de prueba final.
 
-**¿Que cada etapa reduzca la pérdida de entrenamiento garantiza mejor resultado externo?** No. Puedes seguir ajustando particularidades del entrenamiento cuando el rendimiento de validación ya empeora.
+<Quiz
+	client:visible
+	question="Si baja la pérdida de entrenamiento, ¿qué falta comprobar?"
+	options={[
+		"Que también mejora la evaluación con datos no usados para ajustar",
+		"Que todos los árboles son idénticos",
+		"Que la tasa de aprendizaje es uno",
+	]}
+	answer={0}
+/>
 
 ## Detener y regularizar
 
@@ -77,6 +106,11 @@ Estas decisiones deben formar parte de un procedimiento reproducible. Si pruebas
 Boosting puede representar relaciones no lineales mediante la suma de modelos sencillos y funciona bien en muchos problemas tabulares. Eso es una razón para evaluarlo, no para declararlo ganador de cualquier tarea.
 
 Su construcción por etapas introduce dependencias y puede complicar el ajuste. La inferencia también combina las contribuciones de varios modelos. Las bibliotecas optimizan ese trabajo de formas diferentes; conviene medir tiempo, memoria y calidad con las restricciones reales del sistema.
+
+## Errores comunes
+
+- **Aprender siempre sobre residuos literales.** Para otras pérdidas, la corrección se define mediante el gradiente.
+- **Añadir etapas porque mejora entrenamiento.** La validación puede llevar tiempo empeorando.
 
 ## Lo esencial
 

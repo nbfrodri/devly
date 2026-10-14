@@ -6,7 +6,7 @@ kind: curiosidad
 layer: datos
 prerequisites:
   - que-es-una-base-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "IBM: The Relational Database, historia de Codd y System R (en inglés)"
     url: https://www.ibm.com/history/relational-database
@@ -26,7 +26,11 @@ Con una descripción lógica, la pregunta puede mantenerse mientras el sistema c
 
 Piensa en clientes y pedidos guardados en archivos enlazados. Un programa podría empezar en la ficha del cliente, seguir un puntero al primer pedido y continuar por una cadena. Su lógica depende de esa organización: si cambian los enlaces o la forma de agrupar registros, hay que revisar el recorrido.
 
+### Separar la condición del recorrido
+
 En el modelo relacional describes una relación de clientes y otra de pedidos, con atributos que permiten relacionarlas. La pregunta «pedidos del cliente 7» expresa una condición sobre los datos. El sistema puede resolverla leyendo todos los pedidos o utilizando un índice sobre el identificador del cliente. El resultado lógico no debería depender de cuál de esos accesos elija.
+
+### El almacenamiento sigue afectando al coste
 
 La independencia no significa que el diseño físico carezca de importancia. Crear un índice puede acelerar una consulta y encarecer escrituras; la aplicación sigue teniendo requisitos de rendimiento. Lo que se evita es incrustar cada decisión física en la forma de expresar la pregunta.
 
@@ -39,3 +43,9 @@ La investigación posterior de IBM, incluido System R, exploró cómo convertir 
 Para aprender a diseñar tablas, conviene seguir por el [modelo entidad-relación](/articulos/modelo-entidad-relacion/) y la [normalización](/articulos/normalizacion-de-bases-de-datos/). Son herramientas relacionadas con el diseño lógico; no sustituyen después la evaluación de consultas y sus índices.
 
 La historia recuerda una distinción que sigue siendo práctica: decidir qué representan los datos es un trabajo diferente de decidir cómo encontrarlos deprisa.
+
+## Lo esencial
+
+- Codd propuso en 1970 organizar los datos mediante relaciones.
+- La consulta lógica se separa de los caminos físicos de almacenamiento.
+- SQL y el modelo relacional están relacionados, pero no son la misma cosa.

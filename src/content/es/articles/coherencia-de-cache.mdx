@@ -6,11 +6,13 @@ layer: hardware
 prerequisites:
   - memoria-cache-del-procesador
   - procesadores-multinucleo
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Carnegie Mellon 15-418: Cache Coherence (en inglés)"
     url: https://www.cs.cmu.edu/afs/cs/academic/class/15418-f24/www/lectures/10_cachecoherence.pdf
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **coherencia de caché** coordina las copias de una misma ubicación de memoria que pueden existir en las cachés de varios núcleos. Define cómo se propagan o invalidan esas copias cuando alguien escribe, para que no permanezcan indefinidamente versiones incompatibles.
 
@@ -39,7 +41,16 @@ Un protocolo simplificado como MSI utiliza tres estados: **modificado**, para un
 
 La tabla omite estados transitorios y mensajes concretos para mostrar la responsabilidad del protocolo. No pretende describir todos los procesadores con un único recorrido exacto.
 
-**¿Una línea modificada implica que RAM ya tiene el valor nuevo?** No. En una caché de escritura diferida puede mantenerse una copia más reciente en la jerarquía mientras el protocolo garantiza cómo obtenerla.
+<Quiz
+	client:visible
+	question="¿Dónde puede estar el valor más reciente de una línea modificada?"
+	options={[
+		"Siempre en RAM",
+		"En una caché con escritura diferida",
+		"Solo en el archivo ejecutable",
+	]}
+	answer={1}
+/>
 
 ## Cómo se encuentran las copias
 
@@ -59,6 +70,8 @@ Utiliza primitivas del lenguaje, como bloqueos o operaciones atómicas con el co
 
 Supón dos variables, `dato = 0` y `listo = 0`. Un hilo escribe primero `dato = 42` y después `listo = 1`. Otro espera a observar `listo` y entonces consulta `dato`. El protocolo de coherencia puede coordinar cada ubicación sin que esa secuencia constituya, por sí sola, una publicación válida según el lenguaje.
 
+### Publicar datos con sincronización
+
 Para expresar la dependencia necesitas sincronización: por ejemplo, una publicación con semántica de liberación y una lectura de adquisición que observe esa publicación, siguiendo las reglas del lenguaje. Esa relación permite razonar sobre qué escrituras anteriores deben hacerse visibles. No se obtiene añadiendo una espera arbitraria ni suponiendo que «ya habrá llegado a RAM».
 
 La diferencia también aclara qué no hace una invalidación. Invalidar la copia de una línea no resuelve automáticamente todos los órdenes entre otras líneas, todas las transformaciones del compilador ni todas las carreras del programa. El hardware proporciona mecanismos sobre los que el lenguaje construye su contrato de concurrencia; quien programa debe utilizar ese contrato.
@@ -68,6 +81,11 @@ La diferencia también aclara qué no hace una invalidación. Invalidar la copia
 Cuando dos hilos actualizan variables distintas dentro de una misma línea, la propiedad puede desplazarse entre núcleos continuamente. Se llama **falso compartido**: la unidad física de coordinación es mayor que el dato lógico que cada hilo necesita.
 
 Reorganizar datos puede reducirlo, pero primero hay que medir. Separar todo por defecto también aumenta el espacio ocupado y puede perjudicar la localidad de otras operaciones.
+
+## Errores comunes
+
+- **Suponer que coherencia implica un programa concurrente correcto.** El orden entre operaciones necesita el contrato de sincronización.
+- **Separar todos los datos sin medir.** Evitar falso compartido puede aumentar espacio y perjudicar otros accesos.
 
 ## Lo esencial
 

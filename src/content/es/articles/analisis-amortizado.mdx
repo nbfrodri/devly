@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - complejidad-algoritmica
   - arrays
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Cornell CS 3110: Amortized Analysis and Dynamic Tables (en inglés)"
     url: https://www.cs.cornell.edu/courses/cs3110/2009sp/lectures/lec21.html
@@ -73,7 +73,11 @@ Con nueve elementos aparece otra copia de ocho. El salto local no destruye la co
 <Quiz
 	client:visible
 	question="¿O(1) amortizado garantiza que cada inserción termine en tiempo constante?"
-	options={["Sí, sin excepciones", "No: una inserción concreta puede copiar todos los elementos", "Solo si la entrada es aleatoria"]}
+	options={[
+		"Sí, sin excepciones",
+		"No: una inserción concreta puede copiar todos los elementos",
+		"Solo si la entrada es aleatoria",
+	]}
 	answer={1}
 />
 
@@ -93,6 +97,8 @@ El método contable puede verse en una fase completa del array. Justo después d
 
 El crédito no es dinero que la implementación almacene. Es una herramienta de demostración: asignas costes a las operaciones y compruebas que nunca estás pagando una copia futura con trabajo que todavía no has cobrado. Una prueba completa cuida el estado inicial y los extremos de cada fase.
 
+### Qué cambia al crecer de uno en uno
+
 Si amplías solo una posición, desaparece esa fase larga de inserciones baratas. Tras llenar el nuevo hueco hay que copiar de nuevo. Para `n` inserciones, las copias suman `1 + 2 + ... + (n - 1) = n(n - 1)/2`. El contraste muestra que la garantía amortizada sale de una política concreta de crecimiento, no de llamar dinámico al array.
 
 ## Límites prácticos
@@ -100,6 +106,11 @@ Si amplías solo una posición, desaparece esa fase larga de inserciones baratas
 Crecer de uno en uno obliga a copiar 1 + 2 + 3… elementos y lleva a un coste total cuadrático. Duplicar evita ese patrón, a cambio de reservar espacio libre. Si además reduces capacidad al borrar, necesitas umbrales separados para no alternar ampliaciones y reducciones continuamente.
 
 En un sistema con plazos estrictos, una pausa ocasional larga puede seguir siendo inaceptable. O(1) amortizado no garantiza una latencia máxima constante.
+
+## Errores comunes
+
+- **Leer O(1) amortizado como una latencia máxima.** Una ampliación todavía puede copiar todo el array.
+- **Cambiar la política de crecimiento sin revisar la prueba.** Crecer de uno en uno produce una secuencia de coste cuadrático.
 
 ## Lo esencial
 

@@ -7,11 +7,13 @@ prerequisites:
   - que-es-un-parametro-de-un-modelo
   - que-es-la-inferencia
   - coma-flotante
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Hugging Face Transformers: Quantization Overview (en inglés)"
     url: https://huggingface.co/docs/transformers/quantization/overview
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **cuantización de un modelo** representa algunos de sus pesos, activaciones u otros valores con menos precisión que la representación de referencia. Busca reducir memoria, transferencias o coste de cálculo, aceptando una aproximación que debe evaluarse.
 
@@ -45,13 +47,26 @@ Una única escala para valores con magnitudes muy diferentes puede representar m
 
 Los formatos de pocos bits y los algoritmos concretos no son intercambiables. Para ejecutar el modelo necesitas soporte de la biblioteca y del hardware, además del archivo con los pesos.
 
-**¿Un archivo más pequeño prueba que las respuestas conservarán su calidad?** No. Solo has comprobado una propiedad de almacenamiento. La calidad y el rendimiento necesitan medidas separadas.
+<Quiz
+	client:visible
+	question="¿Qué demuestra que un archivo cuantizado sea menor?"
+	options={[
+		"Que ocupa menos; calidad y velocidad necesitan mediciones",
+		"Que siempre responde más rápido",
+		"Que conserva exactamente las predicciones",
+	]}
+	answer={0}
+/>
 
 ## Por qué un valor extremo afecta a los demás
 
 Supón que casi todos los pesos están entre `-1` y `1`, pero uno vale `100`. Si una sola escala debe cubrir de `-100` a `100` con códigos de `-127` a `127`, el paso entre valores representables ronda `0,787`. Un peso de `0,1` terminaría en cero; otro de `0,5`, cerca de `0,787`. El problema no es solo el peso extremo: ha consumido resolución que necesitaban los demás.
 
+### Cambiar el alcance de la escala
+
 Usar escalas por grupos puede aislar parte de ese efecto. A cambio, cada grupo necesita guardar su escala y el cálculo debe aplicarla correctamente. Recortar el extremo conserva resolución en el centro, pero introduce un error grande en ese valor. La calibración sirve para tomar estas decisiones con distribuciones representativas, especialmente cuando se cuantizan activaciones que dependen de las entradas.
+
+### Almacenar y calcular con distinta precisión
 
 También importa dónde ocurre la aritmética. Un sistema puede almacenar pesos con pocos bits, recuperarlos para calcular en otra precisión y acumular productos en una tercera. El ahorro en transferencias puede ser útil incluso sin multiplicaciones enteras completas. Por eso «modelo de cuatro bits» no describe por sí solo todo el recorrido de una operación ni permite deducir su aceleración.
 
@@ -72,6 +87,11 @@ La cuantización de señales también aproxima amplitudes y las bases vectoriale
 Compara calidad en tareas representativas, memoria máxima, tiempo hasta la primera respuesta y ritmo de producción cuando corresponda. Mantén iguales las condiciones relevantes para que la comparación tenga sentido.
 
 Una mejora de memoria puede permitir ejecutar el modelo donde antes no cabía. Esa puede ser una ventaja suficiente, aunque no acelere todas las operaciones. La decisión depende de los límites del sistema y del error tolerable.
+
+## Errores comunes
+
+- **Deducir velocidad del tamaño del archivo.** El soporte de operaciones y el hardware condicionan el tiempo.
+- **Calibrar con entradas poco representativas.** Un rango inadecuado aumenta redondeos o recortes relevantes.
 
 ## Lo esencial
 

@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - que-es-sql
   - indices-de-bases-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "SQLite: EXPLAIN QUERY PLAN (en inglés)"
     url: https://www.sqlite.org/eqp.html
@@ -69,7 +69,11 @@ El orden `(cliente_id, total)` agrupa los pedidos de cada cliente y, dentro del 
 <Quiz
 	client:visible
 	question="¿Qué indica COVERING INDEX?"
-	options={["Que el índice contiene los datos necesarios para esa consulta", "Que la consulta devuelve toda la tabla", "Que el índice no ocupa espacio"]}
+	options={[
+		"Que el índice contiene los datos necesarios para esa consulta",
+		"Que la consulta devuelve toda la tabla",
+		"Que el índice no ocupa espacio",
+	]}
 	answer={0}
 />
 
@@ -82,6 +86,8 @@ No basta, por tanto, con buscar la palabra `INDEX`. Pregunta cuántas veces se r
 ## Por qué invertir el índice cambia la pregunta
 
 El índice `(cliente_id, total)` coloca juntos los pedidos de cada cliente y los ordena por total dentro del grupo. Un índice `(total, cliente_id)` comienza por agrupar el total. Puede ser útil para otras preguntas, pero ya no ofrece el mismo acceso directo a un único grupo de cliente. Tener las mismas columnas en un índice no implica tener el mismo orden útil.
+
+### Contar repeticiones y filas
 
 Ahora imagina un `JOIN` que encuentra cien clientes y consulta sus pedidos mediante un índice. Si cada cliente tiene tres pedidos, el trabajo interior se repite cien veces y entrega unas trescientas filas. Si hay un cliente con un millón de pedidos, la distribución cambia radicalmente el coste aunque el esquema sea idéntico. Las estimaciones basadas en promedios pueden no reflejar ese caso.
 
@@ -102,6 +108,11 @@ El ejemplo usa cuatro filas para que puedas seguirlo. Para evaluar rendimiento n
 5. Revisa de nuevo plan, tiempo y coste de escritura del índice.
 
 No elimines condiciones ni cambies el significado para conseguir un plan más vistoso. Optimizar significa conservar el resultado utilizando menos recursos.
+
+## Errores comunes
+
+- **Buscar únicamente la palabra INDEX.** Importan también filas, repeticiones y ordenaciones.
+- **Medir cuatro filas y extrapolar.** El volumen y la distribución cambian el coste real.
 
 ## Lo esencial
 

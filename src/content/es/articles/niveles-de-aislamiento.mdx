@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - transacciones-y-acid
   - una-base-de-datos-por-dentro
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Explicit Locking (en inglés)"
     url: https://www.postgresql.org/docs/current/explicit-locking.html
@@ -15,6 +15,8 @@ sources:
   - title: "SQLite: Isolation in SQLite (en inglés)"
     url: https://www.sqlite.org/isolation.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 El **nivel de aislamiento** define qué interferencias de otras transacciones puede observar una transacción y qué anomalías impide el motor. La atomicidad garantiza aplicar un conjunto de cambios entero; el aislamiento determina cómo se coordina ese conjunto con otros trabajos simultáneos.
 
@@ -38,7 +40,7 @@ El estándar distingue Read Uncommitted, Read Committed, Repeatable Read y Seria
 
 En PostgreSQL, Read Committed utiliza una nueva instantánea por sentencia; dos consultas dentro de la misma transacción pueden observar confirmaciones diferentes. Repeatable Read mantiene una instantánea para la transacción y, en ese motor, también evita los fantasmas descritos por el estándar. Serializable añade garantías equivalentes a algún orden secuencial de las transacciones confirmadas, pudiendo abortar trabajos que deben reintentarse.
 
-## Una regla global puede romperse sin tocar la misma fila
+### Una regla global puede romperse sin tocar la misma fila
 
 Dos personas están de guardia y la regla exige que siempre quede al menos una. Las transacciones A y B leen una instantánea donde ambas están disponibles. A desactiva la guardia de la primera persona; B desactiva la de la segunda. Cada una vio otra persona de guardia y cada una modifica una fila diferente.
 
@@ -73,7 +75,16 @@ with tempfile.TemporaryDirectory() as carpeta:
 
 La segunda lectura no reproduce una lectura no repetible: precisamente muestra que la instantánea la evita en esa configuración. No extrapoles el resultado a Read Committed de PostgreSQL ni a cualquier modo de otro motor.
 
-**¿La conexión A ve siempre datos antiguos?** Solo mientras conserva esa lectura transaccional. Tras terminarla, una consulta nueva puede ver el cambio confirmado.
+<Quiz
+	client:visible
+	question="¿Qué observa A después de terminar su lectura transaccional y consultar de nuevo?"
+	options={[
+		"Puede observar el cambio confirmado por B",
+		"Siempre la primera instantánea",
+		"Solo los datos que escribió A",
+	]}
+	answer={0}
+/>
 
 ## Resolver conflictos forma parte del programa
 
@@ -104,6 +115,8 @@ SELECT disponible, version FROM inventario;
 
 El primer recuento es uno; el segundo, cero. La fila queda con nueve unidades y versión dos. Quien no actualizó debe decidir si relee, reintenta o informa del conflicto. El ejemplo reproduce la comprobación de versión, no dos sesiones simultáneas.
 
+### La misma actualización con bloqueo
+
 En una estrategia pesimista, la primera transacción obtiene un bloqueo apropiado, lee y modifica antes de liberarlo. En PostgreSQL existen bloqueos de filas; SQLite utiliza otros mecanismos y BEGIN IMMEDIATE reserva la posibilidad de escritura. No debes trasladar una orden de un motor al otro suponiendo la misma granularidad.
 
 | Criterio | Optimista | Pesimista |
@@ -113,6 +126,11 @@ En una estrategia pesimista, la primera transacción obtiene un bloqueo apropiad
 | Conviene evaluar | Conflictos poco frecuentes | Secciones cortas con conflictos relevantes |
 
 Mantener un bloqueo mientras una persona rellena un formulario suele ser una mala frontera transaccional. Una comprobación optimista tampoco basta si los escritores no respetan el mismo contrato de versión.
+
+## Errores comunes
+
+- **Confundir una instantánea estable con serialización.** Las decisiones sobre filas distintas todavía pueden entrar en conflicto.
+- **Repetir solo la última escritura tras un aborto.** Puede reutilizar decisiones basadas en lecturas obsoletas.
 
 ## Lo esencial
 

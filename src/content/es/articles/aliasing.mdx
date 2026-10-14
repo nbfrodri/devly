@@ -6,11 +6,13 @@ layer: redes
 prerequisites:
   - senales-analogicas-y-digitales
   - como-se-representa-el-sonido
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Steven W. Smith: The Scientist and Engineer's Guide to DSP, capítulo 3 (en inglés)"
     url: https://www.dspguide.com/CH3.PDF
 ---
+
+import { Quiz } from "@/components/quiz";
 
 El **aliasing** ocurre cuando señales diferentes resultan indistinguibles después del muestreo. Componentes que no se han muestreado con suficiente rapidez pueden aparecer como otras frecuencias en los datos digitales.
 
@@ -44,11 +46,22 @@ Para una señal de banda base limitada en frecuencia, la condición de muestreo 
 
 El límite exacto requiere tratar condiciones matemáticas de la señal; en la práctica no se diseña aprovechando una igualdad ideal sin margen. Un seno justo a la mitad de la frecuencia de muestreo puede quedar mal representado según su fase. Además, los filtros reales necesitan una banda de transición.
 
-**Si solo te interesan frecuencias de hasta cien hercios, ¿puedes ignorar el resto antes de medir?** No. Una componente mayor puede plegarse precisamente dentro de la banda que te interesa.
+<Quiz
+	client:visible
+	question="¿Por qué hay que controlar las frecuencias fuera de la banda útil antes de muestrear?"
+	options={[
+		"Porque pueden aparecer dentro de la banda útil como alias",
+		"Porque una FFT siempre las elimina",
+		"Porque después se recupera automáticamente su origen",
+	]}
+	answer={0}
+/>
 
 ## Localizar la frecuencia aparente
 
 Con muestreo a 1000 Hz, restar o sumar múltiplos de 1000 a una frecuencia no cambia sus valores en los instantes de muestreo, una vez considerada la periodicidad. Para señales reales puedes plegar después el resultado a la banda entre cero y 500 Hz. Por eso un coseno de 700 Hz aparece como uno de 300 Hz, y uno de 1100 Hz como uno de 100 Hz.
+
+### Una interferencia dentro de la banda útil
 
 Imagina un sensor que debe conservar vibraciones hasta 100 Hz. Muestrear a 1000 Hz deja margen, pero una interferencia de 900 Hz puede entrar como 100 Hz. Un filtro digital que elimine las frecuencias superiores a 100 no la quitaría: después de adquirir, ya está dentro de la banda que quieres conservar.
 
@@ -71,6 +84,11 @@ Aumentar después la cantidad de muestras mediante interpolación no deshace el 
 Identifica la banda de interés, el contenido posible fuera de ella, la frecuencia real de muestreo y el filtro de entrada. Comprueba también qué hace cualquier etapa que reduzca la tasa de datos. Un sensor que entrega números ya procesados puede haber realizado parte de esa cadena internamente.
 
 La [transformada de Fourier](/articulos/transformada-de-fourier/) ayuda a estudiar frecuencias, pero tampoco identifica por sí sola cuál de las señales físicas compatibles originó una secuencia afectada.
+
+## Errores comunes
+
+- **Filtrar después para recuperar el origen de un alias.** Las mismas muestras pueden representar señales físicas diferentes.
+- **Reducir la tasa descartando muestras sin filtrar.** Cambia la banda que puede representarse sin ambigüedad.
 
 ## Lo esencial
 

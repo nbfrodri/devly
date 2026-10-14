@@ -7,7 +7,7 @@ prerequisites:
   - modelos-de-lenguaje
   - que-es-el-aprendizaje-automatico
   - generacion-aumentada-por-recuperacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google: Fine-tuning, Distillation and Prompt Engineering (en inglés)"
     url: https://developers.google.com/machine-learning/crash-course/llm/tuning
@@ -146,6 +146,8 @@ Para la misma tarea de clasificar documentos, podrías entrenar una arquitectura
 No son opciones completamente excluyentes: un alumno puede empezar de una base entrenada y ajustarse con ejemplos del maestro. Tampoco destilar equivale a copiar pesos ni a convertir automáticamente un archivo a menos bits; eso último se relaciona con [cuantización](/articulos/cuantizacion-de-modelos/).
 
 La destilación no garantiza que el alumno conserve todas las capacidades, y puede transmitir errores del maestro. Evalúa la tarea real con datos independientes. Ajustar tampoco crea por sí solo conocimiento siempre actualizado ni elimina la necesidad de recuperación de información cuando esa es la necesidad del producto.
+
+### La misma clasificación con tres enfoques
 
 Para clasificar documentos en cinco categorías internas, entrenar desde cero significa que el modelo debe aprender con su inicialización y los datos aportados, sin heredar los pesos de una base. Si dispones de pocos ejemplos, aprender también buenas representaciones del lenguaje puede ser la parte más difícil.
 

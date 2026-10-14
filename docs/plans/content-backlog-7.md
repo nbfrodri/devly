@@ -28,6 +28,14 @@ La revisión modifica 84 artículos: 65 de los nuevos y 19 existentes. El criter
 
 Verificación de los ejemplos: 39 bloques JavaScript/SQL ejecutados, más el ejemplo Python de aislamiento con SQLite; comprobación independiente de los cálculos numéricos desarrollados y auditoría de prerrequisitos, ciclos y enlaces entrantes de los 72 artículos. La revisión visual continúa pendiente: la herramienta de navegador no ofrece ninguna sesión disponible. Esta pasada no modifica componentes, estilos ni los cuatro diagramas Mermaid.
 
+### Corrección de estructura y recursos didácticos
+
+Revisión del 15 de octubre de 2026 en `docs/plan-7-article-structure`. La segunda pasada amplió las explicaciones, pero no organizó suficientemente los párrafos ni reutilizó todos los recursos habituales del sitio. Se toman como referencia artículos anteriores al plan 7: `condicionales`, `memoria-cache-del-procesador`, `pruebas-unitarias-de-integracion-y-de-extremo-a-extremo` y `por-que-se-llama-bug-a-un-error`.
+
+Los conceptos conservan definición y motivación, agrupan detalles bajo secciones y subsecciones, muestran los recorridos ordenados y reúnen errores concretos con su causa. Las preguntas que estaban respondidas dentro de un párrafo se convierten en componentes `Quiz` con `client:visible`, situados después de la explicación que evalúan. Se emplean tablas para seguir permisos, plazos y valores intermedios, en lugar de esconderlos en frases largas.
+
+Las comparaciones separan elección y confusiones; las curiosidades organizan los hechos y terminan con «Lo esencial». Las definiciones mantienen su alcance breve y distinguen los ejemplos añadidos de la explicación general. Se reutilizan los estilos y componentes existentes, sin añadir niveles de encabezado ajenos al patrón del sitio. La longitud deja de ser el criterio de aceptación: la revisión debe comprobar también la organización y la progresión de cada explicación.
+
 ## Huecos detectados
 
 | Área | Cobertura actual | Siguiente hueco |

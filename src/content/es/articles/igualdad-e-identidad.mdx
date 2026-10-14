@@ -8,11 +8,13 @@ prerequisites:
   - que-es-un-objeto
   - que-es-un-puntero
   - inmutabilidad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Comparaciones de igualdad y semejanza en JavaScript"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **igualdad** compara valores según una regla elegida; la **identidad** pregunta si dos referencias designan el mismo objeto. Dos objetos pueden contener datos equivalentes y seguir siendo objetos distintos. Los operadores concretos dependen del lenguaje: los ejemplos siguientes utilizan JavaScript.
 
@@ -31,6 +33,17 @@ console.log(primero.nombre === segundo.nombre); // true
 `primero` y `segundo` se crean en expresiones diferentes. Que sus propiedades coincidan no los convierte en una única entidad en memoria. `alias`, en cambio, conserva una referencia al mismo objeto que `primero`.
 
 La comparación de sus nombres utiliza textos primitivos. Para ellos, `===` compara el valor. El mismo operador tiene reglas distintas según los tipos que está comparando: no debes resumirlo como «siempre compara todo el contenido».
+
+<Quiz
+	client:visible
+	question="Dos objetos recién creados tienen las mismas propiedades. ¿Qué devuelve === al compararlos en JavaScript?"
+	options={[
+		"true, porque su contenido coincide",
+		"false, porque son objetos distintos",
+		"Depende del orden de sus propiedades",
+	]}
+	answer={1}
+/>
 
 ## La identidad afecta a los cambios
 
@@ -96,9 +109,13 @@ console.log(ficha.direccion.ciudad); // "Quito"
 
 Hay dos fichas exteriores y una única dirección compartida. Para cambiar la ciudad conservando la dirección anterior debes crear también una dirección nueva, por ejemplo mediante otra copia en ese nivel. Esta distinción permite explicar un error frecuente: comparar solo los objetos exteriores y concluir que ya no comparten estado.
 
+### Comparar elementos de una colección
+
 También importa en colecciones. Un `Set` de JavaScript conserva dos objetos recién creados con las mismas propiedades porque sus identidades son distintas. Si quieres eliminar usuarios duplicados por identificador, debes expresar esa regla de dominio, por ejemplo utilizando el identificador como clave. No se deduce de una igualdad estructural automática.
 
-## Particularidades numéricas
+## Confusiones frecuentes
+
+### Cambiar de operador sin conocer sus reglas
 
 En JavaScript, `Object.is` y `===` tampoco son idénticos para todos los valores:
 

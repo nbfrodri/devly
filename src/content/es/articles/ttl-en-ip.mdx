@@ -6,7 +6,7 @@ kind: definicion
 layer: redes
 prerequisites:
   - enrutamiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RFC 791: Internet Protocol (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc791.html
@@ -27,5 +27,7 @@ La definición original de IPv4 relaciona el campo con el tiempo y exige disminu
 IPv6 utiliza un campo equivalente llamado **Hop Limit**, límite de saltos. El nombre expresa de forma más directa el uso habitual.
 
 No lo confundas con el **TTL de DNS**: ese valor indica durante cuánto tiempo puede conservarse en caché un registro DNS. Ambos limitan una vigencia, pero uno actúa sobre paquetes en tránsito y el otro sobre datos almacenados.
+
+## Leer las sondas de traceroute
 
 Si el TTL inicial es uno, la sonda permite observar el primer router que lo agota; con dos puede llegar al segundo, y así sucesivamente. Las respuestas no proporcionan necesariamente un mapa fijo: distintas sondas pueden seguir caminos diferentes y algunos routers no responder. Un asterisco en traceroute significa que no se recibió la respuesta esperada dentro del plazo, no que allí exista obligatoriamente un enlace roto.

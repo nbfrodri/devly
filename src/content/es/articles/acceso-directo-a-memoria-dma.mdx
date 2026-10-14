@@ -6,11 +6,13 @@ layer: hardware
 prerequisites:
   - interrupciones-y-entrada-salida
   - memoria-virtual
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Linux Kernel: Dynamic DMA Mapping Guide (en inglés)"
     url: https://docs.kernel.org/core-api/dma-api-howto.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 El **acceso directo a memoria**, o **DMA**, permite que un dispositivo o motor de transferencia mueva datos hacia o desde memoria sin que la CPU ejecute una instrucción para copiar cada unidad. La CPU prepara y coordina el trabajo, pero no realiza toda la transferencia elemento a elemento.
 
@@ -39,7 +41,16 @@ Una **IOMMU** puede traducir direcciones del dispositivo y ayudar a limitar las 
 
 Por eso los controladores utilizan funciones de mapeo y desmapeo del sistema. Un ejemplo de memoria ordinaria no puede trasladarse directamente a un dispositivo por el hecho de disponer de un puntero.
 
-**¿DMA permite al dispositivo escribir en cualquier memoria?** No debería. El controlador y la plataforma deben establecer qué regiones son válidas y durante cuánto tiempo.
+<Quiz
+	client:visible
+	question="¿Qué dirección debe entregarse al dispositivo para DMA?"
+	options={[
+		"Cualquier puntero de la aplicación",
+		"Siempre la misma dirección virtual que usa la CPU",
+		"Una dirección válida para DMA obtenida con la interfaz del sistema",
+	]}
+	answer={2}
+/>
 
 ## Coherencia y propiedad del búfer
 
@@ -55,6 +66,8 @@ Una tarjeta de red puede recibir una lista de descriptores. Cada uno identifica 
 
 Por eso hay que distinguir visibilidad de datos y orden de publicación. Una plataforma coherente puede evitar que CPU y dispositivo conserven indefinidamente copias incompatibles, pero no hace que varias escrituras independientes formen automáticamente una operación indivisible. Las barreras y la API del controlador expresan cuándo una descripción está lista.
 
+### Devolver la propiedad a la CPU
+
 Al terminar una recepción ocurre el recorrido inverso: comprobar la finalización, realizar la sincronización que corresponda y solo después interpretar los datos. Devolver el búfer a la tarjeta antes de que el programa acabe de leerlo permite que la siguiente recepción sobrescriba el contenido en uso.
 
 Estos pasos explican por qué DMA reduce las copias de CPU sin eliminar la coordinación. La unidad transferida puede ser grande, pero su propiedad cambia en momentos concretos que el controlador debe respetar.
@@ -67,7 +80,9 @@ Para una transferencia grande, preparar DMA puede ahorrar mucho trabajo de CPU. 
 
 ## Errores comunes
 
-Liberar un búfer antes de terminar, reutilizarlo mientras el dispositivo lo posee, confundir direcciones y omitir sincronización son errores del ciclo de vida. También importa tratar el fallo al preparar un mapeo: no toda solicitud de recursos tiene éxito.
+- **Liberar o reutilizar un búfer antes de terminar.** El dispositivo puede seguir leyéndolo o sobrescribir datos que la CPU aún utiliza.
+- **Confundir un puntero con una dirección DMA.** El dispositivo necesita un mapeo válido para su plataforma.
+- **Omitir sincronización o ignorar un fallo de mapeo.** El controlador debe comprobar que puede preparar y publicar la operación.
 
 ## Lo esencial
 

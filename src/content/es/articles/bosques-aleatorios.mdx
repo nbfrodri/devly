@@ -6,13 +6,15 @@ layer: ia
 prerequisites:
   - arboles-de-decision
   - sobreajuste-y-subajuste
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Leo Breiman: Random Forests, 2001 (en inglés)"
     url: https://www.stat.berkeley.edu/~breiman/randomforest2001.pdf
   - title: "scikit-learn: Ensembles, Random Forests (en inglés)"
     url: https://scikit-learn.org/stable/modules/ensemble.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Un **bosque aleatorio**, o *random forest*, combina las predicciones de varios árboles de decisión introduciendo variación durante su entrenamiento. Busca obtener un resultado más estable que el de un único árbol muy dependiente de los datos concretos que recibió.
 
@@ -34,7 +36,11 @@ La combinación de muestreo y selección de características reduce la correlaci
 
 Con cuatro observaciones identificadas como A, B, C y D, una muestra bootstrap de tamaño cuatro podría ser `A, C, C, D`. Otra podría ser `B, B, C, A`. El primer árbol no ve B y el segundo no ve D; C aparece dos veces en el primero y tiene más peso en su ajuste.
 
+### Cuántas observaciones quedan fuera
+
 Para un conjunto de tamaño `n`, la probabilidad de no seleccionar una observación en un sorteo es `1 - 1/n`. En `n` sorteos independientes resulta `(1 - 1/n)^n`, que se aproxima al 36,8 % cuando el conjunto crece. Esto explica por qué cada árbol deja fuera una fracción apreciable de ejemplos, aunque se realicen tantos sorteos como observaciones originales.
+
+### Evitar árboles demasiado parecidos
 
 Imagina que intentas detectar fraude con importe, país y antigüedad de la cuenta. Si el importe domina todas las primeras divisiones, los árboles pueden acabar pareciéndose mucho. Limitar aleatoriamente las características candidatas en cada división obliga a algunos a explorar otras señales. Hay un equilibrio: demasiada similitud reduce el beneficio de combinar; muy poca información puede debilitar los árboles.
 
@@ -54,7 +60,16 @@ console.log(media >= 0.5); // true
 
 Un modelo disidente puede quedar compensado por otros. Eso no garantiza que el grupo tenga razón: si todos aprendieron el mismo sesgo o utilizan información filtrada del futuro, la combinación conserva el problema.
 
-**¿Más árboles siempre arreglan malos datos?** No. Pueden estabilizar el modelo, pero no inventan etiquetas correctas ni corrigen una división de evaluación equivocada.
+<Quiz
+	client:visible
+	question="¿Qué ocurre al crear más árboles sobre datos con fuga de información?"
+	options={[
+		"La fuga desaparece al promediar",
+		"La evaluación puede seguir siendo engañosa",
+		"Todos los árboles se vuelven independientes",
+	]}
+	answer={1}
+/>
 
 ## Evaluar sin engañarte
 
@@ -80,6 +95,11 @@ Para el mismo conjunto tabular, puedes comparar ambos con las mismas particiones
 Muchos árboles ocupan más memoria y tardan más en predecir que uno. Los bosques ofrecen herramientas de importancia de variables, pero esas medidas pueden depender del método y no demuestran causalidad.
 
 Empieza por una referencia sencilla, evalúa con datos separados y revisa errores relevantes. La complejidad del conjunto no elimina la necesidad de entender cómo se utilizará su salida.
+
+## Errores comunes
+
+- **Crear árboles idénticos y esperar diversidad.** Promediar sus predicciones no cambia sus errores compartidos.
+- **Evaluar datos temporales con una mezcla que filtra el futuro.** Más árboles no corrigen la partición.
 
 ## Lo esencial
 

@@ -7,7 +7,7 @@ layer: aplicaciones
 prerequisites:
   - integracion-y-despliegue-continuos
   - balanceador-de-carga
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Martin Fowler: Blue Green Deployment (en inglés)"
     url: https://martinfowler.com/bliki/BlueGreenDeployment.html
@@ -157,6 +157,8 @@ Si la configuración puede cambiar en ejecución, encenderlo o apagarlo no requi
 En el mismo ejemplo, puedes desplegar el lunes con la bandera apagada, comprobar el sistema y lanzar el martes para un grupo. También puedes lanzar directamente durante el despliegue si la funcionalidad es sencilla y ese control adicional no aporta nada. Separarlos es una herramienta para coordinar cambios y reducir exposición, no una obligación para cada modificación.
 
 Desactivar no siempre basta: las compras ya guardadas, los mensajes enviados o los cambios de esquema no desaparecen. Y si una rama antigua deja de ser compatible con los datos nuevos, la bandera ya no ofrece una reversión segura. Verifica qué se puede recuperar antes de tratarla como un botón universal de deshacer.
+
+### Distinguir un fallo de instalación de uno de uso
 
 Para seguir el mismo carrito, separa dos fallos. Si la versión nueva no arranca, afecta al despliegue aunque la bandera esté apagada: el proceso contiene y carga código nuevo. Si arranca bien, pero el cálculo del carrito falla solo cuando se activa, retirar el acceso mediante la bandera puede reducir la exposición sin cambiar la versión instalada.
 

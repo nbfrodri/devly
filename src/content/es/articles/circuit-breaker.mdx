@@ -6,11 +6,13 @@ layer: sistemas
 prerequisites:
   - monolito-y-microservicios
   - reintentos-de-peticiones
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Martin Fowler: Circuit Breaker (en inglés)"
     url: https://martinfowler.com/bliki/CircuitBreaker.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Un **disyuntor**, o *circuit breaker*, es un mecanismo que observa fallos en las llamadas a una dependencia y suspende temporalmente nuevos intentos cuando detecta un problema persistente. Después permite una cantidad controlada de llamadas para comprobar si se ha recuperado.
 
@@ -43,13 +45,40 @@ Imagina que el servicio de recomendaciones empieza a fallar. Durante la ventana 
 
 Cuando transcurre la espera, no conviene enviar de golpe toda la carga acumulada. Pasan unas pruebas controladas. Si tienen éxito, se restablece el acceso. El umbral y el número de pruebas deben ajustarse a la carga y al coste real del servicio.
 
-**¿Qué significa un circuito cerrado?** Que deja pasar las llamadas, no que bloquea. La metáfora eléctrica puede resultar confusa si olvidas esa convención.
+<Quiz
+	client:visible
+	question="¿Qué hace un circuito cerrado?"
+	options={[
+		"Permite pasar llamadas y registra sus resultados",
+		"Rechaza todas las llamadas",
+		"Solo permite una prueba de recuperación",
+	]}
+	answer={0}
+/>
 
 ## Una política con números
 
-Supón una política didáctica: observar veinte resultados, abrir cuando al menos diez sean fallos de dependencia, esperar treinta segundos y admitir una prueba en estado semiabierto. Un error de validación del cliente no cuenta como fallo de salud; un timeout sí. Estas decisiones forman parte de la configuración, no de la definición universal del patrón.
+Supón esta política didáctica:
 
-Si se registran doce timeouts entre veinte llamadas, abre el circuito. La siguiente petición falla inmediatamente o utiliza la alternativa acordada; no espera otro timeout. Tras treinta segundos se admite una prueba. Si todavía falla, vuelve a comenzar la espera. Si tiene éxito, esta política concreta cierra el circuito; otra podría exigir varios éxitos antes de recuperar toda la carga.
+| Decisión | Valor del ejemplo |
+| --- | --- |
+| Ventana de observación | 20 resultados |
+| Umbral de apertura | Al menos 10 fallos de dependencia |
+| Espera con circuito abierto | 30 segundos |
+| Pruebas simultáneas en semiabierto | 1 |
+
+Un error de validación del cliente no cuenta aquí como fallo de salud; un timeout sí. Los valores son una configuración de ejemplo, no una regla universal del patrón.
+
+El recorrido de esa política es:
+
+1. Se registran doce timeouts entre veinte llamadas: se supera el umbral y el circuito abre.
+2. La siguiente petición se rechaza rápidamente o utiliza la alternativa acordada.
+3. Tras treinta segundos se admite una prueba.
+4. Si falla, vuelve a comenzar la espera. Si tiene éxito, esta política cierra el circuito.
+
+Otra configuración podría exigir varios éxitos antes de recuperar toda la carga.
+
+### Llamadas que ya estaban en curso
 
 Durante la apertura aún pueden terminar llamadas iniciadas antes. Su resultado no debe provocar transiciones accidentales: una implementación necesita coordinar el estado y distinguir esas observaciones de las pruebas de recuperación. Por esa razón un booleano global que se activa ante cualquier excepción no implementa todo el patrón.
 
@@ -68,6 +97,11 @@ Un circuito por cada instancia puede tomar decisiones distintas: una tiene pocos
 No todos los errores cuentan igual. Una petición inválida rechazada de forma correcta no suele indicar que el servidor esté enfermo. En cambio, timeouts sostenidos o conexiones fallidas pueden ser relevantes.
 
 El disyuntor tampoco sustituye límites de concurrencia, colas limitadas ni aislamiento de recursos. Antes de abrir ya ha dejado pasar algunas llamadas; sin límites, podrían ser demasiadas. La [contrapresión](/articulos/contrapresion/) aborda otra parte del control de sobrecarga.
+
+## Errores comunes
+
+- **Contar cualquier rechazo como enfermedad del servicio.** Un dato inválido puede estar recibiendo una respuesta correcta.
+- **Inventar un éxito como alternativa de respaldo.** Mostrar recomendaciones genéricas no equivale a confirmar un pago sin comprobarlo.
 
 ## Lo esencial
 

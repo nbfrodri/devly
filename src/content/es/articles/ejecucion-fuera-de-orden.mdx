@@ -6,11 +6,13 @@ layer: hardware
 prerequisites:
   - segmentacion-del-procesador
   - memoria-cache-del-procesador
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Intel: Software Developer's Manual, Volume 1, Basic Architecture (en inglés)"
     url: https://cdrdv2.intel.com/v1/dl/getContent/671436
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **ejecución fuera de orden** permite a un procesador ejecutar operaciones listas antes que otras anteriores que están esperando, siempre que respete las dependencias y el comportamiento arquitectónico requerido. Aprovecha recursos que quedarían ociosos si siguiera cada paso de forma estrictamente secuencial.
 
@@ -42,6 +44,8 @@ R1 = R3 * R4
 
 La suma necesita el resultado de la carga: es una dependencia verdadera. La multiplicación no necesita ese valor, pero reutiliza el nombre `R1`. Sin más cuidado, ejecutarla pronto sobrescribiría el valor que aún necesita la suma.
 
+### Dar un registro físico a cada versión
+
 El renombrado puede asignar la primera escritura de `R1` a un registro físico y la segunda a otro. La suma mantiene una referencia al primero; las instrucciones posteriores que deban ver la multiplicación se conectan al segundo. Así pueden avanzar operaciones independientes sin confundir sus versiones del mismo nombre arquitectónico.
 
 La carga y la suma siguen unidas. Si A tarda en llegar de memoria, renombrar no inventa su contenido. Tampoco elimina las dependencias entre accesos a memoria que puedan referirse a la misma ubicación: el procesador debe detectarlas o especular con un mecanismo de comprobación y recuperación.
@@ -52,7 +56,16 @@ El procesador mantiene una ventana de trabajo y selecciona operaciones cuyos dat
 
 Los fallos de caché y las cadenas de operaciones dependientes siguen importando. Una lista enlazada, donde cada dirección se obtiene leyendo el nodo anterior, ofrece menos independencia que muchos accesos conocidos de antemano.
 
-**¿Fuera de orden significa que siempre acaba antes?** No. Solo puede aprovechar independencia y recursos reales. La coordinación consume hardware y hay cargas que ofrecen pocas oportunidades.
+<Quiz
+	client:visible
+	question="¿Qué instrucción puede adelantarse mientras espera una carga?"
+	options={[
+		"Una operación independiente con operandos y recursos disponibles",
+		"Una suma que necesita el valor todavía no recibido",
+		"Cualquier instrucción posterior sin comprobar dependencias",
+	]}
+	answer={0}
+/>
 
 ## Ejecutar y retirar
 
@@ -73,6 +86,11 @@ Si una predicción falla, el procesador descarta resultados arquitectónicos del
 Puedes mejorar oportunidades de ejecución manteniendo buena localidad y evitando cadenas innecesarias de dependencias, pero debes medir el caso real. Contar instrucciones aisladas no predice automáticamente el tiempo total.
 
 Tampoco deduzcas un modelo de memoria entre hilos solo a partir de la retirada: el orden observable de accesos tiene sus propias reglas. La [coherencia de caché](/articulos/coherencia-de-cache/) y las primitivas de sincronización resuelven responsabilidades diferentes.
+
+## Errores comunes
+
+- **Creer que renombrar elimina dependencias de datos.** Una suma sigue esperando el valor que necesita.
+- **Confundir terminar con retirar.** Un resultado calculado puede no formar parte todavía del estado confirmado.
 
 ## Lo esencial
 

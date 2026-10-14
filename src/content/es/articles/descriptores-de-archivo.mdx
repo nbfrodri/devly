@@ -7,7 +7,7 @@ layer: sistemas
 prerequisites:
   - llamadas-al-sistema
   - sistema-de-archivos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Linux man-pages: open(2) (en inglés)"
     url: https://man7.org/linux/man-pages/man2/open.2.html
@@ -28,5 +28,7 @@ También se utilizan descriptores para sockets y tuberías. Esto permite que dis
 Al cerrar un descriptor, su número puede reutilizarse. Guardarlo y utilizarlo después del cierre puede acabar operando sobre otro recurso abierto más tarde. Además, olvidar cierres consume recursos: existe un límite de descriptores abiertos por proceso.
 
 No lo confundas con un [inodo](/articulos/sistema-de-archivos/), que identifica una estructura del sistema de archivos. Tampoco con una ruta: un archivo abierto puede seguir siendo accesible mediante su descriptor aunque se haya eliminado su último nombre, hasta que se cierren las referencias que lo mantienen abierto.
+
+## Una apertura compartida o dos independientes
 
 Dos aperturas del mismo archivo pueden mantener posiciones de lectura independientes: avanzar en una no tiene por qué avanzar en la otra. Duplicar un descriptor, en cambio, puede hacer que ambos remitan a la misma descripción de archivo abierto y compartan su posición. Así se distinguen tres piezas: el número del proceso, el estado de la apertura y el archivo almacenado. Confundirlas dificulta explicar tanto las redirecciones como los efectos de compartir una apertura.

@@ -6,11 +6,13 @@ layer: datos
 prerequisites:
   - clasificacion-y-regresion
   - media-mediana-y-desviacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google: Linear Regression, Machine Learning Crash Course (en inglés)"
     url: https://developers.google.com/machine-learning/crash-course/linear-regression
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **regresión lineal** es un modelo que predice un valor numérico mediante una combinación lineal de características. En el caso más sencillo ajusta una recta: predicción = intercepto + pendiente × entrada.
 
@@ -20,7 +22,9 @@ Quieres estimar cuánto tarda una tarea según la cantidad de elementos que proc
 
 No supone que cualquier relación real sea una recta. Es una elección de modelo que debe comprobarse frente a los datos y al uso que necesitas hacer de ella.
 
-## Dos parámetros
+## Cómo funciona
+
+### Dos parámetros
 
 La **pendiente** indica cuánto cambia la predicción al aumentar una unidad la entrada. El **intercepto** es el valor predicho cuando la entrada vale cero.
 
@@ -28,7 +32,7 @@ En `tiempo = 1 + 2 × elementos`, procesar cuatro elementos da una predicción d
 
 Con varias características, cada una tiene un peso. «Lineal» se refiere a la combinación de parámetros del modelo; puedes preparar características transformadas, pero seguirás necesitando evaluar el resultado y evitar interpretaciones injustificadas.
 
-## Ajustar con mínimos cuadrados
+### Ajustar con mínimos cuadrados
 
 El **residuo** de una observación es el valor real menos su predicción. Una forma habitual de entrenar el modelo minimiza la suma de residuos al cuadrado. Elevar al cuadrado evita que errores positivos y negativos se cancelen y penaliza con fuerza errores grandes.
 
@@ -52,19 +56,32 @@ console.log(intercepto + pendiente * 4); // 9
 
 El caso está construido para ajustarse exactamente. Si todas las entradas fueran iguales, el denominador sería cero y no podrías estimar esa pendiente con esta fórmula. Una implementación de uso general debe validar su dominio y tratar degeneraciones.
 
-## Mirar los residuos
+### Mirar los residuos
 
 Un error medio pequeño no cuenta toda la historia. Dibuja residuos frente a predicciones o entradas. Si aparece una curva, la recta puede estar dejando una estructura sin modelar. Si el error crece con el tamaño, la variabilidad tampoco es constante.
 
 Los [valores atípicos](/articulos/valores-atipicos/) pueden influir mucho porque el cuadrado amplifica errores grandes. Debes investigar su origen antes de eliminarlos.
 
-**¿Un ajuste perfecto con los datos de entrenamiento garantiza buenas predicciones?** No. Puede haber pocos datos, una selección sesgada o un uso fuera del rango observado. La evaluación con datos independientes sigue siendo necesaria.
+<Quiz
+	client:visible
+	question="¿Qué demuestra un ajuste perfecto en entrenamiento?"
+	options={[
+		"Que el modelo generaliza bien",
+		"Que ajusta esos datos, no necesariamente otros",
+		"Que las entradas causan el resultado",
+	]}
+	answer={1}
+/>
 
 ## Un ajuste con errores reales
 
 Ahora cambia los tiempos observados a `3, 5, 8`. La recta de mínimos cuadrados tiene pendiente `2,5` e intercepto aproximadamente `0,333`. Sus predicciones son `2,833`, `5,333` y `7,833`. Los residuos son aproximadamente `0,167`, `-0,333` y `0,167`: ya no hay una recta que pase por todos los puntos.
 
+### Medir el error
+
 El **error cuadrático medio**, o MSE, promedia sus cuadrados: aproximadamente `0,056`. Se expresa en unidades de tiempo al cuadrado. Su raíz, RMSE, vale aproximadamente `0,236` y vuelve a las unidades originales. Así puedes comparar el error con un requisito como «toleramos medio segundo», aunque el promedio no describe el peor caso.
+
+### Comparar con una referencia
 
 ¿Cómo sabemos si la recta aporta algo? Una referencia sencilla predice siempre el tiempo medio, aquí `5,333`. Su MSE en estos tres datos ronda `4,222`. La recta mejora ese ajuste porque utiliza la relación con el tamaño. La comparación que importa para el uso real se hace también con observaciones que no participaron en el ajuste.
 
@@ -75,6 +92,11 @@ Con varias características aparece otro problema: si dos entradas contienen cas
 Un peso positivo describe una asociación en este modelo. No demuestra que intervenir sobre esa característica cause el cambio previsto. Variables omitidas, correlaciones entre entradas y sesgos de selección pueden alterar la interpretación.
 
 Extrapolar también es arriesgado: una recta ajustada entre tamaños pequeños puede fallar cuando aparece otro régimen de funcionamiento, como falta de memoria o saturación. Empieza con el modelo sencillo y amplíalo si sus errores y los requisitos justifican hacerlo.
+
+## Errores comunes
+
+- **Interpretar un coeficiente como una causa.** El ajuste encuentra asociaciones; no demuestra qué ocurriría al intervenir.
+- **Extrapolar sin comprobar el rango.** Una recta ajustada a entradas pequeñas puede fallar cuando cambia el régimen de funcionamiento.
 
 ## Lo esencial
 

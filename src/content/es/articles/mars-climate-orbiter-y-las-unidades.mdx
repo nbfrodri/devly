@@ -7,7 +7,7 @@ layer: aplicaciones
 prerequisites:
   - requisitos-funcionales-y-no-funcionales
   - pruebas-de-software
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "NASA: Mars Climate Orbiter Mishap Investigation Board, Phase I Report, 1999 (en inglés)"
     url: https://discovery.larc.nasa.gov/pdf_files/MCO_report_2.pdf
@@ -21,7 +21,11 @@ La interfaz exigía unidades métricas, pero un archivo entregaba datos de impul
 
 La sonda utilizaba pequeños encendidos para controlar su orientación. Esos encendidos también alteraban ligeramente su movimiento, y el equipo de navegación debía incorporarlos al cálculo de la trayectoria. El software de tierra producía un archivo con información del **impulso**, la fuerza aplicada multiplicada por el tiempo de actuación.
 
+### La diferencia de unidades
+
 La especificación exigía newton-segundo, pero el archivo entregaba libra-fuerza-segundo. Una libra-fuerza equivale aproximadamente a 4,45 newtons. Leer un impulso de una libra-fuerza-segundo como si fuera un newton-segundo subestima su magnitud por ese factor. No se trataba de confundir directamente una distancia en millas con otra en kilómetros.
+
+### Dónde se propagó la interpretación incorrecta
 
 El efecto acumulado entró en el modelo utilizado para estimar la órbita. El programa podía leer el archivo sin errores de sintaxis y completar todos sus cálculos: estaba calculando sobre una interpretación incorrecta de las entradas. El informe sitúa el desacuerdo en el software de tierra; no afirma que todo el software de la nave utilizara las mismas unidades equivocadas.
 
@@ -40,3 +44,9 @@ Si un servicio entrega una duración de 500 y otro la interpreta como segundos c
 Un [requisito comprobable](/articulos/requisitos-funcionales-y-no-funcionales/) debe expresar unidad, rango y significado. Una prueba de integración necesita verificar esa interpretación entre componentes, no únicamente que el mensaje pueda analizarse.
 
 La lección para software corriente es concreta: documenta qué mide cada campo, usa nombres o tipos que ayuden a distinguirlo y prueba ejemplos donde una interpretación equivocada resulte visible. La compatibilidad sintáctica no basta para garantizar compatibilidad de significado.
+
+## Lo esencial
+
+- El desacuerdo estaba en datos de impulso producidos por software de tierra.
+- Una libra-fuerza equivale aproximadamente a 4,45 newtons.
+- La interfaz estaba documentada, pero faltó detectar que los componentes no la interpretaban igual.

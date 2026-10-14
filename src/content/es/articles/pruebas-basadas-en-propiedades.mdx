@@ -6,11 +6,13 @@ layer: aplicaciones
 prerequisites:
   - pruebas-de-software
   - que-es-una-asercion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "fast-check: Why Property-Based Testing? (en inglés)"
     url: https://fast-check.dev/docs/introduction/why-property-based/
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Las **pruebas basadas en propiedades** comprueban reglas que deberían cumplirse para un conjunto de entradas, en lugar de limitarse a ejemplos elegidos a mano. Una herramienta genera casos, ejecuta la propiedad y busca una entrada que la contradiga.
 
@@ -28,7 +30,16 @@ No sustituyes pensar por azar. Elegir buenas propiedades y generadores es la par
 
 Por eso también compruebas longitud y contenido, incluidas repeticiones. Si entran dos cincos, debe haber dos cincos en el resultado. Comparar conjuntos eliminaría esa multiplicidad y podría ocultar un error.
 
-**¿Puede una propiedad verdadera ser insuficiente?** Sí: describe una condición necesaria, pero puede no caracterizar todo el comportamiento requerido.
+<Quiz
+	client:visible
+	question="Una función devuelve siempre una lista vacía. ¿Qué propiedad de ordenación podría pasar?"
+	options={[
+		"La salida está ordenada",
+		"Conserva todos los elementos",
+		"Conserva la longitud de cualquier entrada",
+	]}
+	answer={0}
+/>
 
 ## Un ejemplo sin instalar herramientas
 
@@ -66,7 +77,7 @@ Cuando aparece un fallo, la **reducción**, o *shrinking*, intenta encontrar una
 
 Conviene conservar la semilla y la información de reproducción que proporciona la herramienta. Así puedes recuperar la ejecución concreta y convertir el contraejemplo en una prueba de regresión legible.
 
-## Encontrar un fallo y hacerlo pequeño
+### Encontrar un fallo y hacerlo pequeño
 
 La ordenación predeterminada de JavaScript compara representaciones textuales. Para ordenar números hay que proporcionar un comparador. Una prueba con `[1, 2, 3]` no descubre esa diferencia, pero esta entrada sí:
 
@@ -90,6 +101,11 @@ El contraejemplo permite explicar la causa: el carácter `1` de `10` se ordena a
 Una codificación y su decodificación pueden recuperar el original dentro de un dominio definido. Normalizar dos veces puede dar lo mismo que normalizar una. Transferir dinero entre dos cuentas puede conservar el total. Cada regla necesita precisar sus condiciones: una compresión con pérdida no promete reconstrucción exacta.
 
 También puedes comparar con una implementación sencilla que actúe como referencia. Evita copiar exactamente el algoritmo probado: repetir el mismo error en ambos lados reduce el valor de la comprobación.
+
+## Errores comunes
+
+- **Comprobar solo que una lista está ordenada.** Devolver una lista vacía pasa esa regla sin conservar el contenido.
+- **Generar entradas fuera del dominio sin querer.** La propiedad debe precisar qué valores admite el contrato.
 
 ## Lo esencial
 

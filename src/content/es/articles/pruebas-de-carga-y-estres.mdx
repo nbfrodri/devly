@@ -7,11 +7,13 @@ layer: aplicaciones
 prerequisites:
   - pruebas-de-software
   - observabilidad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Grafana k6: Load Test Types, documentación oficial (en inglés)"
     url: https://grafana.com/docs/k6/latest/testing-guides/test-types/
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Una **prueba de carga** comprueba el sistema bajo un volumen y patrón de uso definidos, normalmente representativos de lo esperado. Una **prueba de estrés** supera condiciones normales para estudiar límites, degradación y recuperación. Ambas miden rendimiento, pero responden preguntas distintas.
 
@@ -47,6 +49,17 @@ La recuperación es parte de la prueba. Un servicio puede dejar de recibir tráf
 | Resultado útil | Evidencia de capacidad para un escenario | Cuellos de botella y degradación observables |
 | Errores | Pueden incumplir el criterio | Pueden ser parte de lo que se estudia |
 
+<Quiz
+	client:visible
+	question="Aumentas la demanda por encima del rango esperado y compruebas la recuperación. ¿Qué estás estudiando?"
+	options={[
+		"Solo si el caso de uso habitual cumple sus objetivos",
+		"La corrección de una función aislada",
+		"El comportamiento bajo estrés",
+	]}
+	answer={2}
+/>
+
 ## Medir el sistema y el generador
 
 Observa latencias por percentiles, tasa de errores, trabajo completado, saturación de recursos y edad de las colas. El promedio puede ocultar solicitudes extremadamente lentas.
@@ -57,9 +70,15 @@ Una cifra máxima sin condiciones reproducibles no permite comparar versiones. C
 
 ## Interpretar dos resultados del mismo escenario
 
+### Carga: comprobar el objetivo
+
 En una prueba de carga didáctica envías cien solicitudes por segundo durante diez minutos y exiges que el 99 % termine en menos de 400 ms, con menos del 0,1 % de errores. Si el promedio es 100 ms pero el percentil 99 llega a dos segundos, no se cumple el objetivo de latencia. El promedio no puede sustituir el criterio que fijaste.
 
+### Estrés: encontrar la saturación
+
 Después aumentas gradualmente a doscientas y trescientas solicitudes por segundo. A partir de cierto nivel, la tasa completada deja de crecer y la cola envejece. Ese punto muestra saturación para esa mezcla y ese entorno. Mantener la llegada por encima de la salida no demuestra más capacidad: acumula trabajo pendiente.
+
+### Comprobar la recuperación
 
 Al bajar de nuevo a cien, compruebas si el sistema vuelve al estado inicial o sigue atendiendo solicitudes antiguas. Un límite de cola que rechaza pronto puede mejorar la recuperación aunque produzca más errores inmediatos durante el pico. Debes evaluar qué comportamiento necesita el producto, además del máximo rendimiento observado.
 
@@ -69,7 +88,11 @@ El informe útil conserva la curva de demanda, la completada, errores, percentil
 
 La carga ayuda a comprobar requisitos para un lanzamiento o un cambio de implementación. El estrés ayuda a diseñar límites de admisión, aislamiento y recuperación. Una prueba prolongada busca problemas que aparecen con el tiempo; una de picos estudia cambios bruscos. No son nombres intercambiables para ejecutar la misma secuencia.
 
-Realiza las pruebas sobre un entorno autorizado y representativo. Los resultados solo justifican conclusiones dentro de sus condiciones: pasar una campaña simulada no demuestra capacidad ilimitada ni ausencia de errores funcionales.
+## Confusiones frecuentes
+
+- **Confundir usuarios con solicitudes por segundo.** Un usuario puede estar leyendo sin generar tráfico; una operación lenta mantiene recursos ocupados durante más tiempo.
+- **Confundir recibir con completar.** Una cola puede aceptar más trabajo del que el sistema termina y mantenerlo pendiente durante mucho tiempo.
+- **Publicar un máximo sin condiciones.** Pasar una campaña simulada solo aporta evidencia para ese escenario, sus datos y su entorno.
 
 ## Lo esencial
 

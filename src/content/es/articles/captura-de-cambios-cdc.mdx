@@ -7,11 +7,13 @@ prerequisites:
   - procesos-etl
   - una-base-de-datos-por-dentro
   - colas-de-mensajes
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Debezium: Architecture (en inglés)"
     url: https://debezium.io/documentation/reference/stable/architecture.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **captura de cambios de datos**, o **CDC** por *change data capture*, detecta inserciones, actualizaciones y borrados en una fuente y los convierte en información consumible por otros sistemas. Permite mantener destinos actualizados sin volver a copiar todas las filas en cada ejecución.
 
@@ -39,11 +41,25 @@ La transición debe estar coordinada. Si copias filas y empiezas a escuchar camb
 
 ## Un cambio de precio paso a paso
 
-El producto 7 cuesta 20. Una transacción lo actualiza a 25 y confirma. El capturador publica un cambio que identifica el producto, la operación y el valor relevante. El consumidor actualiza el documento 7 del buscador.
+El producto 7 cuesta 20. Para cambiar su precio a 25:
+
+1. La transacción actualiza la fila y confirma.
+2. El capturador detecta el cambio confirmado.
+3. Publica un mensaje que identifica el producto, la operación y el nuevo valor.
+4. El consumidor actualiza el documento 7 del buscador.
 
 Si el consumidor se detiene después de escribir pero antes de confirmar su avance, puede recibir otra vez el cambio al recuperarse. Aplicar «el precio del producto 7 es 25» de forma idempotente evita duplicar un efecto acumulativo.
 
-**¿Un evento recibido significa que todos los destinos ya están actualizados?** No. Cada consumidor tiene su propio progreso. La base de origen puede haber confirmado mientras el buscador todavía va por detrás.
+<Quiz
+	client:visible
+	question="¿Qué permite concluir que un consumidor recibió un cambio?"
+	options={[
+		"Que todos los destinos ya lo aplicaron",
+		"Que ningún consumidor va retrasado",
+		"Que ese consumidor lo recibió; los demás tienen su propio progreso",
+	]}
+	answer={2}
+/>
 
 ## Orden, borrados y esquema
 
@@ -59,6 +75,8 @@ Supón que un consumidor recibe para el producto 7 las versiones 10 y 11, con pr
 
 El destino puede conservar una versión comparable por entidad y rechazar cambios anteriores, si la fuente proporciona ese contrato. No conviene inventar el orden comparando relojes de distintas máquinas: dos marcas de tiempo pueden empatar o no representar el orden de confirmación. Otra opción es preservar estrictamente el orden por clave durante transporte y consumo.
 
+### No resucitar filas borradas
+
 Los borrados plantean el mismo problema: un evento antiguo de actualización no debe resucitar una entidad eliminada después. A veces hay que conservar una marca de borrado con su versión, en lugar de olvidar inmediatamente toda evidencia del producto.
 
 Por último, guardar una posición del conector no confirma el progreso de todos los destinos. Si buscas garantías más fuertes, examina dónde se hacen atómicas la escritura del resultado y la confirmación del avance. Sin esa coordinación hay ventanas de repetición o pérdida que el consumidor debe tratar explícitamente.
@@ -66,6 +84,11 @@ Por último, guardar una posición del conector no confirma el progreso de todos
 ## CDC no es event sourcing
 
 CDC suele describir modificaciones de almacenamiento: una fila cambió. [Event sourcing](/articulos/cqrs-y-event-sourcing/) conserva eventos del dominio como origen del estado: un pedido fue confirmado. No son intercambiables. Una actualización física puede no contener el motivo de negocio que necesitaría otro servicio.
+
+## Errores comunes
+
+- **Sumar al recibir un mensaje repetido.** Una entrega duplicada puede duplicar el efecto si la aplicación no es idempotente.
+- **Aplicar una versión antigua después de una nueva.** Evitar duplicados no resuelve por sí solo el desorden.
 
 ## Lo esencial
 

@@ -7,7 +7,7 @@ layer: aplicaciones
 prerequisites:
   - condiciones-de-carrera-y-bloqueos
   - pruebas-de-software
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Nancy Leveson y Clark S. Turner: An Investigation of the Therac-25 Accidents, 1993 (en inglés)"
     url: https://people.eecs.berkeley.edu/~bh/61a-pages/Volume2/Therac-25.pdf
@@ -21,9 +21,13 @@ Su investigación describe problemas de sincronización en software con acceso c
 
 En marzo y abril de 1986 hubo dos accidentes en Tyler, Texas. La investigación describe una secuencia de edición rápida: la operadora introducía un modo de tratamiento y después lo corregía de rayos X a electrones. Cambiar el dato en pantalla no garantizaba que todas las tareas de configuración volvieran a ejecutarse de forma coherente.
 
+### Reproducir la secuencia rápida
+
 El físico del hospital, Fritz Hager, trabajó con la operadora para reproducir la secuencia. La rapidez de edición resultó decisiva. Una prueba realizada despacio podía terminar con los mismos valores visibles y no provocar el fallo. Esa diferencia permitió acotar un problema que las comprobaciones anteriores no habían reproducido.
 
 El software coordinaba entrada de datos y preparación del equipo mediante tareas y variables compartidas. La sincronización defectuosa permitía avanzar con una combinación incompatible de parámetros y estado físico. No era simplemente que la persona hubiese elegido una dosis excesiva: una operación habitual de corrección podía llevar al sistema a una configuración peligrosa.
+
+### La información que recibía la operadora
 
 La consola mostró el mensaje «Malfunction 54», cuya explicación no ofrecía a la operadora una descripción útil de la sobredosis. El monitor también podía mostrar una dosis aparentemente baja. Esa información favorecía interpretar la parada como otra interrupción recuperable, en lugar de reconocer lo ocurrido.
 
@@ -40,3 +44,9 @@ Cuando el software controla un dispositivo, el estado que muestra la interfaz, e
 La investigación no presenta los accidentes como un único error aislado que explica todos los casos. Examina diseño, pruebas, barreras de seguridad, comunicación de incidentes y respuestas a señales de fallo.
 
 La lección es estudiar las interacciones y las defensas del conjunto. Probar un componente por separado o asumir que el software no puede originar un estado peligroso deja preguntas esenciales sin responder. Las barreras independientes, el tratamiento explícito de fallos y aprender de incidentes necesitan diseñarse, no darse por supuestos.
+
+## Lo esencial
+
+- En los accidentes de Tyler, la secuencia y rapidez de edición ayudaron a reproducir el fallo.
+- El estado visible, el del programa y el físico podían dejar de coincidir.
+- La seguridad dependía de sincronización, barreras, interfaz y respuesta a los incidentes.

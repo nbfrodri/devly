@@ -6,7 +6,7 @@ kind: definicion
 layer: hardware
 prerequisites:
   - memoria-cache-del-procesador
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Intel: Software Developer's Manuals (en inglés)"
     url: https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
@@ -27,5 +27,7 @@ La primera consulta a un bloque puede fallar porque todavía no se había cargad
 No debes deducir el tiempo total únicamente contando fallos. Importan su coste, el trabajo que puede solaparse y la dependencia entre accesos. Un procesador puede tener varias peticiones en curso, pero una cadena donde cada dirección depende del dato anterior limita ese solapamiento.
 
 Tampoco es un **fallo de página**: ese evento pertenece a la traducción y gestión de memoria virtual. Ambos pueden añadir espera, pero ocurren en mecanismos distintos y se diagnostican con métricas diferentes.
+
+## Seguir un acceso secuencial
 
 Imagina líneas de 64 bytes y enteros de cuatro bytes, con el array alineado para simplificar. La primera lectura puede traer una línea que contiene dieciséis enteros. Leer los quince siguientes puede aprovechar ese mismo bloque, si nada lo expulsa. Recorrer una posición de cada dieciséis usa mucho menos de cada línea traída. Esta **localidad espacial** explica por qué dos recorridos con igual cantidad de elementos pueden generar cantidades muy distintas de tráfico de memoria.

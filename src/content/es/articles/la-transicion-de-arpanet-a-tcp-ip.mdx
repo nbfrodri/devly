@@ -7,7 +7,7 @@ layer: redes
 prerequisites:
   - modelos-osi-y-tcp-ip
   - historia-de-internet
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RFC 801: NCP/TCP Transition Plan, 1981 (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc801.html
@@ -27,7 +27,11 @@ Esa dificultad también aparece cuando hoy migras una API o un formato de mensaj
 
 NCP servía para la comunicación entre hosts de ARPANET. TCP/IP respondía a una necesidad más amplia: comunicar equipos a través de distintas redes. IP proporcionaba un servicio de datagramas entre redes y TCP podía construir sobre él una comunicación fiable para las aplicaciones que la necesitaran.
 
+### Migrar también las aplicaciones
+
 La transición afectaba a más que el programa que enviaba paquetes. Hacían falta implementaciones en los sistemas operativos y servicios utilizables, como transferencia de archivos y acceso remoto, para que una máquina no estuviera «migrada» solo en una prueba aislada.
+
+### Ensayar la retirada del protocolo antiguo
 
 El RFC 801 establecía etapas anteriores a la fecha final y periodos de prueba sin NCP. Retirar temporalmente el mecanismo viejo permitía descubrir dependencias que permanecían ocultas mientras ambos funcionaban. Si una aplicación seguía utilizándolo sin que su equipo lo supiera, una prueba de TCP satisfactoria en otro servicio no demostraba que pudiera retirarse NCP.
 
@@ -38,3 +42,9 @@ Es la diferencia entre comprobar que existe una alternativa y comprobar que ya n
 El RFC documenta un plan, no un registro exhaustivo del estado final de cada máquina. Tampoco significa que aquel día nacieran de golpe todas las redes o todos los servicios de internet. Existían desarrollos anteriores y siguieron cambiando después.
 
 Lo que ayuda a recordar es el papel de [TCP/IP](/articulos/modelos-osi-y-tcp-ip/) en conectar sistemas y redes mediante acuerdos comunes. Un protocolo solo resulta útil cuando sus participantes lo implementan de forma compatible, y cambiar ese acuerdo exige tanto ingeniería de transición como especificaciones.
+
+## Lo esencial
+
+- El RFC 801 fijó el 1 de enero de 1983 como fecha de transición desde NCP.
+- La preparación incluía implementaciones, servicios y pruebas sin el protocolo anterior.
+- Que una alternativa funcione no demuestra que todos los consumidores hayan dejado la antigua.

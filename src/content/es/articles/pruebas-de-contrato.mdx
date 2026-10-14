@@ -6,13 +6,15 @@ layer: aplicaciones
 prerequisites:
   - que-es-una-api
   - pruebas-de-software
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Pact: Introduction to Contract Testing (en inglés)"
     url: https://docs.pact.io/
   - title: "Google AIP-180: Backwards Compatibility (en inglés)"
     url: https://google.aip.dev/180
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Una **prueba de contrato** comprueba un acuerdo en el punto de integración entre aplicaciones. Verifica qué petición o mensaje espera una parte y qué respuesta o mensaje necesita la otra, sin exigir que todo el sistema se despliegue junto para cada comprobación.
 
@@ -22,7 +24,9 @@ Una página de pedidos utiliza un servicio que devuelve identificador, total y m
 
 Ambas partes estaban probadas por separado, pero sus suposiciones ya no coincidían. La prueba de contrato conecta esas suposiciones mediante un artefacto comprobable.
 
-## Consumidor y proveedor
+## Cómo se verifica el acuerdo
+
+### Consumidor y proveedor
 
 El **consumidor** utiliza los datos; el **proveedor** los entrega. No tienen por qué ser un navegador y un servidor: también pueden comunicarse mediante una cola de mensajes.
 
@@ -30,7 +34,7 @@ En un enfoque dirigido por el consumidor, las pruebas de este registran interacc
 
 Por ejemplo, para «pedido 42 existente», el contrato puede exigir estado de éxito, un identificador con formato acordado, total numérico y moneda. Si el consumidor no utiliza otro campo, quizá no necesite imponer su valor exacto.
 
-## Un recorrido de verificación
+### Un recorrido de verificación
 
 1. La prueba del consumidor solicita el pedido a un doble configurado con el acuerdo.
 2. Comprueba que el consumidor interpreta la respuesta correctamente.
@@ -40,7 +44,16 @@ Por ejemplo, para «pedido 42 existente», el contrato puede exigir estado de é
 
 Un simple archivo JSON escrito a mano no realiza automáticamente esos pasos. La confianza depende de que el acuerdo se genere y se verifique con el código pertinente.
 
-**Si la respuesta simulada tiene el formato correcto, ¿ya está probada la integración?** No. Falta comprobar que el proveedor real pueda satisfacer ese formato y significado en el estado requerido.
+<Quiz
+	client:visible
+	question="El consumidor pasa sus pruebas con una respuesta simulada. ¿Qué falta verificar?"
+	options={[
+		"Que el proveedor real satisface el acuerdo",
+		"Que el JSON tiene espacios",
+		"Que todos los servicios se despliegan juntos",
+	]}
+	answer={0}
+/>
 
 ## Ver un contrato que se rompe
 
@@ -62,6 +75,8 @@ console.log(respuestaCompatible(cambiada)); // false
 
 La segunda respuesta rompe el tipo de `total`. Para convertir este ejemplo en una verificación de proveedor, la respuesta debe proceder de una petición a su implementación con el pedido 42 preparado, en lugar de escribirla a mano. En la prueba del consumidor, el doble devuelve la primera forma y se comprueba que el cliente calcula o presenta el importe correctamente. Son dos comprobaciones conectadas por el mismo acuerdo.
 
+### Mismo tipo, significado distinto
+
 Hay una ruptura que la función no detecta: que `1250` pase de significar céntimos a significar euros. Sigue siendo un número y satisface las restricciones. Por eso el contrato necesita ejemplos cuyo significado se compruebe: un pedido preparado con precio conocido debe devolver el importe esperado en la unidad documentada. La compatibilidad incluye semántica, no solo tipos.
 
 ## Qué debe fijarse
@@ -81,6 +96,11 @@ Las [pruebas de extremo a extremo](/articulos/pruebas-unitarias-de-integracion-y
 Con varios consumidores, el proveedor necesita saber qué versiones del contrato siguen vigentes. Pasar la última prueba de un único consumidor no demuestra que todos los clientes desplegados funcionen. El resultado útil es una evidencia de compatibilidad entre versiones concretas.
 
 Antes de retirar un campo, revisa su uso y verifica la transición. La [evolución de una API](/articulos/evolucion-compatible-de-api/) necesita una política de cambios además de herramientas de prueba.
+
+## Errores comunes
+
+- **Verificar únicamente el doble.** Falta comprobar que el proveedor real satisface lo que necesita el consumidor.
+- **Comprobar tipos y olvidar unidades.** Un número en euros y otro en céntimos pueden pasar el mismo esquema.
 
 ## Lo esencial
 

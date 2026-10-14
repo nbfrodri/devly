@@ -6,11 +6,13 @@ layer: aplicaciones
 prerequisites:
   - que-es-rest
   - requisitos-funcionales-y-no-funcionales
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google AIP-180: Backwards Compatibility (en inglés)"
     url: https://google.aip.dev/180
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **evolución compatible de una API** permite cambiar una implementación o ampliar un contrato manteniendo operativos los clientes que siguen utilizando la versión anterior del acuerdo. La compatibilidad depende tanto del formato como del significado y del comportamiento observable.
 
@@ -30,13 +32,27 @@ Por eso necesitas definir qué extensiones deben tolerarse y probar consumidores
 
 ## Introducir antes de retirar
 
-Supón que `nombre` debe convertirse en `nombreVisible`. Puedes introducir el nuevo campo manteniendo el anterior, documentar cuál utilizar, actualizar clientes y observar qué consumidores siguen dependiendo del viejo.
+Supón que el campo nombre debe convertirse en nombreVisible. La transición puede organizarse así:
+
+1. **Introducir** el nuevo campo manteniendo el anterior.
+2. **Documentar** cuál deben usar los clientes nuevos.
+3. **Migrar** los consumidores y comprobar su uso real.
+4. **Retirar** el anterior cuando se cumpla la política de soporte.
 
 Si ambos describen lo mismo, deben mantenerse coherentes durante la transición. Si su significado cambia, documenta la diferencia: duplicar nombres no soluciona una discrepancia semántica.
 
 Una vez completada la migración y cumplida la política de retirada, puedes eliminar el campo antiguo en una versión que lo permita. La retirada necesita evidencia, no simplemente que el cambio lleve varias semanas disponible.
 
-**¿Que no haya llamadas hoy demuestra que un cliente desapareció?** No. Puede ejecutarse con poca frecuencia. Considera ventanas de uso y compromisos de soporte acordados.
+<Quiz
+	client:visible
+	question="¿Por qué un día sin llamadas no basta para retirar una versión?"
+	options={[
+		"Porque una API nunca puede retirarse",
+		"Porque puede haber clientes que se ejecutan con poca frecuencia",
+		"Porque añadir una versión borra los registros",
+	]}
+	answer={1}
+/>
 
 ## La compatibilidad depende de la dirección
 
@@ -48,6 +64,8 @@ Supón que el servidor empieza a aceptar un parámetro opcional `idioma`, cuyo v
 | Nuevo campo de respuesta | Depende del lector | Tolerancia a campos desconocidos |
 | Nuevo valor de estado | Puede romper decisiones existentes | Ramas por defecto y enumeraciones |
 | Mismo número, unidad distinta | Puede funcionar y calcular mal | Significado, no solo esquema |
+
+### Un estado nuevo en un cliente antiguo
 
 Por ejemplo, un cliente distingue pedidos `pendiente` y `entregado`. Añadir `cancelado` puede ser correcto para el servidor y peligroso para un cliente que interprete cualquier estado distinto de `pendiente` como entregado. El consumidor necesita tratar valores desconocidos sin inventar un significado. El proveedor necesita definir si su contrato permitía ampliar esa lista.
 
@@ -68,6 +86,11 @@ Observa el uso de la versión anterior sin registrar datos sensibles innecesario
 ## No confundas adaptación con tolerancia ilimitada
 
 Un servidor no debe aceptar silenciosamente datos inválidos para aparentar compatibilidad. Si el requisito necesita cambiar, expresa un nuevo contrato y una transición explícita. Ocultar errores puede conservar respuestas de éxito mientras corrompe los resultados.
+
+## Errores comunes
+
+- **Suponer que añadir siempre es compatible.** Un cliente puede rechazar campos o valores desconocidos.
+- **Retirar por antigüedad del campo.** Hace falta comprobar consumidores y compromisos de soporte.
 
 ## Lo esencial
 

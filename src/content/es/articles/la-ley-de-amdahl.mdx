@@ -6,7 +6,7 @@ kind: curiosidad
 layer: hardware
 prerequisites:
   - procesadores-multinucleo
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Gene Amdahl: Validity of the Single Processor Approach to Achieving Large Scale Computing Capabilities, 1967 (en inglés)"
     url: https://www.cs.cmu.edu/~18742/papers/Amdahl1967.pdf
@@ -33,7 +33,11 @@ Incluso con una cantidad idealmente ilimitada de núcleos, los diez segundos no 
 
 Con ocho núcleos, el caso anterior tarda idealmente `10 + 90/8 = 21,25` segundos. Con dieciséis, `15,625`. Duplicar de ocho a dieciséis no reduce el tiempo a la mitad porque los diez segundos secuenciales no se reparten. Cada ampliación se acerca más al límite y aporta menos mejora absoluta.
 
+### Mejorar la parte que no se reparte
+
 En cambio, reducir la preparación de diez a cinco segundos cambia el límite ideal de diez a veinte veces la velocidad original. A veces merece más la pena quitar una dependencia secuencial o preparar datos una sola vez que duplicar otra vez la parte paralela.
+
+### El límite de una optimización local
 
 La misma cuenta sirve fuera del paralelismo. Si una función ocupa el 5 % del tiempo y consigues hacerla infinitamente rápida, el programa todavía conserva el 95 % restante. La aceleración máxima sería `1 / 0,95`, aproximadamente `1,053`: apenas un 5,3 %. Una mejora local espectacular no garantiza una mejora global parecida.
 
@@ -46,3 +50,9 @@ El cálculo supone reparto perfecto de la parte paralela y omite comunicaciones,
 También mantiene fijo el trabajo. Si al disponer de más recursos decides analizar un conjunto de datos mayor, estás haciendo otra pregunta: cuánto trabajo adicional puedes realizar, en vez de cuánto aceleras exactamente el anterior.
 
 La lección práctica es medir dónde se consume el tiempo. Optimizar una parte que ya ocupa muy poco tiene un límite similar. Acelerar un cálculo diez veces puede apenas notarse si el programa pasa casi todo el tiempo esperando una operación que no has cambiado.
+
+## Lo esencial
+
+- La parte secuencial limita la aceleración de un trabajo fijo.
+- Duplicar núcleos no implica reducir el tiempo a la mitad.
+- Primero se mide dónde se consume el tiempo; comunicación y coordinación añaden costes reales.

@@ -6,7 +6,7 @@ kind: curiosidad
 layer: datos
 prerequisites:
   - que-es-sql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "IBM: Structured Query Language, origen e historia (en inglés)"
     url: https://www.ibm.com/think/topics/structured-query-language
@@ -34,6 +34,8 @@ Esa separación permite que el motor mejore el plan sin cambiar la intención de
 
 El contexto era hacer utilizables las ideas de Codd en sistemas reales como System R. Una descripción lógica de los datos necesitaba un lenguaje con el que pedir selecciones, combinaciones y resúmenes. Las palabras cercanas al inglés facilitaban leer esas operaciones, aunque seguía haciendo falta aprender su significado formal.
 
+### La misma consulta antes y después de un índice
+
 Este ejemplo funciona en SQLite:
 
 ```sql
@@ -55,3 +57,9 @@ Aunque «consulta» forme parte de sus siglas, SQL también permite definir tabl
 Tampoco implica que todos los motores implementen exactamente las mismas funciones. Comparten un lenguaje estandarizado, pero conservan diferencias de dialecto y comportamiento que debes comprobar cuando trasladas una aplicación.
 
 La curiosidad del nombre sirve así para recordar la característica relevante: describes resultados y operaciones sobre datos, mientras el motor decide buena parte del trabajo físico necesario para obtenerlos.
+
+## Lo esencial
+
+- SEQUEL significaba Structured English Query Language.
+- Chamberlin recuerda que retiraron las vocales porque el nombre era una marca ajena.
+- El enfoque declarativo conserva la pregunta mientras el motor decide cómo obtener el resultado.

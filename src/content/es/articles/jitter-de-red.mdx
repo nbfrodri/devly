@@ -6,7 +6,7 @@ kind: definicion
 layer: redes
 prerequisites:
   - ancho-de-banda-latencia-y-rendimiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RFC 3393: IP Packet Delay Variation Metric (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc3393.html
@@ -27,5 +27,7 @@ Un **búfer de jitter** retiene temporalmente los paquetes para reproducirlos co
 No hay una única medida universal llamada jitter: hay métricas concretas de variación del retardo y sus resultados dependen de cómo se calculan. Al comparar herramientas, comprueba la definición utilizada y si mide una dirección o un recorrido de ida y vuelta.
 
 Tampoco es el mismo uso del término que añadir una espera aleatoria a los **reintentos**. En ese caso se introduce variación deliberada para que muchos clientes no repitan una petición al mismo tiempo. En una red de tiempo real, en cambio, la variación de llegada es algo que se intenta gestionar.
+
+## Reproducir a un ritmo estable
 
 Si un emisor produce un paquete de audio cada 20 ms, el receptor necesita reproducirlos a ese ritmo, no a la velocidad irregular con la que llegan. Un paquete correcto que aparece después de su turno puede no servir para la reproducción actual. Aumentar el búfer da más margen, pero retrasa todas las intervenciones de la conversación. El objetivo no es minimizar una única cifra: es equilibrar regularidad, retraso y paquetes que llegan demasiado tarde.

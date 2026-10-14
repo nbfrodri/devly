@@ -6,7 +6,7 @@ layer: sistemas
 prerequisites:
   - computacion-en-la-nube
   - sistema-de-archivos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Amazon S3: Data Protection, documentación oficial (en inglés)"
     url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/DataDurability.html
@@ -95,6 +95,8 @@ La **disponibilidad** expresa si el servicio puede atender operaciones dentro de
 Para una foto, una avería de red puede impedir verla sin destruirla. Borrar su única versión válida puede perderla aunque el sistema continúe atendiendo otras operaciones. No traduzcas una cifra de durabilidad en minutos de disponibilidad: tienen denominadores y contratos distintos.
 
 Las garantías dependen de la clase de almacenamiento y su configuración. Replicar datos no sustituye protegerlos frente a cambios autorizados por error o conservar versiones históricas. Una estrategia de [copias de seguridad](/articulos/copias-de-seguridad/) necesita contemplar también esos casos.
+
+### Una foto inaccesible o una versión perdida
 
 Imagina que los datos de una foto se conservan en varias ubicaciones, pero una avería impide autenticar peticiones durante veinte minutos. La foto no se ha perdido: hay un problema de disponibilidad. Si después vuelve el acceso y el contenido original está intacto, no hubo por ese hecho una pérdida de durabilidad.
 

@@ -5,7 +5,7 @@ level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-proceso
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Operating Systems: Three Easy Pieces, Concurrency: An Introduction (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf
@@ -53,6 +53,8 @@ En dos núcleos puedes ejecutar A y B simultáneamente. Si son independientes y 
 Si A pasa diez milisegundos esperando una respuesta, el único núcleo puede aprovechar esa espera para ejecutar B. Esa mejora proviene de solapar espera y trabajo, no de hacer dos cálculos a la vez en el mismo núcleo. Para decidir, distingue primero una carga limitada por CPU de otra limitada por entrada y salida.
 
 Añadir núcleos tampoco garantiza una aceleración proporcional: la [ley de Amdahl](/articulos/la-ley-de-amdahl/) recuerda que el trabajo secuencial sigue limitando el conjunto.
+
+### Elegir según el trabajo
 
 La elección también depende del objetivo. Un editor puede querer seguir respondiendo al teclado mientras espera un archivo: organizar el trabajo concurrentemente mejora la respuesta aunque no reduzca la cantidad total de cálculo. Un conversor de imágenes puede querer terminar cien transformaciones antes: repartir imágenes independientes entre núcleos ofrece paralelismo útil.
 

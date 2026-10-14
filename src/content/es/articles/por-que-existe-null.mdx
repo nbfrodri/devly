@@ -6,7 +6,7 @@ kind: curiosidad
 layer: datos
 prerequisites:
   - null-en-sql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "E. F. Codd: Extending the Database Relational Model to Capture More Meaning, 1979 (en inglés)"
     url: https://www.softwaregems.com.au/Documents/Article/Database/Relational%20Model/Codd%20E%20F/Extending%20the%20Database%20Relational%20Model.pdf
@@ -26,9 +26,13 @@ La dificultad aparece al comparar. Si no sabes dos edades, no puedes concluir qu
 
 Imagina una tabla de personas con edades `20`, `35` y una edad desconocida. La condición `edad >= 30` es falsa para la primera, verdadera para la segunda y desconocida para la tercera. Negarla no resuelve la duda: si no sabes si una persona tiene treinta años, tampoco sabes si tiene menos.
 
+### Por qué una condición y su negación no cubren todo
+
 En el filtrado SQL solo pasan las filas cuya condición es verdadera. Por eso la consulta que selecciona mayores de treinta y la que selecciona quienes no son mayores de treinta pueden dejar fuera ambas a la persona sin edad conocida. No forman automáticamente dos grupos que cubran todas las filas.
 
 Esta decisión evita afirmar información que no existe, pero obliga a cambiar hábitos de lógica binaria. Para preguntar por la ausencia se utiliza `IS NULL`; comparar con `= NULL` no convierte el desconocimiento en un valor ordinario que pueda igualarse.
+
+### Distinguir los motivos de la ausencia
 
 También aparece una decisión de modelado. Si el teléfono de una persona no se conoce, un marcador puede bastar. Si debes distinguir que no tiene teléfono, que se negó a darlo y que todavía no se le preguntó, conviene guardar el motivo. Esas situaciones pueden exigir acciones distintas aunque ninguna aporte un número telefónico.
 
@@ -39,3 +43,9 @@ La historia del diseño permite entender el coste de la solución: representar i
 En SQL, [NULL](/articulos/null-en-sql/) obliga a utilizar reglas específicas de comparación y filtrado. Pero un único marcador no distingue por sí solo «no preguntado», «no aplicable» y «pendiente de verificar».
 
 Si esas situaciones cambian el comportamiento de la aplicación, necesitas modelarlas expresamente, por ejemplo con un estado adicional. La curiosidad histórica recuerda una decisión de diseño todavía actual: representar la ausencia también comunica significado, y elegir un valor de sustitución no es una operación neutral.
+
+## Lo esencial
+
+- Un valor desconocido no equivale a cero ni a un texto vacío.
+- La comparación de información incompleta motiva un resultado lógico desconocido.
+- Un único NULL no distingue por sí solo todos los motivos por los que falta un dato.

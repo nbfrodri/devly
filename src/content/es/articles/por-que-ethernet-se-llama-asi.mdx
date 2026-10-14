@@ -6,7 +6,7 @@ kind: curiosidad
 layer: redes
 prerequisites:
   - capa-de-enlace
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Computer History Museum: Oral History of Robert Metcalfe, 2006 (en inglés)"
     url: https://archive.computerhistory.org/resources/text/Oral_History/Metcalfe_Robert_1/Metcalfe_Robert_1_2.oral_history.2006.7.102657995.pdf
@@ -28,7 +28,11 @@ No era necesario imaginar que cada estación disponía de una conexión física 
 
 Dos estaciones pueden escuchar un medio y encontrarlo libre casi al mismo tiempo. La señal de una tarda en propagarse hasta la otra. Si ambas empiezan dentro de ese intervalo, escuchar no ha evitado la colisión. El diseño necesita tratar también lo que ocurre después de comenzar a transmitir.
 
+### Detectar y volver a intentar
+
 En el Ethernet clásico de medio compartido, las estaciones detectaban la colisión, abandonaban ese intento y esperaban antes de repetir. La variación aleatoria de las esperas ayudaba a que no volvieran a coincidir una y otra vez. No se buscaba impedir físicamente toda simultaneidad, sino recuperarse de ella mediante reglas comunes.
+
+### La idea que conserva el nombre
 
 La inspiración en redes de radio se entiende mejor así: el problema central era compartir un canal entre participantes que no recibían un turno fijo de antemano. «Éter» evocaba ese espacio común por el que podían comunicarse, aunque la implementación utilizara un cable y no ondas de radio libres.
 
@@ -41,3 +45,9 @@ No debes trasladar cada detalle de aquella red a cualquier conexión Ethernet ac
 Por eso la historia del nombre ayuda a recordar una idea de diseño, pero no sustituye leer el estándar y la configuración de una red concreta.
 
 La imagen del medio compartido explica también una distinción general: describir por dónde viajan las señales y definir cómo obtienen turno los participantes son problemas diferentes. Un cable por sí solo no establece un protocolo de comunicación.
+
+## Lo esencial
+
+- Ethernet toma su nombre de la imagen de un medio compartido de comunicación.
+- Escuchar antes de transmitir no evita todas las colisiones por el tiempo de propagación.
+- Los enlaces con switches y dúplex completo no funcionan como el cable compartido original.

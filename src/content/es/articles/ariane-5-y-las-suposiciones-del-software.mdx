@@ -7,7 +7,7 @@ layer: aplicaciones
 prerequisites:
   - tipos-de-datos
   - manejo-de-errores-y-excepciones
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "ESA y CNES: Ariane 5 Flight 501 Failure, informe de la comisión, 1996 (en inglés)"
     url: https://www-users.cse.umn.edu/~arnold/disasters/ariane5rep.html
@@ -21,7 +21,11 @@ El valor excedía el rango de destino. El software procedía de un contexto de A
 
 El sistema de referencia inercial calculaba orientación y movimiento y enviaba sus datos al ordenador que controlaba las toberas. Había dos unidades iguales: una activa y otra preparada para sustituirla. Esa duplicación protegía frente a ciertos fallos de una unidad, pero ambas procesaban la trayectoria con el mismo programa.
 
+### Una función que ya no hacía falta
+
 Una función de alineación seguía ejecutándose durante el vuelo aunque sus resultados solo eran necesarios antes del despegue. Esa permanencia procedía de requisitos de Ariane 4. Dentro de ella se calculaba una magnitud relacionada con la velocidad horizontal. La trayectoria de Ariane 5 produjo valores mayores que los previstos para aquella conversión.
+
+### Del desbordamiento a las órdenes de control
 
 La secuencia descrita por la comisión fue esta:
 
@@ -43,3 +47,9 @@ El ejemplo elemental es guardar un número en un [tipo](/articulos/tipos-de-dato
 Duplicar una unidad ayuda ante algunos fallos independientes. Si ambas ejecutan la misma lógica con las mismas entradas fuera de sus supuestos, pueden fallar de la misma manera. La cantidad de copias no demuestra diversidad de comportamiento.
 
 La lección para una aplicación corriente es revisar rangos, dependencias y supuestos al reutilizar. Las pruebas relevantes para el entorno anterior no sustituyen las del nuevo. Y un [manejo de excepciones](/articulos/manejo-de-errores-y-excepciones/) debe definir qué estado seguro puede mantenerse, en lugar de tratar cualquier interrupción del cálculo como un detalle local sin consecuencias.
+
+## Lo esencial
+
+- La trayectoria nueva invalidó supuestos de un componente reutilizado.
+- La unidad de respaldo falló por la misma causa que la activa.
+- El fallo se propagó por la política de excepciones y la interpretación de datos de diagnóstico.

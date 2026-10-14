@@ -7,11 +7,13 @@ prerequisites:
   - integracion-y-despliegue-continuos
   - que-es-un-conjunto-de-datos
   - validacion-cruzada
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google Cloud: MLOps, Continuous Delivery and Automation Pipelines (en inglés)"
     url: https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
 ---
+
+import { Quiz } from "@/components/quiz";
 
 **MLOps** reúne prácticas para desarrollar, desplegar y mantener sistemas de aprendizaje automático de forma controlada. Amplía la entrega de software para incluir datos, entrenamiento, evaluación y seguimiento del comportamiento de los modelos.
 
@@ -48,7 +50,16 @@ La **inferencia por lotes** procesa grupos de entradas para producir resultados 
 
 El mismo modelo puede utilizarse de ambas formas. No confundas agrupar varias solicitudes dentro de un servidor con convertir el producto en un proceso nocturno: existe también agrupación interna para aprovechar el hardware manteniendo un plazo corto.
 
-**¿Un modelo que predice bien fuera de línea está listo para servir peticiones?** No necesariamente. Faltan medir memoria, latencia, concurrencia y compatibilidad con las entradas reales.
+<Quiz
+	client:visible
+	question="¿Qué falta comprobar antes de servir un modelo que predice bien fuera de línea?"
+	options={[
+		"Solo el nombre del archivo",
+		"Latencia, recursos y compatibilidad del sistema desplegado",
+		"Nada: la calidad predictiva es suficiente",
+	]}
+	answer={1}
+/>
 
 ## Desplegar y observar
 
@@ -62,6 +73,8 @@ Imagina un modelo que estima retrasos de entrega. La versión 12 se entrenó con
 
 Un paquete de despliegue debe vincular modelo y transformaciones. Su evaluación puede incluir una entrada conocida con la predicción esperada dentro de una tolerancia: detecta, por ejemplo, que el escalador equivocado está acompañando a los pesos correctos. Las pruebas de esquema por sí solas no encuentran un número válido expresado en otra unidad.
 
+### Revertir el servicio y sus resultados
+
 Si promocionas la versión 13, registra qué versión sustituye y cómo volver a ella. Para inferencia nocturna necesitas además identificar los resultados generados: cambiar el servicio no retira automáticamente las predicciones ya escritas en una tabla. Para tiempo real, conservar el artefacto anterior permite revertir el servicio, siempre que sus dependencias y el formato de entrada sigan disponibles.
 
 Una puerta de promoción concreta podría exigir que no empeore la métrica principal en el conjunto reservado, que ningún segmento crítico cruce un límite acordado y que la latencia cumpla el plazo. Esos límites dependen del producto; lo esencial es fijarlos antes de elegir el candidato, para que el proceso no se adapte retrospectivamente al resultado favorito.
@@ -71,6 +84,11 @@ Una puerta de promoción concreta podría exigir que no empeore la métrica prin
 Entrenar periódicamente o ante una señal es una decisión del sistema. El entrenamiento automático no obliga a publicar automáticamente cualquier resultado. Puedes automatizar comprobaciones y mantener una aprobación cuando el impacto o la incertidumbre lo justifiquen.
 
 Empieza con un procedimiento sencillo que puedas repetir y auditar. Añade infraestructura cuando exista una necesidad de escala, coordinación o tiempo de entrega, evitando construir una plataforma antes de conocer el flujo real.
+
+## Errores comunes
+
+- **Versionar solo los pesos.** También hacen falta las transformaciones y dependencias con las que se evaluaron.
+- **Promocionar porque terminó el entrenamiento.** El candidato debe superar criterios de calidad y ejecución definidos antes.
 
 ## Lo esencial
 

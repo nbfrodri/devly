@@ -6,7 +6,7 @@ kind: curiosidad
 layer: redes
 prerequisites:
   - ipv4-frente-a-ipv6
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "FutureLearn: entrevista con Vinton Cerf sobre el origen de internet (en inglés)"
     url: https://ugc.futurelearn.com/uploads/files/a5/1b/a51bfefb-6634-4452-b9ce-810edb051261/Interview_with_Vinton_Cerf.pdf
@@ -26,9 +26,22 @@ El cálculo de combinaciones es directo: cada bit duplica las posibilidades. Añ
 
 ## Contar combinaciones no es contar dispositivos disponibles
 
-Cuatro octetos son `4 × 8 = 32` bits. Cada uno de los 32 bits admite dos valores, de modo que hay `2^32 = 4.294.967.296` combinaciones. La escritura decimal con puntos no aumenta ese espacio: solo agrupa los bits para que las personas puedan leerlos.
+La cuenta del formato es:
+
+| Parte | Cantidad |
+| --- | --- |
+| Octetos por dirección | 4 |
+| Bits por octeto | 8 |
+| Bits por dirección | 32 |
+| Combinaciones posibles | 2^32 = 4.294.967.296 |
+
+La escritura decimal con puntos no aumenta ese espacio: solo agrupa los bits para que las personas puedan leerlos.
+
+### Cómo se repartía el espacio
 
 El RFC 791 describía clases de direcciones con diferentes repartos entre identificación de red y de host. Esa organización no asignaba todas las combinaciones como una lista plana de dispositivos. También existen usos especiales y bloques que no equivalen a direcciones públicas asignables libremente. Por eso «cuatro mil millones» es un límite de combinaciones del formato, no un inventario exacto de conexiones posibles.
+
+### Direcciones, interfaces y dispositivos
 
 Una dirección IP tampoco identifica necesariamente un aparato de manera permanente. Un equipo puede tener varias interfaces y direcciones; una dirección puede reasignarse. La traducción de direcciones permite además que varios equipos compartan una dirección pública, sin convertir el espacio de IPv4 en infinito.
 
@@ -39,3 +52,9 @@ Pasar a un tamaño mayor afecta a cabeceras, tablas, herramientas y configuracio
 [IPv6](/articulos/ipv4-frente-a-ipv6/) amplió el espacio a 128 bits y requiere mecanismos de transición y convivencia. El tamaño mayor no convierte los formatos en intercambiables de forma automática.
 
 La historia sirve para recordar que las decisiones de un prototipo pueden convertirse en contratos de larga duración. También evita una anécdota engañosa: no hace falta atribuir a sus diseñadores una predicción de que toda internet futura cabría para siempre en el límite de aquel experimento.
+
+## Lo esencial
+
+- IPv4 tiene 2^32 combinaciones, no ese número de direcciones públicas libremente asignables.
+- Cerf recuerda la elección como una decisión para una red experimental.
+- Ampliar el espacio exige una transición de protocolos e implementaciones, además de cambiar el tamaño.

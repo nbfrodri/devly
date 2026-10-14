@@ -6,11 +6,13 @@ layer: redes
 prerequisites:
   - senales-analogicas-y-digitales
   - aliasing
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Steven W. Smith: The Scientist and Engineer's Guide to DSP, capítulo 8 (en inglés)"
     url: https://www.dspguide.com/CH8.PDF
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **transformada de Fourier** cambia la representación de una señal para expresar su contenido en frecuencias. En lugar de preguntar qué valor tiene en cada instante, permite estudiar qué componentes oscilatorias contribuyen a ella y con qué amplitud y fase.
 
@@ -61,13 +63,24 @@ Si hay `N` muestras tomadas a frecuencia `fs`, la separación de las componentes
 
 Observar durante más tiempo permite una rejilla más fina manteniendo la frecuencia de muestreo. Añadir ceros puede interpolar la representación, pero no equivale a haber observado información adicional de la señal.
 
-**¿Una FFT más larga siempre descubre dos tonos cercanos?** No. Importan la duración real observada, el ruido, la ventana y la separación de los tonos.
+<Quiz
+	client:visible
+	question="¿Qué aporta añadir ceros a una grabación antes de la DFT?"
+	options={[
+		"Más tiempo real de observación",
+		"La garantía de separar tonos cercanos",
+		"Más posiciones calculadas, sin nueva información observada",
+	]}
+	answer={2}
+/>
 
 ## Leer amplitud y fase en el cálculo
 
 En cada componente, el código multiplica la señal por un coseno y por un seno, y acumula los productos. Si la oscilación de referencia coincide con una componente de la señal, los productos refuerzan una contribución; si no coincide, las partes positivas y negativas pueden cancelarse. Es una forma de medir semejanza con oscilaciones de frecuencia conocida.
 
 La parte real y la imaginaria guardan dos proyecciones complementarias. Su combinación permite representar también un tono desplazado en el tiempo, no solo un coseno que empieza en su máximo. La magnitud resume su tamaño; la fase conserva ese desplazamiento relativo.
+
+### Duración frente a relleno con ceros
 
 Para ver el efecto de la duración, supón una grabación a 8000 muestras por segundo. Con 800 muestras observas 0,1 segundos y la separación entre componentes es de 10 Hz. Con 8000 muestras observas un segundo y baja a 1 Hz. Añadir 7200 ceros al primer fragmento produce más posiciones en la gráfica, pero sigue habiendo solo 0,1 segundos de señal observada.
 
@@ -84,6 +97,11 @@ Una **ventana** pondera las muestras para controlar ese efecto, con intercambios
 Puedes analizar vibraciones, localizar tonos, estudiar interferencias o comprobar qué frecuencias atenúa un filtro. En comunicaciones, permite relacionar señales con sus bandas y portadoras.
 
 El [aliasing](/articulos/aliasing/) sigue siendo un límite anterior: transformar datos afectados no revela por sí solo qué frecuencia física se confundió durante la adquisición.
+
+## Errores comunes
+
+- **Confundir DFT y FFT.** Una es la transformación y la otra una familia de algoritmos para calcularla.
+- **Creer que añadir ceros equivale a observar más tiempo.** Cambia la rejilla, no la información medida.
 
 ## Lo esencial
 

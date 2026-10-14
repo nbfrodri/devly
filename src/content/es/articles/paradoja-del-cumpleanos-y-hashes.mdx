@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - probabilidad-basica
   - funciones-hash
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RFC 4270: Attacks on Cryptographic Hashes in Internet Protocols (en inglés)"
     url: https://datatracker.ietf.org/doc/html/rfc4270
@@ -31,7 +31,11 @@ El modelo ignora años bisiestos y diferencias reales de frecuencia entre fechas
 
 Con `k` personas hay `k × (k - 1) / 2` parejas. Para valores moderados de `k` respecto al número de días, la probabilidad de ninguna coincidencia se aproxima mediante `exp(-k × (k - 1) / (2 × 365))`. Restarla de uno aproxima la probabilidad de al menos una coincidencia. Las parejas no son todas independientes; por eso contar parejas explica la escala, pero no sustituye sin más el cálculo exacto.
 
+### Del número de parejas al tamaño de la muestra
+
 Para un espacio uniforme de `N` valores, la coincidencia se vuelve apreciable cuando el número de parejas alcanza el orden de `N`. Como las parejas crecen aproximadamente con `k²`, basta un número de muestras del orden de la raíz cuadrada de `N`.
+
+### Aplicarlo a identificadores aleatorios
 
 Esta idea también se aplica al generar identificadores aleatorios. Si produces muchas claves en un espacio pequeño, debes considerar la probabilidad de que colisione cualquier pareja de claves emitidas, no solo la de acertar una clave concreta. Una restricción de unicidad puede detectar el choque y permitir repetir la generación; sin ella, una probabilidad pequeña puede convertirse en un dato sobrescrito silenciosamente.
 
@@ -44,3 +48,9 @@ Una [colisión](/articulos/funciones-hash/) ocurre cuando dos entradas diferente
 No significa que la mitad de los bits estén «rotos». Las preguntas son distintas: colisión frente a preimagen. El RFC 4270 explica por qué esa diferencia importa al analizar protocolos.
 
 Tampoco basta el cálculo para evaluar una función real: su estructura puede permitir ataques mejores que la búsqueda genérica. La curiosidad ayuda a recordar el tipo de problema y a no confundir una coincidencia accidental en una tabla hash con toda una evaluación de seguridad criptográfica.
+
+## Lo esencial
+
+- Buscar cualquier pareja coincidente no equivale a acertar un valor fijado.
+- En un espacio uniforme de tamaño N, las colisiones se vuelven apreciables alrededor de la raíz de N muestras.
+- Distribución de salidas, tamaño del espacio y número de valores generados condicionan el riesgo.

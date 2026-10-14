@@ -6,11 +6,13 @@ layer: datos
 prerequisites:
   - regresion-lineal
   - como-se-evalua-un-modelo-de-clasificacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google: Logistic Regression, Machine Learning Crash Course (en inglés)"
     url: https://developers.google.com/machine-learning/crash-course/logistic-regression
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **regresión logística** es un modelo que estima la probabilidad de una clase, habitualmente en un problema binario. Combina características mediante pesos y transforma esa puntuación con una función que produce valores entre cero y uno.
 
@@ -22,7 +24,9 @@ La regresión logística conserva una puntuación lineal, pero aplica la **funci
 
 Se llama regresión por su formulación estadística, aunque se utiliza para [clasificación](/articulos/clasificacion-y-regresion/). El nombre no convierte su salida en una predicción de cualquier magnitud numérica.
 
-## De puntuación a probabilidad
+## Cómo funciona
+
+### De puntuación a probabilidad
 
 En una situación simplificada, una característica indica cuántas señales sospechosas tiene un mensaje. Hemos fijado unos pesos didácticos; este código no entrena un detector real:
 
@@ -37,21 +41,29 @@ console.log(probabilidad(2).toFixed(3)); // "0.881"
 
 Los pesos determinan cómo influyen las entradas antes de la transformación. En un modelo entrenado, se aprenden a partir de ejemplos etiquetados, no se eligen solo porque una salida parezca convincente.
 
-## Entrenar y decidir son etapas distintas
+## Cómo aprende el modelo
 
 El entrenamiento suele minimizar una **pérdida logarítmica**, que penaliza asignar poca probabilidad a la respuesta correcta. Una predicción muy segura y equivocada recibe una penalización grande. El [descenso del gradiente](/articulos/descenso-del-gradiente/) puede ajustar los pesos para reducir esa pérdida.
 
-Después, para producir una etiqueta, eliges un **umbral**. Con umbral 0,5 clasificas como positiva una probabilidad igual o superior a ese valor. Pero 0,5 no es una obligación del modelo.
+### Una actualización paso a paso
 
-Si perder un mensaje legítimo resulta muy costoso, quizá exijas una probabilidad mayor antes de enviarlo automáticamente a spam. Si quieres revisar manualmente todos los casos sospechosos, podrías usar otro umbral para esa cola de revisión. La decisión depende del coste de falsos positivos y negativos.
+Partimos de dos mensajes y unos parámetros iniciales:
 
-**¿Cambiar el umbral cambia los pesos aprendidos?** No por sí solo. Cambia cómo conviertes sus probabilidades en decisiones. Debes evaluar ese procedimiento completo con datos adecuados.
+| Mensaje | Señales sospechosas | Etiqueta real | Probabilidad inicial |
+| --- | --- | --- | --- |
+| Legítimo | 0 | 0 | 0,5 |
+| Spam | 2 | 1 | 0,5 |
 
-## Una actualización de los pesos
+El peso y el intercepto empiezan en cero. Por eso la puntuación de ambos mensajes es cero y la sigmoide devuelve 0,5.
 
-Para entender qué significa aprender, toma dos mensajes: uno con cero señales sospechosas y etiqueta cero, y otro con dos señales y etiqueta uno. La etiqueta uno significa spam. Partimos de peso e intercepto cero: ambos reciben probabilidad 0,5.
+Para esta pérdida, el **gradiente** del peso es el promedio de `(probabilidad - etiqueta) × entrada`. El del intercepto es el promedio de `probabilidad - etiqueta`. El gradiente indica hacia dónde aumenta la pérdida; restarlo mueve los parámetros en la dirección contraria.
 
-Para esta pérdida, el gradiente del peso es el promedio de `(probabilidad - etiqueta) × entrada`. El del intercepto es el promedio de `probabilidad - etiqueta`. El gradiente indica hacia dónde aumenta la pérdida; restarlo mueve los parámetros en la dirección contraria.
+El cálculo sigue cuatro pasos:
+
+1. Calcular las probabilidades con los parámetros actuales.
+2. Restar a cada probabilidad su etiqueta real.
+3. Promediar las contribuciones al gradiente.
+4. Restar el gradiente multiplicado por la **tasa de aprendizaje**, aquí 0,4.
 
 ```js
 const datos = [{ x: 0, y: 0 }, { x: 2, y: 1 }];
@@ -68,21 +80,53 @@ console.log(peso.toFixed(1)); // "0.2"
 console.log(sigmoid(intercepto + peso * 2).toFixed(3)); // "0.599"
 ```
 
-Tras un paso, el segundo mensaje pasa de 0,5 a aproximadamente 0,599. El primero continúa en 0,5 porque el intercepto aún no cambió. En los pasos siguientes se recalculan ambas probabilidades: no se reutilizan los errores iniciales. Con solo dos ejemplos no obtenemos un clasificador fiable, pero sí vemos cómo las etiquetas modifican una predicción.
+El mensaje de spam pasa de 0,5 a aproximadamente 0,599. El legítimo continúa en 0,5 porque el intercepto aún no cambió. Antes de otro paso se recalculan ambas probabilidades: no se reutilizan los errores iniciales.
+
+Dos ejemplos no bastan para obtener un detector fiable, pero permiten ver cómo las etiquetas modifican la predicción.
+
+### Entender la penalización
 
 La pérdida de un positivo es `-log(p)`: con `p = 0,5` vale aproximadamente 0,693; con `p = 0,599`, 0,513. Para un negativo se usa `-log(1 - p)`. Por eso una respuesta segura pero equivocada resulta tan costosa. En entrenamiento real también puede añadirse **regularización**, una penalización que limita pesos excesivos.
 
-## Una probabilidad no es certeza
+## De probabilidad a etiqueta
+
+Para producir una etiqueta, eliges un **umbral**. Con umbral 0,5 clasificas como positiva una probabilidad igual o superior a ese valor. Pero 0,5 no es una obligación del modelo.
+
+- **Evitar falsos positivos:** puedes exigir una probabilidad mayor antes de mandar automáticamente un correo a spam.
+- **Detectar más casos sospechosos:** puedes reducir el umbral para enviarlos a revisión, aceptando revisar también más mensajes legítimos.
+
+El umbral depende del coste de ambos errores. Se elige y evalúa con datos adecuados, separado del ajuste de pesos.
+
+<Quiz
+	client:visible
+	question="¿Qué cambia al subir el umbral sin volver a entrenar?"
+	options={[
+		"Los pesos aprendidos",
+		"Las probabilidades calculadas",
+		"Qué probabilidades se convierten en una etiqueta positiva",
+	]}
+	answer={2}
+/>
+
+## Sus límites
+
+### Una probabilidad no es certeza
 
 Que el modelo produzca 0,9 no demuestra que tenga razón en el 90 % de cualquier grupo o entorno. La **calibración** estudia si los valores predichos corresponden a frecuencias observadas en datos representativos.
 
 El cambio de distribución o una selección poco representativa puede empeorar esa relación. También puede haber clases desequilibradas: una exactitud alta no basta para saber si detecta los positivos relevantes. Utiliza métricas y umbrales ajustados al problema.
 
-## Sus límites
+### La frontera básica es lineal
 
 En las características elegidas, la frontera de decisión del caso binario básico es lineal. Si las clases requieren relaciones más complejas, necesitas transformar características o elegir otro modelo. Más complejidad no elimina la necesidad de validación.
 
 El preprocesamiento forma parte del sistema. Si escalas las entradas al entrenar, debes aplicar la misma transformación al predecir. Y no debes aprender ese escalado utilizando el conjunto reservado para la prueba final.
+
+## Errores comunes
+
+- **Confundir probabilidad con etiqueta.** El umbral decide la clase; no cambia por sí solo los pesos.
+- **Interpretar 0,9 como una garantía universal de acierto.** La calibración depende de datos representativos.
+- **Preparar las entradas de otra forma al predecir.** El modelo necesita las mismas transformaciones usadas al entrenar.
 
 ## Lo esencial
 

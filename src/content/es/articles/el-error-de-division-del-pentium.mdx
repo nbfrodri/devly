@@ -7,7 +7,7 @@ layer: hardware
 prerequisites:
   - coma-flotante
   - la-alu-y-la-aritmetica-binaria
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Intel: Statistical Analysis of Floating Point Flaw in the Pentium Processor, 1994 (en inglés)"
     url: https://www.ardent-tool.com/CPU/Intel/fdiv/white11.pdf
@@ -29,7 +29,11 @@ Una división binaria puede construirse eligiendo sucesivamente partes del cocie
 
 Si una combinación consultaba una de las entradas defectuosas, podía elegirse una contribución incorrecta al cociente. Las operaciones posteriores no garantizaban reparar esa decisión. El resultado final podía alejarse de la precisión que debía proporcionar la instrucción, aunque otras operaciones con los mismos números funcionaran correctamente.
 
+### Cinco entradas ausentes
+
 El informe concreta el defecto: un script que trasladaba la tabla calculada a la estructura de consulta del hardware omitió entradas. En los cinco casos críticos, la consulta podía devolver cero donde debía seleccionar una contribución de +2. El algoritmo matemático de división no necesitaba estar equivocado para que una implementación con una tabla incompleta produjera una respuesta incorrecta.
+
+### Por qué repetir unas pocas divisiones no bastaba
 
 Esta estructura explica dos características del incidente. Primero, repetir siempre las mismas divisiones sencillas no ejercita todas las combinaciones internas de la tabla. Segundo, que falle una pareja de operandos no significa que fallen todas las divisiones del procesador. La cobertura relevante depende de los estados del algoritmo, no solo del número de pruebas ejecutadas.
 
@@ -40,3 +44,9 @@ Una comprobación conceptual compara `x / y` con una referencia independiente de
 Comparar resultados con otra implementación o con identidades numéricas puede ayudar a descubrir diferencias, pero tampoco cualquier identidad se conserva exactamente en aritmética finita. Necesitas distinguir tolerancias esperadas de incumplimientos reales del contrato.
 
 La curiosidad conecta dos capas que a menudo se estudian por separado: las pruebas verifican programas, pero esos programas se ejecutan sobre hardware que también requiere validación. Tener un algoritmo matemáticamente correcto no garantiza que todas sus implementaciones, físicas o de software, lo sean.
+
+## Lo esencial
+
+- El defecto era de implementación, distinto del redondeo normal de coma flotante.
+- Cinco entradas omitidas podían seleccionar cero en lugar de una contribución de +2.
+- Validar una división exige ejercitar los estados del algoritmo y comparar con una referencia adecuada.

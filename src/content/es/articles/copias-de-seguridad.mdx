@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - que-es-una-base-de-datos
   - discos-duros-y-ssd
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Amazon EBS: Snapshots, documentación oficial (en inglés)"
     url: https://docs.aws.amazon.com/ebs/latest/userguide/ebs-snapshots.html
@@ -150,7 +150,11 @@ Un snapshot puede compartir bloques, cuenta o infraestructura con el origen, o a
 
 Puedes combinar las tres técnicas. La decisión se comprueba restaurando y midiendo los objetivos de pérdida de datos y tiempo de recuperación, no únicamente verificando que existe un archivo llamado copia.
 
+### Recuperar el mismo incidente de tres formas
+
 Supón una tabla borrada por error a las diez. La réplica aplica el borrado segundos después: puede seguir ofreciendo servicio y carecer ya de la tabla. Un snapshot de las nueve conserva un punto anterior, si su implementación y retención permiten restaurarlo. Una copia independiente de la noche anterior conserva otro punto, quizá más antiguo, pero fuera del alcance del fallo que afectó al almacenamiento principal.
+
+### Si falla el servidor pero los datos siguen bien
 
 Ahora cambia el incidente: falla el servidor, pero los datos siguen correctos en otra réplica. Promocionarla puede recuperar el servicio antes que restaurar una copia completa. Son fallos diferentes y las técnicas aportan ventajas distintas.
 

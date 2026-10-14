@@ -5,11 +5,13 @@ level: intermedio
 layer: sistemas
 prerequisites:
   - colas-de-mensajes
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Node.js: Backpressuring in Streams (en inglés)"
     url: https://nodejs.org/learn/modules/backpressuring-in-streams
 ---
+
+import { Quiz } from "@/components/quiz";
 
 La **contrapresión**, o *backpressure*, es un mecanismo para que un consumidor comunique que no puede seguir recibiendo al ritmo actual y el productor reduzca o pause el envío. Evita tratar una cola o un búfer como si tuviera capacidad infinita.
 
@@ -33,13 +35,26 @@ Las utilidades que conectan flujos pueden gestionar ese acuerdo por ti. Aun así
 
 Con una capacidad de dos, el productor entrega A y B. Antes de insertar C encuentra el límite y espera. El consumidor procesa A y libera una posición. Entonces puede entrar C. El límite obliga a que el avance de la producción dependa del consumo.
 
-**¿Has hecho más rápido al consumidor?** No. Has limitado lo que se acumula y trasladado parte de la espera al productor. La capacidad máxima sigue siendo la del cuello de botella, salvo que cambies sus recursos o reduzcas el trabajo.
+<Quiz
+	client:visible
+	question="¿Qué consigue limitar la cola a dos elementos?"
+	options={[
+		"Que el consumidor procese más rápido",
+		"Que desaparezca la espera",
+		"Que la producción no acumule trabajo sin límite en esa cola",
+	]}
+	answer={2}
+/>
 
 ## La presión debe atravesar toda la tubería
 
 Considera lectura de archivo, descompresión y escritura en red. Si la red se ralentiza, el escritor deja de aceptar más trabajo; el descompresor debe detener su producción y, a su vez, dejar de pedir fragmentos al lector. Si el descompresor sigue leyendo y guarda todas sus salidas en un array, solo has movido la acumulación a una etapa intermedia.
 
+### Contar bytes además de elementos
+
 El tamaño de los elementos también importa. Una cola limitada a cien mensajes no limita a cien kilobytes si cada mensaje puede ocupar varios megabytes. Puedes necesitar un presupuesto de bytes además del número de elementos, especialmente si una transformación aumenta el tamaño de la entrada.
+
+### Calcular cuánto tarda en llenarse
 
 En el ejemplo de cien eventos entrantes y sesenta procesados por segundo, una capacidad de doscientos eventos se llena en cinco segundos si empieza vacía. Después hay que pausar, rechazar o perder trabajo: ninguna estructura de datos elimina esa decisión. Si más tarde la entrada baja a cuarenta, quedan veinte eventos por segundo de capacidad para vaciar la cola, siempre que el consumidor mantenga su ritmo de sesenta.
 
@@ -60,6 +75,11 @@ Tampoco una cola duradera elimina el problema. Puede resistir reinicios, pero se
 ## Qué medir
 
 Observa el tamaño y la edad de la cola, los ritmos de entrada y salida, el tiempo bloqueado y los descartes. Un tamaño estable puede ocultar que se está rechazando la mayoría del trabajo. La [observabilidad](/articulos/observabilidad/) debe mostrar tanto capacidad como resultado.
+
+## Errores comunes
+
+- **Ampliar indefinidamente el búfer.** Retrasa la saturación sin corregir una entrada sostenida mayor que la salida.
+- **Respetar la presión solo en una etapa.** Otra puede seguir acumulando los datos en memoria.
 
 ## Lo esencial
 

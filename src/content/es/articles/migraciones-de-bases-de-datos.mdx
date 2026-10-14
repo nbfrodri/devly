@@ -6,13 +6,15 @@ layer: datos
 prerequisites:
   - que-es-sql
   - integracion-y-despliegue-continuos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Martin Fowler: Parallel Change (en inglés)"
     url: https://martinfowler.com/bliki/ParallelChange.html
   - title: "SQLite: ALTER TABLE (en inglés)"
     url: https://www.sqlite.org/lang_altertable.html
 ---
+
+import { Quiz } from "@/components/quiz";
 
 Una **migración de base de datos** es un cambio versionado y controlado del esquema o de los datos. Puede crear una tabla, añadir una columna, transformar valores o introducir una restricción. Forma parte de la evolución del programa, no de una edición manual independiente del código.
 
@@ -39,7 +41,7 @@ SELECT nombre, nombre_visible FROM perfiles;
 
 La consulta devuelve Ana en ambas columnas. El esquema ya admite el campo nuevo y el antiguo sigue disponible.
 
-## Coordinar las escrituras
+### Coordinar las escrituras
 
 Copiar una vez no garantiza que ambos campos permanezcan iguales mientras el programa sigue recibiendo cambios. Necesitas una estrategia durante la convivencia: una versión de la aplicación que escriba ambos, una sincronización controlada u otro mecanismo adecuado al sistema.
 
@@ -53,7 +55,16 @@ SELECT nombre_visible FROM perfiles WHERE id = 1;
 
 La consulta devuelve Ana María. El ejemplo muestra una actualización coherente, pero no implementa toda una aplicación ni sincroniza automáticamente escritores antiguos. Antes de retirar `nombre`, debes garantizar que han dejado de escribir versiones que solo conocen esa columna.
 
-**¿Es suficiente esperar a que acabe la copia inicial?** No: mientras existan escrituras, también necesitas tratar los cambios posteriores y las carreras durante la copia.
+<Quiz
+	client:visible
+	question="¿Qué falta tras copiar una columna mientras la aplicación sigue escribiendo?"
+	options={[
+		"Borrar inmediatamente la anterior",
+		"Repetir el despliegue sin más",
+		"Coordinar los cambios posteriores y verificar la copia",
+	]}
+	answer={2}
+/>
 
 ## Migrar datos puede tardar
 
@@ -67,6 +78,8 @@ La copia inicial, o **backfill**, también puede competir con la aplicación. Un
 
 Una estrategia es hacer la copia dentro de actualizaciones que comprueben el estado actual y solo rellenen filas todavía pendientes. Otra utiliza versiones para detectar que una fila cambió desde su lectura. La elección depende de qué significa un valor nulo y de qué escritores siguen activos: añadir `WHERE nombre_visible IS NULL` no basta si un escritor antiguo continúa modificando solo `nombre` después de la copia.
 
+### El orden de la transición
+
 Por eso el orden de despliegue es parte de la migración. Primero se prepara el esquema; después se actualizan los escritores y se espera a que desaparezcan los antiguos; luego se completa y verifica la copia con una estrategia compatible con esos escritores. Solo entonces se cambian definitivamente los lectores y se retira la columna anterior.
 
 Para una tarea larga, registra progreso por una clave estable y comprueba filas pendientes al terminar. Un reinicio no debería obligar a adivinar qué lotes se aplicaron. Las verificaciones deben buscar tanto valores ausentes como divergencias: contar filas copiadas no demuestra que sus contenidos coincidan.
@@ -76,6 +89,11 @@ Para una tarea larga, registra progreso por una clave estable y comprueba filas 
 La retirada llega después de migrar lectores y escritores, comprobar datos y cumplir la ventana de compatibilidad. Algunas modificaciones en SQLite requieren reconstruir tablas; su documentación describe las capacidades y limitaciones de `ALTER TABLE`.
 
 Una migración inversa no equivale a una recuperación segura. Si eliminaste información, volver al esquema anterior no la reconstruye. Prepara copias y comprueba restauración cuando el cambio pueda perder datos. A veces la recuperación más adecuada es avanzar con una corrección compatible, no volver a ejecutar una transformación destructiva al revés.
+
+## Errores comunes
+
+- **Confundir copia terminada con migración terminada.** Los escritores antiguos todavía pueden introducir divergencias.
+- **Tratar una migración inversa como recuperación.** Recrear una columna no devuelve los datos eliminados.
 
 ## Lo esencial
 
