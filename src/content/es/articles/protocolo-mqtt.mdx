@@ -1,0 +1,194 @@
+---
+title: "¿Qué es el protocolo MQTT?"
+description: "MQTT es un protocolo de mensajería ligero, de publicación y suscripción, pensado para dispositivos con pocos recursos y redes poco fiables."
+level: intermedio
+layer: redes
+prerequisites:
+  - internet-de-las-cosas
+  - tcp-y-udp
+  - colas-de-mensajes
+updated: 2026-10-13
+sources:
+  - title: "OASIS: MQTT Version 5.0 (en inglés)"
+    url: https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html
+  - title: "OASIS: MQTT Version 3.1.1 (en inglés)"
+    url: https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+  - title: "MQTT.org: preguntas frecuentes (en inglés)"
+    url: https://mqtt.org/faq/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**MQTT** es un protocolo de mensajería ligero basado en **publicación y suscripción**. Los dispositivos no se hablan entre sí: envían mensajes a un servidor intermedio, que los reparte a quienes se han interesado por ellos. Es el protocolo más usado en el [internet de las cosas](/articulos/internet-de-las-cosas/).
+
+Nació en 1999, para vigilar oleoductos a través de enlaces por satélite, lentos y caros. Hoy es un estándar abierto de la organización OASIS.
+
+## Qué problema resuelve
+
+Un sensor a pilas con una conexión intermitente no puede permitirse [HTTP](/articulos/que-es-http/):
+
+- Cada petición lleva cabeceras de texto que ocupan más que el dato.
+- El modelo es de pregunta y respuesta. Para saber si hay una orden nueva, el dispositivo tendría que preguntar una y otra vez.
+- Emisor y receptor deben conocerse.
+
+MQTT responde a las tres cosas: mensajes mínimos, una conexión abierta por la que llegan los avisos, y un intermediario que separa a quien envía de quien recibe.
+
+## El modelo
+
+| Pieza | Función |
+| --- | --- |
+| Cliente | Cualquier dispositivo o programa que se conecta |
+| Intermediario | El servidor que recibe y reparte los mensajes; en inglés, *broker* |
+| Tema | La etiqueta que clasifica un mensaje; en inglés, *topic* |
+
+Un cliente **publica** un mensaje en un tema. Otros clientes se **suscriben** a temas. El intermediario entrega cada mensaje a todos los suscritos a su tema.
+
+Quien publica no sabe quién recibe, ni cuántos son, ni si hay alguno. Es el modelo de publicación y suscripción del artículo sobre [colas de mensajes](/articulos/colas-de-mensajes/).
+
+Un mismo cliente puede publicar y suscribirse. Un termostato publica la temperatura y está suscrito a las órdenes.
+
+## Temas
+
+Un tema es un texto con niveles separados por barras:
+
+```
+casa/salon/temperatura
+casa/cocina/luz/estado
+```
+
+No se crean de antemano: existen en cuanto alguien publica o se suscribe.
+
+Al suscribirse se pueden usar dos **comodines**:
+
+- `+` sustituye a **un** nivel.
+- `#` sustituye a **todos los que quedan**, y solo puede ir al final.
+
+Este programa imita al intermediario:
+
+```js
+function coincide(filtro, tema) {
+	const partesDelFiltro = filtro.split("/");
+	const partesDelTema = tema.split("/");
+
+	for (let i = 0; i < partesDelFiltro.length; i++) {
+		if (partesDelFiltro[i] === "#") return true;
+		if (partesDelTema[i] === undefined) return false;
+		if (partesDelFiltro[i] !== "+" && partesDelFiltro[i] !== partesDelTema[i]) {
+			return false;
+		}
+	}
+
+	return partesDelFiltro.length === partesDelTema.length;
+}
+
+console.log(coincide("casa/+/temperatura", "casa/salon/temperatura")); // true
+console.log(coincide("casa/+/temperatura", "casa/salon/humedad")); // false
+console.log(coincide("casa/#", "casa/cocina/luz/estado")); // true
+
+const suscripciones = [];
+const recibidos = [];
+
+suscripciones.push({
+	filtro: "casa/+/temperatura",
+	alRecibir: (tema, mensaje) => recibidos.push(`${tema}=${mensaje}`),
+});
+
+function publicar(tema, mensaje) {
+	for (const suscripcion of suscripciones) {
+		if (coincide(suscripcion.filtro, tema)) {
+			suscripcion.alRecibir(tema, mensaje);
+		}
+	}
+}
+
+publicar("casa/salon/temperatura", "21.5");
+publicar("casa/salon/luz", "encendida");
+
+console.log(recibidos.join(", ")); // "casa/salon/temperatura=21.5"
+```
+
+Con `casa/+/temperatura` se reciben las temperaturas de todas las habitaciones, incluidas las de sensores que se instalen más adelante.
+
+El contenido del mensaje es libre: MQTT transporta bytes y no los interpreta. Suele ser un número, un texto corto o [JSON](/articulos/formatos-de-datos-json-csv-xml/).
+
+## Calidad de servicio
+
+MQTT deja elegir, para cada mensaje, cuánta garantía de entrega se quiere. Se llama **QoS**.
+
+| Nivel | Garantía | Coste | Uso |
+| --- | --- | --- | --- |
+| 0 | Como mucho una vez: puede perderse | Mínimo | Lecturas frecuentes; la siguiente corrige |
+| 1 | Al menos una vez: puede repetirse | Una confirmación | Lo habitual |
+| 2 | Exactamente una vez | Cuatro mensajes | Órdenes que no deben repetirse |
+
+Con el nivel 1 pueden llegar duplicados, así que quien recibe debe tolerarlos, como se explica en [atomicidad e idempotencia](/articulos/atomicidad-e-idempotencia/). "Pon la luz al 50 %" se puede repetir sin problema; "sube la luz un 10 %" no.
+
+## Tres mecanismos útiles
+
+### Mensajes retenidos
+
+Si un mensaje se publica como **retenido**, el intermediario guarda el último de ese tema. Quien se suscriba después lo recibe de inmediato.
+
+Sin eso, un panel que se enciende tendría que esperar a la siguiente lectura de cada sensor, que puede tardar una hora.
+
+### Última voluntad
+
+Al conectarse, un cliente puede dejar encargado un mensaje para que el intermediario lo publique **si él desaparece sin despedirse**: "sensor del salón desconectado".
+
+Así los demás se enteran de que un dispositivo se ha caído, se ha quedado sin batería o ha perdido la red.
+
+### Sesiones persistentes
+
+Un dispositivo que duerme casi siempre se perdería lo publicado mientras tanto. Con una sesión persistente, el intermediario recuerda sus suscripciones y le guarda los mensajes de nivel 1 y 2 hasta que vuelve.
+
+<Quiz
+	client:visible
+	question="Un panel se conecta y necesita conocer de inmediato el último estado de cada sensor. ¿Qué mecanismo de MQTT lo permite?"
+	options={["Los mensajes retenidos", "La calidad de servicio 0", "El comodín +"]}
+	answer={0}
+/>
+
+## Por qué es ligero
+
+- **Formato binario**, no texto. La cabecera fija ocupa dos bytes.
+- **Una conexión [TCP](/articulos/tcp-y-udp/) que se mantiene abierta.** Los mensajes llegan en cuanto se publican, sin preguntar.
+- **Latidos.** Si no hay nada que enviar, el cliente manda cada cierto tiempo un aviso mínimo. Si deja de llegar, el intermediario da la conexión por perdida.
+- **Clientes simples.** Una biblioteca cabe en un microcontrolador.
+
+## Seguridad
+
+El protocolo, por sí mismo, no cifra nada. Hay que añadirlo:
+
+- **TLS** para cifrar la conexión, igual que en [HTTPS](/articulos/https-y-tls/).
+- **Autenticación** de cada cliente, con usuario y contraseña o, mejor, con un certificado por dispositivo.
+- **Permisos por tema.** Cada dispositivo publica y se suscribe solo a lo suyo. Sin esto, cualquier cliente suscrito a `#` lo ve todo.
+
+Un intermediario abierto a internet, sin autenticación, expone todos los datos y permite enviar órdenes a los dispositivos. Se encuentran miles así.
+
+## Sus límites
+
+- **El intermediario es un punto único de fallo.** En sistemas serios se despliegan varios en grupo.
+- **No guarda historia.** Reparte mensajes; no es una base de datos. Si nadie está suscrito y el mensaje no es retenido, se pierde.
+- **No es de pregunta y respuesta.** Se puede simular, y la versión 5 lo facilita, pero no es su terreno.
+- **El contenido no tiene formato.** Los que publican y los que reciben tienen que acordarlo por su cuenta.
+- **Necesita TCP**, que para los dispositivos más limitados ya es mucho.
+
+## Frente a otras opciones
+
+| | MQTT | HTTP | WebSocket |
+| --- | --- | --- | --- |
+| Modelo | Publicación y suscripción | Pregunta y respuesta | Canal en los dos sentidos |
+| Intermediario | Sí | No | No |
+| Tamaño de los mensajes | Mínimo | Grande | Pequeño |
+| Garantías de entrega | Tres niveles | Las de TCP | Las de TCP |
+| Encaja con | Dispositivos y telemetría | API y web | Aplicaciones en tiempo real |
+
+Se combinan a menudo: MQTT puede viajar sobre [WebSockets](/articulos/websockets/), y así un panel en un navegador se suscribe directamente a los temas.
+
+## Lo esencial
+
+- MQTT es un protocolo ligero de publicación y suscripción, a través de un intermediario.
+- Los mensajes se clasifican en temas jerárquicos, con comodines para suscribirse a varios.
+- Ofrece tres niveles de garantía de entrega.
+- Los mensajes retenidos, la última voluntad y las sesiones persistentes cubren las desconexiones.
+- No cifra por sí mismo: necesita TLS, autenticación y permisos por tema.

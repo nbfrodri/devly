@@ -1,0 +1,8 @@
+title: Ética y derecho en la informática
+description: Lo que la ley y la responsabilidad profesional piden a quien construye software.
+layer: aplicaciones
+steps:
+  - rgpd-y-proteccion-de-datos
+  - licencias-de-software
+  - sesgos-en-los-algoritmos
+  - accesibilidad-web

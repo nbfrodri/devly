@@ -1,0 +1,194 @@
+---
+title: "¿Qué es el RGPD? Privacidad y protección de datos"
+description: "El RGPD es la norma europea que regula cómo se pueden usar los datos de las personas. Afecta a casi cualquier aplicación."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - que-es-la-ciberseguridad
+  - que-es-una-base-de-datos
+updated: 2026-10-13
+sources:
+  - title: "Comisión Europea: Explicación de la protección de datos"
+    url: https://commission.europa.eu/law/law-topic/data-protection/data-protection-explained_es
+  - title: "AEPD: Conoce tus derechos"
+    url: https://www.aepd.es/derechos-y-deberes/conoce-tus-derechos
+  - title: "AEPD: Guía del RGPD para responsables de tratamiento"
+    url: https://www.aepd.es/guias/guia-rgpd-para-responsables-de-tratamiento.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **RGPD**, Reglamento General de Protección de Datos, es la norma de la Unión Europea que regula cómo las organizaciones pueden recoger, usar y guardar datos de las personas. Se aplica desde el 25 de mayo de 2018. Su idea de fondo es que los datos personales pertenecen a la persona a la que se refieren, y quien los usa debe justificarlo y protegerlos.
+
+Este artículo explica los conceptos que afectan a quien construye software. No es asesoramiento legal.
+
+## A quién se aplica
+
+A cualquier organización que trate datos de personas que están en la Unión Europea, **tenga o no su sede en ella**. Una empresa de otro continente que ofrece un servicio a usuarios europeos está sujeta.
+
+## Qué es un dato personal
+
+Cualquier información sobre una persona **identificada o identificable**. Es mucho más amplio de lo que se suele pensar.
+
+| Dato | ¿Personal? |
+| --- | --- |
+| Nombre, correo, teléfono | Sí |
+| [Dirección IP](/articulos/que-es-una-direccion-ip/) | Sí |
+| Identificador de una cookie o de un dispositivo | Sí |
+| Ubicación | Sí |
+| Un identificador interno de usuario | Sí, si se puede relacionar con la persona |
+| Estadísticas agregadas, sin posibilidad de llegar a nadie | No |
+
+Algunos datos tienen protección reforzada: salud, origen étnico, ideología, religión, orientación sexual, datos biométricos. Son las **categorías especiales**, y tratarlas está prohibido salvo excepciones.
+
+**Tratamiento** es casi cualquier cosa que se haga con los datos: recogerlos, guardarlos, consultarlos, cederlos, borrarlos.
+
+## Quién es quién
+
+| Papel | Quién es |
+| --- | --- |
+| Interesado | La persona a la que se refieren los datos |
+| Responsable | Quien decide para qué y cómo se tratan |
+| Encargado | Quien los trata por cuenta del responsable |
+
+Una tienda en línea es responsable de los datos de sus clientes. Su proveedor de alojamiento es encargado. Entre ambos debe haber un contrato que fije las obligaciones.
+
+## Los principios
+
+Son el núcleo de la norma.
+
+- **Licitud, lealtad y transparencia.** Hay una base legal, y se informa con claridad.
+- **Limitación de la finalidad.** Los datos se recogen para fines concretos, y no se usan para otros incompatibles.
+- **Minimización.** Solo los datos necesarios.
+- **Exactitud.** Correctos y al día.
+- **Limitación del plazo de conservación.** No se guardan más tiempo del necesario.
+- **Integridad y confidencialidad.** Protegidos con medidas de [seguridad](/articulos/que-es-la-ciberseguridad/) adecuadas.
+- **Responsabilidad proactiva.** No basta con cumplir: hay que poder demostrarlo.
+
+## Hace falta una base legal
+
+Todo tratamiento necesita apoyarse en una de seis bases. Las más habituales:
+
+- **Consentimiento** de la persona.
+- **Ejecución de un contrato.** Para enviar un pedido hace falta la dirección.
+- **Obligación legal.** Conservar facturas.
+- **Interés legítimo** del responsable, si no pesa más el derecho de la persona.
+
+Un error común es creer que todo exige consentimiento. No hace falta pedirlo para la dirección de envío. Sí para enviar publicidad o para rastrear.
+
+Cuando se usa, el consentimiento debe ser **libre, específico, informado e inequívoco**. Una casilla marcada de antemano no vale. Retirarlo debe ser tan fácil como darlo.
+
+## Los derechos de las personas
+
+| Derecho | En qué consiste |
+| --- | --- |
+| Acceso | Saber qué datos se tienen y obtener una copia |
+| Rectificación | Corregir los incorrectos |
+| Supresión | Que se borren, el llamado derecho al olvido |
+| Oposición | Negarse a un tratamiento |
+| Limitación | Que se dejen de usar temporalmente |
+| Portabilidad | Recibirlos en un formato reutilizable |
+| No ser objeto de decisiones automatizadas | Que una decisión importante no la tome solo un programa |
+
+El plazo general para responder es de un mes.
+
+<Quiz
+	client:visible
+	question="Según el RGPD, ¿es una dirección IP un dato personal?"
+	options={[
+		"No, porque no contiene el nombre de nadie",
+		"Sí, porque permite identificar a una persona",
+		"Solo si se guarda durante más de un año",
+	]}
+	answer={1}
+/>
+
+## Lo que significa al programar
+
+### Privacidad desde el diseño y por defecto
+
+La protección se incorpora desde el principio, no al final. Y la configuración inicial debe ser la más respetuosa: lo que el usuario no ha activado, está desactivado.
+
+### Recoger menos
+
+El dato que no se tiene no se puede filtrar, no hay que protegerlo y no genera obligaciones.
+
+```js
+function soloLoNecesario(formulario, campos) {
+	return Object.fromEntries(campos.map((campo) => [campo, formulario[campo]]));
+}
+
+const formulario = {
+	correo: "ana@ejemplo.com",
+	nombre: "Ana",
+	fechaDeNacimiento: "1990-04-12",
+	telefono: "600000000",
+};
+
+const paraElBoletin = soloLoNecesario(formulario, ["correo"]);
+
+console.log(Object.keys(paraElBoletin).join(" ")); // "correo"
+```
+
+Para un boletín basta el correo. Pedir la fecha de nacimiento "por si acaso" va contra el principio de minimización.
+
+### Poder borrar y exportar
+
+El derecho de supresión obliga a saber **dónde están** los datos de una persona: la base de datos, las copias de seguridad, los [registros](/articulos/observabilidad/), las herramientas de análisis, los servicios de terceros. Si el diseño no lo previó, cumplirlo es muy difícil.
+
+### Fechas de caducidad
+
+Cada dato necesita un plazo y un proceso que lo elimine cuando vence.
+
+### Seudonimizar y anonimizar
+
+- **Seudonimizar** es sustituir lo que identifica por un código. Con información adicional, se puede volver a la persona. Siguen siendo datos personales, mejor protegidos.
+- **Anonimizar** es hacer imposible la identificación. Dejan de ser datos personales.
+
+```js
+import { createHmac } from "node:crypto";
+
+const seudonimo = (dato, clave) =>
+	createHmac("sha256", clave).update(dato).digest("hex").slice(0, 12);
+
+const clave = "clave-guardada-aparte";
+const primero = seudonimo("ana@ejemplo.com", clave);
+const segundo = seudonimo("ana@ejemplo.com", clave);
+
+console.log(primero.length); // 12
+console.log(primero === segundo); // true
+```
+
+El mismo correo da siempre el mismo código, lo que permite analizar el comportamiento de un usuario sin manejar su correo. Pero quien tenga la clave puede comprobar a quién corresponde: es seudonimización.
+
+Anonimizar de verdad es más difícil de lo que parece. Quitar el nombre no basta: combinaciones como código postal, fecha de nacimiento y sexo identifican a mucha gente.
+
+### Seguridad
+
+Cifrado en tránsito y en reposo, [control de acceso](/articulos/autenticacion-y-autorizacion/), [contraseñas bien guardadas](/articulos/como-se-guardan-las-contrasenas/), y nada de datos personales en los registros ni en las direcciones web.
+
+### Terceros
+
+Cada servicio externo que recibe datos, analítica, correo, pagos, es un encargado, y hay que saber dónde los guarda. Enviar datos fuera del Espacio Económico Europeo exige garantías adicionales.
+
+Las [cookies](/articulos/almacenamiento-en-el-navegador/) que no son necesarias para el funcionamiento requieren consentimiento previo, por una norma distinta que se aplica junto al RGPD.
+
+## Cuando hay una brecha
+
+Si se produce un acceso indebido, una pérdida o una filtración de datos personales, hay que notificarlo a la autoridad de control **en 72 horas** desde que se conoce, salvo que sea improbable que suponga un riesgo. Si el riesgo para las personas es alto, hay que avisarlas también.
+
+## Sanciones
+
+Las más graves pueden llegar a 20 millones de euros o al 4 % de la facturación anual mundial, la cifra que sea mayor. En España, la autoridad de control es la Agencia Española de Protección de Datos.
+
+## Más allá de la ley
+
+Otros países tienen normas inspiradas en esta. Y al margen de la obligación, es buena ingeniería: quien sabe qué datos tiene, por qué y dónde, y guarda solo los necesarios, tiene un sistema más simple y menos que perder si algo falla.
+
+## Lo esencial
+
+- El RGPD regula el uso de datos de personas en la Unión Europea, esté donde esté quien los trata.
+- Dato personal es todo lo que permite identificar a alguien, incluida una dirección IP.
+- Todo tratamiento necesita una base legal; el consentimiento es solo una de ellas.
+- Las personas pueden acceder a sus datos, corregirlos, borrarlos y llevárselos.
+- Al diseñar: recoger lo mínimo, fijar plazos, poder borrar y proteger desde el principio.

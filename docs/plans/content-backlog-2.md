@@ -63,9 +63,9 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Móvil e IoT
 
-- [ ] Diferencias entre aplicaciones nativas, híbridas y PWA
-- [ ] ¿Qué es el internet de las cosas? (TCP y UDP)
-- [ ] El protocolo MQTT (colas de mensajes)
+- [x] Diferencias entre aplicaciones nativas, híbridas y PWA
+- [x] ¿Qué es el internet de las cosas? (TCP y UDP)
+- [x] El protocolo MQTT (colas de mensajes)
 - [x] Diferencias entre microcontrolador y microprocesador (procesador)
 
 ## Blockchain
@@ -90,6 +90,6 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Ética y derecho
 
-- [ ] Privacidad y protección de datos: el RGPD
-- [ ] Licencias de software (control de versiones con Git)
-- [ ] Sesgos en los algoritmos (aprendizaje automático)
+- [x] Privacidad y protección de datos: el RGPD
+- [x] Licencias de software (control de versiones con Git)
+- [x] Sesgos en los algoritmos (aprendizaje automático)

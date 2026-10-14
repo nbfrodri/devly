@@ -7,3 +7,4 @@ steps:
   - manejo-de-errores-y-excepciones
   - promesas-y-async-await
   - expresiones-regulares
+  - que-es-typescript

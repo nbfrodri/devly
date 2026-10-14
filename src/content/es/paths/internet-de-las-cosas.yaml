@@ -1,0 +1,9 @@
+title: Internet de las cosas
+description: Dispositivos pequeños conectados, y los protocolos con los que envían sus datos.
+layer: redes
+steps:
+  - microcontrolador-y-microprocesador
+  - tcp-y-udp
+  - internet-de-las-cosas
+  - protocolo-mqtt
+  - colas-de-mensajes

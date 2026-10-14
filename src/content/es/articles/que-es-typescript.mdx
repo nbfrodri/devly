@@ -1,0 +1,224 @@
+---
+title: "¿Qué es TypeScript?"
+description: "TypeScript es JavaScript con tipos estáticos: una herramienta revisa el código antes de ejecutarlo y avisa de muchos errores."
+level: intermedio
+layer: programacion
+prerequisites:
+  - tipado-estatico-y-dinamico
+  - tipos-de-datos
+  - compilador-e-interprete
+updated: 2026-10-13
+sources:
+  - title: "TypeScript: TypeScript for JavaScript Programmers (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html
+  - title: "TypeScript: TypeScript for the New Programmer (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/typescript-from-scratch.html
+  - title: "TypeScript: Everyday Types (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html
+  - title: "TypeScript: Narrowing (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**TypeScript** es un lenguaje de programación que añade **tipos estáticos** a JavaScript. Se escribe casi igual que JavaScript, con anotaciones que indican qué clase de valor es cada cosa. Una herramienta revisa el código antes de ejecutarlo y señala los errores de tipo. Después, las anotaciones se eliminan y queda JavaScript normal.
+
+Lo creó Microsoft y se publicó en 2012. Es de código abierto.
+
+## Qué problema resuelve
+
+JavaScript es de [tipado dinámico](/articulos/tipado-estatico-y-dinamico/): los errores de tipo aparecen al ejecutar, y a veces ni eso.
+
+```js
+function precioConIva(precio) {
+	return precio * 1.21;
+}
+
+console.log(precioConIva("100")); // 121
+console.log(precioConIva("cien")); // NaN
+console.log(precioConIva(undefined)); // NaN
+```
+
+Ninguna llamada produce un error. Las dos últimas devuelven `NaN`, "no es un número", que seguirá circulando por el programa hasta que alguien vea un precio absurdo en pantalla.
+
+En un programa pequeño se detecta pronto. En uno grande, con muchas personas, estos fallos son constantes: llamar a una función con los argumentos en otro orden, leer una propiedad que no existe, olvidar que un valor puede faltar.
+
+## La misma función, con tipos
+
+```ts
+function precioConIva(precio: number): number {
+	return precio * 1.21;
+}
+
+precioConIva("cien");
+// Error: el argumento de tipo 'string' no se puede asignar
+// al parámetro de tipo 'number'.
+```
+
+El error aparece **al escribir**, subrayado en el editor, antes de ejecutar nada.
+
+## Cómo funciona
+
+TypeScript es un **superconjunto** de JavaScript: todo JavaScript válido es TypeScript válido. Se añaden tipos encima.
+
+El proceso tiene dos partes:
+
+1. **Comprobación.** Se analiza el código y se informa de los errores de tipo.
+2. **Borrado.** Se quitan las anotaciones y se genera JavaScript, como explica el artículo sobre el [empaquetador](/articulos/que-hace-un-empaquetador/).
+
+Lo segundo tiene una consecuencia que conviene tener siempre presente: **los tipos no existen al ejecutar**. El navegador nunca ve TypeScript.
+
+## Lo básico
+
+```ts
+let nombre: string = "Ana";
+let edad: number = 30;
+let activo: boolean = true;
+let etiquetas: string[] = ["a", "b"];
+```
+
+Casi nunca hace falta escribirlos. TypeScript **infiere** el tipo a partir del valor:
+
+```ts
+let ciudad = "Madrid";
+ciudad = 42;
+// Error: 'number' no se puede asignar a 'string'.
+```
+
+Lo habitual es anotar los parámetros de las funciones y dejar que se deduzca el resto.
+
+### La forma de los objetos
+
+```ts
+interface Usuario {
+	id: number;
+	nombre: string;
+	correo?: string;
+}
+
+function saludar(usuario: Usuario) {
+	return `Hola, ${usuario.nombre}`;
+}
+```
+
+El signo de interrogación indica que `correo` es opcional.
+
+TypeScript compara los tipos por su **estructura**, no por su nombre: cualquier objeto que tenga las propiedades necesarias vale como `Usuario`, se haya declarado así o no.
+
+### Uno de varios
+
+Un valor puede ser de varios tipos. Se expresa con una **unión**:
+
+```ts
+type Estado = "cargando" | "listo" | "error";
+
+function mostrar(id: number | string) {
+	if (typeof id === "string") {
+		return id.toUpperCase();
+	}
+
+	return id.toFixed(0);
+}
+```
+
+Dentro del `if`, TypeScript sabe que `id` es un texto, y fuera, que es un número. A eso se le llama **estrechamiento**: sigue el flujo del programa y afina el tipo en cada rama.
+
+`Estado` solo admite esos tres textos. Escribir `"lsito"` es un error que se detecta al momento.
+
+### Lo que puede faltar
+
+El fallo más frecuente en JavaScript es usar algo que resulta ser `undefined`. Con el modo estricto, TypeScript obliga a tratarlo:
+
+```ts
+function longitud(texto?: string) {
+	return texto.length;
+	// Error: 'texto' es posiblemente 'undefined'.
+}
+```
+
+Hay que comprobarlo antes. Solo esta comprobación elimina una clase entera de errores.
+
+### Genéricos
+
+Permiten escribir código que funciona con cualquier tipo sin perder la información:
+
+```ts
+function primero<T>(lista: T[]): T | undefined {
+	return lista[0];
+}
+
+const numero = primero([1, 2, 3]);
+const texto = primero(["a", "b"]);
+```
+
+`T` es un tipo que se decide en cada llamada. `numero` es un número y `texto`, un texto.
+
+## Lo que se gana
+
+- **Errores antes de ejecutar.**
+- **Un editor que ayuda.** Autocompletado fiable, ir a la definición, ver qué acepta una función. Para mucha gente es la ventaja principal.
+- **Cambiar con seguridad.** Al renombrar una propiedad o cambiar una función, el compilador señala cada sitio que se ha roto. En un proyecto grande, es lo que permite reorganizar el código sin miedo.
+- **Documentación que no caduca.** Los tipos dicen qué espera y qué devuelve cada función, y se comprueban.
+
+<Quiz
+	client:visible
+	question="¿Qué ocurre con los tipos de TypeScript cuando el programa se ejecuta?"
+	options={[
+		"Se comprueban en cada operación",
+		"Ya no existen: se han borrado y queda JavaScript",
+		"El navegador los valida al cargar la página",
+	]}
+	answer={1}
+/>
+
+## Lo que no hace
+
+Es la parte que más confunde.
+
+### No valida los datos de fuera
+
+Los tipos describen lo que **crees** que hay. Lo que llega de una [API](/articulos/que-es-una-api/), de un formulario o de un archivo puede ser cualquier cosa.
+
+```js
+const respuesta = JSON.parse('{"edad":"treinta"}');
+
+console.log(typeof respuesta.edad); // "string"
+```
+
+Aunque en TypeScript se declarara que `edad` es un número, al ejecutar sería un texto, y nada avisaría. En las fronteras del programa hay que **validar de verdad**, con código que compruebe los datos al recibirlos.
+
+### `any` lo apaga
+
+El tipo `any` significa "cualquier cosa, no compruebes". Lo que toca deja de estar revisado, y se contagia.
+
+Para un valor de tipo desconocido existe `unknown`, que es su versión segura: obliga a comprobar qué es antes de usarlo.
+
+### No detecta errores de lógica
+
+Que los tipos encajen no significa que el programa haga lo correcto. Sumar donde había que restar tiene tipos perfectos. Los tipos complementan a las [pruebas](/articulos/pruebas-de-software/), no las sustituyen.
+
+## Lo que cuesta
+
+- **Un paso de construcción.**
+- **Aprendizaje.** Lo básico es fácil; los tipos avanzados, bastante menos.
+- **Mensajes de error** largos y crípticos en los casos complejos.
+- **Tiempo.** Hay que escribir tipos, y a veces discutir con el compilador.
+- **La tentación de complicarse**, con tipos tan elaborados que nadie más entiende.
+
+## Adoptarlo
+
+Se puede hacer poco a poco: un proyecto de JavaScript admite archivos de TypeScript mezclados, y se migra por partes.
+
+Conviene activar el **modo estricto** desde el principio. Sin él, se pierden comprobaciones importantes, como la de los valores que pueden faltar.
+
+Las bibliotecas escritas en JavaScript suelen ir acompañadas de archivos que describen sus tipos, de modo que se usan con todas las ayudas.
+
+Hoy es la opción habitual en proyectos nuevos de cierto tamaño, tanto con [React](/articulos/que-es-react/) en el navegador como con [Node.js](/articulos/que-es-nodejs/) en el servidor.
+
+## Lo esencial
+
+- TypeScript es JavaScript con tipos estáticos, que se comprueban antes de ejecutar.
+- Los tipos se borran al compilar: al ejecutar solo hay JavaScript.
+- Infiere la mayoría de los tipos y sigue el flujo del programa para afinarlos.
+- Detecta errores pronto, mejora el editor y hace seguros los cambios grandes.
+- No valida los datos que llegan de fuera, ni garantiza que la lógica sea correcta.

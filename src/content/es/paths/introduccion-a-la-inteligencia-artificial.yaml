@@ -11,3 +11,4 @@ steps:
   - modelos-de-lenguaje
   - embeddings
   - model-context-protocol
+  - sesgos-en-los-algoritmos

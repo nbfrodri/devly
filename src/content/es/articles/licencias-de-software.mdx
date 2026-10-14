@@ -1,0 +1,161 @@
+---
+title: "¿Qué es una licencia de software?"
+description: "Una licencia indica qué puede hacer cada cual con un programa. Sin ella, nadie puede usar tu código, aunque sea público."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - control-de-versiones-con-git
+updated: 2026-10-13
+sources:
+  - title: "Open Source Initiative: The Open Source Definition (en inglés)"
+    url: https://opensource.org/osd
+  - title: "GNU: ¿Qué es el software libre?"
+    url: https://www.gnu.org/philosophy/free-sw.es.html
+  - title: "GNU: Lista de licencias con comentarios"
+    url: https://www.gnu.org/licenses/license-list.es.html
+  - title: "Choose a License: Licenses (en inglés)"
+    url: https://choosealicense.com/licenses/
+  - title: "SPDX: License List (en inglés)"
+    url: https://spdx.org/licenses/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **licencia de software** es el texto legal con el que el autor de un programa indica qué pueden hacer los demás con él: usarlo, copiarlo, modificarlo, distribuirlo, y con qué condiciones.
+
+Importa a cualquiera que publique código o use el de otros, es decir, a todo el que programa. Este artículo es una introducción, no asesoramiento legal.
+
+## Por qué hace falta
+
+El código está protegido por **derechos de autor** desde que se escribe, sin registrarlo en ningún sitio. Por defecto, solo su autor puede copiarlo, modificarlo y distribuirlo.
+
+De ahí sale algo que sorprende: **un repositorio público sin licencia no es código abierto**. Que se pueda leer no significa que se pueda usar. Legalmente, todos los derechos están reservados.
+
+La licencia es el permiso.
+
+## Las grandes familias
+
+| Familia | Idea | Ejemplos |
+| --- | --- | --- |
+| Permisivas | Haz casi lo que quieras, citando al autor | MIT, BSD, Apache 2.0 |
+| Copyleft | Lo mismo, pero lo derivado debe seguir siendo libre | GPL, AGPL |
+| Copyleft débil | La condición afecta solo al componente, no a quien lo usa | LGPL, MPL |
+| Dominio público | Se renuncia a los derechos | CC0, Unlicense |
+| Privativas | Los derechos se reservan; se concede un uso limitado | La mayoría del software comercial |
+
+## Libre y abierto
+
+Se usan como sinónimos y tienen orígenes distintos.
+
+El **software libre**, definido por la Free Software Foundation, garantiza cuatro libertades: usar el programa con cualquier fin, estudiarlo y modificarlo, redistribuir copias y distribuir versiones modificadas. Aquí "libre" habla de libertad, no de precio.
+
+El **código abierto**, definido por la Open Source Initiative, pone el acento en las ventajas prácticas de ese modelo de desarrollo, con una lista de criterios que una licencia debe cumplir.
+
+En la práctica, casi todas las licencias que cumplen una definición cumplen la otra.
+
+## Permisivas
+
+Imponen muy poco: conservar el aviso de autoría y el texto de la licencia.
+
+- **MIT.** Unas pocas líneas. Es la más usada.
+- **BSD.** Muy parecida.
+- **Apache 2.0.** Más larga. Añade una **concesión expresa de patentes**: quien contribuye da permiso para usar las patentes que cubran su contribución. Eso protege a los usuarios de una demanda posterior.
+
+Con una licencia permisiva, cualquiera puede incorporar el código a un producto cerrado sin publicar nada a cambio.
+
+## Copyleft
+
+El copyleft usa los derechos de autor para un fin contrario al habitual: garantizar que el programa, y lo que se construya a partir de él, siga siendo libre.
+
+La **GPL** es la licencia de referencia. Su condición: si distribuyes un programa que incluye código GPL, tienes que distribuirlo entero bajo la GPL, con su código fuente.
+
+Dos precisiones que se suelen malentender:
+
+- **Se activa al distribuir.** Modificar un programa GPL para uso interno, sin entregarlo a nadie, no obliga a publicar nada.
+- **No prohíbe cobrar.** Se puede vender software GPL. Lo que no se puede es negar el código a quien lo recibe.
+
+[Linux](/articulos/que-es-linux/) y [Git](/articulos/control-de-versiones-con-git/) usan la GPL.
+
+### El caso de los servicios
+
+Un servicio web no distribuye el programa: el usuario solo recibe sus respuestas. Con la GPL, una empresa puede modificar un programa y ofrecerlo como servicio sin compartir sus cambios.
+
+La **AGPL** cierra ese hueco: quien ofrece el programa a través de una red debe dar acceso al código.
+
+### Copyleft débil
+
+La **LGPL** y la **MPL** aplican la condición solo al propio componente. Un programa cerrado puede usar una biblioteca LGPL; lo que debe publicarse son los cambios a la biblioteca.
+
+<Quiz
+	client:visible
+	question="Encuentras en internet un repositorio público que no tiene ningún archivo de licencia. ¿Puedes usar su código en tu proyecto?"
+	options={[
+		"Sí, porque es público",
+		"No: sin licencia, todos los derechos siguen reservados",
+		"Sí, siempre que cites al autor",
+	]}
+	answer={1}
+/>
+
+## Ni abiertas ni cerradas del todo
+
+Algunas licencias publican el código con restricciones, normalmente para impedir que un competidor lo ofrezca como servicio. Se las llama de **código disponible**.
+
+Aunque el código se pueda leer, no cumplen las definiciones de software libre ni de código abierto, porque limitan para qué se puede usar. La licencia de [MongoDB](/articulos/que-es-mongodb/) es un ejemplo.
+
+## Compatibilidad
+
+No todas las licencias se pueden mezclar.
+
+- Código **permisivo** puede entrar en un proyecto con casi cualquier licencia.
+- Código **GPL** obliga a que el conjunto sea GPL. No puede entrar en un producto cerrado que se distribuye.
+- Algunas licencias copyleft son incompatibles entre sí.
+
+La regla aproximada: se puede ir de más permisivo a más restrictivo, y no al revés.
+
+## Tus dependencias también cuentan
+
+Un proyecto moderno incluye cientos de dependencias, cada una con su licencia. Todas te obligan.
+
+- **Revisar antes de añadir.** Una dependencia con copyleft fuerte en un producto cerrado que se distribuye es un problema serio.
+- **Cumplir los avisos.** Incluso las permisivas exigen conservar la autoría. Por eso las aplicaciones tienen una pantalla de "licencias de terceros".
+- **Automatizarlo.** Hay herramientas que listan las licencias de todas las dependencias y avisan de las no permitidas, y se pueden integrar en el [pipeline de CI](/articulos/integracion-y-despliegue-continuos/).
+
+Cada licencia tiene un identificador corto normalizado, como `MIT` o `Apache-2.0`, que es el que se pone en el archivo que describe el paquete.
+
+## Cómo se pone una licencia
+
+- Un archivo `LICENSE` en la raíz del repositorio, con el texto completo.
+- El identificador en los metadatos del paquete.
+- A veces, un aviso breve al principio de cada archivo.
+
+Se elige una de las existentes. **No se escribe una propia**: una licencia casera es ambigua, nadie la ha probado ante un juez y ahuyenta a quien podría usar el proyecto.
+
+## El contenido no es código
+
+Las licencias de software no encajan bien con textos, imágenes o datos. Para eso existen las **Creative Commons**, que combinan condiciones: reconocer la autoría, compartir igual, no hacer uso comercial, no modificar.
+
+Un proyecto puede usar dos. Este sitio, por ejemplo, publica su código bajo MIT y sus artículos bajo CC BY-SA 4.0, que permite reutilizarlos citando la fuente y manteniendo la misma licencia en lo derivado.
+
+Al revés, las Creative Commons no se recomiendan para código.
+
+## Otros conceptos
+
+- **Licencia doble.** El mismo programa se ofrece bajo copyleft, gratis, y bajo una licencia comercial de pago para quien no quiera esas condiciones.
+- **Acuerdo de contribución.** Algunos proyectos piden a quien contribuye que ceda derechos o los licencie al proyecto, lo que les permite cambiar de licencia más adelante.
+- **Sin garantía.** Casi todas las licencias abiertas declaran que el software se entrega tal cual, sin responsabilidad del autor.
+
+## Cómo elegir
+
+- **Que lo use cualquiera, con las mínimas condiciones**: MIT. Si preocupan las patentes, Apache 2.0.
+- **Que las mejoras vuelvan a la comunidad**: GPL. Si es un servicio en red, AGPL.
+- **Una biblioteca que quieres que usen también productos cerrados, pero que sus mejoras se compartan**: LGPL o MPL.
+- **Contribuir a un proyecto existente**: la que ya tenga.
+
+## Lo esencial
+
+- Sin licencia, nadie puede usar legalmente tu código, aunque sea público.
+- Las permisivas, como MIT, piden poco más que citar al autor.
+- El copyleft, como la GPL, exige que lo distribuido a partir del programa siga siendo libre.
+- Las licencias de tus dependencias te obligan, y no todas se pueden combinar.
+- Se elige una licencia conocida; para textos e imágenes, Creative Commons.

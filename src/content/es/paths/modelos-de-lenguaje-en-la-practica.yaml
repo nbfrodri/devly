@@ -6,6 +6,7 @@ steps:
   - que-es-un-transformer
   - ventana-de-contexto-y-tokens
   - embeddings
+  - bases-de-datos-vectoriales
   - generacion-aumentada-por-recuperacion
   - model-context-protocol
   - agentes-de-ia

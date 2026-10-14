@@ -1,0 +1,176 @@
+---
+title: "¿Qué es una base de datos vectorial?"
+description: "Una base de datos vectorial guarda embeddings y encuentra con rapidez los más parecidos a uno dado. Es la pieza de búsqueda de muchas aplicaciones de IA."
+level: intermedio
+layer: datos
+prerequisites:
+  - embeddings
+  - indices-de-bases-de-datos
+updated: 2026-10-13
+sources:
+  - title: "Malkov y Yashunin: Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs (2016, en inglés)"
+    url: https://arxiv.org/abs/1603.09320
+  - title: "pgvector: documentación (en inglés)"
+    url: https://github.com/pgvector/pgvector
+  - title: "Qdrant: Concepts (en inglés)"
+    url: https://qdrant.tech/documentation/concepts/
+  - title: "Faiss: biblioteca de búsqueda por similitud (en inglés)"
+    url: https://faiss.ai/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **base de datos vectorial** es un sistema que guarda **vectores**, listas de números que representan el significado de un texto, una imagen u otro dato, y que responde con rapidez a una pregunta concreta: ¿cuáles de los vectores guardados se parecen más a este?
+
+Esos vectores son [embeddings](/articulos/embeddings/). Las bases vectoriales son la pieza de búsqueda de muchas aplicaciones con [modelos de lenguaje](/articulos/modelos-de-lenguaje/).
+
+## Qué problema resuelve
+
+Una base de datos tradicional busca coincidencias exactas o por rangos: el usuario con este identificador, los pedidos de marzo. Sus [índices](/articulos/indices-de-bases-de-datos/) se apoyan en que los datos se pueden ordenar.
+
+La búsqueda por significado es otra cosa. Para "cómo devuelvo un pedido" hay que encontrar un texto que diga "política de reembolsos", sin ninguna palabra en común. Se convierten ambos en vectores y se busca el más cercano.
+
+Los vectores no se pueden ordenar de forma útil: tienen cientos o miles de dimensiones, y "cerca" depende de todas a la vez. Un índice corriente no sirve.
+
+## La forma directa
+
+Comparar la consulta con todos los vectores y quedarse con los mejores.
+
+```js
+function coseno(a, b) {
+	const producto = a.reduce((suma, x, i) => suma + x * b[i], 0);
+	return producto / (Math.hypot(...a) * Math.hypot(...b));
+}
+
+const vectores = [
+	{ id: "gato", vector: [0.9, 0.1] },
+	{ id: "perro", vector: [0.8, 0.3] },
+	{ id: "coche", vector: [0.1, 0.9] },
+];
+
+function masCercanos(consulta, cuantos) {
+	return vectores
+		.map((v) => ({ id: v.id, parecido: coseno(consulta, v.vector) }))
+		.toSorted((a, b) => b.parecido - a.parecido)
+		.slice(0, cuantos)
+		.map((v) => v.id);
+}
+
+console.log(masCercanos([1, 0.2], 2).join(" ")); // "gato perro"
+```
+
+Es la búsqueda **exacta** de los vecinos más cercanos. Da siempre el resultado correcto.
+
+Su coste crece con el número de vectores: con cien millones, cada consulta hace cien millones de comparaciones, cada una sobre cientos de números. Demasiado lento.
+
+## La idea: aproximar
+
+Las bases vectoriales renuncian a la exactitud. Usan búsqueda **aproximada** de vecinos más cercanos: encuentran casi siempre los mejores resultados, mirando solo una pequeña parte de los datos.
+
+Se acepta porque la búsqueda por significado ya es imprecisa por naturaleza. Que se escape el séptimo resultado más parecido rara vez importa.
+
+La calidad se mide con la **exhaustividad**: qué proporción de los verdaderos vecinos más cercanos se ha encontrado. Un 95 % significa que, de los 10 mejores reales, la búsqueda devuelve de media 9,5.
+
+## Cómo se construyen los índices
+
+### Un grafo navegable
+
+El método más extendido, llamado HNSW, organiza los vectores en un [grafo](/articulos/grafos/): cada vector se conecta con algunos de sus vecinos cercanos.
+
+Para buscar, se entra por un punto y se salta, una y otra vez, al vecino que esté más cerca de la consulta, hasta que ninguno mejora.
+
+Para no dar miles de pasos pequeños, hay varias capas. Las superiores tienen pocos vectores y conexiones largas, que cruzan el espacio de un salto. Las inferiores, todos los vectores y conexiones cortas. Se empieza arriba, se llega deprisa a la zona adecuada y se baja para afinar.
+
+Se parece a orientarse en un viaje: primero autopista, luego carretera, al final calles.
+
+- **A favor:** rápido y con buena exhaustividad.
+- **En contra:** ocupa mucha memoria y tarda en construirse.
+
+### Agrupar
+
+Otro método divide los vectores en grupos de vectores parecidos. Al buscar, se localizan los grupos más cercanos a la consulta y solo se miran esos.
+
+- **A favor:** menos memoria, construcción más rápida.
+- **En contra:** si el vecino buscado quedó en un grupo que no se revisa, se pierde.
+
+### Comprimir
+
+Un vector de 1536 números ocupa unos 6 kilobytes. Cien millones, 600 gigabytes. La **cuantización** los guarda con menos precisión, o resumidos. Se pierde algo de exactitud y se gana mucho espacio.
+
+## El compromiso
+
+Todos los índices tienen parámetros que mueven el mismo equilibrio:
+
+| Si se quiere más | Se paga con |
+| --- | --- |
+| Exhaustividad | Consultas más lentas o más memoria |
+| Velocidad | Menos exhaustividad |
+| Ahorro de memoria | Menos exhaustividad o menos velocidad |
+
+No hay un ajuste universal. Se prueba con datos y consultas reales.
+
+<Quiz
+	client:visible
+	question="¿Por qué las bases de datos vectoriales usan búsqueda aproximada?"
+	options={[
+		"Porque la búsqueda exacta da resultados incorrectos",
+		"Porque comparar con todos los vectores es demasiado lento a gran escala",
+		"Porque los vectores no se pueden comparar con exactitud",
+	]}
+	answer={1}
+/>
+
+## Cómo se mide el parecido
+
+| Medida | Qué compara |
+| --- | --- |
+| Similitud del coseno | La dirección de los vectores, sin importar su longitud |
+| Producto escalar | Dirección y longitud |
+| Distancia euclídea | La separación en línea recta |
+
+Hay que usar la medida con la que se entrenó el modelo de embeddings. Su documentación lo indica.
+
+Otra regla, fácil de incumplir: **todos los vectores deben venir del mismo modelo**. Los de modelos distintos no son comparables. Cambiar de modelo obliga a recalcularlo todo.
+
+## Filtros
+
+Casi nunca se busca en todo. Se busca "documentos parecidos a este, **de este cliente**, **de este año**". Cada vector lleva asociados unos **metadatos**, y la consulta combina parecido y filtro.
+
+Hacerlo bien es difícil:
+
+- Filtrar **después** de buscar puede dejar sin resultados: los diez más parecidos eran todos de otro cliente.
+- Filtrar **antes** puede inutilizar el índice.
+
+Cómo resuelve esto cada sistema es una de las diferencias reales entre ellos. Y el filtro por usuario no es opcional: es lo que impide que alguien recupere documentos ajenos.
+
+## Opciones
+
+- **Bases vectoriales dedicadas.** Diseñadas para esto, pensadas para volúmenes muy grandes.
+- **Extensiones de bases existentes.** `pgvector` añade vectores a [PostgreSQL](/articulos/que-es-postgresql/). Los vectores viven junto al resto de los datos, con transacciones, [JOIN](/articulos/tipos-de-join/) y permisos.
+- **Bibliotecas**, que construyen el índice en memoria dentro de tu programa.
+- **Buscadores de texto** que han añadido vectores.
+
+## ¿Hace falta una?
+
+A menudo, no.
+
+- **Con unos pocos miles de vectores**, la búsqueda exacta tarda milisegundos. No hace falta índice ni sistema nuevo.
+- **Si ya se usa PostgreSQL**, su extensión cubre hasta varios millones de vectores sin añadir otra pieza que mantener y sincronizar.
+- **Una base dedicada** compensa con volúmenes muy grandes o exigencias de rendimiento altas.
+
+Añadir un sistema significa mantener dos copias de los datos al día. Es un coste real.
+
+## Sus límites
+
+- **La búsqueda por significado no encuentra bien lo exacto**: códigos, nombres propios, siglas. Por eso se combina con la búsqueda por palabras, como explica el artículo sobre [RAG](/articulos/generacion-aumentada-por-recuperacion/).
+- **Depende del modelo de embeddings.** La base encuentra los vectores cercanos; que "cercano" signifique "relevante" es cosa del modelo.
+- **Las actualizaciones cuestan.** Insertar y borrar en algunos índices es lento o los degrada.
+- **Resultados que varían** un poco, al ser aproximados.
+
+## Lo esencial
+
+- Una base de datos vectorial guarda embeddings y busca los más parecidos a uno dado.
+- La búsqueda exacta compara con todos y no escala; se usa búsqueda aproximada.
+- Los índices, como los grafos navegables, miran solo una pequeña parte de los datos.
+- Hay un equilibrio entre exhaustividad, velocidad y memoria.
+- Con pocos vectores, o con PostgreSQL ya en uso, puede no hacer falta un sistema aparte.

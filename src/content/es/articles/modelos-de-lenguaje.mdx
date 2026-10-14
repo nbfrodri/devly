@@ -119,7 +119,7 @@ Después, el modelo puede seguir entrenándose con datos más específicos para 
 - **No son una base de datos.** No consultan hechos guardados: generan texto plausible. Pueden producir afirmaciones falsas con total seguridad, citas inventadas incluidas. A esto se le llama **alucinación**.
 - **No saben lo que no saben.** No distinguen de forma fiable lo que conocen de lo que se están inventando.
 - **Tienen fecha de corte.** Solo conocen lo que había en sus datos de entrenamiento. Lo posterior hay que proporcionárselo.
-- **Heredan los sesgos** de los textos con los que aprendieron.
+- **Heredan los [sesgos](/articulos/sesgos-en-los-algoritmos/)** de los textos con los que aprendieron.
 - **No son deterministas.** La misma pregunta puede dar respuestas distintas.
 
 Por eso sus respuestas deben comprobarse, sobre todo cuando importan. Y por eso se han desarrollado técnicas para darles información fiable, como buscar documentos relevantes con [embeddings](/articulos/embeddings/), o para conectarlos con herramientas externas, como el [Model Context Protocol](/articulos/model-context-protocol/).

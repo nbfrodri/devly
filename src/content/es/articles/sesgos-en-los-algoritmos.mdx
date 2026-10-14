@@ -1,0 +1,152 @@
+---
+title: "¿Qué son los sesgos en los algoritmos?"
+description: "Un sistema automático tiene sesgo cuando perjudica de forma sistemática a ciertos grupos. Casi siempre lo aprende de los datos."
+level: basico
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - como-se-evalua-un-modelo-de-clasificacion
+  - correlacion-y-causalidad
+updated: 2026-10-13
+sources:
+  - title: "Buolamwini y Gebru: Gender Shades, Intersectional Accuracy Disparities in Commercial Gender Classification (2018, en inglés)"
+    url: https://proceedings.mlr.press/v81/buolamwini18a.html
+  - title: "ProPublica: Machine Bias (2016, en inglés)"
+    url: https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing
+  - title: "Mehrabi y otros: A Survey on Bias and Fairness in Machine Learning (2019, en inglés)"
+    url: https://arxiv.org/abs/1908.09635
+  - title: "NIST SP 1270: Towards a Standard for Identifying and Managing Bias in Artificial Intelligence (en inglés)"
+    url: https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence
+  - title: "Barocas, Hardt y Narayanan: Fairness and Machine Learning, libro libre (en inglés)"
+    url: https://fairmlbook.org/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un algoritmo tiene **sesgo** cuando sus resultados perjudican o favorecen de forma sistemática a ciertos grupos de personas, sin una razón que lo justifique. En los sistemas de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) no suele deberse a que alguien lo haya programado así, sino a que el modelo lo ha aprendido de los datos.
+
+El sentido es distinto del que la palabra tiene en estadística o al describir una [neurona](/articulos/que-es-una-red-neuronal/). Aquí se habla de injusticia.
+
+## Por qué importa
+
+Hay sistemas automáticos que deciden o influyen en quién recibe un crédito, qué currículos se leen, a quién se investiga, qué precio se ofrece o qué diagnóstico se sugiere.
+
+Cuando una persona decide mal, afecta a quienes pasan por sus manos. Un sistema aplica el mismo criterio a millones, con apariencia de objetividad: "lo dice el ordenador".
+
+## Un modelo aprende lo que hay en los datos
+
+Un modelo no entiende. Encuentra patrones en ejemplos y los reproduce. Si los ejemplos reflejan desigualdades, las aprende como si fueran reglas.
+
+## De dónde sale
+
+### De la historia
+
+Los datos describen el mundo como ha sido. Un modelo entrenado con las contrataciones pasadas de una empresa que contrataba sobre todo a hombres aprenderá que ser hombre predice ser contratado. No mide quién era mejor: imita a quien decidía.
+
+### De quién falta
+
+Si un grupo aparece poco en los datos, el modelo aprende mal sobre él.
+
+Un estudio de 2018, *Gender Shades*, analizó tres sistemas comerciales que clasificaban el género a partir de una foto. Para hombres de piel clara, el error máximo era del 0,8 %. Para mujeres de piel oscura llegaba al 34,7 %. Los conjuntos de datos con los que se desarrollaban esos sistemas estaban formados mayoritariamente por rostros de piel clara.
+
+### De lo que se mide
+
+A menudo lo que interesa no se puede medir, y se usa un sustituto. Si el sustituto no significa lo mismo para todos, el resultado se tuerce.
+
+Para estimar quién necesita más atención médica se puede usar cuánto ha gastado cada persona en sanidad. Pero quien tiene peor acceso gasta menos estando igual de enfermo. El modelo concluye que necesita menos.
+
+### De las variables que delatan
+
+Quitar del modelo el dato sensible, el sexo o el origen, no basta. Otros lo revelan: el código postal, el nombre, el centro de estudios, los hábitos de compra. El modelo reconstruye la información a partir de ellos. Se llaman **variables sustitutas**.
+
+### De cómo se evalúa
+
+Un modelo con un 95 % de acierto global puede acertar el 99 % en un grupo y el 70 % en otro. La [media oculta la diferencia](/articulos/como-se-evalua-un-modelo-de-clasificacion/).
+
+### De los bucles
+
+El resultado del sistema genera los datos con los que se volverá a entrenar. Si se envían más patrullas a un barrio, allí se registran más delitos, lo que justifica enviar más. El sistema confirma su propia predicción. Es una confusión entre [correlación y causalidad](/articulos/correlacion-y-causalidad/), convertida en proceso.
+
+## Medirlo
+
+No se ve en la cifra global. Hay que **desglosar por grupo**.
+
+```js
+function tasaDeFalsosPositivos(casos) {
+	const noReinciden = casos.filter((caso) => !caso.reincide);
+	const marcados = noReinciden.filter((caso) => caso.riesgoAlto);
+
+	return marcados.length / noReinciden.length;
+}
+
+const crearGrupo = (personas, marcadas) =>
+	Array.from({ length: personas }, (_, i) => ({
+		reincide: false,
+		riesgoAlto: i < marcadas,
+	}));
+
+console.log(tasaDeFalsosPositivos(crearGrupo(10, 4))); // 0.4
+console.log(tasaDeFalsosPositivos(crearGrupo(10, 1))); // 0.1
+```
+
+Los dos grupos están formados por personas que no volvieron a delinquir. En el primero, el sistema marcó como de alto riesgo a 4 de cada 10. En el segundo, a 1.
+
+Eso se parece a lo que la organización periodística ProPublica publicó en 2016 sobre un programa usado en tribunales de Estados Unidos para estimar el riesgo de reincidencia: entre quienes no reincidieron, los acusados negros habían sido clasificados como de alto riesgo con mucha más frecuencia que los blancos.
+
+<Quiz
+	client:visible
+	question="Se elimina de los datos de entrenamiento la columna que indica el sexo. ¿Deja el modelo de poder discriminar por sexo?"
+	options={[
+		"Sí: no puede usar lo que no ve",
+		"No: otras variables relacionadas pueden revelarlo",
+		"Solo si el modelo es una red neuronal",
+	]}
+	answer={1}
+/>
+
+## No hay una sola definición de justicia
+
+El caso anterior desató una discusión que sigue abierta. La empresa respondió que su sistema era justo: una puntuación dada significaba la misma probabilidad de reincidir fuera cual fuera el grupo.
+
+Los dos tenían razón, con definiciones distintas:
+
+| Criterio | Qué exige |
+| --- | --- |
+| Paridad demográfica | La misma proporción de resultados favorables en cada grupo |
+| Igualdad de tasas de error | Los mismos falsos positivos y falsos negativos en cada grupo |
+| Calibración | Una puntuación significa la misma probabilidad en cada grupo |
+
+Se ha demostrado que, cuando la frecuencia real del fenómeno difiere entre grupos, **no se pueden cumplir todos a la vez**. Salvo en casos triviales, mejorar uno empeora otro.
+
+La consecuencia es incómoda: no existe un algoritmo "justo" en abstracto. Hay que elegir qué criterio importa en cada contexto, y esa elección no es técnica. Es una decisión de valores.
+
+## Qué se puede hacer
+
+- **Examinar los datos.** Quién está, quién falta, cómo se recogieron, qué miden de verdad las etiquetas.
+- **Evaluar por grupo**, siempre, y no solo en conjunto.
+- **Cuestionar el objetivo.** ¿Se predice lo que interesa, o algo que se le parece?
+- **Corregir.** Equilibrar los datos, imponer restricciones durante el entrenamiento o ajustar los umbrales. Ninguna técnica lo arregla sola.
+- **Supervisión humana** en las decisiones importantes, con capacidad real de revisar, no de firmar lo que diga la máquina.
+- **Poder explicar y recurrir.** La persona afectada debe poder saber por qué y pedir revisión. El [RGPD](/articulos/rgpd-y-proteccion-de-datos/) reconoce el derecho a no quedar sometido a decisiones únicamente automatizadas con efectos importantes.
+- **Vigilar tras el despliegue.** Los datos cambian y el comportamiento del modelo, con ellos.
+- **Documentar** con qué datos se entrenó, para qué sirve y para qué no.
+- **Equipos diversos**, que ven problemas que un grupo homogéneo no imagina.
+
+Y una pregunta previa: si el sistema debe existir. No todo problema se resuelve bien con una predicción automática.
+
+## En los modelos de lenguaje
+
+Los [modelos de lenguaje](/articulos/modelos-de-lenguaje/) aprenden de enormes cantidades de texto, con los estereotipos que contiene. Pueden asociar profesiones a un género, funcionar peor en idiomas con menos textos disponibles o tratar de forma distinta nombres de orígenes diferentes. Los [embeddings](/articulos/embeddings/) recogen esas mismas asociaciones.
+
+## Dos ideas equivocadas
+
+- **"Los datos son objetivos."** Los datos los recoge alguien, con un fin, midiendo unas cosas y no otras.
+- **"El algoritmo es neutral."** Elegir qué predecir, con qué datos y con qué medida de éxito son decisiones humanas.
+
+## Lo esencial
+
+- Un algoritmo tiene sesgo cuando perjudica de forma sistemática a ciertos grupos.
+- Suele venir de los datos: reflejan desigualdades pasadas, o faltan grupos enteros.
+- Eliminar el dato sensible no basta, porque otras variables lo delatan.
+- Se detecta midiendo los errores por grupo, no en conjunto.
+- Hay varias definiciones de justicia incompatibles entre sí; elegir una es una decisión de valores.

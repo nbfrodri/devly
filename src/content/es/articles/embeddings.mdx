@@ -118,7 +118,7 @@ El modelo deja de depender solo de su memoria y trabaja con información concret
 
 ## Bases de datos vectoriales
 
-Comparar una consulta con millones de vectores, uno a uno, sería lento. Las **bases de datos vectoriales** están diseñadas para encontrar con rapidez los vectores más cercanos a uno dado.
+Comparar una consulta con millones de vectores, uno a uno, sería lento. Las [**bases de datos vectoriales**](/articulos/bases-de-datos-vectoriales/) están diseñadas para encontrar con rapidez los vectores más cercanos a uno dado.
 
 Lo consiguen con índices que dan un resultado **aproximado**: casi siempre los más cercanos, sin garantía de que sean exactamente los primeros. A cambio, responden en milisegundos.
 
@@ -126,7 +126,7 @@ Lo consiguen con índices que dan un resultado **aproximado**: casi siempre los 
 
 - **Solo se comparan embeddings del mismo modelo.** Cada modelo construye su propio espacio, con otras dimensiones. Si cambias de modelo, hay que volver a calcularlos todos.
 - **Cercanía no es verdad.** "El café es bueno" y "el café es malo" pueden quedar próximos: hablan de lo mismo. Un embedding capta el tema mejor que el matiz.
-- **Heredan sesgos.** Reflejan las asociaciones presentes en los textos de entrenamiento, incluidos los estereotipos.
+- **Heredan [sesgos](/articulos/sesgos-en-los-algoritmos/).** Reflejan las asociaciones presentes en los textos de entrenamiento, incluidos los estereotipos.
 - **Los textos largos se trocean.** Un solo vector para un documento entero mezcla demasiadas ideas. Se divide en fragmentos y se calcula un embedding para cada uno.
 - **No sustituyen a la búsqueda por palabras.** Para un código de producto o un nombre propio, la coincidencia literal sigue siendo mejor. Muchos sistemas combinan las dos.
 

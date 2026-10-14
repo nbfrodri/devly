@@ -1,0 +1,168 @@
+---
+title: "Diferencias entre aplicaciones nativas, híbridas y PWA"
+description: "Tres formas de llevar una aplicación a un móvil: con las herramientas de cada plataforma, con un código común, o como una web instalable."
+level: basico
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+  - cliente-servidor
+updated: 2026-10-13
+sources:
+  - title: "MDN: Aplicaciones web progresivas"
+    url: https://developer.mozilla.org/es/docs/Web/Progressive_web_apps
+  - title: "web.dev: Learn PWA (en inglés)"
+    url: https://web.dev/learn/pwa/
+  - title: "React Native: Introduction (en inglés)"
+    url: https://reactnative.dev/docs/getting-started
+  - title: "Flutter: Architectural overview (en inglés)"
+    url: https://docs.flutter.dev/resources/architectural-overview
+  - title: "Capacitor: documentación (en inglés)"
+    url: https://capacitorjs.com/docs
+---
+
+import { Quiz } from "@/components/quiz";
+
+Hay tres grandes formas de construir una aplicación para móviles. Una **aplicación nativa** se escribe con las herramientas propias de cada plataforma. Una **aplicación híbrida o multiplataforma** parte de un solo código que funciona en varias. Una **PWA**, o aplicación web progresiva, es un sitio web que se puede instalar y usar como una aplicación.
+
+Se diferencian en cuánto cuesta hacerlas, qué pueden hacer y cómo llegan al usuario.
+
+## El punto de partida
+
+Dos sistemas se reparten casi todos los móviles: Android e iOS. Cada uno tiene su lenguaje, sus herramientas y sus normas de diseño. Una aplicación escrita para uno no funciona en el otro.
+
+Llegar a todos los usuarios significa, en principio, hacer el trabajo dos veces. Las alternativas buscan evitarlo.
+
+## Nativas
+
+Se escriben con el lenguaje y las herramientas que ofrece el fabricante: Kotlin en Android, Swift en iOS.
+
+**A favor:**
+
+- **El mejor rendimiento** y la respuesta más fluida.
+- **Acceso completo al dispositivo**: cámara, sensores, pagos, y cada novedad del sistema desde el primer día.
+- **Aspecto y comportamiento de la plataforma.** Usan sus componentes, así que se sienten como el resto del teléfono.
+
+**En contra:**
+
+- **Dos aplicaciones**, dos equipos o dos especialidades, y cada función se programa dos veces.
+- **Más coste** de desarrollo y de mantenimiento.
+
+## Híbridas y multiplataforma
+
+Un solo código, que se ejecuta en las dos plataformas. Bajo ese nombre hay técnicas bastante distintas.
+
+### Una web dentro de una aplicación
+
+La aplicación es un sitio hecho con [HTML](/articulos/que-es-html/), [CSS](/articulos/que-es-css/) y JavaScript, que se muestra dentro de un navegador incrustado, sin barra de direcciones. Un envoltorio nativo le da acceso a funciones del teléfono mediante complementos.
+
+Es lo que se entiende por híbrida en sentido estricto. Aprovecha el conocimiento de un equipo web. La interfaz es una página, y a veces se nota en el rendimiento y en el tacto.
+
+### Componentes nativos desde código común
+
+La lógica se escribe una vez, en JavaScript, y el framework la traduce a los componentes reales de cada plataforma. Un botón es un botón de Android en Android y uno de iOS en iOS. Es el enfoque de React Native, que usa el modelo de [React](/articulos/que-es-react/).
+
+### Dibujarlo todo
+
+El framework no usa los componentes del sistema: dibuja cada píxel con su propio motor gráfico. La aplicación se ve igual en todas partes. Es el enfoque de Flutter.
+
+**En conjunto, a favor:** un equipo y un código para las dos plataformas, y un desarrollo más rápido.
+
+**En contra:**
+
+- **Una capa intermedia** entre tu código y el sistema, que puede fallar o quedarse atrás.
+- **Las novedades del sistema llegan más tarde**, cuando el framework las incorpora.
+- **Tarde o temprano hace falta código nativo** para algo concreto.
+
+## PWA
+
+Una PWA es un sitio web al que se añaden capacidades de aplicación. Tres piezas la definen:
+
+- **Un manifiesto**: un archivo que indica nombre, icono y colores, para que se pueda instalar.
+- **Un service worker**: un script que el navegador ejecuta en segundo plano, entre la página y la red. Puede guardar recursos y servirlos sin conexión.
+- **[HTTPS](/articulos/https-y-tls/)**, obligatorio.
+
+Una vez instalada, tiene su icono, se abre en su propia ventana y puede funcionar sin red.
+
+El service worker decide de dónde sale cada respuesta. Una estrategia habitual es mirar primero en la copia guardada:
+
+```js
+const guardado = new Map();
+let peticionesDeRed = 0;
+
+async function obtener(direccion) {
+	if (guardado.has(direccion)) {
+		return guardado.get(direccion);
+	}
+
+	peticionesDeRed = peticionesDeRed + 1;
+	const respuesta = `contenido de ${direccion}`;
+	guardado.set(direccion, respuesta);
+
+	return respuesta;
+}
+
+await obtener("/inicio");
+await obtener("/inicio");
+
+console.log(peticionesDeRed); // 1
+```
+
+La segunda vez no hace falta red. Es una [caché](/articulos/que-es-una-cache/) controlada por la propia aplicación.
+
+**A favor:**
+
+- **Un solo código** para móvil y escritorio.
+- **Sin tienda.** Se entra por un enlace. No hay revisión ni comisión.
+- **Actualización inmediata**, como cualquier web.
+- **Se encuentra en buscadores** y se comparte con una dirección.
+- **Ligera.** No hay que descargar decenas de megabytes para probarla.
+
+**En contra:**
+
+- **Acceso limitado al dispositivo.** Lo que el navegador no expone, no se puede usar.
+- **Soporte desigual.** iOS ha ido siempre por detrás en lo que permite a las aplicaciones web.
+- **No está en las tiendas**, que es donde mucha gente busca aplicaciones.
+- **Instalarla es poco evidente** para muchos usuarios.
+
+## Comparación
+
+| | Nativa | Multiplataforma | PWA |
+| --- | --- | --- | --- |
+| Código | Uno por plataforma | Uno | Uno, también para escritorio |
+| Rendimiento | El mejor | Bueno o muy bueno | Depende del navegador |
+| Acceso al dispositivo | Completo | Amplio, con complementos | Limitado |
+| Distribución | Tiendas | Tiendas | Un enlace |
+| Actualizaciones | Pasan por la tienda | Pasan por la tienda | Inmediatas |
+| Coste | Alto | Medio | Bajo |
+
+<Quiz
+	client:visible
+	question="¿Qué pieza permite a una PWA funcionar sin conexión?"
+	options={["El manifiesto", "El service worker", "La tienda de aplicaciones"]}
+	answer={1}
+/>
+
+## Lo que comparten
+
+Sea cual sea la opción, casi todas las aplicaciones son un cliente que habla con un servidor a través de una [API](/articulos/que-es-una-api/), como describe el modelo [cliente-servidor](/articulos/cliente-servidor/). La lógica importante y los datos viven en el servidor.
+
+Y en todas vale lo mismo: lo que hay en el dispositivo está en manos del usuario. Una clave incluida en la aplicación se puede extraer. Los secretos y las comprobaciones de permisos van en el servidor.
+
+El móvil añade condiciones que un escritorio no tiene: red lenta o intermitente, batería, pantallas pequeñas y uso con los dedos. Diseñar pensando en que la conexión puede faltar es parte del trabajo.
+
+## Cómo elegir
+
+- **PWA**, si el producto es sobre todo contenido o formularios, no necesita funciones especiales del dispositivo y conviene que se encuentre y se comparta con facilidad.
+- **Multiplataforma**, si hace falta estar en las tiendas con un equipo y un presupuesto. Es la opción más habitual para aplicaciones de negocio.
+- **Nativa**, si el rendimiento o la integración con el sistema son el centro del producto: juegos exigentes, cámara, realidad aumentada, o lo último de cada plataforma.
+
+A menudo se empieza con una web bien hecha y [adaptable](/articulos/diseno-adaptable/), y se da el salto cuando el uso lo justifica. Muchas ideas no necesitan una aplicación.
+
+## Lo esencial
+
+- Una aplicación nativa usa las herramientas de cada plataforma: máximo rendimiento, doble trabajo.
+- Las multiplataforma comparten un código, con una capa intermedia que tiene sus límites.
+- Una PWA es una web instalable, que funciona sin conexión gracias al service worker.
+- Las PWA no pasan por las tiendas y acceden a menos funciones del dispositivo.
+- La elección depende de qué necesita la aplicación del dispositivo, y del presupuesto.

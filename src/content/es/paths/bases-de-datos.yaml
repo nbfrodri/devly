@@ -13,6 +13,7 @@ steps:
   - que-es-mongodb
   - que-es-redis
   - bases-de-datos-de-grafos
+  - bases-de-datos-vectoriales
   - sql-frente-a-nosql
   - teorema-cap
   - replicacion-y-particionado

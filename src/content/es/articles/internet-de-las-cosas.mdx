@@ -1,0 +1,161 @@
+---
+title: "¿Qué es el internet de las cosas?"
+description: "El internet de las cosas son objetos corrientes con sensores y conexión, que envían datos y reciben órdenes. Sus límites de energía y su seguridad lo condicionan todo."
+level: basico
+layer: redes
+prerequisites:
+  - tcp-y-udp
+  - microcontrolador-y-microprocesador
+updated: 2026-10-13
+sources:
+  - title: "RFC 7228: Terminology for Constrained-Node Networks"
+    url: https://www.rfc-editor.org/info/rfc7228/
+  - title: "RFC 8576: Internet of Things (IoT) Security, State of the Art and Challenges"
+    url: https://www.rfc-editor.org/info/rfc8576/
+  - title: "RFC 7252: The Constrained Application Protocol (CoAP)"
+    url: https://www.rfc-editor.org/info/rfc7252/
+  - title: "OWASP: Internet of Things Project (en inglés)"
+    url: https://owasp.org/www-project-internet-of-things/
+  - title: "UIT-T Y.2060: Overview of the Internet of things (en inglés)"
+    url: https://www.itu.int/rec/T-REC-Y.2060-201206-I
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **internet de las cosas**, o IoT por sus siglas en inglés, es el conjunto de objetos físicos que llevan sensores, algo de capacidad de cálculo y conexión a una red, y que con ello envían datos y reciben órdenes. Un termostato que se controla desde el móvil, un contador de luz que comunica el consumo, un sensor que vigila la humedad de un cultivo.
+
+La diferencia con el internet de siempre es quién está conectado: no personas ante una pantalla, sino objetos que funcionan solos.
+
+## Las piezas
+
+Un sistema de IoT tiene casi siempre cuatro capas.
+
+| Capa | Qué hace | Ejemplo |
+| --- | --- | --- |
+| Dispositivos | Miden y actúan | Un sensor de temperatura, una válvula |
+| Conectividad | Lleva los datos | Wifi, Bluetooth, redes de largo alcance |
+| Plataforma | Recibe, guarda y procesa | Servidores en [la nube](/articulos/computacion-en-la-nube/) |
+| Aplicación | Muestra y decide | Un panel, una alerta, una automatización |
+
+### Los dispositivos
+
+Tienen dos tipos de componentes:
+
+- **Sensores**, que convierten una magnitud física en un dato: temperatura, luz, movimiento, posición.
+- **Actuadores**, que hacen algo en el mundo: encender un motor, abrir una cerradura.
+
+En el centro hay normalmente un [microcontrolador](/articulos/microcontrolador-y-microprocesador/): un chip pequeño, barato y de muy bajo consumo.
+
+### La pasarela
+
+Muchos dispositivos no hablan directamente con internet. Se conectan a una **pasarela** cercana, que traduce su protocolo de corto alcance y reenvía los datos. El altavoz o el concentrador de una casa conectada hacen ese papel.
+
+## Lo que lo hace distinto: las limitaciones
+
+Un servidor tiene gigabytes de memoria y corriente continua. Un sensor puede tener unos kilobytes y una pila que debe durar años. Esa diferencia lo condiciona todo.
+
+- **Poca memoria y poco procesador.** No cabe un sistema operativo corriente ni las bibliotecas habituales.
+- **Energía.** Es la restricción más dura. Lo que más gasta es la radio.
+- **Red poco fiable**, lenta y a veces de pago por cada dato.
+- **Sin pantalla ni teclado.** Configurarlos y actualizarlos es complicado.
+- **Muchos años en servicio**, a menudo en lugares de difícil acceso.
+
+### Dormir casi siempre
+
+La forma de que una pila dure años es que el dispositivo esté casi todo el tiempo dormido: despierta, mide, transmite y vuelve a dormir.
+
+```js
+const diasDeBateria = (capacidad, consumo) =>
+	Math.round(capacidad / consumo / 24);
+
+const consumoMedio = (activo, dormido, fraccionActivo) =>
+	activo * fraccionActivo + dormido * (1 - fraccionActivo);
+
+console.log(diasDeBateria(2000, 80)); // 1
+console.log(diasDeBateria(2000, consumoMedio(80, 0.01, 0.001))); // 926
+```
+
+Con una batería de 2000 miliamperios hora, un dispositivo que consume 80 miliamperios todo el rato dura un día. Si solo está activo una milésima parte del tiempo, y dormido consume una centésima de miliamperio, dura dos años y medio.
+
+Esa decisión condiciona el software: un dispositivo dormido no puede recibir mensajes. Es él quien pregunta al despertar.
+
+## Conectividad
+
+No hay una red para todo. Se elige según alcance, consumo y cantidad de datos.
+
+| Tecnología | Alcance | Consumo | Uso típico |
+| --- | --- | --- | --- |
+| Wifi | Una casa | Alto | Cámaras, enchufes con corriente |
+| Bluetooth de baja energía | Unos metros | Muy bajo | Pulseras, balizas |
+| Redes en malla, como Zigbee o Thread | Una casa, saltando entre dispositivos | Muy bajo | Bombillas, sensores domésticos |
+| Redes de largo alcance y baja potencia, como LoRaWAN | Kilómetros | Muy bajo | Agricultura, contadores |
+| Red móvil | Donde haya cobertura | Medio o bajo | Vehículos, seguimiento |
+
+Las de largo alcance y bajo consumo pagan un precio: transmiten muy pocos datos, unos cuantos bytes cada vez.
+
+## Protocolos ligeros
+
+[HTTP](/articulos/que-es-http/) es pesado para un sensor: cabeceras de texto largas y una conexión por petición. Se usan alternativas pensadas para estas condiciones:
+
+- **[MQTT](/articulos/protocolo-mqtt/).** Publicación y suscripción a través de un intermediario, con mensajes mínimos. Es el más extendido.
+- **CoAP.** Parecido a HTTP en su modelo, pero binario, compacto y sobre [UDP](/articulos/tcp-y-udp/).
+
+## Dónde se procesa
+
+Enviarlo todo a la nube no siempre es posible ni conveniente. Procesar los datos cerca de donde se generan, en el propio dispositivo o en la pasarela, se llama **computación en el borde**.
+
+- **Menos latencia.** Un freno de emergencia no puede esperar una respuesta de un servidor lejano.
+- **Menos datos transmitidos.** Se envía "todo normal" en lugar de mil lecturas.
+- **Funciona sin conexión.**
+- **Privacidad.** Los datos en bruto no salen.
+
+<Quiz
+	client:visible
+	question="¿Cuál es la principal razón de que un sensor a pilas pase casi todo el tiempo dormido?"
+	options={[
+		"Para no saturar la red",
+		"Para que la batería dure meses o años",
+		"Para que sus medidas sean más precisas",
+	]}
+	answer={1}
+/>
+
+## Seguridad: el punto débil
+
+El IoT tiene un historial de [seguridad](/articulos/que-es-la-ciberseguridad/) malo, y las razones son estructurales.
+
+- **Contraseñas de fábrica.** Miles de dispositivos con el mismo usuario y la misma clave, que nadie cambia.
+- **Sin actualizaciones.** Muchos no reciben parches nunca, y siguen conectados una década.
+- **Poco margen.** El cifrado cuesta memoria y energía que el dispositivo apenas tiene.
+- **Acceso físico.** Cualquiera puede abrir un sensor instalado en la calle y leer su memoria.
+- **Precio.** En un producto de pocos euros, la seguridad compite con el margen.
+
+En 2016, una red de cientos de miles de cámaras y routers domésticos infectados, llamada Mirai, lanzó ataques que dejaron inaccesibles servicios importantes de internet. Los dispositivos se habían infectado probando una lista corta de contraseñas de fábrica.
+
+Las consecuencias, además, son físicas: un dispositivo comprometido abre una puerta, apaga una calefacción o detiene una máquina.
+
+Lo mínimo exigible:
+
+- Una credencial distinta por dispositivo, nunca una común.
+- Comunicación cifrada.
+- Actualizaciones remotas, firmadas.
+- Recoger solo los datos necesarios.
+- Separar estos dispositivos del resto de la red.
+
+## Privacidad
+
+Sensores en casas, coches y cuerpos recogen datos muy íntimos: cuándo hay alguien en casa, cómo duerme, por dónde se mueve. Suelen ser datos personales, sujetos a normas como el [RGPD](/articulos/rgpd-y-proteccion-de-datos/).
+
+## Otros retos
+
+- **Interoperabilidad.** Fabricantes distintos, protocolos distintos. Hay estándares que intentan que los dispositivos domésticos se entiendan entre sí.
+- **Escala.** Millones de dispositivos enviando datos a la vez exigen una plataforma preparada, a menudo con [colas de mensajes](/articulos/colas-de-mensajes/).
+- **Dependencia del fabricante.** Si la empresa cierra sus servidores, el aparato puede dejar de funcionar.
+
+## Lo esencial
+
+- El IoT son objetos con sensores, cálculo y conexión que funcionan sin una persona delante.
+- Un sistema tiene dispositivos, conectividad, plataforma y aplicación.
+- La energía es la mayor limitación: los dispositivos duermen casi siempre.
+- Usan redes y protocolos ligeros, elegidos según alcance y consumo.
+- La seguridad es su mayor problema, por contraseñas comunes y falta de actualizaciones.

@@ -73,12 +73,12 @@ Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre pr
 - [x] ¿Qué es React? (componentes y estado)
 - [x] ¿Qué es Next.js? (SPA, MPA y renderizado en servidor)
 - [x] ¿Qué es Node.js? (promesas y async/await)
-- [ ] ¿Qué es TypeScript? (tipado estático y dinámico)
+- [x] ¿Qué es TypeScript? (tipado estático y dinámico)
 - [x] ¿Qué es Redis? (caché)
 - [x] ¿Qué es PostgreSQL? (SQL)
 - [x] ¿Qué es MongoDB? (bases de datos NoSQL)
 - [x] Bases de datos de grafos (grafos)
-- [ ] Bases de datos vectoriales (embeddings)
+- [x] Bases de datos vectoriales (embeddings)
 - [ ] ¿Qué es Nginx? (proxy inverso)
 
 ## Linux
@@ -101,6 +101,28 @@ Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre pr
 - [ ] Ajuste fino de un modelo (modelo de lenguaje)
 - [ ] Alucinaciones de los modelos de lenguaje
 - [ ] Modelos de difusión: cómo se genera una imagen
+
+## Algoritmos y estructuras de datos concretos
+
+Pedido por el usuario el 2026-10-14: algoritmos y estructuras específicos, no solo las ideas generales.
+
+- [ ] Búsqueda en anchura, BFS (grafos)
+- [ ] Búsqueda en profundidad, DFS (grafos, recursividad)
+- [ ] El algoritmo de Dijkstra (grafos)
+- [ ] El algoritmo A* (Dijkstra)
+- [ ] Ordenación topológica (grafos)
+- [ ] Árbol de expansión mínima: Kruskal y Prim (grafos)
+- [ ] Quicksort (algoritmos de ordenación)
+- [ ] Mergesort y divide y vencerás (recursividad)
+- [ ] Montículos y colas de prioridad (árboles)
+- [ ] Programación dinámica (recursividad)
+- [ ] Algoritmos voraces
+- [ ] Vuelta atrás, backtracking (recursividad)
+- [ ] Árboles equilibrados: AVL y rojo-negro (árboles binarios de búsqueda)
+- [ ] Árboles B (índices de bases de datos)
+- [ ] Tries (árboles)
+- [ ] Filtros de Bloom (tablas hash)
+- [ ] Conjuntos disjuntos, union-find (grafos)
 
 ## Curiosidades
 
