@@ -119,7 +119,7 @@ En la práctica, la mayoría de las API que se llaman REST no llegan a esto. Se 
 ## Buenas prácticas habituales
 
 - **Sustantivos en plural** para las colecciones: `/usuarios`, no `/usuario` ni `/obtenerUsuarios`.
-- **Filtrar, ordenar y paginar con parámetros**: `/articulos?nivel=basico&pagina=2`.
+- **Filtrar, ordenar y [paginar](/articulos/paginacion/) con parámetros**: `/articulos?nivel=basico&pagina=2`.
 - **Versionar la API**, por ejemplo con `/v1/` en la dirección, para poder cambiarla sin romper a quien ya la usa.
 - **Errores con formato constante**, con un mensaje que explique qué falló.
 

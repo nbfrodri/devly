@@ -1,0 +1,178 @@
+---
+title: "¿Qué es la observabilidad? Registros, métricas y trazas"
+description: "La observabilidad es poder entender qué hace un sistema en producción a partir de los datos que emite: registros, métricas y trazas."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - cliente-servidor
+  - media-mediana-y-desviacion
+updated: 2026-10-13
+sources:
+  - title: "OpenTelemetry: Introducción a la observabilidad"
+    url: https://opentelemetry.io/es/docs/concepts/observability-primer/
+  - title: "Google: Site Reliability Engineering, cap. 6, Monitoring Distributed Systems (en inglés)"
+    url: https://sre.google/sre-book/monitoring-distributed-systems/
+  - title: "Google: Site Reliability Engineering, cap. 4, Service Level Objectives (en inglés)"
+    url: https://sre.google/sre-book/service-level-objectives/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **observabilidad** es la capacidad de entender qué ocurre dentro de un sistema a partir de los datos que emite hacia fuera. Esos datos son de tres tipos: **registros**, **métricas** y **trazas**. Un sistema es observable si, cuando algo va mal, se puede averiguar por qué sin tener que modificarlo ni adivinar.
+
+## Qué problema resuelve
+
+En tu ordenador, si un programa falla, lo ejecutas de nuevo, pones un punto de parada y miras. En producción no se puede: el programa corre en máquinas remotas, atiende a miles de usuarios y el fallo ocurrió hace una hora, a una persona, en unas condiciones que no conoces.
+
+Lo único que tienes es lo que el sistema dejó escrito mientras funcionaba. Si no dejó nada útil, no hay manera de saber qué pasó.
+
+## Monitorización y observabilidad
+
+Se confunden, y no son lo mismo.
+
+- **Monitorizar** es vigilar cosas que ya sabes que pueden fallar: ¿está el servidor encendido?, ¿queda disco?
+- **Observar** es poder responder preguntas que no habías previsto: ¿por qué las peticiones de los usuarios de un país, con una versión concreta de la aplicación, tardan el triple desde ayer?
+
+La monitorización dice **que** algo va mal. La observabilidad ayuda a saber **por qué**.
+
+## Registros
+
+Un **registro**, o *log*, es una anotación de algo que ocurrió, con su fecha y hora.
+
+```
+2026-10-14T09:31:07Z ERROR No se pudo cobrar el pedido 512: tarjeta rechazada
+```
+
+Son el dato más detallado: cuentan exactamente qué pasó en un momento.
+
+### Niveles
+
+Cada registro lleva un nivel de gravedad, que permite filtrar:
+
+| Nivel | Uso |
+| --- | --- |
+| DEBUG | Detalle para depurar; apagado en producción |
+| INFO | Hechos normales: un pedido creado |
+| WARN | Algo raro que no impide seguir |
+| ERROR | Una operación ha fallado |
+
+### Registros estructurados
+
+Un texto libre lo lee bien una persona y mal un programa. Con miles de registros por segundo, quien los lee es un programa. Por eso se escriben en un formato con campos, como [JSON](/articulos/formatos-de-datos-json-csv-xml/):
+
+```js
+function registrar(nivel, mensaje, datos) {
+	return JSON.stringify({ nivel, mensaje, ...datos });
+}
+
+const linea = registrar("error", "cobro rechazado", {
+	pedido: 512,
+	usuario: 87,
+});
+
+console.log(linea); // {"nivel":"error","mensaje":"cobro rechazado","pedido":512,"usuario":87}
+console.log(JSON.parse(linea).pedido); // 512
+```
+
+Así se puede preguntar "todos los errores del pedido 512" o "cuántos cobros rechazados por usuario".
+
+### Qué no se registra
+
+Contraseñas, tokens, números de tarjeta ni datos personales innecesarios. Los registros se guardan mucho tiempo y los ve mucha gente; son un lugar habitual de fugas de datos.
+
+## Métricas
+
+Una **métrica** es un número medido a lo largo del tiempo: peticiones por segundo, porcentaje de errores, memoria usada.
+
+No dicen qué pasó en una petición concreta, sino cómo va el conjunto. A cambio, son baratas: guardar un número cada diez segundos ocupa lo mismo con cien peticiones que con un millón. Sirven para gráficas y para alertas.
+
+### Cuatro señales
+
+El equipo de fiabilidad de Google propone vigilar, como mínimo, cuatro cosas en cualquier servicio que atiende a usuarios:
+
+| Señal | Pregunta |
+| --- | --- |
+| Latencia | ¿Cuánto tarda en responder? |
+| Tráfico | ¿Cuánta demanda recibe? |
+| Errores | ¿Qué proporción de peticiones falla? |
+| Saturación | ¿Cuánto le queda antes de llenarse? |
+
+### La media engaña
+
+Para la latencia no se usa la media, sino los **percentiles**. El percentil 99 es el valor por debajo del cual está el 99 % de las peticiones.
+
+```js
+const tiempos = [20, 22, 21, 23, 20, 22, 21, 24, 20, 900];
+
+const media = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
+const ordenados = tiempos.toSorted((a, b) => a - b);
+const percentil = (p) => ordenados[Math.ceil((p / 100) * ordenados.length) - 1];
+
+console.log(media); // 109.3
+console.log(percentil(50)); // 21
+console.log(percentil(99)); // 900
+```
+
+La media, 109 milisegundos, no describe a nadie: nueve peticiones tardaron unos 20 y una tardó 900. El percentil 50, la [mediana](/articulos/media-mediana-y-desviacion/), dice cómo le va al usuario típico. El percentil 99 dice cómo le va al que peor lo pasa.
+
+Ese usuario importa. Una página que hace cincuenta peticiones tiene muchas probabilidades de toparse con una de las lentas.
+
+## Trazas
+
+Con varios servicios, una petición del usuario pasa por muchos: la API llama al servicio de pedidos, que llama al de pagos y al de almacén. Si tarda dos segundos, ¿dónde se fueron?
+
+Una **traza** registra el recorrido completo de una petición. Está formada por **tramos**, en inglés *spans*: cada uno es una operación, con su inicio y su duración.
+
+```
+Petición POST /pedidos ............ 2030 ms
+├─ validar datos ..................   10 ms
+├─ servicio de pagos .............. 1950 ms
+│  └─ consulta a la base de datos . 1900 ms
+└─ servicio de almacén ............   60 ms
+```
+
+Se ve de inmediato: el tiempo se va en una consulta dentro del servicio de pagos.
+
+Para unir los tramos, cada petición recibe al entrar un **identificador de traza**, que viaja de servicio en servicio en una cabecera [HTTP](/articulos/que-es-http/). Incluir ese identificador en los registros permite saltar de una traza a los registros exactos de esa petición.
+
+Las trazas son imprescindibles con [microservicios](/articulos/monolito-y-microservicios/), donde ningún servicio ve la petición entera.
+
+## Comparación
+
+| | Registros | Métricas | Trazas |
+| --- | --- | --- | --- |
+| Qué son | Anotaciones de hechos | Números en el tiempo | El recorrido de una petición |
+| Responden a | ¿Qué pasó exactamente? | ¿Va bien el conjunto? | ¿Dónde se fue el tiempo? |
+| Coste | Alto, crece con el tráfico | Bajo y constante | Alto; se guarda una muestra |
+| Uso típico | Investigar un fallo | Gráficas y alertas | Localizar el servicio lento |
+
+Se usan juntas: una métrica dispara la alerta, una traza señala el servicio y sus registros explican la causa.
+
+<Quiz
+	client:visible
+	question="Una petición atraviesa cinco servicios y tarda demasiado. ¿Qué dato muestra en cuál se pierde el tiempo?"
+	options={["Un registro", "Una métrica", "Una traza"]}
+	answer={2}
+/>
+
+## Alertas y objetivos
+
+Una **alerta** avisa a una persona cuando una métrica cruza un umbral. Las buenas alertas se basan en **síntomas**, lo que nota el usuario, y no en causas. "El 5 % de las peticiones falla" merece despertar a alguien. "El procesador está al 90 %" quizá no: puede estar trabajando bien.
+
+Demasiadas alertas son tan malas como ninguna. Si suenan a todas horas por cosas que no exigen actuar, se acaban ignorando, y la que importaba pasa inadvertida.
+
+Para decidir qué merece una alerta se fijan **objetivos de nivel de servicio**: por ejemplo, que el 99,9 % de las peticiones del mes tenga éxito. Lo que falta hasta el 100 % es el margen de error aceptado. Mientras quede margen, se pueden asumir riesgos; cuando se agota, toca dedicarse a la estabilidad.
+
+## Lo que cuesta
+
+- **Almacenamiento.** Guardar todos los registros y trazas puede costar más que el propio sistema. Se guarda una muestra y se borra lo antiguo.
+- **Instrumentar.** El código tiene que emitir los datos. Existen estándares abiertos y bibliotecas que lo hacen automáticamente para lo más común.
+- **Ruido.** Muchos datos no son más comprensión. Lo que importa es poder hacer preguntas.
+
+## Lo esencial
+
+- La observabilidad es poder entender un sistema en producción por los datos que emite.
+- Los registros cuentan hechos concretos; conviene que sean estructurados.
+- Las métricas son números agregados, baratos, buenos para alertas.
+- Las trazas siguen una petición a través de varios servicios.
+- La latencia se mide con percentiles, y las alertas, sobre lo que nota el usuario.

@@ -1,0 +1,208 @@
+---
+title: "¿Qué es la paginación de resultados?"
+description: "Paginar es devolver una lista grande en trozos. Hay dos formas principales, por desplazamiento y por cursor, con costes muy distintos."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-sql
+  - que-es-una-api
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: LIMIT and OFFSET (en inglés)"
+    url: https://www.postgresql.org/docs/current/queries-limit.html
+  - title: "Markus Winand: We need tool support for keyset pagination (en inglés)"
+    url: https://use-the-index-luke.com/no-offset
+  - title: "RFC 8288: Web Linking"
+    url: https://www.rfc-editor.org/info/rfc8288/
+  - title: "GitHub: Uso de la paginación en la API de REST"
+    url: https://docs.github.com/es/rest/using-the-rest-api/using-pagination-in-the-rest-api
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Paginar** es dividir un conjunto grande de resultados en partes, llamadas páginas, y entregarlas de una en una. Lo hacen las [API](/articulos/que-es-una-api/), las consultas a [bases de datos](/articulos/que-es-una-base-de-datos/) y las interfaces que muestran listas.
+
+## Qué problema resuelve
+
+Una tabla tiene un millón de pedidos. Devolverlos todos en una respuesta:
+
+- **Es lento.** La base de datos tiene que leerlos, el servidor convertirlos y la red transportarlos.
+- **Consume memoria** en el servidor y en el cliente.
+- **Es inútil.** Nadie mira un millón de filas. Se miran las primeras veinte.
+- **Es un riesgo.** Una petición que obliga a tanto trabajo sirve para tumbar un servicio.
+
+Toda lista que pueda crecer sin límite debe paginarse, y con un tamaño máximo de página que el cliente no pueda superar.
+
+Hay dos técnicas principales.
+
+## Por desplazamiento
+
+El cliente indica cuántos resultados quiere y cuántos saltarse. En [SQL](/articulos/que-es-sql/), con `LIMIT` y `OFFSET`:
+
+```sql
+SELECT * FROM articulos ORDER BY id LIMIT 3 OFFSET 3;
+```
+
+"Sáltate 3 y dame los 3 siguientes": la página 2. En una API suele presentarse como `?pagina=2&tamano=3`.
+
+```js
+const articulos = Array.from({ length: 10 }, (_, i) => ({ id: i + 1 }));
+
+function porDesplazamiento(pagina, tamano) {
+	const inicio = (pagina - 1) * tamano;
+	return articulos.slice(inicio, inicio + tamano);
+}
+
+const segunda = porDesplazamiento(2, 3);
+
+console.log(segunda.map((a) => a.id).join(" ")); // "4 5 6"
+```
+
+**A favor:**
+
+- Es simple.
+- Permite saltar a cualquier página: "ir a la 37".
+- Permite mostrar el total de páginas.
+
+Tiene dos problemas serios.
+
+### Se vuelve lenta
+
+Para saltarse filas, la base de datos tiene que **leerlas primero** y descartarlas. La documentación de PostgreSQL lo advierte: las filas omitidas por `OFFSET` se calculan igualmente.
+
+La página 1 es instantánea. Para la página 50 000 de 20 elementos, la base de datos lee un millón de filas y devuelve 20. Cuanto más lejos, más lento.
+
+### Los datos se mueven
+
+Si se insertan o se borran filas mientras alguien pagina, las páginas se desplazan.
+
+```js
+let ids = [5, 4, 3, 2, 1];
+const pagina = (numero, tamano) =>
+	ids.slice((numero - 1) * tamano, numero * tamano);
+
+console.log(pagina(1, 2).join(" ")); // "5 4"
+
+ids = [6, ...ids];
+
+console.log(pagina(2, 2).join(" ")); // "4 3"
+```
+
+El usuario ve la página 1, con los elementos 5 y 4. Entra uno nuevo, el 6. Al pedir la página 2, recibe el 4 y el 3: **el 4 aparece repetido**. Si en lugar de entrar un elemento se hubiera borrado, uno se habría quedado sin mostrar.
+
+En una lista de novedades, donde entran elementos sin parar, ocurre constantemente.
+
+## Por cursor
+
+En lugar de decir cuántos saltarse, el cliente dice **dónde se quedó**: "dame los 3 siguientes al elemento con id 3".
+
+```sql
+SELECT * FROM articulos WHERE id > 3 ORDER BY id LIMIT 3;
+```
+
+Ese "dónde me quedé" es el **cursor**. La técnica se llama también paginación por conjunto de claves, o *keyset*.
+
+```js
+const articulos = Array.from({ length: 10 }, (_, i) => ({ id: i + 1 }));
+
+function porCursor(despuesDe, tamano) {
+	return articulos.filter((a) => a.id > despuesDe).slice(0, tamano);
+}
+
+const pagina = porCursor(3, 3);
+
+console.log(pagina.map((a) => a.id).join(" ")); // "4 5 6"
+console.log(pagina.at(-1).id); // 6
+```
+
+El último id de la página, 6, es el cursor para pedir la siguiente.
+
+**A favor:**
+
+- **Rapidez constante.** Con un [índice](/articulos/indices-de-bases-de-datos/) sobre la columna, la base de datos va directa al punto de partida. La página un millón cuesta lo mismo que la primera.
+- **Estable.** Aunque entren o salgan elementos, no hay repetidos ni omitidos: se continúa desde un elemento concreto, no desde una posición.
+
+Con la lista del ejemplo anterior, ordenada de más nuevo a más antiguo:
+
+```js
+const ids = [6, 5, 4, 3, 2, 1];
+const trasCursor = (cursor, tamano) =>
+	ids.filter((id) => id < cursor).slice(0, tamano);
+
+console.log(trasCursor(4, 2).join(" ")); // "3 2"
+```
+
+Tras ver el 5 y el 4, se piden los anteriores al 4. Llegan el 3 y el 2, sin repetir nada, aunque haya entrado el 6.
+
+**En contra:**
+
+- **No se puede saltar** a una página arbitraria. Solo siguiente y anterior.
+- **No da el total** de páginas.
+- **Exige un orden estable y único.** Si se ordena por fecha y dos elementos tienen la misma, el cursor es ambiguo. Se añade el id como desempate.
+
+## Comparación
+
+| | Desplazamiento | Cursor |
+| --- | --- | --- |
+| El cliente envía | Número de página | Marca del último elemento visto |
+| Páginas lejanas | Cada vez más lentas | Igual de rápidas |
+| Con datos que cambian | Repite u omite elementos | Estable |
+| Saltar a una página | Sí | No |
+| Total de páginas | Sí | No |
+| Encaja con | Tablas pequeñas, paneles de administración | Listas largas, desplazamiento infinito, API públicas |
+
+<Quiz
+	client:visible
+	question="¿Por qué la paginación con OFFSET se vuelve lenta en las páginas lejanas?"
+	options={[
+		"Porque la red tarda más",
+		"Porque la base de datos lee y descarta todas las filas anteriores",
+		"Porque el navegador tiene que dibujar más elementos",
+	]}
+	answer={1}
+/>
+
+## Cómo se presenta en una API
+
+La respuesta incluye, además de los datos, lo necesario para pedir la página siguiente.
+
+```json
+{
+	"datos": [{ "id": 4 }, { "id": 5 }, { "id": 6 }],
+	"siguiente": "eyJpZCI6Nn0"
+}
+```
+
+El cursor se entrega como un texto **opaco**: el cliente lo devuelve tal cual, sin interpretarlo. Así el servidor puede cambiar por dentro cómo pagina sin romper a nadie. Si no hay más páginas, el campo viene vacío.
+
+Otra convención es enviar los enlaces en una cabecera [HTTP](/articulos/que-es-http/) llamada `Link`, con la relación `next` para la página siguiente:
+
+```http
+Link: <https://api.ejemplo.com/articulos?cursor=eyJpZCI6Nn0>; rel="next"
+```
+
+En ambos casos el cliente no construye direcciones: sigue el enlace que le dan.
+
+## Buenas prácticas
+
+- **Un tamaño por defecto y un máximo.** Si el cliente pide 100 000, se le dan 100.
+- **Ordenar siempre de forma explícita.** Sin `ORDER BY`, la base de datos no garantiza ningún orden, y las páginas pueden solaparse.
+- **Evitar contar el total** si no hace falta. Contar millones de filas es caro. A menudo basta con saber si hay más.
+- **Un índice** sobre las columnas de ordenación.
+
+## En la interfaz
+
+La técnica condiciona lo que puede mostrar la interfaz:
+
+- **Páginas numeradas.** El usuario sabe dónde está y puede saltar. Necesitan desplazamiento.
+- **Botón "cargar más" o desplazamiento infinito.** Solo necesitan la página siguiente, así que encajan con cursores.
+
+El desplazamiento infinito tiene sus inconvenientes: el pie de página se vuelve inalcanzable, y es difícil volver al punto donde uno estaba. Para contenido que se consulta, y no solo se recorre, las páginas o el botón suelen ser mejores, como recuerdan las [heurísticas de usabilidad](/articulos/heuristicas-de-usabilidad/).
+
+## Lo esencial
+
+- Paginar es entregar una lista grande por partes, con un tamaño máximo.
+- Por desplazamiento es simple y permite saltar, pero se vuelve lenta y falla si los datos cambian.
+- Por cursor continúa desde el último elemento visto: es rápida y estable.
+- El cursor no permite saltar a una página ni conocer el total.
+- Toda paginación necesita un orden explícito y único.

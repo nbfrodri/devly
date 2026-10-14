@@ -1,0 +1,188 @@
+---
+title: "¿Qué es un middleware?"
+description: "Un middleware es una función que se ejecuta entre la llegada de una petición y la respuesta. Sirve para lo que es común a muchas rutas."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-http
+  - funciones-de-orden-superior-y-clausuras
+updated: 2026-10-13
+sources:
+  - title: "Express: Utilización del middleware"
+    url: https://expressjs.com/es/guide/using-middleware.html
+  - title: "Django: Middleware"
+    url: https://docs.djangoproject.com/es/5.2/topics/http/middleware/
+  - title: "Microsoft: Middleware de ASP.NET Core"
+    url: https://learn.microsoft.com/es-es/aspnet/core/fundamentals/middleware/
+---
+
+import { Quiz } from "@/components/quiz";
+
+En el desarrollo web, un **middleware** es una función que se ejecuta en medio del recorrido de una petición: después de que llega al servidor y antes de que salga la respuesta. Cada middleware puede examinar la petición, modificarla, responder él mismo o pasarla al siguiente.
+
+El término, "software de en medio", se usa también de forma más amplia para cualquier programa que conecta otros dos. Aquí se trata el sentido que tiene en los frameworks web.
+
+## Qué problema resuelve
+
+Un servidor tiene muchas rutas: ver un perfil, crear un pedido, listar productos. Y hay tareas que casi todas necesitan:
+
+- Anotar cada petición en los [registros](/articulos/observabilidad/).
+- Comprobar que el usuario ha iniciado sesión.
+- Interpretar el cuerpo de la petición.
+- Tratar los errores.
+- Añadir cabeceras de seguridad.
+
+Repetir ese código en cada ruta es tedioso y frágil: basta olvidarlo en una para tener una ruta sin protección.
+
+Un middleware escribe esa tarea **una vez** y la aplica a todas las rutas que se quiera.
+
+## La cadena
+
+Los middleware se colocan en fila. La petición los atraviesa en orden, hasta llegar al código que la atiende, llamado **manejador**. La respuesta recorre el camino de vuelta.
+
+```
+Petición → registro → autenticación → manejador
+                                          ↓
+Respuesta ← registro ← autenticación ←────┘
+```
+
+Se suele comparar con las capas de una cebolla: la petición las cruza hacia dentro y la respuesta hacia fuera.
+
+Cada middleware recibe la petición, la respuesta y una función, normalmente llamada `next`, que cede el paso al siguiente. Tiene dos opciones:
+
+- **Llamar al siguiente**, y la petición continúa.
+- **No llamarlo** y responder. La cadena se corta ahí.
+
+## Construir una
+
+Para ver que no hay magia, esta es una versión mínima del mecanismo:
+
+```js
+function crearAplicacion() {
+	const middlewares = [];
+
+	return {
+		usar: (middleware) => middlewares.push(middleware),
+		manejar(peticion) {
+			const respuesta = { estado: 200, cuerpo: "", registro: [] };
+			let indice = 0;
+
+			const siguiente = () => {
+				const middleware = middlewares[indice];
+				indice = indice + 1;
+
+				if (middleware) {
+					middleware(peticion, respuesta, siguiente);
+				}
+			};
+
+			siguiente();
+			return respuesta;
+		},
+	};
+}
+
+const app = crearAplicacion();
+
+app.usar((peticion, respuesta, siguiente) => {
+	respuesta.registro.push(`entra ${peticion.ruta}`);
+	siguiente();
+	respuesta.registro.push("sale");
+});
+
+app.usar((peticion, respuesta, siguiente) => {
+	if (!peticion.usuario) {
+		respuesta.estado = 401;
+		return;
+	}
+
+	siguiente();
+});
+
+app.usar((peticion, respuesta) => {
+	respuesta.cuerpo = `Hola, ${peticion.usuario}`;
+});
+
+const correcta = app.manejar({ ruta: "/perfil", usuario: "ana" });
+console.log(correcta.estado); // 200
+console.log(correcta.cuerpo); // "Hola, ana"
+console.log(correcta.registro.join(", ")); // "entra /perfil, sale"
+
+const anonima = app.manejar({ ruta: "/perfil" });
+console.log(anonima.estado); // 401
+console.log(anonima.cuerpo === ""); // true
+```
+
+Tres cosas que observar:
+
+- **El primero hace algo antes y algo después.** Lo que escribe antes de `siguiente()` ocurre al entrar; lo de después, al salir. Así se mide cuánto tarda una petición.
+- **El segundo corta la cadena.** Sin usuario, responde con un 401 y no llama al siguiente. El manejador ni se ejecuta.
+- **El tercero es el manejador**: el último eslabón.
+
+`usar` recibe funciones, de modo que es una [función de orden superior](/articulos/funciones-de-orden-superior-y-clausuras/).
+
+## El orden importa
+
+Los middleware se ejecutan en el orden en que se registran, y un orden equivocado es un error frecuente.
+
+- El que **interpreta el cuerpo** va antes de los que lo leen.
+- El de **autenticación** va antes de las rutas protegidas. Una ruta registrada antes que él queda abierta.
+- El de **registro** va al principio, para anotarlo todo.
+- El de **errores** suele ir al final, para recoger lo que falle en los anteriores.
+
+<Quiz
+	client:visible
+	question="Un middleware de autenticación detecta que no hay sesión y no llama al siguiente. ¿Qué ocurre?"
+	options={[
+		"La petición continúa hasta el manejador",
+		"La cadena se corta y el manejador no se ejecuta",
+		"El servidor se detiene",
+	]}
+	answer={1}
+/>
+
+## Usos habituales
+
+| Middleware | Qué hace |
+| --- | --- |
+| Registro | Anota método, ruta, estado y duración |
+| Interpretación del cuerpo | Convierte el [JSON](/articulos/formatos-de-datos-json-csv-xml/) recibido en un objeto |
+| Autenticación | Identifica al usuario a partir de la [sesión o el token](/articulos/sesiones-y-tokens/) |
+| Autorización | Comprueba que [tiene permiso](/articulos/autenticacion-y-autorizacion/) |
+| CORS | Añade las cabeceras que permiten [peticiones desde otros orígenes](/articulos/que-es-cors/) |
+| Limitación | Rechaza a quien hace [demasiadas peticiones](/articulos/limitacion-de-peticiones/) |
+| Compresión | Reduce el tamaño de la respuesta |
+| Errores | Convierte una [excepción](/articulos/manejo-de-errores-y-excepciones/) en una respuesta adecuada |
+
+Todos son **asuntos transversales**: cosas que afectan a muchas rutas y no pertenecen a ninguna.
+
+## Pasar datos
+
+Un middleware suele dejar información para los siguientes. El de autenticación averigua quién es el usuario y lo anota en la petición; el manejador lo lee de ahí, sin repetir la comprobación.
+
+## Dónde se aplican
+
+- **A toda la aplicación.** El registro, la compresión.
+- **A un grupo de rutas.** La autenticación, para todo lo que cuelga de `/admin`.
+- **A una sola ruta.** Una validación concreta.
+
+## Es un patrón conocido
+
+El mecanismo es una forma del [patrón de diseño](/articulos/patrones-de-diseno/) llamado cadena de responsabilidad: una petición pasa por una serie de manejadores, y cada uno decide si la trata o la pasa.
+
+Existe en casi todos los frameworks web, con este nombre o con otros, como filtros o interceptores. La idea es la misma.
+
+## Precauciones
+
+- **Olvidar llamar al siguiente.** Si no se llama y tampoco se responde, la petición queda colgada hasta que el cliente se cansa de esperar.
+- **Demasiada lógica oculta.** Si mucho comportamiento vive en middleware, leer un manejador ya no explica qué pasa con una petición.
+- **Coste acumulado.** Cada uno se ejecuta en cada petición. Una consulta a la base de datos dentro de un middleware global se multiplica por todo el tráfico.
+- **Dependencias entre ellos.** Uno que da por hecho que otro se ejecutó antes falla de forma confusa si se cambia el orden.
+
+## Lo esencial
+
+- Un middleware es una función que se ejecuta entre la petición y la respuesta.
+- Forman una cadena: cada uno pasa el control al siguiente o responde y la corta.
+- Sirven para lo común a muchas rutas: registro, autenticación, errores.
+- Se ejecutan en el orden en que se registran, y ese orden importa.
+- Evitan repetir código, a cambio de un comportamiento menos visible.

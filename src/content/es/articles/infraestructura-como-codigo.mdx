@@ -1,0 +1,130 @@
+---
+title: "¿Qué es la infraestructura como código?"
+description: "Describir servidores, redes y bases de datos en archivos de texto, para crearlos y cambiarlos de forma automática y repetible."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - computacion-en-la-nube
+  - control-de-versiones-con-git
+updated: 2026-10-13
+sources:
+  - title: "HashiCorp: What is Terraform? (en inglés)"
+    url: https://developer.hashicorp.com/terraform/intro
+  - title: "AWS: Introducción a DevOps en AWS, infraestructura como código"
+    url: https://docs.aws.amazon.com/es_es/whitepapers/latest/introduction-devops-aws/infrastructure-as-code.html
+  - title: "OpenTofu: introducción (en inglés)"
+    url: https://opentofu.org/docs/intro/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **infraestructura como código**, o IaC por sus siglas en inglés, consiste en describir la infraestructura de un sistema, servidores, redes, bases de datos, permisos, en archivos de texto, y dejar que una herramienta la cree y la modifique a partir de ellos. La infraestructura se trata igual que el código de la aplicación: se versiona, se revisa y se despliega de forma automática.
+
+## Qué problema resuelve
+
+En [la nube](/articulos/computacion-en-la-nube/), un servidor se crea desde una página web, con unos cuantos clics. Para un experimento está bien. Para un sistema real, tiene problemas serios:
+
+- **No se puede repetir.** Montar un segundo entorno idéntico exige recordar cada clic. Nadie lo recuerda.
+- **No queda constancia.** ¿Quién abrió ese puerto, cuándo y por qué? No hay forma de saberlo.
+- **Los entornos se separan.** El de pruebas y el de producción, creados a mano en momentos distintos, acaban siendo diferentes. Lo que funciona en uno falla en el otro.
+- **Depende de una persona**, la que lo montó.
+- **Reconstruir tras un desastre** lleva días.
+
+## La idea
+
+Escribir en un archivo qué infraestructura se quiere. Este ejemplo, en el lenguaje de Terraform, describe un servidor:
+
+```hcl
+resource "aws_instance" "web" {
+  ami           = "ami-0abc1234"
+  instance_type = "t3.micro"
+
+  tags = {
+    Name = "servidor-web"
+  }
+}
+```
+
+La herramienta lee el archivo, habla con la [API](/articulos/que-es-una-api/) del proveedor y crea lo que falta.
+
+Ese archivo se guarda en un repositorio de [Git](/articulos/control-de-versiones-con-git/), junto al resto del código.
+
+## Declarativo e imperativo
+
+Hay dos formas de describir infraestructura.
+
+- **Imperativa.** Una lista de órdenes: crea un servidor, luego crea una red, luego conéctalos. Es un guion.
+- **Declarativa.** Una descripción del resultado: debe haber un servidor y una red conectados. La herramienta averigua qué hacer.
+
+La declarativa es la dominante, por una razón. Si el guion imperativo se ejecuta dos veces, crea dos servidores. La descripción declarativa, aplicada dos veces, no hace nada la segunda: ya existe lo que se pide.
+
+Esa propiedad es la [idempotencia](/articulos/atomicidad-e-idempotencia/), y es lo que permite aplicar la configuración una y otra vez sin miedo.
+
+## Cómo trabaja una herramienta declarativa
+
+Compara tres cosas: lo que dice el archivo, lo que anotó la última vez y lo que existe de verdad.
+
+1. **Escribir.** Se edita el archivo: por ejemplo, se pide un servidor más grande.
+2. **Planificar.** La herramienta calcula las diferencias y muestra un **plan**: "se va a modificar un servidor; no se crea ni se destruye nada".
+3. **Revisar.** Una persona lee el plan. Es el momento de detectar que un cambio pequeño va a destruir la base de datos.
+4. **Aplicar.** La herramienta ejecuta los cambios.
+
+Para saber qué creó ella, la herramienta guarda un **estado**: un archivo con la correspondencia entre lo descrito y los recursos reales. Ese archivo es delicado. Suele contener datos sensibles y, si dos personas lo modifican a la vez, se corrompe. Se guarda en un almacén compartido, con bloqueo.
+
+## Qué se gana
+
+- **Repetible.** El mismo archivo crea el mismo entorno, hoy y dentro de un año. Un entorno de pruebas igual al de producción cuesta una orden.
+- **Historial.** Cada cambio es un commit: quién, cuándo, por qué.
+- **Revisión.** Los cambios de infraestructura pasan por la misma revisión que el código.
+- **Automatización.** Se aplican desde un [pipeline de CI/CD](/articulos/integracion-y-despliegue-continuos/).
+- **Recuperación.** Si se pierde todo, se vuelve a crear desde los archivos.
+- **Documentación que no miente.** El archivo es la descripción exacta de lo que hay.
+
+<Quiz
+	client:visible
+	question="Se aplica dos veces seguidas la misma configuración declarativa, sin cambios. ¿Qué ocurre la segunda vez?"
+	options={[
+		"Se crean todos los recursos por duplicado",
+		"Nada: lo que se describe ya existe",
+		"Se destruye todo y se vuelve a crear",
+	]}
+	answer={1}
+/>
+
+## La deriva
+
+Si alguien cambia algo a mano desde la web del proveedor, la realidad deja de coincidir con los archivos. A eso se le llama **deriva de configuración**.
+
+La próxima vez que se aplique la configuración, la herramienta puede deshacer ese cambio manual, o chocar con él. La regla es estricta: todo cambio pasa por el código. Lo que se toca a mano en una urgencia se lleva después a los archivos.
+
+## Servidores que no se modifican
+
+De aquí sale una práctica relacionada, la **infraestructura inmutable**. En lugar de entrar en un servidor para actualizarlo, se crea uno nuevo con la versión nueva y se elimina el antiguo.
+
+Así ningún servidor acumula cambios que nadie recuerda. Es la misma idea que la [inmutabilidad](/articulos/inmutabilidad/) en los datos, y encaja con los [contenedores](/articulos/que-es-docker/), que se sustituyen en lugar de repararse.
+
+Se suele resumir con una comparación: tratar a los servidores como ganado y no como mascotas. A una mascota se le pone nombre y se la cuida cuando enferma. Una res del rebaño se sustituye.
+
+## Tipos de herramientas
+
+| Tipo | Qué hacen |
+| --- | --- |
+| Aprovisionamiento | Crean los recursos: máquinas, redes, bases de datos |
+| Gestión de configuración | Instalan y configuran el software dentro de las máquinas |
+| Construcción de imágenes | Preparan imágenes de máquina o de contenedor ya configuradas |
+| Orquestación | Describen qué contenedores deben ejecutarse, como [Kubernetes](/articulos/que-es-kubernetes/) |
+
+## Precauciones
+
+- **Un error se aplica a escala.** La misma automatización que crea cien servidores puede borrarlos. El plan se lee siempre antes de aplicar.
+- **Los secretos no van en los archivos.** Contraseñas y claves se guardan en un gestor de secretos, y los archivos solo las referencian. Se explica en [variables de entorno y secretos](/articulos/variables-de-entorno-y-secretos/).
+- **El estado se protege** como un dato sensible.
+- **Hay que aprenderla.** Para un proyecto con un solo servidor, puede ser más ceremonia que beneficio.
+
+## Lo esencial
+
+- La infraestructura como código describe en archivos de texto lo que antes se hacía a mano.
+- El estilo declarativo describe el resultado, y aplicarlo varias veces no cambia nada.
+- La herramienta muestra un plan de cambios antes de ejecutarlos.
+- Da entornos repetibles, historial y revisión de cada cambio.
+- Los cambios manuales provocan deriva: todo debe pasar por el código.

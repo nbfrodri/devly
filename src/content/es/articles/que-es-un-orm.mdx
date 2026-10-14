@@ -1,0 +1,189 @@
+---
+title: "¿Qué es un ORM?"
+description: "Un ORM traduce entre los objetos de un programa y las tablas de una base de datos relacional, para trabajar con datos sin escribir SQL a mano."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-sql
+  - programacion-orientada-a-objetos
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Active Record, Patterns of Enterprise Application Architecture (en inglés)"
+    url: https://martinfowler.com/eaaCatalog/activeRecord.html
+  - title: "Martin Fowler: Data Mapper, Patterns of Enterprise Application Architecture (en inglés)"
+    url: https://martinfowler.com/eaaCatalog/dataMapper.html
+  - title: "Martin Fowler: OrmHate (en inglés)"
+    url: https://martinfowler.com/bliki/OrmHate.html
+  - title: "Django: Hacer consultas"
+    url: https://docs.djangoproject.com/es/5.2/topics/db/queries/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **ORM**, del inglés *object-relational mapping* o mapeo objeto-relacional, es una biblioteca que traduce entre los objetos de un programa y las tablas de una [base de datos relacional](/articulos/que-es-una-base-de-datos/). Permite guardar, leer y modificar datos usando el lenguaje de programación, y genera el [SQL](/articulos/que-es-sql/) por ti.
+
+## Qué problema resuelve
+
+Un programa [orientado a objetos](/articulos/programacion-orientada-a-objetos/) y una base de datos relacional representan los datos de formas distintas:
+
+| En el programa | En la base de datos |
+| --- | --- |
+| Clases y objetos | Tablas y filas |
+| Atributos | Columnas |
+| Un objeto contiene a otros | Las tablas se relacionan por claves |
+| Herencia | No existe |
+
+A esa diferencia se le llama **desajuste de impedancia**.
+
+Sin ORM, cada operación exige escribir la consulta, ejecutarla y copiar a mano cada columna del resultado en un objeto. Es código repetitivo y propenso a errores.
+
+## Cómo se usa
+
+Primero se describe el **modelo**: qué clase corresponde a qué tabla. Después se trabaja con objetos. Este ejemplo, en un estilo genérico, muestra la idea:
+
+```javascript
+const usuario = await Usuario.crear({ nombre: "Ana", edad: 30 });
+
+const adultos = await Usuario.buscar({ edad: { mayorQue: 17 } });
+
+usuario.edad = 31;
+await usuario.guardar();
+```
+
+Por debajo, el ORM genera y ejecuta el SQL:
+
+```sql
+INSERT INTO usuarios (nombre, edad) VALUES ('Ana', 30);
+SELECT * FROM usuarios WHERE edad > 17;
+UPDATE usuarios SET edad = 31 WHERE id = 1;
+```
+
+La traducción no tiene nada de misterioso. Esta función hace una parte mínima:
+
+```js
+function insertar(tabla, objeto) {
+	const columnas = Object.keys(objeto);
+	const marcadores = columnas.map(() => "?").join(", ");
+
+	return {
+		sql: `INSERT INTO ${tabla} (${columnas.join(", ")}) VALUES (${marcadores})`,
+		parametros: Object.values(objeto),
+	};
+}
+
+const consulta = insertar("usuarios", { nombre: "Ana", edad: 30 });
+
+console.log(consulta.sql); // "INSERT INTO usuarios (nombre, edad) VALUES (?, ?)"
+console.log(consulta.parametros.join(" ")); // "Ana 30"
+```
+
+Los valores no se insertan en el texto de la consulta: van aparte, como parámetros. Es la defensa contra la [inyección SQL](/articulos/inyeccion-sql/), y los ORM la aplican siempre.
+
+## Qué más ofrece
+
+- **Relaciones.** Con `pedido.cliente` se obtiene el cliente de un pedido, sin escribir el [JOIN](/articulos/tipos-de-join/).
+- **Migraciones.** Los cambios del esquema, añadir una columna o crear una tabla, se escriben en archivos versionados, que se aplican en orden en cada entorno.
+- **Independencia del motor.** El mismo código funciona, con matices, sobre distintas bases de datos.
+- **Validación y tipos.** Los modelos declaran qué forma tienen los datos.
+
+## Dos estilos
+
+| | Active Record | Data Mapper |
+| --- | --- | --- |
+| Quién guarda | El propio objeto: `usuario.guardar()` | Un objeto aparte: `repositorio.guardar(usuario)` |
+| El objeto de negocio | Conoce la base de datos | No sabe que existe |
+| A favor | Simple y directo | Lógica de negocio independiente, más fácil de probar |
+| En contra | Mezcla negocio y persistencia | Más piezas y más código |
+
+Active Record conviene en aplicaciones cuyos objetos se parecen mucho a las tablas. Data Mapper, cuando la lógica es compleja y se quiere aislar, como propone el [diseño guiado por el dominio](/articulos/diseno-guiado-por-el-dominio/).
+
+## El problema N+1
+
+Es el fallo de rendimiento más frecuente con un ORM, y el que mejor ilustra su riesgo: **ocultar las consultas**.
+
+Se quiere mostrar una lista de artículos con el nombre de su autor.
+
+```javascript
+const articulos = await Articulo.todos();
+
+for (const articulo of articulos) {
+	console.log(articulo.autor.nombre);
+}
+```
+
+Parece inocente. Pero cada `articulo.autor` lanza una consulta. Con 100 artículos: 1 consulta para la lista y 100 para los autores. De ahí el nombre.
+
+Esta simulación cuenta las consultas:
+
+```js
+let consultas = 0;
+
+const autores = [
+	{ id: 1, nombre: "Ana" },
+	{ id: 2, nombre: "Luis" },
+];
+const articulos = [
+	{ titulo: "A", autorId: 1 },
+	{ titulo: "B", autorId: 2 },
+	{ titulo: "C", autorId: 1 },
+];
+
+function consultar(resultado) {
+	consultas = consultas + 1;
+	return resultado;
+}
+
+const lista = consultar(articulos);
+for (const articulo of lista) {
+	consultar(autores.find((autor) => autor.id === articulo.autorId));
+}
+console.log(consultas); // 4
+
+consultas = 0;
+const todos = consultar(articulos);
+const ids = [...new Set(todos.map((articulo) => articulo.autorId))];
+consultar(autores.filter((autor) => ids.includes(autor.id)));
+console.log(consultas); // 2
+```
+
+La segunda forma pide todos los autores necesarios de una vez. Son 2 consultas, haya 3 artículos o 3000.
+
+Los ORM lo permiten con la **carga anticipada**: se indica de antemano qué relaciones se van a usar. Lo contrario, pedirlas una a una cuando se tocan, es la **carga perezosa**, cómoda y origen del problema.
+
+En desarrollo no se nota, con diez filas y la base de datos en la misma máquina. En producción, con miles de filas, la página tarda segundos.
+
+<Quiz
+	client:visible
+	question="Se listan 50 pedidos y, para cada uno, se accede a su cliente con carga perezosa. ¿Cuántas consultas se hacen?"
+	options={["1", "2", "51"]}
+	answer={2}
+/>
+
+## Otros costes
+
+- **SQL ineficiente.** El generado suele ser correcto, y no siempre el mejor. Pedir todas las columnas cuando hacen falta dos es habitual.
+- **Las consultas complejas se resisten.** Informes con agrupaciones y subconsultas son más claros en SQL que retorcidos en la sintaxis del ORM.
+- **La abstracción tiene fugas.** Tarde o temprano hay que entender qué SQL se ejecuta. El ORM no evita aprender SQL: lo pospone.
+- **Otra cosa que aprender.** Cada ORM tiene su sintaxis y sus particularidades.
+
+## Usarlo bien
+
+- **Aprende SQL primero.** Un ORM es una herramienta para quien sabe lo que genera.
+- **Mira las consultas.** Todos pueden mostrar el SQL que ejecutan. En desarrollo conviene tenerlo a la vista.
+- **Carga anticipada** para las relaciones que se van a recorrer.
+- **Pide solo lo necesario**, y [pagina](/articulos/paginacion/) las listas.
+- **Escribe SQL cuando haga falta.** Todos los ORM dejan ejecutar consultas directas. Usar el ORM para lo corriente y SQL para lo complejo es lo normal, no una derrota.
+- **Cuida los [índices](/articulos/indices-de-bases-de-datos/) y las [transacciones](/articulos/transacciones-y-acid/).** El ORM no decide por ti cuáles hacen falta.
+
+## Alternativas
+
+- **SQL directo**, con una biblioteca que solo ejecuta consultas. Control total, más código.
+- **Constructores de consultas.** Un punto intermedio: se compone el SQL con funciones, sin convertirlo en objetos. Queda cerca del SQL y evita concatenar texto.
+
+## Lo esencial
+
+- Un ORM traduce entre objetos y tablas, y genera el SQL.
+- Ahorra código repetitivo y protege de la inyección SQL.
+- Active Record hace que el objeto se guarde a sí mismo; Data Mapper lo separa de la persistencia.
+- Su mayor riesgo es ocultar consultas, como en el problema N+1.
+- No sustituye a saber SQL, y se combina con consultas directas cuando conviene.

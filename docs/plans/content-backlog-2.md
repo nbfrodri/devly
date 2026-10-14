@@ -26,11 +26,11 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## DevOps y operación
 
-- [ ] Infraestructura como código
-- [ ] ¿Qué es Kubernetes? (Docker)
-- [ ] Observabilidad: registros, métricas y trazas
-- [ ] Estrategias de despliegue: blue-green y canary (CI/CD)
-- [ ] Variables de entorno y gestión de secretos (ciberseguridad)
+- [x] Infraestructura como código
+- [x] ¿Qué es Kubernetes? (Docker)
+- [x] Observabilidad: registros, métricas y trazas
+- [x] Estrategias de despliegue: blue-green y canary (CI/CD)
+- [x] Variables de entorno y gestión de secretos (ciberseguridad)
 
 ## Desarrollo web: front-end
 
@@ -42,10 +42,10 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Desarrollo web: back-end
 
-- [ ] ¿Qué es un middleware? (HTTP)
-- [ ] ¿Qué es un ORM? (SQL, programación orientada a objetos)
-- [ ] Paginación de resultados (SQL, API)
-- [ ] Limitación de peticiones (API)
+- [x] ¿Qué es un middleware? (HTTP)
+- [x] ¿Qué es un ORM? (SQL, programación orientada a objetos)
+- [x] Paginación de resultados (SQL, API)
+- [x] Limitación de peticiones (API)
 - [x] Diferencias entre sesiones y tokens (JWT, stateful y stateless)
 
 ## Conceptos transversales

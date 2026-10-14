@@ -1,0 +1,189 @@
+---
+title: "¿Qué es Kubernetes?"
+description: "Kubernetes reparte contenedores entre un grupo de máquinas y los mantiene funcionando: los reinicia, los multiplica y los actualiza."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - que-es-docker
+  - contenedores-y-maquinas-virtuales
+updated: 2026-10-13
+sources:
+  - title: "Kubernetes: ¿Qué es Kubernetes?"
+    url: https://kubernetes.io/es/docs/concepts/overview/what-is-kubernetes/
+  - title: "Kubernetes: Componentes de Kubernetes"
+    url: https://kubernetes.io/es/docs/concepts/overview/components/
+  - title: "Verma y otros: Large-scale cluster management at Google with Borg (2015, en inglés)"
+    url: https://research.google/pubs/large-scale-cluster-management-at-google-with-borg/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Kubernetes** es un sistema de código abierto que gestiona [contenedores](/articulos/que-es-docker/) repartidos entre muchas máquinas. Decide dónde se ejecuta cada uno, los reinicia si fallan, aumenta o reduce su número y los actualiza sin interrumpir el servicio. A este tipo de sistema se le llama **orquestador**.
+
+El nombre viene del griego y significa timonel. Se abrevia K8s, por las ocho letras entre la K y la s. Google lo publicó en 2014, a partir de su experiencia con Borg, el sistema interno con el que gestionaba sus propios centros de datos.
+
+## Qué problema resuelve
+
+Docker resuelve cómo empaquetar una aplicación y ejecutarla en una máquina. Con cincuenta contenedores en diez máquinas aparecen preguntas nuevas:
+
+- ¿En qué máquina se pone cada contenedor?
+- ¿Quién lo reinicia si se cae a las tres de la madrugada?
+- ¿Qué pasa con los contenedores de una máquina que se avería?
+- ¿Cómo encuentra un contenedor a otro, si cambian de máquina y de dirección?
+- ¿Cómo se actualiza una aplicación sin dejar de atender?
+
+Hacerlo a mano no es viable. Kubernetes lo automatiza.
+
+## La idea central: el estado deseado
+
+A Kubernetes no se le dan órdenes. Se le describe **cómo deben estar las cosas**, y él se encarga de que estén así.
+
+No se dice "arranca tres copias". Se declara "debe haber tres copias". La diferencia importa cuando una se cae: como sigue siendo cierto que debe haber tres, Kubernetes arranca otra, sin que nadie se lo pida.
+
+Lo hace con **bucles de control**: programas que comparan sin parar el estado deseado con el real y corrigen la diferencia.
+
+```js
+function reconciliar(deseadas, actuales) {
+	if (actuales < deseadas) {
+		return `crear ${deseadas - actuales}`;
+	}
+
+	if (actuales > deseadas) {
+		return `eliminar ${actuales - deseadas}`;
+	}
+
+	return "nada";
+}
+
+console.log(reconciliar(3, 3)); // "nada"
+console.log(reconciliar(3, 1)); // "crear 2"
+console.log(reconciliar(2, 3)); // "eliminar 1"
+```
+
+Es el mismo principio que un termostato: no enciende la calefacción a una hora, mantiene una temperatura. Y es el estilo declarativo de la [infraestructura como código](/articulos/infraestructura-como-codigo/).
+
+## Las piezas
+
+El conjunto de máquinas que gestiona Kubernetes es un **clúster**. Tiene dos partes.
+
+### El plano de control
+
+El cerebro. Toma las decisiones.
+
+| Componente | Función |
+| --- | --- |
+| Servidor de API | La puerta de entrada: todo pasa por él |
+| etcd | El almacén donde se guarda el estado del clúster |
+| Planificador | Decide en qué máquina se ejecuta cada contenedor nuevo |
+| Gestor de controladores | Ejecuta los bucles de control |
+
+El almacén, etcd, mantiene sus copias de acuerdo con un algoritmo de [consenso](/articulos/consenso-distribuido/).
+
+### Los nodos
+
+Las máquinas que ejecutan los contenedores. En cada una hay un agente, el **kubelet**, que recibe instrucciones del plano de control, arranca los contenedores y avisa de cómo están.
+
+## Los objetos
+
+Lo que se describe a Kubernetes son **objetos**. Los principales:
+
+### Pod
+
+La unidad mínima. Es uno o varios contenedores que se ejecutan juntos y comparten red. Lo normal es un contenedor por pod.
+
+Los pods son **efímeros**: se crean y se destruyen constantemente, y cada uno nuevo tiene otra dirección. No se cuida un pod concreto.
+
+### Deployment
+
+Describe cuántas copias de un pod debe haber y con qué versión de la imagen. Es lo que se usa para desplegar una aplicación.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: mi-tienda/web:1.4.0
+          ports:
+            - containerPort: 8080
+```
+
+"Quiero tres copias de esta imagen." Si se cambia `1.4.0` por `1.5.0` y se aplica, Kubernetes sustituye los pods poco a poco: arranca uno nuevo, espera a que funcione, retira uno antiguo. Es una [actualización progresiva](/articulos/estrategias-de-despliegue/).
+
+### Service
+
+Como los pods cambian de dirección, hace falta un punto fijo para llegar a ellos. Un Service da un nombre y una dirección estables a un grupo de pods, y reparte las peticiones entre ellos, como un [balanceador de carga](/articulos/balanceador-de-carga/).
+
+### Otros
+
+| Objeto | Para qué sirve |
+| --- | --- |
+| Ingress | Dirige el tráfico [HTTP](/articulos/que-es-http/) de fuera hacia los servicios |
+| ConfigMap | Guarda configuración que no es secreta |
+| Secret | Guarda datos sensibles, como contraseñas |
+| Namespace | Separa el clúster en espacios, por equipo o por entorno |
+| Volumen persistente | Almacenamiento que sobrevive a los pods |
+
+## Qué hace por ti
+
+- **Reparación automática.** Reinicia los contenedores que fallan y recoloca los de un nodo caído.
+- **Escalado.** Se cambia el número de copias, o se deja que lo ajuste según el uso del [procesador](/articulos/como-funciona-un-procesador/).
+- **Actualizaciones sin cortes**, con vuelta atrás si la nueva versión falla.
+- **Descubrimiento.** Los servicios se encuentran por nombre.
+- **Reparto de recursos.** Coloca cada contenedor donde hay sitio.
+
+<Quiz
+	client:visible
+	question="Has declarado tres copias de una aplicación y una se cae. ¿Qué hace Kubernetes?"
+	options={[
+		"Espera a que alguien la reinicie",
+		"Crea otra, porque el estado deseado sigue siendo de tres",
+		"Reduce el estado deseado a dos",
+	]}
+	answer={1}
+/>
+
+## Lo que exige de la aplicación
+
+Kubernetes mueve, reinicia y multiplica los contenedores cuando lo cree necesario. La aplicación debe soportarlo:
+
+- **Sin estado propio.** Lo que haya que conservar va a una base de datos o a un volumen. Se explica en [stateful y stateless](/articulos/stateful-y-stateless/).
+- **Arranque y parada limpios.** Puede ser detenida en cualquier momento.
+- **Comprobaciones de salud.** Una dirección que diga si la aplicación está viva y si está lista para recibir tráfico.
+- **Configuración desde fuera**, por [variables de entorno](/articulos/variables-de-entorno-y-secretos/).
+
+Las bases de datos, que son estado puro, son lo más difícil de ejecutar en Kubernetes. Muchos equipos las dejan fuera, en un servicio gestionado.
+
+## Lo que cuesta
+
+Kubernetes es potente y complejo.
+
+- **Mucho que aprender**: decenas de tipos de objetos y un vocabulario propio.
+- **Mucho que operar.** Mantener un clúster es un trabajo. Los proveedores de la nube ofrecen clústeres gestionados que quitan parte.
+- **Mucho que configurar**, en archivos YAML largos.
+- **Consume recursos** por sí mismo.
+
+## Cuándo no hace falta
+
+Para una aplicación o unas pocas, Kubernetes suele sobrar. Un servidor con Docker Compose, una plataforma que ejecuta contenedores por ti o [funciones serverless](/articulos/que-es-serverless/) dan casi todo con una fracción del esfuerzo.
+
+Compensa cuando hay muchos servicios, varios equipos y necesidad real de alta disponibilidad. Es la misma advertencia que con los [microservicios](/articulos/monolito-y-microservicios/): resuelve problemas de escala que primero hay que tener.
+
+## Lo esencial
+
+- Kubernetes es un orquestador: gestiona contenedores en un grupo de máquinas.
+- Se le declara un estado deseado, y sus bucles de control lo mantienen.
+- Un pod ejecuta contenedores, un Deployment mantiene sus copias y un Service les da una dirección estable.
+- Repara, escala y actualiza de forma automática.
+- Su complejidad solo compensa a partir de cierto tamaño.

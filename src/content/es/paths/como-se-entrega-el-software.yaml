@@ -5,6 +5,11 @@ steps:
   - control-de-versiones-con-git
   - pruebas-de-software
   - integracion-y-despliegue-continuos
+  - estrategias-de-despliegue
   - que-es-docker
+  - variables-de-entorno-y-secretos
   - contenedores-y-maquinas-virtuales
+  - infraestructura-como-codigo
+  - que-es-kubernetes
+  - observabilidad
   - scrum-y-metodologias-agiles

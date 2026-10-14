@@ -67,7 +67,7 @@ Al separar los servicios, lo que era una llamada dentro del mismo programa pasa 
 
 - **La red falla.** Una llamada puede tardar, no llegar o quedarse sin respuesta. Hay que prever tiempos de espera, reintentos y qué hacer cuando otro servicio no contesta. Por eso las operaciones deben ser [idempotentes](/articulos/atomicidad-e-idempotencia/).
 - **No hay transacciones globales.** Un pedido que toca tres servicios con tres bases de datos no puede envolverse en una transacción. La coherencia hay que construirla, y a menudo se acepta que sea [eventual](/articulos/teorema-cap/).
-- **Depurar es más difícil.** Una petición atraviesa varios servicios; seguirla exige herramientas específicas de trazas y registros.
+- **Depurar es más difícil.** Una petición atraviesa varios servicios; seguirla exige herramientas específicas de [trazas y registros](/articulos/observabilidad/).
 - **La operación se multiplica.** Decenas de servicios que desplegar, vigilar y actualizar. Sin [automatización](/articulos/integracion-y-despliegue-continuos/) y [contenedores](/articulos/que-es-docker/) no es viable.
 - **Las pruebas se complican.** Comprobar que todo funciona junto requiere levantar muchas piezas.
 

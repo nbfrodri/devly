@@ -1,0 +1,202 @@
+---
+title: "¿Qué es la limitación de peticiones?"
+description: "Limitar peticiones es fijar cuántas puede hacer un cliente en un tiempo dado, para proteger un servicio del abuso y de la sobrecarga."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-una-api
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "RFC 6585: Additional HTTP Status Codes"
+    url: https://www.rfc-editor.org/info/rfc6585/
+  - title: "GitHub: Límites de frecuencia de la API de REST"
+    url: https://docs.github.com/es/rest/using-the-rest-api/rate-limits-for-the-rest-api
+  - title: "IETF: RateLimit header fields for HTTP, borrador (en inglés)"
+    url: https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **limitación de peticiones**, en inglés *rate limiting*, consiste en fijar cuántas peticiones puede hacer un cliente a un servicio en un periodo de tiempo, y rechazar las que superen esa cantidad.
+
+Casi todas las [API](/articulos/que-es-una-api/) públicas la aplican.
+
+## Qué problema resuelve
+
+Un servicio tiene una capacidad finita. Sin límites, un solo cliente puede consumirla entera, queriendo o sin querer:
+
+- **Errores.** Un programa con un bucle mal escrito que hace miles de peticiones por segundo.
+- **Abuso.** Alguien que copia todo el contenido de un sitio de forma automática.
+- **Ataques.** Probar millones de contraseñas contra un formulario de acceso, o saturar el servicio para tumbarlo.
+- **Reparto injusto.** Un cliente muy activo que deja sin recursos a los demás.
+- **Coste.** Si cada petición cuesta dinero, porque llama a un servicio de pago o usa mucho cómputo, no limitar es firmar un cheque en blanco.
+
+## A quién se limita
+
+Hace falta identificar al cliente. Según el caso:
+
+| Identificador | Cuándo |
+| --- | --- |
+| Clave de API o usuario | Clientes [autenticados](/articulos/autenticacion-y-autorizacion/). Es lo más preciso |
+| [Dirección IP](/articulos/que-es-una-direccion-ip/) | Peticiones anónimas |
+| Combinación | Por ejemplo, IP y cuenta en un inicio de sesión |
+
+La IP es imperfecta. Muchas personas pueden compartir una, en una oficina o en una red móvil, y un atacante puede usar muchas.
+
+## Ventana fija
+
+El algoritmo más simple. El tiempo se divide en ventanas, de un minuto por ejemplo, y se cuenta cuántas peticiones hace cada cliente en la ventana actual.
+
+```js
+const LIMITE = 3;
+const contadores = new Map();
+
+function permitir(cliente, segundo) {
+	const ventana = Math.floor(segundo / 60);
+	const clave = `${cliente}:${ventana}`;
+	const usadas = contadores.get(clave) ?? 0;
+
+	if (usadas >= LIMITE) {
+		return false;
+	}
+
+	contadores.set(clave, usadas + 1);
+	return true;
+}
+
+const intentos = [1, 2, 3, 4, 61].map((segundo) => permitir("ana", segundo));
+
+console.log(intentos.join(" ")); // "true true true false true"
+console.log(permitir("luis", 4)); // true
+```
+
+La cuarta petición de Ana en el primer minuto se rechaza. En el segundo 61 empieza otra ventana, y vuelve a tener cupo. Luis tiene su propio contador.
+
+Su defecto está en los bordes. Con un límite de 100 por minuto, un cliente puede hacer 100 peticiones en el último segundo de una ventana y otras 100 en el primero de la siguiente: 200 en dos segundos, el doble de lo previsto.
+
+## Ventana deslizante
+
+Corrige ese defecto. En lugar de ventanas con bordes fijos, se cuentan las peticiones de los últimos 60 segundos **desde ahora**. Es más preciso, y cuesta más: hay que recordar cuándo se hizo cada petición, o aproximarlo combinando la ventana actual con la anterior.
+
+## Cubo de fichas
+
+El más usado, llamado *token bucket*. Cada cliente tiene un cubo con fichas:
+
+- El cubo tiene una **capacidad** máxima.
+- Se rellena a un **ritmo** constante.
+- Cada petición gasta una ficha.
+- Sin fichas, la petición se rechaza.
+
+```js
+function crearCubo(capacidad, recargaPorSegundo) {
+	let fichas = capacidad;
+	let ultima = 0;
+
+	return (ahora) => {
+		const transcurrido = ahora - ultima;
+		fichas = Math.min(capacidad, fichas + transcurrido * recargaPorSegundo);
+		ultima = ahora;
+
+		if (fichas >= 1) {
+			fichas = fichas - 1;
+			return true;
+		}
+
+		return false;
+	};
+}
+
+const permitir = crearCubo(3, 1);
+const resultados = [0, 0, 0, 0, 2].map((segundo) => permitir(segundo));
+
+console.log(resultados.join(" ")); // "true true true false true"
+```
+
+El cubo empieza con 3 fichas. Tres peticiones seguidas las gastan; la cuarta se rechaza. Dos segundos después se han recargado 2 fichas, y la petición pasa.
+
+Su ventaja es que **admite ráfagas**. Un cliente que ha estado inactivo acumula fichas y puede hacer varias peticiones seguidas, que es como se comporta el uso real: al abrir una página se piden muchas cosas de golpe y luego nada. A la larga, el ritmo medio no supera el de recarga.
+
+| Algoritmo | A favor | En contra |
+| --- | --- | --- |
+| Ventana fija | Muy simple | Permite el doble en los bordes |
+| Ventana deslizante | Preciso | Más memoria o más cálculo |
+| Cubo de fichas | Admite ráfagas, poca memoria | Dos parámetros que ajustar |
+
+<Quiz
+	client:visible
+	question="¿Qué ventaja tiene el cubo de fichas frente a la ventana fija?"
+	options={[
+		"No necesita identificar al cliente",
+		"Permite ráfagas breves sin superar el ritmo medio",
+		"No rechaza nunca ninguna petición",
+	]}
+	answer={1}
+/>
+
+## Cómo se comunica
+
+Cuando un cliente supera el límite, el servidor responde con el código de estado [HTTP](/articulos/que-es-http/) **429**, *Too Many Requests*, que significa demasiadas peticiones. Puede acompañarlo de la cabecera `Retry-After`, con los segundos que conviene esperar:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 30
+```
+
+Muchas API informan además del estado del límite en cada respuesta, para que el cliente se regule antes de chocar:
+
+```http
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4987
+X-RateLimit-Reset: 1791972000
+```
+
+Dicen el límite, lo que queda y cuándo se renueva. Los nombres varían de un servicio a otro; hay un borrador en curso para normalizarlos.
+
+## Qué debe hacer el cliente
+
+Recibir un 429 no es un error del programa: es una instrucción. Un buen cliente:
+
+- **Respeta `Retry-After`** y espera lo indicado.
+- **Reintenta con espera creciente.** Si no hay indicación, espera 1 segundo, luego 2, luego 4. Se llama **retroceso exponencial**.
+- **Añade algo de azar** a la espera. Si mil clientes rechazados a la vez reintentan exactamente al cabo de un segundo, vuelven a saturar el servicio todos juntos.
+- **No reintenta sin fin.**
+
+Reintentar al instante, en bucle, es lo peor que se puede hacer: empeora la sobrecarga que causó el rechazo. Y como una petición puede repetirse, conviene que las operaciones sean [idempotentes](/articulos/atomicidad-e-idempotencia/).
+
+## Dónde se aplica
+
+- **En el borde**: una [CDN](/articulos/que-es-una-cdn/), un [balanceador de carga](/articulos/balanceador-de-carga/) o una pasarela de API. Lo abusivo se descarta antes de llegar a la aplicación.
+- **En la aplicación**, como [middleware](/articulos/que-es-un-middleware/). Permite reglas que dependen del usuario o de su plan.
+
+Lo normal es combinar las dos.
+
+### Con varios servidores
+
+Si cada servidor lleva su propia cuenta, el límite real se multiplica por el número de servidores. Los contadores se guardan en un almacén compartido y rápido, normalmente una base de datos en memoria. Hay que cuidar que comprobar e incrementar sea una operación [atómica](/articulos/atomicidad-e-idempotencia/); si no, dos servidores pueden leer el mismo valor y dejar pasar a ambos, una [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/).
+
+## Límites distintos para cosas distintas
+
+- **Por coste.** Una búsqueda pesada tiene un límite más bajo que una lectura simple.
+- **Por riesgo.** El inicio de sesión y la recuperación de contraseña llevan límites muy estrictos: pocos intentos por cuenta frenan el ataque de probar contraseñas, como se explica en [cómo se guardan las contraseñas](/articulos/como-se-guardan-las-contrasenas/).
+- **Por plan.** Las cuentas de pago suelen tener más cupo.
+
+## Conceptos cercanos
+
+- **Cuota.** Un límite a largo plazo: tantas peticiones al mes. El límite de frecuencia protege el servicio; la cuota regula el uso contratado.
+- **Regulación.** En lugar de rechazar, se retrasa la petición.
+- **Descarte de carga.** Cuando el servicio entero está saturado, rechaza peticiones de cualquiera para proteger a las que sí puede atender.
+
+## Precauciones
+
+- **Bloquear a usuarios legítimos.** Un límite demasiado bajo, o por IP en una red compartida, castiga a inocentes.
+- **No es una defensa completa.** Un ataque repartido entre miles de direcciones pasa por debajo de un límite por IP.
+- **Documentar los límites.** Quien usa la API necesita conocerlos para programar bien.
+
+## Lo esencial
+
+- Limitar peticiones es fijar cuántas puede hacer un cliente en un tiempo dado.
+- Protege del abuso, de los errores y de la sobrecarga, y reparte la capacidad.
+- La ventana fija es simple; el cubo de fichas admite ráfagas y es el más usado.
+- El servidor responde con un 429 e indica cuánto esperar.
+- El cliente debe esperar y reintentar con pausas crecientes, no insistir.

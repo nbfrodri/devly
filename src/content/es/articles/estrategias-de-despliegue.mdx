@@ -1,0 +1,172 @@
+---
+title: "Estrategias de despliegue: blue-green, canary y actualización progresiva"
+description: "Formas de publicar una versión nueva sin cortar el servicio y con la posibilidad de volver atrás si algo falla."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - integracion-y-despliegue-continuos
+  - balanceador-de-carga
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Blue Green Deployment (en inglés)"
+    url: https://martinfowler.com/bliki/BlueGreenDeployment.html
+  - title: "Danilo Sato: Canary Release (en inglés)"
+    url: https://martinfowler.com/bliki/CanaryRelease.html
+  - title: "Pete Hodgson: Feature Toggles (en inglés)"
+    url: https://martinfowler.com/articles/feature-toggles.html
+  - title: "Kubernetes: Deployments (en inglés)"
+    url: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **estrategia de despliegue** es la forma en que se sustituye la versión de una aplicación que está en producción por una nueva. Las tres más usadas son la **actualización progresiva**, el despliegue **blue-green** y el despliegue **canary**. Todas buscan lo mismo: publicar sin cortar el servicio y poder volver atrás deprisa.
+
+## Qué problema resuelven
+
+La forma más simple de actualizar es parar la versión antigua y arrancar la nueva. Tiene dos defectos:
+
+- **Hay un corte.** Entre una cosa y otra, el servicio no responde.
+- **Si la nueva falla, fallan todos los usuarios**, y volver a la anterior significa repetir el proceso al revés, con otro corte.
+
+Por eso los despliegues se hacían de madrugada y pocas veces. Las estrategias siguientes permiten hacerlos a cualquier hora y varias veces al día, que es lo que pide el [despliegue continuo](/articulos/integracion-y-despliegue-continuos/).
+
+Todas se apoyan en tener varias copias de la aplicación tras un [balanceador de carga](/articulos/balanceador-de-carga/), que decide a cuáles envía el tráfico.
+
+## Actualización progresiva
+
+En inglés, *rolling update*. Las copias se sustituyen de una en una, o por grupos:
+
+1. Se arranca una copia con la versión nueva.
+2. Cuando responde bien, se incluye en el reparto.
+3. Se retira una copia antigua.
+4. Se repite hasta que no queda ninguna.
+
+- **A favor:** sin cortes y sin necesitar apenas máquinas de más. Es la estrategia por defecto de [Kubernetes](/articulos/que-es-kubernetes/).
+- **En contra:** durante el proceso conviven las dos versiones. Y volver atrás es otra actualización progresiva, que lleva su tiempo.
+
+## Blue-green
+
+Se mantienen **dos entornos completos e idénticos**. Uno, llamado azul, atiende a los usuarios. El otro, verde, está parado o en reserva.
+
+1. Se despliega la versión nueva en el verde.
+2. Se prueba ahí, sin usuarios.
+3. Se cambia el balanceador para que todo el tráfico vaya al verde.
+4. El azul queda intacto, con la versión anterior.
+
+Si algo va mal, se devuelve el tráfico al azul. La vuelta atrás es **inmediata**: un cambio en el balanceador.
+
+- **A favor:** vuelta atrás instantánea, y la versión nueva se prueba en un entorno idéntico al real antes de recibir a nadie.
+- **En contra:** exige el doble de infraestructura, al menos durante el cambio. Y todos los usuarios pasan a la vez: si hay un fallo que las pruebas no vieron, lo sufren todos hasta que se revierte.
+
+## Canary
+
+La versión nueva se publica primero para **una pequeña parte** de los usuarios. Si se comporta bien, se amplía.
+
+1. Se despliega junto a la actual.
+2. Se le envía, por ejemplo, el 5 % del tráfico.
+3. Se comparan las [métricas](/articulos/observabilidad/) de las dos: errores, latencia.
+4. Si son buenas, se sube al 25 %, al 50 %, al 100 %.
+5. Si empeoran, se devuelve todo a la versión anterior.
+
+El nombre viene de los canarios que los mineros llevaban a las galerías: más sensibles que las personas a los gases tóxicos, avisaban del peligro antes de que afectara a los demás.
+
+```js
+function version(usuarioId, porcentajeNuevo) {
+	return usuarioId % 100 < porcentajeNuevo ? "nueva" : "estable";
+}
+
+const usuarios = Array.from({ length: 1000 }, (_, i) => i);
+const conLaNueva = usuarios.filter((u) => version(u, 5) === "nueva");
+
+console.log(conLaNueva.length); // 50
+console.log(version(3, 5)); // "nueva"
+console.log(version(42, 5)); // "estable"
+```
+
+El reparto se calcula a partir del identificador del usuario, y no al azar en cada petición. Así una misma persona ve siempre la misma versión, en lugar de alternar entre las dos.
+
+- **A favor:** un fallo afecta a pocos, y se prueba con tráfico real, que es la única prueba completa.
+- **En contra:** es la más compleja. Exige enrutar por porcentajes y buenas métricas. Sin ellas, es una actualización lenta y nada más.
+
+## Comparación
+
+| | Progresiva | Blue-green | Canary |
+| --- | --- | --- | --- |
+| Cómo cambia | Copia a copia | Todo de golpe | Por porcentajes |
+| Infraestructura extra | Poca | El doble | Poca |
+| Vuelta atrás | Lenta | Inmediata | Rápida |
+| Usuarios expuestos a un fallo | Van creciendo | Todos | Pocos |
+| Complejidad | Baja | Media | Alta |
+
+<Quiz
+	client:visible
+	question="¿Qué estrategia expone una versión nueva solo a una pequeña parte de los usuarios al principio?"
+	options={["Blue-green", "Canary", "Parar y arrancar"]}
+	answer={1}
+/>
+
+## El obstáculo común: la base de datos
+
+El código se puede tener en dos versiones a la vez. La [base de datos](/articulos/que-es-una-base-de-datos/) es una sola.
+
+Si la versión nueva renombra una columna, la antigua, que sigue en marcha durante el despliegue o a la que quizá haya que volver, deja de funcionar.
+
+La solución es que cada cambio del esquema sea compatible con las dos versiones, y hacerlo en pasos:
+
+1. **Ampliar.** Se añade la columna nueva, sin tocar la antigua. Nada se rompe.
+2. **Migrar.** Se despliega código que escribe en las dos y lee de la nueva. Se copian los datos existentes.
+3. **Contraer.** Cuando ninguna versión usa la columna antigua, se elimina.
+
+Son tres despliegues en lugar de uno, y en cualquiera se puede volver atrás.
+
+Por lo mismo, las [API](/articulos/que-es-una-api/) deben ser compatibles hacia atrás, y las operaciones, [idempotentes](/articulos/atomicidad-e-idempotencia/): durante el cambio, una petición puede repetirse contra otra versión.
+
+## Desplegar no es lanzar
+
+Hay una distinción útil:
+
+- **Desplegar** es poner código en producción.
+- **Lanzar** es que los usuarios vean una funcionalidad.
+
+Los **interruptores de funcionalidad**, en inglés *feature flags*, las separan. El código nuevo se despliega apagado, tras una condición:
+
+```js
+const interruptores = { nuevoCarrito: false };
+
+function verCarrito() {
+	return interruptores.nuevoCarrito ? "carrito nuevo" : "carrito actual";
+}
+
+console.log(verCarrito()); // "carrito actual"
+
+interruptores.nuevoCarrito = true;
+console.log(verCarrito()); // "carrito nuevo"
+```
+
+Encenderlo no requiere desplegar, y apagarlo tampoco: es la vuelta atrás más rápida que hay. Se puede encender para el equipo, luego para unos pocos, luego para todos.
+
+Su coste es que cada interruptor añade una rama al código. Los que ya no se usan se eliminan; si no, se acumulan y nadie sabe qué combinaciones están probadas.
+
+## Requisitos de todas
+
+- **Comprobaciones de salud**, para saber si una copia nueva funciona antes de enviarle tráfico.
+- **Despliegues automatizados.** A mano no son fiables.
+- **Observabilidad.** Sin métricas no se sabe si la versión nueva es peor.
+- **Servidores sin estado.** Las sesiones guardadas en una copia se pierden cuando se sustituye.
+
+## Cómo elegir
+
+- **Progresiva** como punto de partida: sencilla y suficiente para la mayoría.
+- **Blue-green** cuando hace falta volver atrás al instante y se puede pagar el doble de infraestructura.
+- **Canary** cuando hay mucho tráfico, un fallo sale caro y se dispone de buenas métricas.
+- **Interruptores** además de cualquiera, para separar el despliegue del lanzamiento.
+
+## Lo esencial
+
+- Una estrategia de despliegue define cómo se sustituye una versión por otra sin cortes.
+- La progresiva cambia las copias de una en una.
+- Blue-green tiene dos entornos y cambia todo el tráfico de golpe, con vuelta atrás inmediata.
+- Canary expone la versión nueva a pocos usuarios y la amplía según las métricas.
+- Los cambios en la base de datos deben ser compatibles con las dos versiones.

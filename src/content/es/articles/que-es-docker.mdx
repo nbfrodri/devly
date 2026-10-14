@@ -116,14 +116,14 @@ Como no arranca un sistema operativo completo, un contenedor se inicia en menos 
 
 Una aplicación real suele necesitar varias piezas: el servidor web, la base de datos, una caché. Y cuando se divide en [microservicios](/articulos/monolito-y-microservicios/), muchas más. La práctica habitual es poner cada una en su contenedor.
 
-**Docker Compose** permite describirlas todas en un archivo y arrancarlas con una sola orden. Para coordinar muchos contenedores repartidos en varias máquinas existen los **orquestadores**, como Kubernetes.
+**Docker Compose** permite describirlas todas en un archivo y arrancarlas con una sola orden. Para coordinar muchos contenedores repartidos en varias máquinas existen los **orquestadores**, como [Kubernetes](/articulos/que-es-kubernetes/).
 
 ## Buenas prácticas
 
 - **Imágenes pequeñas.** Partir de una imagen base ligera reduce el tamaño, el tiempo de descarga y la superficie de ataque.
 - **Un proceso por contenedor.** Facilita escalar y sustituir cada pieza.
 - **No ejecutar como administrador** dentro del contenedor.
-- **No meter secretos en la imagen.** Quien tenga la imagen los tendría. Se pasan al arrancar.
+- **No meter secretos en la imagen.** Quien tenga la imagen los tendría. Se pasan al arrancar, como explica [variables de entorno y secretos](/articulos/variables-de-entorno-y-secretos/).
 - **Fijar versiones** de la imagen base. Usar siempre "la última" hace que la construcción cambie sin aviso.
 
 ## Docker y los contenedores
