@@ -1,0 +1,90 @@
+---
+title: "¿Qué es la jerarquía visual? Tipografía en pantalla"
+description: "La jerarquía visual ordena lo que se ve para que lo importante se lea primero. La tipografía, el tamaño, el contraste y el espacio son sus herramientas."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - que-es-css
+  - accesibilidad-web
+  - diseno-adaptable
+updated: 2026-10-13
+sources:
+  - title: "web.dev: Learn Design, Typography (en inglés)"
+    url: https://web.dev/learn/design/typography
+  - title: "MDN: Fundamentos de estilos de texto"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Core/Text_styling/Fundamentals
+  - title: "W3C WAI: Pautas de accesibilidad para el contenido web (WCAG)"
+    url: https://www.w3.org/WAI/standards-guidelines/wcag/es
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **jerarquía visual** es la organización de los elementos de una pantalla para que el ojo los recorra en un orden: primero lo más importante, después lo secundario. Se construye con tamaño, peso de la letra, color, contraste y espacio. La **tipografía**, la elección y el uso de las letras, es su herramienta principal en una web.
+
+## Por qué importa
+
+La gente no lee una pantalla de arriba abajo: la **escanea**, buscando lo que le interesa. Si todo tiene el mismo aspecto, nada destaca y cuesta encontrar lo que se busca. Una buena jerarquía hace que se entienda la estructura de un vistazo.
+
+## Las herramientas
+
+| Herramienta | Cómo crea jerarquía |
+| --- | --- |
+| Tamaño | Lo grande se ve primero |
+| Peso | La negrita destaca |
+| Color y contraste | Lo que contrasta con el fondo llama la atención |
+| Espacio | Lo que está separado se percibe como distinto; lo que está junto, como relacionado |
+| Posición | Arriba y a la izquierda se mira antes, en idiomas que se leen así |
+
+## Una escala de tamaños
+
+En lugar de elegir tamaños a ojo, se usa una **escala**: cada nivel es el anterior multiplicado por un factor constante.
+
+```js
+const base = 16;
+const factor = 1.25;
+
+const tamanos = [0, 1, 2, 3].map((nivel) => base * factor ** nivel);
+
+console.log(tamanos.map((t) => t.toFixed(1)).join(" ")); // "16.0 20.0 25.0 31.3"
+```
+
+Texto a 16 píxeles, subtítulos a 20 y 25, título a 31. Las proporciones constantes dan sensación de orden. Los títulos se marcan además con los encabezados de [HTML](/articulos/que-es-html/), para que la estructura exista también para quien no ve la pantalla.
+
+## Legibilidad
+
+- **Longitud de línea**: entre unos 45 y 75 caracteres por línea se lee con comodidad. Las líneas muy largas cansan.
+- **Interlineado** generoso para el texto corrido.
+- **Tamaño suficiente**, sobre todo en móviles.
+- **Pocas familias tipográficas**: una o dos.
+
+## Contraste
+
+El texto debe distinguirse bien del fondo. Las pautas de accesibilidad WCAG fijan una relación de contraste mínima de 4,5 a 1 para el texto normal.
+
+```js
+function luminancia(hex) {
+	const canal = (c) => {
+		const v = c / 255;
+		return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+	};
+	const [r, g, b] = [1, 3, 5].map((i) => canal(parseInt(hex.slice(i, i + 2), 16)));
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+const contraste = (a, b) => {
+	const [claro, oscuro] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
+	return (claro + 0.05) / (oscuro + 0.05);
+};
+
+console.log(contraste("#ffffff", "#000000").toFixed(0)); // "21"
+console.log(contraste("#ffffff", "#767676").toFixed(2)); // "4.54"
+```
+
+Negro sobre blanco da el máximo, 21 a 1. Un gris medio sobre blanco apenas supera el mínimo. Es uno de los requisitos de la [accesibilidad web](/articulos/accesibilidad-web/).
+
+## Lo esencial
+
+- La jerarquía visual ordena la pantalla para que lo importante se vea primero.
+- Se construye con tamaño, peso, color, contraste, espacio y posición.
+- Una escala de tamaños con un factor constante da orden.
+- El texto necesita líneas de longitud moderada y un contraste mínimo de 4,5 a 1.

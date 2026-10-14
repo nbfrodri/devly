@@ -8,3 +8,4 @@ steps:
   - balanceador-de-carga
   - que-es-una-cdn
   - que-es-serverless
+  - virtualizacion

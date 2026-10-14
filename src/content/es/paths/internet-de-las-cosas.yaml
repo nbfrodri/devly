@@ -7,3 +7,4 @@ steps:
   - internet-de-las-cosas
   - protocolo-mqtt
   - colas-de-mensajes
+  - gemelo-digital

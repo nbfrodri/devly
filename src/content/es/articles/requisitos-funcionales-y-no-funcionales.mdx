@@ -1,0 +1,66 @@
+---
+title: "Diferencias entre requisitos funcionales y no funcionales"
+description: "Los requisitos funcionales dicen qué debe hacer un sistema. Los no funcionales, cómo de bien: rapidez, seguridad, disponibilidad, accesibilidad."
+level: basico
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - diseno-centrado-en-el-usuario
+  - pruebas-de-software
+updated: 2026-10-13
+sources:
+  - title: "ISO 25000: ISO/IEC 25010, modelo de calidad del producto software"
+    url: https://iso25000.com/index.php/normas-iso-25000/iso-25010
+---
+
+import { Quiz } from "@/components/quiz";
+
+Los **requisitos** describen lo que un sistema debe cumplir. Los **funcionales** dicen **qué hace**: las funciones que ofrece. Los **no funcionales** dicen **cómo de bien lo hace**: lo rápido, seguro, disponible o fácil de usar que debe ser.
+
+## Funcionales
+
+Describen comportamientos concretos:
+
+- "El usuario puede restablecer su contraseña por correo."
+- "El sistema calcula el IVA de cada pedido."
+- "Un administrador puede desactivar cuentas."
+
+Se comprueban fácilmente: la función existe y hace lo que debe, o no.
+
+## No funcionales
+
+Describen cualidades del sistema en su conjunto:
+
+- "La página carga en menos de 2 segundos para el 95 % de las visitas."
+- "El servicio está disponible el 99,9 % del tiempo."
+- "Las contraseñas se guardan con un algoritmo de hash lento."
+- "La web cumple las pautas de accesibilidad WCAG en el nivel AA."
+
+La norma ISO/IEC 25010 organiza estas cualidades en características como la eficiencia en el rendimiento, la usabilidad, la fiabilidad, la seguridad, la mantenibilidad y la portabilidad.
+
+## Comparación
+
+| | Funcionales | No funcionales |
+| --- | --- | --- |
+| Describen | Qué hace el sistema | Cómo de bien lo hace |
+| Afectan a | Una función concreta | Todo el sistema |
+| Ejemplo | Pagar con tarjeta | Que el pago tarde menos de 3 segundos |
+| Se comprueban con | [Pruebas](/articulos/pruebas-de-software/) de comportamiento | Medidas: rendimiento, carga, auditorías |
+| Si faltan | Falta una función | El sistema funciona, pero mal |
+
+## El error habitual: olvidar los no funcionales
+
+Los funcionales salen solos al hablar con los usuarios. Los no funcionales casi nunca se mencionan, porque se dan por supuestos: nadie pide expresamente que la web no se caiga.
+
+Pero son los que más condicionan el diseño. Una aplicación para cien usuarios y otra para cien millones pueden tener las mismas funciones y arquitecturas completamente distintas. Descubrir tarde que hacía falta [escalar](/articulos/escalado-vertical-y-horizontal/), cumplir el [RGPD](/articulos/rgpd-y-proteccion-de-datos/) o ser [accesible](/articulos/accesibilidad-web/) obliga a rehacer mucho.
+
+## Que se puedan medir
+
+Un requisito no funcional vago no sirve: "el sistema debe ser rápido" no se puede comprobar. Hay que darle una cifra y una condición: cuánto, para qué porcentaje de casos y con qué carga. Así se convierte en algo que se puede [observar](/articulos/observabilidad/) y vigilar.
+
+## Lo esencial
+
+- Los requisitos funcionales dicen qué hace el sistema; los no funcionales, cómo de bien.
+- Los no funcionales afectan a todo el sistema: rendimiento, seguridad, disponibilidad, accesibilidad.
+- Se suelen olvidar, y son los que más condicionan la arquitectura.
+- Deben expresarse con cifras que se puedan medir.

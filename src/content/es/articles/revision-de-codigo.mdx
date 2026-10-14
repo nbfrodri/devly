@@ -1,0 +1,68 @@
+---
+title: "¿Qué es la revisión de código?"
+description: "La revisión de código es que otra persona lea los cambios antes de incorporarlos, para detectar errores, mejorar el diseño y compartir conocimiento."
+level: basico
+layer: programacion
+prerequisites:
+  - control-de-versiones-con-git
+  - git-y-github
+updated: 2026-10-13
+sources:
+  - title: "Google: Engineering Practices, Code Review (en inglés)"
+    url: https://google.github.io/eng-practices/review/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **revisión de código** consiste en que una o más personas lean y comenten los cambios de otra antes de incorporarlos al proyecto. Es una práctica habitual en casi cualquier equipo profesional, y se hace sobre cada solicitud de cambios en plataformas como las que explica [Git y GitHub](/articulos/git-y-github/).
+
+## Para qué sirve
+
+- **Detectar errores** que el autor no ve.
+- **Mejorar el diseño**: un código más claro y más fácil de mantener.
+- **Compartir conocimiento**: más de una persona conoce cada parte del sistema.
+- **Mantener la coherencia** de estilo y de criterios en el equipo.
+
+Las guías de Google lo resumen en un principio: el objetivo es que la salud del código del proyecto mejore con el tiempo. Un cambio debe aprobarse si mejora el estado general del código, aunque no sea perfecto.
+
+## Qué mirar
+
+Las mismas guías proponen una lista:
+
+| Aspecto | Pregunta |
+| --- | --- |
+| Diseño | ¿Encaja bien en el sistema? |
+| Funcionalidad | ¿Hace lo que pretende? ¿Hay casos límite sin tratar? |
+| Complejidad | ¿Se puede entender? ¿Es más complejo de lo necesario? |
+| Pruebas | ¿Tiene [pruebas](/articulos/pruebas-de-software/) adecuadas? |
+| Nombres | ¿Son claros? |
+| Comentarios | ¿Explican el porqué, no el qué? |
+| Documentación | ¿Se ha actualizado? |
+
+Lo que puede comprobar una máquina, el formato o los errores evidentes, se deja a los [linters](/articulos/que-es-un-linter/) y al [pipeline de integración continua](/articulos/integracion-y-despliegue-continuos/). La persona se centra en lo que requiere criterio.
+
+## Cómo hacerla bien
+
+**Quien propone el cambio:**
+
+- Cambios **pequeños**. Un cambio de 50 líneas se revisa bien; uno de 2000, no.
+- Una descripción que explique **qué y por qué**.
+- Revisar uno mismo el cambio antes de pedir revisión.
+
+**Quien revisa:**
+
+- Responder **pronto**: una revisión que tarda días frena a todo el equipo.
+- Comentar el **código, no a la persona**.
+- Distinguir lo importante de las preferencias personales, y marcarlo como tal.
+- Explicar el porqué de cada sugerencia.
+
+## Sus límites
+
+No sustituye a las pruebas ni a las auditorías de [seguridad](/articulos/que-es-la-ciberseguridad/). Una revisión rápida de un cambio grande da una falsa sensación de seguridad. Y si se convierte en un trámite, o en una forma de imponer gustos, pierde su valor.
+
+## Lo esencial
+
+- La revisión de código es que otra persona lea los cambios antes de incorporarlos.
+- Detecta errores, mejora el diseño y reparte el conocimiento.
+- Se aprueba un cambio si mejora el estado del código, aunque no sea perfecto.
+- Funciona mejor con cambios pequeños, respuestas rápidas y comentarios sobre el código, no sobre la persona.

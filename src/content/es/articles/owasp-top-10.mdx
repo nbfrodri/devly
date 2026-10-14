@@ -1,0 +1,72 @@
+---
+title: "¿Qué es el OWASP Top 10?"
+description: "El OWASP Top 10 es la lista de las diez categorías de riesgo más importantes en las aplicaciones web, elaborada por la fundación OWASP con datos reales."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-la-ciberseguridad
+  - inyeccion-sql
+  - cross-site-scripting-xss
+updated: 2026-10-13
+sources:
+  - title: "OWASP: Top 10:2025 (en inglés)"
+    url: https://owasp.org/Top10/2025/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **OWASP Top 10** es una lista de las **diez categorías de riesgo de seguridad más importantes** en las aplicaciones web. La publica la fundación OWASP, una organización sin ánimo de lucro dedicada a la seguridad del software, y se actualiza cada pocos años a partir de datos de vulnerabilidades reales y de encuestas a profesionales.
+
+Es la referencia más usada para empezar a pensar en la [seguridad](/articulos/que-es-la-ciberseguridad/) de una aplicación.
+
+## La edición de 2025
+
+| | Categoría | En pocas palabras |
+| --- | --- | --- |
+| A01 | Control de acceso roto | Un usuario puede ver o hacer lo que no le corresponde |
+| A02 | Configuración de seguridad incorrecta | Opciones por defecto inseguras, errores con detalles internos |
+| A03 | Fallos en la cadena de suministro de software | Dependencias o herramientas comprometidas, como explica [cadena de suministro de software](/articulos/cadena-de-suministro-de-software/) |
+| A04 | Fallos criptográficos | Datos sensibles sin cifrar o con cifrado débil |
+| A05 | Inyección | Datos que se interpretan como órdenes: [SQL](/articulos/inyeccion-sql/), [XSS](/articulos/cross-site-scripting-xss/) |
+| A06 | Diseño inseguro | Fallos que vienen del diseño, no de la implementación |
+| A07 | Fallos de autenticación | Contraseñas débiles, sesiones mal gestionadas |
+| A08 | Fallos de integridad de software o datos | Actualizaciones o datos sin verificar |
+| A09 | Fallos de registro y alertas de seguridad | Ataques que nadie detecta |
+| A10 | Mala gestión de condiciones excepcionales | Errores que dejan la aplicación en un estado inseguro |
+
+## El primero: el control de acceso
+
+Que el control de acceso ocupe el primer puesto dice mucho. El caso típico:
+
+```
+GET /api/facturas/1001   ← mi factura
+GET /api/facturas/1002   ← ¿la de otra persona?
+```
+
+Si el servidor comprueba que el usuario ha iniciado sesión, pero no que la factura **es suya**, cualquiera puede leer las facturas de los demás cambiando un número. La [autorización](/articulos/autenticacion-y-autorizacion/) debe comprobarse en el servidor, en cada petición y para cada recurso.
+
+## Cómo usar la lista
+
+- **Como punto de partida**, no como lista completa. Hay muchos más riesgos.
+- **Como formación**: cada categoría tiene una página con ejemplos y formas de prevenirla.
+- **En revisiones**: repasar si una aplicación está expuesta a cada categoría.
+
+OWASP publica además guías prácticas, como sus hojas de referencia rápida sobre sesiones o contraseñas, y otras listas para API y aplicaciones móviles.
+
+## Lo que la lista enseña
+
+Muchas categorías no son fallos de una línea de código, sino de diseño, configuración o proceso: elegir mal las dependencias, no registrar los ataques, no pensar en los casos de error. La seguridad no se añade al final: se diseña desde el principio y se comprueba en cada cambio.
+
+<Quiz
+	client:visible
+	question="¿Qué categoría ocupa el primer puesto del OWASP Top 10 de 2025?"
+	options={["Inyección", "Control de acceso roto", "Fallos criptográficos"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El OWASP Top 10 lista las diez categorías de riesgo más importantes de las aplicaciones web.
+- La edición de 2025 encabeza la lista con el control de acceso roto.
+- Incluye fallos de diseño, configuración y cadena de suministro, no solo de código.
+- Es un punto de partida, no una lista completa de riesgos.

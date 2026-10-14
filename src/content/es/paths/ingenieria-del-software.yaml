@@ -1,0 +1,13 @@
+title: Ingeniería del software
+description: "Cómo se define, se diseña y se mantiene un software que dura: requisitos, diagramas, arquitectura y revisión."
+layer: aplicaciones
+steps:
+  - requisitos-funcionales-y-no-funcionales
+  - uml
+  - principios-solid
+  - patrones-de-diseno
+  - arquitectura-hexagonal
+  - arquitectura-orientada-a-eventos
+  - cqrs-y-event-sourcing
+  - revision-de-codigo
+  - que-es-la-deuda-tecnica

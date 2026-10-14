@@ -1,0 +1,67 @@
+---
+title: "¿Qué es un sistema de diseño?"
+description: "Un sistema de diseño reúne los componentes, estilos y reglas de un producto en un solo lugar, para que todo se vea y funcione igual y no se diseñe dos veces lo mismo."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - componentes-y-estado
+  - jerarquia-visual-y-tipografia
+updated: 2026-10-13
+sources:
+  - title: "GOV.UK Design System (en inglés)"
+    url: https://design-system.service.gov.uk/
+  - title: "Material Design 3 (en inglés)"
+    url: https://m3.material.io/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **sistema de diseño** es el conjunto de piezas y reglas con las que se construyen las interfaces de un producto: colores, tipografías, espaciados, componentes como botones y formularios, y las pautas para usarlos. Reúne en un solo lugar lo que el diseño y el desarrollo comparten, para que todo sea coherente.
+
+Ejemplos públicos conocidos son el sistema de diseño del gobierno británico y Material Design, de Google.
+
+## Qué problema resuelve
+
+Sin un sistema, cada pantalla se diseña por separado. Al cabo de un tiempo hay siete tonos de azul, cuatro estilos de botón y cada formulario se comporta a su manera. Los usuarios se desorientan, y el equipo rehace una y otra vez lo mismo.
+
+## Sus capas
+
+| Capa | Qué contiene | Ejemplo |
+| --- | --- | --- |
+| Tokens | Los valores básicos con nombre | `color-primario`, `espacio-medio` |
+| Componentes | Piezas reutilizables | Botón, campo de texto, tarjeta |
+| Patrones | Combinaciones para tareas comunes | Un formulario de registro, una búsqueda |
+| Pautas | Cuándo y cómo usar cada cosa | "Un solo botón principal por pantalla" |
+
+Los **tokens** son la base. En lugar de escribir un color directamente, se usa su nombre. Si el color cambia, se cambia en un sitio y se actualiza todo. Es la misma idea que dar nombre a los números mágicos en el código.
+
+## Diseño y código, a la vez
+
+Un sistema de diseño útil existe en dos formas que coinciden:
+
+- En la **herramienta de diseño**, para quien diseña.
+- En **código**, como una biblioteca de [componentes](/articulos/componentes-y-estado/), para quien desarrolla.
+
+Si las dos se separan, el sistema deja de servir. Por eso se mantiene como un producto más, con sus versiones y su documentación.
+
+## Lo que se gana
+
+- **Coherencia**: el producto se ve y se comporta igual en todas partes.
+- **Velocidad**: no se diseña ni se programa dos veces lo mismo.
+- **[Accesibilidad](/articulos/accesibilidad-web/)**: si el componente base es accesible, todo lo que lo usa también. El sistema británico, por ejemplo, prueba sus componentes con tecnologías de asistencia.
+- **Un lenguaje común** entre diseño y desarrollo.
+
+## Lo que cuesta
+
+- **Construirlo y mantenerlo** exige tiempo y alguien responsable.
+- **Puede volverse rígido** si no admite casos nuevos.
+- **No sustituye al criterio**: los componentes se pueden combinar mal.
+
+Para un proyecto pequeño basta con unos pocos tokens y componentes bien definidos. Un sistema completo compensa cuando hay muchos equipos o muchos productos.
+
+## Lo esencial
+
+- Un sistema de diseño reúne tokens, componentes, patrones y pautas de un producto.
+- Los tokens dan nombre a los valores básicos, para cambiarlos en un solo lugar.
+- Debe existir a la vez en diseño y en código, y mantenerse como un producto.
+- Da coherencia, velocidad y accesibilidad, a cambio de esfuerzo para mantenerlo.

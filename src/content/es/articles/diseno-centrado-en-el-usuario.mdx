@@ -1,0 +1,72 @@
+---
+title: "¿Qué es el diseño centrado en el usuario?"
+description: "El diseño centrado en el usuario construye un producto a partir de las necesidades reales de quienes lo usarán, investigando, probando y corrigiendo en ciclos."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - heuristicas-de-usabilidad
+  - accesibilidad-web
+updated: 2026-10-13
+sources:
+  - title: "ISO 9241-210: Human-centred design for interactive systems (en inglés)"
+    url: https://www.iso.org/standard/77520.html
+  - title: "Usability.gov: User-Centered Design Basics (en inglés)"
+    url: https://www.usability.gov/what-and-why/user-centered-design.html
+  - title: "GOV.UK Service Manual: User research (en inglés)"
+    url: https://www.gov.uk/service-manual/user-research
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **diseño centrado en el usuario** es una forma de crear productos en la que las decisiones se basan en las **necesidades reales** de quienes los van a usar, y no en suposiciones del equipo. Se investiga a los usuarios, se diseña, se prueba con ellos y se corrige, en ciclos que se repiten.
+
+La norma internacional ISO 9241-210 lo describe como un proceso para sistemas interactivos que pone a las personas en el centro durante todo el desarrollo.
+
+## El problema que evita
+
+El error más común al construir software es dar por hecho que los usuarios piensan como el equipo que lo construye. Quien diseña conoce el producto por dentro y sabe qué significa cada botón. Quien lo usa por primera vez, no.
+
+El resultado son funciones que nadie usa, pasos que nadie entiende y productos que fracasan aunque técnicamente funcionen.
+
+## El ciclo
+
+1. **Entender el contexto**: quién usará el producto, para qué, en qué situación. Con entrevistas y observación.
+2. **Definir los requisitos** a partir de lo aprendido, como explica [requisitos funcionales y no funcionales](/articulos/requisitos-funcionales-y-no-funcionales/).
+3. **Diseñar** soluciones, empezando por bocetos y prototipos baratos.
+4. **Evaluar** con usuarios reales, como explica [pruebas con usuarios](/articulos/pruebas-con-usuarios/).
+5. **Repetir**: lo aprendido vuelve al principio.
+
+La clave es la **iteración**: se aprende pronto, cuando corregir es barato, en lugar de descubrir los problemas tras meses de desarrollo.
+
+## Principios
+
+- **Involucrar a los usuarios** a lo largo de todo el proceso, no solo al final.
+- **Diseñar para la experiencia completa**, no solo la pantalla: desde cómo se descubre el producto hasta cómo se pide ayuda.
+- **Equipos multidisciplinares**: diseño, desarrollo, negocio e investigación juntos.
+- **Incluir a todos**: personas con discapacidad, mayores, con poca experiencia digital. Es lo que pide la [accesibilidad web](/articulos/accesibilidad-web/).
+
+## Investigar sin grandes medios
+
+No hace falta un laboratorio. El servicio digital del gobierno británico, una referencia en el tema, insiste en investigar de forma continua y con métodos sencillos:
+
+- Hablar con unas pocas personas del público objetivo.
+- Observarlas usando el producto, sin ayudarlas.
+- Revisar los datos de uso y las consultas al soporte.
+
+<Quiz
+	client:visible
+	question="¿Cuál es la idea central del diseño centrado en el usuario?"
+	options={[
+		"Que el equipo decida según su experiencia",
+		"Basar las decisiones en las necesidades reales de los usuarios, probando y corrigiendo en ciclos",
+		"Añadir todas las funciones que piden los usuarios",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El diseño centrado en el usuario parte de las necesidades reales de quienes usarán el producto.
+- Es un ciclo: entender, definir, diseñar, evaluar y repetir.
+- Probar pronto con prototipos baratos evita descubrir los problemas cuando ya es caro corregirlos.
+- No consiste en hacer lo que piden los usuarios, sino en entender qué necesitan.

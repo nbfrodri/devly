@@ -1,0 +1,66 @@
+---
+title: "¿Qué es la política de seguridad de contenido (CSP)?"
+description: "CSP es una cabecera HTTP que indica al navegador de dónde puede cargar scripts, estilos e imágenes una página. Si un atacante inyecta código, el navegador lo bloquea."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - cross-site-scripting-xss
+  - que-es-una-cabecera-http
+updated: 2026-10-13
+sources:
+  - title: "MDN: Content Security Policy (CSP)"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/CSP
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **política de seguridad de contenido**, o **CSP** por sus siglas en inglés, es una [cabecera HTTP](/articulos/que-es-una-cabecera-http/) con la que un sitio indica al navegador **de qué orígenes** puede cargar scripts, estilos, imágenes y otros recursos. Todo lo que no esté permitido, el navegador lo bloquea.
+
+Es una segunda línea de defensa contra el [cross-site scripting](/articulos/cross-site-scripting-xss/): aunque un atacante consiga inyectar código en la página, el navegador se niega a ejecutarlo.
+
+## Un ejemplo
+
+```http
+Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.ejemplo.com; img-src 'self' data:
+```
+
+| Directiva | Significa |
+| --- | --- |
+| `default-src 'self'` | Por defecto, solo recursos del propio sitio |
+| `script-src 'self' https://cdn.ejemplo.com` | Scripts del propio sitio y de esa CDN |
+| `img-src 'self' data:` | Imágenes del propio sitio e incrustadas |
+
+Con esta política, si alguien consigue meter `<script>robar()</script>` en la página, el navegador no lo ejecuta: los scripts **en línea** no están permitidos.
+
+## Por qué funciona
+
+El XSS consiste en conseguir que el navegador ejecute código del atacante como si fuera del sitio. Con CSP, el sitio declara de antemano qué código es legítimo. Lo demás se rechaza.
+
+## Directivas útiles
+
+- `script-src`, `style-src`, `img-src`, `font-src`, `connect-src`: de dónde se cargan scripts, estilos, imágenes, tipografías y a dónde se conecta con peticiones.
+- `frame-ancestors`: qué sitios pueden incrustar la página en un marco. Protege contra el engaño de superponer una página invisible encima de otra.
+- `upgrade-insecure-requests`: convertir las peticiones HTTP en [HTTPS](/articulos/https-y-tls/).
+
+## Los scripts en línea
+
+Muchas webs tienen scripts escritos directamente en el HTML. Permitirlos todos, con `'unsafe-inline'`, anula buena parte de la protección. Las alternativas:
+
+- Mover los scripts a archivos aparte.
+- Usar un **nonce**: un valor aleatorio, distinto en cada respuesta, que se incluye en la cabecera y en los scripts legítimos. Un script inyectado no lo conoce.
+
+## Probar sin romper
+
+Una política estricta puede romper una web que carga recursos de muchos sitios. La cabecera `Content-Security-Policy-Report-Only` aplica la política **solo en modo informe**: el navegador avisa de lo que habría bloqueado, sin bloquearlo. Así se ajusta antes de activarla.
+
+## Lo que no hace
+
+- **No sustituye a escapar los datos.** La defensa principal contra el XSS sigue siendo no insertar datos sin tratar en el HTML. CSP es una red de seguridad.
+- **No protege de todo**: no impide la [inyección SQL](/articulos/inyeccion-sql/) ni el [CSRF](/articulos/csrf/).
+
+## Lo esencial
+
+- CSP es una cabecera que indica al navegador de dónde puede cargar cada tipo de recurso.
+- Si un atacante inyecta un script, el navegador no lo ejecuta.
+- Los scripts en línea deben evitarse o autorizarse con un nonce.
+- Se puede probar en modo informe antes de aplicarla.

@@ -105,7 +105,7 @@ Hay lugares donde ninguna codificación basta, como dentro de una etiqueta `<scr
 
 ## Defensas complementarias
 
-- **Política de seguridad de contenido (CSP).** Es una cabecera con la que el servidor indica al navegador de dónde puede cargar y ejecutar código. Bien configurada, impide que se ejecute un script inyectado aunque haya llegado a la página.
+- **[Política de seguridad de contenido (CSP)](/articulos/politica-de-seguridad-de-contenido/).** Es una cabecera con la que el servidor indica al navegador de dónde puede cargar y ejecutar código. Bien configurada, impide que se ejecute un script inyectado aunque haya llegado a la página.
 - **Cookies con el atributo `HttpOnly`.** El JavaScript de la página no puede leerlas, así que un XSS no puede robar la sesión por esa vía.
 - **Validar la entrada.** Rechazar lo que no tiene la forma esperada reduce las oportunidades.
 - **Limpiar el HTML** con una biblioteca especializada cuando hay que aceptar contenido con formato, como en un editor de texto enriquecido.

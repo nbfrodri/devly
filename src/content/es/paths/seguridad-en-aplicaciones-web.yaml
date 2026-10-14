@@ -7,3 +7,7 @@ steps:
   - cross-site-scripting-xss
   - csrf
   - que-es-cors
+  - owasp-top-10
+  - politica-de-seguridad-de-contenido
+  - ssrf
+  - cadena-de-suministro-de-software

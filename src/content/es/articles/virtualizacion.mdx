@@ -1,0 +1,91 @@
+---
+title: "¿Qué es la virtualización?"
+description: "La virtualización hace que un solo ordenador físico funcione como varios. Un hipervisor reparte el procesador, la memoria y los discos entre máquinas virtuales aisladas."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+  - que-es-el-kernel
+  - contenedores-y-maquinas-virtuales
+updated: 2026-10-13
+sources:
+  - title: "Red Hat: ¿Qué es la virtualización?"
+    url: https://www.redhat.com/es/topics/virtualization/what-is-virtualization
+  - title: "AWS: ¿Qué es la virtualización?"
+    url: https://aws.amazon.com/es/what-is/virtualization/
+  - title: "Linux KVM (en inglés)"
+    url: https://www.linux-kvm.org/page/Main_Page
+  - title: "The Linux Kernel documentation: KVM (en inglés)"
+    url: https://docs.kernel.org/virt/kvm/index.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **virtualización** es la técnica que permite que un solo ordenador físico se comporte como **varios ordenadores independientes**. Cada uno, una **máquina virtual**, tiene su propio sistema operativo y sus programas, y cree tener un hardware para él solo. En realidad comparte el procesador, la memoria y los discos con las demás.
+
+Es la base de la [computación en la nube](/articulos/computacion-en-la-nube/): cuando se alquila un servidor a un proveedor, casi siempre es una máquina virtual dentro de un ordenador mucho mayor.
+
+## El hipervisor
+
+El programa que lo hace posible es el **hipervisor**, también llamado monitor de máquinas virtuales. Separa los recursos físicos y los reparte entre las máquinas virtuales según lo que necesita cada una. Al ordenador físico se le llama **anfitrión** y a cada máquina virtual, **invitada**.
+
+Hay dos formas de instalarlo:
+
+| | Tipo 1, nativo | Tipo 2, alojado |
+| --- | --- | --- |
+| Se instala | Directamente sobre el hardware | Como un programa dentro de un sistema operativo |
+| Uso típico | Servidores y centros de datos | Ordenadores personales, para probar otro sistema |
+| Rendimiento | Mayor | Algo menor |
+| Ejemplos | Xen, Hyper-V, VMware ESXi | VirtualBox, VMware Workstation |
+
+KVM, el hipervisor integrado en el [núcleo](/articulos/que-es-el-kernel/) de Linux, convierte al propio Linux en un hipervisor de tipo 1. Es el que usan muchas nubes.
+
+## Cómo engaña al sistema invitado
+
+El sistema operativo invitado espera controlar el hardware directamente: ejecutar instrucciones privilegiadas, manejar la [memoria virtual](/articulos/memoria-virtual/), hablar con los discos. El hipervisor debe interceptar esas operaciones y simularlas, sin que el invitado note nada y sin que pueda afectar a los demás.
+
+Hay varias técnicas:
+
+- **Virtualización completa**: el invitado no sabe que es virtual. Al principio se lograba traduciendo sobre la marcha las instrucciones problemáticas, algo lento.
+- **Paravirtualización**: el invitado se modifica para colaborar con el hipervisor, llamándolo directamente en lugar de tocar el hardware. Muy usada para discos y redes, con [drivers](/articulos/que-es-un-driver/) especiales.
+- **Asistida por hardware**: los procesadores modernos incluyen extensiones para virtualizar, Intel VT y AMD-V. El procesador ejecuta el código del invitado directamente y avisa al hipervisor solo cuando hace falta. KVM las exige.
+
+Gracias al soporte del hardware, una máquina virtual actual se acerca mucho al rendimiento de un ordenador real.
+
+## Lo que se gana
+
+- **Aprovechar el hardware**: un servidor que estaría ocupado al 10 % aloja diez máquinas.
+- **Aislamiento**: un fallo o un ataque en una máquina virtual no afecta a las demás.
+- **Instantáneas**: guardar el estado completo de una máquina y volver a él.
+- **Mover máquinas** de un servidor físico a otro, incluso en marcha.
+- **Probar** otros sistemas operativos sin reinstalar nada.
+
+## No solo ordenadores
+
+La idea de separar los recursos lógicos de los físicos se aplica a más cosas:
+
+- **Almacenamiento**: varios discos se gestionan como un único almacén.
+- **Red**: redes enteras, con sus switches y cortafuegos, definidas por software sobre la red física. Los operadores de telecomunicaciones virtualizan así funciones de red que antes eran aparatos dedicados.
+- **Escritorio**: el escritorio de un usuario corre en un servidor y se muestra a distancia.
+
+## Y los contenedores
+
+Los [contenedores](/articulos/contenedores-y-maquinas-virtuales/) son una forma más ligera de aislar programas: comparten el núcleo del sistema anfitrión en lugar de virtualizar todo el hardware. Arrancan en segundos y gastan menos, pero aíslan menos. A menudo se combinan: contenedores dentro de máquinas virtuales.
+
+<Quiz
+	client:visible
+	question="¿Qué diferencia a un hipervisor de tipo 1 de uno de tipo 2?"
+	options={[
+		"El de tipo 1 se instala directamente sobre el hardware; el de tipo 2, dentro de un sistema operativo",
+		"El de tipo 1 solo ejecuta Linux",
+		"El de tipo 2 no necesita procesador",
+	]}
+	answer={0}
+/>
+
+## Lo esencial
+
+- La virtualización hace que un ordenador físico funcione como varios aislados entre sí.
+- El hipervisor reparte los recursos; puede ir sobre el hardware (tipo 1) o sobre un sistema operativo (tipo 2).
+- Los procesadores actuales tienen extensiones que hacen la virtualización casi tan rápida como el hardware real.
+- La misma idea se aplica al almacenamiento, la red y los escritorios, y es la base de la nube.

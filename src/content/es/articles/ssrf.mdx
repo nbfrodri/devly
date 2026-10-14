@@ -1,0 +1,82 @@
+---
+title: "¿Qué es la falsificación de peticiones del lado del servidor (SSRF)?"
+description: "En un ataque SSRF, el atacante consigue que el servidor haga peticiones a direcciones que él elige, incluidas las de la red interna, que no son accesibles desde fuera."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-una-url
+  - subredes-y-cidr
+  - owasp-top-10
+updated: 2026-10-13
+sources:
+  - title: "OWASP: Server Side Request Forgery (en inglés)"
+    url: https://owasp.org/www-community/attacks/Server_Side_Request_Forgery
+  - title: "OWASP: Server-Side Request Forgery Prevention Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **falsificación de peticiones del lado del servidor**, o **SSRF** por sus siglas en inglés, es un ataque en el que se consigue que un **servidor** haga peticiones a direcciones que elige el atacante. Como el servidor está dentro de la red de la empresa, puede alcanzar sistemas internos que no son accesibles desde internet.
+
+## Cómo ocurre
+
+Muchas aplicaciones descargan algo a partir de una [URL](/articulos/que-es-una-url/) que da el usuario: una imagen de perfil desde una dirección, una vista previa de un enlace, un webhook.
+
+```
+POST /perfil/imagen
+url=https://fotos.ejemplo.com/ana.jpg
+```
+
+El servidor descarga la imagen. Pero si el atacante envía:
+
+```
+url=http://10.0.0.5/admin
+```
+
+el servidor, que sí puede llegar a esa dirección interna, hace la petición y quizá devuelve el resultado. El atacante usa el servidor como puerta a la red interna.
+
+## Por qué es grave
+
+- **Sistemas internos**: paneles de administración, bases de datos o servicios que confían en cualquier petición que venga de dentro.
+- **Metadatos de la nube**: los servidores en [la nube](/articulos/computacion-en-la-nube/) pueden consultar una dirección especial con información sobre sí mismos, a veces con credenciales temporales. Un SSRF que llegue ahí puede robarlas.
+- **Escanear la red** interna desde dentro.
+
+## Cómo se previene
+
+La guía de OWASP propone, sobre todo, **no fiarse de la dirección**:
+
+- **Lista de permitidos**: si solo hace falta descargar de ciertos dominios, permitir solo esos.
+- **Bloquear direcciones internas**: rechazar las direcciones privadas y especiales.
+
+```js
+function esInterna(ip) {
+	const [a, b] = ip.split(".").map(Number);
+
+	return (
+		a === 10 ||
+		a === 127 ||
+		(a === 172 && b >= 16 && b <= 31) ||
+		(a === 192 && b === 168) ||
+		(a === 169 && b === 254)
+	);
+}
+
+console.log(esInterna("10.0.0.5")); // true
+console.log(esInterna("169.254.169.254")); // true
+console.log(esInterna("93.184.216.34")); // false
+```
+
+Son los [rangos privados](/articulos/subredes-y-cidr/) y el de enlace local, donde está la dirección de metadatos de muchos proveedores.
+
+Y hay trampas: un nombre de dominio puede resolverse a una IP interna, o cambiar de IP entre la comprobación y la petición. Hay que comprobar la IP **a la que realmente se conecta**, y no seguir redirecciones sin volver a comprobar.
+
+- **Aislar** el componente que hace peticiones salientes, con un [cortafuegos](/articulos/cortafuegos/) que limite a dónde puede conectarse.
+- **No devolver** al usuario la respuesta en bruto.
+
+## Lo esencial
+
+- En un SSRF, el atacante hace que el servidor pida direcciones que él elige.
+- Permite alcanzar sistemas internos y los metadatos de la nube.
+- Se previene con listas de permitidos, bloqueando direcciones internas y aislando las peticiones salientes.
+- Hay que comprobar la IP real a la que se conecta, no solo el nombre.

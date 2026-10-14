@@ -1,0 +1,76 @@
+---
+title: "¿Qué es la arquitectura orientada a eventos?"
+description: "En una arquitectura orientada a eventos, los componentes no se llaman entre sí: publican lo que ha ocurrido y otros reaccionan. Esto los desacopla."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - colas-de-mensajes
+  - monolito-y-microservicios
+  - consistencia-eventual
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: What do you mean by «Event-Driven»? (en inglés)"
+    url: https://martinfowler.com/articles/201701-event-driven.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+En una **arquitectura orientada a eventos**, los componentes de un sistema se comunican **publicando eventos**, avisos de que algo ha ocurrido, en lugar de llamarse directamente. Otros componentes se suscriben a los eventos que les interesan y reaccionan a ellos.
+
+Un **evento** es un hecho del pasado: "pedido creado", "pago recibido", "usuario registrado".
+
+## Llamar o avisar
+
+Con **llamadas directas**, el servicio de pedidos, al crear un pedido, llama al de pagos, al de correo y al de almacén. Conoce a todos, y si uno falla, el pedido falla.
+
+Con **eventos**, el servicio de pedidos publica "pedido creado" y sigue. Los demás, suscritos, hacen su parte. El que publica no sabe quién escucha.
+
+```js
+const suscriptores = {};
+const suscribir = (evento, accion) => {
+	suscriptores[evento] = [...(suscriptores[evento] ?? []), accion];
+};
+const publicar = (evento, datos) =>
+	(suscriptores[evento] ?? []).forEach((accion) => accion(datos));
+
+const registro = [];
+suscribir("pedido-creado", (p) => registro.push(`cobrar ${p.id}`));
+suscribir("pedido-creado", (p) => registro.push(`avisar ${p.id}`));
+
+publicar("pedido-creado", { id: 512 });
+
+console.log(registro.join(", ")); // "cobrar 512, avisar 512"
+```
+
+Añadir una reacción nueva, por ejemplo actualizar estadísticas, es suscribirse. El servicio de pedidos no cambia. Entre servicios distintos, los eventos viajan por [colas de mensajes](/articulos/colas-de-mensajes/).
+
+## Varios significados
+
+Martin Fowler señala que "orientado a eventos" se usa para cosas distintas, y conviene precisar:
+
+| Patrón | Qué lleva el evento |
+| --- | --- |
+| Notificación | Solo el aviso: "el pedido 512 ha cambiado". Quien lo necesite, consulta los detalles |
+| Transferencia de estado | Todos los datos, para que el receptor no tenga que consultar |
+| Event sourcing | Los eventos son la fuente de verdad, como explica [CQRS y event sourcing](/articulos/cqrs-y-event-sourcing/) |
+
+## Lo que se gana
+
+- **Desacoplamiento**: los servicios no dependen unos de otros.
+- **Extensibilidad**: se añaden reacciones sin tocar a quien publica.
+- **Resistencia**: si un consumidor está caído, los eventos lo esperan en la cola.
+- **Escalado** independiente de cada parte.
+
+## Lo que cuesta
+
+- **El flujo se vuelve invisible.** En el código del servicio de pedidos ya no se ve qué ocurre después. Hay que reconstruirlo con [observabilidad](/articulos/observabilidad/).
+- **[Consistencia eventual](/articulos/consistencia-eventual/)**: durante un momento, unas partes saben del pedido y otras no.
+- **Duplicados y orden**: los eventos pueden llegar repetidos o desordenados, como explica [como mucho, al menos y exactamente una vez](/articulos/garantias-de-entrega-de-mensajes/). Los consumidores deben ser [idempotentes](/articulos/atomicidad-e-idempotencia/).
+- **Cambiar el formato** de un evento afecta a todos sus suscriptores.
+
+## Lo esencial
+
+- Los componentes publican eventos, hechos ocurridos, y otros reaccionan.
+- Quien publica no conoce a quien escucha, lo que desacopla el sistema.
+- Facilita añadir funciones y resistir fallos.
+- A cambio, el flujo es menos visible y hay que tratar duplicados, desorden y consistencia eventual.

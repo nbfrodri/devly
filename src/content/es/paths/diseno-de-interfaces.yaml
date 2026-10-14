@@ -1,0 +1,10 @@
+title: Diseño de interfaces
+description: "Cómo se diseña una interfaz que la gente entienda: investigar, ordenar lo visual, construir con un sistema y probar."
+layer: aplicaciones
+steps:
+  - diseno-centrado-en-el-usuario
+  - heuristicas-de-usabilidad
+  - jerarquia-visual-y-tipografia
+  - accesibilidad-web
+  - sistemas-de-diseno
+  - pruebas-con-usuarios

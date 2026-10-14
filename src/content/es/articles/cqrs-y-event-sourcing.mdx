@@ -1,0 +1,83 @@
+---
+title: "¿Qué son CQRS y event sourcing?"
+description: "CQRS separa el modelo que escribe datos del que los lee. Event sourcing guarda cada cambio como un evento, y el estado actual se calcula a partir de ellos."
+level: avanzado
+layer: datos
+prerequisites:
+  - arquitectura-orientada-a-eventos
+  - transacciones-y-acid
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: CQRS (en inglés)"
+    url: https://martinfowler.com/bliki/CQRS.html
+  - title: "Martin Fowler: Event Sourcing (en inglés)"
+    url: https://martinfowler.com/eaaDev/EventSourcing.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**CQRS** y **event sourcing** son dos patrones de diseño que a menudo se usan juntos. **CQRS**, separación de responsabilidades entre órdenes y consultas, usa **un modelo para escribir datos y otro distinto para leerlos**. **Event sourcing**, abastecimiento por eventos, guarda **cada cambio como un evento** en lugar de guardar solo el estado actual.
+
+## Event sourcing
+
+Una base de datos normal guarda el estado actual: el saldo de una cuenta es 70. Cómo se llegó a 70 se pierde.
+
+Con event sourcing se guardan los **hechos**, en orden, y nunca se modifican:
+
+```js
+const eventos = [
+	{ tipo: "abierta", saldo: 0 },
+	{ tipo: "ingreso", importe: 100 },
+	{ tipo: "retirada", importe: 50 },
+	{ tipo: "ingreso", importe: 20 },
+];
+
+const saldo = eventos.reduce((total, e) => {
+	if (e.tipo === "ingreso") return total + e.importe;
+	if (e.tipo === "retirada") return total - e.importe;
+	return total;
+}, 0);
+
+console.log(saldo); // 70
+
+const saldoTrasDosEventos = eventos.slice(0, 3).reduce((t, e) => (e.tipo === "ingreso" ? t + e.importe : e.tipo === "retirada" ? t - e.importe : t), 0);
+console.log(saldoTrasDosEventos); // 50
+```
+
+El estado actual se **calcula** recorriendo los eventos. Y se puede calcular el estado en cualquier momento del pasado, solo con recorrer los eventos hasta ese punto.
+
+Martin Fowler lo compara con la contabilidad: un libro de cuentas no borra un apunte equivocado, sino que añade otro que lo corrige. El historial completo se conserva.
+
+**A favor:**
+
+- **Historial completo** y auditable.
+- **Reconstruir** el estado de cualquier momento.
+- **Encaja con la [arquitectura orientada a eventos](/articulos/arquitectura-orientada-a-eventos/)**: los eventos guardados se pueden publicar.
+
+**En contra:**
+
+- Calcular el estado recorriendo muchos eventos es lento: se guardan **instantáneas** periódicas.
+- **Cambiar el formato** de los eventos antiguos es complicado, porque no se modifican.
+- Es una forma de pensar distinta, y más compleja.
+
+## CQRS
+
+En una aplicación normal, el mismo modelo de datos sirve para escribir y para leer. Pero las necesidades difieren: para escribir importan las reglas y la consistencia; para leer, la rapidez y que los datos tengan la forma que necesita cada pantalla.
+
+CQRS los separa:
+
+- Las **órdenes** cambian datos, con sus validaciones, sobre un modelo de escritura.
+- Las **consultas** leen de uno o varios modelos de lectura, preparados para cada caso, por ejemplo [vistas](/articulos/vista-y-tabla/) ya calculadas.
+
+Los modelos de lectura se actualizan a partir de los cambios del de escritura, a menudo con eventos. Eso implica [consistencia eventual](/articulos/consistencia-eventual/): una lectura puede ir un poco por detrás.
+
+## Con cuidado
+
+Fowler advierte que CQRS añade una complejidad considerable y que, para la mayoría de los sistemas, es un riesgo. Compensa en partes concretas con necesidades de lectura y escritura muy distintas, no como arquitectura general. Lo mismo vale para event sourcing: tiene mucho sentido en dominios donde el historial importa, como la contabilidad, y poco en un formulario de contacto.
+
+## Lo esencial
+
+- Event sourcing guarda cada cambio como un evento inmutable y calcula el estado a partir de ellos.
+- Da un historial completo y permite reconstruir cualquier momento.
+- CQRS separa el modelo que escribe del que lee.
+- Los dos añaden mucha complejidad y solo compensan en casos concretos.

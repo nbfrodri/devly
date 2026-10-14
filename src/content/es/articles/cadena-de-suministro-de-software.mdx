@@ -1,0 +1,59 @@
+---
+title: "¿Qué es la seguridad de la cadena de suministro de software?"
+description: "Tu aplicación incluye cientos de dependencias y herramientas ajenas. Si una se compromete, el ataque llega dentro de tu propio software."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - gestores-de-paquetes
+  - integracion-y-despliegue-continuos
+  - owasp-top-10
+updated: 2026-10-13
+sources:
+  - title: "SLSA: Supply-chain Levels for Software Artifacts (en inglés)"
+    url: https://slsa.dev/
+  - title: "CISA: Software Bill of Materials (en inglés)"
+    url: https://www.cisa.gov/sbom
+  - title: "npm: npm audit (en inglés)"
+    url: https://docs.npmjs.com/cli/v10/commands/npm-audit
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **cadena de suministro de software** es todo lo que interviene en producir una aplicación además del código propio: las dependencias, las herramientas de construcción, el [pipeline de integración continua](/articulos/integracion-y-despliegue-continuos/), los repositorios de paquetes. Su **seguridad** consiste en proteger cada eslabón, porque si uno se compromete, el código del atacante acaba dentro de la aplicación y llega a todos sus usuarios.
+
+La edición de 2025 del [OWASP Top 10](/articulos/owasp-top-10/) le dedica una de sus categorías.
+
+## El problema
+
+Un proyecto pequeño de JavaScript puede depender de cientos de paquetes, la mayoría indirectos, escritos por personas que no se conocen. Cada uno se ejecuta con todos los permisos de la aplicación, y a menudo durante la instalación.
+
+## Cómo se ataca
+
+- **Paquetes maliciosos** con nombres parecidos a otros populares, esperando una errata al instalarlos.
+- **Cuentas robadas**: el atacante se hace con la cuenta del autor de un paquete legítimo y publica una versión con código malicioso.
+- **Mantenedores que cambian**: un proyecto abandonado pasa a otras manos.
+- **Herramientas comprometidas**: el ataque se mete en el sistema de construcción, y el código fuente parece limpio aunque lo que se publica no lo esté.
+- **Paquetes inventados**: un asistente de IA sugiere instalar un paquete que no existe, y alguien lo registra, como cuenta [alucinaciones de los modelos de lenguaje](/articulos/alucinaciones-de-los-modelos-de-lenguaje/).
+
+## Cómo se protege
+
+| Medida | Qué aporta |
+| --- | --- |
+| Archivo de bloqueo | Fija las versiones exactas que se instalan, como explica [gestores de paquetes](/articulos/gestores-de-paquetes/) |
+| Auditoría de dependencias | Avisa de versiones con vulnerabilidades conocidas, con herramientas como `npm audit` |
+| Pocas dependencias | Cada una es código ajeno con todos los permisos |
+| Revisar antes de añadir | Quién lo mantiene, cuánto se usa, si está activo |
+| Actualizar con criterio | Corregir vulnerabilidades sin instalar versiones recién publicadas a ciegas |
+| SBOM | Una lista de materiales del software: qué incluye exactamente cada versión |
+| Construcciones verificables | Comprobar que lo publicado sale del código revisado |
+
+La **lista de materiales del software**, o SBOM, es un inventario de todos los componentes de una aplicación. La agencia estadounidense de ciberseguridad CISA la promueve porque, cuando aparece una vulnerabilidad en un componente, permite saber al instante qué aplicaciones lo usan.
+
+El marco **SLSA** define niveles de garantía para el proceso de construcción: desde documentar cómo se construye cada versión hasta que sea verificable que el resultado procede del código fuente indicado.
+
+## Lo esencial
+
+- La cadena de suministro incluye dependencias, herramientas y el proceso de construcción.
+- Un eslabón comprometido introduce código del atacante en la aplicación.
+- Se protege fijando versiones, auditando dependencias, reduciéndolas y revisando las nuevas.
+- Una SBOM permite saber qué componentes incluye cada versión.

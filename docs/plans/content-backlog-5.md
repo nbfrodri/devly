@@ -17,26 +17,26 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ### Diseño de interfaces y experiencia de usuario
 
-- [ ] Diseño centrado en el usuario
-- [ ] Jerarquía visual y tipografía en pantalla
-- [ ] Sistemas de diseño (componentes y estado)
-- [ ] Pruebas con usuarios (heurísticas de usabilidad)
+- [x] Diseño centrado en el usuario
+- [x] Jerarquía visual y tipografía en pantalla
+- [x] Sistemas de diseño (componentes y estado)
+- [x] Pruebas con usuarios (heurísticas de usabilidad)
 
 ### Ingeniería del software
 
-- [ ] Requisitos funcionales y no funcionales
-- [ ] UML: los diagramas más usados
-- [ ] Revisión de código (control de versiones con Git)
-- [ ] Arquitectura hexagonal (patrones de diseño)
-- [ ] Arquitectura orientada a eventos (colas de mensajes)
-- [ ] CQRS y event sourcing (transacciones y ACID)
+- [x] Requisitos funcionales y no funcionales
+- [x] UML: los diagramas más usados
+- [x] Revisión de código (control de versiones con Git)
+- [x] Arquitectura hexagonal (patrones de diseño)
+- [x] Arquitectura orientada a eventos (colas de mensajes)
+- [x] CQRS y event sourcing (transacciones y ACID)
 
 ### Seguridad web
 
-- [ ] OWASP Top 10 (ciberseguridad)
-- [ ] Política de seguridad de contenido, CSP (XSS)
-- [ ] Falsificación de peticiones del lado del servidor, SSRF
-- [ ] Gestión de dependencias y cadena de suministro (gestores de paquetes)
+- [x] OWASP Top 10 (ciberseguridad)
+- [x] Política de seguridad de contenido, CSP (XSS)
+- [x] Falsificación de peticiones del lado del servidor, SSRF
+- [x] Gestión de dependencias y cadena de suministro (gestores de paquetes)
 
 ### Nube
 
