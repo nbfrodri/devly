@@ -618,6 +618,9 @@ a:hover {
 	font-size: clamp(2.5rem, 5vw, 4rem);
 	line-height: 1;
 	letter-spacing: -0.035em;
+	/* Long Spanish words such as "telecomunicaciones" must not widen the page on phones. */
+	overflow-wrap: break-word;
+	hyphens: auto;
 }
 
 /* Layer stack */
@@ -729,6 +732,7 @@ a:hover {
 .layer-count {
 	flex: none;
 	white-space: nowrap;
+	text-align: right;
 }
 
 .stack-compact .layer {
@@ -1266,6 +1270,29 @@ a:hover {
 	background: var(--ok);
 }
 
+.section-progress {
+	max-width: 24rem;
+	margin: -0.5rem 0 1rem;
+}
+
+/* Inside a coloured layer row the progress uses the row's own ink. */
+.layer-progress {
+	display: none;
+	font-size: 0.8125rem;
+	font-weight: 500;
+}
+
+.layer[data-started] .layer-progress {
+	display: block;
+}
+
+.layer[data-started] {
+	background-image: linear-gradient(currentColor, currentColor);
+	background-size: calc(var(--progress, 0) * 100%) 3px;
+	background-position: left bottom;
+	background-repeat: no-repeat;
+}
+
 .path-progress-head {
 	max-width: 32rem;
 }
@@ -1351,7 +1378,8 @@ a:hover {
 
 /* Without the script nothing can be marked, so the controls stay out of the way. */
 html:not(.progress-ready) .progress-buttons,
-html:not(.progress-ready) .article-finish {
+html:not(.progress-ready) .article-finish,
+html:not(.progress-ready) .filter-progress {
 	display: none;
 }
 
@@ -1521,6 +1549,8 @@ html:not(.progress-ready) .article-finish {
 	font-size: clamp(2.5rem, 5vw, 4rem);
 	line-height: 1;
 	letter-spacing: -0.035em;
+	overflow-wrap: break-word;
+	hyphens: auto;
 }
 
 .article-level {

@@ -24,3 +24,16 @@ export function countByLayer(
 
 	return counts;
 }
+
+/** Article ids per layer, for the reading progress of each layer. */
+export function idsByLayer(
+	articles: Article[],
+): Partial<Record<Article["data"]["layer"], string[]>> {
+	const ids: Partial<Record<Article["data"]["layer"], string[]>> = {};
+
+	for (const article of articles) {
+		ids[article.data.layer] = [...(ids[article.data.layer] ?? []), article.id];
+	}
+
+	return ids;
+}

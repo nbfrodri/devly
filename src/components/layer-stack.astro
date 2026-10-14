@@ -4,11 +4,13 @@ import { LAYERS, type LayerId } from "@/lib/layers";
 type Props = {
 	/** Article count per layer; shown in the full-size stack. */
 	counts?: Partial<Record<LayerId, number>>;
+	/** Article ids per layer; enables the reading progress of each layer. */
+	ids?: Partial<Record<LayerId, string[]>>;
 	/** Highlights one layer and renders the compact variant used beside an article. */
 	current?: LayerId;
 };
 
-const { counts, current } = Astro.props;
+const { counts, ids, current } = Astro.props;
 const compact = current !== undefined;
 ---
 
@@ -26,6 +28,8 @@ const compact = current !== undefined;
 						class="layer"
 						href={`/capas/${layer.id}/`}
 						aria-current={current === layer.id ? "true" : undefined}
+						data-progress-group={ids?.[layer.id] ? layer.id : undefined}
+						data-steps={ids?.[layer.id]?.join(" ")}
 						style={
 							compact
 								? undefined
@@ -46,6 +50,9 @@ const compact = current !== undefined;
 										<span class="visually-hidden">
 											{count === 1 ? " artículo" : " artículos"}
 										</span>
+									)}
+									{ids?.[layer.id] && (
+										<span class="layer-progress" data-progress-count="short" />
 									)}
 								</span>
 							</>

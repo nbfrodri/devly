@@ -13,6 +13,7 @@ import {
  * - `data-progress-article="<id>"` gets `data-status` with the article status.
  * - `data-progress-path="<id>"` with `data-steps="<id> <id>"` gets `data-status`,
  *   and fills `[data-progress-count]` and `--progress` inside it.
+ * - `data-progress-group` with `data-steps` does the same for a layer.
  * - `button[data-progress-toggle]` toggles a status on `data-progress-id`.
  * - `[data-progress-list="<status>"]` with `data-source="<template id>"` is
  *   filled with the template's items that have that status.
@@ -95,8 +96,9 @@ function render() {
 		);
 	}
 
+	// Layers use the same display as paths, without a pending mark of their own.
 	for (const element of document.querySelectorAll<HTMLElement>(
-		"[data-progress-path]",
+		"[data-progress-path], [data-progress-group]",
 	)) {
 		const steps = (element.dataset.steps ?? "").split(" ").filter(Boolean);
 		const state = getPathProgress(
@@ -117,7 +119,10 @@ function render() {
 		for (const count of element.querySelectorAll<HTMLElement>(
 			"[data-progress-count]",
 		)) {
-			count.textContent = `${state.read} de ${state.total} leídos`;
+			count.textContent =
+				count.dataset.progressCount === "short"
+					? `${state.read} ${state.read === 1 ? "leído" : "leídos"}`
+					: `${state.read} de ${state.total} leídos`;
 		}
 	}
 

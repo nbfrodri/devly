@@ -1,5 +1,6 @@
 ---
 import ArticleCard from "@/components/article-card.astro";
+import Icon from "@/components/icon.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { getArticles } from "@/lib/content";
 import { LAYERS, type Layer } from "@/lib/layers";
@@ -27,6 +28,24 @@ const articles = (await getArticles()).filter(
 			<p class="article-level">Capa</p>
 			<h1>{layer.name}</h1>
 			<p class="lead">{layer.description}</p>
+			{
+				articles.length > 0 && (
+					<div
+						class="path-progress path-progress-head"
+						data-progress-group={layer.id}
+						data-steps={articles.map((article) => article.id).join(" ")}
+					>
+						<span class="path-progress-bar" aria-hidden="true" />
+						<span class="path-progress-text">
+							<span class="progress-badge progress-badge-read">
+								<Icon name="circle-check-filled" />
+								Capa completada
+							</span>
+							<span data-progress-count />
+						</span>
+					</div>
+				)
+			}
 		</header>
 		<section class="section">
 			{

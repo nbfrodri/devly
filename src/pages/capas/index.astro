@@ -1,7 +1,7 @@
 ---
 import LayerStack from "@/components/layer-stack.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
-import { countByLayer, getArticles } from "@/lib/content";
+import { countByLayer, getArticles, idsByLayer } from "@/lib/content";
 
 const articles = await getArticles();
 ---
@@ -23,7 +23,7 @@ const articles = await getArticles();
 					<span>más abstracto</span>
 					<span>más cerca de la máquina</span>
 				</div>
-				<LayerStack counts={countByLayer(articles)} />
+				<LayerStack counts={countByLayer(articles)} ids={idsByLayer(articles)} />
 			</nav>
 		</section>
 	</div>

@@ -1,6 +1,7 @@
 ---
 import ArticleCard from "@/components/article-card.astro";
 import FilterBar from "@/components/filter-bar.astro";
+import Icon from "@/components/icon.astro";
 import BaseLayout from "@/layouts/base-layout.astro";
 import { getArticles } from "@/lib/content";
 import { LAYERS } from "@/lib/layers";
@@ -29,6 +30,7 @@ const groups = LAYERS.map((layer) => ({
 		</header>
 
 		<FilterBar
+			progressLabels={["Leídos", "Pendientes", "Sin marcar"]}
 			layers={groups.map((group) => group.layer)}
 			total={articles.length}
 			singular="artículo"
@@ -46,6 +48,20 @@ const groups = LAYERS.map((layer) => ({
 							</a>
 							<span class="section-count">{group.articles.length}</span>
 						</h2>
+						<div
+							class="path-progress section-progress"
+							data-progress-group={group.layer.id}
+							data-steps={group.articles.map((article) => article.id).join(" ")}
+						>
+							<span class="path-progress-bar" aria-hidden="true" />
+							<span class="path-progress-text">
+								<span class="progress-badge progress-badge-read">
+									<Icon name="circle-check-filled" />
+									Capa completada
+								</span>
+								<span data-progress-count />
+							</span>
+						</div>
 						<ul class="card-grid">
 							{group.articles.map((article, index) => (
 								<ArticleCard article={article} hidden={index >= LIMIT} />

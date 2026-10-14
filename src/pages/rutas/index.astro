@@ -33,6 +33,7 @@ const groups = LAYERS.map((layer) => ({
 		</header>
 
 		<FilterBar
+			progressLabels={["Completadas", "Pendientes", "Sin completar"]}
 			layers={groups.map((group) => group.layer)}
 			total={paths.length}
 			singular="ruta"

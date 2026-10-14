@@ -13,9 +13,19 @@ type Props = {
 	plural: string;
 	/** Adds the article type filter. */
 	showKinds?: boolean;
+	/** Labels for the reading progress filter: read or complete, pending, neither. */
+	progressLabels: readonly [string, string, string];
 };
 
-const { layers, total, singular, plural, showKinds = false } = Astro.props;
+const {
+	layers,
+	total,
+	singular,
+	plural,
+	showKinds = false,
+	progressLabels,
+} = Astro.props;
+const [readLabel, pendingLabel, untouchedLabel] = progressLabels;
 ---
 
 <form
@@ -72,6 +82,17 @@ const { layers, total, singular, plural, showKinds = false } = Astro.props;
 			<select id="filtro-capa" name="layer">
 				<option value="">Todas las capas</option>
 				{layers.map((layer) => <option value={layer.id}>{layer.name}</option>)}
+			</select>
+		</div>
+	</div>
+	<div class="filter-field filter-select filter-progress">
+		<label for="filtro-estado">Mi progreso</label>
+		<div class="select">
+			<select id="filtro-estado" name="progress">
+				<option value="">Todos</option>
+				<option value="leido">{readLabel}</option>
+				<option value="pendiente">{pendingLabel}</option>
+				<option value="ninguno">{untouchedLabel}</option>
 			</select>
 		</div>
 	</div>

@@ -11,6 +11,18 @@ const status = document.querySelector<HTMLElement>("[data-filter-status]");
 const reset = document.querySelector<HTMLElement>("[data-filter-reset]");
 const empty = document.querySelector<HTMLElement>("[data-filter-empty]");
 
+/**
+ * Reading status of an item, set by the progress script on the item or on the
+ * path card inside it. A complete path counts as read.
+ */
+function progressOf(item: HTMLElement): string {
+	const status =
+		item.dataset.status ??
+		item.querySelector<HTMLElement>("[data-progress-path]")?.dataset.status;
+	if (status === "completa") return "leido";
+	return status ?? "ninguno";
+}
+
 function applyFilters() {
 	if (!form || !list) return;
 
@@ -18,8 +30,14 @@ function applyFilters() {
 	const level = String(data.get("level") ?? "");
 	const layer = String(data.get("layer") ?? "");
 	const kind = String(data.get("kind") ?? "");
+	const progress = String(data.get("progress") ?? "");
 	const text = normalizeForSearch(String(data.get("text") ?? "").trim());
-	const filtering = level !== "" || layer !== "" || kind !== "" || text !== "";
+	const filtering =
+		level !== "" ||
+		layer !== "" ||
+		kind !== "" ||
+		progress !== "" ||
+		text !== "";
 	const plural = form.dataset.plural ?? "";
 	let total = 0;
 
@@ -35,6 +53,7 @@ function applyFilters() {
 				(level === "" ||
 					(item.dataset.levels ?? "").split(" ").includes(level)) &&
 				(kind === "" || item.dataset.kind === kind) &&
+				(progress === "" || progressOf(item) === progress) &&
 				(text === "" || (item.dataset.text ?? "").includes(text));
 
 			if (itemMatches) matches += 1;
