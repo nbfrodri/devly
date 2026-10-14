@@ -1,0 +1,67 @@
+---
+title: "¿Por qué se llama spam al correo no deseado?"
+description: "El nombre viene de un sketch de los Monty Python sobre una carne en lata que aparece en todos los platos. El primer correo masivo no deseado se envió en 1978."
+level: basico
+kind: curiosidad
+layer: aplicaciones
+prerequisites:
+  - que-es-la-ciberseguridad
+updated: 2026-10-13
+sources:
+  - title: "Brad Templeton: Origin of the term spam to mean net abuse (en inglés)"
+    url: https://www.templetons.com/brad/spamterm.html
+  - title: "Computer History Museum: May 3, 1978, Earliest Known Case of Spam (en inglés)"
+    url: https://www.computerhistory.org/tdih/may/3/
+  - title: "RFC 2635: DON’T SPEW, A Set of Guidelines for Mass Unsolicited Mailings and Postings"
+    url: https://www.rfc-editor.org/info/rfc2635/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Al correo masivo no deseado se le llama **spam** por un sketch del grupo cómico británico **Monty Python**. En él, un restaurante sirve todos sus platos con Spam, una marca de carne en lata, y la palabra se repite una y otra vez hasta ahogar cualquier conversación. Exactamente lo que hace la publicidad no deseada con un buzón.
+
+## El sketch
+
+En el episodio de *Monty Python's Flying Circus*, una pareja intenta pedir algo en una cafetería en la que todo lleva Spam. La camarera recita la carta, con Spam en casi cada plato, mientras un grupo de vikingos se pone a cantar "Spam, Spam, Spam…" cada vez más alto, hasta que nadie puede hablar.
+
+La idea de algo repetitivo, que no se ha pedido y que tapa todo lo demás, encajó perfectamente con lo que empezó a ocurrir en las redes.
+
+## Del sketch a internet
+
+Brad Templeton, que investigó el origen del término, documenta que la palabra se usaba ya en las comunidades en línea de los años ochenta: en los chats y juegos multijugador de texto, inundar a los demás con mensajes repetidos, a veces la letra entera de la canción del sketch, se llamaba *spamming*.
+
+El salto al gran público llegó en 1994, cuando dos abogados publicaron un anuncio de sus servicios en miles de grupos de discusión de Usenet a la vez. La reacción fue enorme, y la palabra se fijó para siempre con su sentido actual.
+
+## El primer spam
+
+El primer caso conocido es anterior al nombre. El 3 de mayo de 1978, Gary Thuerk, un comercial de la empresa de ordenadores Digital Equipment Corporation, envió un anuncio de un nuevo modelo a cientos de usuarios de ARPANET, la red precursora de internet.
+
+Las reglas de ARPANET prohibían usarla con fines comerciales, y el mensaje recibió protestas inmediatas. Según el Computer History Museum, también generó algunas ventas.
+
+## Hoy
+
+El correo no deseado llegó a ser la gran mayoría de todos los mensajes que circulan. Para combatirlo:
+
+- **Filtros** que analizan el contenido y el remitente, muchos basados en [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/), con técnicas de [clasificación](/articulos/clasificacion-y-regresion/).
+- **Autenticación del remitente**, con registros [DNS](/articulos/que-es-dns/) que indican qué servidores pueden enviar correo en nombre de un dominio.
+- **Leyes** que exigen consentimiento para enviar publicidad.
+
+El término se ha extendido a cualquier contenido masivo no deseado: comentarios en foros, mensajes en redes sociales, llamadas.
+
+<Quiz
+	client:visible
+	question="¿De dónde viene el uso de la palabra spam para el correo no deseado?"
+	options={[
+		"De las siglas de un protocolo de correo",
+		"De un sketch de los Monty Python en el que la palabra se repite sin parar",
+		"Del nombre del primer remitente de correo masivo",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El término viene de un sketch de los Monty Python en el que el Spam aparece en todos los platos.
+- En las comunidades en línea de los ochenta, inundar a otros con mensajes ya se llamaba así.
+- El primer correo masivo no deseado conocido se envió en 1978, por ARPANET.
+- Hoy se combate con filtros, autenticación del remitente y leyes.

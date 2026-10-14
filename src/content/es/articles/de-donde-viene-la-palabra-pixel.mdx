@@ -1,0 +1,70 @@
+---
+title: "¿De dónde viene la palabra «píxel»?"
+description: "«Píxel» es una contracción de «picture element», elemento de imagen. Se publicó por primera vez en 1965, en artículos de un ingeniero del laboratorio de la NASA."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - como-se-representa-una-imagen
+updated: 2026-10-13
+sources:
+  - title: "Richard F. Lyon: A Brief History of Pixel (2006, en inglés)"
+    url: http://www.dicklyon.com/tech/Photography/Pixel-SPIE06-Lyon.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La palabra **píxel** viene del inglés *pixel*, una contracción de **picture element**, "elemento de imagen". Según el investigador Richard Lyon, que rastreó su historia, se publicó por primera vez en 1965, en dos artículos de Fred Billingsley, un ingeniero del Jet Propulsion Laboratory de Caltech, el laboratorio que gestionaba las sondas espaciales de la NASA.
+
+## El contexto: fotos desde el espacio
+
+A mediados de los años sesenta, las sondas espaciales empezaban a enviar fotografías de la Luna y de Marte. No podían mandar una foto como un papel: la imagen se dividía en una cuadrícula de puntos, el brillo de cada punto se convertía en un número, y esos números se transmitían por radio a la Tierra, donde se volvía a componer la imagen.
+
+Hacía falta una palabra para cada uno de esos puntos. *Picture element* era largo, y en los laboratorios se acortó.
+
+## Pix, el antecedente
+
+La contracción no salió de la nada. En inglés, *pix* era una forma coloquial de *pictures*, "fotos" o "películas", muy usada en la prensa de espectáculos. De *pix* y *element* salió *pixel*.
+
+Lyon recoge que hubo una alternativa: **pel**, también de *picture element*, propuesta en 1967 por William Schreiber, del MIT. Durante un tiempo convivieron las dos, sobre todo en el campo del procesamiento de imágenes. Al final se impuso *pixel*.
+
+## De la palabra al concepto
+
+Un píxel es el elemento más pequeño de una imagen digital: un punto de un solo color. Como explica el artículo sobre [cómo se representa una imagen](/articulos/como-se-representa-una-imagen/), una foto es una cuadrícula de píxeles, y el color de cada uno se guarda como números.
+
+```js
+const ancho = 1920;
+const alto = 1080;
+
+console.log(ancho * alto); // 2073600
+console.log(((ancho * alto) / 1e6).toFixed(1)); // "2.1"
+```
+
+Una pantalla de 1920 por 1080 tiene algo más de dos millones de píxeles: unos 2,1 **megapíxeles**, la unidad con la que se anuncian las cámaras.
+
+## Píxeles que no son cuadrados
+
+En la imaginación popular, un píxel es un cuadradito. Técnicamente, es una **muestra**: el valor de la imagen en un punto, como explica el artículo sobre [señales](/articulos/senales-analogicas-y-digitales/). Cómo se dibuja en la pantalla depende del dispositivo.
+
+En muchas pantallas, cada píxel se forma con tres pequeños puntos de luz, rojo, verde y azul, que vistos de lejos se mezclan en un solo color.
+
+## La familia
+
+El éxito de la palabra dio lugar a otras construidas igual:
+
+- **Vóxel**, de *volume element*: el equivalente en tres dimensiones, un cubo pequeño de una imagen volumétrica, como las de un escáner médico.
+- **Téxel**, de *texture element*: un punto de una textura en gráficos por ordenador.
+
+<Quiz
+	client:visible
+	question="¿Qué significa originalmente la palabra pixel?"
+	options={["Pixel extra large", "Picture element", "Pixel exchange"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- *Pixel* es una contracción de *picture element*, "elemento de imagen".
+- Se publicó por primera vez en 1965, en trabajos del Jet Propulsion Laboratory sobre imágenes de sondas espaciales.
+- Viene de *pix*, forma coloquial de "fotos" en inglés.
+- Compitió con *pel*, propuesta en 1967, y acabó imponiéndose.

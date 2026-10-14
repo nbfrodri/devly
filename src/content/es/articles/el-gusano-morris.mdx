@@ -1,0 +1,80 @@
+---
+title: "¿Qué fue el gusano Morris?"
+description: "En 1988, un programa creado por un estudiante se propagó por internet y colapsó miles de ordenadores. Fue el primer gran ataque a la red."
+level: basico
+kind: curiosidad
+layer: redes
+prerequisites:
+  - que-es-la-ciberseguridad
+  - como-se-guardan-las-contrasenas
+updated: 2026-10-13
+sources:
+  - title: "FBI: Morris Worm (en inglés)"
+    url: https://www.fbi.gov/history/famous-cases/morris-worm
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **gusano Morris** fue un programa que el 2 de noviembre de 1988 se propagó por internet, ordenador a ordenador, hasta dejar inservible una parte importante de la red de entonces. Lo creó Robert Tappan Morris, un estudiante de posgrado. Fue el primer gran ataque a internet, y Morris se convirtió en la primera persona condenada por un tipo de delito nuevo.
+
+## Qué es un gusano
+
+Un **gusano** es un programa malicioso que se copia a sí mismo de un ordenador a otro **sin intervención humana**, aprovechando fallos de seguridad. A diferencia de un virus, no necesita que nadie abra un archivo infectado.
+
+## La noche del 2 de noviembre
+
+Según el FBI, hacia las 20:30 el gusano se liberó desde un ordenador del Instituto Tecnológico de Massachusetts. Se propagó a una velocidad que nadie esperaba, ralentizando los ordenadores hasta detenerlos.
+
+Afectó a universidades como Berkeley, Harvard, Princeton o Stanford, y a centros como la NASA. Un estudiante de Berkeley escribió esa noche un mensaje que se haría célebre: "Estamos siendo atacados".
+
+## Cómo se propagaba
+
+Atacaba ordenadores con ciertas versiones del sistema operativo Unix, y tenía varias formas de entrar:
+
+- **Un fallo en un servicio de red** que daba información sobre usuarios: enviándole más datos de los que esperaba, se podía hacer que ejecutara código del atacante.
+- **Una puerta trasera en el programa de correo**, una función de depuración que había quedado activada.
+- **Contraseñas débiles.** Probaba contraseñas comunes y variaciones del nombre del usuario, lo que explica por qué importa [cómo se guardan las contraseñas](/articulos/como-se-guardan-las-contrasenas/).
+- **Relaciones de confianza** entre máquinas que se permitían el acceso sin contraseña.
+
+Tener varias vías de entrada fue lo que le permitió extenderse tanto.
+
+## Un error de cálculo
+
+Morris dijo que su intención no era causar daños, sino medir el tamaño de internet. El problema estuvo en una decisión del diseño.
+
+Para no ser bloqueado, el gusano se reinstalaba en una máquina aunque ya estuviera infectada en una parte de las ocasiones. Esa proporción resultó demasiado alta: los ordenadores acababan con muchas copias del gusano a la vez, cada una consumiendo recursos, hasta que dejaban de responder.
+
+Un programa pensado para pasar desapercibido acabó colapsando la red por un fallo de diseño.
+
+## Las consecuencias
+
+- Muchas instituciones desconectaron sus ordenadores de la red, algunas durante una semana, mientras se averiguaba cómo eliminarlo.
+- El FBI cifra los daños en estimaciones que empezaban en 100 000 dólares y llegaban a millones.
+- Morris fue la primera persona condenada en Estados Unidos según la ley de fraude y abuso informático, aprobada poco antes. Fue condenado a libertad vigilada, servicios a la comunidad y una multa.
+
+Morris acabó siendo profesor del Instituto Tecnológico de Massachusetts.
+
+## Lo que cambió
+
+El incidente mostró que una red pensada para la colaboración entre investigadores que se conocían y se fiaban unos de otros no estaba preparada para un ataque. A raíz de él se crearon equipos de respuesta ante incidentes informáticos, dedicados a coordinar la reacción ante ataques, y la [seguridad](/articulos/que-es-la-ciberseguridad/) pasó a ser una preocupación central de la red.
+
+Sus técnicas siguen vigentes: desbordar la memoria de un programa con datos que no espera, aprovechar funciones de depuración olvidadas, probar contraseñas débiles y abusar de la confianza entre máquinas.
+
+<Quiz
+	client:visible
+	question="¿Por qué el gusano Morris colapsó tantos ordenadores?"
+	options={[
+		"Porque borraba los discos duros",
+		"Porque se reinstalaba en máquinas ya infectadas hasta agotar sus recursos",
+		"Porque apagaba los servidores a propósito",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El gusano Morris se propagó por internet el 2 de noviembre de 1988.
+- Un gusano se copia solo entre ordenadores aprovechando fallos de seguridad.
+- Entraba por varias vías: un fallo en un servicio, una función de depuración olvidada y contraseñas débiles.
+- Un error de diseño hizo que se reinstalara sin control y colapsara las máquinas.
+- Fue el primer gran ataque a internet y dio lugar a la primera condena por ese tipo de delito en Estados Unidos.

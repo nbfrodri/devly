@@ -1,0 +1,64 @@
+---
+title: "¿Por qué las cookies se llaman así?"
+description: "El nombre viene de las «galletas mágicas» de la jerga de los programadores, y su inventor las diseñó en 1994 para que las tiendas en línea recordaran el carrito."
+level: basico
+kind: curiosidad
+layer: aplicaciones
+prerequisites:
+  - almacenamiento-en-el-navegador
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "Lou Montulli: The reasoning behind Web Cookies (2013, en inglés)"
+    url: https://montulli.blogspot.com/2013/05/the-reasoning-behind-web-cookies.html
+  - title: "RFC 6265: HTTP State Management Mechanism"
+    url: https://www.rfc-editor.org/info/rfc6265/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las [cookies](/articulos/almacenamiento-en-el-navegador/) del navegador se llaman así por una expresión de la jerga de los programadores, *magic cookie*, "galleta mágica". La eligió Lou Montulli, el ingeniero de Netscape que las inventó en 1994, porque la había oído en un curso de sistemas operativos en la universidad.
+
+## El problema que resolvían
+
+[HTTP](/articulos/que-es-http/) no tiene memoria: cada petición llega al servidor sin relación con la anterior. Montulli lo comparó con hablar con alguien que lo olvida todo: en cada interacción hay que volver a presentarse.
+
+En 1994, la web empezaba a usarse para comprar, y una tienda necesita recordar qué ha metido cada cliente en el carrito mientras pasa de una página a otra. Otro equipo de Netscape estaba construyendo un servidor de comercio electrónico y necesitaba resolverlo.
+
+Montulli cuenta que se habían propuesto otras ideas, como dar a cada navegador un identificador único y permanente. Las descartó porque ese identificador serviría para seguir a una persona por todos los sitios que visitara.
+
+## La solución
+
+Su diseño fue que el servidor pudiera entregar al navegador un pequeño dato, y que el navegador se lo devolviera en las peticiones siguientes, **solo a ese mismo servidor**. Empezó como un identificador de sesión y lo generalizó a cualquier contenido, para que sirviera para algo más que carritos.
+
+Es exactamente lo que siguen haciendo hoy: el servidor envía una cabecera `Set-Cookie`, y el navegador la devuelve en cada petición a ese sitio. La especificación actual es el RFC 6265.
+
+## ¿Y la galleta?
+
+En la jerga de Unix, una *magic cookie* era un dato que un programa recibe y devuelve tal cual, sin interpretarlo, para que quien lo emitió lo reconozca después. Como el resguardo de un guardarropa: no dice nada por sí mismo, pero quien te lo dio sabe qué abrigo es el tuyo.
+
+A Montulli le pareció que el término describía bien lo que hacían, y le gustó el nombre. Se quedó con la mitad: *cookie*.
+
+## La ironía
+
+Montulli se preocupó por la privacidad desde el diseño: una cookie solo vuelve al sitio que la creó. Lo que no evitó fueron las **cookies de terceros**: las que crea un sitio distinto del que se visita, por ejemplo una red de anuncios incrustada en muchas páginas. Al estar presente en todas ellas, ese tercero puede reconocer al mismo navegador de un sitio a otro.
+
+El mecanismo pensado para que una tienda recordara un carrito acabó siendo la base del seguimiento publicitario, y de los avisos de cookies que hoy aparecen en casi cualquier web por las leyes de [protección de datos](/articulos/rgpd-y-proteccion-de-datos/).
+
+<Quiz
+	client:visible
+	question="¿Qué problema querían resolver las cookies cuando se inventaron?"
+	options={[
+		"Mostrar anuncios personalizados",
+		"Que un sitio recordara datos entre peticiones, como el carrito de la compra",
+		"Acelerar la carga de las páginas",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Las cookies las inventó Lou Montulli en Netscape en 1994.
+- Resolvían que HTTP no recuerda nada entre peticiones, empezando por el carrito de la compra.
+- El nombre viene de *magic cookie*, un término de la jerga de Unix para un dato que se devuelve sin interpretarlo.
+- Su diseño las limita al sitio que las creó, pero las cookies de terceros permitieron el seguimiento entre sitios.

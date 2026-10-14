@@ -1,0 +1,65 @@
+---
+title: "¿Cuál fue el primer mensaje enviado por internet?"
+description: "El 29 de octubre de 1969 se intentó enviar la palabra «login» entre dos ordenadores de ARPANET. Llegaron dos letras y el sistema se cayó: «lo»."
+level: basico
+kind: curiosidad
+layer: redes
+prerequisites:
+  - modelos-osi-y-tcp-ip
+  - cliente-servidor
+updated: 2026-10-13
+sources:
+  - title: "Leonard Kleinrock: The Day the Infant Internet Uttered its First Words (en inglés)"
+    url: https://www.lk.cs.ucla.edu/internet_first_words.html
+  - title: "RFC 2616: Hypertext Transfer Protocol, HTTP/1.1"
+    url: https://www.rfc-editor.org/info/rfc2616/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El primer mensaje enviado por ARPANET, la red de la que nació internet, fue **"lo"**. Se transmitió el 29 de octubre de 1969 a las 22:30, desde la Universidad de California en Los Ángeles hasta el Instituto de Investigación de Stanford. Se intentaba escribir "login", pero tras las dos primeras letras el sistema se colgó.
+
+## La red
+
+ARPANET era un proyecto financiado por la agencia de investigación del Departamento de Defensa de Estados Unidos. Su objetivo era conectar ordenadores de distintas universidades y centros, para que los investigadores pudieran compartir recursos a distancia.
+
+Era una idea nueva: en lugar de una línea dedicada entre dos puntos, como una llamada telefónica, los datos se dividían en pequeños **paquetes** que viajaban por la red de forma independiente. Es el principio que sigue usando internet, y que se explica en [modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/).
+
+Los primeros nodos de la red se instalaron en 1969. El primero estaba en UCLA, en el laboratorio de Leonard Kleinrock, y el segundo, en el Stanford Research Institute.
+
+## La noche del 29 de octubre
+
+El estudiante Charley Kline, en Los Ángeles, debía conectarse al ordenador de Stanford escribiendo la orden "login". Al otro lado, Bill Duvall comprobaba por teléfono lo que llegaba.
+
+Kline escribió la "l". Por teléfono, le confirmaron que había llegado. Escribió la "o". También llegó. Escribió la "g"… y el ordenador de Stanford se colgó.
+
+El primer mensaje de la historia de internet fue, por tanto, "lo". Kleinrock lo ha contado a menudo como "lo", de *lo and behold*, una expresión inglesa que equivale a "he aquí": un mensaje más profético de lo que nadie había planeado.
+
+Según el propio Kleinrock, una hora después consiguieron completar el inicio de sesión.
+
+El registro de esa noche se conserva: es una anotación en el cuaderno del laboratorio, con la hora y la frase de que se había hablado con el ordenador de Stanford.
+
+## Lo que vino después
+
+- A finales de 1969, la red tenía cuatro nodos.
+- En los años setenta se desarrollaron los protocolos [TCP e IP](/articulos/tcp-y-udp/), que permitían conectar redes distintas entre sí: una red de redes, *internetwork*.
+- En 1983, ARPANET adoptó TCP/IP, fecha que se suele tomar como el nacimiento de internet tal como la conocemos.
+- En 1989 se propuso la World Wide Web, que puso sobre esa red las páginas enlazadas, como cuenta el artículo sobre [la primera página web](/articulos/la-primera-pagina-web/).
+
+## Un comienzo con un fallo
+
+Que la primera comunicación de internet terminara en un cuelgue es casi un resumen de la profesión: el primer intento rara vez sale bien. Y también enseña algo del diseño posterior de la red: fallos como ese, en los que una parte deja de responder, son lo normal, y los protocolos tuvieron que aprender a convivir con ellos.
+
+<Quiz
+	client:visible
+	question="¿Qué palabra se intentaba enviar en el primer mensaje de ARPANET?"
+	options={["Hello", "Login", "Test"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El primer mensaje de ARPANET se envió el 29 de octubre de 1969, de UCLA a Stanford.
+- Se intentaba escribir "login", y el sistema se colgó tras la "l" y la "o".
+- Una hora después se completó la conexión.
+- ARPANET introdujo la transmisión por paquetes, base de internet.

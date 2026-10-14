@@ -1,0 +1,84 @@
+---
+title: "¿Cuál fue la primera página web?"
+description: "Tim Berners-Lee inventó la web en el CERN en 1989. La primera página explicaba qué era la propia web, y una copia de 1992 sigue en línea."
+level: basico
+kind: curiosidad
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+  - que-es-http
+  - cliente-servidor
+updated: 2026-10-13
+sources:
+  - title: "CERN: The World Wide Web project, copia de la primera web (en inglés)"
+    url: https://info.cern.ch/hypertext/WWW/TheProject.html
+  - title: "W3C: Tim Berners-Lee, biografía (en inglés)"
+    url: https://www.w3.org/People/Berners-Lee/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La primera página web la creó **Tim Berners-Lee** en el CERN, el laboratorio europeo de física de partículas, cerca de Ginebra. Explicaba qué era la propia web y cómo usarla. Una copia de su versión de 1992 sigue en línea, en su dirección original, y se puede visitar.
+
+## Antes de la web existía internet
+
+Es una confusión habitual. **Internet** es la red: los ordenadores conectados y los protocolos con los que se comunican, que existían desde décadas antes, como cuenta el artículo sobre el [primer mensaje de internet](/articulos/el-primer-mensaje-de-internet/).
+
+La **web** es un servicio que funciona sobre internet: documentos enlazados entre sí, que se consultan con un navegador. El correo electrónico es otro servicio distinto sobre la misma red.
+
+## El problema del CERN
+
+En el CERN trabajaban miles de científicos de muchos países, con ordenadores y sistemas distintos. Encontrar información era difícil: documentos repartidos en máquinas diferentes, en formatos incompatibles.
+
+En 1989, Berners-Lee propuso un sistema para enlazar documentos de cualquier ordenador, de modo que desde un texto se pudiera saltar a otro con un clic, estuviera donde estuviera. Su jefe, según se cuenta, escribió en la propuesta un comentario que se ha hecho famoso: "vago, pero apasionante".
+
+## Las tres piezas
+
+Para que funcionara, Berners-Lee creó tres cosas que siguen siendo la base de la web:
+
+| Pieza | Función |
+| --- | --- |
+| [HTML](/articulos/que-es-html/) | El lenguaje para escribir las páginas, con enlaces |
+| [HTTP](/articulos/que-es-http/) | El protocolo para pedirlas y enviarlas |
+| URL | La dirección única de cada documento |
+
+En 1990 escribió el primer servidor web y el primer navegador, que también era un editor: se podían ver y modificar las páginas en el mismo programa. Funcionaba en un ordenador NeXT. El servidor tenía pegada una etiqueta que pedía no apagarlo.
+
+## La primera página
+
+La primera web se publicó en `info.cern.ch`. Su contenido era la propia web: qué era el proyecto, cómo conseguir el software, cómo crear páginas propias, quién participaba.
+
+No se conserva la versión exacta de 1990 o 1991. La que hoy se puede visitar es una copia de 1992, recuperada por el CERN. Es texto con enlaces, sin imágenes ni estilos, y su código sigue funcionando en cualquier navegador actual. Treinta años después, el HTML básico no ha dejado de ser compatible.
+
+## La decisión clave
+
+En 1993, el CERN puso el software de la web en el dominio público: cualquiera podía usarlo, sin pagar ni pedir permiso. Otras tecnologías de la época eran de pago o tenían restricciones.
+
+Esa decisión explica buena parte de su éxito. En pocos años, la web pasó de unos cientos de sitios a millones.
+
+Berners-Lee fundó en 1994 el W3C, la organización que desarrolla los estándares de la web, y en 2016 recibió el premio Turing, considerado el más importante de la informática.
+
+## Comparar con hoy
+
+La primera página tenía unos kilobytes de texto. Una página actual descarga a menudo varios megabytes, con imágenes, tipografías y mucho JavaScript, lo que explica la importancia del [rendimiento web](/articulos/rendimiento-web-y-core-web-vitals/).
+
+La idea de fondo, sin embargo, es la misma: un documento con una dirección, que se pide por HTTP y enlaza a otros.
+
+<Quiz
+	client:visible
+	question="¿Qué diferencia hay entre internet y la web?"
+	options={[
+		"Son lo mismo con dos nombres",
+		"Internet es la red de ordenadores; la web es un servicio de documentos enlazados que funciona sobre ella",
+		"La web es más antigua que internet",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Tim Berners-Lee propuso la web en el CERN en 1989 y la puso en marcha en 1990.
+- La web es un servicio sobre internet, no lo mismo que internet.
+- Se basa en HTML, HTTP y las URL, que él mismo creó.
+- La primera página explicaba la propia web; una copia de 1992 sigue en línea.
+- El CERN liberó la tecnología en 1993, lo que impulsó su expansión.

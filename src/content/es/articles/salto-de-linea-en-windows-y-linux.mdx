@@ -1,0 +1,96 @@
+---
+title: "¿Por qué el salto de línea es distinto en Windows y en Linux?"
+description: "Windows termina cada línea con dos caracteres, retorno de carro y avance de línea; Linux y macOS, con uno. La diferencia viene de las máquinas de escribir y los teletipos."
+level: basico
+kind: curiosidad
+layer: sistemas
+prerequisites:
+  - codificacion-de-caracteres
+  - sistema-de-archivos
+updated: 2026-10-13
+sources:
+  - title: "RFC 20: ASCII format for Network Interchange"
+    url: https://www.rfc-editor.org/info/rfc20/
+  - title: "Unicode: C0 Controls and Basic Latin (en inglés)"
+    url: https://www.unicode.org/charts/PDF/U0000.pdf
+  - title: "RFC 2616: Hypertext Transfer Protocol, HTTP/1.1"
+    url: https://www.rfc-editor.org/info/rfc2616/
+---
+
+import { Quiz } from "@/components/quiz";
+
+En un archivo de texto, el final de cada línea se marca con caracteres especiales, y no todos los sistemas usan los mismos. **Windows** usa dos: **retorno de carro** y **avance de línea**, abreviados CR LF. **Linux** y **macOS** usan solo el avance de línea, LF. La diferencia viene de las máquinas que había antes de las pantallas.
+
+## Dos caracteres de control
+
+El código [ASCII](/articulos/codificacion-de-caracteres/), definido en los años sesenta, incluye caracteres que no se imprimen, sino que dan órdenes a la máquina. Dos de ellos son:
+
+| Carácter | Código | Escritura | Orden original |
+| --- | --- | --- | --- |
+| Retorno de carro, CR | 13 | `\r` | Volver al principio de la línea |
+| Avance de línea, LF | 10 | `\n` | Bajar una línea |
+
+## Las máquinas de escribir
+
+En una máquina de escribir, terminar una línea son **dos movimientos**: llevar el carro, la pieza que sujeta el papel, de vuelta al margen izquierdo, y girar el rodillo para bajar una línea.
+
+Los **teletipos**, máquinas de escribir conectadas a una línea de comunicaciones que se usaron como terminales de los primeros ordenadores, funcionaban igual. Recibían esas dos órdenes por separado.
+
+Separarlas tenía usos. Con solo un retorno de carro, sin avance, se podía volver a escribir sobre la misma línea, por ejemplo para subrayar o tachar.
+
+## Cada sistema eligió
+
+Al guardar texto en archivos, cada sistema decidió cómo marcar el final de línea:
+
+- **Unix**, del que derivan Linux y macOS, eligió solo LF. Un carácter era suficiente, y el programa que mostraba el texto se encargaba de interpretarlo como "línea nueva".
+- **CP/M** y después **MS-DOS**, y de ahí Windows, mantuvieron los dos, CR y LF, como hacían los teletipos.
+- Las primeras versiones del sistema de los Macintosh usaban solo CR. macOS, basado en Unix, pasó a LF.
+
+## El problema
+
+Un archivo creado en un sistema y abierto en otro da sorpresas:
+
+- Un archivo de Linux abierto en un editor antiguo de Windows aparece en una sola línea.
+- Un archivo de Windows en Linux muestra un `^M` al final de cada línea: es el retorno de carro, que ahí sobra.
+
+Y en programas, el carácter de más provoca fallos difíciles de ver:
+
+```js
+const deWindows = "uno\r\ndos";
+
+const mal = deWindows.split("\n");
+const bien = deWindows.split(/\r?\n/);
+
+console.log(mal[0].length); // 4
+console.log(mal[0].endsWith("\r")); // true
+console.log(bien[0].length); // 3
+```
+
+Al partir por `\n`, la primera línea conserva un `\r` invisible al final. Compararla con `"uno"` daría falso, y el error no se ve al imprimirla.
+
+Es un fallo clásico en [scripts de la terminal](/articulos/terminal-y-shell/): un script escrito en Windows puede fallar en Linux con un error incomprensible, porque el sistema intenta ejecutar un programa cuyo nombre termina en un carácter oculto.
+
+## En los protocolos de internet
+
+Muchos protocolos de texto, nacidos en la época de los teletipos, exigen CR LF como final de línea, sea cual sea el sistema. Es el caso de [HTTP](/articulos/que-es-http/): las cabeceras de una petición o una respuesta se separan con CR LF, y una línea vacía marca el final de las cabeceras.
+
+## Cómo se convive
+
+- **Los editores** detectan el formato y lo respetan, y permiten elegir cuál usar.
+- **[Git](/articulos/control-de-versiones-con-git/)** puede convertir los finales de línea automáticamente al guardar y al recuperar archivos, y un archivo de configuración en el repositorio fija la norma para todo el equipo.
+- **Los programas** que leen texto aceptan los dos formatos, como el ejemplo de arriba con `\r?\n`.
+
+<Quiz
+	client:visible
+	question="¿Qué caracteres usa Windows para marcar el final de una línea en un archivo de texto?"
+	options={["Solo LF", "Solo CR", "CR seguido de LF"]}
+	answer={2}
+/>
+
+## Lo esencial
+
+- Windows termina las líneas con CR LF; Linux y macOS, con LF.
+- CR y LF eran dos órdenes de las máquinas de escribir y los teletipos: volver al margen y bajar una línea.
+- Unix se quedó con un carácter; MS-DOS y Windows, con los dos.
+- Mezclar formatos provoca caracteres invisibles que rompen comparaciones y scripts.
+- Protocolos como HTTP usan CR LF, y Git puede convertir los finales de línea.

@@ -1,0 +1,80 @@
+---
+title: "¿Quién fue la primera programadora? Ada Lovelace"
+description: "En 1843, Ada Lovelace publicó lo que se considera el primer programa: una secuencia de pasos para que una máquina que aún no existía calculara unos números."
+level: basico
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+  - bucles
+updated: 2026-10-13
+sources:
+  - title: "Computer History Museum: Ada Lovelace (en inglés)"
+    url: https://www.computerhistory.org/babbage/adalovelace/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Ada Lovelace** es considerada la primera programadora de la historia. En 1843 publicó unas notas sobre la **máquina analítica**, un ordenador mecánico diseñado por Charles Babbage, que incluían la primera descripción publicada de una secuencia de operaciones para que una máquina resolviera un problema matemático: un programa.
+
+La máquina nunca llegó a construirse. El programa se escribió un siglo antes de que existiera un ordenador capaz de ejecutarlo.
+
+## Quién era
+
+Augusta Ada Byron nació en 1815. Era hija del poeta Lord Byron, al que no llegó a conocer. Su madre, matemática aficionada, se empeñó en que recibiera una educación científica, poco habitual para una mujer de su época.
+
+Conoció a Charles Babbage cuando tenía 17 años, y se interesó por sus máquinas de calcular.
+
+## La máquina analítica
+
+Babbage había diseñado antes una máquina para calcular tablas numéricas. Después concibió algo mucho más ambicioso: una máquina de propósito general, programable.
+
+Tenía las piezas que tiene hoy cualquier [ordenador](/articulos/como-funciona-un-procesador/):
+
+| Parte de la máquina analítica | Equivalente actual |
+| --- | --- |
+| El almacén | La memoria |
+| El molino | El procesador |
+| Tarjetas perforadas | El programa y los datos |
+
+Las tarjetas perforadas venían del telar de Jacquard, que las usaba para tejer dibujos complejos. Ada lo resumió en una frase célebre: la máquina analítica teje patrones algebraicos igual que el telar de Jacquard teje flores y hojas.
+
+## Las notas
+
+En 1843, Ada tradujo del francés un artículo sobre la máquina escrito por el ingeniero italiano Luigi Menabrea. Le añadió unas **notas** propias, más largas que el artículo original.
+
+En ellas describía paso a paso cómo la máquina podría calcular los llamados números de Bernoulli, una serie de números que aparece en matemáticas. Era una tabla con cada operación, qué variables intervenían y cómo cambiaban sus valores, incluida la repetición de una serie de pasos: lo que hoy sería un [bucle](/articulos/bucles/).
+
+Por eso se la suele llamar la primera programadora.
+
+## Más allá del cálculo
+
+Lo más notable de las notas no es el programa, sino una idea. El Computer History Museum destaca que Ada fue la primera en expresar con claridad que una máquina así podía hacer mucho más que cálculos con números: podía manipular **cualquier símbolo**, siempre que se representara de forma adecuada. Mencionaba, por ejemplo, que podría componer música.
+
+Es la idea en la que se basa toda la informática: un ordenador procesa números, y con números se puede [representar](/articulos/que-es-un-bit/) texto, imágenes, sonido o cualquier otra cosa. Ese salto, del cálculo a la computación, es lo que la convierte en una visionaria.
+
+## Su legado
+
+Ada murió en 1852, con 36 años. Sus notas quedaron casi olvidadas durante un siglo, hasta que los pioneros de la informática del siglo XX redescubrieron el trabajo de Babbage.
+
+En los años ochenta, el Departamento de Defensa de Estados Unidos llamó **Ada** a un lenguaje de programación en su honor, que se sigue usando en sistemas donde un fallo no es admisible, como la aviación.
+
+Existe además un debate histórico sobre cuánto del programa es suyo y cuánto de Babbage, que también había esbozado cálculos para su máquina. Lo indiscutible es que las notas publicadas, y la visión que contienen, son de Ada.
+
+<Quiz
+	client:visible
+	question="¿Qué idea de Ada Lovelace se considera más visionaria?"
+	options={[
+		"Que las máquinas podían calcular más rápido que las personas",
+		"Que una máquina así podía manipular cualquier símbolo, no solo números",
+		"Que los ordenadores debían usar electricidad",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Ada Lovelace publicó en 1843 unas notas sobre la máquina analítica de Babbage.
+- Incluían la primera secuencia de operaciones publicada para que una máquina resolviera un problema: un programa.
+- La máquina analítica tenía memoria, unidad de cálculo y se programaba con tarjetas perforadas, pero nunca se construyó.
+- Ada intuyó que una máquina podía manipular cualquier símbolo, no solo números.

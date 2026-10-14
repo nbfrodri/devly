@@ -1,0 +1,68 @@
+---
+title: "¿Por qué Python se llama así?"
+description: "No tiene nada que ver con la serpiente: Guido van Rossum le puso el nombre por los Monty Python, el grupo cómico británico."
+level: basico
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - compilador-e-interprete
+  - tipado-estatico-y-dinamico
+updated: 2026-10-13
+sources:
+  - title: "Python: Preguntas frecuentes generales, ¿Por qué se llama Python?"
+    url: https://docs.python.org/es/3/faq/general.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El lenguaje de programación **Python** no se llama así por la serpiente, sino por **Monty Python's Flying Circus**, la serie de humor británica de los años setenta. Lo explica la propia documentación oficial del lenguaje.
+
+## La historia
+
+Guido van Rossum empezó a crear Python a finales de los años ochenta, en un instituto de investigación de los Países Bajos. Según cuenta la sección de preguntas frecuentes de la documentación de Python, mientras lo desarrollaba estaba leyendo los guiones publicados de la serie.
+
+Quería un nombre corto, único y algo misterioso, y le pareció que Python cumplía.
+
+## El humor se quedó
+
+La referencia no se quedó en el nombre. La comunidad de Python adoptó las bromas de los Monty Python como seña de identidad:
+
+- En los ejemplos de la documentación, en lugar de los nombres genéricos habituales, aparecen a menudo `spam` y `eggs`, por el sketch del restaurante en el que todo lleva Spam. Es el mismo sketch del que viene la palabra [spam](/articulos/por-que-se-llama-spam/) para el correo no deseado.
+- La propia documentación anima a que los ejemplos tengan algo de ese humor.
+
+La misma página de preguntas frecuentes responde con ironía a si hay que ser seguidor de la serie para usar el lenguaje: no hace falta, pero ayuda.
+
+## La serpiente llegó después
+
+Pese a todo, el logotipo de Python son dos serpientes entrelazadas, y la imagen de la serpiente acompaña al lenguaje en libros y conferencias. Era inevitable: es lo primero que evoca el nombre.
+
+## El lenguaje
+
+Python es un lenguaje **interpretado**, como explica el artículo sobre [compiladores e intérpretes](/articulos/compilador-e-interprete/), de [tipado dinámico](/articulos/tipado-estatico-y-dinamico/), y diseñado para que el código sea fácil de leer. Una de sus características más visibles es que la sangría forma parte de la sintaxis: los bloques se delimitan con espacios, no con llaves.
+
+```python
+for numero in range(3):
+    if numero % 2 == 0:
+        print("par")
+```
+
+Se ha convertido en uno de los lenguajes más usados del mundo, sobre todo en análisis de datos, ciencia y [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/).
+
+Van Rossum fue durante casi tres décadas su responsable final, con el título humorístico de "dictador benevolente vitalicio". Renunció a ese papel en 2018, y desde entonces el lenguaje lo dirige un consejo elegido por la comunidad.
+
+<Quiz
+	client:visible
+	question="¿De dónde viene el nombre del lenguaje Python?"
+	options={[
+		"De la serpiente pitón",
+		"De la serie de humor Monty Python's Flying Circus",
+		"De las siglas de su primer intérprete",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Python se llama así por la serie de humor *Monty Python's Flying Circus*, no por la serpiente.
+- Su creador, Guido van Rossum, leía los guiones de la serie mientras lo desarrollaba.
+- La comunidad mantiene las referencias: `spam` y `eggs` aparecen en muchos ejemplos.

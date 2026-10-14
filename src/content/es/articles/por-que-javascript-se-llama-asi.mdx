@@ -1,0 +1,88 @@
+---
+title: "¿Por qué JavaScript se llama así si no es Java?"
+description: "JavaScript y Java son lenguajes distintos. El nombre nació en 1995, cuando Netscape quería ofrecer los dos en su navegador."
+level: basico
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - que-es-typescript
+  - compilador-e-interprete
+updated: 2026-10-13
+sources:
+  - title: "Brendan Eich: Popularity (2008, en inglés)"
+    url: https://brendaneich.com/2008/04/popularity/
+  - title: "Ecma International: ECMA-262, ECMAScript Language Specification (en inglés)"
+    url: https://www.ecma-international.org/publications-and-standards/standards/ecma-262/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**JavaScript** y **Java** son dos lenguajes de programación distintos, con orígenes, diseños y usos diferentes. Se parecen poco más que en el nombre. La coincidencia viene de 1995, cuando la empresa Netscape quiso incluir en su navegador tanto Java como un lenguaje propio más ligero, y este acabó llamándose JavaScript.
+
+Se suele resumir con una frase: Java es a JavaScript lo que el coche es a la alfombra.
+
+## El contexto: 1995
+
+Netscape Navigator era el navegador dominante. La empresa quería que las páginas web pudieran tener comportamiento, no solo texto e imágenes, y fichó a Brendan Eich para incorporar un lenguaje de programación al navegador.
+
+Al mismo tiempo, Sun Microsystems había lanzado **Java**, un lenguaje que despertaba un enorme entusiasmo. Según cuenta Eich, Netscape estaba negociando con Sun para incluir Java en su navegador.
+
+## ¿Por qué dos lenguajes?
+
+Eich relata que dentro de Netscape la gran pregunta fue: si vamos a tener Java, ¿para qué otro lenguaje?
+
+La respuesta fue que servían a públicos distintos:
+
+- **Java**, para programadores profesionales que construían componentes complejos.
+- **Un lenguaje de guion**, sencillo, para que diseñadores y aficionados añadieran pequeños comportamientos directamente en el HTML de la página.
+
+Eich escribió el primer prototipo, que se llamó **Mocha**, en mayo de 1995, en muy poco tiempo. Después de otros nombres, se lanzó como **JavaScript**: presentado como el compañero ligero de Java, y aprovechando la popularidad de este.
+
+## En qué se diferencian
+
+| | Java | JavaScript |
+| --- | --- | --- |
+| Creado por | Sun Microsystems | Netscape |
+| Tipado | [Estático](/articulos/tipado-estatico-y-dinamico/) | Dinámico |
+| Ejecución | Se [compila](/articulos/compilador-e-interprete/) a un código intermedio que ejecuta una máquina virtual | Lo ejecuta el navegador, o [Node.js](/articulos/que-es-nodejs/) |
+| Orientación a objetos | Basada en clases | Basada en prototipos, con sintaxis de clases añadida después |
+| Uso principal | Aplicaciones empresariales, Android | La web, en el navegador y en el servidor |
+
+Se parecen en la sintaxis, con llaves y punto y coma, porque los dos se inspiran en C. Por dentro, JavaScript debe mucho más a lenguajes como Scheme, de la familia de la [programación funcional](/articulos/programacion-funcional/), y Self, de donde tomó los prototipos.
+
+## ECMAScript
+
+Para que el lenguaje no dependiera de una empresa, en 1996 se llevó a estandarizar a Ecma International. El estándar se llama **ECMAScript**, y define el lenguaje que implementan todos los navegadores. Cada versión nueva, que ahora sale cada año, añade funcionalidades.
+
+JavaScript es, en la práctica, el nombre con el que todo el mundo llama a ECMAScript.
+
+## Un lenguaje hecho deprisa
+
+Las prisas del origen dejaron rarezas que siguen ahí, porque cambiarlas rompería millones de páginas: comparaciones con conversiones de tipo sorprendentes, o que `typeof null` devuelva `"object"`.
+
+```js
+console.log(typeof null); // "object"
+console.log("5" * 2); // 10
+console.log("5" + 2); // "52"
+```
+
+Para evitar parte de estos problemas, mucha gente escribe hoy en [TypeScript](/articulos/que-es-typescript/), que añade tipos estáticos y se convierte en JavaScript.
+
+<Quiz
+	client:visible
+	question="¿Qué relación tienen Java y JavaScript?"
+	options={[
+		"JavaScript es una versión simplificada de Java",
+		"Son lenguajes distintos; el parecido del nombre se debe a la época en que nació JavaScript",
+		"Java se creó a partir de JavaScript",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Java y JavaScript son lenguajes distintos, con diseños y usos diferentes.
+- JavaScript nació en Netscape en 1995, cuando la empresa negociaba incluir Java en su navegador.
+- Se pensó como un lenguaje ligero, complementario a Java, y el nombre aprovechó su popularidad.
+- El estándar del lenguaje se llama ECMAScript.
+- Su desarrollo apresurado dejó rarezas que se mantienen por compatibilidad.

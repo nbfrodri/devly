@@ -1,0 +1,98 @@
+---
+title: "¿Un kilobyte son 1000 o 1024 bytes?"
+description: "Depende de a quién se pregunte. La confusión explica por qué un disco de 1 terabyte aparece con unos 931 gigas en el ordenador."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - sistema-hexadecimal
+updated: 2026-10-13
+sources:
+  - title: "NIST: Prefixes for binary multiples (en inglés)"
+    url: https://physics.nist.gov/cuu/Units/binary.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **kilobyte** son, según el Sistema Internacional de Unidades, **1000 bytes**. Pero durante décadas, en informática se usó para referirse a **1024**. Las dos costumbres conviven, y de ahí una confusión que todo el mundo ha visto alguna vez: compras un disco de 1 terabyte y el ordenador dice que tiene unos 931 "gigas".
+
+## Por qué 1024
+
+Los ordenadores trabajan en [binario](/articulos/que-es-un-bit/), y las cantidades que resultan naturales son potencias de 2. La memoria se organiza en bloques de 2, 4, 8, 16… posiciones.
+
+1024 es 2 elevado a 10, y está muy cerca de 1000. En los primeros tiempos, a los ingenieros les resultó práctico llamar "kilo" a 1024: la diferencia era solo de un 2,4 %, y el prefijo era familiar.
+
+## El problema: la diferencia crece
+
+Con cada prefijo, la diferencia entre la versión decimal y la binaria aumenta:
+
+```js
+const decimal = [1e3, 1e6, 1e9, 1e12];
+const binario = [2 ** 10, 2 ** 20, 2 ** 30, 2 ** 40];
+
+const diferencias = decimal.map((d, i) =>
+	(((binario[i] - d) / d) * 100).toFixed(1),
+);
+
+console.log(diferencias.join(" ")); // "2.4 4.9 7.4 10.0"
+```
+
+En el kilo es un 2,4 %. En el tera, ya un 10 %.
+
+## Los prefijos binarios
+
+Para acabar con la ambigüedad, la Comisión Electrotécnica Internacional definió en 1998 unos prefijos propios para las potencias de 2. Los recoge el instituto de estándares de Estados Unidos, el NIST:
+
+| Decimal | Valor | Binario | Valor |
+| --- | --- | --- | --- |
+| kilobyte, kB | 1000 | kibibyte, KiB | 1024 |
+| megabyte, MB | 1000² | mebibyte, MiB | 1024² |
+| gigabyte, GB | 1000³ | gibibyte, GiB | 1024³ |
+| terabyte, TB | 1000⁴ | tebibyte, TiB | 1024⁴ |
+
+Los nombres combinan el prefijo de siempre con "bi", de binario: kibi, mebi, gibi.
+
+Se han adoptado de forma desigual. Muchos programas los usan, y muchas personas siguen diciendo "megas" sin precisar.
+
+## El misterio del disco
+
+Los fabricantes de discos usan las unidades decimales, que son las del Sistema Internacional. Un disco de 1 terabyte tiene un billón de bytes.
+
+Algunos sistemas operativos, en cambio, dividen entre potencias de 1024, y muestran el resultado con la etiqueta "GB":
+
+```js
+const bytes = 1e12;
+
+console.log(Math.round(bytes / 1e9)); // 1000
+console.log(Math.round(bytes / 2 ** 30)); // 931
+```
+
+Son los mismos bytes. Lo que cambia es la unidad con la que se cuentan. No falta espacio: el fabricante dice 1000 gigabytes, y el sistema dice 931 gibibytes, aunque escriba "GB".
+
+Unos sistemas operativos usan unidades decimales y otros binarias, así que el mismo disco puede aparecer con cifras distintas según dónde se mire.
+
+## Y los bits
+
+Otra fuente de confusión: la velocidad de las conexiones se mide en **bits** por segundo, y los archivos en **bytes**. Un byte son 8 bits. Una conexión de 100 megabits por segundo descarga como mucho unos 12,5 megabytes por segundo, como se explica en [ancho de banda, latencia y rendimiento](/articulos/ancho-de-banda-latencia-y-rendimiento/).
+
+La abreviatura lo indica: **b** minúscula para bits, **B** mayúscula para bytes. Mb no es MB.
+
+<Quiz
+	client:visible
+	question="¿Por qué un disco de 1 TB aparece con unos 931 GB en algunos ordenadores?"
+	options={[
+		"Porque el sistema operativo ocupa ese espacio",
+		"Porque el fabricante cuenta en potencias de 1000 y el sistema en potencias de 1024",
+		"Porque el disco viene defectuoso",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Según el Sistema Internacional, un kilobyte son 1000 bytes.
+- En informática se usó durante décadas para 1024, por ser una potencia de 2.
+- La diferencia crece con cada prefijo: un 10 % en el tera.
+- Los prefijos binarios, como kibibyte o gibibyte, existen para evitar la ambigüedad.
+- Un disco de 1 TB son 1000 GB o unos 931 GiB: los mismos bytes contados de dos formas.

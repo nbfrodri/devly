@@ -128,11 +128,11 @@ Pedido por el usuario el 2026-10-14: algoritmos y estructuras específicos, no s
 
 - [x] ¿Por qué 0,1 + 0,2 no da 0,3?
 - [ ] ¿Por qué el teclado es QWERTY? Pendiente de una fuente comprobable sobre el motivo de la distribución.
-- [ ] ¿De dónde viene la palabra "cookie"?
-- [ ] ¿Por qué se llama "spam" al correo no deseado?
-- [ ] ¿Qué fue el primer mensaje enviado por internet?
-- [ ] ¿Por qué el símbolo de guardar sigue siendo un disquete?
-- [ ] ¿De dónde viene el nombre "Wi-Fi"?
+- [x] ¿De dónde viene la palabra "cookie"?
+- [x] ¿Por qué se llama "spam" al correo no deseado?
+- [x] ¿Qué fue el primer mensaje enviado por internet?
+- [ ] ¿Por qué el símbolo de guardar sigue siendo un disquete? Pendiente: no se encontró una fuente comprobable.
+- [ ] ¿De dónde viene el nombre "Wi-Fi"? Pendiente: la Wi-Fi Alliance solo confirma que adoptó el nombre en 2000, no su origen.
 - [x] ¿Qué es la ley de Moore?
-- [ ] El origen del símbolo @ en el correo electrónico
+- [ ] El origen del símbolo @ en el correo electrónico. Pendiente: las fuentes sobre Ray Tomlinson consultadas no se dejaban abrir.
 - [ ] ¿Por qué "hola, mundo" es el primer programa? Pendiente: las fuentes originales (tutoriales de Kernighan) no se dejaban abrir para comprobarlas.
