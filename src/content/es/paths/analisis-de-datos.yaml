@@ -12,3 +12,4 @@ steps:
   - series-temporales
   - que-es-un-esquema-en-estrella
   - mapreduce-y-spark
+  - normalizar-y-estandarizar

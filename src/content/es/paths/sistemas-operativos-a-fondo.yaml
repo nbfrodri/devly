@@ -9,6 +9,7 @@ steps:
   - que-es-un-proceso
   - planificador-de-procesos
   - memoria-virtual
+  - swap-y-memoria-ram
   - sistema-de-archivos
   - fat-y-ntfs
   - permisos-y-usuarios

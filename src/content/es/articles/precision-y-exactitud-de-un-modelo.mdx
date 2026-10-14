@@ -1,0 +1,68 @@
+---
+title: "Diferencias entre exactitud y precisión de un modelo"
+description: "La exactitud cuenta los aciertos sobre el total; la precisión, cuántos de los positivos que marca el modelo lo son de verdad. Con clases desequilibradas, la exactitud engaña."
+level: basico
+kind: comparacion
+layer: ia
+prerequisites:
+  - como-se-evalua-un-modelo-de-clasificacion
+updated: 2026-10-13
+sources:
+  - title: "Google Machine Learning Crash Course: Accuracy, precision, recall (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall
+---
+
+import { Quiz } from "@/components/quiz";
+
+En el habla común, exactitud y precisión parecen lo mismo. Al evaluar un clasificador, son medidas distintas, y confundirlas lleva a creer que un modelo es bueno cuando no sirve para nada. En inglés son *accuracy* y *precision*.
+
+## Para comparar
+
+| | Exactitud | Precisión |
+| --- | --- | --- |
+| Pregunta | ¿Qué parte de todas las predicciones es correcta? | De lo que el modelo marca como positivo, ¿qué parte lo es? |
+| Fórmula | (VP + VN) / total | VP / (VP + FP) |
+| Le afecta | Que una clase sea mucho más frecuente | Las falsas alarmas |
+| Útil cuando | Las clases están equilibradas | Las falsas alarmas cuestan caro |
+
+VP son verdaderos positivos; VN, verdaderos negativos; FP, falsos positivos. Lo explica la [matriz de confusión](/articulos/como-se-evalua-un-modelo-de-clasificacion/).
+
+## Por qué la exactitud engaña
+
+Un filtro de spam con 1000 correos, de los que solo 10 son spam:
+
+```js
+const exactitud = (vp, fp, fn, vn) => (vp + vn) / (vp + fp + fn + vn);
+const precision = (vp, fp) => vp / (vp + fp);
+const exhaustividad = (vp, fn) => vp / (vp + fn);
+
+// Un "modelo" que dice siempre que no es spam.
+console.log(exactitud(0, 0, 10, 990)); // 0.99
+
+// Un modelo de verdad.
+console.log(exactitud(8, 12, 2, 978), precision(8, 12), exhaustividad(8, 2)); // 0.986 0.4 0.8
+```
+
+El modelo que no detecta nada tiene un 99 % de exactitud, más que el que sí funciona. Como señala el curso de Google, la exactitud solo sirve como medida aproximada cuando las clases están equilibradas.
+
+El modelo real atrapa 8 de los 10 spam (**exhaustividad** del 80 %), pero de los 20 correos que marca, solo 8 lo eran: **precisión** del 40 %. Ese dato es el que importa a quien ve sus correos buenos en la carpeta de spam.
+
+## Precisión y exhaustividad
+
+Suelen ir en direcciones opuestas: un modelo más estricto marca menos y acierta más en lo que marca (más precisión), pero se le escapan más casos (menos exhaustividad). Cuál priorizar depende del coste de cada error:
+
+- **Prima la precisión** cuando una falsa alarma es cara: bloquear una cuenta legítima.
+- **Prima la exhaustividad** cuando se escapa algo grave: no detectar una enfermedad.
+
+La misma trampa de las clases raras explica el [teorema de Bayes](/articulos/teorema-de-bayes/).
+
+## En física, otra cosa
+
+En medición, exactitud es lo cerca que están las medidas del valor real, y precisión, lo parecidas que son entre sí. Es un uso distinto de las mismas palabras.
+
+## Lo esencial
+
+- La exactitud es la proporción de aciertos sobre el total.
+- La precisión es la proporción de positivos reales entre los que el modelo marca como positivos.
+- Con clases desequilibradas, una exactitud alta puede esconder un modelo inútil.
+- Se elige entre precisión y exhaustividad según el coste de cada tipo de error.

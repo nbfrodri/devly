@@ -1,0 +1,52 @@
+---
+title: "Diferencias entre un SSD SATA y uno NVMe"
+description: "Los dos son SSD con la misma memoria flash, pero se conectan de forma distinta. SATA viene de los discos duros; NVMe se diseñó para flash y va por PCI Express."
+level: basico
+kind: comparacion
+layer: hardware
+prerequisites:
+  - discos-duros-y-ssd
+  - la-placa-base-y-los-buses
+updated: 2026-10-13
+sources:
+  - title: "NVM Express: About (en inglés)"
+    url: https://nvmexpress.org/about/
+  - title: "Remzi y Andrea Arpaci-Dusseau: Flash-based SSDs, Operating Systems, Three Easy Pieces (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un [SSD](/articulos/discos-duros-y-ssd/) guarda los datos en memoria flash, sin piezas móviles. Pero la memoria es solo la mitad: también importa **cómo se conecta** al resto del equipo. Hay dos formas principales, **SATA** y **NVMe**, y la diferencia de velocidad entre ellas es grande.
+
+## Para comparar
+
+| | SSD SATA | SSD NVMe |
+| --- | --- | --- |
+| Interfaz | SATA, la de los discos duros | NVMe, sobre PCI Express |
+| Pensada para | Un dispositivo lento que atiende una petición tras otra | Memoria flash, con muchas operaciones en paralelo |
+| Formato habitual | Caja de 2,5 pulgadas con cable, o M.2 | Tarjeta M.2 o tarjeta de expansión |
+| Velocidad | Limitada por la interfaz SATA | Varias veces mayor |
+| Compatibilidad | Prácticamente cualquier equipo | Equipos con ranura y soporte adecuados |
+
+## Por qué SATA se queda corto
+
+SATA se diseñó para discos duros, donde el cuello de botella es el brazo mecánico que se mueve sobre el plato. Para un dispositivo así, una interfaz modesta bastaba. La memoria flash es mucho más rápida y puede atender muchas peticiones a la vez, y SATA no la deja aprovecharlo.
+
+**NVMe**, según el consorcio que lo mantiene, define la interfaz de registros y el conjunto de órdenes para almacenamiento conectado por **PCI Express**, el bus más rápido de la [placa base](/articulos/la-placa-base-y-los-buses/), y es el estándar de hecho para los SSD de PCIe.
+
+## La trampa del M.2
+
+**M.2** es un **formato**, la forma del conector y de la tarjeta, no una interfaz. Una tarjeta M.2 puede ser SATA o NVMe, con un aspecto casi idéntico. Antes de comprar hay que comprobar qué admite la ranura de la placa.
+
+## ¿Se nota?
+
+- **Copiar archivos grandes**, cargar proyectos pesados o bases de datos: sí, mucho.
+- **Uso normal**, navegar, ofimática: menos. El salto grande es de disco duro a cualquier SSD; de SSD SATA a NVMe se nota menos en el día a día.
+
+## Lo esencial
+
+- Ambos son SSD; cambia cómo se conectan.
+- SATA viene de los discos duros y limita la velocidad de la flash.
+- NVMe va por PCI Express y aprovecha el paralelismo de la flash.
+- M.2 es un formato que puede ser SATA o NVMe.

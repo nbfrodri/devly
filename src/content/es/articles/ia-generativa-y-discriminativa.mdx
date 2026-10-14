@@ -1,0 +1,51 @@
+---
+title: "Diferencias entre IA generativa y discriminativa"
+description: "Un modelo discriminativo aprende a distinguir entre categorías; uno generativo aprende cómo son los datos y puede crear otros nuevos. Un filtro de spam frente a un generador de imágenes."
+level: basico
+kind: comparacion
+layer: ia
+prerequisites:
+  - clasificacion-y-regresion
+  - modelos-de-lenguaje
+updated: 2026-10-13
+sources:
+  - title: "Google Machine Learning: Background, what is a generative model? (en inglés)"
+    url: https://developers.google.com/machine-learning/gan/generative
+  - title: "Ng y Jordan: On Discriminative vs. Generative Classifiers, NeurIPS 2001 (en inglés)"
+    url: https://papers.nips.cc/paper_files/paper/2001/hash/7b7a53e239400a13bd6be6c91c4f6c4e-Abstract.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+En aprendizaje automático hay dos grandes familias de modelos. Los **discriminativos** aprenden a **distinguir** entre categorías: ¿es spam o no?, ¿es un gato o un perro? Los **generativos** aprenden **cómo son los datos** en sí, y por eso pueden **crear** ejemplos nuevos: un texto, una imagen, una voz. Como resume Google, los generativos crean nuevos datos y los discriminativos clasifican los que ya existen.
+
+## Para comparar
+
+| | Discriminativo | Generativo |
+| --- | --- | --- |
+| Qué aprende | La frontera entre categorías | Cómo se distribuyen los datos |
+| Pregunta que responde | Dado este dato, ¿qué categoría es? | ¿Cómo es un dato típico?, ¿qué probabilidad tiene este? |
+| Puede crear datos nuevos | No | Sí |
+| Ejemplos clásicos | Regresión logística, [árboles de decisión](/articulos/arboles-de-decision/) | Bayes ingenuo |
+| Ejemplos actuales | Detectores de fraude, clasificadores de imágenes | [Modelos de lenguaje](/articulos/modelos-de-lenguaje/), [modelos de difusión](/articulos/modelos-de-difusion/) |
+
+## Una analogía
+
+Para distinguir el castellano del italiano, basta con fijarse en unas pocas pistas: es lo que hace un discriminativo. Para **escribir** en castellano hace falta saber cómo es el idioma entero: es lo que aprende un generativo. Lo segundo es mucho más difícil, y necesita muchos más datos.
+
+## Los dos también clasifican
+
+Un modelo generativo también puede clasificar: calcula cómo de probable es el dato bajo cada categoría y elige la mayor, con el [teorema de Bayes](/articulos/teorema-de-bayes/). Un estudio clásico de Andrew Ng y Michael Jordan, de 2001, comparó así la regresión logística, discriminativa, con el clasificador bayesiano ingenuo, generativo.
+
+En la práctica, para **solo clasificar**, los discriminativos suelen ser la opción directa. Los generativos brillan cuando hace falta **crear**, rellenar datos que faltan o detectar lo que es anómalo, que es lo que resulta improbable según el modelo.
+
+## La IA generativa actual
+
+Lo que hoy se llama "IA generativa" son modelos generativos enormes: los modelos de lenguaje, que generan texto [token](/articulos/ventana-de-contexto-y-tokens/) a token, y los de difusión, que generan imágenes a partir de ruido. Su capacidad de crear trae problemas propios, como las [alucinaciones](/articulos/alucinaciones-de-los-modelos-de-lenguaje/): generan algo plausible aunque no sea cierto.
+
+## Lo esencial
+
+- Un modelo discriminativo aprende a distinguir categorías.
+- Uno generativo aprende cómo son los datos y puede crear otros nuevos.
+- Ambos pueden clasificar, pero solo el generativo puede generar.
+- Los modelos de lenguaje y de difusión son modelos generativos.

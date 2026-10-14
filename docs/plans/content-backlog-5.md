@@ -108,15 +108,15 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 - [x] Diferencias entre una vista y una tabla
 - [x] Diferencias entre DELETE, TRUNCATE y DROP
-- [ ] Diferencias entre escalado de datos: normalizar y estandarizar
-- [ ] Diferencias entre precisión y exactitud de un modelo
-- [ ] Diferencias entre swap y memoria RAM
+- [x] Diferencias entre escalado de datos: normalizar y estandarizar
+- [x] Diferencias entre precisión y exactitud de un modelo
+- [x] Diferencias entre swap y memoria RAM
 - [x] Diferencias entre shell, terminal y consola. Cubierta en el artículo de terminal y shell, ampliado con la consola.
-- [ ] Diferencias entre SSD SATA y NVMe
+- [x] Diferencias entre SSD SATA y NVMe
 - [x] Diferencias entre LAN, WAN y VPN. Cubierta en el artículo de tipos de redes.
-- [ ] Diferencias entre IA generativa y discriminativa
-- [ ] Diferencias entre ancho de banda y velocidad de transferencia de un disco
-- [ ] Diferencias entre UX y UI
+- [x] Diferencias entre IA generativa y discriminativa
+- [x] Diferencias entre ancho de banda y velocidad de transferencia de un disco
+- [x] Diferencias entre UX y UI
 
 ## Curiosidades
 

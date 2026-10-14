@@ -6,6 +6,8 @@ steps:
   - como-funciona-un-procesador
   - memoria-ram-y-almacenamiento
   - discos-duros-y-ssd
+  - ssd-sata-y-nvme
+  - ancho-de-banda-y-velocidad-de-un-disco
   - raid
   - que-es-una-gpu
   - la-placa-base-y-los-buses

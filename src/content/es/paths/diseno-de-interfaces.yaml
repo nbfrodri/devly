@@ -3,6 +3,7 @@ description: "Cómo se diseña una interfaz que la gente entienda: investigar, o
 layer: aplicaciones
 steps:
   - diseno-centrado-en-el-usuario
+  - ux-y-ui
   - que-es-un-prototipo
   - heuristicas-de-usabilidad
   - jerarquia-visual-y-tipografia

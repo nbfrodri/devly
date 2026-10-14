@@ -1,0 +1,62 @@
+---
+title: "Diferencias entre ancho de banda, IOPS y latencia de un disco"
+description: "La velocidad de un disco no es un único número. El ancho de banda mide megas por segundo; las IOPS, operaciones por segundo; la latencia, cuánto tarda cada una."
+level: basico
+kind: comparacion
+layer: hardware
+prerequisites:
+  - discos-duros-y-ssd
+  - ancho-de-banda-latencia-y-rendimiento
+updated: 2026-10-13
+sources:
+  - title: "fio documentation (en inglés)"
+    url: https://fio.readthedocs.io/en/latest/fio_doc.html
+  - title: "Remzi y Andrea Arpaci-Dusseau: Hard Disk Drives, Operating Systems, Three Easy Pieces (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+"Este disco va a 3000 MB/s" es solo una parte de la historia. La velocidad de un [disco](/articulos/discos-duros-y-ssd/) se describe con tres medidas distintas, y según lo que hagas importa una u otra. Es la misma distinción que hace [ancho de banda, latencia y rendimiento](/articulos/ancho-de-banda-latencia-y-rendimiento/) para las redes.
+
+## Para comparar
+
+| | Ancho de banda | IOPS | Latencia |
+| --- | --- | --- | --- |
+| Qué mide | Datos transferidos por segundo | Operaciones por segundo | Tiempo de cada operación |
+| Unidad | MB/s | Operaciones por segundo | Milisegundos o microsegundos |
+| Importa en | Copiar archivos grandes, vídeo | Bases de datos, muchos archivos pequeños | Respuesta de cada petición |
+| El número del anuncio | Suele ser este, con bloques grandes | A veces, con bloques pequeños | Casi nunca |
+
+## La relación entre ellas
+
+El ancho de banda depende de cuántas operaciones se hacen y de **cuánto ocupa cada una**, el **tamaño de bloque**:
+
+```js
+const anchoDeBanda = (iops, kibPorOperacion) => (iops * kibPorOperacion) / 1024; // MiB/s
+
+console.log(anchoDeBanda(20000, 4)); // 78.125
+console.log(anchoDeBanda(1000, 1024)); // 1000
+```
+
+Veinte mil operaciones de 4 KiB por segundo son solo 78 MiB/s, y mil operaciones de 1 MiB son 1000 MiB/s. El mismo disco da cifras de ancho de banda muy distintas según el tamaño de bloque. Por eso la herramienta de pruebas `fio` pide indicar siempre el tamaño de bloque y el tipo de acceso.
+
+## Secuencial frente a aleatorio
+
+- **Acceso secuencial**: leer un archivo grande de principio a fin. Bloques grandes, mucho ancho de banda.
+- **Acceso aleatorio**: leer trocitos dispersos, como hace una [base de datos](/articulos/que-es-una-base-de-datos/). Bloques pequeños, lo que cuenta son las IOPS y la latencia.
+
+En un **disco duro**, la diferencia es enorme: cada acceso aleatorio exige mover el cabezal y esperar a que gire el plato, como explica el libro OSTEP. En un **SSD** no hay piezas que mover, y por eso su ventaja es aún mayor en acceso aleatorio que en secuencial.
+
+## Qué mirar al elegir
+
+- Para **vídeo y archivos grandes**: ancho de banda secuencial.
+- Para **sistema operativo, bases de datos y desarrollo**: IOPS en bloques pequeños y latencia.
+- Las cifras de los fabricantes suelen medirse en las condiciones más favorables; en uso real, sobre todo con el disco lleno o tras escribir mucho, pueden bajar.
+
+## Lo esencial
+
+- El ancho de banda mide datos por segundo; las IOPS, operaciones por segundo; la latencia, el tiempo de cada una.
+- Ancho de banda = IOPS × tamaño de bloque.
+- El acceso secuencial depende del ancho de banda; el aleatorio, de las IOPS y la latencia.
+- La cifra del anuncio suele ser el mejor caso, con bloques grandes.

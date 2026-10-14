@@ -1,0 +1,61 @@
+---
+title: "Diferencias entre swap y memoria RAM"
+description: "La RAM es la memoria rápida donde trabajan los programas; el swap es una zona del disco donde el sistema aparca lo que no cabe. Sirve de colchón, pero es mucho más lenta."
+level: basico
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - memoria-virtual
+  - memoria-ram-y-almacenamiento
+updated: 2026-10-13
+sources:
+  - title: "ArchWiki: Swap (en inglés)"
+    url: https://wiki.archlinux.org/title/Swap
+  - title: "The Linux Kernel documentation: sysctl vm, swappiness (en inglés)"
+    url: https://docs.kernel.org/admin-guide/sysctl/vm.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **[memoria RAM](/articulos/memoria-ram-y-almacenamiento/)** es donde los programas guardan lo que están usando ahora mismo. El **swap**, o espacio de intercambio, es una zona del **disco** donde el sistema operativo aparca páginas de memoria que llevan tiempo sin usarse, para dejar sitio en la RAM. La suma de las dos es la memoria virtual disponible, como explica [memoria virtual](/articulos/memoria-virtual/).
+
+## Para comparar
+
+| | RAM | Swap |
+| --- | --- | --- |
+| Dónde está | Chips de memoria | Una partición o un archivo en el disco |
+| Velocidad | Muy rápida | Mucho más lenta, incluso en un SSD |
+| Qué guarda | Lo que se está usando | Páginas que llevan tiempo sin usarse |
+| Al apagar | Se borra | Normalmente se descarta |
+| Si se llena | El sistema empieza a usar swap | El sistema mata procesos para liberar memoria |
+
+## Cómo funciona
+
+Linux divide la RAM en bloques llamados **páginas**. Cuando falta memoria, copia algunas páginas poco usadas al swap y libera su sitio. Si un programa vuelve a necesitarlas, se traen de vuelta, y eso se nota: leer del disco es mucho más lento que de la RAM.
+
+```mermaid
+flowchart LR
+	P["Programa"] --> R["RAM"]
+	R -- "páginas poco usadas" --> S["Swap en disco"]
+	S -- "si se vuelven a necesitar" --> R
+```
+
+## El colchón y el abismo
+
+- **Un poco de swap es bueno**: el sistema aparca lo que no se usa, por ejemplo partes de programas abiertos pero inactivos, y deja más RAM para la caché de disco.
+- **Mucho swap en uso es malo**: si los programas activos no caben en la RAM, el sistema se pasa el tiempo moviendo páginas entre RAM y disco. El equipo se vuelve lentísimo sin llegar a colgarse.
+
+Sin swap, cuando la RAM se llena, el núcleo no tiene margen y termina un proceso a la fuerza para liberar memoria.
+
+## Cuánto se usa
+
+En Linux, el parámetro `swappiness` indica la preferencia del núcleo por escribir en el swap frente a liberar caché de archivos. Según la documentación del kernel, va de 0 a 200 y vale 60 por defecto: un valor bajo hace que el núcleo prefiera liberar caché; uno alto, que use más el swap.
+
+El swap también sirve para **hibernar**: guardar el contenido de la RAM en el disco y apagar el equipo.
+
+## Lo esencial
+
+- La RAM es la memoria rápida donde trabajan los programas; el swap, una zona del disco.
+- El sistema aparca en el swap las páginas poco usadas para liberar RAM.
+- Un poco de swap ayuda; depender de él vuelve el equipo muy lento.
+- En Linux, `swappiness` regula cuánto se usa.

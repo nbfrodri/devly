@@ -21,3 +21,5 @@ steps:
   - sesgos-en-los-algoritmos
   - aprendizaje-por-transferencia
   - ia-explicable
+  - precision-y-exactitud-de-un-modelo
+  - ia-generativa-y-discriminativa
