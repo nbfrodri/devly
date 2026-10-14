@@ -1,0 +1,177 @@
+---
+title: "¿Cómo funciona un compilador por dentro?"
+description: "Un compilador trocea el código en tokens, construye un árbol con su estructura, lo comprueba, lo optimiza y genera instrucciones. Así, paso a paso, con un compilador de juguete."
+level: avanzado
+layer: programacion
+prerequisites:
+  - compilador-e-interprete
+  - arboles
+updated: 2026-10-14
+sources:
+  - title: "Robert Nystrom: Crafting Interpreters, A Map of the Territory (en inglés)"
+    url: https://craftinginterpreters.com/a-map-of-the-territory.html
+  - title: "Robert Nystrom: Crafting Interpreters, Scanning (en inglés)"
+    url: https://craftinginterpreters.com/scanning.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un [compilador](/articulos/compilador-e-interprete/) convierte un texto, el código fuente, en algo que una máquina puede ejecutar. No lo hace de un salto, sino en una serie de **fases**, cada una con una tarea clara. El libro *Crafting Interpreters*, de Robert Nystrom, las describe como una subida y bajada por una montaña: se sube analizando el texto hasta entender su significado, y se baja generando instrucciones.
+
+```mermaid
+flowchart LR
+	F["Código fuente<br>texto"] --> L["Análisis léxico<br>tokens"]
+	L --> P["Análisis sintáctico<br>árbol"]
+	P --> S["Análisis semántico<br>tipos, nombres"]
+	S --> O["Optimización"]
+	O --> G["Generación de código"]
+	G --> E["Código máquina<br>o bytecode"]
+```
+
+Vamos a recorrer las fases con un compilador de juguete para expresiones como `2 + 3 * 4`.
+
+## 1. Análisis léxico: de caracteres a tokens
+
+La primera fase, el **análisis léxico** o escaneo, recorre el texto carácter a carácter y lo agrupa en **tokens**: las "palabras" del lenguaje. Un número, un operador, un paréntesis. Los espacios y los comentarios, que no significan nada, se descartan.
+
+```js
+function lexico(texto) {
+	const tokens = [];
+	let i = 0;
+	while (i < texto.length) {
+		const c = texto[i];
+		if (c === " ") {
+			i++;
+		} else if (/[0-9]/.test(c)) {
+			let numero = "";
+			while (i < texto.length && /[0-9]/.test(texto[i])) numero += texto[i++];
+			tokens.push({ tipo: "numero", valor: Number(numero) });
+		} else if ("+-*/()".includes(c)) {
+			tokens.push({ tipo: c });
+			i++;
+		} else {
+			throw new Error(`Carácter inesperado: ${c}`);
+		}
+	}
+	return tokens;
+}
+
+console.log(lexico("2 + 3 * 4").map((t) => t.valor ?? t.tipo).join(" | ")); // "2 | + | 3 | * | 4"
+```
+
+Aquí ya se detectan los errores más básicos: un carácter que no pertenece al lenguaje.
+
+## 2. Análisis sintáctico: de tokens a un árbol
+
+Los tokens son una lista plana. El **análisis sintáctico** (*parsing*) descubre su estructura según la **gramática** del lenguaje, y la representa como un [árbol](/articulos/arboles/): el **árbol sintáctico abstracto** (AST). La precedencia de los operadores, que la multiplicación va antes que la suma, queda reflejada en la forma del árbol.
+
+```mermaid
+flowchart TD
+	S["+"] --> A["2"]
+	S --> M["*"]
+	M --> B["3"]
+	M --> C["4"]
+```
+
+Un analizador de **descenso recursivo**, una función por cada regla de la gramática:
+
+```js
+function sintactico(tokens) {
+	let pos = 0;
+	const actual = () => tokens[pos];
+
+	// expresion := termino (("+" | "-") termino)*
+	function expresion() {
+		let nodo = termino();
+		while (actual() && "+-".includes(actual().tipo)) {
+			const op = tokens[pos++].tipo;
+			nodo = { op, izq: nodo, der: termino() };
+		}
+		return nodo;
+	}
+	// termino := factor (("*" | "/") factor)*
+	function termino() {
+		let nodo = factor();
+		while (actual() && "*/".includes(actual().tipo)) {
+			const op = tokens[pos++].tipo;
+			nodo = { op, izq: nodo, der: factor() };
+		}
+		return nodo;
+	}
+	// factor := numero | "(" expresion ")"
+	function factor() {
+		const t = tokens[pos++];
+		if (t?.tipo === "numero") return { numero: t.valor };
+		if (t?.tipo === "(") {
+			const nodo = expresion();
+			if (tokens[pos++]?.tipo !== ")") throw new Error("Falta un paréntesis");
+			return nodo;
+		}
+		throw new Error("Expresión mal formada");
+	}
+
+	return expresion();
+}
+
+const arbol = sintactico(lexico("2 + 3 * 4"));
+console.log(JSON.stringify(arbol)); // {"op":"+","izq":{"numero":2},"der":{"op":"*","izq":{"numero":3},"der":{"numero":4}}}
+```
+
+Como `termino` se resuelve dentro de `expresion`, la multiplicación queda más abajo en el árbol y se calcula antes. Aquí se detectan los **errores de sintaxis**: un paréntesis sin cerrar, un operador sin operando.
+
+## 3. Análisis semántico
+
+Un programa puede estar bien escrito y no tener sentido: usar una variable que no existe, sumar un número a una función. El **análisis semántico** recorre el árbol y comprueba nombres y tipos. En lenguajes con [tipado estático](/articulos/tipado-estatico-y-dinamico/), es donde aparecen los errores de tipos.
+
+## 4. Optimización
+
+Con el árbol entendido, el compilador lo **mejora** sin cambiar lo que hace. Un ejemplo clásico, el **plegado de constantes**: si una operación solo tiene constantes, se calcula al compilar.
+
+```js
+function plegar(nodo) {
+	if ("numero" in nodo) return nodo;
+	const izq = plegar(nodo.izq);
+	const der = plegar(nodo.der);
+	if ("numero" in izq && "numero" in der) {
+		const operaciones = { "+": (a, b) => a + b, "-": (a, b) => a - b, "*": (a, b) => a * b, "/": (a, b) => a / b };
+		return { numero: operaciones[nodo.op](izq.numero, der.numero) };
+	}
+	return { op: nodo.op, izq, der };
+}
+
+console.log(JSON.stringify(plegar(arbol))); // {"numero":14}
+```
+
+Toda la expresión se reduce a `14` al compilar: el programa final no calcula nada. Los compiladores reales encadenan decenas de optimizaciones, a menudo sobre una **representación intermedia** más cómoda que el árbol.
+
+## 5. Generación de código
+
+Por último, el compilador traduce el árbol a instrucciones de la máquina de destino: código máquina para un procesador concreto, como explica [qué es un binario](/articulos/que-es-un-binario/), o **bytecode** para una [máquina virtual](/articulos/que-es-una-maquina-virtual-de-un-lenguaje/). Para una máquina de pila, basta con recorrer el árbol en postorden:
+
+```js
+function generar(nodo) {
+	if ("numero" in nodo) return [`APILAR ${nodo.numero}`];
+	const nombres = { "+": "SUMAR", "-": "RESTAR", "*": "MULTIPLICAR", "/": "DIVIDIR" };
+	return [...generar(nodo.izq), ...generar(nodo.der), nombres[nodo.op]];
+}
+
+console.log(generar(arbol).join("; ")); // "APILAR 2; APILAR 3; APILAR 4; MULTIPLICAR; SUMAR"
+```
+
+Primero se apilan los operandos y después se aplica la operación: la multiplicación ocurre antes que la suma, tal como dictaba el árbol.
+
+## Delante y detrás
+
+Las fases se agrupan en dos mitades:
+
+- **Parte delantera** (*front end*): léxico, sintáctico y semántico. Depende del **lenguaje** de entrada.
+- **Parte trasera** (*back end*): optimización y generación. Depende de la **máquina** de destino.
+
+Separarlas permite reutilizar: varios lenguajes pueden compartir la misma parte trasera, y un lenguaje puede generar código para muchos procesadores, como [x86 y ARM](/articulos/arquitecturas-x86-y-arm/). Un **intérprete** comparte las primeras fases, pero en lugar de generar código, recorre el árbol o el bytecode y lo ejecuta directamente.
+
+## Lo esencial
+
+- Un compilador trabaja por fases: léxico, sintáctico, semántico, optimización y generación.
+- El análisis léxico produce tokens; el sintáctico, un árbol que refleja la estructura y la precedencia.
+- Las optimizaciones mejoran el programa sin cambiar su resultado, como calcular las constantes al compilar.
+- La parte delantera depende del lenguaje; la trasera, de la máquina de destino.

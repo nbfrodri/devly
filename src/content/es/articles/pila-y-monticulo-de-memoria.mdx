@@ -79,7 +79,7 @@ El objeto se crea dentro de la función, pero sigue existiendo después: vive en
 ## Quién libera el montículo
 
 - En **C**, el programador reserva y libera a mano. Olvidarse provoca **fugas de memoria**; liberar dos veces o usar algo ya liberado provoca fallos graves y vulnerabilidades.
-- En **JavaScript, Java o Python**, un **recolector de basura** libera lo que ya nadie puede alcanzar.
+- En **JavaScript, Java o Python**, un **[recolector de basura](/articulos/recoleccion-de-basura/)** libera lo que ya nadie puede alcanzar.
 - **Rust** sigue un tercer camino: el compilador comprueba quién es el dueño de cada dato y lo libera en el momento exacto, sin recolector.
 
 ## Con qué no confundirlos

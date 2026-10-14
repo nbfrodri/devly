@@ -6,3 +6,4 @@ steps:
   - git-y-github
   - merge-y-rebase
   - revision-de-codigo
+  - git-por-dentro

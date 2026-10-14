@@ -7,3 +7,5 @@ steps:
   - programacion-logica
   - tipado-estatico-y-dinamico
   - compilador-e-interprete
+  - como-funciona-un-compilador-por-dentro
+  - recoleccion-de-basura
