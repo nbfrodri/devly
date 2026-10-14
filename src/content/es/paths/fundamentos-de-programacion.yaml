@@ -4,6 +4,7 @@ layer: programacion
 steps:
   - que-es-una-variable
   - tipos-de-datos
+  - que-es-un-enum
   - condicionales
   - logica-booleana
   - bucles

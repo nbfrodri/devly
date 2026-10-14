@@ -1,0 +1,129 @@
+---
+title: "¿Qué es un enum o tipo enumerado?"
+description: "Un enum es un tipo con un conjunto cerrado de valores con nombre, como los días de la semana o los estados de un pedido. Evita errores con valores sueltos."
+level: basico
+layer: programacion
+prerequisites:
+  - tipos-de-datos
+  - condicionales
+updated: 2026-10-13
+sources:
+  - title: "TypeScript Handbook: Enums (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/enums.html
+  - title: "The Rust Programming Language: Defining an Enum (en inglés)"
+    url: https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html
+  - title: "Python: enum, soporte para enumeraciones"
+    url: https://docs.python.org/es/3/library/enum.html
+  - title: "The Java Tutorials: Enum Types (en inglés)"
+    url: https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html
+  - title: "MDN: Object.freeze()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **enum**, o **tipo enumerado**, es un [tipo de dato](/articulos/tipos-de-datos/) cuyo conjunto de valores posibles es **cerrado** y está escrito en el código, cada uno con un nombre: los palos de la baraja, los días de la semana, los estados de un pedido. Una variable de ese tipo solo puede tomar uno de esos valores. El nombre viene de **enumerar**: se escriben todos los valores posibles.
+
+## El problema que resuelve
+
+Sin enums, los estados se suelen representar con textos o números sueltos:
+
+```js
+const pedido = { estado: "enviado" };
+
+if (pedido.estado === "enviddo") {
+	console.log("en camino");
+} else {
+	console.log("no entra"); // "no entra"
+}
+```
+
+Una errata en `"enviddo"` no da ningún error: la condición, simplemente, nunca se cumple. Y nada impide asignar un estado que no existe, como `"perdido"`. Con números es peor: `estado = 3` no dice nada a quien lee el código.
+
+Un enum da un nombre a cada valor y deja que el lenguaje compruebe que solo se usan los que existen.
+
+## En JavaScript: un objeto congelado
+
+JavaScript no tiene enums, pero se imitan con un objeto que no se puede modificar:
+
+```js
+const Estado = Object.freeze({
+	PENDIENTE: "pendiente",
+	ENVIADO: "enviado",
+	ENTREGADO: "entregado",
+});
+
+const pedido = { estado: Estado.ENVIADO };
+
+console.log(pedido.estado === Estado.ENVIADO); // true
+console.log(Estado.ENVIDO); // undefined
+console.log(Object.values(Estado).length); // 3
+```
+
+Escribir mal el nombre da `undefined`, que al menos se detecta, y el editor puede autocompletar. Pero el lenguaje no impide guardar cualquier otro texto en `pedido.estado`.
+
+## En TypeScript
+
+[TypeScript](/articulos/que-es-typescript/) sí comprueba los valores al compilar. Tiene dos formas habituales:
+
+```ts
+enum Direccion {
+	Arriba,
+	Abajo,
+}
+
+type Estado = "pendiente" | "enviado" | "entregado";
+
+let estado: Estado = "enviado";
+estado = "enviddo"; // Error de compilación: ese valor no está en el tipo
+```
+
+- Un `enum` numérico asigna números automáticamente: `Arriba` vale 0 y `Abajo`, 1. Los enums de texto, con un valor escrito para cada miembro, se leen mejor al depurar.
+- Una **unión de literales** consigue lo mismo sin generar código extra, y es la opción que prefieren muchos equipos.
+
+## En otros lenguajes
+
+```python
+from enum import Enum
+
+class Estado(Enum):
+    PENDIENTE = 1
+    ENVIADO = 2
+    ENTREGADO = 3
+```
+
+- **Java** y **Python** tienen enums que son clases: cada valor es un [objeto](/articulos/que-es-un-objeto/), y pueden tener métodos.
+- **Rust** va más allá: cada variante puede llevar **datos propios**. Una dirección IP puede ser la variante `V4` con cuatro números o la `V6` con un texto. Rust no tiene un valor nulo: usa un enum, `Option`, con las variantes "hay un valor" y "no hay nada", y obliga a tratar los dos casos.
+
+## Recorrer todos los casos
+
+La gran ventaja de un conjunto cerrado es que se puede comprobar que se han tratado **todos** los casos:
+
+```js
+const ETIQUETAS = {
+	pendiente: "Preparando",
+	enviado: "En camino",
+	entregado: "Entregado",
+};
+
+const etiqueta = (estado) => ETIQUETAS[estado] ?? "Estado desconocido";
+
+console.log(etiqueta("enviado")); // "En camino"
+console.log(etiqueta("perdido")); // "Estado desconocido"
+```
+
+En lenguajes como TypeScript o Rust, el compilador puede avisar si una [condicional](/articulos/condicionales/) olvida un caso. Al añadir un estado nuevo, el compilador señala todos los lugares que hay que actualizar.
+
+## Cuándo usarlos
+
+- Cuando el conjunto de valores es **fijo y conocido**: estados, tipos, direcciones, niveles.
+- No cuando los valores cambian con frecuencia o los define el usuario, como las categorías de una tienda: eso va en una [base de datos](/articulos/que-es-una-base-de-datos/).
+
+Los estados de un enum son a menudo los de una máquina de estados, como los que dibuja un diagrama de estados de [UML](/articulos/uml/).
+
+## Lo esencial
+
+- Un enum es un tipo con un conjunto cerrado de valores con nombre.
+- Evita las erratas y los valores imposibles de los textos y números sueltos.
+- JavaScript los imita con objetos congelados; TypeScript, Java, Python y Rust los tienen en el lenguaje.
+- Permiten comprobar que se tratan todos los casos posibles.

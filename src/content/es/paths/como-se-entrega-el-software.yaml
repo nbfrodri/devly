@@ -4,6 +4,7 @@ layer: aplicaciones
 steps:
   - control-de-versiones-con-git
   - pruebas-de-software
+  - desarrollo-guiado-por-pruebas
   - integracion-y-despliegue-continuos
   - estrategias-de-despliegue
   - que-es-docker
