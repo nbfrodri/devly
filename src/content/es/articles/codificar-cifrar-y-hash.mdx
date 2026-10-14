@@ -1,0 +1,114 @@
+---
+title: "Diferencias entre codificar, cifrar y calcular un hash"
+description: "Codificar cambia el formato y cualquiera puede deshacerlo. Cifrar oculta el contenido y solo se deshace con la clave. Un hash resume y no se puede deshacer."
+level: intermedio
+kind: comparacion
+layer: redes
+prerequisites:
+  - cifrado-simetrico-y-asimetrico
+  - funciones-hash
+  - codificacion-de-caracteres
+updated: 2026-10-13
+sources:
+  - title: "MDN: Base64"
+    url: https://developer.mozilla.org/es/docs/Glossary/Base64
+  - title: "RFC 4648: The Base16, Base32, and Base64 Data Encodings"
+    url: https://www.rfc-editor.org/info/rfc4648/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Codificar**, **cifrar** y **calcular un hash** transforman datos, y se confunden a menudo. La diferencia está en el propósito y en si se puede volver atrás:
+
+- **Codificar** cambia el formato de los datos para que se puedan transmitir o guardar. Cualquiera puede deshacerlo. **No oculta nada.**
+- **Cifrar** oculta el contenido. Solo puede deshacerlo quien tiene la **clave**.
+- **Calcular un hash** produce un resumen de tamaño fijo. **No se puede deshacer**.
+
+## En un ejemplo
+
+```js
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+
+const texto = "hola";
+
+const codificado = Buffer.from(texto).toString("base64");
+console.log(codificado); // "aG9sYQ=="
+console.log(Buffer.from(codificado, "base64").toString()); // "hola"
+
+const clave = randomBytes(32);
+const iv = randomBytes(12);
+const cifrador = createCipheriv("aes-256-gcm", clave, iv);
+const cifrado = Buffer.concat([cifrador.update(texto), cifrador.final()]);
+const etiqueta = cifrador.getAuthTag();
+
+const descifrador = createDecipheriv("aes-256-gcm", clave, iv);
+descifrador.setAuthTag(etiqueta);
+console.log(Buffer.concat([descifrador.update(cifrado), descifrador.final()]).toString()); // "hola"
+
+const resumen = createHash("sha256").update(texto).digest("hex");
+console.log(resumen.length); // 64
+```
+
+- La codificación en **Base64** se deshace sin ningún secreto.
+- El texto cifrado solo se recupera con la clave.
+- Del hash no hay forma de volver a "hola": solo se puede comprobar si otro texto produce el mismo resumen.
+
+## Codificar
+
+Sirve para que los datos encajen en un formato o un canal:
+
+- **Base64** representa datos binarios, como una imagen, usando solo letras, cifras y unos pocos signos, para que viajen dentro de un texto: un correo, un [JSON](/articulos/formatos-de-datos-json-csv-xml/), una URL.
+- **UTF-8** representa caracteres como bytes, como explica [codificación de caracteres](/articulos/codificacion-de-caracteres/).
+- La codificación de URL convierte los espacios en `%20`.
+
+El error peligroso es tratarla como protección. Una contraseña en Base64 es una contraseña a la vista.
+
+## Cifrar
+
+Sirve para la **confidencialidad**: que solo quien tiene la clave pueda leer los datos. Con cifrado [simétrico o asimétrico](/articulos/cifrado-simetrico-y-asimetrico/). Protege las comunicaciones con [HTTPS](/articulos/https-y-tls/) y los datos guardados en discos y copias de seguridad.
+
+Su seguridad depende de la clave: si se pierde, los datos se pierden; si se roba, quedan expuestos.
+
+## Hash
+
+Una [función hash](/articulos/funciones-hash/) resume cualquier cantidad de datos en una huella de tamaño fijo. El mismo dato da siempre la misma huella, y un cambio mínimo da una huella completamente distinta.
+
+Sirve para:
+
+- **Comprobar integridad**: que un archivo descargado no se ha alterado.
+- **Guardar contraseñas**, con algoritmos lentos diseñados para ello, como explica [cómo se guardan las contraseñas](/articulos/como-se-guardan-las-contrasenas/).
+- **Identificar contenido**, como hace Git con cada commit.
+
+## Comparación
+
+| | Codificar | Cifrar | Hash |
+| --- | --- | --- | --- |
+| Propósito | Cambiar el formato | Ocultar el contenido | Resumir y comprobar |
+| Se puede deshacer | Sí, cualquiera | Sí, con la clave | No |
+| Necesita clave | No | Sí | No |
+| Tamaño del resultado | Proporcional al original | Proporcional al original | Fijo |
+| Ejemplos | Base64, UTF-8 | AES, RSA | SHA-256 |
+
+## Errores frecuentes
+
+- **"Cifrar" contraseñas.** Las contraseñas no se cifran, porque quien tenga la clave podría recuperarlas todas. Se guarda su hash.
+- **Usar Base64 como seguridad.** No protege nada.
+- **Usar un hash rápido para contraseñas.** SHA-256 es demasiado rápido: un atacante prueba miles de millones por segundo. Para contraseñas se usan algoritmos lentos a propósito.
+
+<Quiz
+	client:visible
+	question="Un dato en Base64, ¿está protegido?"
+	options={[
+		"Sí, porque está cifrado",
+		"No: Base64 es una codificación y cualquiera puede deshacerla",
+		"Solo si se usa con HTTPS",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Codificar cambia el formato y no protege nada.
+- Cifrar oculta el contenido y se deshace con la clave.
+- Un hash resume los datos en una huella fija y no se puede deshacer.
+- Las contraseñas no se cifran ni se codifican: se guarda su hash, con un algoritmo lento.

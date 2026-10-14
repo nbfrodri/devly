@@ -1,0 +1,107 @@
+---
+title: "Diferencias entre polling, long polling, Server-Sent Events y WebSockets"
+description: "Cuatro formas de que un navegador reciba datos nuevos del servidor sin recargar: preguntar a menudo, preguntar y esperar, escuchar un flujo o abrir un canal en los dos sentidos."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - que-es-http
+  - websockets
+updated: 2026-10-13
+sources:
+  - title: "MDN: Server-sent events"
+    url: https://developer.mozilla.org/es/docs/Web/API/Server-sent_events
+  - title: "MDN: Usando server-sent events"
+    url: https://developer.mozilla.org/es/docs/Web/API/Server-sent_events/Using_server-sent_events
+  - title: "RFC 6455: The WebSocket Protocol"
+    url: https://www.rfc-editor.org/info/rfc6455/
+---
+
+import { Quiz } from "@/components/quiz";
+
+[HTTP](/articulos/que-es-http/) funciona por peticiones: el navegador pregunta y el servidor responde. Pero muchas aplicaciones necesitan que el **servidor avise** cuando hay algo nuevo: un mensaje de chat, una notificación, un precio que cambia. Hay cuatro formas principales de conseguirlo: **polling**, **long polling**, **Server-Sent Events** y **WebSockets**.
+
+## Polling
+
+El navegador **pregunta cada pocos segundos**: ¿hay algo nuevo?
+
+```js
+const intervalo = 5;
+const llegaEnElSegundo = 23;
+
+const peticiones = Math.ceil(llegaEnElSegundo / intervalo);
+const retraso = peticiones * intervalo - llegaEnElSegundo;
+
+console.log(peticiones); // 5
+console.log(retraso); // 2
+```
+
+Si el mensaje llega en el segundo 23 y se pregunta cada 5, hacen falta 5 peticiones, cuatro de ellas inútiles, y el aviso llega con 2 segundos de retraso.
+
+- **A favor:** lo más simple. Funciona en cualquier sitio.
+- **En contra:** peticiones desperdiciadas y retraso. Acortar el intervalo reduce el retraso y multiplica el desperdicio.
+
+## Long polling
+
+El navegador pregunta, y el servidor **no responde hasta que hay algo nuevo**, o hasta que pasa un tiempo máximo. Cuando llega la respuesta, el navegador vuelve a preguntar enseguida.
+
+- **A favor:** casi sin retraso, y sin peticiones vacías constantes. Funciona con HTTP corriente.
+- **En contra:** el servidor mantiene muchas conexiones abiertas esperando. Cada mensaje cuesta una petición nueva.
+
+## Server-Sent Events
+
+El navegador abre una conexión y el servidor **envía un flujo de mensajes** por ella, cuando quiera, sin cerrarla. Es una función estándar del navegador:
+
+```javascript
+const eventos = new EventSource("/notificaciones");
+
+eventos.onmessage = (evento) => {
+	console.log("Nuevo:", evento.data);
+};
+```
+
+- **A favor:** simple, sobre HTTP normal, y el navegador **se reconecta solo** si se corta.
+- **En contra:** solo en un sentido, del servidor al navegador. Solo texto.
+
+Encaja con notificaciones, cotizaciones, el progreso de una tarea o las respuestas de un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) que van apareciendo palabra a palabra.
+
+## WebSockets
+
+Se abre un **canal permanente en los dos sentidos**: cualquiera de los dos extremos puede enviar mensajes en cualquier momento, con muy poco coste por mensaje. Se explica en [WebSockets](/articulos/websockets/).
+
+- **A favor:** comunicación bidireccional con mínima latencia.
+- **En contra:** es otro protocolo, con su propia gestión: reconexión, autenticación, mensajes perdidos. Algunos [proxies](/articulos/proxy-y-proxy-inverso/) y [cortafuegos](/articulos/cortafuegos/) necesitan configuración. Y escalar muchas conexiones permanentes exige preparar el servidor.
+
+Encaja con chats, juegos en línea y edición colaborativa.
+
+## Comparación
+
+| | Polling | Long polling | Server-Sent Events | WebSockets |
+| --- | --- | --- | --- | --- |
+| Sentido | Cliente pregunta | Cliente pregunta | Servidor → cliente | Los dos |
+| Retraso | El intervalo | Casi ninguno | Casi ninguno | Casi ninguno |
+| Peticiones inútiles | Muchas | Pocas | Ninguna | Ninguna |
+| Protocolo | HTTP | HTTP | HTTP | Propio |
+| Reconexión | No aplica | Manual | Automática | Manual |
+| Complejidad | Mínima | Baja | Baja | Media |
+
+## Cómo elegir
+
+- **Datos que cambian poco** y un retraso de segundos da igual: **polling**. No hace falta más.
+- **El servidor avisa y el cliente solo escucha**: **Server-Sent Events**.
+- **Comunicación constante en los dos sentidos**: **WebSockets**.
+- **Long polling** queda como alternativa para entornos donde lo demás no funciona.
+
+<Quiz
+	client:visible
+	question="Una aplicación solo necesita que el servidor envíe notificaciones al navegador. ¿Qué opción es la más sencilla y adecuada?"
+	options={["WebSockets", "Server-Sent Events", "Polling cada segundo"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Polling pregunta cada cierto tiempo; es simple, con retraso y peticiones inútiles.
+- Long polling pregunta y espera a que haya algo; casi sin retraso, con conexiones abiertas.
+- Server-Sent Events envía un flujo del servidor al cliente, con reconexión automática.
+- WebSockets abre un canal permanente en los dos sentidos.

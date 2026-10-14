@@ -1,0 +1,95 @@
+---
+title: "Diferencias entre cookies y localStorage"
+description: "Las cookies viajan al servidor en cada petición y pueden ocultarse de JavaScript. LocalStorage se queda en el navegador y solo lo usa JavaScript."
+level: basico
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - almacenamiento-en-el-navegador
+  - sesiones-y-tokens
+updated: 2026-10-13
+sources:
+  - title: "MDN: API de almacenamiento web"
+    url: https://developer.mozilla.org/es/docs/Web/API/Web_Storage_API
+  - title: "MDN: Uso de cookies HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Cookies
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las **cookies** y **localStorage** sirven para guardar datos en el navegador, con un propósito distinto. Las cookies están pensadas para **comunicarse con el servidor**: viajan automáticamente en cada petición. LocalStorage está pensado para que la **página** guarde datos para sí misma: nunca se envía al servidor por su cuenta.
+
+El artículo sobre [almacenamiento en el navegador](/articulos/almacenamiento-en-el-navegador/) explica los dos en detalle, junto con sessionStorage.
+
+## Cookies
+
+- El servidor las crea con una cabecera `Set-Cookie`, y el navegador las devuelve en cada petición a ese sitio.
+- Pequeñas: unos 4 kilobytes cada una.
+- Tienen atributos de seguridad: `HttpOnly` las oculta de JavaScript, `Secure` las limita a [HTTPS](/articulos/https-y-tls/), `SameSite` limita su envío desde otros sitios.
+- Caducan cuando se indique.
+
+Desde JavaScript se leen como un único texto, incómodo de manejar:
+
+```js
+const cookies = "tema=oscuro; idioma=es";
+
+const comoObjeto = Object.fromEntries(
+	cookies.split("; ").map((par) => par.split("=")),
+);
+
+console.log(comoObjeto.idioma); // "es"
+```
+
+## LocalStorage
+
+- Lo maneja solo el JavaScript de la página, con `setItem` y `getItem`.
+- Varios megabytes.
+- No caduca.
+- Cualquier script de la página puede leerlo.
+
+```javascript
+localStorage.setItem("tema", "oscuro");
+localStorage.getItem("tema"); // "oscuro"
+```
+
+## Comparación
+
+| | Cookies | LocalStorage |
+| --- | --- | --- |
+| Se envía al servidor | Sí, en cada petición | No |
+| Quién lo crea normalmente | El servidor | La página |
+| Tamaño | Unos 4 KB | Varios MB |
+| Caducidad | La que se indique | No caduca |
+| Oculto para JavaScript | Posible, con `HttpOnly` | Nunca |
+| Riesgo principal | [CSRF](/articulos/csrf/) | [XSS](/articulos/cross-site-scripting-xss/) |
+| Uso típico | Sesión del usuario | Preferencias de la interfaz |
+
+## Dónde va un token de sesión
+
+Es la decisión que más importa, y tiene que ver con la seguridad.
+
+- En **localStorage**, cualquier script que consiga ejecutarse en la página, por ejemplo mediante un ataque XSS, puede leerlo y robarlo.
+- En una **cookie con `HttpOnly`**, ningún script puede leerla. El riesgo es otro, el CSRF, que se mitiga con `SameSite`.
+
+Por eso la recomendación habitual es guardar los identificadores de [sesión o los tokens](/articulos/sesiones-y-tokens/) en cookies `HttpOnly`, `Secure` y `SameSite`, y usar localStorage solo para datos no sensibles: el tema, el idioma, un borrador.
+
+## Un detalle de rendimiento
+
+Como las cookies viajan en todas las peticiones, incluidas las de imágenes y hojas de estilo, cada byte guardado en ellas se transmite una y otra vez. Guardar mucho en cookies hace la web más lenta. LocalStorage no tiene ese coste.
+
+<Quiz
+	client:visible
+	question="¿Dónde es más seguro guardar un token de sesión?"
+	options={[
+		"En localStorage",
+		"En una cookie con HttpOnly, Secure y SameSite",
+		"En una variable global de JavaScript",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Las cookies se envían al servidor en cada petición; localStorage se queda en el navegador.
+- Las cookies son pequeñas y pueden ocultarse de JavaScript; localStorage es mayor y siempre visible para los scripts.
+- Los datos de sesión van en cookies `HttpOnly`; localStorage, para preferencias.

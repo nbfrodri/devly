@@ -1,0 +1,112 @@
+---
+title: "Diferencias entre merge y rebase en Git"
+description: "Las dos combinan el trabajo de dos ramas. Merge conserva la historia tal como ocurrió; rebase la reescribe para que parezca lineal."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - control-de-versiones-con-git
+  - git-y-github
+updated: 2026-10-13
+sources:
+  - title: "Pro Git: Reorganizar el trabajo realizado"
+    url: https://git-scm.com/book/es/v2/Ramificaciones-en-Git-Reorganizar-el-Trabajo-Realizado
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Merge** y **rebase** son dos formas de incorporar a una rama de [Git](/articulos/control-de-versiones-con-git/) los cambios de otra. **Merge** une las dos historias con un commit nuevo y conserva todo tal como ocurrió. **Rebase** traslada tus commits para que parezca que empezaste a trabajar desde la versión más reciente, y deja una historia en línea recta.
+
+## El punto de partida
+
+Creaste una rama para una funcionalidad a partir de `main`. Mientras trabajabas, otras personas añadieron commits a `main`:
+
+```
+          A---B   tu-rama
+         /
+    C---D---E---F   main
+```
+
+Ahora quieres juntar las dos.
+
+## Merge
+
+```bash
+git switch main
+git merge tu-rama
+```
+
+Git crea un **commit de fusión** que tiene dos padres, uno de cada rama:
+
+```
+          A---B
+         /     \
+    C---D---E---F---M   main
+```
+
+- **A favor:** no cambia nada de lo que ya existía. La historia refleja lo que ocurrió de verdad, incluido que hubo trabajo en paralelo.
+- **En contra:** en un proyecto con mucho movimiento, la historia se llena de bifurcaciones y commits de fusión, y cuesta seguirla.
+
+## Rebase
+
+```bash
+git switch tu-rama
+git rebase main
+```
+
+Git toma tus commits A y B y los **vuelve a aplicar** encima del último commit de `main`, como si hubieras empezado ahí:
+
+```
+    C---D---E---F---A'---B'   tu-rama
+```
+
+A' y B' tienen los mismos cambios que A y B, pero son commits **nuevos**, con otros identificadores. Después, `main` puede avanzar hasta B' sin commit de fusión.
+
+- **A favor:** historia lineal, fácil de leer.
+- **En contra:** **reescribe la historia**. Y si hay conflictos, aparecen commit a commit.
+
+## Comparación
+
+| | Merge | Rebase |
+| --- | --- | --- |
+| Historia | Conserva lo que ocurrió | La reescribe, lineal |
+| Commits existentes | No cambian | Se sustituyen por copias nuevas |
+| Commit extra | Uno de fusión | Ninguno |
+| Conflictos | Se resuelven una vez | Se pueden repetir en cada commit |
+| Seguro con ramas compartidas | Sí | No |
+
+## La regla de oro
+
+**No hagas rebase de commits que ya has compartido** con otras personas.
+
+Si alguien ya tiene los commits A y B y tú los sustituyes por A' y B', las dos historias divergen. Al sincronizar, aparecen commits duplicados y conflictos confusos. El libro Pro Git lo resume en esa regla.
+
+Rebase es seguro para ordenar **tu propio trabajo local** antes de compartirlo.
+
+## Cuál usar
+
+Es en buena parte una cuestión de convención en cada equipo:
+
+- Muchos hacen **rebase** de su rama sobre `main` antes de proponer los cambios, para que sea fácil de revisar, y después **merge** para incorporarla.
+- Otros usan siempre merge y aceptan una historia más ramificada.
+- Las plataformas como GitHub permiten elegir al aceptar una solicitud de cambios: fusionar, reorganizar o **aplastar**, que reúne todos los commits de la rama en uno solo.
+
+Lo importante es que todo el equipo siga el mismo criterio.
+
+<Quiz
+	client:visible
+	question="¿Por qué no se debe hacer rebase de commits que ya se han compartido?"
+	options={[
+		"Porque se pierden los cambios",
+		"Porque rebase crea commits nuevos y la historia de los demás deja de coincidir",
+		"Porque Git no lo permite",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Merge une dos ramas con un commit de fusión y conserva la historia real.
+- Rebase reaplica tus commits sobre la otra rama y deja una historia lineal.
+- Rebase crea commits nuevos: no se usa con commits ya compartidos.
+- Muchos equipos combinan los dos: rebase para ordenar, merge para incorporar.

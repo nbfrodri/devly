@@ -1,0 +1,92 @@
+---
+title: "Diferencias entre OLTP y OLAP"
+description: "OLTP es el uso diario de una base de datos, con muchas operaciones pequeñas. OLAP es el análisis, con pocas consultas enormes. Se diseñan de forma opuesta."
+level: intermedio
+kind: comparacion
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+  - almacen-de-datos-y-lago-de-datos
+updated: 2026-10-13
+sources:
+  - title: "Microsoft: Procesamiento de transacciones en línea (OLTP)"
+    url: https://learn.microsoft.com/es-es/azure/architecture/data-guide/relational-data/online-transaction-processing
+  - title: "Microsoft: Procesamiento analítico en línea (OLAP)"
+    url: https://learn.microsoft.com/es-es/azure/architecture/data-guide/relational-data/online-analytical-processing
+---
+
+import { Quiz } from "@/components/quiz";
+
+**OLTP**, procesamiento de transacciones en línea, es el uso de una [base de datos](/articulos/que-es-una-base-de-datos/) para el **funcionamiento diario** de una aplicación: muchas operaciones pequeñas y rápidas, como crear un pedido o actualizar un saldo. **OLAP**, procesamiento analítico en línea, es su uso para **analizar**: pocas consultas, pero que recorren enormes cantidades de datos para responder preguntas de negocio.
+
+Tienen necesidades tan distintas que se suelen resolver con sistemas diferentes.
+
+## OLTP
+
+Es lo que hace la base de datos de una tienda en línea mientras la gente compra:
+
+- Registrar un pedido.
+- Descontar unidades del almacén.
+- Consultar el carrito de un usuario.
+
+Cada operación toca **pocas filas**, debe ser **muy rápida**, y hay **miles a la vez**. Además deben ser correctas aunque coincidan: son [transacciones ACID](/articulos/transacciones-y-acid/).
+
+```sql
+UPDATE productos SET existencias = existencias - 1 WHERE id = 42;
+```
+
+## OLAP
+
+Es lo que hace el equipo de negocio al preguntar:
+
+```sql
+SELECT region, date_trunc('month', fecha) AS mes, SUM(importe)
+FROM ventas
+GROUP BY region, mes;
+```
+
+"Ventas por región y mes de los últimos cinco años". Una sola consulta que recorre millones de filas, combina varias tablas y agrega. Importa que termine en un tiempo razonable, no en milisegundos.
+
+## Comparación
+
+| | OLTP | OLAP |
+| --- | --- | --- |
+| Uso | Operaciones del día a día | Análisis e informes |
+| Consultas | Muchas, pequeñas | Pocas, enormes |
+| Filas por operación | Pocas | Millones |
+| Escrituras | Constantes | Cargas periódicas |
+| Diseño | [Normalizado](/articulos/normalizacion-de-bases-de-datos/) | Desnormalizado, en estrella |
+| Almacenamiento | Por filas | Por columnas |
+| Usuarios | La aplicación y sus clientes | Analistas |
+| Prioridad | Rapidez y consistencia de cada operación | Velocidad de las agregaciones |
+| Datos | Actuales | Históricos |
+
+## Por qué no en la misma base
+
+- **Rendimiento.** Una consulta analítica pesada consume recursos y ralentiza las operaciones de los usuarios.
+- **Diseño opuesto.** OLTP guarda por filas, porque lee y escribe filas enteras. OLAP guarda por columnas, porque suma columnas enteras.
+- **Historia.** Las bases operativas guardan el estado actual; el análisis necesita la historia.
+
+Por eso los datos se copian periódicamente, con [procesos ETL](/articulos/procesos-etl/), de las bases OLTP a un [almacén de datos](/articulos/almacen-de-datos-y-lago-de-datos/) para OLAP.
+
+## La frontera se acorta
+
+Existen sistemas llamados **HTAP**, híbridos, que intentan servir los dos usos sobre los mismos datos, para analizar en tiempo real sin esperar a la copia nocturna. Y muchas bases de datos operativas ofrecen réplicas de lectura donde lanzar análisis sin molestar a la principal, como explica [replicación y particionado](/articulos/replicacion-y-particionado/).
+
+<Quiz
+	client:visible
+	question="¿Qué consulta es típica de OLAP?"
+	options={[
+		"Registrar un pedido nuevo",
+		"Calcular las ventas totales por región de los últimos cinco años",
+		"Consultar el carrito de un usuario",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- OLTP es el uso operativo: muchas transacciones pequeñas, rápidas y consistentes.
+- OLAP es el análisis: pocas consultas que agregan millones de filas.
+- OLTP se normaliza y guarda por filas; OLAP se desnormaliza y guarda por columnas.
+- Se separan en sistemas distintos, unidos por procesos ETL.

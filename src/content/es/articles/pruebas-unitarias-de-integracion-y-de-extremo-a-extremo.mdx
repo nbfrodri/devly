@@ -1,0 +1,100 @@
+---
+title: "Diferencias entre pruebas unitarias, de integración y de extremo a extremo"
+description: "Las unitarias prueban una pieza aislada, las de integración comprueban que varias encajan, y las de extremo a extremo recorren la aplicación como un usuario."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - pruebas-de-software
+updated: 2026-10-13
+sources:
+  - title: "Ham Vocke: The Practical Test Pyramid (en inglés)"
+    url: https://martinfowler.com/articles/practical-test-pyramid.html
+  - title: "Martin Fowler: Test Pyramid (en inglés)"
+    url: https://martinfowler.com/bliki/TestPyramid.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las [pruebas automáticas](/articulos/pruebas-de-software/) se clasifican por **cuánto abarcan**. Una **prueba unitaria** comprueba una pieza pequeña, como una función, aislada del resto. Una **prueba de integración** comprueba que varias piezas funcionan juntas, por ejemplo el código y la base de datos. Una **prueba de extremo a extremo** recorre la aplicación completa como lo haría un usuario.
+
+## Unitarias
+
+Prueban una función o una clase sin nada alrededor.
+
+```js
+import assert from "node:assert/strict";
+
+function precioConIva(precio) {
+	return Math.round(precio * 121) / 100;
+}
+
+assert.equal(precioConIva(100), 121);
+assert.equal(precioConIva(0), 0);
+
+console.log("pruebas superadas"); // pruebas superadas
+```
+
+- **Rapidísimas**: miles en segundos.
+- **Precisas**: si una falla, se sabe exactamente dónde está el problema.
+- **Limitadas**: una pieza puede funcionar sola y fallar al juntarse con las demás.
+
+Si la pieza depende de algo externo, como una API, en la prueba se sustituye por un **doble**: una versión falsa que responde lo que conviene.
+
+## De integración
+
+Comprueban la **colaboración** entre piezas: que el código guarda y lee bien de una base de datos real, que dos servicios se entienden, que una [API](/articulos/que-es-una-api/) responde con el formato esperado.
+
+- Detectan errores que las unitarias no ven: consultas [SQL](/articulos/que-es-sql/) mal escritas, formatos que no coinciden.
+- Son más lentas y necesitan preparar un entorno: una base de datos de pruebas, por ejemplo.
+
+## De extremo a extremo
+
+Arrancan la aplicación completa y la manejan desde fuera, como un usuario: abren el navegador, rellenan un formulario, pulsan "comprar" y comprueban que aparece la confirmación.
+
+- **Dan la máxima confianza**: si pasan, el flujo funciona de verdad.
+- **Son lentas y frágiles**: dependen de la red, de los tiempos de carga, de cambios en la interfaz. A veces fallan sin que haya un error real.
+- **Cuesta diagnosticarlas**: un fallo puede venir de cualquier parte.
+
+## Comparación
+
+| | Unitarias | De integración | De extremo a extremo |
+| --- | --- | --- | --- |
+| Alcance | Una pieza | Varias piezas juntas | Todo el sistema |
+| Velocidad | Milisegundos | Segundos | Segundos o minutos |
+| Coste de mantener | Bajo | Medio | Alto |
+| Fiabilidad | Alta | Media | Más fallos aleatorios |
+| Si fallan | Se sabe dónde | Se acota la zona | Puede ser cualquier cosa |
+| Confianza que dan | Sobre la pieza | Sobre la colaboración | Sobre el producto |
+
+## La pirámide
+
+Una recomendación clásica, la **pirámide de pruebas**, propone tener:
+
+```
+        ▲  pocas de extremo a extremo
+       ▲▲▲  algunas de integración
+     ▲▲▲▲▲▲▲  muchas unitarias
+```
+
+Muchas pruebas pequeñas y rápidas en la base, y pocas grandes y lentas arriba. El motivo: las unitarias detectan la mayoría de los errores a un coste mínimo, y las de extremo a extremo se reservan para los flujos críticos, como pagar o registrarse.
+
+El error habitual es la pirámide invertida: casi todo probado de extremo a extremo, con una batería lenta y frágil en la que nadie confía.
+
+## Todas tienen su sitio
+
+Ninguna sustituye a las otras. Las unitarias dicen que las piezas funcionan; las de integración, que encajan; las de extremo a extremo, que el producto hace lo que debe. Se ejecutan juntas en el [pipeline de integración continua](/articulos/integracion-y-despliegue-continuos/).
+
+<Quiz
+	client:visible
+	question="Según la pirámide de pruebas, ¿de qué tipo debería haber más?"
+	options={["De extremo a extremo", "De integración", "Unitarias"]}
+	answer={2}
+/>
+
+## Lo esencial
+
+- Las unitarias prueban una pieza aislada; son rápidas y precisas.
+- Las de integración comprueban que varias piezas colaboran bien.
+- Las de extremo a extremo recorren la aplicación como un usuario; dan confianza y son lentas y frágiles.
+- La pirámide recomienda muchas unitarias, algunas de integración y pocas de extremo a extremo.

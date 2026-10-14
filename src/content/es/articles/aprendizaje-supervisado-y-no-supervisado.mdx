@@ -1,0 +1,86 @@
+---
+title: "Diferencias entre aprendizaje supervisado y no supervisado"
+description: "En el supervisado, el modelo aprende de ejemplos con la respuesta correcta. En el no supervisado, recibe datos sin respuesta y busca estructura por su cuenta."
+level: basico
+kind: comparacion
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - clasificacion-y-regresion
+  - agrupamiento-y-k-medias
+updated: 2026-10-13
+sources:
+  - title: "scikit-learn: Supervised learning (en inglés)"
+    url: https://scikit-learn.org/stable/supervised_learning.html
+  - title: "scikit-learn: Unsupervised learning (en inglés)"
+    url: https://scikit-learn.org/stable/unsupervised_learning.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Son las dos grandes formas de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/). En el **aprendizaje supervisado**, el modelo aprende de ejemplos que llevan la **respuesta correcta**: esta foto es un gato, esta casa costó tanto. En el **no supervisado**, recibe datos **sin respuesta** y tiene que encontrar por su cuenta alguna estructura: grupos, patrones, rarezas.
+
+## Supervisado
+
+Es como aprender con un profesor que corrige: cada ejemplo viene con su solución, la **etiqueta**.
+
+| Datos | Etiqueta |
+| --- | --- |
+| Texto de un correo | Spam o no spam |
+| Características de una casa | Precio |
+| Radiografía | Con lesión o sin ella |
+
+El modelo aprende la relación entre los datos y la etiqueta, y después la aplica a casos nuevos. Hay dos tipos de tarea, como explica [clasificación y regresión](/articulos/clasificacion-y-regresion/):
+
+- **Clasificación**: la respuesta es una categoría.
+- **Regresión**: la respuesta es un número.
+
+Ejemplos de algoritmos: [árboles de decisión](/articulos/arboles-de-decision/), [vecinos más cercanos](/articulos/vecinos-mas-cercanos/), regresión logística, redes neuronales.
+
+Como se conoce la respuesta correcta, se puede **medir** con precisión cómo de bien funciona, como explica [cómo se evalúa un modelo de clasificación](/articulos/como-se-evalua-un-modelo-de-clasificacion/).
+
+## No supervisado
+
+No hay profesor. Solo datos, y la pregunta es qué estructura tienen.
+
+- **[Agrupamiento](/articulos/agrupamiento-y-k-medias/)**: encontrar grupos de elementos parecidos. Tipos de clientes, temas de documentos.
+- **[Reducción de dimensionalidad](/articulos/reduccion-de-dimensionalidad/)**: describir los datos con menos características.
+- **Detección de anomalías**: encontrar lo que no encaja con lo demás.
+
+Es más difícil de evaluar: no hay una respuesta correcta con la que comparar. Si el algoritmo encuentra cinco grupos de clientes, decidir si tienen sentido es trabajo humano.
+
+## Comparación
+
+| | Supervisado | No supervisado |
+| --- | --- | --- |
+| Datos | Con etiquetas | Sin etiquetas |
+| Objetivo | Predecir la etiqueta de casos nuevos | Descubrir estructura |
+| Tareas típicas | Clasificación, regresión | Agrupamiento, reducción de dimensiones, anomalías |
+| Evaluación | Clara: se compara con la respuesta | Difícil y subjetiva |
+| Coste principal | Conseguir etiquetas | Interpretar el resultado |
+
+## Las etiquetas cuestan
+
+Lo caro del aprendizaje supervisado son las etiquetas: alguien tiene que revisar miles de imágenes o de textos y anotar la respuesta. A veces exige especialistas, como médicos.
+
+Por eso tienen tanto interés los métodos que necesitan pocas.
+
+## Más allá de los dos
+
+- **Semisupervisado**: pocos datos etiquetados y muchos sin etiquetar.
+- **Autosupervisado**: el modelo se fabrica sus propias etiquetas a partir de los datos. Los [modelos de lenguaje](/articulos/modelos-de-lenguaje/) se entrenan así: ocultan la siguiente palabra de un texto y aprenden a predecirla. No hace falta que nadie anote nada, y por eso pueden aprender de cantidades enormes de texto.
+- **[Por refuerzo](/articulos/aprendizaje-por-refuerzo/)**: no hay etiquetas ni datos fijos, sino recompensas por las acciones.
+
+<Quiz
+	client:visible
+	question="Tienes datos de clientes sin ninguna etiqueta y quieres descubrir tipos de clientes. ¿Qué tipo de aprendizaje usas?"
+	options={["Supervisado", "No supervisado", "Por refuerzo"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El aprendizaje supervisado aprende de ejemplos con la respuesta correcta.
+- El no supervisado busca estructura en datos sin respuesta.
+- El supervisado se evalúa con facilidad; el no supervisado requiere interpretación.
+- Conseguir etiquetas es caro, y por eso existen métodos semisupervisados y autosupervisados.

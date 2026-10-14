@@ -93,23 +93,23 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [ ] Diferencias entre búsqueda en anchura y en profundidad
 - [x] Diferencias entre una biblioteca y un framework
 - [x] Diferencias entre GET y POST
-- [ ] Diferencias entre cookies y localStorage
+- [x] Diferencias entre cookies y localStorage
 - [ ] Diferencias entre autenticación por sesión y por clave de API
 - [x] Diferencias entre HTTP/1.1, HTTP/2 y HTTP/3
-- [ ] Diferencias entre polling, long polling, Server-Sent Events y WebSockets
-- [ ] Diferencias entre JavaScript y TypeScript
-- [ ] Diferencias entre Git y GitHub
-- [ ] Diferencias entre merge y rebase en Git
+- [x] Diferencias entre polling, long polling, Server-Sent Events y WebSockets
+- [x] Diferencias entre JavaScript y TypeScript
+- [x] Diferencias entre Git y GitHub
+- [x] Diferencias entre merge y rebase en Git
 - [ ] Diferencias entre una máquina virtual y un contenedor de cara al desarrollo
 - [ ] Diferencias entre RAM y ROM
 - [ ] Diferencias entre CPU, GPU y NPU
 - [ ] Diferencias entre hub, switch y router
-- [ ] Diferencias entre inteligencia artificial, aprendizaje automático y aprendizaje profundo
-- [ ] Diferencias entre aprendizaje supervisado y no supervisado
-- [ ] Diferencias entre codificar y cifrar
-- [ ] Diferencias entre hash y cifrado
-- [ ] Diferencias entre OLTP y OLAP
-- [ ] Diferencias entre pruebas unitarias, de integración y de extremo a extremo
+- [x] Diferencias entre inteligencia artificial, aprendizaje automático y aprendizaje profundo
+- [x] Diferencias entre aprendizaje supervisado y no supervisado
+- [x] Diferencias entre codificar y cifrar
+- [x] Diferencias entre hash y cifrado
+- [x] Diferencias entre OLTP y OLAP
+- [x] Diferencias entre pruebas unitarias, de integración y de extremo a extremo
 
 ## Curiosidades
 

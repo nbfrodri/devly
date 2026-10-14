@@ -1,0 +1,86 @@
+---
+title: "Diferencias entre inteligencia artificial, aprendizaje automático y aprendizaje profundo"
+description: "Son tres círculos, uno dentro de otro. La IA es el objetivo general; el aprendizaje automático, una forma de conseguirla; el profundo, un tipo de aprendizaje automático."
+level: basico
+kind: comparacion
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - que-es-una-red-neuronal
+updated: 2026-10-13
+sources:
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, cap. 1, Introduction (en inglés)"
+    url: https://www.deeplearningbook.org/contents/intro.html
+  - title: "scikit-learn: Supervised learning (en inglés)"
+    url: https://scikit-learn.org/stable/supervised_learning.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Inteligencia artificial**, **aprendizaje automático** y **aprendizaje profundo** se usan a menudo como sinónimos, y no lo son. Son tres conceptos **anidados**, uno dentro de otro:
+
+```
+┌───────────────── Inteligencia artificial ─────────────────┐
+│   ┌──────────── Aprendizaje automático ────────────┐       │
+│   │   ┌──────── Aprendizaje profundo ────────┐     │       │
+│   │   └──────────────────────────────────────┘     │       │
+│   └────────────────────────────────────────────────┘       │
+└────────────────────────────────────────────────────────────┘
+```
+
+Todo el aprendizaje profundo es aprendizaje automático, y todo el aprendizaje automático es inteligencia artificial. Al revés, no.
+
+## Inteligencia artificial
+
+Es el campo más amplio: conseguir que las máquinas hagan tareas que, hechas por una persona, diríamos que requieren inteligencia. Razonar, planificar, entender el lenguaje, reconocer objetos, jugar.
+
+No dice **cómo**. Una IA puede estar hecha de reglas escritas a mano. Los sistemas expertos de los años ochenta, con miles de reglas del tipo "si se cumple esto, entonces aquello", eran IA sin aprender nada, como cuenta el artículo sobre [los inviernos de la IA](/articulos/los-inviernos-de-la-ia/). El programa de ajedrez que venció al campeón del mundo en 1997 buscaba entre jugadas con reglas y mucha potencia de cálculo.
+
+## Aprendizaje automático
+
+Es una forma de hacer IA: en lugar de escribir las reglas, el programa **las aprende de ejemplos**. Se le dan datos y encuentra patrones, como explica [qué es el aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/).
+
+Incluye muchas técnicas: [árboles de decisión](/articulos/arboles-de-decision/), [vecinos más cercanos](/articulos/vecinos-mas-cercanos/), regresión, [agrupamiento](/articulos/agrupamiento-y-k-medias/)… y las redes neuronales.
+
+Con los métodos clásicos, una persona suele decidir qué características de los datos mirar: la superficie y el barrio de una casa, por ejemplo. Es la [preparación de datos](/articulos/preparacion-de-datos/) y la ingeniería de características.
+
+## Aprendizaje profundo
+
+Es un tipo de aprendizaje automático basado en [redes neuronales](/articulos/que-es-una-red-neuronal/) con **muchas capas**. "Profundo" se refiere a esa cantidad de capas.
+
+Su rasgo distintivo, como explica el libro de Goodfellow, Bengio y Courville, es que **aprende por sí mismo las representaciones**: a partir de datos en bruto, como los píxeles de una imagen, las primeras capas detectan rasgos simples y las siguientes los combinan en conceptos cada vez más complejos. No hace falta decirle qué mirar.
+
+Es lo que hay detrás del reconocimiento de imágenes con [redes convolucionales](/articulos/redes-convolucionales/), de la traducción automática y de los [modelos de lenguaje](/articulos/modelos-de-lenguaje/).
+
+## Comparación
+
+| | IA | Aprendizaje automático | Aprendizaje profundo |
+| --- | --- | --- | --- |
+| Qué es | El objetivo general | Aprender de datos | Aprender con redes de muchas capas |
+| ¿Aprende? | No necesariamente | Sí | Sí |
+| ¿Quién elige las características? | No aplica | A menudo, una persona | La propia red |
+| Datos necesarios | Variable | Moderados | Muchísimos |
+| Cálculo necesario | Variable | Moderado | Muy alto, en [GPU](/articulos/que-es-una-gpu/) |
+| Ejemplo | Sistema experto con reglas | Detector de fraude con árboles | Reconocimiento de voz |
+
+## No siempre gana lo profundo
+
+El aprendizaje profundo domina con imágenes, sonido y texto. Pero con datos en tabla y cantidades moderadas, los métodos clásicos, como los conjuntos de árboles, suelen ser igual de buenos o mejores, más baratos y más fáciles de explicar.
+
+<Quiz
+	client:visible
+	question="¿Qué relación hay entre aprendizaje profundo e inteligencia artificial?"
+	options={[
+		"Son lo mismo",
+		"El aprendizaje profundo es un tipo de aprendizaje automático, que es una forma de IA",
+		"La IA es un tipo de aprendizaje profundo",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- La IA es el objetivo general de que las máquinas hagan tareas inteligentes, aprendan o no.
+- El aprendizaje automático consigue IA aprendiendo de datos en lugar de reglas escritas.
+- El aprendizaje profundo es aprendizaje automático con redes neuronales de muchas capas.
+- Lo profundo aprende sus propias representaciones, a cambio de muchos datos y mucho cálculo.

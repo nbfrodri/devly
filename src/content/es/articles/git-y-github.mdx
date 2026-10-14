@@ -1,0 +1,78 @@
+---
+title: "Diferencias entre Git y GitHub"
+description: "Git es el programa de control de versiones que guarda la historia de un proyecto. GitHub es un servicio web que aloja repositorios de Git y añade colaboración."
+level: basico
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - control-de-versiones-con-git
+updated: 2026-10-13
+sources:
+  - title: "Pro Git: Acerca del control de versiones"
+    url: https://git-scm.com/book/es/v2/Inicio---Sobre-el-Control-de-Versiones-Acerca-del-Control-de-Versiones
+  - title: "GitHub: Acerca de GitHub y Git"
+    url: https://docs.github.com/es/get-started/start-your-journey/about-github-and-git
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Git** es un programa de [control de versiones](/articulos/control-de-versiones-con-git/): guarda la historia de los cambios de un proyecto en tu ordenador. **GitHub** es un servicio web que aloja repositorios de Git en internet y añade herramientas para colaborar: revisar cambios, gestionar tareas, automatizar pruebas.
+
+Git es la herramienta; GitHub, un sitio donde guardarla y trabajar en equipo con ella.
+
+## Git
+
+Lo creó Linus Torvalds en 2005 para desarrollar el núcleo de [Linux](/articulos/que-es-linux/). Es software libre y funciona sin conexión.
+
+- Registra cada cambio en **commits**.
+- Permite trabajar en **ramas** y combinarlas.
+- Es **distribuido**: cada copia de un repositorio tiene la historia completa.
+
+```bash
+git init
+git add .
+git commit -m "Primera versión"
+```
+
+Nada de esto necesita internet ni ninguna cuenta.
+
+## GitHub
+
+Es una plataforma, propiedad de Microsoft desde 2018, que guarda repositorios de Git en sus servidores. Sobre ellos ofrece:
+
+- **Solicitudes de cambios**, *pull requests*: proponer cambios y que otros los revisen y comenten antes de incorporarlos.
+- **Incidencias**, para seguir errores y tareas.
+- **Automatización** con flujos que ejecutan pruebas o despliegan, la [integración continua](/articulos/integracion-y-despliegue-continuos/).
+- **Páginas web** gratuitas generadas desde un repositorio.
+- Una **red social** de proyectos: seguir, marcar como favorito, bifurcar.
+
+```bash
+git remote add origin https://github.com/usuario/proyecto.git
+git push -u origin main
+```
+
+`git push` envía los commits al repositorio de GitHub. Es Git hablando con un servidor remoto.
+
+## Comparación
+
+| | Git | GitHub |
+| --- | --- | --- |
+| Qué es | Un programa | Un servicio web |
+| Dónde funciona | En tu ordenador | En internet |
+| Necesita conexión | No | Sí |
+| Para qué | Guardar la historia de versiones | Alojar repositorios y colaborar |
+| Quién lo hace | Comunidad de software libre | Una empresa |
+| Alternativas | Mercurial, Subversion | GitLab, Bitbucket, Codeberg |
+
+## Se puede usar Git sin GitHub
+
+Git funciona solo. Y un repositorio de Git se puede alojar en GitLab, Bitbucket, Codeberg, un servidor propio o simplemente en otra carpeta. GitHub es el más popular, no el único.
+
+Lo que no se puede es usar GitHub sin Git: todo lo que guarda son repositorios de Git.
+
+## Lo esencial
+
+- Git es un programa de control de versiones que funciona en local.
+- GitHub es un servicio que aloja repositorios de Git y añade herramientas de colaboración.
+- `git push` y `git pull` sincronizan un repositorio local con uno remoto, como el de GitHub.
+- Se puede usar Git sin GitHub; hay otras plataformas e incluso servidores propios.
