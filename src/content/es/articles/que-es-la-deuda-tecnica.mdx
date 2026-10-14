@@ -1,0 +1,52 @@
+---
+title: "¿Qué es la deuda técnica?"
+description: "La deuda técnica es el coste futuro de haber elegido una solución rápida en lugar de una mejor. Como una deuda, genera intereses: cada cambio cuesta más."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-la-refactorizacion
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Technical Debt (en inglés)"
+    url: https://martinfowler.com/bliki/TechnicalDebt.html
+  - title: "Martin Fowler: Technical Debt Quadrant (en inglés)"
+    url: https://martinfowler.com/bliki/TechnicalDebtQuadrant.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **deuda técnica** es una metáfora: el coste que se acumula en un programa cuando se elige una solución rápida en lugar de una mejor. Como una deuda económica, permite avanzar antes, pero genera **intereses**: mientras no se pague, cada cambio futuro cuesta más.
+
+## Cómo funcionan los intereses
+
+Una función mal estructurada funciona. Pero cada vez que hay que modificarla, se tarda más en entenderla, y es más fácil romper algo. Ese tiempo extra son los intereses.
+
+El **principal** es el trabajo que costaría arreglarla. Se paga [refactorizando](/articulos/que-es-la-refactorizacion/).
+
+Si la deuda crece mucho, los intereses se comen todo el tiempo: el equipo dedica más esfuerzo a pelear con el código que a mejorarlo.
+
+## No siempre es mala
+
+Endeudarse puede ser una buena decisión. Lanzar antes para comprobar si un producto interesa, sabiendo que el código se arreglará después, es razonable. El problema es la deuda que nadie decidió contraer, o la que nunca se paga.
+
+Martin Fowler la clasifica según dos preguntas:
+
+| | Deliberada | Inadvertida |
+| --- | --- | --- |
+| **Prudente** | "Lanzamos ya y lo arreglamos después" | "Ahora sabemos cómo deberíamos haberlo hecho" |
+| **Imprudente** | "No hay tiempo para diseñar" | "¿Qué es la separación en capas?" |
+
+La prudente e inadvertida es inevitable: al construir algo se aprende cómo debería haberse hecho.
+
+## Señales
+
+- Cambios sencillos que llevan días.
+- Miedo a tocar ciertas partes del código.
+- Errores que reaparecen.
+- Dependencias muy antiguas, sin actualizar.
+- Falta de [pruebas](/articulos/pruebas-de-software/).
+
+## Con qué no confundirla
+
+No es lo mismo que un error. Un error es algo que no funciona. La deuda técnica es código que **funciona**, pero cuesta mantener.

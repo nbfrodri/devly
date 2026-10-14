@@ -1,0 +1,51 @@
+---
+title: "¿Qué es la ingeniería social?"
+description: "La ingeniería social es manipular a las personas para que revelen información o hagan algo que compromete la seguridad. Ataca a las personas, no a la tecnología."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-la-ciberseguridad
+updated: 2026-10-13
+sources:
+  - title: "NIST: Glossary, social engineering (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/social_engineering
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **ingeniería social** es el conjunto de técnicas para **manipular a las personas** de modo que revelen información confidencial o hagan algo que compromete la seguridad: dar una contraseña, abrir un archivo, transferir dinero, dejar pasar a alguien.
+
+No ataca a los sistemas, sino a quienes los usan. A menudo es más fácil engañar a una persona que romper un cifrado.
+
+## En qué se apoya
+
+Explota reacciones humanas normales:
+
+| Palanca | Ejemplo |
+| --- | --- |
+| Autoridad | "Soy del departamento de informática; necesito tu contraseña" |
+| Urgencia | "Si no pagas hoy, se cancela el contrato" |
+| Miedo | "Hemos detectado un acceso sospechoso a tu cuenta" |
+| Confianza | Un mensaje que parece de un compañero o un familiar |
+| Ayuda | Alguien con las manos ocupadas que pide que le abras la puerta |
+| Curiosidad | Una memoria USB "olvidada" en el aparcamiento |
+
+## Formas habituales
+
+- **[Phishing](/articulos/que-es-el-phishing/)**: mensajes que suplantan a alguien de confianza.
+- **Pretexto**: inventar una historia creíble para justificar la petición.
+- **Fraude del directivo**: un correo que imita a un jefe y pide una transferencia urgente.
+- **Colarse**: entrar en un edificio detrás de alguien que tiene acceso.
+
+## Cómo protegerse
+
+- **Verificar por otro canal.** Si "el banco" llama, colgar y llamar al número oficial. Si "el director" pide una transferencia, confirmarlo en persona.
+- **Desconfiar de la presión**: la urgencia es la herramienta principal del engaño.
+- **Procesos que no dependan de una sola persona**: que un pago grande necesite dos aprobaciones.
+- **Formación**: conocer los trucos es la mejor defensa.
+- **Medidas técnicas** que limiten el daño, como la [autenticación en dos factores](/articulos/que-es-la-autenticacion-en-dos-factores/).
+
+## Con qué no confundirla
+
+No es un tipo de programa. El [malware](/articulos/que-es-el-malware/) es software; la ingeniería social es engaño. A menudo van juntos: se usa un engaño para que alguien instale el programa.

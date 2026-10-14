@@ -1,0 +1,49 @@
+---
+title: "¿Qué es el firmware?"
+description: "El firmware es el software que viene grabado en un dispositivo y controla su funcionamiento más básico, por debajo del sistema operativo."
+level: basico
+kind: definicion
+layer: hardware
+prerequisites:
+  - la-placa-base-y-los-buses
+  - que-es-un-sistema-operativo
+updated: 2026-10-13
+sources:
+  - title: "NIST: Glossary, firmware (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/firmware
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **firmware** es el software que viene grabado en un dispositivo, en una memoria permanente, y controla su funcionamiento más básico. Está a medio camino entre el hardware y el software: es código, pero va unido al aparato.
+
+El nombre combina *firm*, firme, con *software*: un programa que no se cambia con frecuencia.
+
+## Dónde está
+
+Casi cualquier aparato electrónico lo tiene:
+
+- La **placa base** de un ordenador, con el firmware que arranca el equipo, como explica [la placa base y los buses](/articulos/la-placa-base-y-los-buses/).
+- Los **discos y SSD**, cuyo controlador gestiona dónde se guarda cada dato, como cuenta [discos duros y SSD](/articulos/discos-duros-y-ssd/).
+- Los **routers**, las impresoras, las cámaras.
+- Los electrodomésticos y los dispositivos del [internet de las cosas](/articulos/internet-de-las-cosas/), donde a menudo es todo el software que hay, ejecutándose en un [microcontrolador](/articulos/microcontrolador-y-microprocesador/).
+
+## Firmware y sistema operativo
+
+En un ordenador, el firmware arranca primero: comprueba el hardware, lo prepara y carga el [sistema operativo](/articulos/que-es-un-sistema-operativo/). A partir de ahí, el sistema toma el control.
+
+En un aparato sencillo no hay sistema operativo: el firmware lo hace todo.
+
+## Actualizaciones
+
+Antes se grababa una vez en fábrica y no se tocaba. Hoy se guarda en memoria flash y se puede **actualizar**, para corregir errores, añadir funciones o cerrar fallos de seguridad.
+
+Actualizar el firmware tiene un riesgo particular: si se interrumpe a medias, por ejemplo por un corte de luz, el aparato puede quedar inservible. Muchos dispositivos guardan una copia de reserva para evitarlo.
+
+## Seguridad
+
+El firmware se ejecuta antes que todo lo demás y con el máximo control. Un firmware comprometido es muy difícil de detectar y sobrevive a reinstalar el sistema operativo. Por eso los equipos comprueban, al arrancar, que el firmware y lo que carga están firmados por quien corresponde.
+
+## Con qué no confundirlo
+
+No es el **controlador**, o *driver*: este es un programa del sistema operativo para hablar con un dispositivo. El firmware vive dentro del propio dispositivo.

@@ -1,0 +1,42 @@
+---
+title: "¿Qué es un SDK?"
+description: "Un SDK, kit de desarrollo de software, es el conjunto de herramientas que un fabricante ofrece para programar sobre su plataforma o servicio."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-una-api
+updated: 2026-10-13
+sources:
+  - title: "MDN: SDK, Software Development Kit (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/SDK
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **SDK**, del inglés *software development kit* o kit de desarrollo de software, es un conjunto de herramientas que se ofrece para programar sobre una plataforma o un servicio concretos. Suele incluir bibliotecas, documentación, ejemplos y programas de ayuda.
+
+## Ejemplos
+
+- El SDK de Android: lo necesario para crear aplicaciones para ese sistema.
+- El SDK de un servicio de pagos: bibliotecas en varios lenguajes para cobrar sin escribir a mano cada petición.
+- El SDK de un proveedor de [la nube](/articulos/computacion-en-la-nube/), para manejar sus servicios desde código.
+
+## SDK y API
+
+Se confunden a menudo.
+
+- Una **[API](/articulos/que-es-una-api/)** es la interfaz: qué se puede pedir y cómo. Por ejemplo, las direcciones a las que se envían peticiones y el formato de las respuestas.
+- Un **SDK** es un paquete de herramientas que facilita usar esa API, y a veces otras cosas.
+
+Se puede usar una API sin SDK, escribiendo directamente las peticiones [HTTP](/articulos/que-es-http/). El SDK ahorra ese trabajo: gestiona la autenticación, los reintentos y los errores, y ofrece funciones con nombres claros.
+
+```javascript
+const pago = await pagos.crear({ importe: 1999, moneda: "eur" });
+```
+
+Esa llamada de un SDK imaginario esconde por debajo una petición HTTP con sus cabeceras y su cuerpo.
+
+## Con qué no confundirlo
+
+Una **biblioteca** es una pieza de código reutilizable; un SDK suele incluir varias bibliotecas y además herramientas, documentación y ejemplos. Un **framework** impone una estructura a la aplicación; un SDK no.

@@ -12,38 +12,38 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 
 ### Programación
 
-- [ ] ¿Qué es un algoritmo?
+- [x] ¿Qué es un algoritmo?
 - [ ] ¿Qué es un lenguaje de programación?
 - [ ] ¿Qué es el código fuente?
 - [ ] ¿Qué es una biblioteca?
 - [ ] ¿Qué es un framework?
-- [ ] ¿Qué es un SDK?
-- [ ] ¿Qué es la sintaxis?
-- [ ] ¿Qué es un literal?
-- [ ] ¿Qué es un operador?
+- [x] ¿Qué es un SDK?
+- [x] ¿Qué es la sintaxis?
+- [x] ¿Qué es un literal?
+- [x] ¿Qué es un operador?
 - [ ] ¿Qué es un puntero o una referencia?
-- [ ] ¿Qué es un objeto?
-- [ ] ¿Qué es una clase?
+- [x] ¿Qué es un objeto?
+- [x] ¿Qué es una clase?
 - [ ] ¿Qué es una interfaz?
-- [ ] ¿Qué es un callback?
-- [ ] ¿Qué es la refactorización?
-- [ ] ¿Qué es la deuda técnica?
+- [x] ¿Qué es un callback?
+- [x] ¿Qué es la refactorización?
+- [x] ¿Qué es la deuda técnica?
 - [ ] ¿Qué es el código espagueti?
-- [ ] ¿Qué es un linter?
+- [x] ¿Qué es un linter?
 - [ ] ¿Qué es un depurador?
-- [ ] ¿Qué es un IDE?
+- [x] ¿Qué es un IDE?
 
 ### Web y aplicaciones
 
-- [ ] ¿Qué es una URL?
-- [ ] ¿Qué es un dominio?
-- [ ] ¿Qué es un puerto?
+- [x] ¿Qué es una URL?
+- [x] ¿Qué es un dominio?
+- [x] ¿Qué es un puerto?
 - [ ] ¿Qué es un endpoint?
 - [ ] ¿Qué es un webhook?
-- [ ] ¿Qué es un código de estado HTTP?
-- [ ] ¿Qué es una cabecera HTTP?
-- [ ] ¿Qué es localhost?
-- [ ] ¿Qué es un certificado digital?
+- [x] ¿Qué es un código de estado HTTP?
+- [x] ¿Qué es una cabecera HTTP?
+- [x] ¿Qué es localhost?
+- [x] ¿Qué es un certificado digital?
 - [ ] ¿Qué es un hosting?
 - [ ] ¿Qué es el SEO técnico?
 
@@ -56,19 +56,19 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [ ] ¿Qué es un archivo?
 - [ ] ¿Qué es el kernel?
 - [ ] ¿Qué es un driver?
-- [ ] ¿Qué es el firmware?
+- [x] ¿Qué es el firmware?
 - [ ] ¿Qué es una máquina virtual de un lenguaje?
-- [ ] ¿Qué es una dirección MAC?
+- [x] ¿Qué es una dirección MAC?
 
 ### Seguridad
 
-- [ ] ¿Qué es el phishing?
-- [ ] ¿Qué es el malware?
+- [x] ¿Qué es el phishing?
+- [x] ¿Qué es el malware?
 - [ ] ¿Qué es el ransomware?
-- [ ] ¿Qué es un ataque de denegación de servicio?
-- [ ] ¿Qué es la autenticación en dos factores?
+- [x] ¿Qué es un ataque de denegación de servicio?
+- [x] ¿Qué es la autenticación en dos factores?
 - [ ] ¿Qué es una vulnerabilidad de día cero?
-- [ ] ¿Qué es la ingeniería social?
+- [x] ¿Qué es la ingeniería social?
 
 ### IA
 

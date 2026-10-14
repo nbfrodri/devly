@@ -1,0 +1,52 @@
+---
+title: "¿Qué es un certificado digital?"
+description: "Un certificado digital es un documento firmado por una autoridad de confianza que asocia una clave pública con una identidad, como un dominio."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - cifrado-simetrico-y-asimetrico
+  - https-y-tls
+updated: 2026-10-13
+sources:
+  - title: "MDN: Digital certificate (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/Digital_certificate
+  - title: "RFC 5280: Internet X.509 Public Key Infrastructure Certificate and CRL Profile"
+    url: https://www.rfc-editor.org/info/rfc5280/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **certificado digital** es un documento electrónico que asocia una **clave pública** con una **identidad**, como un nombre de dominio o una persona, y que está firmado por una **autoridad de certificación** que da fe de esa asociación.
+
+Es lo que permite al navegador saber que, cuando se conecta a la web de su banco, habla de verdad con su banco.
+
+## El problema que resuelve
+
+El [cifrado asimétrico](/articulos/cifrado-simetrico-y-asimetrico/) permite comunicarse de forma segura con quien tiene una clave privada, usando su clave pública. Pero queda una pregunta: ¿cómo sé que esa clave pública es de quien dice ser? Un atacante podría darme la suya haciéndose pasar por el banco.
+
+El certificado lo resuelve: una tercera parte de confianza firma "esta clave pública pertenece a `banco.ejemplo`".
+
+## Qué contiene
+
+- El nombre al que pertenece, por ejemplo un dominio.
+- La clave pública.
+- Quién lo emite, la autoridad de certificación.
+- Las fechas de validez.
+- La firma de la autoridad.
+
+## La cadena de confianza
+
+Los navegadores y sistemas operativos traen una lista de autoridades raíz en las que confían. Estas firman a autoridades intermedias, que firman los certificados de los sitios.
+
+Al conectarse por [HTTPS](/articulos/https-y-tls/), el navegador comprueba que cada firma de la cadena es válida, que llega a una raíz de confianza, que el nombre coincide con el del sitio y que el certificado no ha caducado. Si algo falla, muestra un aviso.
+
+## Caducan
+
+Los certificados tienen una vida limitada, cada vez más corta. Que caduque uno es una causa frecuente de caídas de servicios. Por eso se renuevan de forma automática.
+
+## Con qué no confundirlo
+
+- **La clave privada** no va en el certificado: se queda en el servidor, en secreto. El certificado es público.
+- **Un certificado no garantiza que un sitio sea honrado**, solo que el dominio es el que dice ser. Una web de [phishing](/articulos/que-es-el-phishing/) puede tener un certificado válido para su propio dominio falso.
+- El **certificado digital** con el que una persona firma trámites ante la administración usa la misma tecnología, con una identidad personal en lugar de un dominio.

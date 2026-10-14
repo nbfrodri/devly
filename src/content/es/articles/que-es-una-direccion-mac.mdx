@@ -1,0 +1,58 @@
+---
+title: "¿Qué es una dirección MAC?"
+description: "Una dirección MAC es el identificador de una tarjeta de red, usado para entregar datos dentro de una misma red local."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - capa-de-enlace
+  - que-es-una-direccion-ip
+updated: 2026-10-13
+sources:
+  - title: "NIST: Glossary, media access control address (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/media_access_control_address
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **dirección MAC** es un identificador de 48 bits asociado a una **tarjeta de red**. Sirve para entregar datos de un equipo a otro **dentro de una misma red local**. Se escribe como seis pares de cifras [hexadecimales](/articulos/sistema-hexadecimal/): `00:1A:2B:3C:4D:5E`.
+
+MAC son las siglas de *media access control*, control de acceso al medio.
+
+## Su estructura
+
+```js
+const mac = "00:1A:2B:3C:4D:5E";
+const partes = mac.split(":");
+
+console.log(partes.length); // 6
+console.log(partes.slice(0, 3).join(":")); // "00:1A:2B"
+console.log(2 ** 48); // 281474976710656
+```
+
+Los tres primeros bytes identifican al **fabricante**, que tiene asignado ese prefijo. Los tres últimos los elige el fabricante para cada tarjeta.
+
+## Para qué sirve
+
+Trabaja en la [capa de enlace](/articulos/capa-de-enlace/). Cuando un equipo envía algo a otro de su misma red, el conmutador mira la dirección MAC de destino para saber por qué cable sacarlo, o el punto de acceso, a qué dispositivo enviarlo.
+
+Para saber qué MAC corresponde a una [dirección IP](/articulos/que-es-una-direccion-ip/) de la red local, se usa el protocolo ARP.
+
+## MAC e IP
+
+| | Dirección MAC | Dirección IP |
+| --- | --- | --- |
+| Identifica | La tarjeta de red | El equipo en una red |
+| Ámbito | La red local | Toda internet |
+| Capa | Enlace | Red |
+| Cambia | Normalmente no | Al cambiar de red |
+
+Cuando un paquete sale de la red local, la MAC no viaja con él hasta el destino: cada salto entre [routers](/articulos/enrutamiento/) usa las MAC de ese tramo. La IP es la que se mantiene de principio a fin.
+
+## Privacidad
+
+Como era fija, una dirección MAC permitía reconocer un dispositivo en cualquier red wifi a la que se conectara. Por eso los móviles y ordenadores actuales usan **direcciones aleatorias**, distintas para cada red.
+
+## Con qué no confundirla
+
+No tiene relación con los ordenadores Mac de Apple: es una coincidencia de siglas.

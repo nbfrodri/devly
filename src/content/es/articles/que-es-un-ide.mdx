@@ -1,0 +1,44 @@
+---
+title: "¿Qué es un IDE?"
+description: "Un IDE, entorno de desarrollo integrado, reúne en un programa el editor de código y las herramientas para ejecutar, depurar y probar."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - compilador-e-interprete
+updated: 2026-10-13
+sources:
+  - title: "MDN: IDE"
+    url: https://developer.mozilla.org/es/docs/Glossary/IDE
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **IDE**, del inglés *integrated development environment* o entorno de desarrollo integrado, es un programa que reúne en una sola aplicación las herramientas que se usan para programar: el editor de código y todo lo necesario para ejecutarlo, depurarlo y probarlo.
+
+## Qué suele incluir
+
+| Herramienta | Para qué |
+| --- | --- |
+| Editor con colores | Leer el código con más facilidad |
+| Autocompletado | Proponer nombres de funciones y variables mientras se escribe |
+| Navegación | Ir a la definición de una función, buscar dónde se usa |
+| Detección de errores | Señalar problemas sin ejecutar, con ayuda de un [linter](/articulos/que-es-un-linter/) |
+| Depurador | Detener el programa en un punto e inspeccionar sus valores |
+| Terminal | Ejecutar órdenes sin salir del programa |
+| Control de versiones | Ver y confirmar cambios con [Git](/articulos/control-de-versiones-con-git/) |
+| Refactorización | Renombrar o mover código en todo el proyecto de forma segura |
+
+## IDE y editor
+
+La frontera se ha difuminado.
+
+- Un **editor de texto** sencillo solo edita.
+- Un **IDE** clásico viene preparado para uno o varios lenguajes, con todo integrado.
+- Muchos **editores modernos** empiezan ligeros y se convierten en un IDE completo con extensiones.
+
+Gran parte de esa inteligencia viene hoy de un estándar, el protocolo de servidor de lenguaje: un programa aparte analiza el código de un lenguaje y se lo cuenta al editor. Así cualquier editor puede ofrecer autocompletado o ir a la definición en cualquier lenguaje que tenga ese servidor.
+
+## No es imprescindible
+
+Se puede programar con un editor de texto cualquiera y la [terminal](/articulos/terminal-y-shell/). Un IDE no cambia lo que se puede hacer, sino lo rápido y lo cómodo que es hacerlo, sobre todo en proyectos grandes.

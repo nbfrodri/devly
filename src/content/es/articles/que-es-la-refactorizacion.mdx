@@ -1,0 +1,52 @@
+---
+title: "¿Qué es la refactorización?"
+description: "Refactorizar es cambiar la estructura interna del código sin cambiar lo que hace, para que sea más fácil de entender y de modificar."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - pruebas-de-software
+  - principios-solid
+updated: 2026-10-13
+sources:
+  - title: "Martin Fowler: Refactoring (en inglés)"
+    url: https://refactoring.com/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Refactorizar** es modificar la estructura interna del código **sin cambiar su comportamiento**, para que sea más fácil de entender y de modificar. El programa hace exactamente lo mismo antes y después; lo que mejora es cómo está escrito.
+
+## Ejemplos
+
+- Dar un nombre claro a una variable llamada `x`.
+- Extraer un fragmento repetido a una [función](/articulos/funciones/).
+- Dividir una función de 200 líneas en varias pequeñas.
+- Sustituir un número mágico por una constante con nombre.
+
+```javascript
+// Antes
+if (u.e > 17 && u.p.length > 0) { /* ... */ }
+
+// Después
+const esMayorDeEdad = usuario.edad >= 18;
+const tienePedidos = usuario.pedidos.length > 0;
+if (esMayorDeEdad && tienePedidos) { /* ... */ }
+```
+
+El resultado es idéntico. El segundo se lee sin pensar.
+
+## Pasos pequeños y con red
+
+Martin Fowler, que popularizó el término, lo describe como una serie de transformaciones pequeñas, cada una de las cuales mantiene el comportamiento. Muchas pequeñas, juntas, pueden reorganizar un sistema entero.
+
+La red de seguridad son las [pruebas](/articulos/pruebas-de-software/): se ejecutan después de cada paso para comprobar que nada ha cambiado. Refactorizar sin pruebas es reescribir con los ojos cerrados.
+
+## Con qué no confundirla
+
+- **Reescribir.** Tirar el código y empezar de nuevo no es refactorizar.
+- **Corregir un error o añadir una función.** Eso cambia el comportamiento. Lo recomendable es no mezclar: primero refactorizar para que el cambio sea fácil, y después hacer el cambio.
+
+## Por qué hace falta
+
+El código se degrada con el tiempo: cada prisa deja algo peor de lo que estaba. Esa degradación es la [deuda técnica](/articulos/que-es-la-deuda-tecnica/), y refactorizar es la forma de pagarla, poco a poco.

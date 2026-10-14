@@ -1,0 +1,61 @@
+---
+title: "¿Qué es una URL?"
+description: "Una URL es la dirección de un recurso en internet. Indica cómo acceder a él, en qué servidor está y dónde dentro de ese servidor."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-http
+  - que-es-dns
+updated: 2026-10-13
+sources:
+  - title: "MDN: URL"
+    url: https://developer.mozilla.org/es/docs/Glossary/URL
+  - title: "MDN: ¿Qué es una URL?"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_URL
+  - title: "RFC 3986: Uniform Resource Identifier (URI), Generic Syntax"
+    url: https://www.rfc-editor.org/info/rfc3986/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **URL**, del inglés *uniform resource locator* o localizador uniforme de recursos, es la dirección de un recurso en internet: una página, una imagen, un archivo, un punto de una [API](/articulos/que-es-una-api/). Indica cómo acceder a él y dónde está.
+
+## Sus partes
+
+```
+https://tienda.ejemplo:8080/productos?color=rojo#opiniones
+└─┬─┘   └─────┬──────┘ └┬─┘└───┬───┘ └───┬────┘ └───┬───┘
+esquema     host     puerto  ruta    consulta   fragmento
+```
+
+| Parte | Qué indica |
+| --- | --- |
+| Esquema | El protocolo: `https`, `http`, `mailto`, `ftp` |
+| Host | El servidor, por su [dominio](/articulos/que-es-un-dominio/) o su dirección IP |
+| Puerto | El [puerto](/articulos/que-es-un-puerto/) del servidor; se omite si es el habitual |
+| Ruta | Qué recurso, dentro del servidor |
+| Consulta | Parámetros, en pares de nombre y valor |
+| Fragmento | Una parte del documento; no se envía al servidor |
+
+Los navegadores ofrecen una forma de analizarla sin errores:
+
+```js
+const url = new URL("https://tienda.ejemplo:8080/productos?color=rojo#opiniones");
+
+console.log(url.hostname); // "tienda.ejemplo"
+console.log(url.port); // "8080"
+console.log(url.searchParams.get("color")); // "rojo"
+console.log(url.hash); // "#opiniones"
+```
+
+Partirla a mano con expresiones regulares es fuente frecuente de errores, y de fallos de seguridad.
+
+## Caracteres especiales
+
+Una URL solo admite ciertos caracteres. Los demás, como los espacios o las letras con tilde, se **codifican**: el espacio se escribe `%20`.
+
+## Con qué no confundirla
+
+- **URI** es el término general para identificar un recurso. Una URL es una URI que además dice **dónde** encontrarlo. En la práctica, se usan como sinónimos.
+- **Dominio**: es solo una parte de la URL, el nombre del servidor.

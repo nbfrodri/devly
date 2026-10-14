@@ -1,0 +1,65 @@
+---
+title: "¿Qué es la autenticación en dos factores?"
+description: "La autenticación en dos factores exige dos pruebas de identidad de tipos distintos, como una contraseña y un código del móvil. Robar una sola no basta."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - autenticacion-y-autorizacion
+  - como-se-guardan-las-contrasenas
+updated: 2026-10-13
+sources:
+  - title: "NIST: Glossary, multi-factor authentication (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/multi_factor_authentication
+  - title: "RFC 6238: TOTP, Time-Based One-Time Password Algorithm"
+    url: https://www.rfc-editor.org/info/rfc6238/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **autenticación en dos factores**, o 2FA, exige dos pruebas de identidad **de tipos distintos** para iniciar sesión. Normalmente, una contraseña y un código que genera el móvil. Un atacante que robe la contraseña no puede entrar sin el segundo factor.
+
+Es un caso de la **autenticación multifactor**, que puede usar dos o más.
+
+## Los tres tipos de factor
+
+| Factor | Qué es | Ejemplos |
+| --- | --- | --- |
+| Algo que sabes | Un secreto | Contraseña, PIN |
+| Algo que tienes | Un objeto | Móvil, llave de seguridad |
+| Algo que eres | Un rasgo físico | Huella, cara |
+
+La clave es que sean de tipos distintos. Dos contraseñas no son dos factores: las dos se pueden robar de la misma forma.
+
+## Códigos que cambian cada 30 segundos
+
+Las aplicaciones de autenticación generan códigos de un solo uso. Al activarlas, el servicio y el móvil comparten un secreto. Cada 30 segundos, los dos calculan el mismo código a partir de ese secreto y de la hora, sin comunicarse:
+
+```js
+import { createHmac } from "node:crypto";
+
+function codigo(secreto, segundos, cifras = 8) {
+	const intervalo = Buffer.alloc(8);
+	intervalo.writeBigUInt64BE(BigInt(Math.floor(segundos / 30)));
+
+	const resumen = createHmac("sha1", secreto).update(intervalo).digest();
+	const desplazamiento = resumen[resumen.length - 1] & 0xf;
+	const numero = resumen.readUInt32BE(desplazamiento) & 0x7fffffff;
+
+	return String(numero % 10 ** cifras).padStart(cifras, "0");
+}
+
+console.log(codigo("12345678901234567890", 59)); // "94287082"
+```
+
+El resultado coincide con el valor de prueba de la especificación. Es el algoritmo TOTP, construido sobre una [función hash](/articulos/funciones-hash/).
+
+## No todos los segundos factores valen igual
+
+- **SMS**: mejor que nada, pero vulnerable a que alguien consiga un duplicado de la tarjeta SIM.
+- **Aplicación de códigos**: más segura.
+- **Llaves físicas y llaves de acceso**: las más seguras. Comprueban el dominio del sitio, así que no funcionan en una web de [phishing](/articulos/que-es-el-phishing/).
+
+## Con qué no confundirla
+
+La **verificación en dos pasos** a veces usa dos elementos del mismo tipo, como una contraseña y una pregunta de seguridad. No es lo mismo que dos factores. Y la 2FA no sustituye a una buena contraseña: la complementa.

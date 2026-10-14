@@ -1,0 +1,50 @@
+---
+title: "¿Qué es un dominio?"
+description: "Un nombre de dominio es el nombre legible de un sitio en internet, como ejemplo.com. El DNS lo traduce a la dirección IP del servidor."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-dns
+  - que-es-una-direccion-ip
+updated: 2026-10-13
+sources:
+  - title: "MDN: Dominio"
+    url: https://developer.mozilla.org/es/docs/Glossary/Domain
+  - title: "MDN: ¿Qué es un nombre de dominio?"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_domain_name
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **nombre de dominio** es un nombre legible que identifica un sitio o un servicio en internet, como `ejemplo.com`. Existe porque las personas recuerdan nombres, y los ordenadores se localizan por números: el [DNS](/articulos/que-es-dns/) se encarga de traducir uno en otro, la [dirección IP](/articulos/que-es-una-direccion-ip/).
+
+## Su estructura
+
+Se lee de derecha a izquierda, de lo general a lo particular:
+
+```
+tienda.ejemplo.es
+  │       │    └── dominio de primer nivel
+  │       └─────── dominio de segundo nivel
+  └─────────────── subdominio
+```
+
+| Nivel | Ejemplos |
+| --- | --- |
+| Primer nivel, genérico | `.com`, `.org`, `.dev` |
+| Primer nivel, de país | `.es`, `.mx`, `.ar` |
+| Segundo nivel | El nombre que se registra: `ejemplo` |
+| Subdominio | Lo que el dueño añade a la izquierda: `tienda`, `www`, `api` |
+
+## Registrar uno
+
+Los dominios no se compran para siempre: se **alquilan** por años, a través de empresas registradoras acreditadas. Quien registra `ejemplo.es` puede crear los subdominios que quiera sin pedir permiso a nadie.
+
+Si no se renueva, el dominio queda libre y otro puede registrarlo. Y con él, recibir el correo y las visitas que iban destinados al anterior dueño.
+
+## Con qué no confundirlo
+
+- **URL**: la dirección completa de un recurso. El dominio es solo una parte, como explica [qué es una URL](/articulos/que-es-una-url/).
+- **Alojamiento**: el servidor donde están los archivos del sitio. El dominio solo apunta a él, y se puede cambiar de alojamiento conservando el dominio.
+- **Dirección IP**: el número al que apunta el dominio.

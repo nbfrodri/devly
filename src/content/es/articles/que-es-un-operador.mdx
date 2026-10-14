@@ -1,0 +1,60 @@
+---
+title: "¿Qué es un operador?"
+description: "Un operador es un símbolo que realiza una operación sobre uno o más valores: sumar, comparar, combinar condiciones."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+  - logica-booleana
+updated: 2026-10-13
+sources:
+  - title: "MDN: Operador"
+    url: https://developer.mozilla.org/es/docs/Glossary/Operator
+  - title: "MDN: Expresiones y operadores"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **operador** es un símbolo, o a veces una palabra, que realiza una operación con uno o varios valores, llamados **operandos**, y produce un resultado. En `2 + 3`, el `+` es el operador y `2` y `3` los operandos.
+
+## Los más comunes
+
+| Tipo | Ejemplos | Resultado |
+| --- | --- | --- |
+| Aritméticos | `+`, `-`, `*`, `/`, `%`, `**` | Un número |
+| De comparación | `===`, `!==`, `<`, `>=` | Verdadero o falso |
+| Lógicos | `&&`, `\|\|`, `!` | Verdadero o falso |
+| De asignación | `=`, `+=` | Guarda un valor |
+
+```js
+console.log(7 % 3); // 1
+console.log(2 ** 3); // 8
+console.log(5 > 3 && 2 > 1); // true
+```
+
+`%` da el resto de una división; `**`, la potencia. Los lógicos se explican en [lógica booleana](/articulos/logica-booleana/).
+
+## Cuántos operandos
+
+- **Unarios**, uno: `!activo`, `-x`.
+- **Binarios**, dos: `a + b`.
+- **Ternario**, tres: `edad >= 18 ? "adulto" : "menor"`, una forma abreviada de un [condicional](/articulos/condicionales/).
+
+## Precedencia
+
+Cuando hay varios, unos se aplican antes que otros, como en matemáticas: `2 + 3 * 4` es 14, no 20. Ante la duda, los paréntesis dejan claro el orden.
+
+## Una trampa
+
+El mismo símbolo puede hacer cosas distintas según el tipo de los operandos:
+
+```js
+console.log(2 + 3); // 5
+console.log("2" + 3); // "23"
+console.log("5" == 5); // true
+console.log("5" === 5); // false
+```
+
+Con un texto, `+` concatena. Y `==` convierte los tipos antes de comparar, mientras que `===` no. Por eso en JavaScript se usa casi siempre `===`.

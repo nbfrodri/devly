@@ -1,0 +1,54 @@
+---
+title: "¿Qué es un callback?"
+description: "Un callback, o función de retrollamada, es una función que se pasa a otra para que esta la llame cuando corresponda."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - funciones
+  - funciones-de-orden-superior-y-clausuras
+updated: 2026-10-13
+sources:
+  - title: "MDN: Función de retrollamada"
+    url: https://developer.mozilla.org/es/docs/Glossary/Callback_function
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **callback**, o función de **retrollamada**, es una [función](/articulos/funciones/) que se entrega como argumento a otra función, para que esta la ejecute cuando le corresponda.
+
+La idea se parece a dejar tu teléfono en una tienda: "llámame cuando llegue el pedido". No esperas allí; te avisan.
+
+## Dos usos
+
+### Personalizar un comportamiento
+
+La función que recibe el callback hace un trabajo general, y el callback decide un detalle:
+
+```js
+const ordenados = [3, 1, 2].toSorted((a, b) => a - b);
+const dobles = [1, 2, 3].map((n) => n * 2);
+
+console.log(ordenados.join(" ")); // "1 2 3"
+console.log(dobles.join(" ")); // "2 4 6"
+```
+
+`toSorted` sabe ordenar, pero necesita que le digas cómo comparar. `map` sabe recorrer, pero necesita que le digas qué hacer con cada elemento. A las funciones que reciben otras se las llama [de orden superior](/articulos/funciones-de-orden-superior-y-clausuras/).
+
+### Reaccionar a algo que pasará después
+
+```javascript
+boton.addEventListener("click", () => {
+	console.log("Han pulsado el botón");
+});
+```
+
+La función se ejecutará cuando el usuario pulse, quizá nunca. Es el uso típico en código asíncrono: al terminar una lectura, al llegar una respuesta, al vencer un temporizador.
+
+## El problema de anidar
+
+Cuando cada operación asíncrona necesitaba un callback, y cada callback lanzaba otra operación, el código se iba anidando hacia la derecha sin fin. Se le llamó el "infierno de los callbacks". Las [promesas y async/await](/articulos/promesas-y-async-await/) nacieron para resolverlo.
+
+## Con qué no confundirlo
+
+Un callback no es un tipo especial de función: es cualquier función, usada de una manera concreta. Lo que la convierte en callback es que se pasa a otra para que la llame.

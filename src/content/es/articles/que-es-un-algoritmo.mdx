@@ -1,0 +1,58 @@
+---
+title: "¿Qué es un algoritmo?"
+description: "Un algoritmo es una secuencia finita de pasos bien definidos que resuelve un problema. Es la receta; el programa es su versión para una máquina."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+updated: 2026-10-13
+sources:
+  - title: "MDN: Algoritmo"
+    url: https://developer.mozilla.org/es/docs/Glossary/Algorithm
+  - title: "RAE: algoritmo"
+    url: https://dle.rae.es/algoritmo
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **algoritmo** es una secuencia finita y ordenada de pasos bien definidos que resuelve un problema. Recibe unos datos de entrada y produce un resultado.
+
+Una receta de cocina es un algoritmo: ingredientes, pasos en orden, un plato al final.
+
+## Un ejemplo
+
+Encontrar el número mayor de una lista:
+
+1. Toma el primer número como el mayor provisional.
+2. Recorre los demás.
+3. Si uno es mayor que el provisional, pasa a serlo.
+4. Al terminar, el provisional es el mayor.
+
+```js
+function mayor(numeros) {
+	let candidato = numeros[0];
+
+	for (const numero of numeros) {
+		if (numero > candidato) candidato = numero;
+	}
+
+	return candidato;
+}
+
+console.log(mayor([4, 17, 9, 2])); // 17
+```
+
+## Lo que debe cumplir
+
+- **Finito**: termina.
+- **Preciso**: cada paso tiene un único significado.
+- **Con entrada y salida.**
+- **Eficaz**: cada paso se puede llevar a cabo.
+
+## Con qué no confundirlo
+
+- **Programa.** El algoritmo es la idea; el programa, su escritura en un lenguaje concreto. El mismo algoritmo se puede programar en cualquier lenguaje, o hacer a mano.
+- **Algoritmo de redes sociales.** En el uso cotidiano, "el algoritmo" designa el sistema que decide qué se muestra. Es un uso extendido del término, y a menudo se refiere a un modelo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/), no a una receta escrita paso a paso.
+
+Para un mismo problema hay muchos algoritmos, y se comparan por cuánto tardan y cuánta memoria usan, lo que estudia la [complejidad algorítmica](/articulos/complejidad-algoritmica/). Hay ejemplos clásicos en [búsqueda binaria](/articulos/busqueda-binaria/) y en los [algoritmos de ordenación](/articulos/algoritmos-de-ordenacion/).

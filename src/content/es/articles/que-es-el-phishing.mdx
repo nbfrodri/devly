@@ -1,0 +1,54 @@
+---
+title: "¿Qué es el phishing?"
+description: "El phishing es un engaño que suplanta a una entidad de confianza, normalmente por correo o mensaje, para conseguir contraseñas, datos o dinero."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-la-ciberseguridad
+updated: 2026-10-13
+sources:
+  - title: "NIST: Glossary, phishing (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/phishing
+  - title: "NIST: Glossary, social engineering (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/social_engineering
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **phishing** es un tipo de engaño en el que el atacante **se hace pasar por alguien de confianza**, un banco, una empresa de mensajería, un compañero, para que la víctima le entregue contraseñas, datos de su tarjeta o dinero, o instale un programa malicioso.
+
+El nombre es un juego de palabras con *fishing*, pescar: se lanza un cebo y se espera a que alguien pique.
+
+## Cómo suele ser
+
+Un correo o un mensaje que parece legítimo:
+
+- Imita el aspecto de una empresa real: logotipo, colores, firma.
+- Crea **urgencia**: "su cuenta será bloqueada en 24 horas", "tiene un paquete retenido".
+- Pide **actuar**: pulsar un enlace, iniciar sesión, descargar un archivo, pagar una pequeña cantidad.
+
+El enlace lleva a una página que copia la original, en un dominio parecido. Lo que se escribe ahí va al atacante.
+
+## Variantes
+
+| Variante | Cómo es |
+| --- | --- |
+| Masivo | El mismo mensaje a millones de personas |
+| Dirigido | Personalizado para una víctima concreta, con datos reales |
+| Por SMS | Mensajes de texto con enlaces |
+| Por teléfono | Una llamada que suplanta a un banco o al soporte técnico |
+
+## Cómo protegerse
+
+- **Desconfiar de la urgencia** y de las peticiones inesperadas de datos o pagos.
+- **Mirar el dominio real** del enlace y del remitente, no el nombre que aparece.
+- **Ir directamente** a la web o la aplicación oficial en lugar de pulsar el enlace.
+- **Usar [autenticación en dos factores](/articulos/que-es-la-autenticacion-en-dos-factores/)**, que limita el daño si se entrega la contraseña. Las claves físicas y las llaves de acceso resisten incluso al phishing, porque se niegan a funcionar en un dominio falso.
+- **Un gestor de contraseñas**, que no rellenará la contraseña en una web falsa.
+
+## Con qué no confundirlo
+
+El phishing es una forma de [ingeniería social](/articulos/que-es-la-ingenieria-social/): ataca a las personas, no a los fallos técnicos. Puede servir para instalar [malware](/articulos/que-es-el-malware/), pero no es lo mismo.
+
+Un candado en la barra de direcciones no garantiza que el sitio sea legítimo: solo que la conexión está cifrada, como explica [qué es un certificado digital](/articulos/que-es-un-certificado-digital/).

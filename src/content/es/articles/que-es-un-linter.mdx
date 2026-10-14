@@ -1,0 +1,60 @@
+---
+title: "¿Qué es un linter?"
+description: "Un linter es una herramienta que analiza el código sin ejecutarlo y avisa de errores probables, malas prácticas e incumplimientos del estilo acordado."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - compilador-e-interprete
+  - pruebas-de-software
+updated: 2026-10-13
+sources:
+  - title: "ESLint: Core Concepts (en inglés)"
+    url: https://eslint.org/docs/latest/use/core-concepts/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **linter** es una herramienta que analiza el código fuente **sin ejecutarlo** y avisa de errores probables, malas prácticas y desviaciones del estilo acordado. El nombre viene de *lint*, la pelusa que se queda en la ropa: el linter quita la pelusa del código.
+
+## Qué detecta
+
+```javascript
+function total(precios) {
+	let suma = 0;
+	let iva = 0.21;
+	for (const precio of precios) {
+		suma = suma + precio;
+	}
+	if (suma = 0) {
+		return 0;
+	}
+	return suma;
+}
+```
+
+Un linter señalaría aquí dos cosas:
+
+- `iva` se declara y nunca se usa.
+- `if (suma = 0)` **asigna** en lugar de comparar. Es casi seguro un error: se quería `===`.
+
+El programa no da ningún aviso al ejecutarse. Simplemente hace algo distinto de lo que se pretendía.
+
+Otros problemas típicos: variables sin declarar, código que nunca se ejecuta, comparaciones dudosas, funciones demasiado complejas.
+
+## Linter y formateador
+
+- Un **formateador** solo cambia el aspecto: espacios, sangrías, saltos de línea. No cambia el significado.
+- Un **linter** busca problemas en la lógica y en el uso del lenguaje.
+
+Muchas herramientas actuales hacen las dos cosas.
+
+## Dónde se usa
+
+- **En el editor**, que subraya los problemas mientras se escribe.
+- **Antes de confirmar** cambios en [Git](/articulos/control-de-versiones-con-git/).
+- **En el [pipeline de integración continua](/articulos/integracion-y-despliegue-continuos/)**, que rechaza los cambios que no lo superan.
+
+## Con qué no confundirlo
+
+No sustituye a las [pruebas](/articulos/pruebas-de-software/): un linter detecta patrones sospechosos, no si el programa hace lo que debe. Y es distinto de un comprobador de tipos, como el de [TypeScript](/articulos/que-es-typescript/), aunque los dos analizan sin ejecutar y se complementan.

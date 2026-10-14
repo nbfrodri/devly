@@ -1,0 +1,48 @@
+---
+title: "¿Qué es localhost?"
+description: "Localhost es el nombre con el que un ordenador se refiere a sí mismo en la red. Una conexión a localhost no sale del equipo."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+  - que-es-un-puerto
+updated: 2026-10-13
+sources:
+  - title: "RFC 6761: Special-Use Domain Names"
+    url: https://www.rfc-editor.org/info/rfc6761/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Localhost** es el nombre con el que un ordenador se refiere **a sí mismo** en la red. Conectarse a `localhost` es conectarse al propio equipo: los datos no salen a ninguna red, ni siquiera llegan a la tarjeta de red.
+
+Corresponde a la [dirección IP](/articulos/que-es-una-direccion-ip/) `127.0.0.1` en IPv4 y `::1` en IPv6. La especificación de los nombres de dominio de uso especial reserva `localhost` para este fin.
+
+## Para qué se usa
+
+Sobre todo, para **desarrollar**. Mientras se construye una aplicación web, se ejecuta un servidor en el propio ordenador, y el navegador se conecta a él:
+
+```js
+const direccion = new URL("http://localhost:3000/productos");
+
+console.log(direccion.hostname); // "localhost"
+console.log(direccion.port); // "3000"
+```
+
+El número tras los dos puntos es el [puerto](/articulos/que-es-un-puerto/) en el que escucha ese servidor. Así pueden convivir varios: una aplicación en el 3000, una base de datos en el 5432.
+
+También sirve para que dos programas del mismo equipo se comuniquen sin exponerse a la red.
+
+## La interfaz de bucle
+
+El sistema operativo tiene una interfaz de red virtual, llamada de **bucle local**, en inglés *loopback*. Todo lo que se envía por ella vuelve inmediatamente al mismo equipo. Es muy rápida, y funciona aunque el ordenador no tenga ninguna conexión.
+
+## Una precaución
+
+Un servidor que escucha solo en `127.0.0.1` es accesible únicamente desde ese equipo. Uno que escucha en `0.0.0.0` acepta conexiones desde **cualquier** red a la que esté conectado el equipo, por ejemplo la wifi de una cafetería. Para desarrollar, lo seguro es lo primero.
+
+## Con qué no confundirlo
+
+- **La IP privada del equipo**, como `192.168.1.20`, es su dirección en la red local: otros equipos de esa red pueden usarla. `localhost` solo funciona desde el propio equipo.
+- **Dentro de un [contenedor](/articulos/que-es-docker/)**, `localhost` es el propio contenedor, no el ordenador que lo ejecuta. Es una confusión muy habitual al conectar un contenedor con una base de datos.

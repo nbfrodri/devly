@@ -1,0 +1,58 @@
+---
+title: "¿Qué es una clase?"
+description: "Una clase es un molde que define qué datos y qué comportamiento tendrán los objetos de un tipo. Cada objeto creado a partir de ella es una instancia."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-un-objeto
+  - programacion-orientada-a-objetos
+updated: 2026-10-13
+sources:
+  - title: "MDN: Clase"
+    url: https://developer.mozilla.org/es/docs/Glossary/Class
+  - title: "MDN: Clases"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Classes
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **clase** es una plantilla que define cómo son los [objetos](/articulos/que-es-un-objeto/) de un tipo: qué datos tienen y qué pueden hacer. Cada objeto creado a partir de una clase es una **instancia** de ella.
+
+Una clase es como el plano de una casa. Con el mismo plano se construyen muchas casas, cada una con sus propios muebles.
+
+## Un ejemplo
+
+```js
+class Contador {
+	#valor = 0;
+
+	incrementar() {
+		this.#valor = this.#valor + 1;
+		return this.#valor;
+	}
+}
+
+const visitas = new Contador();
+visitas.incrementar();
+
+console.log(visitas.incrementar()); // 2
+
+const descargas = new Contador();
+console.log(descargas.incrementar()); // 1
+```
+
+`visitas` y `descargas` son dos instancias de la misma clase. Comparten el comportamiento, pero cada una lleva su propia cuenta. La almohadilla de `#valor` lo hace **privado**: no se puede tocar desde fuera de la clase.
+
+## Lo que define
+
+- **Atributos**: los datos de cada instancia.
+- **Métodos**: las funciones que operan sobre ellos.
+- **Constructor**: el código que prepara cada instancia al crearla.
+
+## Con qué no confundirla
+
+- **Objeto.** La clase es el molde; el objeto, lo que sale de él.
+- **Interfaz.** Una interfaz solo dice qué métodos debe tener algo, sin dar su código. Una clase da la implementación.
+
+Las clases son la herramienta principal de la [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/), con ideas como la herencia, en la que una clase extiende a otra. No es la única forma de organizar un programa: la [programación funcional](/articulos/programacion-funcional/) prescinde de ellas.

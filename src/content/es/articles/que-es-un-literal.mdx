@@ -1,0 +1,55 @@
+---
+title: "¿Qué es un literal?"
+description: "Un literal es un valor escrito tal cual en el código, como 42, «hola» o true, en lugar de calcularse o leerse de una variable."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-una-variable
+  - tipos-de-datos
+updated: 2026-10-13
+sources:
+  - title: "MDN: Literal (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/Literal
+  - title: "MDN: Gramática y tipos"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Grammar_and_types
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **literal** es un valor que aparece escrito directamente en el código fuente, tal como es. En `const precio = 42;`, el `42` es un literal: no se calcula ni se lee de ningún sitio.
+
+## Tipos de literales
+
+Hay uno por cada [tipo de dato](/articulos/tipos-de-datos/) básico:
+
+| Literal | Tipo |
+| --- | --- |
+| `42`, `3.14` | Número |
+| `"hola"`, `'adiós'` | Texto |
+| `true`, `false` | Booleano |
+| `null` | Ausencia de valor |
+| `[1, 2, 3]` | Array |
+| `{ nombre: "Ana" }` | Objeto |
+| `/\d+/` | [Expresión regular](/articulos/expresiones-regulares/) |
+
+```js
+console.log(typeof 42, typeof "hola"); // number string
+console.log(Array.isArray([1, 2, 3])); // true
+```
+
+## Con qué no confundirlo
+
+- **Variable.** Una [variable](/articulos/que-es-una-variable/) es un nombre que guarda un valor que puede cambiar. En `const precio = 42`, `precio` es la variable y `42` el literal.
+- **Constante.** Una constante es una variable que no se puede reasignar. Tiene nombre; un literal, no.
+
+## Números mágicos
+
+Un literal numérico que aparece en el código sin explicación, como `if (estado === 3)`, se llama **número mágico**: nadie sabe qué significa ese 3. Es mejor darle nombre:
+
+```javascript
+const ESTADO_ENVIADO = 3;
+if (estado === ESTADO_ENVIADO) { /* ... */ }
+```
+
+El valor es el mismo, pero el código se explica solo.

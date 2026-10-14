@@ -1,0 +1,48 @@
+---
+title: "¿Qué es un código de estado HTTP?"
+description: "Es el número de tres cifras con el que un servidor indica cómo ha ido una petición: 200 si bien, 404 si no existe, 500 si ha fallado."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-http
+  - que-es-una-api
+updated: 2026-10-13
+sources:
+  - title: "MDN: Códigos de estado de respuesta HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Status
+  - title: "IANA: HTTP Status Code Registry (en inglés)"
+    url: https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **código de estado HTTP** es un número de tres cifras que el servidor incluye en cada respuesta para indicar cómo ha ido la petición. Lo acompaña una frase breve: `200 OK`, `404 Not Found`.
+
+Forma parte de toda respuesta de [HTTP](/articulos/que-es-http/).
+
+## Las cinco familias
+
+La primera cifra indica la categoría:
+
+| Familia | Significado | Ejemplos |
+| --- | --- | --- |
+| 1xx | Información: sigue | 101, cambiar de protocolo |
+| 2xx | Éxito | 200, correcto; 201, creado; 204, sin contenido |
+| 3xx | Redirección: está en otro sitio | 301, movido para siempre; 304, no ha cambiado |
+| 4xx | Error del cliente | 400, petición mal formada; 401, no autenticado; 403, prohibido; 404, no encontrado; 429, demasiadas peticiones |
+| 5xx | Error del servidor | 500, error interno; 502, puerta de enlace incorrecta; 503, no disponible |
+
+La distinción entre 4xx y 5xx es la más útil: con un 4xx, el problema está en lo que se pidió; con un 5xx, en el servidor, y reintentar más tarde puede funcionar.
+
+## Algunos que se confunden
+
+- **401 y 403.** El 401 significa que no se sabe quién eres: falta [autenticarse](/articulos/autenticacion-y-autorizacion/). El 403, que se sabe y no tienes permiso.
+- **301 y 302.** El 301 es una redirección permanente, que los buscadores y navegadores recuerdan. El 302, temporal.
+- **200 con un error dentro.** Algunas API responden 200 y ponen el error en el cuerpo. Es un mal diseño: los clientes, las [cachés](/articulos/que-es-una-cache/) y las herramientas de monitorización se fían del código.
+
+## Al diseñar una API
+
+Elegir bien el código hace que el cliente sepa qué hacer sin leer el mensaje: reintentar ante un 503, pedir credenciales ante un 401, esperar ante un 429, como explica [limitación de peticiones](/articulos/limitacion-de-peticiones/). Es parte de lo que propone el estilo [REST](/articulos/que-es-rest/).
+
+La organización IANA mantiene el registro oficial de todos los códigos.

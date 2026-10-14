@@ -1,0 +1,71 @@
+---
+title: "¿Qué es una cabecera HTTP?"
+description: "Las cabeceras son pares de nombre y valor que acompañan a una petición o una respuesta HTTP y dan información sobre ella."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "MDN: Cabeceras HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Headers
+  - title: "MDN: HTTP header (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/HTTP_header
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **cabecera HTTP** es un par de **nombre y valor** que acompaña a una petición o a una respuesta de [HTTP](/articulos/que-es-http/) y aporta información sobre ella: qué formato tiene el contenido, quién lo pide, cuánto tiempo se puede guardar.
+
+Van antes del cuerpo del mensaje, una por línea.
+
+## Un ejemplo
+
+Una petición:
+
+```http
+GET /productos HTTP/1.1
+Host: tienda.ejemplo
+Accept: application/json
+Authorization: Bearer eyJhbGciOi...
+```
+
+Y su respuesta:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: max-age=60
+Content-Length: 512
+```
+
+## Las más habituales
+
+| Cabecera | Dónde | Para qué |
+| --- | --- | --- |
+| `Host` | Petición | A qué dominio va dirigida |
+| `Accept` | Petición | Qué formatos acepta el cliente |
+| `Authorization` | Petición | Credenciales, como un [token](/articulos/que-es-un-jwt/) |
+| `Cookie` | Petición | Las [cookies](/articulos/almacenamiento-en-el-navegador/) del sitio |
+| `Content-Type` | Las dos | El formato del cuerpo |
+| `Cache-Control` | Respuesta | Cuánto se puede guardar en [caché](/articulos/que-es-una-cache/) |
+| `Set-Cookie` | Respuesta | Crear una cookie |
+| `Location` | Respuesta | Adónde redirigir |
+
+Los nombres no distinguen mayúsculas de minúsculas.
+
+## Cabeceras de seguridad
+
+Muchas protecciones del navegador se activan con cabeceras que envía el servidor:
+
+- `Strict-Transport-Security`: usar siempre [HTTPS](/articulos/https-y-tls/).
+- `Content-Security-Policy`: de dónde se pueden cargar scripts, contra el [XSS](/articulos/cross-site-scripting-xss/).
+- Las de [CORS](/articulos/que-es-cors/), que permiten peticiones desde otros orígenes.
+
+## Con qué no confundirla
+
+- **El cuerpo** es el contenido en sí: la página, los datos. Las cabeceras hablan **sobre** él.
+- **La cabecera de una página HTML**, el elemento `<head>`, es otra cosa: forma parte del documento, no del protocolo.
+
+Las cabeceras no son privadas por sí mismas: sin HTTPS, viajan en claro.

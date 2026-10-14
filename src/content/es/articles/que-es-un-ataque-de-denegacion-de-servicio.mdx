@@ -1,0 +1,51 @@
+---
+title: "¿Qué es un ataque de denegación de servicio?"
+description: "Un ataque de denegación de servicio intenta dejar un servicio inaccesible saturándolo con más tráfico o peticiones de las que puede atender."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-la-ciberseguridad
+  - ancho-de-banda-latencia-y-rendimiento
+updated: 2026-10-13
+sources:
+  - title: "MDN: Denial of Service (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/Denial_of_Service
+  - title: "NIST: Glossary, denial of service (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/denial_of_service
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **ataque de denegación de servicio**, o DoS por sus siglas en inglés, intenta dejar un servicio **inaccesible para sus usuarios legítimos**, normalmente saturándolo con más tráfico o más peticiones de las que puede atender. No busca robar datos, sino impedir que el servicio funcione.
+
+Cuando el ataque llega desde muchos equipos a la vez, se llama **distribuido**, o DDoS.
+
+## Cómo funciona
+
+Todo servicio tiene un límite: ancho de banda, conexiones simultáneas, capacidad de cálculo, memoria. El ataque busca agotar alguno.
+
+| Tipo | Qué agota | Ejemplo |
+| --- | --- | --- |
+| Volumétrico | El [ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/) de la red | Enviar más tráfico del que cabe por la conexión |
+| De protocolo | Los recursos de red del servidor | Abrir miles de conexiones a medias y no terminarlas |
+| De aplicación | El cálculo de la aplicación | Pedir muchas veces la búsqueda más costosa |
+
+Los de aplicación son difíciles de detectar: cada petición parece legítima.
+
+## De dónde sale tanto tráfico
+
+- **Redes de equipos infectados**, en inglés *botnets*: miles de ordenadores, cámaras o routers controlados por el atacante, a menudo dispositivos del [internet de las cosas](/articulos/internet-de-las-cosas/) con contraseñas de fábrica.
+- **Amplificación**: el atacante envía pequeñas consultas a servicios mal configurados, falsificando como origen la dirección de la víctima. Cada servicio responde con mucho más tráfico, y todo va a parar a la víctima.
+
+## Cómo se defiende
+
+- **[CDN](/articulos/que-es-una-cdn/) y servicios de protección**, con capacidad para absorber volúmenes enormes repartidos por el mundo.
+- **[Limitación de peticiones](/articulos/limitacion-de-peticiones/)** por cliente.
+- **[Cortafuegos](/articulos/cortafuegos/)** que filtran el tráfico sospechoso.
+- **[Escalado](/articulos/escalado-vertical-y-horizontal/)** automático, con cuidado de no convertir el ataque en una factura enorme.
+- **Proteger lo costoso**: que las operaciones caras exijan autenticación.
+
+## Con qué no confundirlo
+
+Una caída por un pico de visitas legítimas, por ejemplo al salir a la venta unas entradas muy esperadas, produce el mismo efecto sin ser un ataque. Las defensas son en parte las mismas.

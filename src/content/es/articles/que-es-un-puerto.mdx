@@ -1,0 +1,55 @@
+---
+title: "¿Qué es un puerto de red?"
+description: "Un puerto es un número que identifica a qué programa de un ordenador va dirigida una conexión. La IP dice a qué máquina; el puerto, a qué servicio."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-una-direccion-ip
+  - tcp-y-udp
+updated: 2026-10-13
+sources:
+  - title: "MDN: Puerto"
+    url: https://developer.mozilla.org/es/docs/Glossary/Port
+  - title: "IANA: Service Name and Transport Protocol Port Number Registry (en inglés)"
+    url: https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **puerto** es un número, del 0 al 65 535, que identifica a qué programa de un ordenador va dirigida una comunicación. La [dirección IP](/articulos/que-es-una-direccion-ip/) indica a qué máquina; el puerto, a qué servicio dentro de ella.
+
+Si la IP es la dirección de un edificio, el puerto es el número del piso.
+
+## Por qué hacen falta
+
+Un mismo servidor puede ofrecer a la vez una web, correo y acceso remoto. Cuando llega una conexión, el sistema operativo necesita saber a qué programa entregarla. Cada programa "escucha" en un puerto, y el número de destino de la conexión decide.
+
+Los puertos los usan [TCP y UDP](/articulos/tcp-y-udp/), en la capa de transporte.
+
+## Puertos conocidos
+
+La organización IANA mantiene un registro con los puertos asignados a cada servicio:
+
+| Puerto | Servicio |
+| --- | --- |
+| 22 | SSH, acceso remoto seguro |
+| 25 | SMTP, envío de correo |
+| 53 | [DNS](/articulos/que-es-dns/) |
+| 80 | [HTTP](/articulos/que-es-http/) |
+| 443 | [HTTPS](/articulos/https-y-tls/) |
+| 5432 | [PostgreSQL](/articulos/que-es-postgresql/) |
+
+Por eso no se escribe el puerto en una dirección web: el navegador usa el 443 para HTTPS. Si un servidor escucha en otro, hay que indicarlo: `http://localhost:3000`.
+
+## Los dos extremos
+
+Una conexión tiene un puerto en cada lado. El servidor usa uno fijo y conocido; el cliente, uno temporal que elige su sistema operativo. Así, un mismo navegador puede tener muchas conexiones abiertas con el mismo servidor, cada una con un puerto de origen distinto.
+
+## Seguridad
+
+Cada puerto abierto es una posible entrada. Un [cortafuegos](/articulos/cortafuegos/) decide qué puertos se pueden alcanzar desde fuera, y lo prudente es abrir solo los necesarios.
+
+## Con qué no confundirlo
+
+No tiene nada que ver con los puertos físicos del ordenador, como un puerto USB. Un puerto de red es solo un número.
