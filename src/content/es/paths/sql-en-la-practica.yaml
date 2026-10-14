@@ -1,0 +1,10 @@
+title: SQL en la práctica
+description: "Las consultas, uniones, índices y transacciones que se usan a diario."
+layer: datos
+steps:
+  - que-es-sql
+  - tipos-de-join
+  - indices-de-bases-de-datos
+  - que-es-un-indice-compuesto
+  - transacciones-y-acid
+  - funciones-de-ventana-en-sql

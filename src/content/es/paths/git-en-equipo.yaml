@@ -1,0 +1,8 @@
+title: Git en equipo
+description: "Guardar la historia del código, compartirla y revisar los cambios de los demás."
+layer: programacion
+steps:
+  - control-de-versiones-con-git
+  - git-y-github
+  - merge-y-rebase
+  - revision-de-codigo

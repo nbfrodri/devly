@@ -1,0 +1,9 @@
+title: Binarios y emulación
+description: "Qué hay dentro de un ejecutable, cómo se ejecuta en otra máquina y cómo se estudia sin su código."
+layer: sistemas
+steps:
+  - compilador-e-interprete
+  - que-es-un-binario
+  - virtualizacion
+  - emuladores
+  - ingenieria-inversa

@@ -1,0 +1,9 @@
+title: Protege tus cuentas
+description: "Cómo se guardan las contraseñas, por qué hace falta un segundo factor y cómo engañan los atacantes."
+layer: aplicaciones
+steps:
+  - funciones-hash
+  - como-se-guardan-las-contrasenas
+  - que-es-la-autenticacion-en-dos-factores
+  - que-es-el-phishing
+  - que-es-la-ingenieria-social

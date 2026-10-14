@@ -1,0 +1,37 @@
+title: De cero a desarrollador full stack
+description: "De la primera variable a una aplicación web completa en producción, con front-end, back-end, datos, pruebas y despliegue."
+layer: aplicaciones
+steps:
+  - que-es-una-variable
+  - tipos-de-datos
+  - condicionales
+  - bucles
+  - funciones
+  - arrays
+  - programacion-orientada-a-objetos
+  - terminal-y-shell
+  - control-de-versiones-con-git
+  - que-es-html
+  - que-es-css
+  - diseno-adaptable
+  - accesibilidad-web
+  - el-dom
+  - javascript-y-typescript
+  - promesas-y-async-await
+  - que-es-react
+  - que-es-http
+  - que-es-una-api
+  - que-es-rest
+  - que-es-nodejs
+  - que-es-sql
+  - normalizacion-de-bases-de-datos
+  - transacciones-y-acid
+  - autenticacion-y-autorizacion
+  - sesiones-y-tokens
+  - owasp-top-10
+  - pruebas-de-software
+  - desarrollo-guiado-por-pruebas
+  - integracion-y-despliegue-continuos
+  - que-es-docker
+  - computacion-en-la-nube
+  - observabilidad
