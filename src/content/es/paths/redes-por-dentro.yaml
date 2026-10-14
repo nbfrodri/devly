@@ -3,6 +3,7 @@ description: Las capas de una red una a una, del cable al transporte.
 layer: redes
 steps:
   - modelos-osi-y-tcp-ip
+  - tipos-de-redes
   - capa-de-enlace
   - enrutamiento
   - subredes-y-cidr

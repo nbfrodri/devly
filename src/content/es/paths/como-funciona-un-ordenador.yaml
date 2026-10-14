@@ -13,5 +13,6 @@ steps:
   - memoria-cache-del-procesador
   - discos-duros-y-ssd
   - compilador-e-interprete
+  - que-es-un-binario
   - que-es-un-sistema-operativo
   - que-es-un-proceso

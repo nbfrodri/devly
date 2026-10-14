@@ -1,0 +1,97 @@
+---
+title: "¿Qué es un emulador?"
+description: "Un emulador hace que un ordenador se comporte como otro distinto: imita su procesador y su hardware para ejecutar programas que no fueron hechos para él."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - virtualizacion
+  - como-funciona-un-procesador
+  - que-es-un-binario
+updated: 2026-10-13
+sources:
+  - title: "QEMU: About QEMU (en inglés)"
+    url: https://www.qemu.org/docs/master/about/index.html
+  - title: "QEMU: Introduction (en inglés)"
+    url: https://www.qemu.org/docs/master/system/introduction.html
+  - title: "MAME: About (en inglés)"
+    url: https://www.mamedev.org/about.html
+  - title: "Android Developers: Ejecuta apps en Android Emulator"
+    url: https://developer.android.com/studio/run/emulator
+  - title: "Apple Developer: About the Rosetta translation environment (en inglés)"
+    url: https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **emulador** es un programa que hace que un ordenador se comporte como **otro distinto**. Imita el procesador, la memoria y los dispositivos de la máquina original con tanta fidelidad que los programas escritos para ella funcionan sin cambios. Con un emulador se puede jugar en un PC a una consola de los años noventa o probar una aplicación de Android sin tener el móvil.
+
+## Emular frente a virtualizar
+
+Se parecen, pero no son lo mismo:
+
+| | Virtualización | Emulación |
+| --- | --- | --- |
+| Arquitectura del invitado | La misma que la del anfitrión | Puede ser otra distinta |
+| Las instrucciones | Se ejecutan directamente en el procesador real | Se traducen o se interpretan |
+| Velocidad | Casi la del hardware real | Bastante menor |
+| Ejemplo | Un Linux x86 dentro de un Windows x86 | Un programa ARM en un PC x86 |
+
+La [virtualización](/articulos/virtualizacion/) reparte un hardware real. La emulación lo **imita** por software, porque el procesador real no entiende las instrucciones del invitado. QEMU, uno de los emuladores más usados, hace las dos cosas: se define como un emulador y virtualizador de máquinas.
+
+## Cómo funciona: el bucle de un procesador
+
+Un procesador repite sin parar tres pasos: **leer** una instrucción de la memoria, **decodificarla** y **ejecutarla**. Un emulador hace lo mismo en software:
+
+```js
+function ejecutar(programa) {
+	const registros = { a: 0 };
+	let pc = 0;
+
+	while (pc < programa.length) {
+		const codigo = programa[pc];
+		if (codigo === 0x01) {
+			registros.a = programa[pc + 1];
+			pc += 2;
+		} else if (codigo === 0x02) {
+			registros.a += programa[pc + 1];
+			pc += 2;
+		} else if (codigo === 0xff) {
+			break;
+		} else {
+			throw new Error(`Instrucción desconocida: ${codigo}`);
+		}
+	}
+	return registros.a;
+}
+
+const programa = [0x01, 5, 0x02, 7, 0x02, 30, 0xff];
+console.log(ejecutar(programa)); // 42
+```
+
+Un procesador inventado con tres instrucciones: cargar un valor, sumar y parar. El emulador lee cada [byte](/articulos/que-es-un-byte/), decide qué instrucción es y actualiza los registros simulados. Un emulador real hace esto con cientos de instrucciones, y además imita la memoria, la pantalla, el sonido y los mandos, con la temporización exacta del original.
+
+## Más rápido: traducir en lugar de interpretar
+
+Interpretar instrucción a instrucción es lento: cada instrucción del invitado cuesta decenas de instrucciones reales. Los emuladores rápidos **traducen** bloques enteros de código del invitado a código del anfitrión, la primera vez que se ejecutan, y guardan la traducción para reutilizarla. Es la compilación sobre la marcha que explica [compilador e intérprete](/articulos/compilador-e-interprete/). QEMU la usa con un traductor propio, el Tiny Code Generator, capaz de emular muchos procesadores distintos.
+
+Rosetta, de Apple, lleva la idea más lejos: al cambiar sus Mac de procesadores Intel a procesadores propios ARM, traduce los programas x86 a ARM, a menudo antes de ejecutarlos, para que las aplicaciones antiguas sigan funcionando mientras sus autores publican versiones nativas.
+
+## Para qué se usan
+
+- **Desarrollo**: el emulador de Android Studio simula móviles de distintos tamaños y versiones; también se emulan [microcontroladores](/articulos/microcontrolador-y-microprocesador/) antes de tener la placa.
+- **Compatibilidad**: ejecutar programas de otra arquitectura, como hace Rosetta.
+- **Preservación**: el proyecto MAME emula máquinas recreativas para que el software histórico no desaparezca cuando el hardware original deja de funcionar. Para preservarlo de verdad, hay que poder usarlo.
+- **Seguridad**: analizar un [malware](/articulos/que-es-el-malware/) en un entorno controlado.
+
+## Lo difícil
+
+Imitar un procesador es solo el principio. Los programas antiguos dependían de detalles exactos del hardware: cuántos ciclos tardaba cada instrucción, en qué momento se dibujaba cada línea de la pantalla. Un emulador fiel debe reproducirlos, y eso exige conocer el hardware original a fondo, a menudo mediante [ingeniería inversa](/articulos/ingenieria-inversa/).
+
+Un aparte legal: un emulador en sí es software como cualquier otro. Las copias de juegos o del firmware original, en cambio, están protegidas por derechos de autor.
+
+## Lo esencial
+
+- Un emulador imita por software otro ordenador, aunque tenga otra arquitectura.
+- Repite el ciclo de leer, decodificar y ejecutar instrucciones, en software.
+- Los emuladores rápidos traducen bloques de código al del procesador real.
+- Se usan para desarrollar, mantener la compatibilidad, preservar software histórico y analizar malware.

@@ -18,3 +18,4 @@ steps:
   - senales-y-comunicacion-entre-procesos
   - sistemas-operativos-de-tiempo-real
   - linux-windows-y-macos
+  - emuladores

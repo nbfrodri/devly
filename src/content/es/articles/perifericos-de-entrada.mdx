@@ -1,0 +1,79 @@
+---
+title: "¿Cómo funcionan el teclado, el ratón y la pantalla táctil?"
+description: "Los periféricos de entrada convierten acciones físicas en datos: una tecla cierra un circuito, un ratón fotografía la mesa y una pantalla táctil mide cambios eléctricos."
+level: basico
+layer: hardware
+prerequisites:
+  - partes-de-un-ordenador
+  - interrupciones-y-entrada-salida
+updated: 2026-10-13
+sources:
+  - title: "Explain that Stuff: Computer keyboards (en inglés)"
+    url: https://www.explainthatstuff.com/computerkeyboards.html
+  - title: "Explain that Stuff: How does a computer mouse work? (en inglés)"
+    url: https://www.explainthatstuff.com/computermouse.html
+  - title: "Explain that Stuff: How do touchscreens work? (en inglés)"
+    url: https://www.explainthatstuff.com/touchscreens.html
+  - title: "USB-IF: Human Interface Devices (HID) (en inglés)"
+    url: https://www.usb.org/hid
+---
+
+import { Quiz } from "@/components/quiz";
+
+Los **periféricos de entrada** son los dispositivos con los que una persona da órdenes a un ordenador: el teclado, el ratón, la pantalla táctil, el micrófono, la cámara. Todos hacen lo mismo en el fondo: convierten una **acción física** en **datos** que el ordenador puede procesar.
+
+## El teclado
+
+Bajo las teclas hay una placa de circuito con pistas eléctricas. Al pulsar una tecla, un contacto conductor en su base toca las pistas y **cierra un circuito**, como un interruptor.
+
+Para no necesitar un cable por cada tecla, las pistas forman una **matriz** de filas y columnas. El chip del teclado recorre las filas muy rápido y comprueba qué columnas reciben corriente. La intersección indica qué tecla está pulsada.
+
+```js
+const matriz = [
+	["q", "w", "e"],
+	["a", "s", "d"],
+];
+
+function teclaPulsada(fila, columna) {
+	return matriz[fila][columna];
+}
+
+console.log(teclaPulsada(1, 2)); // "d"
+```
+
+Seis teclas con cinco cables en lugar de seis. Con un teclado completo, el ahorro es enorme. El teclado no envía letras, sino un **código de tecla**. Es el sistema operativo el que decide qué carácter corresponde según la distribución de teclado configurada, como la española o la [QWERTY](/articulos/por-que-el-teclado-es-qwerty/) estadounidense.
+
+## El ratón
+
+Los ratones antiguos tenían una bola de goma que hacía girar dos ruedas, una por eje. Los actuales son **ópticos**: un LED ilumina la superficie y un pequeño sensor, una cámara muy simple, toma cientos de imágenes por segundo de la mesa. Comparando cada imagen con la anterior, el chip del ratón calcula cuánto y hacia dónde se ha movido.
+
+El ratón no envía una posición, sino **desplazamientos**: "me he movido tanto a la derecha y tanto hacia abajo". El sistema operativo los suma a la posición del puntero.
+
+## La pantalla táctil
+
+Hay varias tecnologías:
+
+| Tipo | Cómo detecta | Multitáctil |
+| --- | --- | --- |
+| Resistiva | Dos capas que se tocan al presionar | Normalmente no |
+| Capacitiva | El dedo, que conduce la electricidad, altera un campo eléctrico | Sí |
+| Infrarroja | El dedo corta haces de luz invisibles en los bordes | Según el modelo |
+
+Los móviles usan pantallas **capacitivas**: una cuadrícula de electrodos transparentes detecta en qué puntos el dedo cambia la carga eléctrica. Por eso pueden detectar varios dedos a la vez, y por eso no responden con guantes normales.
+
+## Cómo llegan los datos al ordenador
+
+Cada vez que hay un dato nuevo, el periférico avisa al procesador con una [interrupción](/articulos/interrupciones-y-entrada-salida/), o el sistema le pregunta periódicamente.
+
+Para no necesitar un [driver](/articulos/que-es-un-driver/) distinto para cada modelo, los teclados, ratones y mandos usan la clase estándar **HID**, de dispositivos de interfaz humana, definida para USB. Un ratón describe qué datos envía siguiendo ese estándar, y el sistema operativo lo entiende sin instalar nada. Por eso un teclado USB funciona nada más conectarlo. Bluetooth tiene un perfil equivalente.
+
+## Accesibilidad
+
+Teclado, ratón y pantalla táctil no son las únicas formas de dar órdenes. Hay personas que usan solo el teclado, conmutadores, control por voz o seguimiento de la mirada. Una buena interfaz no depende de un único periférico, como explica [accesibilidad web](/articulos/accesibilidad-web/).
+
+## Lo esencial
+
+- Los periféricos de entrada convierten acciones físicas en datos.
+- El teclado detecta las teclas con una matriz de filas y columnas, y envía códigos, no letras.
+- El ratón óptico compara imágenes de la superficie y envía desplazamientos.
+- Las pantallas táctiles capacitivas detectan cambios eléctricos, y admiten varios dedos.

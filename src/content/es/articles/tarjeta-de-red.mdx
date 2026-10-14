@@ -1,0 +1,61 @@
+---
+title: "¿Qué es una tarjeta de red?"
+description: "La tarjeta de red es el componente que conecta un ordenador a una red, por cable o por radio. Convierte los datos en señales y tiene su propia dirección MAC."
+level: basico
+layer: hardware
+prerequisites:
+  - partes-de-un-ordenador
+  - que-es-una-direccion-mac
+updated: 2026-10-13
+sources:
+  - title: "Explain that Stuff: How computer networks work (en inglés)"
+    url: https://www.explainthatstuff.com/howcomputernetworkswork.html
+  - title: "IEEE 802.3 Ethernet Working Group (en inglés)"
+    url: https://www.ieee802.org/3/
+  - title: "The Linux Kernel documentation: NAPI (en inglés)"
+    url: https://docs.kernel.org/networking/napi.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **tarjeta de red**, o interfaz de red, es el componente que conecta un ordenador a una red. Convierte los datos del ordenador en **señales** que viajan por un cable o por el aire, y al revés. Hoy casi siempre va integrada en la placa base, pero sigue siendo una pieza distinta, con su propio chip.
+
+## Con cable y sin cable
+
+| | Ethernet | Wifi |
+| --- | --- | --- |
+| Medio | Cable de cobre o fibra | Ondas de radio |
+| Estándar | IEEE 802.3 | IEEE 802.11 |
+| Ventajas | Estable, rápida, poca latencia | Movilidad, sin cables |
+| Inconvenientes | Hay que llevar el cable | Interferencias, comparte el medio |
+
+Un portátil suele tener las dos. Cada una es una interfaz distinta para el sistema operativo. El funcionamiento por radio lo explica [cómo funciona el wifi](/articulos/como-funciona-el-wifi/).
+
+## Su identidad: la dirección MAC
+
+Cada tarjeta de red lleva grabado de fábrica un identificador único, la [dirección MAC](/articulos/que-es-una-direccion-mac/). Es la dirección que se usa dentro de una red local, en la [capa de enlace](/articulos/capa-de-enlace/), para que un [switch](/articulos/hub-switch-y-router/) sepa a qué equipo entregar cada trama.
+
+## Qué hace por dentro
+
+- **Física**: convierte los bits en señales eléctricas, de luz o de radio, con la [modulación](/articulos/modulacion/) adecuada.
+- **Tramas**: monta y desmonta las tramas, y comprueba que llegan sin errores con una suma de verificación.
+- **Filtrado**: descarta las tramas que no van dirigidas a su dirección MAC.
+- **Memoria propia**: guarda temporalmente los paquetes que llegan y salen.
+- **Copia directa a memoria**: deja los datos en la RAM sin ocupar al procesador.
+
+## Avisar o preguntar
+
+Cuando llega un paquete, la tarjeta avisa al procesador con una [interrupción](/articulos/interrupciones-y-entrada-salida/). Con tráfico normal funciona bien. Pero a gran velocidad pueden llegar millones de paquetes por segundo, y atender una interrupción por cada uno saturaría el procesador.
+
+Linux lo resuelve con un mecanismo llamado NAPI: tras la primera interrupción, el sistema deja de recibir avisos y pasa a **preguntar** a la tarjeta, procesando los paquetes por lotes. Cuando el tráfico baja, vuelve a las interrupciones. Es la misma idea que distingue sondear de esperar avisos en tantos otros lugares.
+
+## El driver
+
+El sistema operativo habla con la tarjeta a través de su [driver](/articulos/que-es-un-driver/). Por encima, la pila de red del sistema implementa [TCP, UDP](/articulos/tcp-y-udp/) e [IP](/articulos/que-es-una-direccion-ip/). Algunas tarjetas de servidores descargan parte de ese trabajo en su propio chip, como calcular sumas de verificación o trocear los datos.
+
+## Lo esencial
+
+- La tarjeta de red conecta el ordenador a una red, por cable (Ethernet) o por radio (wifi).
+- Cada una tiene una dirección MAC única para la red local.
+- Convierte bits en señales, monta tramas y copia los datos directamente a la memoria.
+- A gran velocidad, el sistema deja de recibir interrupciones y procesa los paquetes por lotes.

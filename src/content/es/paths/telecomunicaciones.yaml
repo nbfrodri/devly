@@ -7,3 +7,4 @@ steps:
   - ancho-de-banda-latencia-y-rendimiento
   - capa-de-enlace
   - como-funciona-el-wifi
+  - como-funciona-bluetooth

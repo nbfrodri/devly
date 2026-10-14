@@ -1,0 +1,109 @@
+---
+title: "¿Qué es un binario? Ejecutables y código máquina"
+description: "Un binario es un archivo que no es texto. El caso más importante es el ejecutable: el programa ya traducido a instrucciones que el procesador entiende directamente."
+level: intermedio
+layer: programacion
+prerequisites:
+  - compilador-e-interprete
+  - que-es-un-archivo
+  - sistema-hexadecimal
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: elf(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/elf.5.html
+  - title: "Microsoft Learn: Formato PE"
+    url: https://learn.microsoft.com/es-es/windows/win32/debug/pe-format
+  - title: "Linux man-pages: ld.so(8) (en inglés)"
+    url: https://man7.org/linux/man-pages/man8/ld.so.8.html
+  - title: "Linux man-pages: file(1) (en inglés)"
+    url: https://man7.org/linux/man-pages/man1/file.1.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+En informática, **binario** tiene dos sentidos relacionados. En general, un **archivo binario** es cualquier archivo que no es texto: una imagen, un vídeo, una base de datos. En el día a día de un desarrollador, **un binario** suele ser un **ejecutable**: un programa ya traducido a **código máquina**, las instrucciones que el procesador entiende directamente.
+
+"Descarga el binario" significa descargar el programa listo para ejecutar, sin necesidad de compilarlo.
+
+## Texto frente a binario
+
+Todos los archivos son, en el fondo, [bytes](/articulos/que-es-un-byte/). La diferencia está en cómo se interpretan:
+
+- Un **archivo de texto** contiene bytes que representan caracteres según una [codificación](/articulos/codificacion-de-caracteres/). Se puede abrir con cualquier editor.
+- Un **archivo binario** contiene bytes con un significado propio de su formato. Abierto en un editor de texto, se ve como basura.
+
+## Del código fuente al ejecutable
+
+El [código fuente](/articulos/que-es-el-codigo-fuente/) es texto que escriben las personas. El procesador no lo entiende. Un [compilador](/articulos/compilador-e-interprete/) lo traduce a código máquina:
+
+```c
+int doble(int x) { return x * 2; }
+```
+
+En un procesador x86 de 64 bits, esa función puede quedar en unos pocos bytes, que se suelen mostrar en [hexadecimal](/articulos/sistema-hexadecimal/):
+
+```
+8d 04 3f    lea eax, [rdi + rdi]
+c3          ret
+```
+
+A la izquierda, los bytes que lee el procesador. A la derecha, la misma instrucción en **lenguaje ensamblador**, una forma legible de escribir código máquina. El compilador, muy listo, ha calculado `x + x` en lugar de multiplicar.
+
+Por eso un binario es **específico de una arquitectura**: el código máquina de [x86 y el de ARM](/articulos/arquitecturas-x86-y-arm/) son distintos, y un ejecutable compilado para uno no funciona en el otro sin un [emulador](/articulos/emuladores/).
+
+## Qué hay dentro de un ejecutable
+
+Un ejecutable no es solo código máquina. Tiene un **formato** que el sistema operativo sabe leer:
+
+- Una **cabecera** que identifica el formato y la arquitectura.
+- Las **secciones**: el código, los datos con valor inicial, las constantes.
+- Dónde **empezar** a ejecutar.
+- Qué **bibliotecas** necesita.
+
+Cada sistema usa su formato: **ELF** en Linux, **PE** en Windows (los `.exe` y `.dll`) y **Mach-O** en macOS.
+
+## Reconocerlos por sus primeros bytes
+
+Muchos formatos empiezan con unos bytes fijos, un **número mágico**. Un ELF empieza siempre con el byte `7f` seguido de las letras E, L y F:
+
+```js
+const NUMEROS_MAGICOS = [
+	{ formato: "ELF", bytes: [0x7f, 0x45, 0x4c, 0x46] },
+	{ formato: "PNG", bytes: [0x89, 0x50, 0x4e, 0x47] },
+	{ formato: "PDF", bytes: [0x25, 0x50, 0x44, 0x46] },
+];
+
+function identificar(primeros) {
+	const encontrado = NUMEROS_MAGICOS.find((m) => m.bytes.every((b, i) => primeros[i] === b));
+	return encontrado?.formato ?? "desconocido";
+}
+
+console.log(identificar([0x7f, 0x45, 0x4c, 0x46, 0x02])); // "ELF"
+console.log(identificar([0x25, 0x50, 0x44, 0x46, 0x2d])); // "PDF"
+```
+
+Es lo que hace la orden `file` de Linux: identifica un archivo por su contenido, no por su extensión.
+
+## Bibliotecas: estático o dinámico
+
+Casi todo programa usa código ajeno, por ejemplo para escribir en pantalla. Hay dos formas de incluirlo:
+
+| | Enlazado estático | Enlazado dinámico |
+| --- | --- | --- |
+| Las bibliotecas | Se copian dentro del ejecutable | Se cargan al arrancar el programa |
+| Tamaño | Mayor | Menor |
+| Dependencias | Ninguna: funciona solo | Necesita las bibliotecas instaladas |
+| Actualizar una biblioteca | Hay que recompilar | Basta con actualizarla en el sistema |
+
+En Linux, el encargado de buscar y cargar las bibliotecas compartidas al arrancar un programa es el cargador dinámico, `ld.so`. Si falta una, el programa no arranca.
+
+## Binarios y confianza
+
+Un binario no se puede leer como el código fuente. Ejecutar uno descargado es confiar en quien lo compiló: puede hacer cualquier cosa que el usuario pueda hacer. Por eso se descargan de fuentes oficiales, se comprueba su [firma o su hash](/articulos/funciones-hash/), y en el software libre se busca que la compilación sea reproducible. Averiguar qué hace un binario sin su código es la [ingeniería inversa](/articulos/ingenieria-inversa/).
+
+## Lo esencial
+
+- Un archivo binario es cualquiera que no es texto; un binario suele ser un ejecutable.
+- Un ejecutable contiene código máquina, específico de una arquitectura.
+- Cada sistema tiene su formato: ELF en Linux, PE en Windows, Mach-O en macOS.
+- Las bibliotecas se incluyen dentro del ejecutable (estático) o se cargan al arrancar (dinámico).

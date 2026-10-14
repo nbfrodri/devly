@@ -48,7 +48,7 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 - [ ] Cómo funciona la fibra óptica (señales)
 - [ ] Redes móviles: de 2G a 5G (modulación)
-- [ ] Cómo funciona Bluetooth (wifi)
+- [x] Cómo funciona Bluetooth (wifi)
 - [ ] Internet por satélite (latencia)
 
 ### Datos

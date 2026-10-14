@@ -1,0 +1,15 @@
+title: Las piezas de un ordenador
+description: "Qué hace cada componente de un ordenador y cómo encajan: procesador, memoria, discos, placa, fuente, refrigeración, red y periféricos."
+layer: hardware
+steps:
+  - partes-de-un-ordenador
+  - como-funciona-un-procesador
+  - memoria-ram-y-almacenamiento
+  - discos-duros-y-ssd
+  - que-es-una-gpu
+  - la-placa-base-y-los-buses
+  - fuente-de-alimentacion
+  - refrigeracion-de-un-ordenador
+  - tarjeta-de-red
+  - como-funciona-una-pantalla
+  - perifericos-de-entrada

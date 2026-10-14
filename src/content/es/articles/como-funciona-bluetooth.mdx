@@ -1,0 +1,78 @@
+---
+title: "¿Cómo funciona Bluetooth?"
+description: "Bluetooth conecta dispositivos cercanos por radio, en la misma banda que el wifi, saltando entre canales. Su versión de bajo consumo mueve relojes, sensores y balizas."
+level: intermedio
+layer: redes
+prerequisites:
+  - tipos-de-redes
+  - modulacion
+  - como-funciona-el-wifi
+updated: 2026-10-13
+sources:
+  - title: "Bluetooth SIG: Bluetooth Technology Overview (en inglés)"
+    url: https://www.bluetooth.com/learn-about-bluetooth/tech-overview/
+  - title: "Bluetooth SIG: Understanding Bluetooth Range (en inglés)"
+    url: https://www.bluetooth.com/learn-about-bluetooth/key-attributes/range/
+  - title: "Explain that Stuff: How does Bluetooth work? (en inglés)"
+    url: https://www.explainthatstuff.com/howbluetoothworks.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Bluetooth** es una tecnología de radio para conectar dispositivos **cercanos** sin cables: auriculares, teclados, relojes, altavoces, sensores. Es la tecnología típica de las [redes de área personal](/articulos/tipos-de-redes/). La mantiene un consorcio de empresas, el Bluetooth SIG.
+
+El nombre viene de Harald Bluetooth, un rey danés del siglo X que unió a los pueblos escandinavos: la idea era unir la comunicación entre dispositivos.
+
+## Dos Bluetooth distintos
+
+| | Bluetooth clásico | Bluetooth de bajo consumo (LE) |
+| --- | --- | --- |
+| Pensado para | Flujos continuos de datos | Mensajes cortos y ocasionales |
+| Ejemplo | Auriculares, altavoces | Relojes, sensores, balizas, cerraduras |
+| Canales | 79 | 40 |
+| Consumo | Moderado | Muy bajo: una pila puede durar meses |
+
+Los dos usan la banda de **2,4 GHz**, de uso libre sin licencia, la misma que parte del [wifi](/articulos/como-funciona-el-wifi/) y los microondas. Muchos dispositivos actuales incluyen los dos.
+
+## Saltar entre canales
+
+Con tantos aparatos compartiendo la misma banda, las interferencias son inevitables. Bluetooth las esquiva con el **salto de frecuencia**: los dispositivos conectados cambian de canal muchas veces por segundo, siguiendo una secuencia que ambos conocen y que parece aleatoria para los demás.
+
+```js
+function secuencia(semilla, saltos, canales) {
+	const resultado = [];
+	let estado = semilla;
+	for (let i = 0; i < saltos; i++) {
+		estado = (estado * 17 + 5) % canales;
+		resultado.push(estado);
+	}
+	return resultado;
+}
+
+console.log(secuencia(3, 6, 79).join(" ")); // "56 9 0 5 11 34"
+```
+
+Los dos extremos generan la misma secuencia a partir de la misma semilla, así que saben dónde estará el otro en cada momento. Si un canal tiene interferencias, solo se pierde ese instante. El cálculo real es más elaborado, y además evita los canales que detecta ocupados, por ejemplo por un wifi cercano.
+
+## Piconets: quién habla con quién
+
+Cuando dos o más dispositivos se conectan, forman una pequeña red improvisada, una **piconet**. Un dispositivo, normalmente el móvil o el ordenador, coordina la comunicación y marca el ritmo de los saltos; los demás le siguen. Los dispositivos pueden entrar y salir en cualquier momento, y varias piconets pueden unirse en una red mayor.
+
+## Emparejar
+
+Antes de intercambiar datos, dos dispositivos se **emparejan**: se reconocen y acuerdan claves de [cifrado](/articulos/cifrado-simetrico-y-asimetrico/) para que nadie pueda escuchar ni suplantar a ninguno. Por eso a veces hay que confirmar un código en las dos pantallas: así se comprueba que nadie se ha colado en medio de la conexión, haciéndose pasar por el otro dispositivo. Una vez emparejados, se recuerdan y se reconectan solos.
+
+## Perfiles: qué se hace con la conexión
+
+La radio solo transporta bits. Para que unos auriculares de una marca funcionen con un móvil de otra, Bluetooth define **perfiles**: acuerdos sobre cómo transmitir audio, cómo comportarse como un teclado o cómo leer un sensor de pulso. En Bluetooth LE, cada dispositivo expone **servicios** con **características**, valores que se pueden leer o a los que suscribirse, como la frecuencia cardiaca o el nivel de batería.
+
+## El alcance
+
+Depende mucho del dispositivo, de su potencia y de los obstáculos. El Bluetooth SIG explica que va desde unos pocos metros, en unos auriculares, hasta más de un kilómetro en condiciones ideales con equipos preparados para ello. El cuerpo humano, las paredes y otros aparatos lo reducen.
+
+## Lo esencial
+
+- Bluetooth conecta dispositivos cercanos por radio en la banda de 2,4 GHz.
+- El clásico sirve para flujos continuos como el audio; el de bajo consumo, para mensajes cortos.
+- Salta entre canales siguiendo una secuencia compartida para esquivar interferencias.
+- Los dispositivos se emparejan acordando claves, y se entienden mediante perfiles y servicios.

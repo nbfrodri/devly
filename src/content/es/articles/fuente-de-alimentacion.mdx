@@ -1,0 +1,65 @@
+---
+title: "¿Qué es la fuente de alimentación de un ordenador?"
+description: "La fuente convierte la corriente alterna del enchufe en la corriente continua de baja tensión que necesitan los chips. Parte de la energía se pierde en forma de calor."
+level: basico
+layer: hardware
+prerequisites:
+  - partes-de-un-ordenador
+  - senales-analogicas-y-digitales
+updated: 2026-10-13
+sources:
+  - title: "80 PLUS: programa de certificación de fuentes de alimentación (en inglés)"
+    url: https://www.clearesult.com/80plus/
+  - title: "80 PLUS: Program Details (en inglés)"
+    url: https://www.clearesult.com/80plus/program-details
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **fuente de alimentación** es la pieza que da energía a todo el ordenador. Recibe la **corriente alterna** del enchufe, de alta tensión, y la convierte en **corriente continua** de baja tensión, que es la que necesitan los chips. Además, reparte esa energía entre la placa base, el procesador, la tarjeta gráfica y los discos.
+
+En un portátil, ese trabajo lo hace el cargador, y la batería guarda la energía.
+
+## Qué hace, paso a paso
+
+1. **Rectifica**: convierte la corriente alterna, que cambia de sentido muchas veces por segundo, en corriente que va en un solo sentido.
+2. **Filtra** y estabiliza el resultado.
+3. **Reduce la tensión** a los valores que usan los componentes.
+4. **Protege**: se corta si detecta un cortocircuito, una sobrecarga o un calentamiento excesivo.
+
+Además, los propios componentes suelen ajustar la tensión una vez más cerca de ellos. El procesador, por ejemplo, trabaja con una tensión muy baja que se genera en la placa base, justo a su lado.
+
+## La potencia
+
+La fuente indica la **potencia máxima** que puede entregar, en vatios. Debe cubrir el consumo de todo el equipo con margen. La tarjeta gráfica y el procesador son los que más consumen.
+
+Una fuente demasiado justa puede apagar el equipo en los momentos de más carga. Una muy sobredimensionada no daña nada, pero cuesta más.
+
+## La eficiencia
+
+Ninguna conversión es perfecta: parte de la energía que entra se pierde como **calor**. La **eficiencia** es el porcentaje que llega a los componentes.
+
+```js
+function perdidas(consumoDelEquipo, eficiencia) {
+	const tomadoDelEnchufe = consumoDelEquipo / eficiencia;
+	return Math.round(tomadoDelEnchufe - consumoDelEquipo);
+}
+
+console.log(perdidas(400, 0.8)); // 100
+console.log(perdidas(400, 0.92)); // 35
+```
+
+Para dar 400 vatios al equipo, una fuente con un 80 % de eficiencia toma 500 del enchufe y pierde 100 en calor. Con un 92 %, solo pierde unos 35. Menos pérdidas significa menos factura, menos calor y ventiladores más silenciosos.
+
+El programa **80 PLUS** certifica la eficiencia de las fuentes en niveles: Standard, Bronze, Silver, Gold, Platinum, Titanium y Ruby, de menos a más eficiente. Cada nivel exige una eficiencia mínima medida a distintas cargas, porque una fuente no rinde igual al 20 % de su capacidad que al 100 %.
+
+## Por qué importa una buena fuente
+
+Una fuente de mala calidad puede entregar una tensión inestable, que provoca fallos difíciles de diagnosticar, o estropearse llevándose otros componentes por delante. En los centros de datos, donde hay miles de fuentes funcionando sin parar, cada punto de eficiencia se nota en el consumo eléctrico, y los servidores suelen llevar **dos fuentes** por si una falla.
+
+## Lo esencial
+
+- La fuente convierte la corriente alterna del enchufe en corriente continua de baja tensión.
+- Se elige por su potencia máxima, con margen sobre el consumo del equipo.
+- La energía que no llega a los componentes se pierde como calor.
+- La certificación 80 PLUS clasifica las fuentes por su eficiencia.

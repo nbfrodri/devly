@@ -1,0 +1,92 @@
+---
+title: "¿Qué es la ingeniería inversa de software?"
+description: "La ingeniería inversa estudia un programa ya compilado para descubrir cómo funciona sin tener su código fuente. Se usa en seguridad, compatibilidad y preservación."
+level: avanzado
+layer: sistemas
+prerequisites:
+  - que-es-un-binario
+  - emuladores
+updated: 2026-10-13
+sources:
+  - title: "Ghidra: Software Reverse Engineering framework (en inglés)"
+    url: https://github.com/NationalSecurityAgency/ghidra
+  - title: "GNU Binutils: objdump (en inglés)"
+    url: https://sourceware.org/binutils/docs/binutils/objdump.html
+  - title: "BOE: Ley de Propiedad Intelectual, artículo 100"
+    url: https://www.boe.es/buscar/act.php?id=BOE-A-1996-8930
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **ingeniería inversa** de software consiste en estudiar un programa ya construido para **descubrir cómo funciona**, sin tener su código fuente ni su documentación. Se parte del [binario](/articulos/que-es-un-binario/), el ejecutable, y se intenta reconstruir qué hace y por qué.
+
+Es lo contrario del camino normal: en lugar de ir del diseño al programa, se va del programa al diseño.
+
+## Para qué se usa
+
+- **Seguridad**: entender qué hace un [malware](/articulos/que-es-el-malware/), o buscar vulnerabilidades en un programa del que no se tiene el código.
+- **Compatibilidad**: hacer que un programa propio funcione con otro cuyo formato o protocolo no está documentado. Así nacieron muchos programas libres que abren archivos de otros fabricantes.
+- **Preservación**: entender hardware y software antiguos para poder [emularlos](/articulos/emuladores/).
+- **Mantenimiento**: recuperar el funcionamiento de un programa propio cuyo código se perdió.
+- **Aprendizaje**: entender cómo traduce un compilador lo que escribimos.
+
+## Las técnicas
+
+### Análisis estático: leer sin ejecutar
+
+- **Desensamblar**: convertir los bytes de código máquina en instrucciones de ensamblador legibles. La herramienta `objdump`, de las binutils de GNU, lo hace en Linux.
+- **Descompilar**: ir un paso más allá e intentar reconstruir un código parecido al original, en un lenguaje como C. El resultado nunca es el código original: los nombres de las variables y los comentarios se pierden al compilar.
+- **Buscar pistas**: los textos que contiene el binario, las funciones del sistema que llama, las bibliotecas que usa.
+
+Un desensamblador, en miniatura, para el procesador inventado del artículo sobre [emuladores](/articulos/emuladores/):
+
+```js
+const INSTRUCCIONES = { 0x01: "CARGAR", 0x02: "SUMAR", 0xff: "PARAR" };
+
+function desensamblar(bytes) {
+	const lineas = [];
+	let i = 0;
+	while (i < bytes.length) {
+		const nombre = INSTRUCCIONES[bytes[i]] ?? "???";
+		if (nombre === "PARAR" || nombre === "???") {
+			lineas.push(nombre);
+			i += 1;
+		} else {
+			lineas.push(`${nombre} ${bytes[i + 1]}`);
+			i += 2;
+		}
+	}
+	return lineas.join("; ");
+}
+
+console.log(desensamblar([0x01, 5, 0x02, 7, 0x02, 30, 0xff])); // "CARGAR 5; SUMAR 7; SUMAR 30; PARAR"
+```
+
+De una lista de números se pasa a algo que una persona puede leer y razonar: el programa empieza en 5, suma 7 y 30, y para. Con un procesador real, el principio es el mismo, con muchas más instrucciones.
+
+### Análisis dinámico: observar mientras se ejecuta
+
+- Ejecutar el programa con un [depurador](/articulos/que-es-un-depurador/), deteniéndolo y examinando la memoria y los registros.
+- Observar qué archivos abre, qué conexiones hace y qué llamadas al sistema realiza.
+- Ejecutarlo en un entorno aislado, como una [máquina virtual](/articulos/virtualizacion/), cuando puede ser dañino.
+
+## Las herramientas
+
+Ghidra es un entorno completo de ingeniería inversa, creado por la agencia de seguridad estadounidense NSA y publicado como código abierto. Desensambla, descompila, dibuja el flujo del programa y permite automatizar tareas, para binarios de Windows, macOS, Linux y muchos procesadores. Hay otras alternativas libres y comerciales.
+
+## Lo difícil
+
+- **Se pierde información al compilar**: nombres, comentarios, tipos, la estructura original.
+- **Optimización**: el compilador reorganiza el código, y lo que en el fuente era claro aparece transformado.
+- **Ofuscación**: algunos programas se protegen a propósito para dificultar el análisis, como hace mucho malware.
+
+## ¿Es legal?
+
+Depende del país y del propósito. En España, la Ley de Propiedad Intelectual, en su artículo 100, permite al usuario legítimo de un programa **observar, estudiar y verificar su funcionamiento** para conocer las ideas y principios en que se basa. También permite descompilar las partes necesarias para lograr la **interoperabilidad** con un programa creado de forma independiente, con condiciones: que esa información no esté ya disponible, que se limite a lo necesario y que no se use para crear un programa sustancialmente similar. Las licencias de uso pueden añadir restricciones, y la ley no ampara copiar el programa ni saltarse protecciones para piratearlo. Ante un caso concreto, conviene consultar a un profesional.
+
+## Lo esencial
+
+- La ingeniería inversa estudia un programa compilado para entender cómo funciona.
+- Se usa en seguridad, compatibilidad, preservación y aprendizaje.
+- El análisis estático desensambla y descompila; el dinámico observa el programa en ejecución.
+- En España, la ley permite estudiar un programa y descompilarlo para la interoperabilidad, con condiciones.

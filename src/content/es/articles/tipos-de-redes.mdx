@@ -1,0 +1,69 @@
+---
+title: "Tipos de redes: PAN, LAN, WLAN, MAN y WAN"
+description: "Las redes se clasifican por su alcance: desde la red personal de tu móvil y tus auriculares hasta las redes que cruzan continentes."
+level: basico
+layer: redes
+prerequisites:
+  - modelos-osi-y-tcp-ip
+  - hub-switch-y-router
+updated: 2026-10-13
+sources:
+  - title: "Explain that Stuff: How computer networks work (en inglés)"
+    url: https://www.explainthatstuff.com/howcomputernetworkswork.html
+  - title: "IEEE 802.15 Working Group for Wireless Personal Area Networks (en inglés)"
+    url: https://www.ieee802.org/15/
+  - title: "IEEE 802.11 Wireless LAN Working Group (en inglés)"
+    url: https://www.ieee802.org/11/
+  - title: "IEEE 802.3 Ethernet Working Group (en inglés)"
+    url: https://www.ieee802.org/3/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las redes de ordenadores se suelen clasificar por su **alcance**: cuánto espacio cubren. De menor a mayor: la red personal, la local, la metropolitana y la de área amplia. Cada una tiene tecnologías propias, porque conectar unos auriculares a medio metro no tiene nada que ver con cruzar un océano.
+
+## La escala
+
+| Tipo | Nombre | Alcance típico | Ejemplo | Tecnologías |
+| --- | --- | --- | --- | --- |
+| PAN | Red de área personal | Unos metros | Móvil, reloj y auriculares | Bluetooth, USB |
+| LAN | Red de área local | Una casa, una oficina, un edificio | La red de tu casa | Ethernet, wifi |
+| WLAN | Red de área local inalámbrica | Igual que una LAN | El wifi de una cafetería | Wifi |
+| MAN | Red de área metropolitana | Una ciudad | La red que une los edificios de una universidad | Fibra óptica |
+| WAN | Red de área amplia | Países, continentes | La red de un operador, internet | Fibra, enlaces de operador, satélite |
+
+## PAN: la red personal
+
+Una **red de área personal** conecta los dispositivos de una sola persona, a pocos metros: el móvil con los auriculares, el reloj o el teclado. Es, en esencia, una red para una persona. El grupo del IEEE que normaliza estas redes inalámbricas es el 802.15, y su tecnología más conocida es [Bluetooth](/articulos/como-funciona-bluetooth/).
+
+## LAN y WLAN: la red local
+
+Una **red de área local** conecta los equipos de un lugar: los ordenadores, la impresora y el router de una oficina o una casa. Todos los equipos se ven entre sí directamente, a través de [switches](/articulos/hub-switch-y-router/), usando sus [direcciones MAC](/articulos/que-es-una-direccion-mac/).
+
+- Con cable, la tecnología es **Ethernet** (IEEE 802.3).
+- Sin cable, es una **WLAN**, una LAN inalámbrica, con **wifi** (IEEE 802.11), como explica [cómo funciona el wifi](/articulos/como-funciona-el-wifi/).
+
+La WLAN no es otro nivel de alcance: es una LAN cuyo medio es la radio. En una casa normal conviven las dos, y el router hace de punto de unión.
+
+Una LAN suele usar [direcciones IP privadas](/articulos/subredes-y-cidr/) y sale a internet a través del router.
+
+## MAN: la red de una ciudad
+
+Una **red de área metropolitana** une varias redes locales repartidas por una ciudad: los campus de una universidad, las sedes de un ayuntamiento. Suele ir sobre fibra óptica tendida por la ciudad. El término se usa menos hoy, porque la frontera con las WAN es difusa.
+
+## WAN: la red de área amplia
+
+Una **red de área amplia** cubre grandes distancias: une las oficinas de una empresa en distintos países o forma la red de un operador. Rara vez es de una sola organización de extremo a extremo: se alquilan enlaces a operadores de telecomunicaciones.
+
+**Internet** es la WAN más grande, aunque en realidad es una **red de redes**: millones de LAN de hogares, empresas y universidades, conectadas por las redes de los operadores, que se entienden gracias a los protocolos que explica [los modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/).
+
+## Unir redes lejanas: la VPN
+
+Una empresa con oficinas en varias ciudades quiere que todas se vean como una sola red local. En lugar de alquilar líneas dedicadas, puede crear una [VPN](/articulos/vpn-y-tuneles/): un túnel cifrado a través de internet que une las LAN como si estuvieran juntas.
+
+## Lo esencial
+
+- Las redes se clasifican por alcance: PAN, LAN, MAN y WAN.
+- Una PAN conecta los dispositivos de una persona, sobre todo con Bluetooth.
+- Una LAN conecta los equipos de un lugar; si es por radio, es una WLAN con wifi.
+- Una WAN cubre grandes distancias, e internet es una red de redes a escala mundial.

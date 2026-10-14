@@ -68,6 +68,10 @@ La idea de separar los recursos lógicos de los físicos se aplica a más cosas:
 - **Red**: redes enteras, con sus switches y cortafuegos, definidas por software sobre la red física. Los operadores de telecomunicaciones virtualizan así funciones de red que antes eran aparatos dedicados.
 - **Escritorio**: el escritorio de un usuario corre en un servidor y se muestra a distancia.
 
+## Y la emulación
+
+Si el sistema invitado es de otra arquitectura, por ejemplo ARM sobre un procesador x86, sus instrucciones no se pueden ejecutar directamente: hay que imitarlas por software. Es lo que hace un [emulador](/articulos/emuladores/), mucho más lento.
+
 ## Y los contenedores
 
 Los [contenedores](/articulos/contenedores-y-maquinas-virtuales/) son una forma más ligera de aislar programas: comparten el núcleo del sistema anfitrión en lugar de virtualizar todo el hardware. Arrancan en segundos y gastan menos, pero aíslan menos. A menudo se combinan: contenedores dentro de máquinas virtuales.

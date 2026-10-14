@@ -1,0 +1,76 @@
+---
+title: "¿Cómo funciona una pantalla?"
+description: "Una pantalla es una cuadrícula de millones de píxeles que se redibuja decenas de veces por segundo. LCD y OLED los encienden de formas muy distintas."
+level: basico
+layer: hardware
+prerequisites:
+  - como-se-representa-una-imagen
+  - que-es-una-gpu
+updated: 2026-10-13
+sources:
+  - title: "Explain that Stuff: How do LCDs work? (en inglés)"
+    url: https://www.explainthatstuff.com/lcdtv.html
+  - title: "Explain that Stuff: How do OLEDs work? (en inglés)"
+    url: https://www.explainthatstuff.com/how-oleds-and-leps-work.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una pantalla es una **cuadrícula de píxeles**, puntos diminutos cuyo color se controla por separado. Cada píxel se compone de tres subpíxeles, rojo, verde y azul, cuya mezcla da el color, como explica [cómo se representa una imagen](/articulos/como-se-representa-una-imagen/). La [tarjeta gráfica](/articulos/que-es-una-gpu/) calcula la imagen y la envía a la pantalla, que la **redibuja decenas de veces por segundo**.
+
+## Resolución y frecuencia
+
+- **Resolución**: cuántos píxeles tiene. 1920 × 1080 son más de dos millones.
+- **Frecuencia de refresco**: cuántas veces por segundo se redibuja, en hercios. A más frecuencia, movimiento más fluido.
+
+Eso es mucha información:
+
+```js
+const ancho = 1920;
+const alto = 1080;
+const bytesPorPixel = 3;
+
+const bytesPorImagen = ancho * alto * bytesPorPixel;
+console.log(bytesPorImagen); // 6220800
+
+const porSegundo = bytesPorImagen * 60;
+console.log((porSegundo / 1e6).toFixed(0)); // "373"
+```
+
+Una imagen ocupa unos 6 megabytes, y a 60 imágenes por segundo son unos 373 megabytes por segundo, sin comprimir, solo para una pantalla normal. Por eso los cables de vídeo necesitan tanto [ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/).
+
+## LCD: filtrar una luz
+
+Una pantalla **LCD**, de cristal líquido, no produce luz en sus píxeles. Detrás hay una **luz de fondo** blanca, siempre encendida. Cada píxel actúa como una persiana que deja pasar más o menos luz:
+
+1. La luz atraviesa un **filtro polarizador**, que solo deja pasar la luz que vibra en una dirección.
+2. Pasa por una capa de **cristales líquidos**, que pueden girar esa dirección según la tensión eléctrica que reciben.
+3. Llega a un segundo polarizador. Según cuánto la hayan girado los cristales, pasa más o menos luz.
+4. Un **filtro de color** tiñe cada subpíxel de rojo, verde o azul.
+
+Como la luz de fondo siempre está encendida, el negro nunca es totalmente negro: algo de luz se escapa.
+
+## OLED: cada píxel brilla
+
+En una pantalla **OLED**, cada subpíxel es un diodo orgánico que **emite su propia luz**. No hace falta luz de fondo.
+
+| | LCD | OLED |
+| --- | --- | --- |
+| Luz | Luz de fondo filtrada | Cada píxel emite la suya |
+| Negro | Gris muy oscuro | Negro real: el píxel se apaga |
+| Consumo | Constante por la luz de fondo | Depende de lo que se muestre |
+| Grosor | Mayor | Puede ser muy fina, incluso flexible |
+| Desgaste | Bajo | Los píxeles envejecen con el uso |
+
+Un fondo negro en OLED ahorra energía, porque esos píxeles están apagados. En LCD, no cambia nada.
+
+## La pantalla táctil
+
+En móviles y tabletas, sobre la pantalla hay una capa transparente que detecta el contacto. Es un dispositivo de entrada separado, que explica [periféricos de entrada](/articulos/perifericos-de-entrada/).
+
+## Lo esencial
+
+- Una pantalla es una cuadrícula de píxeles, cada uno con subpíxeles rojo, verde y azul.
+- La resolución dice cuántos píxeles tiene; la frecuencia, cuántas veces por segundo se redibuja.
+- Una LCD filtra una luz de fondo con cristales líquidos y polarizadores.
+- En una OLED cada píxel emite su propia luz, lo que da negros reales.
