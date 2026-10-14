@@ -36,7 +36,7 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 - [ ] Componentes y estado en una interfaz (DOM)
 - [ ] Diferencias entre SPA, MPA y renderizado en servidor (cliente-servidor)
-- [ ] Almacenamiento en el navegador: cookies, localStorage y sessionStorage (CSRF)
+- [x] Almacenamiento en el navegador: cookies, localStorage y sessionStorage (CSRF)
 - [ ] Rendimiento web y Core Web Vitals (HTML, CSS)
 - [ ] ¿Qué hace un empaquetador? (compilador e intérprete)
 
@@ -46,7 +46,7 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 - [ ] ¿Qué es un ORM? (SQL, programación orientada a objetos)
 - [ ] Paginación de resultados (SQL, API)
 - [ ] Limitación de peticiones (API)
-- [ ] Diferencias entre sesiones y tokens (JWT, stateful y stateless)
+- [x] Diferencias entre sesiones y tokens (JWT, stateful y stateless)
 
 ## Conceptos transversales
 
@@ -54,12 +54,12 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Programación
 
-- [ ] Funciones de orden superior y clausuras (programación funcional)
-- [ ] Inmutabilidad (programación funcional)
-- [ ] Promesas y async/await (hilos y concurrencia)
-- [ ] Manejo de errores y excepciones (funciones)
-- [ ] Expresiones regulares (máquina de Turing)
-- [ ] Programación lógica
+- [x] Funciones de orden superior y clausuras (programación funcional)
+- [x] Inmutabilidad (programación funcional)
+- [x] Promesas y async/await (hilos y concurrencia)
+- [x] Manejo de errores y excepciones (funciones)
+- [x] Expresiones regulares (máquina de Turing)
+- [x] Programación lógica
 
 ## Móvil e IoT
 

@@ -1,0 +1,218 @@
+---
+title: "¿Qué es la inmutabilidad?"
+description: "Un dato inmutable no cambia después de crearse: para modificarlo se crea uno nuevo. Evita una clase entera de errores."
+level: intermedio
+layer: programacion
+prerequisites:
+  - arrays
+  - programacion-funcional
+updated: 2026-10-13
+sources:
+  - title: "MDN: Object.freeze()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
+  - title: "MDN: const"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/const
+  - title: "John Hughes: Why Functional Programming Matters (1990, en inglés)"
+    url: https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un dato es **inmutable** si no puede cambiar después de haberse creado. Para obtener una versión distinta, no se modifica el original: se crea uno nuevo. Lo contrario es un dato **mutable**, que se puede alterar.
+
+Es una de las ideas centrales de la [programación funcional](/articulos/programacion-funcional/), y se usa mucho fuera de ella.
+
+## Qué problema resuelve
+
+Cuando dos partes de un programa comparten un dato mutable, cualquiera de ellas puede cambiarlo, y la otra se encuentra con algo distinto de lo que esperaba.
+
+```js
+function ordenarPrecios(precios) {
+	return precios.sort((a, b) => a - b);
+}
+
+const precios = [30, 10, 20];
+const ordenados = ordenarPrecios(precios);
+
+console.log(ordenados.join(" ")); // "10 20 30"
+console.log(precios.join(" ")); // "10 20 30"
+```
+
+La función devuelve la lista ordenada, que es lo que promete. Pero `sort` ordena **el propio array**, así que la lista original de quien llamó también ha cambiado. Quien escribió la llamada no lo pidió y quizá no lo sabe.
+
+Este tipo de fallo es difícil de encontrar, porque el cambio ocurre lejos de donde se nota.
+
+## Valores y referencias
+
+Para entenderlo hay que saber cómo se guardan los datos.
+
+Los [tipos](/articulos/tipos-de-datos/) simples, como números, textos y booleanos, se copian al asignarlos:
+
+```js
+let a = 5;
+let b = a;
+b = 10;
+
+console.log(a); // 5
+```
+
+Los objetos y los arrays no. Una variable no contiene el objeto, sino una **referencia** a él. Al asignar, se copia la referencia:
+
+```js
+const original = { nombre: "Ana" };
+const otra = original;
+
+otra.nombre = "Luis";
+
+console.log(original.nombre); // "Luis"
+```
+
+`original` y `otra` apuntan al mismo objeto. No hay dos objetos: hay uno, con dos nombres.
+
+## `const` no hace inmutable
+
+Es la confusión más habitual. `const` impide **reasignar la variable**, no modificar aquello a lo que apunta:
+
+```js
+const lista = [1, 2];
+lista.push(3);
+
+console.log(lista.length); // 3
+```
+
+No hay error. La variable sigue apuntando al mismo array; lo que ha cambiado es el array.
+
+## Trabajar sin modificar
+
+La alternativa es crear una copia con el cambio y dejar el original intacto.
+
+### Arrays
+
+```js
+const original = [3, 1, 2];
+
+const conUnoMas = [...original, 4];
+const sinElPrimero = original.slice(1);
+const ordenado = original.toSorted((a, b) => a - b);
+const dobles = original.map((n) => n * 2);
+
+console.log(original.join(" ")); // "3 1 2"
+console.log(conUnoMas.join(" ")); // "3 1 2 4"
+console.log(ordenado.join(" ")); // "1 2 3"
+```
+
+Los tres puntos, el **operador de propagación**, copian los elementos de un array dentro de otro.
+
+Conviene saber qué métodos modifican y cuáles no:
+
+| Modifican el array | Devuelven uno nuevo |
+| --- | --- |
+| `push`, `pop` | Propagación con `...` |
+| `sort` | `toSorted` |
+| `reverse` | `toReversed` |
+| `splice` | `slice`, `toSpliced` |
+| | `map`, `filter` |
+
+### Objetos
+
+```js
+const usuario = { nombre: "Ana", edad: 30 };
+
+const mayor = { ...usuario, edad: 31 };
+
+console.log(usuario.edad); // 30
+console.log(mayor.edad); // 31
+console.log(mayor.nombre); // "Ana"
+```
+
+Se copian todas las propiedades y se sustituye la que cambia.
+
+## Copias superficiales
+
+Las copias anteriores son **superficiales**: copian el primer nivel. Si dentro hay otro objeto, lo que se copia es su referencia.
+
+```js
+const usuario = { nombre: "Ana", direccion: { ciudad: "Madrid" } };
+const copia = { ...usuario };
+
+copia.direccion.ciudad = "Sevilla";
+
+console.log(usuario.direccion.ciudad); // "Sevilla"
+```
+
+`copia` es un objeto nuevo, pero su `direccion` es el mismo objeto que el del original.
+
+Para una copia completa, o **profunda**, existe `structuredClone`:
+
+```js
+const usuario = { nombre: "Ana", direccion: { ciudad: "Madrid" } };
+const copia = structuredClone(usuario);
+
+copia.direccion.ciudad = "Sevilla";
+
+console.log(usuario.direccion.ciudad); // "Madrid"
+```
+
+## Impedir los cambios
+
+`Object.freeze` congela un objeto: ya no se puede modificar.
+
+```js
+const configuracion = Object.freeze({ idioma: "es" });
+
+try {
+	configuracion.idioma = "en";
+} catch (error) {
+	console.log(error.name); // "TypeError"
+}
+
+console.log(configuracion.idioma); // "es"
+console.log(Object.isFrozen(configuracion)); // true
+```
+
+En modo estricto, que es el de los módulos y las clases, el intento lanza un error. Fuera de él se ignora en silencio, que es peor: el cambio no ocurre y nada avisa.
+
+También es superficial: los objetos que haya dentro siguen siendo modificables.
+
+<Quiz
+	client:visible
+	question="¿Qué impide exactamente declarar un array con const?"
+	options={[
+		"Añadirle o quitarle elementos",
+		"Asignar otro valor a la variable",
+		"Las dos cosas",
+	]}
+	answer={1}
+/>
+
+## Qué se gana
+
+- **Menos sorpresas.** Si un dato no puede cambiar, da igual a quién se lo pases.
+- **Código más fácil de seguir.** Para saber cuánto vale algo, basta mirar dónde se creó.
+- **Detectar cambios es barato.** Como cada cambio produce un objeto nuevo, saber si algo ha cambiado es comparar dos referencias. Las bibliotecas de interfaces se apoyan en esto para decidir qué volver a dibujar.
+- **Historial gratis.** Si se conservan las versiones anteriores, deshacer es volver a una de ellas.
+- **Concurrencia más segura.** Un dato que nadie modifica puede leerse desde varias tareas a la vez sin [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/).
+
+## Qué cuesta
+
+- **Copiar gasta tiempo y memoria.** Para la mayoría de los programas es irrelevante. En un bucle que copia un array enorme en cada vuelta, no.
+- **Las actualizaciones anidadas son incómodas.** Cambiar un campo en el tercer nivel de un objeto obliga a copiar cada nivel.
+
+Las bibliotecas especializadas reducen ese coste con **estructuras persistentes**, en las que la versión nueva comparte con la antigua todo lo que no ha cambiado, en lugar de copiarlo.
+
+## Un criterio práctico
+
+No hace falta que todo sea inmutable. Una buena regla:
+
+- **No modificar lo que te pasan.** Los argumentos de una función se tratan como de solo lectura.
+- **Modificar con libertad lo que has creado tú** y todavía no ha salido de la función.
+
+Así una función puede construir un resultado paso a paso, de forma eficiente, sin efectos fuera de ella.
+
+## Lo esencial
+
+- Un dato inmutable no cambia: los cambios producen datos nuevos.
+- Los objetos y los arrays se comparten por referencia, y modificarlos afecta a todos los que los usan.
+- `const` impide reasignar la variable, no modificar su contenido.
+- Las copias con `...` son superficiales; `structuredClone` copia en profundidad.
+- La inmutabilidad evita cambios inesperados a cambio de copiar más.

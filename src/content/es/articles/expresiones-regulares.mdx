@@ -1,0 +1,195 @@
+---
+title: "¿Qué son las expresiones regulares?"
+description: "Una expresión regular es un patrón que describe un conjunto de textos. Sirve para buscar, validar y transformar texto."
+level: intermedio
+layer: programacion
+prerequisites:
+  - tipos-de-datos
+updated: 2026-10-13
+sources:
+  - title: "MDN: Expresiones regulares"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Regular_expressions
+  - title: "RFC 9485: I-Regexp, An Interoperable Regular Expression Format"
+    url: https://www.rfc-editor.org/info/rfc9485/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **expresión regular**, o *regex*, es un patrón que describe un conjunto de textos. Sirve para comprobar si un texto tiene cierta forma, para encontrar fragmentos dentro de él y para sustituirlos.
+
+Existen en casi todos los lenguajes de programación, en los editores de código y en herramientas de la [terminal](/articulos/terminal-y-shell/).
+
+## Qué problema resuelven
+
+Buscar la palabra "error" en un texto es fácil. Buscar "cualquier fecha", "todos los números de teléfono" o "las líneas que empiezan por un número" no se puede hacer con una búsqueda literal: no se busca un texto concreto, sino cualquier texto que cumpla una forma.
+
+Una expresión regular describe esa forma.
+
+## Lo básico
+
+En JavaScript se escriben entre barras. El método `test` dice si un texto encaja:
+
+```js
+console.log(/gato/.test("mi gato duerme")); // true
+console.log(/gato/.test("mi perro duerme")); // false
+```
+
+La mayoría de los caracteres se representan a sí mismos. Lo interesante son los que tienen un significado especial.
+
+## Clases de caracteres
+
+Describen **qué** carácter puede aparecer en una posición.
+
+| Patrón | Encaja con |
+| --- | --- |
+| `.` | Cualquier carácter |
+| `\d` | Una cifra |
+| `\w` | Una letra, una cifra o un guion bajo |
+| `\s` | Un espacio, tabulación o salto de línea |
+| `[abc]` | Una `a`, una `b` o una `c` |
+| `[a-z]` | Una letra minúscula de la `a` a la `z` |
+| `[^abc]` | Cualquier carácter que no sea `a`, `b` ni `c` |
+
+## Cuantificadores
+
+Describen **cuántas veces** se repite lo anterior.
+
+| Patrón | Significa |
+| --- | --- |
+| `*` | Cero o más veces |
+| `+` | Una o más veces |
+| `?` | Cero o una vez |
+| `{3}` | Exactamente tres veces |
+| `{2,4}` | Entre dos y cuatro veces |
+
+```js
+console.log(/\d+/.test("abc123")); // true
+console.log(/colou?r/.test("color")); // true
+console.log(/colou?r/.test("colour")); // true
+```
+
+`\d+` es "una o más cifras". `u?` hace que la `u` sea opcional.
+
+## Anclas
+
+Sin anclas, un patrón encaja si aparece **en cualquier parte** del texto. Las anclas fijan la posición:
+
+| Patrón | Significa |
+| --- | --- |
+| `^` | Principio del texto |
+| `$` | Final del texto |
+
+```js
+console.log(/\d{5}/.test("codigo 280011 extra")); // true
+console.log(/^\d{5}$/.test("28001")); // true
+console.log(/^\d{5}$/.test("280011")); // false
+```
+
+El primer patrón encuentra cinco cifras dentro de un texto más largo. El segundo exige que el texto **entero** sean exactamente cinco cifras.
+
+Olvidar las anclas al validar es el error más frecuente: sin ellas se aceptan textos con basura alrededor.
+
+## Grupos
+
+Los paréntesis agrupan una parte del patrón y, además, **capturan** el fragmento que encaja con ella, para usarlo después.
+
+```js
+const coincidencia = "2026-10-14".match(/(\d{4})-(\d{2})-(\d{2})/);
+
+console.log(coincidencia[1]); // "2026"
+console.log(coincidencia[2]); // "10"
+console.log(coincidencia[3]); // "14"
+```
+
+A los grupos se les puede poner nombre, lo que hace el patrón más legible:
+
+```js
+const patron = /(?<anio>\d{4})-(?<mes>\d{2})-(?<dia>\d{2})/;
+const { anio, mes } = "2026-10-14".match(patron).groups;
+
+console.log(anio); // "2026"
+console.log(mes); // "10"
+```
+
+La barra vertical ofrece alternativas: `/gato|perro/` encaja con cualquiera de los dos.
+
+## Modificadores
+
+Se escriben tras la barra final y cambian cómo se aplica el patrón:
+
+| Modificador | Efecto |
+| --- | --- |
+| `g` | Busca todas las coincidencias, no solo la primera |
+| `i` | No distingue mayúsculas de minúsculas |
+| `m` | `^` y `$` se aplican a cada línea |
+
+```js
+console.log("a1b22c333".match(/\d+/g).join(" ")); // "1 22 333"
+console.log(/hola/i.test("HOLA")); // true
+```
+
+## Sustituir
+
+```js
+console.log("hola   mundo".replace(/\s+/g, " ")); // "hola mundo"
+console.log("2026-10-14".replace(/(\d{4})-(\d{2})-(\d{2})/, "$3/$2/$1")); // "14/10/2026"
+```
+
+La primera línea convierte cualquier serie de espacios en uno solo. La segunda reordena una fecha usando los grupos capturados: `$1` es el primero, `$2` el segundo.
+
+## Codicioso y perezoso
+
+Los cuantificadores son **codiciosos**: encajan con todo lo que pueden.
+
+```js
+const html = "<b>uno</b><b>dos</b>";
+
+console.log(html.match(/<b>.*<\/b>/)[0].length); // 20
+console.log(html.match(/<b>.*?<\/b>/)[0]); // "<b>uno</b>"
+```
+
+`.*` avanza hasta el último `</b>` del texto y se lleva las dos etiquetas de una vez. Añadiendo `?` al cuantificador se vuelve **perezoso** y se detiene en la primera oportunidad.
+
+La barra invertida delante de `/` es un **escape**: indica que ese carácter se toma de forma literal. Lo mismo hace falta para buscar un punto: `\.`.
+
+<Quiz
+	client:visible
+	question="¿Qué hace falta para validar que un texto entero son exactamente cuatro cifras?"
+	options={["/\\d{4}/", "/^\\d{4}$/", "/\\d+/"]}
+	answer={1}
+/>
+
+## Sus límites
+
+### No sirven para todo
+
+Una expresión regular clásica describe lo que la [teoría de la computación](/articulos/maquina-de-turing/) llama un lenguaje regular: patrones que se reconocen sin necesidad de recordar una cantidad arbitraria de cosas.
+
+No pueden comprobar que unos paréntesis estén bien emparejados a cualquier profundidad, porque eso exige contar. Por la misma razón no sirven para analizar [HTML](/articulos/que-es-html/) o [JSON](/articulos/formatos-de-datos-json-csv-xml/), que son estructuras anidadas. Para eso existen los analizadores.
+
+### Validar un correo
+
+Es el ejemplo clásico de exceso. Las reglas reales de una dirección de correo son tan enrevesadas que un patrón exacto es ilegible. Lo sensato es una comprobación básica, que haya algo, una arroba y algo más, y verificar la dirección enviando un mensaje.
+
+### Pueden ser lentas
+
+Algunos patrones, ante ciertos textos, exploran un número enorme de combinaciones antes de rendirse. Si el texto lo aporta un usuario, puede usarse para dejar bloqueado un servidor. Hay que desconfiar de los cuantificadores anidados, como `(a+)+`.
+
+### Se leen mal
+
+Una expresión regular es fácil de escribir y difícil de leer un mes después. Ayuda:
+
+- Mantenerlas cortas.
+- Usar grupos con nombre.
+- Comentar qué se pretende.
+- Probarlas con ejemplos que deben encajar y ejemplos que no.
+
+Si el patrón se complica demasiado, unas líneas de código normal suelen ser más claras.
+
+## Lo esencial
+
+- Una expresión regular es un patrón que describe una forma de texto.
+- Las clases dicen qué caracteres valen; los cuantificadores, cuántas veces.
+- Las anclas `^` y `$` son imprescindibles para validar un texto entero.
+- Los grupos capturan fragmentos para leerlos o reordenarlos.
+- No sirven para estructuras anidadas, y un patrón complejo cuesta de mantener.

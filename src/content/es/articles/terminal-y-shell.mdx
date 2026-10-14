@@ -96,7 +96,7 @@ La barra vertical es la **tubería** (*pipe*), y es la idea más potente de la s
 cat acceso.log | grep "error" | wc -l
 ```
 
-`cat` muestra el archivo, `grep` se queda con las líneas que contienen "error" y `wc -l` las cuenta. Tres programas pequeños, cada uno con una sola tarea, encadenados para resolver algo que ninguno hace por separado.
+`cat` muestra el archivo, `grep` se queda con las líneas que contienen "error" y `wc -l` las cuenta. `grep` admite además [expresiones regulares](/articulos/expresiones-regulares/) para buscar patrones. Tres programas pequeños, cada uno con una sola tarea, encadenados para resolver algo que ninguno hace por separado.
 
 Es una forma de diseño: herramientas simples que hacen bien una cosa y se combinan.
 

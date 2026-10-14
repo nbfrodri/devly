@@ -1,0 +1,167 @@
+---
+title: "Diferencias entre sesiones y tokens"
+description: "Dos formas de recordar quién ha iniciado sesión: guardar el estado en el servidor o entregárselo firmado al cliente."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - autenticacion-y-autorizacion
+  - que-es-un-jwt
+  - stateful-y-stateless
+updated: 2026-10-13
+sources:
+  - title: "OWASP: Session Management Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+  - title: "RFC 6265: HTTP State Management Mechanism"
+    url: https://www.rfc-editor.org/info/rfc6265/
+  - title: "RFC 7519: JSON Web Token (JWT)"
+    url: https://www.rfc-editor.org/info/rfc7519/
+  - title: "RFC 8725: JSON Web Token Best Current Practices"
+    url: https://www.rfc-editor.org/info/rfc8725/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Después de que un usuario demuestra quién es, la aplicación tiene que recordarlo en las peticiones siguientes. Hay dos formas principales de hacerlo. Con **sesiones**, el servidor guarda quién es cada usuario y le entrega un identificador. Con **tokens**, el servidor entrega los datos firmados y no guarda nada.
+
+## El problema común
+
+[HTTP](/articulos/que-es-http/) no tiene memoria: cada petición llega sin relación con la anterior. Tras la [autenticación](/articulos/autenticacion-y-autorizacion/), hace falta algo que acompañe a cada petición y diga "soy el mismo de antes".
+
+La diferencia entre los dos enfoques es **dónde vive esa información**.
+
+## Sesiones
+
+1. El usuario inicia sesión.
+2. El servidor crea una **sesión**: un registro con quién es el usuario, guardado en su memoria o en una [base de datos](/articulos/que-es-una-base-de-datos/).
+3. Genera un **identificador de sesión**, un texto largo y aleatorio, y se lo envía al navegador en una cookie.
+4. En cada petición, el navegador devuelve la cookie.
+5. El servidor busca ese identificador en su almacén y recupera quién es el usuario.
+
+El identificador no significa nada por sí mismo. Es como el número de un resguardo: solo sirve porque el servidor tiene la lista.
+
+Es un diseño [con estado](/articulos/stateful-y-stateless/): el servidor recuerda.
+
+## Tokens
+
+1. El usuario inicia sesión.
+2. El servidor crea un **token** que contiene los datos del usuario y lo **firma**. El formato más usado es el [JWT](/articulos/que-es-un-jwt/).
+3. Se lo entrega al cliente y no guarda nada.
+4. En cada petición, el cliente envía el token.
+5. El servidor comprueba la firma. Si es válida, se fía de lo que dice el token.
+
+El token es como un pasaporte: lleva los datos dentro y un sello que demuestra que es auténtico. Quien lo revisa no necesita llamar a nadie.
+
+Es un diseño sin estado.
+
+Este programa imita los dos mecanismos:
+
+```js
+import { createHmac, randomUUID } from "node:crypto";
+
+const sesiones = new Map();
+
+function crearSesion(usuario) {
+	const id = randomUUID();
+	sesiones.set(id, { usuario });
+	return id;
+}
+
+const idDeSesion = crearSesion("ana");
+console.log(sesiones.get(idDeSesion).usuario); // "ana"
+
+sesiones.delete(idDeSesion);
+console.log(sesiones.has(idDeSesion)); // false
+
+const secreto = "clave-del-servidor";
+const firmar = (texto) =>
+	createHmac("sha256", secreto).update(texto).digest("hex");
+
+const datos = "usuario=ana";
+const token = `${datos}.${firmar(datos)}`;
+
+const [contenido, firma] = token.split(".");
+console.log(firmar(contenido) === firma); // true
+console.log(contenido); // "usuario=ana"
+```
+
+Con la sesión, el servidor consulta su almacén, y al borrarla deja de valer al instante. Con el token no hay almacén: basta con recalcular la firma. Y por eso mismo no hay nada que borrar para anularlo.
+
+## Comparación
+
+| | Sesiones | Tokens |
+| --- | --- | --- |
+| Dónde están los datos | En el servidor | En el propio token |
+| Qué lleva el cliente | Un identificador opaco | Los datos, firmados |
+| Comprobar una petición | Consultar el almacén | Verificar la firma |
+| Cerrar una sesión al momento | Inmediato: se borra | Difícil: vale hasta que caduca |
+| Varios servidores | Necesitan compartir el almacén | Cualquiera verifica con la clave |
+| Tamaño de cada petición | Pequeño | Mayor |
+| Encaja con | Una aplicación web clásica | API, móviles, varios servicios |
+
+<Quiz
+	client:visible
+	question="Hay que expulsar de inmediato a un usuario cuya cuenta ha sido robada. ¿Con qué mecanismo es más fácil?"
+	options={["Con sesiones", "Con tokens", "Es igual de fácil con los dos"]}
+	answer={0}
+/>
+
+## El punto débil de los tokens: revocar
+
+Con una sesión, cerrar la sesión de alguien es borrar un registro. La siguiente petición ya no se acepta.
+
+Un token es válido mientras no caduque y la firma sea correcta. Si lo roban, o si el usuario pierde un permiso, sigue funcionando. Las soluciones habituales:
+
+- **Tokens de vida corta**, de minutos, acompañados de un **token de refresco** más duradero, que sirve para pedir otros nuevos y que el servidor sí puede anular.
+- **Una lista de tokens revocados** que se consulta en cada petición.
+
+La segunda devuelve el estado al servidor. Si hay que consultar un almacén en cada petición, se ha perdido la ventaja principal del token, y una sesión habría sido más sencilla.
+
+## El punto débil de las sesiones: escalar
+
+Con un solo servidor, guardar las sesiones en memoria funciona. Con varios aparece un problema: la sesión creada en uno no existe en los demás.
+
+Se resuelve guardándolas en un almacén compartido y rápido, normalmente una base de datos clave-valor en memoria. Funciona muy bien, a cambio de una pieza más que mantener.
+
+## Dónde guarda el cliente la credencial
+
+Es una decisión de seguridad aparte, y afecta a los dos enfoques.
+
+| Lugar | Riesgo principal |
+| --- | --- |
+| Cookie con `HttpOnly` | [CSRF](/articulos/csrf/), que se mitiga con el atributo `SameSite` y tokens anti-CSRF |
+| Almacenamiento del navegador accesible desde JavaScript | [XSS](/articulos/cross-site-scripting-xss/): un script inyectado puede leerlo y robarlo |
+
+Una cookie con `HttpOnly` no puede leerse desde JavaScript, lo que la protege del robo por XSS. Por eso se suele recomendar para aplicaciones web, tanto para un identificador de sesión como para un token.
+
+Lo que **no** cambia: en los dos casos, quien obtenga la credencial puede hacerse pasar por el usuario. Debe viajar siempre por [HTTPS](/articulos/https-y-tls/).
+
+## Cómo elegir
+
+**Sesiones** cuando:
+
+- es una aplicación web con su propio servidor;
+- hace falta cerrar sesiones al instante;
+- se quiere la solución más simple y más probada.
+
+**Tokens** cuando:
+
+- la API la consumen aplicaciones móviles o terceros;
+- varios servicios independientes deben reconocer al mismo usuario;
+- se delega el inicio de sesión en otro proveedor, con [OAuth 2.0 y OpenID Connect](/articulos/oauth-2-y-openid-connect/).
+
+Para una aplicación web corriente, las sesiones suelen ser la mejor opción. Los tokens resuelven un problema real, repartir la verificación entre servicios, y añaden complejidad que no compensa si ese problema no existe.
+
+## Confusiones frecuentes
+
+- **"Los tokens son más seguros."** No por sí mismos. Cambian unos riesgos por otros.
+- **"Los tokens no se guardan en cookies."** Se puede, y a menudo conviene. Sesión o token es qué se envía; cookie o cabecera es cómo.
+- **"Sin estado significa sin base de datos."** El usuario sigue estando en una. Lo que no se guarda es la sesión.
+
+## Lo esencial
+
+- Con sesiones, el servidor guarda quién es el usuario y el cliente lleva un identificador.
+- Con tokens, el cliente lleva los datos firmados y el servidor solo verifica.
+- Las sesiones se anulan al instante, pero exigen un almacén compartido si hay varios servidores.
+- Los tokens se verifican en cualquier servidor, pero no se revocan con facilidad.
+- En ambos casos, la credencial debe protegerse como una contraseña.

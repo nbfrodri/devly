@@ -1,0 +1,197 @@
+---
+title: "¿Qué es la programación lógica?"
+description: "En la programación lógica no se escriben pasos: se declaran hechos y reglas, y el sistema busca las respuestas."
+level: intermedio
+layer: programacion
+prerequisites:
+  - logica-booleana
+  - recursividad
+updated: 2026-10-13
+sources:
+  - title: "SWI-Prolog: manual de referencia, introducción (en inglés)"
+    url: https://www.swi-prolog.org/pldoc/man?section=intro
+  - title: "Blackburn, Bos y Striegnitz: Learn Prolog Now!, libro libre (en inglés)"
+    url: https://www.let.rug.nl/bos/lpn/lpnpage.php?pageid=online
+  - title: "Robert Kowalski: Algorithm = Logic + Control (1979, en inglés)"
+    url: https://www.doc.ic.ac.uk/~rak/papers/algorithm%20=%20logic%20+%20control.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **programación lógica** es un paradigma en el que un programa no describe los pasos para llegar a un resultado, sino lo que es cierto: unos **hechos** y unas **reglas**. A partir de ellos, el sistema deduce las respuestas a las preguntas que se le hacen.
+
+Su lenguaje más conocido es **Prolog**, creado a principios de los años setenta.
+
+## Otra forma de pensar
+
+En la programación habitual, llamada **imperativa**, das órdenes: haz esto, luego esto otro, repite. Tú diseñas el camino.
+
+En la programación lógica describes el problema y dejas el camino al sistema. Es un estilo **declarativo**, como [SQL](/articulos/que-es-sql/): dices qué quieres, no cómo obtenerlo.
+
+Una frase resume la idea: un algoritmo es **lógica más control**. La lógica es lo que se sabe del problema; el control, la estrategia para usarlo. En un lenguaje imperativo escribes las dos cosas mezcladas. En Prolog escribes la lógica, y el control lo pone el lenguaje.
+
+## Las tres piezas
+
+### Hechos
+
+Afirmaciones que se dan por ciertas.
+
+```prolog
+progenitor(ana, luis).
+progenitor(ana, marta).
+progenitor(luis, pablo).
+```
+
+Se lee: Ana es progenitora de Luis, de Marta, y Luis lo es de Pablo. Los nombres en minúscula son valores concretos.
+
+### Reglas
+
+Permiten deducir cosas nuevas a partir de otras.
+
+```prolog
+abuelo(X, Z) :- progenitor(X, Y), progenitor(Y, Z).
+```
+
+El símbolo `:-` se lee "si", y la coma, "y". X es abuelo de Z **si** X es progenitor de alguien, Y, **y** ese Y es progenitor de Z.
+
+Las palabras que empiezan por mayúscula son **variables**. No son como las de otros lenguajes: no guardan un valor que va cambiando, sino que representan una incógnita, como en álgebra.
+
+### Consultas
+
+Preguntas que se le hacen al sistema.
+
+```prolog
+?- abuelo(ana, pablo).
+true.
+
+?- abuelo(ana, Quien).
+Quien = pablo.
+```
+
+La primera pregunta si algo es cierto. La segunda es más interesante: "¿de quién es abuela Ana?". El sistema busca qué valor de `Quien` hace verdadera la afirmación.
+
+Lo notable es que nadie escribió un procedimiento para buscar nietos. Solo se definió qué significa ser abuelo.
+
+## La misma relación, en varias direcciones
+
+Una función normal tiene entradas y salidas fijas. Una relación lógica no.
+
+Con la misma regla `abuelo` se puede preguntar:
+
+- ¿Es Ana abuela de Pablo? Comprobar.
+- ¿De quién es abuela Ana? Buscar nietos.
+- ¿Quién es abuelo de Pablo? Buscar abuelos.
+- ¿Qué parejas de abuelo y nieto hay? Enumerar todas.
+
+En un lenguaje imperativo harían falta cuatro funciones.
+
+## Cómo encuentra las respuestas
+
+Dos mecanismos hacen el trabajo.
+
+### Unificación
+
+Consiste en hacer coincidir dos expresiones dando valores a sus variables. `progenitor(ana, Y)` unifica con el hecho `progenitor(ana, luis)` si `Y` vale `luis`.
+
+### Vuelta atrás
+
+Para responder, Prolog prueba opciones en orden. Si un camino no lleva a ninguna parte, **retrocede** hasta la última decisión y prueba la siguiente. Se llama *backtracking*.
+
+Para `abuelo(ana, Quien)`:
+
+1. Busca un `Y` tal que `progenitor(ana, Y)`. Encuentra `luis`.
+2. Busca un `Z` tal que `progenitor(luis, Z)`. Encuentra `pablo`. Primera respuesta.
+3. Si se piden más, retrocede y prueba `Y = marta`.
+4. Busca `progenitor(marta, Z)`. No hay ninguno. Ese camino falla.
+5. No quedan más opciones.
+
+El programa explora un árbol de posibilidades, como una [búsqueda en profundidad](/articulos/grafos/).
+
+## Recreándolo en JavaScript
+
+Para ver la mecánica, este programa imita la consulta anterior. No es programación lógica, porque la búsqueda está escrita a mano, pero muestra qué hace Prolog por dentro:
+
+```js
+const progenitores = [
+	["ana", "luis"],
+	["ana", "marta"],
+	["luis", "pablo"],
+];
+
+function nietosDe(persona) {
+	const nietos = [];
+
+	for (const [padre, hijo] of progenitores) {
+		if (padre !== persona) continue;
+
+		for (const [otroPadre, nieto] of progenitores) {
+			if (otroPadre === hijo) {
+				nietos.push(nieto);
+			}
+		}
+	}
+
+	return nietos;
+}
+
+console.log(nietosDe("ana").join(" ")); // "pablo"
+console.log(nietosDe("luis").length); // 0
+```
+
+Esta función solo responde a una de las cuatro preguntas. En Prolog, la regla de una línea las responde todas.
+
+## Reglas recursivas
+
+Las reglas pueden definirse en términos de sí mismas, igual que una función [recursiva](/articulos/recursividad/):
+
+```prolog
+antepasado(X, Y) :- progenitor(X, Y).
+antepasado(X, Y) :- progenitor(X, Z), antepasado(Z, Y).
+```
+
+X es antepasado de Y si es su progenitor, o si es progenitor de alguien que es antepasado de Y. Con dos líneas se cubren todas las generaciones.
+
+<Quiz
+	client:visible
+	question="En programación lógica, ¿qué escribe quien programa?"
+	options={[
+		"Los pasos exactos para llegar al resultado",
+		"Hechos y reglas; el sistema busca las respuestas",
+		"Solo consultas a una base de datos",
+	]}
+	answer={1}
+/>
+
+## Dónde encaja
+
+Es una buena herramienta para problemas que consisten en **relaciones y búsqueda**:
+
+- Sistemas basados en reglas, como diagnósticos o comprobación de normativas.
+- Problemas con restricciones: horarios, asignación de turnos, rompecabezas.
+- Análisis de lenguaje.
+- Consultas sobre datos muy relacionados.
+
+No lo es para tareas que son por naturaleza una secuencia de pasos, como una interfaz gráfica o un cálculo numérico intensivo.
+
+## Su influencia
+
+Prolog no se usa mucho como lenguaje principal, pero sus ideas están muy repartidas:
+
+- **Datalog**, un subconjunto de Prolog, se usa para consultar datos y analizar programas.
+- Los **sistemas de tipos** de algunos lenguajes resuelven sus comprobaciones con unificación.
+- Los **motores de reglas** de muchas aplicaciones empresariales siguen el mismo esquema de hechos y reglas.
+- Los **resolutores de restricciones**, que buscan soluciones que cumplan un conjunto de condiciones.
+
+## Sus dificultades
+
+- **El orden importa.** En teoría solo se describe la lógica, pero Prolog prueba las reglas en el orden en que están escritas. Un orden desafortunado puede provocar una búsqueda sin fin.
+- **El rendimiento es difícil de prever.** Una consulta inocente puede explorar un número enorme de caminos.
+- **Cuesta cambiar de mentalidad** viniendo de la programación imperativa.
+
+## Lo esencial
+
+- En la programación lógica se declaran hechos y reglas, y el sistema deduce las respuestas.
+- Una consulta puede comprobar algo o pedir los valores que lo hacen cierto.
+- La misma relación sirve para preguntar en varias direcciones.
+- Las respuestas se buscan con unificación y vuelta atrás.
+- Encaja con problemas de relaciones, reglas y restricciones.

@@ -1,0 +1,218 @@
+---
+title: "¿Qué son las funciones de orden superior y las clausuras?"
+description: "Una función de orden superior recibe o devuelve otras funciones; una clausura es una función que recuerda las variables del lugar donde se creó."
+level: intermedio
+layer: programacion
+prerequisites:
+  - funciones
+  - programacion-funcional
+updated: 2026-10-13
+sources:
+  - title: "MDN: Closures"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Closures
+  - title: "MDN: Array.prototype.map()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/map
+  - title: "MDN: Funciones"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **función de orden superior** es una [función](/articulos/funciones/) que recibe otra función como argumento, o que devuelve una función como resultado. Una **clausura** (*closure*) es una función que conserva el acceso a las variables del lugar donde fue creada, incluso después de que ese lugar haya dejado de ejecutarse.
+
+Las dos ideas van juntas y son la base de la [programación funcional](/articulos/programacion-funcional/).
+
+## Las funciones son valores
+
+En JavaScript, una función es un valor como cualquier otro. Se puede guardar en una variable, meter en una lista, pasar a otra función y devolver.
+
+```js
+const saludar = (nombre) => `Hola, ${nombre}`;
+const acciones = [saludar, (nombre) => `Adiós, ${nombre}`];
+
+console.log(saludar("Ana")); // "Hola, Ana"
+console.log(acciones[1]("Ana")); // "Adiós, Ana"
+```
+
+De ahí sale todo lo demás.
+
+## Funciones que reciben funciones
+
+Recorrer una lista y hacer algo con cada elemento es una tarea que se repite sin parar. Lo que cambia de una vez a otra es el "algo".
+
+Una función de orden superior separa las dos partes: ella pone el recorrido y tú le pasas qué hacer.
+
+```js
+function aplicarATodos(lista, operacion) {
+	const resultado = [];
+
+	for (const elemento of lista) {
+		resultado.push(operacion(elemento));
+	}
+
+	return resultado;
+}
+
+console.log(aplicarATodos([1, 2, 3], (n) => n * 2).join(" ")); // "2 4 6"
+console.log(aplicarATodos(["a", "b"], (s) => s.toUpperCase()).join(" ")); // "A B"
+```
+
+La misma función sirve para duplicar números y para pasar textos a mayúsculas. Esto es lo que hacen por dentro los métodos `map`, `filter` y `reduce` de los [arrays](/articulos/arrays/).
+
+A la función que se pasa como argumento para que otra la llame se le dice **retrollamada** (*callback*). Aparecen por todas partes: al ordenar con un criterio, al reaccionar a un clic, al esperar una respuesta de la red.
+
+## Funciones que devuelven funciones
+
+Una función también puede fabricar otras.
+
+```js
+function crearMultiplicador(factor) {
+	return (numero) => numero * factor;
+}
+
+const doble = crearMultiplicador(2);
+const triple = crearMultiplicador(3);
+
+console.log(doble(10)); // 20
+console.log(triple(10)); // 30
+```
+
+`crearMultiplicador(2)` termina y devuelve una función. Lo curioso es que esa función sigue sabiendo que `factor` vale 2, aunque `crearMultiplicador` ya acabó.
+
+Eso es una clausura.
+
+## Qué es una clausura
+
+Cuando se crea una función, se lleva consigo una referencia al **entorno** en el que nació: las variables que tenía a la vista en ese momento. Mientras la función exista, esas variables siguen vivas.
+
+`doble` y `triple` nacieron en dos llamadas distintas, y cada una recuerda su propio `factor`.
+
+### Estado privado
+
+La clausura no guarda una copia del valor, sino acceso a la variable. Si la variable cambia, la función lo ve. Eso permite tener un estado que nadie más puede tocar:
+
+```js
+function crearContador() {
+	let cuenta = 0;
+
+	return {
+		incrementar: () => {
+			cuenta = cuenta + 1;
+			return cuenta;
+		},
+		valor: () => cuenta,
+	};
+}
+
+const contador = crearContador();
+contador.incrementar();
+contador.incrementar();
+
+console.log(contador.valor()); // 2
+console.log(contador.cuenta); // undefined
+
+const otro = crearContador();
+console.log(otro.valor()); // 0
+```
+
+No hay forma de modificar `cuenta` desde fuera: solo existen las dos funciones que la conocen. Es una manera de conseguir la encapsulación de la [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/) sin usar clases.
+
+Cada llamada a `crearContador` crea un entorno nuevo, y por eso `otro` empieza en 0.
+
+<Quiz
+	client:visible
+	question="Una función se crea dentro de otra y se devuelve. ¿Qué pasa con las variables de la función exterior cuando esta termina?"
+	options={[
+		"Se destruyen siempre",
+		"Siguen existiendo mientras la función interior pueda usarlas",
+		"Se copian a variables globales",
+	]}
+	answer={1}
+/>
+
+## Usos habituales
+
+### Configurar una función
+
+Crear versiones especializadas de una función general, como los multiplicadores.
+
+### Ejecutar algo una sola vez
+
+```js
+function unaVez(funcion) {
+	let hecho = false;
+	let resultado;
+
+	return (...argumentos) => {
+		if (!hecho) {
+			hecho = true;
+			resultado = funcion(...argumentos);
+		}
+
+		return resultado;
+	};
+}
+
+let inicializaciones = 0;
+const inicializar = unaVez(() => {
+	inicializaciones = inicializaciones + 1;
+	return "listo";
+});
+
+inicializar();
+inicializar();
+
+console.log(inicializaciones); // 1
+```
+
+`unaVez` recibe una función y devuelve otra: es de orden superior. Y la que devuelve recuerda `hecho` y `resultado`: es una clausura.
+
+### Recordar resultados
+
+Guardar en una clausura los resultados ya calculados para no repetirlos, técnica que se llama memorización y que es una forma de [caché](/articulos/que-es-una-cache/).
+
+### Manejadores de eventos
+
+Una función que responde a un clic suele necesitar datos de cuando se creó, como el identificador del elemento. Los tiene a mano gracias a la clausura.
+
+## El error clásico
+
+Durante años, este código sorprendió a casi todo el mundo:
+
+```js
+const funciones = [];
+
+for (var i = 0; i < 3; i++) {
+	funciones.push(() => i);
+}
+
+console.log(funciones.map((f) => f()).join(" ")); // "3 3 3"
+```
+
+Se esperaba `0 1 2`. Pero con `var` hay una sola variable `i` para todo el bucle, y las tres funciones la comparten. Cuando se ejecutan, el bucle ha terminado y `i` vale 3.
+
+Con `let`, cada vuelta del bucle tiene su propia variable:
+
+```js
+const funciones = [];
+
+for (let i = 0; i < 3; i++) {
+	funciones.push(() => i);
+}
+
+console.log(funciones.map((f) => f()).join(" ")); // "0 1 2"
+```
+
+Es una de las razones por las que hoy se usa `let` y no `var`. Y enseña lo importante: una clausura captura la **variable**, no el valor que tenía.
+
+## Un coste a tener en cuenta
+
+Las variables que captura una clausura no se liberan mientras la función siga viva. Si se guarda una función que mantiene acceso a un dato muy grande, ese dato permanece en memoria. Es raro que sea un problema, pero es una causa conocida de programas que consumen cada vez más memoria.
+
+## Lo esencial
+
+- Una función de orden superior recibe o devuelve funciones.
+- Permiten separar una tarea general, como recorrer una lista, de lo que se hace en cada paso.
+- Una clausura es una función que conserva acceso a las variables del entorno donde se creó.
+- Captura las variables, no una copia de sus valores.
+- Sirven para configurar funciones y para mantener un estado privado.

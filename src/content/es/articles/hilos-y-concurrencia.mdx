@@ -102,7 +102,7 @@ console.log(registro.join(", ")); // "empieza A, empieza B, termina B, termina A
 
 Las dos tareas empiezan una tras otra y B termina antes, aunque se lanzó después. Mientras A espera, el único hilo atiende a B. `await` marca los puntos en los que una tarea cede el paso.
 
-Este modelo se llama **asíncrono**. Encaja muy bien cuando la mayor parte del tiempo se va en esperar: a la red, al disco, a una base de datos. Con él, un solo hilo atiende a miles de clientes.
+Este modelo se llama **asíncrono**, y en JavaScript se escribe con [promesas y async/await](/articulos/promesas-y-async-await/). Encaja muy bien cuando la mayor parte del tiempo se va en esperar: a la red, al disco, a una base de datos. Con él, un solo hilo atiende a miles de clientes.
 
 No sirve para acelerar cálculos. Si una tarea ocupa el procesador sin pausas, bloquea a todas las demás, porque solo hay un hilo.
 

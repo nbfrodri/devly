@@ -4,5 +4,6 @@ layer: programacion
 steps:
   - programacion-orientada-a-objetos
   - programacion-funcional
+  - programacion-logica
   - tipado-estatico-y-dinamico
   - compilador-e-interprete

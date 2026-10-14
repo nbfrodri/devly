@@ -1,0 +1,198 @@
+---
+title: "¿Qué son las promesas y async/await?"
+description: "Una promesa representa un resultado que llegará más tarde. async y await permiten escribir ese código en espera como si fuera secuencial."
+level: intermedio
+layer: programacion
+prerequisites:
+  - funciones
+  - hilos-y-concurrencia
+updated: 2026-10-13
+sources:
+  - title: "MDN: Promise"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Promise
+  - title: "MDN: Usar promesas"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Using_promises
+  - title: "MDN: async function"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/async_function
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **promesa** es un objeto que representa el resultado de una operación que todavía no ha terminado. **`async`** y **`await`** son una forma de escribir código que usa promesas para que se lea de arriba abajo, como el código normal.
+
+Son la manera habitual de manejar operaciones que tardan en JavaScript.
+
+## Qué problema resuelven
+
+Pedir datos a un servidor o leer un archivo lleva tiempo. JavaScript ejecuta el código en un solo hilo, como explica el artículo sobre [concurrencia](/articulos/hilos-y-concurrencia/): si se quedara esperando, todo lo demás se detendría, y la página dejaría de responder.
+
+La solución es no esperar. Se inicia la operación, se indica qué hacer cuando termine y el programa sigue con otra cosa. Es el modelo **asíncrono**.
+
+### Antes: retrollamadas anidadas
+
+La primera forma de indicarlo fue pasar una función que se ejecutaría al terminar. Con varias operaciones encadenadas, el código se anidaba cada vez más:
+
+```javascript
+obtenerUsuario(id, (usuario) => {
+	obtenerPedidos(usuario, (pedidos) => {
+		obtenerDetalle(pedidos[0], (detalle) => {
+			mostrar(detalle);
+		});
+	});
+});
+```
+
+Difícil de leer, y gestionar los errores en cada nivel era todavía peor. Las promesas nacieron para arreglarlo.
+
+## Qué es una promesa
+
+Una promesa es como el resguardo que te dan al dejar un abrigo en un guardarropa. No es el abrigo, pero representa que lo recibirás.
+
+Está siempre en uno de tres estados:
+
+| Estado | Significado |
+| --- | --- |
+| Pendiente | La operación sigue en curso |
+| Cumplida | Terminó bien y tiene un valor |
+| Rechazada | Falló y tiene un motivo |
+
+Una vez cumplida o rechazada, no vuelve a cambiar.
+
+## Usar una promesa
+
+Con `then` se indica qué hacer con el valor cuando llegue, y con `catch`, qué hacer si falla:
+
+```js
+function esperar(milisegundos, valor) {
+	return new Promise((resolver) => {
+		setTimeout(() => resolver(valor), milisegundos);
+	});
+}
+
+const registro = [];
+
+esperar(20, "dato").then((valor) => {
+	registro.push(`recibido: ${valor}`);
+});
+registro.push("sigo trabajando");
+
+await esperar(50);
+console.log(registro.join(", ")); // "sigo trabajando, recibido: dato"
+```
+
+"sigo trabajando" se anota primero. La promesa no detiene el programa: la función de `then` se ejecuta más tarde, cuando el dato está listo.
+
+`then` devuelve otra promesa, así que las operaciones se encadenan en lugar de anidarse.
+
+## async y await
+
+`await` espera a que una promesa termine y entrega su valor. Solo puede usarse dentro de una función marcada con `async`, o en el nivel superior de un módulo.
+
+```js
+function esperar(milisegundos, valor) {
+	return new Promise((resolver) => {
+		setTimeout(() => resolver(valor), milisegundos);
+	});
+}
+
+async function cargarPerfil() {
+	const usuario = await esperar(10, { nombre: "Ana" });
+	const pedidos = await esperar(10, [25, 40]);
+
+	return `${usuario.nombre} tiene ${pedidos.length} pedidos`;
+}
+
+console.log(await cargarPerfil()); // "Ana tiene 2 pedidos"
+```
+
+El código se lee como si fuera secuencial, y por debajo sigue siendo asíncrono.
+
+Dos cosas que conviene tener claras:
+
+- **`await` pausa la función, no el programa.** Mientras espera, el hilo atiende otras tareas.
+- **Una función `async` siempre devuelve una promesa**, aunque dentro haya un `return` normal.
+
+## Errores
+
+Con `async` y `await`, los errores se tratan con `try` y `catch`, igual que en el código corriente. Se explica en [manejo de errores y excepciones](/articulos/manejo-de-errores-y-excepciones/).
+
+```js
+async function obtenerDato() {
+	throw new Error("sin conexión");
+}
+
+async function cargar() {
+	try {
+		return await obtenerDato();
+	} catch (error) {
+		return `fallo: ${error.message}`;
+	}
+}
+
+console.log(await cargar()); // "fallo: sin conexión"
+```
+
+Una promesa rechazada que nadie trata es un error silencioso. Toda cadena necesita un `catch` en algún punto.
+
+## En serie o a la vez
+
+Dos `await` seguidos se ejecutan uno detrás de otro: el segundo no empieza hasta que termina el primero. Si las operaciones no dependen entre sí, es tiempo perdido.
+
+`Promise.all` las lanza todas y espera a que acaben:
+
+```js
+function esperar(milisegundos, valor) {
+	return new Promise((resolver) => {
+		setTimeout(() => resolver(valor), milisegundos);
+	});
+}
+
+const inicioSerie = Date.now();
+await esperar(100, "a");
+await esperar(100, "b");
+const tiempoEnSerie = Date.now() - inicioSerie;
+
+const inicioParalelo = Date.now();
+const resultados = await Promise.all([esperar(100, "a"), esperar(100, "b")]);
+const tiempoALaVez = Date.now() - inicioParalelo;
+
+console.log(resultados.join(" ")); // "a b"
+console.log(tiempoEnSerie >= 190); // true
+console.log(tiempoALaVez < 190); // true
+```
+
+En serie tarda unos 200 milisegundos; a la vez, unos 100. Es una de las optimizaciones más sencillas y más olvidadas.
+
+| Método | Se resuelve cuando |
+| --- | --- |
+| `Promise.all` | Todas terminan bien; falla si una falla |
+| `Promise.allSettled` | Todas terminan, bien o mal |
+| `Promise.race` | Termina la primera, bien o mal |
+| `Promise.any` | Termina bien la primera |
+
+<Quiz
+	client:visible
+	question="¿Qué hace await dentro de una función async?"
+	options={[
+		"Detiene todo el programa hasta que la promesa termina",
+		"Pausa esa función hasta que la promesa termina, sin bloquear el resto",
+		"Convierte el código en síncrono",
+	]}
+	answer={1}
+/>
+
+## Errores comunes
+
+- **Olvidar `await`.** Sin él no se obtiene el valor, sino la promesa. Comparar o mostrar una promesa da resultados absurdos.
+- **Esperar en serie lo que podía ir a la vez.**
+- **Usar `await` dentro de `forEach`.** `forEach` no espera a las funciones que recibe. Para esperar en orden se usa un bucle `for...of`; para lanzarlas a la vez, `map` con `Promise.all`.
+- **No tratar los rechazos.**
+- **Creer que hace el código más rápido.** No acelera nada: evita bloquear mientras se espera.
+
+## Lo esencial
+
+- Una promesa representa un resultado futuro, y está pendiente, cumplida o rechazada.
+- `then` y `catch` indican qué hacer cuando termina.
+- `await` espera el resultado dentro de una función `async`, sin bloquear el programa.
+- Los errores se tratan con `try` y `catch`.
+- `Promise.all` ejecuta varias operaciones a la vez en lugar de una tras otra.

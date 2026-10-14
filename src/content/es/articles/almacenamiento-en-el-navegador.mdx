@@ -1,0 +1,170 @@
+---
+title: "¿Cómo guarda datos un navegador? Cookies, localStorage y sessionStorage"
+description: "El navegador ofrece varios sitios donde una web puede guardar datos. Se diferencian en cuánto duran, cuánto cabe y quién puede leerlos."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-http
+  - el-dom
+updated: 2026-10-13
+sources:
+  - title: "MDN: API de almacenamiento web"
+    url: https://developer.mozilla.org/es/docs/Web/API/Web_Storage_API
+  - title: "MDN: Uso de cookies HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Cookies
+  - title: "MDN: IndexedDB"
+    url: https://developer.mozilla.org/es/docs/Web/API/IndexedDB_API
+  - title: "RFC 6265: HTTP State Management Mechanism"
+    url: https://www.rfc-editor.org/info/rfc6265/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un navegador ofrece a cada sitio web varios lugares donde guardar datos en el dispositivo del usuario. Los principales son las **cookies**, **localStorage** y **sessionStorage**. Se diferencian en cuánto duran los datos, cuánto cabe y, sobre todo, en si se envían al servidor.
+
+## Para qué guardar datos en el navegador
+
+Una página pierde todo lo que tenía en memoria al recargarla o al cerrar la pestaña. Guardar datos en el navegador permite:
+
+- **Recordar la sesión**, para no pedir la contraseña en cada página.
+- **Conservar preferencias**: el tema claro u oscuro, el idioma.
+- **No perder un borrador** si se cierra la pestaña sin querer.
+- **Evitar descargar otra vez** datos que ya se tenían.
+
+## Cookies
+
+Una cookie es un dato pequeño, con nombre y valor, que el navegador guarda asociado a un sitio.
+
+Lo que las hace distintas de todo lo demás: **el navegador las envía automáticamente al servidor en cada petición** a ese sitio. Están pensadas para la comunicación entre navegador y servidor.
+
+Normalmente las crea el servidor, con una cabecera en la respuesta:
+
+```
+Set-Cookie: sesion=a8f3c2; HttpOnly; Secure; SameSite=Lax; Max-Age=3600
+```
+
+Lo que va tras el valor son **atributos**, y casi todos son de seguridad:
+
+| Atributo | Efecto |
+| --- | --- |
+| `HttpOnly` | El JavaScript de la página no puede leerla |
+| `Secure` | Solo se envía por [HTTPS](/articulos/https-y-tls/) |
+| `SameSite` | Limita su envío en peticiones que vienen de otros sitios |
+| `Max-Age` o `Expires` | Cuándo caduca. Sin ellos, dura hasta cerrar el navegador |
+| `Domain` y `Path` | A qué direcciones se envía |
+
+- **A favor:** son el único almacenamiento que el servidor recibe sin que el código haga nada, y el único que se puede ocultar a JavaScript.
+- **En contra:** caben muy pocos datos, unos 4 kilobytes cada una, y como viajan en todas las peticiones, cada byte que se guarda se transmite una y otra vez.
+
+Su uso principal es identificar la [sesión del usuario](/articulos/sesiones-y-tokens/).
+
+## localStorage
+
+Un almacén de pares de clave y valor que solo maneja el JavaScript de la página. **No se envía al servidor.**
+
+Los ejemplos funcionan en la consola del navegador:
+
+```javascript
+localStorage.setItem("tema", "oscuro");
+
+console.log(localStorage.getItem("tema")); // "oscuro"
+
+localStorage.removeItem("tema");
+```
+
+- Los datos **no caducan**: siguen ahí al cerrar el navegador y al reiniciar el equipo, hasta que el código o el usuario los borren.
+- Caben unos pocos megabytes por sitio.
+- Lo comparten todas las pestañas del mismo sitio.
+
+### Solo guarda texto
+
+Todo se almacena como texto. Para guardar un objeto hay que convertirlo, normalmente a [JSON](/articulos/formatos-de-datos-json-csv-xml/):
+
+```js
+const preferencias = { tema: "oscuro", tamano: 16 };
+
+const guardado = JSON.stringify(preferencias);
+const recuperado = JSON.parse(guardado);
+
+console.log(guardado); // {"tema":"oscuro","tamano":16}
+console.log(recuperado.tamano + 1); // 17
+```
+
+Sin esa conversión, un número se recupera como texto y un objeto queda reducido a algo inservible.
+
+Es adecuado para preferencias y datos no sensibles que deban sobrevivir entre visitas.
+
+## sessionStorage
+
+Funciona igual que localStorage, con la misma forma de usarlo, pero con otro alcance:
+
+- Los datos duran **mientras la pestaña esté abierta**. Al cerrarla se borran.
+- **Cada pestaña tiene el suyo.** Dos pestañas del mismo sitio no comparten nada.
+
+Sirve para datos temporales de una visita: el paso de un formulario largo, un filtro aplicado.
+
+## Comparación
+
+| | Cookies | localStorage | sessionStorage |
+| --- | --- | --- | --- |
+| Capacidad | Unos 4 KB cada una | Unos megabytes | Unos megabytes |
+| Duración | La que se indique | Indefinida | Hasta cerrar la pestaña |
+| Se envía al servidor | Sí, en cada petición | No | No |
+| Lo lee JavaScript | Sí, salvo con `HttpOnly` | Sí | Sí |
+| Compartido entre pestañas | Sí | Sí | No |
+| Uso típico | Sesión del usuario | Preferencias | Estado temporal |
+
+<Quiz
+	client:visible
+	question="¿Cuál de estos almacenes envía sus datos al servidor automáticamente en cada petición?"
+	options={["Las cookies", "localStorage", "sessionStorage"]}
+	answer={0}
+/>
+
+## Para más datos: IndexedDB
+
+Cuando hay que guardar mucha información, o estructurada, existe **IndexedDB**: una base de datos dentro del navegador. Admite grandes volúmenes, objetos completos, índices y transacciones, y no bloquea la página mientras trabaja.
+
+Es más compleja de usar. Se reserva para aplicaciones que funcionan sin conexión o manejan muchos datos en el cliente.
+
+## Aislamiento por origen
+
+Cada sitio tiene su propio espacio. Los datos que guarda `https://tienda.ejemplo` no los puede leer `https://otra.ejemplo`. La separación se hace por **origen**: esquema, dominio y puerto, la misma noción que usa [CORS](/articulos/que-es-cors/).
+
+## Seguridad
+
+Aquí se cometen los errores con más consecuencias.
+
+### JavaScript puede leer el almacenamiento
+
+Cualquier script que se ejecute en la página puede leer localStorage y sessionStorage. Si el sitio tiene una vulnerabilidad de [cross-site scripting](/articulos/cross-site-scripting-xss/), el código del atacante se lleva todo lo que haya.
+
+Por eso **no se deben guardar ahí credenciales**, como un token de sesión. Una cookie con `HttpOnly` es invisible para JavaScript, y un script inyectado no puede robarla.
+
+### Las cookies viajan solas
+
+El envío automático es justo lo que aprovecha un ataque [CSRF](/articulos/csrf/). Se mitiga con el atributo `SameSite` y con tokens anti-CSRF.
+
+### Reglas prácticas
+
+- Las cookies de sesión llevan siempre `HttpOnly`, `Secure` y `SameSite`.
+- Nada sensible en localStorage: ni tokens, ni contraseñas, ni datos personales delicados.
+- Lo que llega del almacenamiento no es de fiar. El usuario puede editarlo desde las herramientas del navegador. Un valor como `esAdministrador` guardado en el cliente no demuestra nada: los permisos se comprueban [en el servidor](/articulos/cliente-servidor/).
+
+## Privacidad
+
+Como permiten reconocer a un usuario entre visitas, las cookies son la base del seguimiento publicitario. En muchos países, la ley exige informar y pedir consentimiento antes de usar las que no sean necesarias para el funcionamiento del sitio. De ahí los avisos de cookies.
+
+Los navegadores también limitan cada vez más las **cookies de terceros**, las que crea un sitio distinto del que se está visitando.
+
+## No es permanente
+
+El navegador puede borrar el almacenamiento si falta espacio, y el usuario puede vaciarlo cuando quiera o navegar en modo privado. Lo que importa conservar se guarda en el servidor. El almacenamiento del navegador es una comodidad, no una copia de seguridad.
+
+## Lo esencial
+
+- Las cookies son pequeñas y se envían al servidor en cada petición; sirven para la sesión.
+- localStorage guarda texto sin caducidad y solo lo usa JavaScript.
+- sessionStorage hace lo mismo, pero se borra al cerrar la pestaña y no se comparte entre pestañas.
+- Lo que JavaScript puede leer, un ataque XSS lo puede robar: las credenciales van en cookies `HttpOnly`.
+- Todo lo guardado en el cliente puede perderse o manipularse.

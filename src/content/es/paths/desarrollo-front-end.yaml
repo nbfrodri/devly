@@ -5,6 +5,7 @@ steps:
   - que-es-html
   - que-es-css
   - el-dom
+  - almacenamiento-en-el-navegador
   - diseno-adaptable
   - accesibilidad-web
   - heuristicas-de-usabilidad

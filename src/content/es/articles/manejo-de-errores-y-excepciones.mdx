@@ -1,0 +1,218 @@
+---
+title: "¿Cómo se manejan los errores? Las excepciones"
+description: "Una excepción interrumpe la ejecución cuando algo va mal. Manejarla bien es decidir dónde y cómo reaccionar."
+level: basico
+layer: programacion
+prerequisites:
+  - funciones
+  - condicionales
+updated: 2026-10-13
+sources:
+  - title: "MDN: try...catch"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/try...catch
+  - title: "MDN: Error"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Error
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **excepción** es una señal de que ha ocurrido algo que impide continuar con normalidad. Cuando se produce, la ejecución se interrumpe y el control salta al punto del programa preparado para tratarla. **Manejar errores** es decidir dónde y cómo reaccionar a esas situaciones.
+
+## Qué problema resuelven
+
+Las cosas fallan: un archivo que no existe, una red que se cae, un dato con un formato inesperado. Un programa tiene que contar con ello.
+
+La forma más antigua de avisar de un fallo es devolver un valor especial: un −1, un `null`. Tiene dos defectos:
+
+- **Es fácil de ignorar.** Si quien llama no comprueba el valor, el programa sigue adelante con un dato incorrecto y falla más tarde, lejos de la causa.
+- **Hay que comprobarlo en cada nivel.** Si el error ocurre cinco llamadas más abajo, cada función intermedia tiene que detectarlo y pasarlo hacia arriba.
+
+Las excepciones resuelven las dos cosas: no se pueden ignorar sin querer, y suben solas hasta donde alguien las trate.
+
+## Lanzar una excepción
+
+Con `throw` se interrumpe la función y se señala el error:
+
+```js
+function dividir(a, b) {
+	if (b === 0) {
+		throw new Error("No se puede dividir entre cero");
+	}
+
+	return a / b;
+}
+
+console.log(dividir(10, 2)); // 5
+```
+
+Si se llama con un cero, la función no devuelve nada: se detiene en el `throw`.
+
+## Capturarla
+
+El código que puede fallar se pone en un bloque `try`. Si se lanza una excepción, la ejecución salta al bloque `catch`.
+
+```js
+function dividir(a, b) {
+	if (b === 0) {
+		throw new Error("No se puede dividir entre cero");
+	}
+
+	return a / b;
+}
+
+function calcular(a, b) {
+	try {
+		return dividir(a, b);
+	} catch (error) {
+		return `Error: ${error.message}`;
+	}
+}
+
+console.log(calcular(10, 2)); // 5
+console.log(calcular(10, 0)); // "Error: No se puede dividir entre cero"
+```
+
+El objeto de error lleva un `message` con la descripción y un `stack`, la **traza**: la lista de llamadas que llevó hasta el fallo. Es la información más útil para localizarlo.
+
+## Cómo sube una excepción
+
+Si una función no captura una excepción, esta pasa a quien la llamó. Y si esa tampoco, a la siguiente. Sube por la [pila de llamadas](/articulos/pilas-y-colas/) hasta encontrar un `catch`.
+
+```js
+function leerEdad(texto) {
+	const edad = Number(texto);
+
+	if (Number.isNaN(edad)) {
+		throw new Error(`No es un número: ${texto}`);
+	}
+
+	return edad;
+}
+
+function procesarFormulario(datos) {
+	return leerEdad(datos.edad) + 1;
+}
+
+function manejarEnvio(datos) {
+	try {
+		return procesarFormulario(datos);
+	} catch (error) {
+		return error.message;
+	}
+}
+
+console.log(manejarEnvio({ edad: "30" })); // 31
+console.log(manejarEnvio({ edad: "treinta" })); // "No es un número: treinta"
+```
+
+`procesarFormulario` no sabe nada de errores. La excepción la atraviesa y llega a `manejarEnvio`, que es quien sabe qué decirle al usuario.
+
+Esa es la ventaja: el error se trata en el nivel que tiene contexto para hacerlo bien, no necesariamente donde ocurre.
+
+Si nadie la captura, el programa se detiene.
+
+## finally
+
+El bloque `finally` se ejecuta siempre, haya habido error o no. Sirve para liberar recursos: cerrar un archivo, soltar una conexión, quitar un indicador de carga.
+
+```js
+function procesar(fallar) {
+	const pasos = [];
+
+	try {
+		pasos.push("abrir");
+		if (fallar) {
+			throw new Error("fallo");
+		}
+		pasos.push("trabajar");
+	} catch {
+		pasos.push("tratar el error");
+	} finally {
+		pasos.push("cerrar");
+	}
+
+	return pasos.join(", ");
+}
+
+console.log(procesar(false)); // "abrir, trabajar, cerrar"
+console.log(procesar(true)); // "abrir, tratar el error, cerrar"
+```
+
+En los dos casos se cierra.
+
+## Tipos de error
+
+No todos los errores se tratan igual. Para distinguirlos se crean clases propias, que heredan de `Error`:
+
+```js
+class ErrorDeValidacion extends Error {
+	constructor(campo, mensaje) {
+		super(mensaje);
+		this.name = "ErrorDeValidacion";
+		this.campo = campo;
+	}
+}
+
+function validar(usuario) {
+	if (!usuario.correo.includes("@")) {
+		throw new ErrorDeValidacion("correo", "El correo no es válido");
+	}
+}
+
+try {
+	validar({ correo: "ana" });
+} catch (error) {
+	if (error instanceof ErrorDeValidacion) {
+		console.log(`${error.campo}: ${error.message}`); // "correo: El correo no es válido"
+	} else {
+		throw error;
+	}
+}
+```
+
+El `else` vuelve a lanzar lo que no es un error de validación. Es importante: un `catch` debe tratar los errores que sabe tratar y dejar pasar los demás.
+
+<Quiz
+	client:visible
+	question="Una función lanza una excepción y no tiene try ni catch. ¿Qué ocurre?"
+	options={[
+		"La excepción se pierde y el programa continúa",
+		"La excepción pasa a la función que la llamó",
+		"La función devuelve undefined",
+	]}
+	answer={1}
+/>
+
+## Dos clases de fallo
+
+Conviene distinguirlos, porque piden respuestas distintas.
+
+- **Errores esperables.** El usuario escribe un correo mal, la red se cae, el archivo no está. Forman parte del funcionamiento normal. Se tratan: se informa, se reintenta, se ofrece una alternativa.
+- **Errores de programación.** Llamar a una función que no existe, usar un dato que debería estar y no está. Son fallos en el código. No se "tratan": se corrigen. Lo correcto es dejar que el programa falle de forma visible, para enterarse.
+
+Capturar un error de programación y seguir como si nada lo esconde. El fallo reaparece más tarde, con peores síntomas.
+
+## Buenas prácticas
+
+- **No silenciar errores.** Un `catch` vacío es el origen de los fallos más difíciles de diagnosticar: algo va mal y no queda rastro.
+- **Capturar donde se puede hacer algo útil.** Si no sabes cómo responder, deja que suba.
+- **Mensajes con contexto.** "Error" no ayuda. "No se pudo leer el archivo de configuración: no existe" sí.
+- **No mostrar al usuario los detalles internos.** La traza es para los registros. Al usuario se le dice qué ha pasado y qué puede hacer; además, los detalles técnicos dan pistas a un atacante.
+- **Fallar pronto.** Comprobar los datos al entrar y lanzar el error ahí, cerca de la causa, en lugar de dejar que un dato incorrecto circule.
+- **No usar excepciones para el flujo normal.** Son para lo excepcional. Que no haya resultados en una búsqueda no es un error.
+
+## En código asíncrono
+
+Con [promesas](/articulos/promesas-y-async-await/), un fallo es una promesa rechazada. Con `async` y `await` se captura con el mismo `try` y `catch`.
+
+## Otros enfoques
+
+No todos los lenguajes usan excepciones. Go devuelve el error como un valor más, junto al resultado, y obliga a mirarlo. Rust usa un tipo que contiene o el resultado o el error, y el compilador no deja ignorarlo. Buscan lo mismo por otra vía: que un fallo no pase desapercibido.
+
+## Lo esencial
+
+- Una excepción interrumpe la ejecución y sube por las llamadas hasta que alguien la captura.
+- `throw` la lanza, `try` y `catch` la tratan, y `finally` se ejecuta siempre.
+- Se captura en el nivel que sabe cómo responder.
+- Los errores esperables se tratan; los de programación se corrigen.
+- Nunca se debe silenciar un error.
