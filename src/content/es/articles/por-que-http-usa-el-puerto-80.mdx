@@ -1,0 +1,66 @@
+---
+title: "¿Por qué la web usa el puerto 80?"
+description: "Cuando Tim Berners-Lee necesitó un número para HTTP, el 80 estaba libre. Antes de tenerlo asignado, la web usaba el 2784."
+level: basico
+kind: curiosidad
+layer: redes
+prerequisites:
+  - que-es-un-puerto
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "RFC 1060: Assigned Numbers (1990)"
+    url: https://www.rfc-editor.org/info/rfc1060/
+  - title: "RFC 1340: Assigned Numbers (1992)"
+    url: https://www.rfc-editor.org/info/rfc1340/
+  - title: "IANA: Service Name and Transport Protocol Port Number Registry (en inglés)"
+    url: https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
+---
+
+import { Quiz } from "@/components/quiz";
+
+[HTTP](/articulos/que-es-http/) usa el [puerto](/articulos/que-es-un-puerto/) **80** porque, cuando la web necesitó un número propio a principios de los años noventa, ese estaba libre. La lista oficial de 1992 lo registra como "World Wide Web HTTP", a nombre de Tim Berners-Lee. Antes, durante el desarrollo, la web había usado otro: el **2784**.
+
+## Los números asignados
+
+Los puertos más conocidos se reparten de forma centralizada, para que cada servicio tenga un número fijo y cualquier cliente sepa dónde llamar. Hoy lo gestiona la organización IANA. Antes se publicaba en una serie de documentos llamados *Assigned Numbers*, "números asignados".
+
+## En 1990, libre
+
+En la versión de 1990, el RFC 1060, la lista de puertos salta del 79, asignado al servicio Finger, al 81. El 80 **no tiene ningún servicio asignado**.
+
+## En 1992, la web
+
+En la versión de 1992, el RFC 1340, aparecen dos entradas nuevas a nombre de Tim Berners-Lee:
+
+| Puerto | Nombre | Descripción |
+| --- | --- | --- |
+| 80 | `www` | World Wide Web HTTP |
+| 2784 | `www-dev` | world wide web - development |
+
+El 2784 era el puerto que se había usado durante el desarrollo de la web, cuando todavía no tenía uno oficial. Queda registrado aparte, como puerto de desarrollo.
+
+## Por qué importa tener un número fijo
+
+Gracias a que HTTP tiene asignado el 80, y HTTPS el 443, no hace falta escribirlo en las direcciones: el navegador lo da por supuesto.
+
+```js
+const conPuertoPorDefecto = new URL("http://ejemplo.com/");
+const conOtroPuerto = new URL("http://ejemplo.com:8080/");
+
+console.log(conPuertoPorDefecto.port === ""); // true
+console.log(conOtroPuerto.port); // "8080"
+```
+
+Si un servidor escucha en otro puerto, hay que indicarlo, como en `localhost:3000` durante el desarrollo, que explica [qué es localhost](/articulos/que-es-localhost/).
+
+## Por debajo del 1024
+
+Los puertos del 0 al 1023 son los "bien conocidos", reservados para servicios estándar. En los sistemas tipo Unix, abrir uno de ellos exige privilegios de administrador. Por eso los programas en desarrollo suelen usar puertos altos, como el 3000 o el 8080, que no necesitan permisos especiales.
+
+## Lo esencial
+
+- HTTP usa el puerto 80 porque estaba libre cuando la web necesitó uno.
+- En la lista de 1990 el 80 no estaba asignado; en la de 1992 figura como World Wide Web HTTP.
+- Durante el desarrollo, la web usó el puerto 2784.
+- Gracias al número fijo, no hace falta escribir el puerto en las direcciones.

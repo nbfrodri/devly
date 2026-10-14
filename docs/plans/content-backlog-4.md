@@ -13,15 +13,15 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 ### Programación
 
 - [x] ¿Qué es un algoritmo?
-- [ ] ¿Qué es un lenguaje de programación?
-- [ ] ¿Qué es el código fuente?
+- [x] ¿Qué es un lenguaje de programación?
+- [x] ¿Qué es el código fuente?
 - [x] ¿Qué es una biblioteca? Cubierta en la comparación entre biblioteca y framework.
 - [x] ¿Qué es un framework? Cubierto en la comparación entre biblioteca y framework.
 - [x] ¿Qué es un SDK?
 - [x] ¿Qué es la sintaxis?
 - [x] ¿Qué es un literal?
 - [x] ¿Qué es un operador?
-- [ ] ¿Qué es un puntero o una referencia?
+- [x] ¿Qué es un puntero o una referencia?
 - [x] ¿Qué es un objeto?
 - [x] ¿Qué es una clase?
 - [x] ¿Qué es una interfaz?
@@ -38,13 +38,13 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [x] ¿Qué es una URL?
 - [x] ¿Qué es un dominio?
 - [x] ¿Qué es un puerto?
-- [ ] ¿Qué es un endpoint?
+- [x] ¿Qué es un endpoint?
 - [x] ¿Qué es un webhook?
 - [x] ¿Qué es un código de estado HTTP?
 - [x] ¿Qué es una cabecera HTTP?
 - [x] ¿Qué es localhost?
 - [x] ¿Qué es un certificado digital?
-- [ ] ¿Qué es un hosting?
+- [x] ¿Qué es un hosting?
 - [x] ¿Qué es el SEO técnico?
 
 ### Datos y sistemas
@@ -53,7 +53,7 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [x] ¿Qué es una consulta?
 - [x] ¿Qué es un esquema de base de datos?
 - [x] ¿Qué es un byte?
-- [ ] ¿Qué es un archivo?
+- [x] ¿Qué es un archivo?
 - [x] ¿Qué es el kernel?
 - [x] ¿Qué es un driver?
 - [x] ¿Qué es el firmware?
@@ -101,9 +101,9 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [x] Diferencias entre Git y GitHub
 - [x] Diferencias entre merge y rebase en Git
 - [x] Diferencias entre una máquina virtual y un contenedor de cara al desarrollo
-- [ ] Diferencias entre RAM y ROM
-- [ ] Diferencias entre CPU, GPU y NPU
-- [ ] Diferencias entre hub, switch y router
+- [x] Diferencias entre RAM y ROM
+- [x] Diferencias entre CPU, GPU y NPU
+- [x] Diferencias entre hub, switch y router
 - [x] Diferencias entre inteligencia artificial, aprendizaje automático y aprendizaje profundo
 - [x] Diferencias entre aprendizaje supervisado y no supervisado
 - [x] Diferencias entre codificar y cifrar
@@ -119,14 +119,14 @@ Solo con fuente comprobable. Si no se encuentra, se deja sin marcar con una nota
 - [x] ¿Por qué el primer programador fue una mujer? Ada Lovelace y la máquina analítica
 - [x] ¿Qué fue ENIAC y quién lo programó?
 - [x] ¿Por qué un kilobyte son 1000 o 1024 bytes?
-- [ ] ¿Por qué el puerto de HTTP es el 80?
-- [ ] ¿Por qué el error 404 se llama así?
+- [x] ¿Por qué el puerto de HTTP es el 80?
+- [x] ¿Por qué el error 404 se llama así?
 - [x] ¿De dónde viene el nombre de Python?
 - [x] ¿Por qué JavaScript se llama así si no tiene nada que ver con Java?
-- [ ] ¿Por qué el año 1970 es el inicio del tiempo en Unix?
-- [ ] ¿Qué es el problema de los dos generales?
+- [x] ¿Por qué el año 1970 es el inicio del tiempo en Unix?
+- [x] ¿Qué es el problema de los dos generales?
 - [x] ¿Qué fue el gusano Morris?
 - [x] ¿Por qué se dice "píxel"?
 - [x] ¿Qué fue la primera página web?
 - [x] ¿Por qué el carácter de nueva línea es distinto en Windows y en Linux?
-- [ ] ¿De dónde viene la palabra "robot"?
+- [x] ¿De dónde viene la palabra "robot"?

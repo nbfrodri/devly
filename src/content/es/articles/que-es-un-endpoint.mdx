@@ -1,0 +1,55 @@
+---
+title: "¿Qué es un endpoint?"
+description: "Un endpoint es una dirección concreta de una API a la que se envían peticiones, combinada con un método HTTP: por ejemplo, GET /usuarios/42."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - que-es-una-api
+  - que-es-rest
+updated: 2026-10-13
+sources:
+  - title: "OpenAPI Specification (en inglés)"
+    url: https://spec.openapis.org/oas/latest.html
+  - title: "Microsoft: REST API Guidelines (en inglés)"
+    url: https://github.com/microsoft/api-guidelines
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **endpoint**, o punto de acceso, es una dirección concreta de una [API](/articulos/que-es-una-api/) a la que se pueden enviar peticiones. En una API web, se identifica por una ruta y un método [HTTP](/articulos/que-es-http/):
+
+| Endpoint | Qué hace |
+| --- | --- |
+| `GET /usuarios` | Listar usuarios |
+| `GET /usuarios/42` | Obtener el usuario 42 |
+| `POST /usuarios` | Crear un usuario |
+| `PATCH /usuarios/42` | Modificar parte del usuario 42 |
+| `DELETE /usuarios/42` | Borrar el usuario 42 |
+
+La misma ruta, `/usuarios/42`, puede ser varios endpoints según el método, como explican [GET y POST](/articulos/get-y-post/) y [PUT y PATCH](/articulos/put-y-patch/).
+
+## Partes variables
+
+Muchas rutas tienen partes que cambian, como el identificador. El servidor las extrae al recibir la petición:
+
+```js
+const coincidencia = "/usuarios/42".match(/^\/usuarios\/(\d+)$/);
+
+console.log(coincidencia[1]); // "42"
+```
+
+## Documentarlos
+
+Una API se describe enumerando sus endpoints: qué datos reciben, qué devuelven, qué errores pueden dar. La **especificación OpenAPI** es el formato estándar para hacerlo, y a partir de ella se generan documentación y código.
+
+## Buenas prácticas
+
+- **Nombres de recursos, no de acciones**: `/pedidos` y no `/obtenerPedidos`. El método ya dice la acción, como propone el estilo [REST](/articulos/que-es-rest/).
+- **Versión en la ruta**, como `/v1/pedidos`, para poder cambiar la API sin romper a quien la usa.
+- **[Autenticación](/articulos/autenticacion-y-autorizacion/)** y [límites de peticiones](/articulos/limitacion-de-peticiones/) en cada endpoint que lo necesite.
+
+## Con qué no confundirlo
+
+- **URL**: es la dirección completa; el endpoint es la combinación de una ruta con un método.
+- En seguridad informática, "endpoint" designa también cada **dispositivo** conectado a una red, como un portátil o un móvil. Es otro sentido de la palabra.

@@ -1,0 +1,52 @@
+---
+title: "¿Qué es un lenguaje de programación?"
+description: "Un lenguaje de programación es un idioma formal, con reglas precisas, para escribir instrucciones que un ordenador puede ejecutar."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-un-algoritmo
+  - compilador-e-interprete
+updated: 2026-10-13
+sources:
+  - title: "Abelson y Sussman: Structure and Interpretation of Computer Programs, cap. 1 (en inglés)"
+    url: https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-10.html
+  - title: "Python: El tutorial de Python"
+    url: https://docs.python.org/es/3/tutorial/index.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **lenguaje de programación** es un idioma artificial, con reglas exactas, para escribir instrucciones que un ordenador puede ejecutar. Sirve de puente: las personas lo pueden leer y escribir, y un programa, el [compilador o el intérprete](/articulos/compilador-e-interprete/), lo traduce a lo que entiende la máquina.
+
+El libro clásico *Structure and Interpretation of Computer Programs* lo plantea así: un lenguaje no es solo una forma de dar órdenes al ordenador, sino un marco para organizar las ideas sobre un proceso.
+
+## Un ejemplo
+
+El mismo [algoritmo](/articulos/que-es-un-algoritmo/), sumar los números pares de una lista, en JavaScript:
+
+```js
+const pares = [1, 2, 3, 4].filter((n) => n % 2 === 0);
+
+console.log(pares.reduce((a, b) => a + b, 0)); // 6
+```
+
+En otro lenguaje cambian las palabras y los símbolos, la [sintaxis](/articulos/que-es-la-sintaxis/), pero la idea es la misma.
+
+## Qué lo define
+
+- **Sintaxis**: cómo se escribe.
+- **Semántica**: qué significa cada construcción.
+- **[Tipos de datos](/articulos/tipos-de-datos/)** y cómo se comprueban: de forma [estática o dinámica](/articulos/tipado-estatico-y-dinamico/).
+- **Cómo se ejecuta**: compilado, interpretado o sobre una [máquina virtual](/articulos/que-es-una-maquina-virtual-de-un-lenguaje/).
+- **Paradigma**: imperativo, [funcional](/articulos/programacion-funcional/), [orientado a objetos](/articulos/programacion-orientada-a-objetos/) o [lógico](/articulos/programacion-logica/).
+
+## Niveles
+
+- **Bajo nivel**: cercanos a las instrucciones del procesador, como el ensamblador. Dan control total y cuestan de escribir.
+- **Alto nivel**: cercanos a las ideas, como Python o JavaScript. Ocultan los detalles de la máquina.
+
+## Con qué no confundirlo
+
+- **HTML** describe la estructura de un documento, y **CSS** su aspecto. No expresan algoritmos con condiciones y repeticiones, así que normalmente no se consideran lenguajes de programación.
+- **Un lenguaje de consulta** como [SQL](/articulos/que-es-sql/) es un lenguaje especializado en pedir datos.

@@ -1,0 +1,62 @@
+---
+title: "¿Por qué el tiempo de Unix empieza en 1970?"
+description: "Los ordenadores tipo Unix cuentan el tiempo en segundos desde el 1 de enero de 1970. Según Dennis Ritchie, se eligió porque «parecía tan buena como cualquier otra»."
+level: basico
+kind: curiosidad
+layer: sistemas
+prerequisites:
+  - el-efecto-2000-y-el-problema-de-2038
+  - que-es-un-sistema-operativo
+updated: 2026-10-13
+sources:
+  - title: "Wired: Unix Tick Tocks to a Billion (2001, en inglés)"
+    url: https://www.wired.com/2001/09/unix-tick-tocks-to-a-billion/
+  - title: "The Open Group: POSIX, General Concepts, Seconds Since the Epoch (en inglés)"
+    url: https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap04.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Los sistemas tipo Unix, y muchos programas y lenguajes, miden el tiempo como el número de **segundos transcurridos desde el 1 de enero de 1970 a medianoche**, en hora universal. Ese instante se llama la **época** de Unix. No tiene ningún significado especial: según Dennis Ritchie, uno de los creadores de Unix, se eligió simplemente porque "1970 parecía tan bueno como cualquier otro".
+
+## El instante cero
+
+```js
+console.log(new Date(0).toISOString()); // "1970-01-01T00:00:00.000Z"
+console.log(new Date(1e12).toISOString()); // "2001-09-09T01:46:40.000Z"
+```
+
+JavaScript cuenta en milisegundos desde ese momento. Un billón de milisegundos, mil millones de segundos, se cumplió el 9 de septiembre de 2001.
+
+## La explicación de Ritchie
+
+En 2001, con motivo de ese número redondo, Wired publicó la explicación del propio Ritchie. En los primeros tiempos de Unix, contó, no tenían cintas y tenían un par de sistemas de archivos en marcha, y **cambiaban constantemente el origen del tiempo**. Al final decidieron elegir algo que no se desbordara en mucho tiempo, y 1970 les pareció tan buena fecha como cualquier otra.
+
+El estándar POSIX, que define el comportamiento de los sistemas tipo Unix, recoge hoy esa época como referencia común.
+
+## Por qué contar así
+
+Representar el tiempo como un único número tiene ventajas:
+
+- **Comparar** dos instantes es comparar dos números.
+- **Calcular duraciones** es restar.
+- **No depende de zonas horarias** ni de formatos de fecha.
+
+Las fechas legibles, con día, mes y hora local, se calculan solo al mostrarlas.
+
+## El precio: 2038
+
+Muchos sistemas guardaron ese número en un entero de 32 bits con signo, cuyo máximo es 2 147 483 647.
+
+```js
+console.log(new Date((2 ** 31 - 1) * 1000).toISOString()); // "2038-01-19T03:14:07.000Z"
+```
+
+Un segundo después, el contador se desborda y vuelve a un número negativo, que representa diciembre de 1901. Es el **problema del año 2038**, pariente del efecto 2000, como explica [el efecto 2000 y el problema de 2038](/articulos/el-efecto-2000-y-el-problema-de-2038/). La solución es usar enteros de 64 bits, que alcanzan para miles de millones de años.
+
+## Lo esencial
+
+- Unix cuenta el tiempo en segundos desde el 1 de enero de 1970, en hora universal.
+- Según Dennis Ritchie, la fecha se eligió porque parecía tan buena como cualquier otra, tras cambiar varias veces el origen.
+- Un único número facilita comparar instantes y calcular duraciones.
+- Guardado en 32 bits, el contador se desborda en enero de 2038.

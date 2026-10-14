@@ -1,0 +1,55 @@
+---
+title: "¿Qué es un archivo?"
+description: "Un archivo es una secuencia de bytes con un nombre, guardada en un dispositivo de almacenamiento y organizada por el sistema de archivos."
+level: basico
+kind: definicion
+layer: sistemas
+prerequisites:
+  - sistema-de-archivos
+  - que-es-un-byte
+updated: 2026-10-13
+sources:
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Files and Directories (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **archivo**, o fichero, es una secuencia de [bytes](/articulos/que-es-un-byte/) con un nombre, guardada de forma permanente en un disco, una SSD o una memoria. Para el [sistema operativo](/articulos/que-es-un-sistema-operativo/) es eso y nada más: bytes. Qué significan, un texto, una imagen o un programa, lo decide el programa que los lee.
+
+## Qué tiene un archivo
+
+- **Contenido**: los bytes.
+- **Nombre**, dentro de una carpeta o directorio.
+- **Metadatos**: tamaño, fechas de creación y modificación, dueño y [permisos](/articulos/permisos-y-usuarios/).
+
+Dónde está físicamente cada byte en el disco lo lleva el [sistema de archivos](/articulos/sistema-de-archivos/), como explica también [FAT y NTFS](/articulos/fat-y-ntfs/).
+
+## Las operaciones básicas
+
+Abrir, leer, escribir y cerrar. Los programas las hacen mediante [llamadas al sistema](/articulos/llamadas-al-sistema/):
+
+```js
+import { readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+const ruta = join(tmpdir(), "devly-ejemplo.txt");
+
+writeFileSync(ruta, "hola");
+
+console.log(readFileSync(ruta, "utf8")); // "hola"
+console.log(statSync(ruta).size); // 4
+
+unlinkSync(ruta);
+```
+
+El archivo ocupa 4 bytes: uno por cada letra.
+
+## La extensión
+
+La parte tras el punto, como `.txt` o `.jpg`, es solo una **convención** para saber qué programa abre el archivo. No cambia su contenido: renombrar una foto como `.txt` no la convierte en texto. Para saber qué hay realmente, muchos formatos empiezan con unos bytes característicos que los identifican.
+
+## Todo es un archivo
+
+En los sistemas tipo Unix, muchas cosas que no son datos en un disco se presentan como archivos: los dispositivos, la información de los procesos, las conexiones. Se explica en [la jerarquía de directorios de Linux](/articulos/jerarquia-de-directorios-de-linux/).

@@ -1,0 +1,60 @@
+---
+title: "Diferencias entre RAM y ROM"
+description: "La RAM es la memoria de trabajo, rápida y que se borra al apagar. La ROM guarda datos permanentes, como el firmware, que normalmente no se modifican."
+level: basico
+kind: comparacion
+layer: hardware
+prerequisites:
+  - memoria-ram-y-almacenamiento
+  - que-es-el-firmware
+updated: 2026-10-13
+sources:
+  - title: "NIST: Glossary, random access memory (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/random_access_memory
+  - title: "NIST: Glossary, read-only memory (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/read_only_memory
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **RAM** y la **ROM** son dos tipos de memoria con funciones opuestas. La **RAM**, memoria de acceso aleatorio, es la memoria de **trabajo** del ordenador: rápida, se lee y se escribe constantemente, y **se borra al apagar**. La **ROM**, memoria de solo lectura, guarda datos **permanentes** que el equipo necesita siempre, como el [firmware](/articulos/que-es-el-firmware/), y **no se borra** sin corriente.
+
+## RAM
+
+Es donde están los programas mientras se ejecutan y los datos con los que trabajan, como explica [memoria RAM y almacenamiento](/articulos/memoria-ram-y-almacenamiento/).
+
+- **Volátil**: sin corriente, se pierde todo.
+- **Muy rápida**, del orden de nanosegundos.
+- **Lectura y escritura** continuas.
+- "Acceso aleatorio" significa que se llega a cualquier posición en el mismo tiempo, sin recorrer las anteriores.
+
+## ROM
+
+Guarda lo que tiene que estar disponible desde el primer instante, antes de que haya nada cargado: el programa que [arranca el equipo](/articulos/arranque-de-un-sistema-operativo/), el firmware de un electrodoméstico.
+
+- **No volátil**: conserva los datos sin corriente.
+- **De solo lectura**, al menos en uso normal.
+
+El nombre se ha quedado antiguo. Las ROM originales se grababan en fábrica y no se podían cambiar nunca. Hoy, lo que se llama ROM suele ser memoria **flash**, que sí se puede reescribir, pero solo en ocasiones especiales, como al actualizar el firmware.
+
+## Comparación
+
+| | RAM | ROM |
+| --- | --- | --- |
+| Uso | Memoria de trabajo | Datos y programas permanentes |
+| Volátil | Sí | No |
+| Escritura | Constante | Rara o ninguna |
+| Velocidad | Muy alta | Menor |
+| Capacidad típica | Gigabytes | Megabytes |
+| Contenido | Programas en ejecución, datos temporales | Firmware, programa de arranque |
+
+## Una confusión de los móviles
+
+En las especificaciones de los teléfonos, a veces se llama "ROM" al **almacenamiento**, donde están las fotos y las aplicaciones. No es ROM en sentido técnico: es memoria flash que se escribe constantemente, como la de una [SSD](/articulos/discos-duros-y-ssd/).
+
+## Lo esencial
+
+- La RAM es memoria de trabajo: rápida, de lectura y escritura, y volátil.
+- La ROM guarda datos permanentes que no se pierden al apagar, como el firmware.
+- Hoy la "ROM" suele ser memoria flash que se reescribe solo al actualizar.
+- En los móviles, "ROM" se usa a veces, de forma imprecisa, para el almacenamiento.

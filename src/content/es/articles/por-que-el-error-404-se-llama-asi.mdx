@@ -1,0 +1,55 @@
+---
+title: "¿Por qué el error 404 se llama así?"
+description: "Se cuenta que viene de una habitación 404 del CERN donde estaban los archivos. Es un mito: es simplemente un número del sistema de códigos de estado de HTTP."
+level: basico
+kind: curiosidad
+layer: redes
+prerequisites:
+  - que-es-un-codigo-de-estado-http
+  - la-primera-pagina-web
+updated: 2026-10-13
+sources:
+  - title: "CERN Wiki: Room 404 (en inglés)"
+    url: https://wiki.cern.ch/index.php/Room_404
+  - title: "MDN: Códigos de estado de respuesta HTTP"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Status
+---
+
+import { Quiz } from "@/components/quiz";
+
+El error **404** se llama así porque es el [código de estado](/articulos/que-es-un-codigo-de-estado-http/) que [HTTP](/articulos/que-es-http/) usa para decir "no encontrado". Circula una historia según la cual el número vendría de una **habitación 404** del CERN, donde se guardaban los archivos de la primera web. Es un **mito**, y así lo recoge la propia wiki del CERN.
+
+## La leyenda
+
+Según la versión popular, en el CERN, donde Tim Berners-Lee creó [la primera página web](/articulos/la-primera-pagina-web/), había una sala en la cuarta planta, la 404, con el servidor y las bases de datos. Cuando alguien pedía un archivo que no existía, los encargados de esa sala respondían que no estaba: "habitación 404, archivo no encontrado".
+
+Es una historia bonita, y por eso se repite.
+
+## Lo que dice el CERN
+
+La wiki del CERN la desmiente: el error "404 Not Found" procede del sistema de códigos numéricos que diseñaron Tim Berners-Lee y Robert Cailliau para HTTP, y el número se asignó a "no encontrado" por elección de los programadores, sin relación con ninguna sala.
+
+## La lógica del número
+
+El número no es arbitrario del todo: sigue el sistema de **familias** de los códigos de estado. La primera cifra indica la categoría:
+
+| Familia | Significado |
+| --- | --- |
+| 2xx | Todo ha ido bien |
+| 3xx | El recurso está en otra parte |
+| 4xx | El error es del cliente: ha pedido algo que no se puede servir |
+| 5xx | El error es del servidor |
+
+Dentro de la familia 4, el 400 es una petición incorrecta, el 401 falta de autenticación, el 403 acceso prohibido… y el 404, que lo pedido no existe. El 4 inicial dice que el problema está en la petición; el resto distingue el caso.
+
+## Del código a la cultura
+
+El 404 es el error que más ve cualquier usuario, y se ha convertido en un pequeño fenómeno: muchas webs diseñan páginas de error con humor o con ilustraciones, y "404" se usa coloquialmente para decir que algo no aparece.
+
+Una buena página 404, además, ayuda a la persona perdida: ofrece un buscador o enlaces a las secciones principales en lugar de un mensaje vacío.
+
+## Lo esencial
+
+- 404 es el código de estado de HTTP para "no encontrado".
+- La historia de la habitación 404 del CERN es un mito, como recoge la wiki del CERN.
+- El número sigue el sistema de familias: los 4xx son errores del cliente.

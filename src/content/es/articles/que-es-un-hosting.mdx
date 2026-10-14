@@ -1,0 +1,50 @@
+---
+title: "¿Qué es un hosting o alojamiento web?"
+description: "El hosting es el servicio que guarda los archivos de una web en un servidor conectado a internet, para que cualquiera pueda visitarla."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - cliente-servidor
+  - que-es-un-dominio
+updated: 2026-10-13
+sources:
+  - title: "MDN: ¿Qué es un servidor web?"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_web_server
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **hosting**, o **alojamiento web**, es el servicio que guarda los archivos de un sitio o una aplicación en un **servidor** conectado a internet las 24 horas, para que cualquiera pueda visitarlo. Es el lugar donde "vive" una web.
+
+## Por qué hace falta
+
+Para que una web esté disponible, alguien tiene que tener encendido un ordenador con los archivos, conectado a internet, con un [servidor web](/articulos/cliente-servidor/) que responda a las peticiones. Se podría hacer en casa, pero exige una conexión estable, una dirección fija, seguridad y mantenimiento. El hosting es alquilar todo eso.
+
+## Tipos
+
+| Tipo | Qué es | Conviene para |
+| --- | --- | --- |
+| Compartido | Muchas webs en el mismo servidor | Sitios pequeños |
+| Servidor privado virtual | Una [máquina virtual](/articulos/contenedores-y-maquinas-virtuales/) propia | Más control |
+| Dedicado | Un servidor físico entero | Mucho tráfico |
+| Estático | Solo archivos, a menudo servidos por una [CDN](/articulos/que-es-una-cdn/) | Sitios que no generan páginas al momento |
+| Plataformas | Se sube el código y la plataforma lo ejecuta, incluido [serverless](/articulos/que-es-serverless/) | Aplicaciones, sin administrar servidores |
+
+Este sitio, por ejemplo, es estático: se genera una vez y se sirve como archivos.
+
+## Hosting y dominio
+
+Son dos servicios distintos, aunque a menudo se contratan juntos:
+
+- El **[dominio](/articulos/que-es-un-dominio/)** es el nombre, como `ejemplo.com`.
+- El **hosting** es el lugar donde están los archivos.
+
+El [DNS](/articulos/que-es-dns/) une los dos: hace que el nombre apunte al servidor. Por eso se puede cambiar de hosting conservando el dominio.
+
+## Qué mirar al elegir
+
+- Que admita la tecnología de la web.
+- [HTTPS](/articulos/https-y-tls/) incluido.
+- [Copias de seguridad](/articulos/copias-de-seguridad/).
+- Dónde están los servidores, por la [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/) y por las leyes de [protección de datos](/articulos/rgpd-y-proteccion-de-datos/).

@@ -1,0 +1,63 @@
+---
+title: "Diferencias entre CPU, GPU y NPU"
+description: "Tres tipos de procesador para trabajos distintos: la CPU para todo, la GPU para muchas operaciones iguales en paralelo y la NPU para redes neuronales con poco consumo."
+level: intermedio
+kind: comparacion
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+  - que-es-una-gpu
+updated: 2026-10-13
+sources:
+  - title: "Microsoft: Uso de dispositivos NPU en Windows"
+    url: https://learn.microsoft.com/es-es/windows/ai/npu-devices/
+  - title: "NVIDIA: CUDA C++ Programming Guide (en inglés)"
+    url: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **CPU**, la **GPU** y la **NPU** son tres tipos de procesador, especializados en trabajos distintos. La **CPU** es el procesador general, capaz de todo y rápido en tareas secuenciales. La **GPU** tiene miles de núcleos sencillos para hacer la misma operación sobre muchos datos a la vez. La **NPU**, unidad de procesamiento neuronal, está diseñada solo para ejecutar redes neuronales con muy poco consumo.
+
+Muchos ordenadores y móviles actuales llevan las tres en el mismo chip.
+
+## CPU
+
+El [procesador](/articulos/como-funciona-un-procesador/) central. Pocos núcleos potentes, con mucha lógica para ejecutar deprisa código impredecible, lleno de condiciones y saltos.
+
+Ejecuta el sistema operativo y casi todos los programas.
+
+## GPU
+
+Como explica [qué es una GPU](/articulos/que-es-una-gpu/), nació para los gráficos: calcular millones de píxeles, cada uno con la misma operación. Esa capacidad de **cálculo paralelo** la convirtió en la herramienta para entrenar [redes neuronales](/articulos/que-es-una-red-neuronal/).
+
+Es muy potente y consume mucho.
+
+## NPU
+
+Está diseñada para una tarea concreta: la **[inferencia](/articulos/que-es-la-inferencia/)**, es decir, usar modelos de IA ya entrenados. Hace las multiplicaciones de matrices de las redes neuronales con mucha menos energía que una GPU, a menudo con números de poca precisión, que bastan para este uso.
+
+Según Microsoft, está pensada para cargas de IA que se ejecutan de forma continua en el equipo, como el desenfoque de fondo en una videollamada o la transcripción, sin agotar la batería.
+
+## Comparación
+
+| | CPU | GPU | NPU |
+| --- | --- | --- | --- |
+| Núcleos | Pocos y potentes | Miles y sencillos | Unidades especializadas |
+| Pensada para | Cualquier tarea | Cálculo paralelo y gráficos | Redes neuronales |
+| Flexibilidad | Máxima | Alta | Baja |
+| Consumo | Medio | Alto | Muy bajo |
+| Uso típico en IA | Modelos pequeños | Entrenar y ejecutar modelos grandes | Ejecutar modelos en el dispositivo |
+
+## Por qué existen tres
+
+Es la consecuencia de que un procesador ya no mejora solo con cada generación, como cuenta la [ley de Moore](/articulos/que-es-la-ley-de-moore/). En lugar de un procesador más rápido para todo, se añaden piezas especializadas que hacen una tarea concreta con mucha más eficiencia.
+
+El reparto habitual: la CPU coordina, la GPU se encarga de los gráficos y del cálculo intensivo, y la NPU de las tareas de IA que deben funcionar sin vaciar la batería.
+
+## Lo esencial
+
+- La CPU es el procesador general, rápido en tareas secuenciales.
+- La GPU hace la misma operación sobre muchos datos a la vez, con mucha potencia y consumo.
+- La NPU ejecuta redes neuronales con muy poca energía.
+- Los equipos actuales combinan las tres y reparten el trabajo según la tarea.

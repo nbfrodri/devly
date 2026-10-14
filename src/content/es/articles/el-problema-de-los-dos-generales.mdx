@@ -1,0 +1,62 @@
+---
+title: "¿Qué es el problema de los dos generales?"
+description: "Dos generales deben atacar a la vez, comunicándose por mensajeros que pueden ser capturados. Se demuestra que ningún protocolo garantiza que se pongan de acuerdo."
+level: basico
+kind: curiosidad
+layer: sistemas
+prerequisites:
+  - consenso-distribuido
+  - garantias-de-entrega-de-mensajes
+  - tcp-y-udp
+updated: 2026-10-13
+sources:
+  - title: "James Aspnes: Two Generals, apuntes de Yale (en inglés)"
+    url: https://cs.yale.edu/homes/aspnes/pinewiki/TwoGenerals.html
+  - title: "James Aspnes: Notes on Theory of Distributed Systems (en inglés)"
+    url: https://arxiv.org/abs/2001.04235
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **problema de los dos generales** es un experimento mental sobre la comunicación por un canal poco fiable. Dos generales deben atacar a la vez a un enemigo; si atacan por separado, pierden. Solo pueden comunicarse con mensajeros, que pueden ser capturados por el camino. La conclusión, demostrada matemáticamente, es que **no existe ningún protocolo que garantice que lleguen a un acuerdo**.
+
+Según los apuntes de James Aspnes, de la Universidad de Yale, fue el primer problema de consenso distribuido ampliamente conocido. Lo describió Jim Gray en 1978, aunque había aparecido antes con otro nombre.
+
+## El dilema
+
+1. El general A envía un mensajero: "atacamos al amanecer".
+2. Si el mensajero llega, B está de acuerdo. Pero A no sabe si llegó. Si no llegó y A ataca, atacará solo.
+3. Así que B envía un mensajero de vuelta: "recibido".
+4. Si llega, A sabe que B lo sabe. Pero B no sabe si su confirmación llegó. Si no llegó, A podría no atacar.
+5. A confirma la confirmación…
+
+Cada mensaje deja al que lo envía con la duda de si llegó. Ninguna cantidad finita de confirmaciones elimina la incertidumbre del último mensajero.
+
+## Por qué es imposible
+
+La demostración es breve. Supongamos que existe un protocolo que funciona, y tomemos la ejecución con el **menor número de mensajes** que acaba en un ataque coordinado. Fijémonos en el último mensaje: si se pierde, el que lo envió no se entera, y tiene que actuar igual. Así que ese mensaje no era necesario, y existiría una ejecución más corta. Contradicción.
+
+## Qué tiene que ver con la informática
+
+Es exactamente la situación de dos ordenadores que se comunican por una red que puede perder mensajes:
+
+- Un cliente envía un pago y no recibe respuesta. ¿Se procesó? No hay forma de saberlo con certeza, como explica [como mucho, al menos y exactamente una vez](/articulos/garantias-de-entrega-de-mensajes/).
+- [TCP](/articulos/tcp-y-udp/) establece conexiones con un intercambio de mensajes y confirmaciones, y al cerrarlas ninguno de los dos extremos puede estar completamente seguro de que el otro recibió el último mensaje.
+
+## Cómo se vive con ello
+
+La imposibilidad es teórica, para una garantía absoluta. En la práctica se combina:
+
+- **Reintentos** hasta recibir confirmación.
+- **Operaciones [idempotentes](/articulos/atomicidad-e-idempotencia/)**, para que repetir no haga daño.
+- **Probabilidades**: con muchos mensajeros, es muy improbable que se pierdan todos.
+- **Protocolos de [consenso](/articulos/consenso-distribuido/)** que funcionan mientras la red se comporte razonablemente.
+
+Se acepta una incertidumbre pequeña y se diseña para que los fallos no causen daño.
+
+## Lo esencial
+
+- Dos generales deben coordinarse con mensajeros que pueden perderse.
+- Ningún número finito de confirmaciones garantiza el acuerdo.
+- Es el problema de fondo de cualquier comunicación por una red que pierde mensajes.
+- En la práctica se resuelve con reintentos, idempotencia y probabilidades.

@@ -1,0 +1,51 @@
+---
+title: "¿Qué es el código fuente?"
+description: "El código fuente es el texto de un programa tal como lo escriben las personas, antes de traducirlo a lo que ejecuta la máquina."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-un-lenguaje-de-programacion
+  - compilador-e-interprete
+updated: 2026-10-13
+sources:
+  - title: "GNU: Licencia Pública General de GNU, versión 3 (en inglés)"
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+  - title: "GNU: ¿Qué es el software libre?"
+    url: https://www.gnu.org/philosophy/free-sw.es.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **código fuente** es el texto de un programa escrito en un [lenguaje de programación](/articulos/que-es-un-lenguaje-de-programacion/), tal como lo escriben y lo leen las personas. Es la "receta" del programa, antes de que un [compilador](/articulos/compilador-e-interprete/) lo convierta en lo que ejecuta la máquina.
+
+La licencia GPL lo define con precisión: el código fuente de una obra es la forma preferida para hacerle modificaciones. No basta con que sea texto: tiene que ser la versión con la que se trabaja.
+
+## Fuente y ejecutable
+
+| | Código fuente | Programa compilado |
+| --- | --- | --- |
+| Lo lee | Una persona | La máquina |
+| Formato | Texto, con nombres y comentarios | Instrucciones en binario |
+| Se puede modificar | Sí, con facilidad | En la práctica, no |
+
+```javascript
+// Código fuente: legible, con nombres y comentarios
+function calcularIva(precio) {
+	return precio * 0.21;
+}
+```
+
+Tras compilar, o incluso tras [minificarlo](/articulos/que-hace-un-empaquetador/), los nombres y comentarios desaparecen y el resultado es casi imposible de entender.
+
+## Por qué importa tenerlo
+
+Quien tiene el código fuente puede **estudiar** cómo funciona un programa, **corregirlo** y **mejorarlo**. Quien solo tiene el ejecutable, no. Por eso el acceso al código fuente es la condición central del [software libre y el código abierto](/articulos/software-libre-y-codigo-abierto/).
+
+## Dónde se guarda
+
+En un repositorio, con [control de versiones](/articulos/control-de-versiones-con-git/), que registra cada cambio. Nunca debe contener secretos, como explica [variables de entorno y secretos](/articulos/variables-de-entorno-y-secretos/).
+
+## Con qué no confundirlo
+
+"Fuente" aquí significa origen, no tipografía: no tiene nada que ver con las fuentes de letra.
