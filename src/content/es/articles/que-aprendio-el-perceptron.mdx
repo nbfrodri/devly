@@ -1,0 +1,33 @@
+---
+title: "¿Qué aprendió realmente el perceptrón?"
+description: "El trabajo de Rosenblatt mostró una vía para aprender decisiones a partir de ejemplos, con capacidades y límites concretos."
+level: basico
+kind: curiosidad
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+updated: 2026-10-14
+sources:
+  - title: "Frank Rosenblatt: The Perceptron, A Probabilistic Model for Information Storage and Organization in the Brain, 1958 (en inglés)"
+    url: https://web.engr.oregonstate.edu/~huanlian/teaching/ML/2020spring/extra/rosenblatt-1958.pdf
+  - title: "Cornell Chronicle: Professor's Perceptron Paved the Way for AI, 2019 (en inglés)"
+    url: https://news.cornell.edu/stories/2019/09/professors-perceptron-paved-way-ai-60-years-too-soon
+---
+
+En los años cincuenta, Frank Rosenblatt investigó sistemas capaces de aprender respuestas a partir de estímulos y publicó su trabajo sobre el **perceptrón**. La idea de ajustar conexiones utilizando ejemplos fue una contribución al desarrollo de las redes neuronales.
+
+La historia se cuenta a veces como si aquella máquina prometiera resolver cualquier tarea mental. Es más útil separar las expectativas públicas del mecanismo y los experimentos concretos que podían evaluarse.
+
+## Aprender pesos para una decisión
+
+La forma elemental que se enseña hoy combina entradas con pesos y compara el resultado con un umbral. Ajustar esos pesos cambia la frontera que separa las respuestas. No hace falta escribir a mano una regla para cada ejemplo de entrenamiento.
+
+Eso tampoco permite representar cualquier separación de entradas sin cambiar el modelo o sus características. En la formulación lineal básica, algunas configuraciones no pueden separarse mediante una sola frontera lineal. Conocer esa limitación permite formular expectativas y pruebas adecuadas.
+
+El artículo original estudia una arquitectura y un marco más amplios que una fórmula aislada de un manual moderno; no conviene tratarlos como descripciones idénticas en todos sus detalles.
+
+## Un límite no es toda una historia
+
+Que un modelo tenga límites no elimina el valor de lo que puede aprender. Tampoco basta una limitación del perceptrón para explicar por sí sola los [inviernos de la IA](/articulos/los-inviernos-de-la-ia/), donde intervinieron expectativas, recursos y decisiones de financiación.
+
+La curiosidad recuerda una buena costumbre: evaluar qué aprende un sistema, sobre qué entradas y con qué representación, antes de convertir una demostración concreta en una promesa universal.

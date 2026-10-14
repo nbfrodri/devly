@@ -5,3 +5,4 @@ steps:
   - que-es-un-proceso
   - hilos-y-concurrencia
   - condiciones-de-carrera-y-bloqueos
+  - semaforos-en-concurrencia

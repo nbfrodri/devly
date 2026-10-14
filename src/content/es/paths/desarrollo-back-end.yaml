@@ -4,12 +4,18 @@ layer: aplicaciones
 steps:
   - que-es-una-api
   - que-es-rest
+  - evolucion-compatible-de-api
+  - pruebas-de-software
+  - pruebas-de-contrato
   - put-y-patch
   - que-es-nodejs
   - que-es-un-middleware
   - autenticacion-y-autorizacion
   - sesiones-y-tokens
   - que-es-un-orm
+  - que-es-sql
+  - integracion-y-despliegue-continuos
+  - migraciones-de-bases-de-datos
   - paginacion
   - limitacion-de-peticiones
   - que-es-una-cache

@@ -1,0 +1,44 @@
+---
+title: "¿Qué es el ámbito de una variable?"
+description: "El ámbito determina desde qué partes del código puede utilizarse el nombre de una variable."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - funciones
+updated: 2026-10-14
+sources:
+  - title: "MDN: Scope, ámbito"
+    url: https://developer.mozilla.org/es/docs/Glossary/Scope
+  - title: "MDN: Funciones"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
+---
+
+El **ámbito**, o *scope*, es la región del código desde la que puedes usar el nombre de una [variable](/articulos/que-es-una-variable/). No todas las variables están disponibles en todas partes: las funciones y los bloques pueden establecer regiones propias.
+
+## Un nombre, dos variables
+
+En JavaScript, `let` y `const` tienen ámbito de bloque. Las llaves crean una región interior:
+
+```js
+const nombre = "Ana";
+
+{
+	const nombre = "Luis";
+	console.log(nombre); // "Luis"
+}
+
+console.log(nombre); // "Ana"
+```
+
+La variable interior **oculta** a la exterior mientras estás dentro del bloque. No la modifica: son dos declaraciones distintas. Al salir, vuelve a utilizarse el nombre exterior.
+
+Una función puede acceder a las variables de su entorno exterior, pero el exterior no puede acceder automáticamente a las que solo existen dentro. Esta relación permite que diferentes funciones utilicen nombres como `total` sin interferirse.
+
+## No es lo mismo que duración
+
+El ámbito responde «¿desde dónde se puede nombrar?». El **tiempo de vida** responde «¿hasta cuándo existe el dato?». Una [clausura](/articulos/funciones-de-orden-superior-y-clausuras/) puede conservar acceso a una variable después de que termine la llamada que la creó. Su nombre sigue sin estar disponible para el resto del programa.
+
+Tampoco debes aplicar las reglas de `let` a cualquier declaración. En JavaScript, `var` tiene ámbito de función y se comporta de otra manera. Las reglas exactas dependen del lenguaje y de la forma de declarar.
+
+Para leer código, localiza primero la declaración y después los bloques que la rodean. Evitar variables globales innecesarias reduce tanto las colisiones de nombres como las dependencias difíciles de seguir.

@@ -39,7 +39,7 @@ Una buena prueba: ¿tiene sentido hablar de un valor intermedio? Entre 200 000 y
 
 El modelo aprende una relación entre las características y un valor numérico.
 
-El caso más simple es la **regresión lineal**: se busca la recta que mejor se ajusta a los ejemplos.
+El caso más simple es la [**regresión lineal**](/articulos/regresion-lineal/): se busca la recta que mejor se ajusta a los ejemplos.
 
 ```js
 const ejemplos = [
@@ -124,7 +124,7 @@ La pregunta es **cuántas veces acierta**, y hay más de una forma de contarlo. 
 
 ### Un nombre engañoso
 
-La **regresión logística** es, a pesar del nombre, un modelo de **clasificación**. Calcula una probabilidad entre 0 y 1 y la compara con un umbral.
+La [**regresión logística**](/articulos/regresion-logistica/) es, a pesar del nombre, un modelo de **clasificación**. Calcula una probabilidad entre 0 y 1 y la compara con un umbral.
 
 ### Números que son etiquetas
 
@@ -148,6 +148,10 @@ Las diferencias están en la salida y en la medida. Todo lo demás se comparte:
 - Los dos pueden [sobreajustar](/articulos/sobreajuste-y-subajuste/).
 - Los dos se evalúan con datos reservados.
 - Muchos modelos sirven para ambos con pequeños cambios, incluidas las [redes neuronales](/articulos/que-es-una-red-neuronal/).
+
+La [regresión lineal](/articulos/regresion-lineal/) ofrece un ejemplo completo de ajuste de un valor numérico y análisis de residuos.
+
+La [regresión logística](/articulos/regresion-logistica/), pese al nombre, estima probabilidades para clasificar; el umbral convierte esas probabilidades en decisiones.
 
 ## Lo esencial
 

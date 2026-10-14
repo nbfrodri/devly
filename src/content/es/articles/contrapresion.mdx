@@ -1,0 +1,59 @@
+---
+title: "¿Qué es la contrapresión o backpressure?"
+description: "La contrapresión permite que quien consume datos más despacio reduzca el ritmo de quien los produce."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - colas-de-mensajes
+updated: 2026-10-14
+sources:
+  - title: "Node.js: Backpressuring in Streams (en inglés)"
+    url: https://nodejs.org/learn/modules/backpressuring-in-streams
+---
+
+La **contrapresión**, o *backpressure*, es un mecanismo para que un consumidor comunique que no puede seguir recibiendo al ritmo actual y el productor reduzca o pause el envío. Evita tratar una cola o un búfer como si tuviera capacidad infinita.
+
+## El problema es una diferencia de ritmos
+
+Imagina un productor que genera cien eventos por segundo y un consumidor que procesa sesenta. Mientras se mantengan esos ritmos, la cola crece cuarenta eventos cada segundo. Un búfer mayor retrasa el momento de llenarse, pero no corrige el desequilibrio.
+
+Además de memoria, crece la espera. Una cola con miles de eventos puede mantener el proceso activo mientras sus resultados llegan demasiado tarde para ser útiles. Mirar solo el número de errores ocultaría esa degradación.
+
+La contrapresión convierte la capacidad del consumidor en una señal que llega hacia el origen. Cuando se recupera, el productor puede volver a avanzar.
+
+## Cómo se expresa
+
+Un diseño puede utilizar un límite de cola que bloquea nuevas inserciones, permisos que se devuelven al procesar o un protocolo que solicita solo cierta cantidad de elementos. Lo común es un acuerdo: producir no significa poder entregar ilimitadamente.
+
+En los flujos escribibles de Node.js, `write()` devuelve un booleano. Si devuelve `false`, indica que debes dejar de escribir hasta recibir `drain`. **No significa que el fragmento haya sido rechazado**: ya se entregó al flujo, pero continuar añadiendo ignoraría la señal de capacidad.
+
+Las utilidades que conectan flujos pueden gestionar ese acuerdo por ti. Aun así, debes conocer qué hacen con errores, cierres y cancelación. Una tubería donde una etapa acumula todo en memoria puede deshacer el control que tenían las demás.
+
+## Seguir una cola limitada
+
+Con una capacidad de dos, el productor entrega A y B. Antes de insertar C encuentra el límite y espera. El consumidor procesa A y libera una posición. Entonces puede entrar C. El límite obliga a que el avance de la producción dependa del consumo.
+
+**¿Has hecho más rápido al consumidor?** No. Has limitado lo que se acumula y trasladado parte de la espera al productor. La capacidad máxima sigue siendo la del cuello de botella, salvo que cambies sus recursos o reduzcas el trabajo.
+
+## Cuando el origen no puede esperar
+
+No toda fuente admite pausa. Un sensor puede seguir midiendo, y una aplicación no siempre puede conservar indefinidamente una petición abierta. Necesitas una política explícita: descartar, muestrear, combinar eventos, rechazar trabajo o guardarlo de forma duradera con un límite y una estrategia de recuperación.
+
+Cada opción cambia el comportamiento. Combinar posiciones de un puntero puede ser aceptable si solo importa la última; perder una orden de pago no es equivalente. La semántica del dato decide qué degradación puedes permitir.
+
+## No es lo mismo que limitar peticiones
+
+La [limitación de peticiones](/articulos/limitacion-de-peticiones/) aplica una cuota o una política de admisión. La contrapresión adapta el flujo a la capacidad de quien lo recibe. Pueden combinarse: una cuota protege frente a abuso y una cola limitada evita sobrecarga incluso con tráfico autorizado.
+
+Tampoco una cola duradera elimina el problema. Puede resistir reinicios, pero seguir creciendo hasta agotar disco o producir retrasos inaceptables. Necesita retención, alertas y una estrategia ante consumo insuficiente.
+
+## Qué medir
+
+Observa el tamaño y la edad de la cola, los ritmos de entrada y salida, el tiempo bloqueado y los descartes. Un tamaño estable puede ocultar que se está rechazando la mayoría del trabajo. La [observabilidad](/articulos/observabilidad/) debe mostrar tanto capacidad como resultado.
+
+## Lo esencial
+
+- Un búfer mayor no resuelve una producción sostenida superior al consumo.
+- La contrapresión hace que el ritmo del consumidor limite al productor.
+- Pausar, rechazar y descartar son políticas diferentes.
+- El control debe conservarse a lo largo de todas las etapas del flujo.

@@ -8,6 +8,8 @@ prerequisites:
   - discos-duros-y-ssd
 updated: 2026-10-14
 sources:
+  - title: "Amazon EBS: Snapshots, documentación oficial (en inglés)"
+    url: https://docs.aws.amazon.com/ebs/latest/userguide/ebs-snapshots.html
   - title: "PostgreSQL: Backup and Restore (en inglés)"
     url: https://www.postgresql.org/docs/current/backup.html
   - title: "PostgreSQL: Continuous Archiving and Point-in-Time Recovery (en inglés)"
@@ -39,7 +41,7 @@ Los datos se pierden de muchas formas:
 
 Es la confusión más peligrosa. La [replicación](/articulos/replicacion-y-particionado/) mantiene copias **sincronizadas** de los datos. Si alguien borra una tabla por error, el borrado se replica a todas las copias en milisegundos. Lo mismo un ataque que cifra los datos.
 
-La replicación protege contra el fallo de una máquina. Una copia de seguridad protege contra todo lo demás, porque guarda el estado de **un momento pasado**.
+La replicación puede ayudar ante el fallo de una máquina. Una copia de seguridad conserva el estado de **un momento pasado**, pero su protección depende de retención, integridad, aislamiento y capacidad de restauración.
 
 Tampoco lo es un [RAID](/articulos/raid/), que combina varios discos para sobrevivir a la avería de uno, ni la papelera, ni una carpeta sincronizada con la nube.
 
@@ -130,6 +132,23 @@ Las copias contienen todos los datos, así que son un objetivo tan valioso como 
 - **Cifrarlas**, y guardar la clave en un lugar distinto de la copia. Perder la clave es perder la copia.
 - **Restringir el acceso**: pocas personas y servicios pueden leerlas o borrarlas.
 - **Cumplir las normas de conservación.** Los datos personales se guardan solo el tiempo justificado, también en las copias, como pide el [RGPD](/articulos/rgpd-y-proteccion-de-datos/).
+
+## Copia, réplica y snapshot
+
+Una **copia de seguridad** está destinada a recuperar un estado conservado. Una **réplica** mantiene otro ejemplar operativo siguiendo cambios. Una **instantánea**, o *snapshot*, representa un punto en el tiempo mediante las capacidades del almacenamiento o del sistema que la crea.
+
+Para una eliminación accidental, una réplica que recibe el borrado no conserva automáticamente el estado previo. Una copia histórica puede permitir recuperarlo. Una instantánea anterior también puede ayudar, pero necesitas conocer su retención, independencia y procedimiento de restauración.
+
+| Criterio | Copia de seguridad | Réplica | Snapshot |
+| --- | --- | --- | --- |
+| Uso principal | Recuperación | Continuidad y reparto | Conservar un estado puntual |
+| Sigue cambios posteriores | Según nuevas copias | Habitualmente sí | No en esa instantánea |
+| Protege ante borrado propagado | Si conserva una versión válida | No necesariamente | Si sigue disponible el estado anterior |
+| Independencia del origen | Debe diseñarse | Depende de la arquitectura | Depende de su implementación |
+
+Un snapshot puede compartir bloques, cuenta o infraestructura con el origen, o almacenarse de otra forma según el servicio. No supongas independencia por su nombre. Para una base de datos, además, debes asegurar que el punto recuperado sea consistente o pueda recuperarse mediante sus registros.
+
+Puedes combinar las tres técnicas. La decisión se comprueba restaurando y midiendo los objetivos de pérdida de datos y tiempo de recuperación, no únicamente verificando que existe un archivo llamado copia.
 
 ## Lo esencial
 

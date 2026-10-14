@@ -1,0 +1,69 @@
+---
+title: "Diferencias entre pruebas de carga y de estrés"
+description: "Las pruebas de carga comprueban un comportamiento esperado; las de estrés exploran qué ocurre al superar las condiciones normales de operación."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - pruebas-de-software
+  - observabilidad
+updated: 2026-10-14
+sources:
+  - title: "Grafana k6: Load Test Types, documentación oficial (en inglés)"
+    url: https://grafana.com/docs/k6/latest/testing-guides/test-types/
+---
+
+Una **prueba de carga** comprueba el sistema bajo un volumen y patrón de uso definidos, normalmente representativos de lo esperado. Una **prueba de estrés** supera condiciones normales para estudiar límites, degradación y recuperación. Ambas miden rendimiento, pero responden preguntas distintas.
+
+## El mismo servicio, dos preguntas
+
+Una tienda espera cierto tráfico durante su campaña. La prueba de carga pregunta si puede atenderlo manteniendo objetivos de latencia y errores. La de estrés pregunta qué ocurre si la demanda crece más de lo previsto: qué recurso se agota, cómo rechaza trabajo y si se recupera después.
+
+Decir «el servidor soportó muchos usuarios» no responde ninguna con precisión. Debes definir acciones, frecuencia, datos y criterios de éxito.
+
+## Diseñar una carga representativa
+
+Supón, como ejemplo de planificación, cien solicitudes por segundo con una mezcla de búsqueda, consulta de producto y compra. Mantienes esa demanda durante una ventana y compruebas objetivos establecidos previamente. Las cifras son didácticas, no mediciones de esta web ni una recomendación universal.
+
+La mezcla importa: cien lecturas en caché no cuestan lo mismo que cien escrituras complejas. También importan los tamaños de datos, la distribución de claves y las dependencias externas.
+
+Las **solicitudes por segundo** y los **usuarios concurrentes** no son equivalentes. Un usuario puede estar leyendo sin hacer peticiones; una petición lenta puede mantener ocupadas más conexiones con el mismo ritmo de llegada. El modelo de generación debe representar lo que intentas estudiar.
+
+## Superar el rango normal
+
+En la prueba de estrés puedes aumentar la demanda por encima de aquel rango hasta observar un límite acordado. El objetivo no es simplemente conseguir que el servicio falle, sino entender el comportamiento cuando deja de cumplir sus objetivos.
+
+¿Crece la cola? ¿Aumentan los tiempos sin límite? ¿Se rechaza trabajo rápidamente? ¿Hay errores parciales o se corrompe algún resultado? Después de reducir la demanda, ¿vuelven los recursos y las latencias a niveles normales?
+
+La recuperación es parte de la prueba. Un servicio puede dejar de recibir tráfico excesivo y permanecer degradado por conexiones, colas o tareas que no se han liberado.
+
+## Comparación
+
+| Criterio | Carga | Estrés |
+| --- | --- | --- |
+| Pregunta | ¿Cumple en las condiciones previstas? | ¿Cómo se comporta más allá de ellas? |
+| Demanda | Patrón definido y representativo | Por encima del rango habitual |
+| Éxito | Objetivos de servicio cumplidos | Límites y recuperación entendidos |
+| Resultado útil | Evidencia de capacidad para un escenario | Cuellos de botella y degradación observables |
+| Errores | Pueden incumplir el criterio | Pueden ser parte de lo que se estudia |
+
+## Medir el sistema y el generador
+
+Observa latencias por percentiles, tasa de errores, trabajo completado, saturación de recursos y edad de las colas. El promedio puede ocultar solicitudes extremadamente lentas.
+
+Comprueba también que el generador puede mantener la demanda. Si se satura primero o espera cada respuesta antes de producir más trabajo, quizá reduzca la presión justo cuando el sistema se ralentiza y oculte el problema que querías medir.
+
+Una cifra máxima sin condiciones reproducibles no permite comparar versiones. Conserva escenario, entorno, datos, configuración y duración.
+
+## Cuándo utilizar cada una
+
+La carga ayuda a comprobar requisitos para un lanzamiento o un cambio de implementación. El estrés ayuda a diseñar límites de admisión, aislamiento y recuperación. Una prueba prolongada busca problemas que aparecen con el tiempo; una de picos estudia cambios bruscos. No son nombres intercambiables para ejecutar la misma secuencia.
+
+Realiza las pruebas sobre un entorno autorizado y representativo. Los resultados solo justifican conclusiones dentro de sus condiciones: pasar una campaña simulada no demuestra capacidad ilimitada ni ausencia de errores funcionales.
+
+## Lo esencial
+
+- Define la pregunta y los criterios antes de generar tráfico.
+- Carga estudia condiciones previstas; estrés, límites y recuperación.
+- Escenario y generador condicionan lo que estás midiendo.
+- Latencia, errores y trabajo completado deben interpretarse juntos.

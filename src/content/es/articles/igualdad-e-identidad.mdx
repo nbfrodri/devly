@@ -1,0 +1,101 @@
+---
+title: "Diferencias entre igualdad e identidad"
+description: "La igualdad compara según una regla de valores; la identidad pregunta si dos referencias designan el mismo objeto."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - que-es-un-objeto
+  - que-es-un-puntero
+  - inmutabilidad
+updated: 2026-10-14
+sources:
+  - title: "MDN: Comparaciones de igualdad y semejanza en JavaScript"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness
+---
+
+La **igualdad** compara valores según una regla elegida; la **identidad** pregunta si dos referencias designan el mismo objeto. Dos objetos pueden contener datos equivalentes y seguir siendo objetos distintos. Los operadores concretos dependen del lenguaje: los ejemplos siguientes utilizan JavaScript.
+
+## Mismos datos, objetos distintos
+
+```js
+const primero = { id: 7, nombre: "Ana" };
+const segundo = { id: 7, nombre: "Ana" };
+const alias = primero;
+
+console.log(primero === segundo); // false
+console.log(primero === alias); // true
+console.log(primero.nombre === segundo.nombre); // true
+```
+
+`primero` y `segundo` se crean en expresiones diferentes. Que sus propiedades coincidan no los convierte en una única entidad en memoria. `alias`, en cambio, conserva una referencia al mismo objeto que `primero`.
+
+La comparación de sus nombres utiliza textos primitivos. Para ellos, `===` compara el valor. El mismo operador tiene reglas distintas según los tipos que está comparando: no debes resumirlo como «siempre compara todo el contenido».
+
+## La identidad afecta a los cambios
+
+Si dos variables apuntan al mismo objeto mutable, modificarlo mediante una afecta a lo que observa la otra. Si creas otro objeto con los mismos datos, modificarlo no cambia automáticamente el anterior.
+
+```js
+const original = { puntos: 10 };
+const compartido = original;
+const independiente = { puntos: 10 };
+
+compartido.puntos = 20;
+console.log(original.puntos); // 20
+console.log(independiente.puntos); // 10
+```
+
+Esta distinción está detrás de muchos errores de estado compartido y de algunas estrategias para detectar cambios con [datos inmutables](/articulos/inmutabilidad/).
+
+## Igualdad del dominio
+
+En una aplicación, quizá dos objetos representen al mismo usuario porque conservan el mismo identificador, aunque sean resultados de peticiones diferentes. Puedes expresar esa igualdad de dominio mediante una regla explícita:
+
+```js
+const anterior = { id: 7, nombre: "Ana" };
+const actual = { id: 7, nombre: "Ana María" };
+const mismoUsuario = (a, b) => a.id === b.id;
+
+console.log(anterior === actual); // false
+console.log(mismoUsuario(anterior, actual)); // true
+console.log(anterior.nombre === actual.nombre); // false
+```
+
+La regla supone que ambos datos tienen identificadores válidos y que el identificador establece la identidad del usuario en ese dominio. No está comprobando igualdad de todas sus propiedades ni identidad del objeto de JavaScript.
+
+## Comparación
+
+| Criterio | Igualdad según valores o dominio | Identidad del objeto |
+| --- | --- | --- |
+| Pregunta | ¿Coinciden según esta regla? | ¿Es exactamente el mismo objeto? |
+| Dos objetos recién creados | Pueden resultar iguales | Son distintos |
+| Campos modificados | Pueden cambiar el resultado | No cambian por sí solos la identidad |
+| Coste | Depende de la regla y datos comparados | Comparación de referencias |
+| Uso típico | Comparar contenido o entidades del dominio | Detectar objetos compartidos |
+
+## Qué regla elegir
+
+Para saber si dos variables comparten un objeto, compara identidad. Para comprobar si un formulario cambió respecto a una instantánea, necesitas decidir qué campos importan. Para reconciliar usuarios recibidos de distintos servicios, necesitas un identificador cuyo ámbito y contrato conozcas.
+
+No utilices una comparación profunda automáticamente. Puede ser costosa y su significado necesita reglas para fechas, conjuntos, objetos anidados o referencias cíclicas. Tampoco serializar con JSON ofrece una igualdad universal: ciertos valores se omiten, algunas estructuras no se representan y la serialización puede fallar.
+
+## Particularidades numéricas
+
+En JavaScript, `Object.is` y `===` tampoco son idénticos para todos los valores:
+
+```js
+console.log(NaN === NaN); // false
+console.log(Object.is(NaN, NaN)); // true
+console.log(0 === -0); // true
+console.log(Object.is(0, -0)); // false
+```
+
+Esto demuestra que «igualdad» necesita una definición concreta. Cambiar de operador sin conocer esas diferencias puede modificar el comportamiento en casos límite.
+
+## Lo esencial
+
+- Mismo contenido no implica el mismo objeto.
+- En JavaScript, `===` compara identidad para objetos y valores para primitivos según sus reglas.
+- La igualdad del dominio puede depender de una clave y no de todos los campos.
+- Elige la comparación a partir de la pregunta que necesitas responder.

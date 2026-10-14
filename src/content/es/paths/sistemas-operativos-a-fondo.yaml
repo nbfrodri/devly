@@ -8,9 +8,11 @@ steps:
   - arranque-de-un-sistema-operativo
   - que-es-un-proceso
   - planificador-de-procesos
+  - cambio-de-contexto
   - memoria-virtual
   - swap-y-memoria-ram
   - sistema-de-archivos
+  - descriptores-de-archivo
   - fat-y-ntfs
   - permisos-y-usuarios
   - terminal-y-shell

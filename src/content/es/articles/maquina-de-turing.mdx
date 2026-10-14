@@ -6,8 +6,10 @@ layer: programacion
 prerequisites:
   - condicionales
   - bucles
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
+  - title: "Boaz Barak: Universality and Uncomputability (en inglés)"
+    url: https://introtcs.org/public/lec_08_uncomputability.html
   - title: "A. M. Turing: On Computable Numbers, with an Application to the Entscheidungsproblem (1936, en inglés)"
     url: https://www.cs.virginia.edu/~robins/Turing_Paper_1936.pdf
   - title: "Stanford Encyclopedia of Philosophy: Turing Machines (en inglés)"
@@ -120,6 +122,35 @@ El resultado más profundo de Turing es negativo: hay problemas bien definidos q
 El más famoso es el **problema de la parada**: dado un programa cualquiera y una entrada, decidir si terminará o se quedará funcionando para siempre. Turing demostró que no existe un algoritmo que acierte en todos los casos.
 
 No es una limitación de la tecnología actual que vaya a superarse con máquinas mejores. Es un límite matemático. Por eso ninguna herramienta puede garantizar, para cualquier programa, que no contiene un bucle infinito.
+
+### Por qué no puede existir un detector general
+
+Supón que existe un programa `decide` que recibe el código de otro programa y su entrada. Siempre termina y responde correctamente si ese programa terminará. Que siempre termine es parte de la promesa: responder «todavía no lo sé» no resolvería el problema.
+
+Construimos ahora un programa `contrario` que recibe el código de un programa `p`. Pregunta a `decide` si `p` terminaría al recibir su propio código como entrada. Si responde que sí, `contrario` entra en un bucle infinito; si responde que no, termina inmediatamente.
+
+La descripción es un **argumento por contradicción**, no código para ejecutar. Estamos suponiendo que existe una pieza cuya imposibilidad queremos demostrar.
+
+¿Qué pasa al entregar a `contrario` su propio código?
+
+- Si `decide` predice que termina, la regla de `contrario` lo hace continuar para siempre.
+- Si predice que continúa para siempre, la regla lo hace terminar.
+
+Ambas respuestas contradicen la supuesta corrección del detector. Por tanto, no existe un `decide` que cumpla la promesa para **todos** los programas y entradas. Poder tratar el código como un dato, como hace la máquina universal, permite construir esta pregunta sobre sí mismo.
+
+### Lo que sí se puede comprobar
+
+El resultado no impide demostrar la terminación de programas concretos. En un bucle que reduce un entero no negativo en cada vuelta, puedes demostrar que llegará a cero. También puedes diseñar lenguajes restringidos donde todos los programas terminen, sacrificando capacidad expresiva.
+
+Ejecutar un programa hasta un límite de tiempo responde otra pregunta: «¿ha terminado dentro del plazo?». Si se agota el plazo, no sabes si terminaría un segundo después o nunca. Un tiempo de espera es una decisión operativa útil, pero no una prueba de no terminación.
+
+Las herramientas de análisis pueden restringir los casos que aceptan, devolver «desconocido» o emitir advertencias conservadoras. Son útiles precisamente porque no prometen decidir siempre el problema general.
+
+No confundas este límite con el coste de los [problemas NP-completos](/articulos/p-np-y-np-completos/). Allí se discute cuánto cuesta resolver problemas que sí tienen algoritmos generales; aquí, si tal algoritmo puede existir.
+
+## Modelos más restringidos
+
+Un [autómata finito](/articulos/automatas-finitos/) tiene un conjunto fijo de estados sin cinta de trabajo ilimitada. Permite reconocer muchos patrones, pero no expresar cualquier cálculo. Las [gramáticas formales](/articulos/gramaticas-formales/) describen cómo se construyen las cadenas de un lenguaje. Elegir un modelo con menos capacidad puede hacer posibles comprobaciones que no lo son para programas arbitrarios.
 
 ## Lo esencial
 

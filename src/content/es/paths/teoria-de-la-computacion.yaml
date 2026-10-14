@@ -3,5 +3,9 @@ description: Qué significa calcular, qué se puede calcular y cuánto cuesta.
 layer: programacion
 steps:
   - logica-booleana
+  - automatas-finitos
   - maquina-de-turing
   - complejidad-algoritmica
+  - p-np-y-np-completos
+  - arrays
+  - analisis-amortizado

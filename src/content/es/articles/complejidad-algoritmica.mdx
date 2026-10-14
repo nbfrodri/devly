@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - bucles
   - arrays
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "MIT OpenCourseWare: 6.006 Introduction to Algorithms (en inglés)"
     url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/
@@ -120,6 +120,10 @@ Lo anterior es **complejidad temporal**. La **complejidad espacial** mide lo mis
 - **Confundir complejidad con velocidad.** Con pocos datos, un algoritmo O(n²) sencillo puede ser más rápido que uno O(n log n). La complejidad describe qué pasa cuando los datos crecen.
 - **Olvidar los bucles ocultos.** Un método como `includes` recorre el array por dentro. Usarlo dentro de un bucle da O(n²) aunque solo se vea un bucle.
 - **Optimizar sin necesidad.** Si los datos siempre van a ser pocos, la claridad del código importa más.
+
+## Cuando una operación depende de las anteriores
+
+El [análisis amortizado](/articulos/analisis-amortizado/) acota secuencias completas de operaciones: una inserción puede provocar una copia grande sin que todas las inserciones cuesten lo mismo. Las clases [P, NP y NP-completo](/articulos/p-np-y-np-completos/) estudian otra cuestión: la dificultad de resolver problemas y verificar sus soluciones.
 
 ## Lo esencial
 

@@ -9,5 +9,6 @@ steps:
   - logica-booleana
   - bucles
   - funciones
+  - ambito-de-una-variable
   - arrays
   - programacion-orientada-a-objetos

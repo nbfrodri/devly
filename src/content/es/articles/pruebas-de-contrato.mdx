@@ -1,0 +1,68 @@
+---
+title: "¿Qué son las pruebas de contrato?"
+description: "Las pruebas de contrato comprueban que consumidor y proveedor mantienen un acuerdo compatible sobre los mensajes que intercambian."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-una-api
+  - pruebas-de-software
+updated: 2026-10-14
+sources:
+  - title: "Pact: Introduction to Contract Testing (en inglés)"
+    url: https://docs.pact.io/
+  - title: "Google AIP-180: Backwards Compatibility (en inglés)"
+    url: https://google.aip.dev/180
+---
+
+Una **prueba de contrato** comprueba un acuerdo en el punto de integración entre aplicaciones. Verifica qué petición o mensaje espera una parte y qué respuesta o mensaje necesita la otra, sin exigir que todo el sistema se despliegue junto para cada comprobación.
+
+## Qué problema resuelve
+
+Una página de pedidos utiliza un servicio que devuelve identificador, total y moneda. El equipo del servicio cambia `total` de número a texto. Sus pruebas internas pasan y las de la página también, porque esta sigue utilizando una respuesta simulada antigua. Al integrarlos, falla el cálculo.
+
+Ambas partes estaban probadas por separado, pero sus suposiciones ya no coincidían. La prueba de contrato conecta esas suposiciones mediante un artefacto comprobable.
+
+## Consumidor y proveedor
+
+El **consumidor** utiliza los datos; el **proveedor** los entrega. No tienen por qué ser un navegador y un servidor: también pueden comunicarse mediante una cola de mensajes.
+
+En un enfoque dirigido por el consumidor, las pruebas de este registran interacciones que necesita: una petición, un estado previo y restricciones de la respuesta. El proveedor verifica después esas interacciones contra su implementación real, preparando los estados necesarios.
+
+Por ejemplo, para «pedido 42 existente», el contrato puede exigir estado de éxito, un identificador con formato acordado, total numérico y moneda. Si el consumidor no utiliza otro campo, quizá no necesite imponer su valor exacto.
+
+## Un recorrido de verificación
+
+1. La prueba del consumidor solicita el pedido a un doble configurado con el acuerdo.
+2. Comprueba que el consumidor interpreta la respuesta correctamente.
+3. Se conserva el contrato de esas interacciones.
+4. La verificación del proveedor prepara el pedido y realiza la petición acordada.
+5. Compara la respuesta real con las restricciones del contrato.
+
+Un simple archivo JSON escrito a mano no realiza automáticamente esos pasos. La confianza depende de que el acuerdo se genere y se verifique con el código pertinente.
+
+**Si la respuesta simulada tiene el formato correcto, ¿ya está probada la integración?** No. Falta comprobar que el proveedor real pueda satisfacer ese formato y significado en el estado requerido.
+
+## Qué debe fijarse
+
+Ser demasiado estricto vuelve frágil el contrato. Exigir una fecha exacta cuando basta una fecha válida puede impedir cambios inocuos. Ser demasiado permisivo deja pasar cambios importantes: aceptar cualquier texto como moneda no comprueba que el consumidor reciba una divisa reconocida.
+
+El estado previo también importa. Un pedido inexistente, uno cancelado y uno pendiente no son el mismo caso. Las interacciones deben representar comportamientos que el consumidor necesita, incluidos errores relevantes.
+
+## Contrato, esquema e integración completa
+
+Un esquema describe formas válidas de mensajes. Puede detectar un tipo equivocado sin demostrar cómo responde el proveedor ante una petición concreta. Un contrato ejecutable añade interacciones verificadas, pero tampoco cubre por sí solo el rendimiento, la red desplegada, la autorización real o todos los flujos de negocio.
+
+Las [pruebas de extremo a extremo](/articulos/pruebas-unitarias-de-integracion-y-de-extremo-a-extremo/) siguen teniendo utilidad para comprobar recorridos completos. La intención es repartir las comprobaciones según lo que cada nivel puede detectar, no declarar una técnica suficiente para todo.
+
+## Versiones que pueden convivir
+
+Con varios consumidores, el proveedor necesita saber qué versiones del contrato siguen vigentes. Pasar la última prueba de un único consumidor no demuestra que todos los clientes desplegados funcionen. El resultado útil es una evidencia de compatibilidad entre versiones concretas.
+
+Antes de retirar un campo, revisa su uso y verifica la transición. La [evolución de una API](/articulos/evolucion-compatible-de-api/) necesita una política de cambios además de herramientas de prueba.
+
+## Lo esencial
+
+- El contrato conecta las expectativas del consumidor con la implementación del proveedor.
+- Debe verificarse contra código real, no solo contra simulaciones.
+- Precisa interacciones, estados y restricciones relevantes.
+- Complementa esquemas y pruebas completas; no los sustituye universalmente.

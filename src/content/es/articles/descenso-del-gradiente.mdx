@@ -106,6 +106,10 @@ Con una tasa de 0,1 llega. Con 0,0001, tras cincuenta pasos apenas se ha movido.
 
 La tasa de aprendizaje no la aprende el modelo: la elige quien lo entrena. A los valores de este tipo se les llama **hiperparámetros**.
 
+No es una duración ni un porcentaje de ejemplos procesados. Multiplica el gradiente para decidir el desplazamiento de los parámetros, de modo que su efecto depende también de la escala de los datos y de la pérdida. Un valor adecuado para una configuración no tiene por qué servir al cambiar de modelo o de optimizador.
+
+La tasa puede variar durante el entrenamiento siguiendo una programación. Eso no elimina la necesidad de evaluar: una pérdida que baja lentamente puede indicar una tasa pequeña, pero también datos mal escalados o un problema en el modelo. Aumentarla sin diagnosticar la causa puede hacer que el entrenamiento diverja.
+
 <Quiz
 	client:visible
 	question="¿Qué pasa si la tasa de aprendizaje es demasiado grande?"
@@ -144,6 +148,8 @@ El descenso del gradiente no garantiza encontrar el mejor mínimo posible. En la
 Una red tiene parámetros repartidos en muchas capas. El algoritmo de [**retropropagación**](/articulos/retropropagacion/) calcula el gradiente de todos ellos de forma eficiente, recorriendo la red desde la salida hacia la entrada.
 
 Los dos trabajan juntos: la retropropagación calcula hacia dónde mover cada peso, y el descenso del gradiente lo mueve.
+
+Para conservar un punto del entrenamiento se guarda un [checkpoint](/articulos/checkpoints-de-modelos/). Reanudarlo puede requerir tanto los parámetros como el estado del optimizador.
 
 ## Lo esencial
 

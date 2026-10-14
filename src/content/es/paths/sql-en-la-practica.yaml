@@ -3,8 +3,15 @@ description: "Las consultas, uniones, índices y transacciones que se usan a dia
 layer: datos
 steps:
   - que-es-sql
+  - null-en-sql
+  - que-es-una-clave-primaria
+  - que-es-una-clave-candidata
   - tipos-de-join
   - indices-de-bases-de-datos
   - que-es-un-indice-compuesto
+  - planes-de-ejecucion-sql
+  - cardinalidad-de-una-consulta
   - transacciones-y-acid
+  - una-base-de-datos-por-dentro
+  - niveles-de-aislamiento
   - funciones-de-ventana-en-sql

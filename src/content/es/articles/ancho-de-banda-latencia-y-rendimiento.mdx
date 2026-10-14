@@ -100,7 +100,7 @@ Es lo que se consigue en la práctica, en inglés *throughput*. Siempre es menor
 
 ### TCP frena por prudencia
 
-TCP no envía a toda velocidad desde el principio. Empieza despacio, acelera mientras recibe confirmaciones, y **reduce bruscamente** el ritmo cuando detecta una pérdida, porque la interpreta como señal de congestión. Es el **control de congestión**, y es lo que evita que internet se colapse.
+TCP no envía a toda velocidad desde el principio. Empieza despacio, acelera mientras recibe confirmaciones, y **reduce bruscamente** el ritmo cuando detecta una pérdida, porque la interpreta como señal de congestión. Es el [**control de congestión**](/articulos/control-de-congestion-tcp/), y es lo que evita que internet se colapse.
 
 Tiene dos consecuencias:
 
@@ -159,6 +159,8 @@ Al medir un servicio, importa la distribución y no la media, como explica el ar
 - **Enviar menos**: comprimir, usar [caché](/articulos/que-es-una-cache/).
 
 Son las mismas ideas que hay detrás del [rendimiento web](/articulos/rendimiento-web-y-core-web-vitals/).
+
+La variación del retardo entre paquetes se llama [jitter](/articulos/jitter-de-red/). Dos conexiones con la misma latencia media pueden ofrecer experiencias muy distintas en una llamada.
 
 ## Lo esencial
 

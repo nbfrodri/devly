@@ -5,7 +5,7 @@ level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-proceso
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "Operating Systems: Three Easy Pieces, Concurrency: An Introduction (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf
@@ -35,7 +35,24 @@ Se usan como sinónimos y no lo son.
 
 Un cocinero que prepara tres platos, atendiendo cada uno mientras los otros se hacen, trabaja de forma concurrente. Tres cocineros, cada uno con su plato, trabajan en paralelo.
 
-La concurrencia es una forma de **organizar** el programa. El paralelismo es una forma de **ejecutarlo**, y requiere hardware con varios núcleos.
+La concurrencia es una forma de **organizar** el programa. El paralelismo es una forma de **ejecutarlo** y requiere recursos capaces de trabajar simultáneamente. Varios núcleos son una forma de conseguirlo; también hay otros niveles, como las operaciones vectoriales y el multihilo simultáneo de algunos procesadores.
+
+### El mismo trabajo con uno o dos núcleos
+
+Imagina dos tareas A y B que necesitan diez milisegundos de CPU cada una, sin esperar a red o disco. Supongamos un único contexto de ejecución, sin multihilo simultáneo. Puedes alternar cinco milisegundos de A, cinco de B y repetir. Ambas progresan de forma concurrente, pero el trabajo total sigue necesitando veinte milisegundos de CPU, más el coste de alternar.
+
+En dos núcleos puedes ejecutar A y B simultáneamente. Si son independientes y no aparecen otros costes, ambas acabarían en unos diez milisegundos. El paralelismo reduce el tiempo de ese cálculo; intercalarlo no crea capacidad adicional.
+
+| Criterio | Concurrencia | Paralelismo |
+| --- | --- | --- |
+| Pregunta principal | Cómo organizar varios trabajos en curso | Cómo ejecutarlos simultáneamente |
+| Recursos simultáneos de CPU | No son necesarios para intercalar | Son necesarios en el nivel que se paraleliza |
+| Ventaja típica | Aprovechar esperas y mantener respuesta | Acelerar trabajo divisible |
+| Coste relevante | Coordinación y [cambios de contexto](/articulos/cambio-de-contexto/) | Reparto, comunicación y sincronización |
+
+Si A pasa diez milisegundos esperando una respuesta, el único núcleo puede aprovechar esa espera para ejecutar B. Esa mejora proviene de solapar espera y trabajo, no de hacer dos cálculos a la vez en el mismo núcleo. Para decidir, distingue primero una carga limitada por CPU de otra limitada por entrada y salida.
+
+Añadir núcleos tampoco garantiza una aceleración proporcional: la [ley de Amdahl](/articulos/la-ley-de-amdahl/) recuerda que el trabajo secuencial sigue limitando el conjunto.
 
 ## Qué es un hilo
 
@@ -116,6 +133,8 @@ No sirve para acelerar cálculos. Si una tarea ocupa el procesador sin pausas, b
 ## Un límite que conviene conocer
 
 Añadir [núcleos](/articulos/procesadores-multinucleo/) no acelera un programa sin fin. Solo se beneficia la parte del trabajo que se puede repartir. Si la décima parte de un programa tiene que ejecutarse en orden, por muchos núcleos que añadas nunca irá más de diez veces más rápido. Esta observación se conoce como **ley de Amdahl**.
+
+Un [semáforo](/articulos/semaforos-en-concurrencia/) coordina tareas mediante permisos y permite distinguir exclusión mutua de límites de capacidad.
 
 ## Lo esencial
 

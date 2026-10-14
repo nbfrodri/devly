@@ -1,0 +1,45 @@
+---
+title: "¿Qué es un generador?"
+description: "Un generador produce valores por etapas y conserva su ejecución entre una petición y la siguiente."
+level: intermedio
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-un-iterador
+  - funciones
+updated: 2026-10-14
+sources:
+  - title: "MDN: Iteradores y generadores"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Iterators_and_generators
+---
+
+Un **generador** es una función cuya ejecución puede suspenderse después de producir un valor y reanudarse para producir el siguiente. En JavaScript se declara con `function*` y entrega valores mediante `yield`.
+
+## Una secuencia por etapas
+
+```js
+function* contarHasta(limite) {
+	for (let numero = 1; numero <= limite; numero++) {
+		yield numero;
+	}
+}
+
+const recorrido = contarHasta(2);
+console.log(recorrido.next().value); // 1
+console.log(recorrido.next().value); // 2
+console.log(recorrido.next().done); // true
+```
+
+La llamada `contarHasta(2)` crea un objeto generador, pero no ejecuta todavía el cuerpo. `next()` inicia o reanuda la ejecución. Al llegar a `yield`, entrega el valor y conserva las variables locales y el punto donde debe continuar.
+
+Al terminar la función, el iterador señala `done: true`. Puedes crear otro recorrido independiente llamando otra vez a la función.
+
+## Para qué sirve
+
+Permite expresar una secuencia sin construir de antemano un array con todos sus elementos. Un consumidor puede detenerse pronto y evitar el trabajo restante. El objeto generador también es iterable, así que puede recorrerse con `for...of`.
+
+Eso no vuelve gratuitos todos los usos. Convertirlo con `[...recorrido]` consume la secuencia completa y guarda todos los resultados. Si la secuencia no termina, esa conversión tampoco terminará normalmente.
+
+## No es una tarea en paralelo
+
+Suspender una función con `yield` no crea un hilo ni traslada el cálculo a otra CPU. El trabajo ocurre cuando el consumidor solicita avanzar. Tampoco debes confundir este «generador» con un generador de números pseudoaleatorios: el primero describe cómo se produce una secuencia; el segundo, cómo se calculan números con unas propiedades estadísticas concretas.

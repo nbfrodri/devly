@@ -1,0 +1,75 @@
+---
+title: "¿Qué son P, NP y los problemas NP-completos?"
+description: "P y NP distinguen problemas que sabemos resolver eficientemente de aquellos cuyas soluciones podemos verificar eficientemente."
+level: avanzado
+layer: programacion
+prerequisites:
+  - complejidad-algoritmica
+  - maquina-de-turing
+updated: 2026-10-14
+sources:
+  - title: "Clay Mathematics Institute: P vs NP (en inglés)"
+    url: https://www.claymath.org/millennium/p-vs-np/
+  - title: "Boaz Barak: NP, NP Completeness and the Cook-Levin Theorem (en inglés)"
+    url: https://introtcs.org/public/lec_13_Cook_Levin.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**P** y **NP** son clases de problemas que comparan el coste de encontrar respuestas y el de comprobar soluciones propuestas. Los **NP-completos** son problemas de NP a los que se puede transformar cualquier otro problema de esa clase mediante una transformación eficiente.
+
+## Resolver frente a comprobar
+
+Recibes una lista de tareas con duraciones y quieres repartirlas entre dos máquinas sin que ninguna supere un tiempo límite. Encontrar el reparto puede exigir explorar muchas combinaciones. Si alguien te entrega uno, comprobarlo es directo: sumas las duraciones asignadas a cada máquina y comparas con el límite.
+
+Esa diferencia entre buscar y verificar es el centro del tema. Que resulte fácil comprobar un reparto no significa que conozcas un método rápido para encontrarlo.
+
+Hablamos de **problemas de decisión**, cuya respuesta es sí o no. «¿Existe un reparto que cumpla el límite?» es uno. «Encuentra el mejor reparto» es un problema de optimización relacionado, pero no la misma formulación.
+
+## Qué significa eficiente
+
+En estas clases, eficiente significa **tiempo polinómico** respecto al tamaño de la entrada: por ejemplo O(n), O(n²) u O(n³). La [complejidad algorítmica](/articulos/complejidad-algoritmica/) estudia cómo crece ese coste.
+
+El tamaño se mide por la representación. Un entero enorme necesita tantos bits como ocupa escribirlo en binario, no tantos como su valor. Esta distinción explica por qué un algoritmo que recorre todos los números hasta un límite puede no ser polinómico respecto a los bits de ese límite.
+
+Polinómico tampoco significa automáticamente práctico: un exponente enorme puede ser inasumible. Es una clasificación teórica del crecimiento, no una promesa de velocidad para cualquier ordenador.
+
+## P y NP
+
+**P** reúne los problemas de decisión resolubles en tiempo polinómico por un algoritmo determinista. Por ejemplo, decidir si existe un camino entre dos vértices de un grafo.
+
+**NP** reúne los problemas en los que una respuesta afirmativa tiene un **certificado** de tamaño polinómico que puede comprobarse en tiempo polinómico. Para el reparto, el certificado indica a qué máquina va cada tarea. Para un camino, enumera sus vértices.
+
+Las letras NP vienen de «tiempo polinómico no determinista». **No significan «no polinómico»**. Todo problema de P está en NP: si puedes resolverlo rápidamente, también puedes verificar una respuesta afirmativa rápidamente.
+
+La pregunta es si la inclusión es estricta: ¿hay problemas cuyas soluciones se comprueban eficientemente pero que no admiten un algoritmo eficiente para encontrarlas? Eso es preguntar si P es distinto de NP. Sigue siendo un problema abierto: no se ha demostrado ni la igualdad ni la desigualdad.
+
+<Quiz
+	client:visible
+	question="Si un problema pertenece a P, ¿puede pertenecer también a NP?"
+	options={["Sí: P está incluida en NP", "No: son clases opuestas", "Solo si utiliza azar"]}
+	answer={0}
+/>
+
+## Reducciones y NP-completitud
+
+Una **reducción polinómica** transforma instancias de un problema A en instancias de B, preservando la respuesta y con coste polinómico. Si sabes resolver B, puedes usarlo para resolver A después de la transformación.
+
+Un problema es **NP-difícil** si todos los problemas de NP se reducen a él. Es **NP-completo** si además pertenece a NP. La satisfacibilidad booleana, preguntar si existe una asignación que haga verdadera una fórmula lógica, es un ejemplo central.
+
+Importa la dirección. Para demostrar que B es difícil, reduces un problema difícil conocido **a B**. Reducir B a un problema difícil solo muestra una forma de resolver B usando ese otro problema.
+
+Si se encontrara un algoritmo polinómico para un NP-completo, las reducciones darían algoritmos polinómicos para todos los problemas de NP. Esa es la razón de agruparlos.
+
+## Qué haces ante uno
+
+No significa abandonar. Puedes resolver entradas pequeñas con búsqueda exacta, aprovechar restricciones, usar heurísticas sin garantía de óptimo o estudiar aproximaciones cuando el problema lo permita. También puedes reformular el requisito: quizá no necesitas la mejor solución, sino una que cumpla un umbral útil.
+
+No debes confundir NP-completo con [indecidible](/articulos/maquina-de-turing/). Un problema NP-completo se puede resolver con suficiente tiempo; el problema de la parada no tiene un algoritmo general que siempre responda correctamente.
+
+## Lo esencial
+
+- P trata de resolver eficientemente; NP, de verificar certificados de respuestas afirmativas.
+- NP no significa «no polinómico» y contiene a P.
+- NP-completo combina pertenencia a NP y dificultad mediante reducciones.
+- La clasificación orienta el diseño, pero no decide por sí sola la viabilidad de una entrada concreta.

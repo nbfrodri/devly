@@ -5,6 +5,7 @@ steps:
   - que-es-html
   - que-es-css
   - el-dom
+  - como-dibuja-una-pagina-el-navegador
   - almacenamiento-en-el-navegador
   - diseno-adaptable
   - accesibilidad-web
@@ -12,6 +13,7 @@ steps:
   - componentes-y-estado
   - que-es-react
   - spa-mpa-y-renderizado-en-servidor
+  - que-es-la-hidratacion
   - que-es-nextjs
   - que-hace-un-empaquetador
   - rendimiento-web-y-core-web-vitals

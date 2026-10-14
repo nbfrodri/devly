@@ -1,0 +1,29 @@
+---
+title: "¿Qué es un fallo de caché?"
+description: "Un fallo de caché ocurre cuando el dato buscado no está en ese nivel y hay que obtenerlo de otro."
+level: basico
+kind: definicion
+layer: hardware
+prerequisites:
+  - memoria-cache-del-procesador
+updated: 2026-10-14
+sources:
+  - title: "Intel: Software Developer's Manuals (en inglés)"
+    url: https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
+---
+
+Un **fallo de caché**, o *cache miss*, ocurre cuando el dato o instrucción solicitado no está disponible en el nivel de caché consultado. Hay que buscarlo en otro nivel, que suele ser más lento. No significa que el programa haya fallado ni que el dato no exista.
+
+## Fallar en un nivel no implica ir a RAM
+
+Un acceso puede fallar en L1 y acertar en L2. Solo cuando los niveles pertinentes no resuelven la petición hará falta obtener el dato de más lejos. Por eso conviene decir qué caché se está midiendo.
+
+Las cachés del procesador trabajan con **líneas**, bloques que incluyen varios bytes contiguos. Recorrer un array en orden puede aprovechar los elementos que llegan juntos. Saltar entre posiciones lejanas suele ofrecer menos oportunidades de reutilización.
+
+## Por qué sucede
+
+La primera consulta a un bloque puede fallar porque todavía no se había cargado. También puede haber sido expulsado por falta de capacidad o por competir con otros bloques por las mismas posiciones. En equipos multinúcleo interviene además la coherencia entre cachés.
+
+No debes deducir el tiempo total únicamente contando fallos. Importan su coste, el trabajo que puede solaparse y la dependencia entre accesos. Un procesador puede tener varias peticiones en curso, pero una cadena donde cada dirección depende del dato anterior limita ese solapamiento.
+
+Tampoco es un **fallo de página**: ese evento pertenece a la traducción y gestión de memoria virtual. Ambos pueden añadir espera, pero ocurren en mecanismos distintos y se diagnostican con métricas diferentes.

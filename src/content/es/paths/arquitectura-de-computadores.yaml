@@ -8,8 +8,14 @@ steps:
   - como-funciona-un-procesador
   - segmentacion-del-procesador
   - memoria-cache-del-procesador
+  - fallos-de-cache
+  - ejecucion-fuera-de-orden
   - procesadores-multinucleo
+  - coherencia-de-cache
+  - la-ley-de-amdahl
   - interrupciones-y-entrada-salida
+  - memoria-virtual
+  - acceso-directo-a-memoria-dma
   - la-placa-base-y-los-buses
   - que-es-una-fpga
   - que-es-un-cubit

@@ -1,0 +1,67 @@
+---
+title: "¿Qué es el acceso directo a memoria, DMA?"
+description: "DMA permite transferir datos entre un dispositivo y la memoria sin que la CPU copie cada unidad mediante instrucciones."
+level: avanzado
+layer: hardware
+prerequisites:
+  - interrupciones-y-entrada-salida
+  - memoria-virtual
+updated: 2026-10-14
+sources:
+  - title: "Linux Kernel: Dynamic DMA Mapping Guide (en inglés)"
+    url: https://docs.kernel.org/core-api/dma-api-howto.html
+---
+
+El **acceso directo a memoria**, o **DMA**, permite que un dispositivo o motor de transferencia mueva datos hacia o desde memoria sin que la CPU ejecute una instrucción para copiar cada unidad. La CPU prepara y coordina el trabajo, pero no realiza toda la transferencia elemento a elemento.
+
+## Qué problema resuelve
+
+Una tarjeta de red recibe datos o un disco entrega un bloque. Copiar cada byte mediante el procesador consumiría tiempo de CPU que podría dedicarse a ejecutar programas.
+
+Con DMA, el controlador prepara un área de memoria y una descripción de la operación. El dispositivo realiza las transferencias autorizadas y el programa se entera de su finalización mediante el mecanismo acordado. Reduce trabajo de copia, pero no hace desaparecer el tiempo ni el tráfico de memoria.
+
+## Un recorrido de recepción
+
+1. El controlador reserva o prepara un búfer apropiado.
+2. Obtiene una dirección utilizable por el dispositivo mediante la interfaz del sistema.
+3. Publica la descripción de la transferencia con las garantías de orden necesarias.
+4. El dispositivo escribe los datos en la memoria correspondiente.
+5. Se notifica o se consulta la finalización.
+6. El software vuelve a utilizar los datos cuando es seguro hacerlo.
+
+El contrato debe impedir que la CPU y el dispositivo reutilicen el mismo búfer de forma incompatible. Entregarlo para DMA y modificarlo inmediatamente como si la operación ya hubiera terminado puede producir resultados incorrectos.
+
+## La dirección no es cualquier puntero
+
+Una aplicación utiliza direcciones virtuales. El dispositivo necesita una dirección DMA válida, que no tiene por qué coincidir numéricamente con un puntero de CPU ni con una dirección física interpretada sin más.
+
+Una **IOMMU** puede traducir direcciones del dispositivo y ayudar a limitar las regiones a las que tiene acceso. Además, hay dispositivos con restricciones de direccionamiento, alineación o tamaño que la API del controlador debe respetar.
+
+Por eso los controladores utilizan funciones de mapeo y desmapeo del sistema. Un ejemplo de memoria ordinaria no puede trasladarse directamente a un dispositivo por el hecho de disponer de un puntero.
+
+**¿DMA permite al dispositivo escribir en cualquier memoria?** No debería. El controlador y la plataforma deben establecer qué regiones son válidas y durante cuánto tiempo.
+
+## Coherencia y propiedad del búfer
+
+CPU y dispositivo pueden observar datos a través de rutas distintas. En algunas plataformas, la coherencia se gestiona por hardware; en otras hacen falta operaciones explícitas mediante las interfaces del sistema.
+
+Incluso una región coherente puede necesitar barreras para que la publicación de descriptores y señales ocurra en el orden correcto. «Coherente» no significa «sin reglas de sincronización».
+
+La documentación de Linux distingue, entre otros usos, mapeos coherentes y mapeos de transferencia que requieren un ciclo de preparación y sincronización. El tipo adecuado depende de la duración, la dirección y la forma de compartir los datos.
+
+## DMA e interrupciones no son alternativas
+
+DMA mueve datos. Una **interrupción** avisa de un evento. Puedes utilizar DMA y recibir una interrupción al terminar, o consultar descriptores completados mediante sondeo.
+
+Para una transferencia grande, preparar DMA puede ahorrar mucho trabajo de CPU. Para una operación diminuta, los costes de preparación pueden ser relevantes. Además, el dispositivo compite por ancho de banda de memoria con otras tareas. Menos instrucciones de copia no garantiza una aceleración proporcional de todo el programa.
+
+## Errores comunes
+
+Liberar un búfer antes de terminar, reutilizarlo mientras el dispositivo lo posee, confundir direcciones y omitir sincronización son errores del ciclo de vida. También importa tratar el fallo al preparar un mapeo: no toda solicitud de recursos tiene éxito.
+
+## Lo esencial
+
+- DMA mueve datos sin exigir una copia por CPU de cada unidad.
+- El controlador sigue preparando, sincronizando y finalizando la operación.
+- Direcciones virtuales, físicas y DMA no son intercambiables.
+- Transferencia y notificación son responsabilidades diferentes.

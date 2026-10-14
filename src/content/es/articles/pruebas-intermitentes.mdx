@@ -1,0 +1,31 @@
+---
+title: "¿Qué es una prueba flaky o intermitente?"
+description: "Una prueba intermitente puede pasar o fallar con el mismo código por depender de condiciones que no controla."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - pruebas-de-software
+updated: 2026-10-14
+sources:
+  - title: "pytest: Flaky Tests, documentación oficial (en inglés)"
+    url: https://docs.pytest.org/en/stable/explanation/flaky.html
+---
+
+Una **prueba intermitente**, o *flaky test*, pasa unas veces y falla otras sin un cambio intencionado en lo que se está comprobando. Su resultado depende de condiciones que no están suficientemente controladas, como tiempos, orden de ejecución o estado compartido.
+
+## Una espera frágil
+
+Imagina una prueba que pulsa «Guardar», espera exactamente cien milisegundos y busca el mensaje «Guardado». En tu ordenador pasa. En una máquina ocupada, la operación tarda más y la prueba falla aunque el comportamiento sea correcto.
+
+La solución no es aumentar la espera indefinidamente, sino esperar una señal observable de finalización, con un tiempo máximo razonable. Si el mensaje nunca aparece, debe fallar con información útil.
+
+Otras causas son datos reutilizados entre pruebas, dependencia del reloj, azar sin registrar o acceso a un servicio externo inestable. El paralelismo suele descubrir interferencias que el orden secuencial ocultaba.
+
+## Reintentar no demuestra que esté bien
+
+Repetir una prueba puede ayudar a medir su frecuencia de fallo, pero una ejecución posterior correcta no explica la anterior. Clasifica la causa: puede haber un defecto en la prueba, en el entorno o una condición de carrera real del producto.
+
+Una prueba intermitente no debe ignorarse simplemente por ser incómoda. Si hace que el equipo deje de confiar en CI, también puede ocultar fallos auténticos.
+
+Para investigarla, conserva el error original, el orden de las pruebas y las condiciones de ejecución. Aislar datos, controlar reloj y azar y limpiar los recursos suele aportar más que añadir esperas fijas.

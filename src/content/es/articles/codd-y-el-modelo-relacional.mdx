@@ -1,0 +1,31 @@
+---
+title: "El artículo que propuso las bases de datos relacionales"
+description: "En 1970, Edgar F. Codd propuso organizar los datos mediante relaciones y separar su uso de su disposición física."
+level: basico
+kind: curiosidad
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+updated: 2026-10-14
+sources:
+  - title: "IBM: The Relational Database, historia de Codd y System R (en inglés)"
+    url: https://www.ibm.com/history/relational-database
+---
+
+En 1970, Edgar F. Codd publicó *A Relational Model of Data for Large Shared Data Banks*. Trabajaba en IBM y propuso una forma de organizar datos mediante **relaciones**, separando la visión lógica de las decisiones físicas de almacenamiento.
+
+Hoy resulta habitual pensar en tablas. La aportación no consistía simplemente en dibujar cuadrículas: ofrecía un modelo para razonar sobre datos y consultarlos sin obligar a cada aplicación a conocer los caminos físicos que los conectaban.
+
+## Cambiar el almacenamiento sin reescribir la pregunta
+
+Imagina una aplicación que necesita obtener los pedidos de un cliente. Si conoce directamente una estructura de enlaces físicos, cambiar esa organización puede obligar a cambiar el programa.
+
+Con una descripción lógica, la pregunta puede mantenerse mientras el sistema cambia sus índices o su forma de acceder a las filas. Esa **independencia de los datos** ayuda a explicar por qué tiene sentido separar el SQL del plan que lo ejecuta.
+
+## Del modelo al sistema
+
+La investigación posterior de IBM, incluido System R, exploró cómo convertir estas ideas en sistemas utilizables. SQL se desarrolló en ese contexto, pero no es sinónimo de modelo relacional ni el artículo de Codd era un manual de SQL.
+
+Para aprender a diseñar tablas, conviene seguir por el [modelo entidad-relación](/articulos/modelo-entidad-relacion/) y la [normalización](/articulos/normalizacion-de-bases-de-datos/). Son herramientas relacionadas con el diseño lógico; no sustituyen después la evaluación de consultas y sus índices.
+
+La historia recuerda una distinción que sigue siendo práctica: decidir qué representan los datos es un trabajo diferente de decidir cómo encontrarlos deprisa.

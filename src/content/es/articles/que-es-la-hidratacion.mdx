@@ -1,0 +1,30 @@
+---
+title: "¿Qué es la hidratación de una página?"
+description: "La hidratación conecta la lógica de una interfaz con el HTML que ya llegó renderizado al navegador."
+level: intermedio
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - spa-mpa-y-renderizado-en-servidor
+  - componentes-y-estado
+updated: 2026-10-14
+sources:
+  - title: "React: hydrateRoot, documentación oficial (en inglés)"
+    url: https://react.dev/reference/react-dom/client/hydrateRoot
+---
+
+La **hidratación** es el proceso por el que el JavaScript de una interfaz conecta su lógica con un HTML previamente renderizado. Ese HTML puede haberse generado en cada petición o durante la construcción de un sitio estático.
+
+## Visible antes de interactivo
+
+Imagina un contador cuyo HTML muestra «0» y dos botones. El navegador puede dibujarlo antes de descargar el código del componente. Cuando ese código se ejecuta, relaciona el estado inicial con el DOM existente y conecta las interacciones. A partir de ahí, pulsar el botón puede actualizar el contador.
+
+La apariencia inicial y la interactividad no llegan necesariamente a la vez. Esa separación explica por qué una página puede verse cargada mientras algunos controles todavía no responden.
+
+## No es volver a crear toda la página
+
+La intención es reutilizar el HTML existente. En React, el resultado inicial del cliente debe coincidir con el generado en el servidor. Si uno muestra una hora, un número aleatorio o datos diferentes, aparece una **discordancia de hidratación**. Debes corregir la causa; ocultar la advertencia no sincroniza los contenidos.
+
+El [renderizado solo en cliente](/articulos/spa-mpa-y-renderizado-en-servidor/) crea la interfaz desde JavaScript sin partir de ese HTML ya renderizado. La hidratación tampoco significa que todo el documento necesite JavaScript.
+
+En una arquitectura de **islas**, solo se hidratan componentes concretos. Por ejemplo, un artículo puede conservar su texto como HTML y cargar lógica únicamente para un cuestionario. Reducir las zonas hidratadas reduce el código y el trabajo que necesita el navegador, aunque cada componente sigue teniendo su propio coste.

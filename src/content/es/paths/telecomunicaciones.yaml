@@ -3,6 +3,10 @@ description: Cómo se convierte la información en señales y viaja por cables y
 layer: redes
 steps:
   - senales-analogicas-y-digitales
+  - como-se-representa-el-sonido
+  - aliasing
+  - transformada-de-fourier
+  - filtros-digitales
   - modulacion
   - como-funciona-la-fibra-optica
   - ancho-de-banda-latencia-y-rendimiento

@@ -1,0 +1,36 @@
+---
+title: "La paradoja del cumpleaños y las colisiones de hash"
+description: "Encontrar dos valores iguales entre muchos pares es más fácil que acertar un valor concreto de antemano."
+level: intermedio
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - probabilidad-basica
+  - funciones-hash
+updated: 2026-10-14
+sources:
+  - title: "RFC 4270: Attacks on Cryptographic Hashes in Internet Protocols (en inglés)"
+    url: https://datatracker.ietf.org/doc/html/rfc4270
+---
+
+Con 23 personas, la probabilidad de que al menos dos compartan cumpleaños supera el 50 %, bajo el modelo simplificado de 365 días igualmente probables e independientes. No se exige que coincidan contigo ni con un día elegido de antemano: vale cualquier pareja.
+
+## Muchas parejas posibles
+
+Es más sencillo calcular la probabilidad contraria: que todos sean distintos. La primera persona puede cumplir cualquier día; la siguiente debe evitar uno; la tercera, dos. Se multiplican esas posibilidades:
+
+```js
+let distintos = 1;
+for (let i = 0; i < 23; i++) distintos *= (365 - i) / 365;
+console.log((1 - distintos).toFixed(3)); // "0.507"
+```
+
+El modelo ignora años bisiestos y diferencias reales de frecuencia entre fechas. Sirve para entender por qué el número de pares crece rápidamente: con 23 personas hay 253 parejas posibles.
+
+## La conexión con un hash
+
+Una [colisión](/articulos/funciones-hash/) ocurre cuando dos entradas diferentes producen la misma salida. Para una salida ideal de `n` bits, buscar cualquier pareja que colisione tiene un coste genérico del orden de `2^(n/2)` evaluaciones, distinto de buscar una entrada que produzca una salida concreta.
+
+No significa que la mitad de los bits estén «rotos». Las preguntas son distintas: colisión frente a preimagen. El RFC 4270 explica por qué esa diferencia importa al analizar protocolos.
+
+Tampoco basta el cálculo para evaluar una función real: su estructura puede permitir ataques mejores que la búsqueda genérica. La curiosidad ayuda a recordar el tipo de problema y a no confundir una coincidencia accidental en una tabla hash con toda una evaluación de seguridad criptográfica.

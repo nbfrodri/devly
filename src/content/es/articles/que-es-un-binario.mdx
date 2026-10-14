@@ -101,6 +101,10 @@ En Linux, el encargado de buscar y cargar las bibliotecas compartidas al arranca
 
 Un binario no se puede leer como el código fuente. Ejecutar uno descargado es confiar en quien lo compiló: puede hacer cualquier cosa que el usuario pueda hacer. Por eso se descargan de fuentes oficiales, se comprueba su [firma o su hash](/articulos/funciones-hash/), y en el software libre se busca que la compilación sea reproducible. Averiguar qué hace un binario sin su código es la [ingeniería inversa](/articulos/ingenieria-inversa/).
 
+## Compatibilidad entre binarios
+
+Los componentes compilados necesitan acordar cómo pasan argumentos y representan datos. Ese contrato se llama [ABI](/articulos/que-es-una-abi/). Conservar los nombres de las funciones no basta para garantizar que una biblioteca nueva encaje con un programa ya compilado.
+
 ## Lo esencial
 
 - Un archivo binario es cualquiera que no es texto; un binario suele ser un ejecutable.

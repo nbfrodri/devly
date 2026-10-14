@@ -99,6 +99,21 @@ Por eso se mantienen tres conjuntos:
 
 La validación cruzada hace el papel del segundo. El conjunto de prueba se aparta al principio **y no se toca** hasta el final. Si se consulta para tomar decisiones, deja de ser una medida honesta.
 
+### La misma decisión en validación y en prueba
+
+Supón que eliges entre árboles de profundidad 3 y 8. Entrenas ambos y utilizas validación para decidir cuál conservar. Después evalúas la configuración elegida con los datos de prueba que habías reservado. El resultado final estima cómo se comporta el procedimiento ya fijado con datos que no han intervenido en su elección.
+
+Si miras la prueba, ves que la profundidad 8 sale peor y vuelves a elegir 3 por ese motivo, has utilizado la prueba como validación. Cambiarle el nombre al archivo no elimina esa dependencia. Necesitas otra evaluación independiente si quieres estimar de nuevo el rendimiento después de esa selección.
+
+| Criterio | Validación | Prueba final |
+| --- | --- | --- |
+| Uso | Comparar y seleccionar configuraciones | Evaluar la elección fijada |
+| Influye en las decisiones | Sí | No debería |
+| Consultas durante el desarrollo | Varias, vigilando el sobreajuste a validación | Se reserva hasta fijar el procedimiento |
+| Si eliges según su resultado | Está cumpliendo su papel | Deja de ser una evaluación independiente |
+
+La separación no consiste solo en apartar filas. El escalado, la imputación y la selección de variables también deben aprenderse sin utilizar información del conjunto que se está evaluando. En series temporales o datos agrupados, la división necesita además respetar tiempo o grupos.
+
 <Quiz
 	client:visible
 	question="En validación cruzada con 5 partes, ¿cuántas veces se usa cada dato para evaluar?"

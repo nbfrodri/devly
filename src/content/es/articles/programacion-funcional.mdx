@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - funciones
   - arrays
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "John Hughes: Why Functional Programming Matters (1990, en inglés)"
     url: https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf
@@ -58,6 +58,12 @@ console.log(pura(1)); // 2
 Las funciones puras son fáciles de probar, porque basta con comparar entrada y salida, y de combinar, porque no interfieren entre sí.
 
 Un programa útil no puede ser solo funciones puras: mostrar algo en pantalla o guardar un dato son efectos secundarios. La idea es mantenerlos en los bordes del programa y dejar puro el núcleo, donde están las reglas.
+
+### Pura no significa que no use variables locales
+
+Una función puede construir un array propio paso a paso y seguir comportándose de forma pura para quien la llama, siempre que no cambie datos compartidos ni dependa de estado externo variable. Lo relevante es su comportamiento observable. En cambio, leer la hora o el estado de una variable global puede hacer que la misma entrada produzca otra salida aunque la función no escriba nada.
+
+Un efecto secundario tampoco es sinónimo de error: guardar una compra es un efecto necesario. Separarlo de calcular su total permite probar el cálculo sin una base de datos y gestionar por separado los fallos de escritura. La [inmutabilidad](/articulos/inmutabilidad/) ayuda a evitar cambios compartidos, pero no convierte automáticamente una función en pura.
 
 ## Inmutabilidad
 

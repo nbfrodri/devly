@@ -1,0 +1,29 @@
+---
+title: "¿Qué es una ABI?"
+description: "Una ABI define cómo encajan componentes compilados: llamadas, datos, símbolos y archivos binarios."
+level: intermedio
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-un-binario
+updated: 2026-10-14
+sources:
+  - title: "Linux Foundation: System V Application Binary Interface (en inglés)"
+    url: https://refspecs.linuxfoundation.org/elf/gabi4%2B/contents.html
+---
+
+Una **ABI**, *Application Binary Interface* o interfaz binaria de aplicación, es un contrato para que componentes compilados puedan trabajar juntos. Incluye reglas sobre cómo llamar funciones, representar datos y enlazar símbolos, además de aspectos del formato de los [binarios](/articulos/que-es-un-binario/).
+
+## Un contrato por debajo del código fuente
+
+Supón que una biblioteca compilada ofrece una función que suma dos enteros. Quien la llama y la biblioteca deben coincidir en dónde llegan los argumentos, dónde se devuelve el resultado y qué registros puede modificar la función. Ese acuerdo es una **convención de llamada**, una parte de la ABI.
+
+También deben coincidir en el tamaño y la alineación de los datos: una estructura que ocupa ciertos bytes para un compilador no puede interpretarse de otra manera al otro lado de la llamada.
+
+Si cambias la disposición de una estructura pública y conservas un programa compilado con la disposición anterior, ambos pueden seguir usando el mismo nombre de función y aun así interpretar mal la memoria.
+
+## ABI frente a API
+
+Una [API](/articulos/que-es-una-api/) describe cómo utilizar una funcionalidad desde el código o mediante un protocolo. La ABI aborda cómo encajan componentes en su representación binaria. Una actualización puede mantener una API y obligar a recompilar, o conservar compatibilidad binaria para programas existentes.
+
+No existe una ABI universal. Depende de la arquitectura, el sistema y las convenciones del entorno; algunas reglas se especifican en documentos complementarios para cada procesador. Que dos programas estén escritos en C no garantiza por sí solo que sus binarios sean compatibles.

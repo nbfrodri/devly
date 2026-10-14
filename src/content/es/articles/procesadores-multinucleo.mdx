@@ -69,7 +69,7 @@ Los procesadores de los móviles, y cada vez más los de ordenador, combinan dos
 
 El [planificador](/articulos/planificador-de-procesos/) envía las tareas exigentes a los primeros y el trabajo de fondo a los segundos. Así se combina potencia con autonomía.
 
-## El límite: la ley de Amdahl
+## El límite: la [ley de Amdahl](/articulos/la-ley-de-amdahl/)
 
 Si un programa tarda 10 segundos y el 90 % de su trabajo se puede repartir, con infinitos núcleos esa parte tardaría cero. Pero el 10 % restante, el segundo de trabajo secuencial, sigue ahí.
 
@@ -115,6 +115,8 @@ Muchos programas no usan más que un núcleo, y no lo necesitan. Un navegador o 
 - **Repartir tiene coste**: crear hilos, coordinarlos, juntar resultados. Para tareas pequeñas, cuesta más que lo que se gana.
 
 Para trabajo masivamente paralelo, miles de operaciones idénticas, existe otro tipo de procesador, la [GPU](/articulos/que-es-una-gpu/), con miles de núcleos sencillos.
+
+La [ley de Amdahl](/articulos/la-ley-de-amdahl/) permite calcular cómo la parte secuencial limita la aceleración de un trabajo fijo, incluso con muchos núcleos.
 
 ## Lo esencial
 

@@ -1,0 +1,73 @@
+---
+title: "¿Qué es la cuantización de un modelo de IA?"
+description: "Cuantizar un modelo representa algunos de sus valores con menos precisión para reducir recursos, comprobando el efecto sobre la calidad."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-un-parametro-de-un-modelo
+  - que-es-la-inferencia
+  - coma-flotante
+updated: 2026-10-14
+sources:
+  - title: "Hugging Face Transformers: Quantization Overview (en inglés)"
+    url: https://huggingface.co/docs/transformers/quantization/overview
+---
+
+La **cuantización de un modelo** representa algunos de sus pesos, activaciones u otros valores con menos precisión que la representación de referencia. Busca reducir memoria, transferencias o coste de cálculo, aceptando una aproximación que debe evaluarse.
+
+## Qué problema resuelve
+
+Un modelo contiene muchos números. Si un peso ocupa cuatro bytes y logras representarlo con uno, la parte correspondiente de sus datos puede ocupar aproximadamente una cuarta parte. Con millones de pesos, la diferencia de memoria resulta relevante.
+
+Eso no significa que todo el sistema se reduzca exactamente cuatro veces. Hay escalas, metadatos, capas que quizá mantienen otra precisión, activaciones y memoria temporal. Además, menor tamaño no garantiza por sí solo menor latencia.
+
+## Una rejilla de valores
+
+En una cuantización uniforme sencilla, una escala relaciona valores reales con códigos enteros. Al escribir redondeas al código cercano; al recuperar aproximas el real mediante la escala y, cuando procede, un punto cero.
+
+Este ejemplo utiliza una rejilla simétrica de menos 127 a 127 para valores entre menos uno y uno. Ilustra el redondeo; no implementa un formato completo de modelo:
+
+```js
+const escala = 1 / 127;
+const cuantizar = (x) => Math.max(-127, Math.min(127, Math.round(x / escala)));
+const recuperar = (q) => q * escala;
+
+console.log(cuantizar(0.5)); // 64
+console.log(recuperar(cuantizar(0.5)).toFixed(4)); // "0.5039"
+console.log(recuperar(cuantizar(1)).toFixed(1)); // "1.0"
+```
+
+El medio ya no se recupera exactamente. Si llega un valor fuera del rango, se recorta al extremo en esta implementación. Elegir mal el rango puede introducir errores mayores que el redondeo habitual.
+
+## La escala importa
+
+Una única escala para valores con magnitudes muy diferentes puede representar mal los pequeños. Otros diseños utilizan escalas por canal o por grupos, o tratan valores extremos de manera específica. Esa información adicional también ocupa espacio y necesita operaciones para interpretarse.
+
+Los formatos de pocos bits y los algoritmos concretos no son intercambiables. Para ejecutar el modelo necesitas soporte de la biblioteca y del hardware, además del archivo con los pesos.
+
+**¿Un archivo más pequeño prueba que las respuestas conservarán su calidad?** No. Solo has comprobado una propiedad de almacenamiento. La calidad y el rendimiento necesitan medidas separadas.
+
+## Después del entrenamiento o durante él
+
+La **cuantización posterior al entrenamiento** convierte un modelo ya aprendido, a veces utilizando datos de calibración para elegir representaciones adecuadas. El **entrenamiento consciente de cuantización** incorpora aproximaciones de ese efecto durante el aprendizaje para que el modelo pueda adaptarse.
+
+No todo método necesita los mismos datos o el mismo trabajo adicional. Debes revisar qué partes cuantiza y qué operaciones mantiene en otra precisión. Tampoco existe una única cifra de bits que describa necesariamente todas las capas del sistema.
+
+## No es poda ni destilación
+
+La **poda** elimina o anula partes del modelo según un criterio. La **destilación** entrena otro modelo para aprender de las salidas de uno de referencia. La cuantización cambia cómo se representan valores. Se pueden combinar, pero actúan sobre decisiones diferentes.
+
+La cuantización de señales también aproxima amplitudes y las bases vectoriales pueden comprimir vectores; comparten la idea de representar con menos detalle, pero sus unidades de trabajo y evaluación no son las mismas que las de una red completa.
+
+## Qué evaluar
+
+Compara calidad en tareas representativas, memoria máxima, tiempo hasta la primera respuesta y ritmo de producción cuando corresponda. Mantén iguales las condiciones relevantes para que la comparación tenga sentido.
+
+Una mejora de memoria puede permitir ejecutar el modelo donde antes no cabía. Esa puede ser una ventaja suficiente, aunque no acelere todas las operaciones. La decisión depende de los límites del sistema y del error tolerable.
+
+## Lo esencial
+
+- Cuantizar reduce precisión de representación mediante un método concreto.
+- Escalas, rangos y valores extremos condicionan el error.
+- Memoria, latencia y calidad son medidas diferentes.
+- Cuantización, poda y destilación no son sinónimos.

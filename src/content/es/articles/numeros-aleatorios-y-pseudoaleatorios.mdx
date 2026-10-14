@@ -8,6 +8,8 @@ prerequisites:
   - funciones
 updated: 2026-10-14
 sources:
+  - title: "NumPy: Random Number Compatibility Policy (en inglés)"
+    url: https://numpy.org/doc/stable/reference/random/compatibility.html
   - title: "MDN: Math.random()"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Math/random
   - title: "MDN: Crypto.getRandomValues()"
@@ -79,6 +81,10 @@ Que sean reproducibles es a menudo lo que se busca.
 - **Juegos.** Un mundo entero generado a partir de un número corto, que se puede compartir.
 
 Cuando no se indica semilla, el sistema elige una que cambia en cada ejecución.
+
+La garantía de repetir una secuencia requiere conservar también el algoritmo y su implementación compatible, además del orden de las llamadas. Dos bibliotecas distintas no tienen por qué producir los mismos números con la misma semilla. Para repetir un experimento, registra el generador, su versión y la configuración; en entrenamiento paralelo pueden intervenir además operaciones no deterministas.
+
+La API `Math.random()` de JavaScript no permite fijar o restablecer su semilla mediante un argumento. Si necesitas controlar la secuencia de una simulación, utiliza una implementación que exponga ese control. La función didáctica anterior lo hace, pero no debe utilizarse para seguridad.
 
 ## El problema: son predecibles
 

@@ -1,0 +1,32 @@
+---
+title: "Mars Climate Orbiter y las unidades que no coincidían"
+description: "La pérdida de la sonda muestra por qué una interfaz debe especificar y comprobar el significado de sus números."
+level: basico
+kind: curiosidad
+layer: aplicaciones
+prerequisites:
+  - requisitos-funcionales-y-no-funcionales
+  - pruebas-de-software
+updated: 2026-10-14
+sources:
+  - title: "NASA: Mars Climate Orbiter Mishap Investigation Board, Phase I Report, 1999 (en inglés)"
+    url: https://discovery.larc.nasa.gov/pdf_files/MCO_report_2.pdf
+---
+
+La **Mars Climate Orbiter** se perdió en septiembre de 1999. El informe de investigación de la NASA identificó una incompatibilidad de unidades en datos producidos por software de tierra y utilizados para modelar su trayectoria.
+
+La interfaz exigía unidades métricas, pero un archivo entregaba datos de impulso en unidades inglesas. El consumidor asumía que el contrato se cumplía. Los valores podían tener un formato legible y ser números válidos; su significado era distinto.
+
+## El contrato ya existía
+
+Esta parte importa: el informe no cuenta simplemente que nadie hubiese pensado en especificar unidades. Había documentación de interfaz, y aun así el desacuerdo no se detectó a tiempo.
+
+La investigación señaló además factores de verificación, comunicación, formación y organización. Reducir el caso a «alguien olvidó convertir una unidad» elimina las barreras que también deberían haber encontrado el problema.
+
+## Un ejemplo cotidiano
+
+Si un servicio entrega una duración de 500 y otro la interpreta como segundos cuando el emisor quería milisegundos, ambos pueden aceptar el mismo tipo numérico y producir un resultado equivocado. Comprobar solo que el campo es un número no verifica el contrato.
+
+Un [requisito comprobable](/articulos/requisitos-funcionales-y-no-funcionales/) debe expresar unidad, rango y significado. Una prueba de integración necesita verificar esa interpretación entre componentes, no únicamente que el mensaje pueda analizarse.
+
+La lección para software corriente es concreta: documenta qué mide cada campo, usa nombres o tipos que ayuden a distinguirlo y prueba ejemplos donde una interpretación equivocada resulte visible. La compatibilidad sintáctica no basta para garantizar compatibilidad de significado.

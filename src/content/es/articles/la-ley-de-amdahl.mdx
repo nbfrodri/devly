@@ -1,0 +1,38 @@
+---
+title: "La ley de Amdahl: por qué más núcleos no multiplican la velocidad"
+description: "La parte de un trabajo que no se puede paralelizar limita la aceleración total, aunque añadas muchos procesadores."
+level: intermedio
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - procesadores-multinucleo
+updated: 2026-10-14
+sources:
+  - title: "Gene Amdahl: Validity of the Single Processor Approach to Achieving Large Scale Computing Capabilities, 1967 (en inglés)"
+    url: https://www.cs.cmu.edu/~18742/papers/Amdahl1967.pdf
+---
+
+En 1967, Gene Amdahl discutió los límites de acelerar cálculos repartiendo trabajo entre procesadores. Su observación sigue apareciendo al decidir si merece la pena añadir [núcleos](/articulos/procesadores-multinucleo/): el trabajo que permanece secuencial limita la mejora del conjunto.
+
+## Noventa segundos que sí se reparten
+
+Imagina un programa que tarda cien segundos: diez preparando datos de forma secuencial y noventa procesando partes independientes. Si el procesamiento se reparte perfectamente entre cuatro núcleos, tarda 22,5 segundos. La preparación sigue tardando diez. El total es 32,5, una aceleración de unas 3,08 veces, no cuatro.
+
+```js
+function aceleracion(fraccionSecuencial, nucleos) {
+	return 1 / (fraccionSecuencial + (1 - fraccionSecuencial) / nucleos);
+}
+
+console.log(aceleracion(0.1, 4).toFixed(2)); // "3.08"
+console.log(aceleracion(0.1, 100).toFixed(2)); // "9.17"
+```
+
+Incluso con una cantidad idealmente ilimitada de núcleos, los diez segundos no desaparecen. Para este trabajo fijo, la aceleración no puede superar diez.
+
+## El modelo tiene condiciones
+
+El cálculo supone reparto perfecto de la parte paralela y omite comunicaciones, sincronización y costes de coordinación. En una implementación real, esos costes pueden empeorar el resultado. El ejemplo no es una medición de un programa concreto.
+
+También mantiene fijo el trabajo. Si al disponer de más recursos decides analizar un conjunto de datos mayor, estás haciendo otra pregunta: cuánto trabajo adicional puedes realizar, en vez de cuánto aceleras exactamente el anterior.
+
+La lección práctica es medir dónde se consume el tiempo. Optimizar una parte que ya ocupa muy poco tiene un límite similar. Acelerar un cálculo diez veces puede apenas notarse si el programa pasa casi todo el tiempo esperando una operación que no has cambiado.

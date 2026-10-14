@@ -5,7 +5,7 @@ level: basico
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "Operating Systems: Three Easy Pieces, Files and Directories (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf
@@ -56,12 +56,35 @@ En los sistemas de tipo Unix, esa información vive en una estructura llamada **
 
 Un detalle que sorprende: **el nombre no está en el inodo**. Está en el directorio, que es una tabla de parejas de nombre y número de inodo. El archivo es el inodo; el nombre es solo una etiqueta que apunta a él.
 
+El número de inodo identifica esa estructura dentro de un sistema de archivos, no en todo el ordenador. Dos sistemas de archivos montados pueden utilizar el mismo número para archivos distintos. Tampoco permanece reservado para siempre: después de eliminar un archivo puede reutilizarse. Por eso no sirve como identificador universal permanente.
+
 ### Enlaces
 
 De ahí sale una consecuencia: un mismo archivo puede tener varios nombres.
 
 - Un **enlace duro** es otro nombre que apunta al mismo inodo. Los dos son igual de válidos, y el contenido solo se borra cuando desaparece el último.
 - Un **enlace simbólico** es un archivo pequeño que contiene la ruta de otro, como un acceso directo. Si el original se borra, el enlace queda apuntando a nada.
+
+El último nombre no es la única referencia relevante. Si un proceso mantiene abierto el archivo mediante un [descriptor](/articulos/descriptores-de-archivo/), puede seguir utilizándolo después de borrar su nombre. El espacio se libera cuando desaparecen los enlaces y las aperturas que lo conservan.
+
+### Enlace duro frente a simbólico
+
+Supón un archivo llamado `informe.txt`. Creas otro nombre, `copia-dura.txt`, para su inodo y un enlace simbólico `acceso.txt` que contiene la ruta `informe.txt`. No has creado dos copias independientes del contenido.
+
+Si renombras `informe.txt` a `final.txt`, `copia-dura.txt` sigue identificando el mismo archivo. El simbólico conserva la ruta anterior y queda roto. Si después creas un archivo distinto llamado `informe.txt`, el simbólico resolverá hacia ese archivo nuevo, mientras el enlace duro seguirá identificando el anterior.
+
+| Criterio | Enlace duro | Enlace simbólico |
+| --- | --- | --- |
+| Qué conserva | Otro nombre para el mismo inodo | Una ruta hacia el destino |
+| Si renombras el otro nombre | Sigue funcionando | Puede quedar roto |
+| Si editas a través del enlace | Modifica el mismo archivo | Modifica el destino que resuelva la ruta |
+| Cruza sistemas de archivos | No | Puede hacerlo |
+| Puede apuntar a algo inexistente | No al crearlo normalmente | Sí |
+| Directorios | Normalmente restringido | Permitido en usos habituales |
+
+Utiliza un enlace duro cuando necesitas varios nombres para un mismo archivo dentro del mismo sistema de archivos. Un enlace simbólico permite expresar una referencia por ruta, también a directorios o a otros sistemas montados, asumiendo que el destino puede cambiar o desaparecer.
+
+No los uses como sustituto de una copia de seguridad. Editar el archivo por cualquiera de sus nombres duros cambia el mismo contenido; seguir un simbólico también puede llevarte al dato original. Para conservar un estado anterior necesitas otra estrategia.
 
 ## Cómo se reparte el disco
 

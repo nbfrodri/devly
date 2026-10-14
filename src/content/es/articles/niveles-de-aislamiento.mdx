@@ -1,0 +1,114 @@
+---
+title: "¿Qué son los niveles de aislamiento de una transacción?"
+description: "El aislamiento define qué efectos de otras transacciones puede observar una operación y qué anomalías debe impedir el motor."
+level: avanzado
+layer: datos
+prerequisites:
+  - transacciones-y-acid
+  - una-base-de-datos-por-dentro
+updated: 2026-10-14
+sources:
+  - title: "PostgreSQL: Explicit Locking (en inglés)"
+    url: https://www.postgresql.org/docs/current/explicit-locking.html
+  - title: "PostgreSQL: Transaction Isolation (en inglés)"
+    url: https://www.postgresql.org/docs/current/transaction-iso.html
+  - title: "SQLite: Isolation in SQLite (en inglés)"
+    url: https://www.sqlite.org/isolation.html
+---
+
+El **nivel de aislamiento** define qué interferencias de otras transacciones puede observar una transacción y qué anomalías impide el motor. La atomicidad garantiza aplicar un conjunto de cambios entero; el aislamiento determina cómo se coordina ese conjunto con otros trabajos simultáneos.
+
+## Por qué una transacción no basta
+
+Dos personas intentan reservar la última plaza. Ambas leen que queda una y después escriben que quedan cero. Si el sistema permite esa secuencia sin detectar el conflicto, las dos pueden recibir una reserva aunque la actualización de cada una sea atómica.
+
+Las [propiedades ACID](/articulos/transacciones-y-acid/) no significan que cualquier secuencia de consultas sea segura con cualquier configuración. Necesitas saber qué garantiza el nivel elegido y cómo expresas la operación.
+
+## Anomalías que conviene reconocer
+
+Una **lectura sucia** observa cambios que otra transacción todavía no ha confirmado. Si esa otra revierte, has utilizado datos que nunca llegaron a consolidarse.
+
+Una **lectura no repetible** obtiene otro valor para la misma fila al releerla, porque otra transacción confirmó una actualización. Un **fantasma** aparece cuando una consulta con la misma condición devuelve otro conjunto de filas, por ejemplo porque se insertó una nueva que cumple el filtro.
+
+También existen anomalías de decisiones conjuntas. Dos transacciones pueden modificar filas distintas después de leer una condición común y violar una regla global. Mantener una instantánea no impide automáticamente todas esas situaciones.
+
+## Nombres y garantías
+
+El estándar distingue Read Uncommitted, Read Committed, Repeatable Read y Serializable. Los nombres orientan sobre interferencias permitidas, pero las implementaciones pueden proporcionar garantías más fuertes y resolver conflictos de maneras distintas.
+
+En PostgreSQL, Read Committed utiliza una nueva instantánea por sentencia; dos consultas dentro de la misma transacción pueden observar confirmaciones diferentes. Repeatable Read mantiene una instantánea para la transacción y, en ese motor, también evita los fantasmas descritos por el estándar. Serializable añade garantías equivalentes a algún orden secuencial de las transacciones confirmadas, pudiendo abortar trabajos que deben reintentarse.
+
+## Una instantánea en SQLite
+
+Este ejemplo de Python usa únicamente SQLite y un directorio temporal. En modo WAL, muestra cómo una lectura conserva su instantánea mientras otra conexión confirma un cambio:
+
+```python
+import sqlite3
+import tempfile
+from pathlib import Path
+
+with tempfile.TemporaryDirectory() as carpeta:
+    ruta = Path(carpeta) / "ejemplo.db"
+    a = sqlite3.connect(ruta, isolation_level=None)
+    b = sqlite3.connect(ruta, isolation_level=None)
+    a.execute("PRAGMA journal_mode=WAL")
+    a.executescript("CREATE TABLE valores (n INTEGER); INSERT INTO valores VALUES (1);")
+    a.execute("BEGIN")
+    print(a.execute("SELECT n FROM valores").fetchone()[0])  # 1
+    b.execute("UPDATE valores SET n = 2")
+    print(a.execute("SELECT n FROM valores").fetchone()[0])  # 1
+    a.execute("COMMIT")
+    print(a.execute("SELECT n FROM valores").fetchone()[0])  # 2
+    a.close()
+    b.close()
+```
+
+La segunda lectura no reproduce una lectura no repetible: precisamente muestra que la instantánea la evita en esa configuración. No extrapoles el resultado a Read Committed de PostgreSQL ni a cualquier modo de otro motor.
+
+**¿La conexión A ve siempre datos antiguos?** Solo mientras conserva esa lectura transaccional. Tras terminarla, una consulta nueva puede ver el cambio confirmado.
+
+## Resolver conflictos forma parte del programa
+
+Los niveles fuertes pueden producir esperas o errores de serialización. La aplicación necesita distinguirlos y reintentar la transacción completa cuando corresponda, recalculando sus decisiones. Repetir únicamente la última escritura puede reutilizar lecturas obsoletas.
+
+Para reservar una plaza, una actualización condicional y una restricción adecuada pueden expresar mejor la regla que separar lectura y escritura sin coordinación. La elección depende de la invariante y del motor, no solo del nombre del nivel.
+
+## Control optimista frente a pesimista
+
+El **control optimista** permite avanzar y comprueba al escribir si sigue siendo válida la versión leída. El **pesimista** reserva o bloquea recursos antes de continuar para evitar determinados conflictos. Ninguno significa que puedan ignorarse transacciones e invariantes.
+
+Dos clientes leyeron la versión uno de una fila. Este ejemplo secuencial de SQLite muestra la condición que impediría aplicar dos actualizaciones basadas en esa misma versión:
+
+```sql
+CREATE TABLE inventario (id INTEGER PRIMARY KEY, disponible INTEGER, version INTEGER);
+INSERT INTO inventario VALUES (1, 10, 1);
+
+UPDATE inventario SET disponible = disponible - 1, version = version + 1
+WHERE id = 1 AND version = 1 AND disponible > 0;
+SELECT changes();
+
+UPDATE inventario SET disponible = disponible - 1, version = version + 1
+WHERE id = 1 AND version = 1 AND disponible > 0;
+SELECT changes();
+
+SELECT disponible, version FROM inventario;
+```
+
+El primer recuento es uno; el segundo, cero. La fila queda con nueve unidades y versión dos. Quien no actualizó debe decidir si relee, reintenta o informa del conflicto. El ejemplo reproduce la comprobación de versión, no dos sesiones simultáneas.
+
+En una estrategia pesimista, la primera transacción obtiene un bloqueo apropiado, lee y modifica antes de liberarlo. En PostgreSQL existen bloqueos de filas; SQLite utiliza otros mecanismos y BEGIN IMMEDIATE reserva la posibilidad de escritura. No debes trasladar una orden de un motor al otro suponiendo la misma granularidad.
+
+| Criterio | Optimista | Pesimista |
+| --- | --- | --- |
+| Conflicto | Se detecta mediante versión o condición | Se intenta prevenir con una reserva o bloqueo |
+| Coste típico | Releer y repetir cuando hay conflicto | Esperar, mantener bloqueos y tratar interbloqueos |
+| Conviene evaluar | Conflictos poco frecuentes | Secciones cortas con conflictos relevantes |
+
+Mantener un bloqueo mientras una persona rellena un formulario suele ser una mala frontera transaccional. Una comprobación optimista tampoco basta si los escritores no respetan el mismo contrato de versión.
+
+## Lo esencial
+
+- Atomicidad y aislamiento garantizan propiedades diferentes.
+- Identifica anomalías y reglas de negocio antes de elegir un nivel.
+- Comprueba las garantías concretas del motor y su configuración.
+- Esperas, abortos y reintentos forman parte de una transacción concurrente real.

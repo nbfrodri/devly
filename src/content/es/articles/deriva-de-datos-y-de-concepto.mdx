@@ -1,0 +1,60 @@
+---
+title: "¿Qué es la deriva de datos y de concepto?"
+description: "Los datos y su relación con la respuesta pueden cambiar después del despliegue; detectar el cambio no equivale a saber cómo corregirlo."
+level: intermedio
+layer: ia
+prerequisites:
+  - calidad-de-datos
+  - como-se-evalua-un-modelo-de-clasificacion
+updated: 2026-10-14
+sources:
+  - title: "Google: Production ML Systems, Monitoring Pipelines (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/production-ml-systems/monitoring
+---
+
+La **deriva de datos** describe cambios en la distribución de las entradas de un modelo. La **deriva de concepto** describe cambios en la relación entre esas entradas y la respuesta que se quiere predecir. Ambas pueden aparecer después del despliegue y hacer que una evaluación antigua deje de representar el uso actual.
+
+## El mundo no permanece como el entrenamiento
+
+Un clasificador de correo se entrenó con mensajes de ciertos idiomas y campañas. Meses después llegan otros usuarios y nuevas formas de spam. El programa puede seguir ejecutándose sin excepciones mientras su resultado empeora.
+
+Esto es distinto de un fallo visible de infraestructura. El servicio puede responder rápido y con el esquema correcto, pero sus predicciones ya no resultar útiles. Por eso observar solo disponibilidad y latencia no basta para operar un modelo.
+
+## Dos tipos de cambio
+
+Si aumenta mucho la proporción de mensajes en un idioma, cambió la distribución de entradas. El modelo podría seguir funcionando si ya comprendía bien ese idioma, o podría fallar: detectar deriva de datos no demuestra por sí solo pérdida de calidad.
+
+Si una característica antes asociada a spam pasa a ser habitual en mensajes legítimos, puede cambiar la relación que utiliza el modelo para decidir. Eso afecta al concepto que estaba aprendiendo, aunque algunas estadísticas globales de entrada apenas cambien.
+
+La terminología exacta puede variar entre herramientas. Define qué distribución comparas y qué señal llamas deriva antes de establecer alertas.
+
+## Qué observar
+
+En las entradas puedes medir valores ausentes, tipos, rangos, categorías y distribuciones. Compara ventanas representativas y revisa segmentos. Un promedio estable puede ocultar que un grupo nuevo recibe un resultado peor.
+
+En las salidas puedes observar distribución de puntuaciones, clases predichas y cambios bruscos. Son señales indirectas: un modelo que siempre repite la misma clase puede parecer estable mientras se equivoca.
+
+Para medir calidad real necesitas respuestas correctas o indicadores del resultado. Esas **etiquetas** pueden llegar tarde o solo para una parte de los casos. La evaluación debe tener en cuenta ese retraso y el posible sesgo de selección.
+
+**¿Una diferencia estadística exige reentrenar inmediatamente?** No. Puede ser una variación esperada, un cambio inocuo o un error del proceso de datos que conviene corregir antes de entrenar.
+
+## Un procedimiento de diagnóstico
+
+Primero comprueba si la fuente o el preprocesamiento cambiaron accidentalmente: unidades, codificaciones, categorías o valores de sustitución. Un dato que pasa de euros a céntimos puede parecer deriva y ser en realidad una ruptura de contrato.
+
+Después revisa si el cambio corresponde a un fenómeno conocido, como estacionalidad o una nueva población. Compara métricas relevantes cuando existan etiquetas y estima el impacto de los errores para el producto.
+
+Solo entonces decide entre corregir una canalización, ajustar un umbral, conseguir nuevas etiquetas, reentrenar o retirar el modelo. Cada acción responde a una causa distinta.
+
+## Reentrenar también necesita evaluación
+
+Un modelo nuevo puede aprender datos recientes que contienen errores o representar peor a usuarios menos frecuentes. Valídalo con divisiones apropiadas, incluidos cortes temporales cuando corresponda, y conserva una referencia para comparar.
+
+No utilices automáticamente cualquier respuesta que produce el propio modelo como si fuera una etiqueta real. Esa realimentación puede reforzar sus errores. También debes distinguir las decisiones tomadas por el sistema de los resultados que habrían ocurrido sin ellas.
+
+## Lo esencial
+
+- Las entradas pueden cambiar sin cambiar el concepto, y viceversa.
+- Estabilidad de infraestructura no garantiza calidad de predicción.
+- Las etiquetas tardías limitan qué puedes concluir en cada momento.
+- Diagnostica la causa y evalúa la corrección antes de automatizar reentrenamientos.

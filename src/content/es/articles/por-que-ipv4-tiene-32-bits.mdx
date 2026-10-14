@@ -1,0 +1,31 @@
+---
+title: "¿Cómo se eligieron los 32 bits de IPv4?"
+description: "Vint Cerf recuerda la elección como una decisión para una red experimental, no como una previsión definitiva del tamaño de internet."
+level: basico
+kind: curiosidad
+layer: redes
+prerequisites:
+  - ipv4-frente-a-ipv6
+updated: 2026-10-14
+sources:
+  - title: "FutureLearn: entrevista con Vinton Cerf sobre el origen de internet (en inglés)"
+    url: https://ugc.futurelearn.com/uploads/files/a5/1b/a51bfefb-6634-4452-b9ce-810edb051261/Interview_with_Vinton_Cerf.pdf
+  - title: "RFC 791: Internet Protocol (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc791.html
+---
+
+Una dirección **IPv4** ocupa 32 bits. Eso permite algo más de cuatro mil millones de combinaciones teóricas, aunque no todas puedan asignarse libremente a dispositivos. ¿Por qué ese tamaño?
+
+En su entrevista para FutureLearn, Vint Cerf recuerda que en 1977 escogió un espacio de 32 bits pensando en un experimento para demostrar que las redes podían interconectarse. Es un testimonio de uno de los participantes: conviene presentarlo como su recuerdo de la decisión, no como una explicación única que sustituya toda la historia del diseño.
+
+## Un límite que se volvió importante
+
+El RFC 791 documenta las direcciones de cuatro octetos de IPv4. El espacio era finito desde el principio; lo que cambió fue la escala de utilización y la cantidad de sistemas que necesitaban conectarse.
+
+El cálculo de combinaciones es directo: cada bit duplica las posibilidades. Añadir unos pocos bits cambia mucho el total, pero cambiar un formato desplegado exige actualizar protocolos, implementaciones y operaciones, no solo una cifra escrita en una especificación.
+
+## El experimento y la transición
+
+[IPv6](/articulos/ipv4-frente-a-ipv6/) amplió el espacio a 128 bits y requiere mecanismos de transición y convivencia. El tamaño mayor no convierte los formatos en intercambiables de forma automática.
+
+La historia sirve para recordar que las decisiones de un prototipo pueden convertirse en contratos de larga duración. También evita una anécdota engañosa: no hace falta atribuir a sus diseñadores una predicción de que toda internet futura cabría para siempre en el límite de aquel experimento.

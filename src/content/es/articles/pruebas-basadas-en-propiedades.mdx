@@ -1,0 +1,80 @@
+---
+title: "¿Qué son las pruebas basadas en propiedades?"
+description: "Comprueban reglas generales con muchas entradas generadas y buscan contraejemplos pequeños cuando una regla falla."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - pruebas-de-software
+  - que-es-una-asercion
+updated: 2026-10-14
+sources:
+  - title: "fast-check: Why Property-Based Testing? (en inglés)"
+    url: https://fast-check.dev/docs/introduction/why-property-based/
+---
+
+Las **pruebas basadas en propiedades** comprueban reglas que deberían cumplirse para un conjunto de entradas, en lugar de limitarse a ejemplos elegidos a mano. Una herramienta genera casos, ejecuta la propiedad y busca una entrada que la contradiga.
+
+## Qué problema resuelven
+
+Para probar una ordenación puedes comprobar que `[3, 1, 2]` produce `[1, 2, 3]`. Es útil, pero no representa listas vacías, valores repetidos o negativos. Añadir ejemplos uno a uno exige anticipar cada caso.
+
+Una propiedad expresa algo más general: el resultado debe estar ordenado, contener los mismos elementos y conservar su cantidad. La generación explora muchas entradas dentro del dominio elegido.
+
+No sustituyes pensar por azar. Elegir buenas propiedades y generadores es la parte principal del trabajo. Una propiedad incorrecta puede rechazar una implementación válida; una demasiado débil puede aceptar una defectuosa.
+
+## Una regla que se queda corta
+
+«La salida está ordenada» parece suficiente hasta que pruebas una función que siempre devuelve un array vacío. No tiene ningún par fuera de orden, así que cumple esa regla y sigue sin ordenar lo recibido.
+
+Por eso también compruebas longitud y contenido, incluidas repeticiones. Si entran dos cincos, debe haber dos cincos en el resultado. Comparar conjuntos eliminaría esa multiplicidad y podría ocultar un error.
+
+**¿Puede una propiedad verdadera ser insuficiente?** Sí: describe una condición necesaria, pero puede no caracterizar todo el comportamiento requerido.
+
+## Un ejemplo sin instalar herramientas
+
+Este programa enumera listas pequeñas y comprueba que invertirlas dos veces recupera la entrada. Es una exploración exhaustiva de un dominio limitado, no una biblioteca completa de generación aleatoria:
+
+```js
+function listasHasta(alphabet, longitud) {
+	let nivel = [[]];
+	const todas = [...nivel];
+	for (let i = 0; i < longitud; i++) {
+		nivel = nivel.flatMap((lista) => alphabet.map((n) => [...lista, n]));
+		todas.push(...nivel);
+	}
+	return todas;
+}
+
+const casos = listasHasta([-1, 0, 1], 3);
+const cumple = casos.every((lista) => {
+	const recuperada = lista.toReversed().toReversed();
+	return recuperada.length === lista.length &&
+		recuperada.every((valor, i) => valor === lista[i]);
+});
+
+console.log(casos.length); // 40
+console.log(cumple); // true
+```
+
+Incluye la lista vacía y listas con repeticiones. No demuestra la propiedad para listas de cualquier longitud: deja claro qué espacio hemos comprobado.
+
+## Generar y reducir
+
+Las herramientas especializadas permiten describir generadores de enteros, textos, objetos o secuencias de acciones. Pueden combinar casos límite con muestras variadas. El dominio debe respetar el contrato: una propiedad para números finitos no tiene por qué admitir `NaN` si la función lo excluye expresamente.
+
+Cuando aparece un fallo, la **reducción**, o *shrinking*, intenta encontrar una entrada más sencilla que siga reproduciéndolo. Una lista de cientos de valores puede acabar reducida a dos elementos que explican la causa. No basta con reducirla si el caso reducido deja de fallar.
+
+Conviene conservar la semilla y la información de reproducción que proporciona la herramienta. Así puedes recuperar la ejecución concreta y convertir el contraejemplo en una prueba de regresión legible.
+
+## Propiedades útiles
+
+Una codificación y su decodificación pueden recuperar el original dentro de un dominio definido. Normalizar dos veces puede dar lo mismo que normalizar una. Transferir dinero entre dos cuentas puede conservar el total. Cada regla necesita precisar sus condiciones: una compresión con pérdida no promete reconstrucción exacta.
+
+También puedes comparar con una implementación sencilla que actúe como referencia. Evita copiar exactamente el algoritmo probado: repetir el mismo error en ambos lados reduce el valor de la comprobación.
+
+## Lo esencial
+
+- Una propiedad expresa una regla sobre entradas y resultados.
+- Generar muchos casos no arregla una propiedad débil.
+- La reducción busca contraejemplos pequeños que sigan fallando.
+- Conserva reproducción y ejemplos manuales: son herramientas complementarias.

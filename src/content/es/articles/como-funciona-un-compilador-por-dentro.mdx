@@ -169,6 +169,10 @@ Las fases se agrupan en dos mitades:
 
 Separarlas permite reutilizar: varios lenguajes pueden compartir la misma parte trasera, y un lenguaje puede generar código para muchos procesadores, como [x86 y ARM](/articulos/arquitecturas-x86-y-arm/). Un **intérprete** comparte las primeras fases, pero en lugar de generar código, recorre el árbol o el bytecode y lo ejecuta directamente.
 
+## Las reglas del lenguaje
+
+Una [gramática formal](/articulos/gramaticas-formales/) especifica qué estructuras sintácticas admite el lenguaje. El análisis sintáctico aplica esas reglas; comprobar que los nombres existen y los tipos encajan requiere fases adicionales.
+
 ## Lo esencial
 
 - Un compilador trabaja por fases: léxico, sintáctico, semántico, optimización y generación.

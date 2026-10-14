@@ -5,7 +5,7 @@ level: basico
 layer: programacion
 prerequisites:
   - que-es-una-variable
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "MDN: Tipos de datos y estructuras en JavaScript"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Data_structures
@@ -130,6 +130,8 @@ console.log(String(2) + "2"); // "22"
 - **Olvidar las comillas de un texto.** `let nombre = Ana` busca una variable llamada `Ana` y falla porque no existe.
 - **Sumar un número que en realidad es un texto.** Si el resultado sale "pegado" en lugar de sumado, comprueba el tipo con `typeof`.
 - **Confundir `undefined` con un error.** `undefined` es un valor normal: significa que todavía no hay nada.
+
+El [fallo de Ariane 5](/articulos/ariane-5-y-las-suposiciones-del-software/) recuerda por qué reutilizar código exige revisar los rangos y supuestos del nuevo entorno.
 
 ## Lo esencial
 

@@ -1,0 +1,29 @@
+---
+title: "¿Por qué existe NULL?"
+description: "La ausencia de información es distinta de un valor conocido; esa diferencia llevó a estudiar marcadores y lógica de tres valores."
+level: basico
+kind: curiosidad
+layer: datos
+prerequisites:
+  - null-en-sql
+updated: 2026-10-14
+sources:
+  - title: "E. F. Codd: Extending the Database Relational Model to Capture More Meaning, 1979 (en inglés)"
+    url: https://www.softwaregems.com.au/Documents/Article/Database/Relational%20Model/Codd%20E%20F/Extending%20the%20Database%20Relational%20Model.pdf
+---
+
+En su artículo de 1979 sobre ampliar el significado del modelo relacional, Edgar F. Codd estudió cómo representar información incompleta. Distinguió el valor todavía desconocido de una propiedad que no resulta aplicable y desarrolló el tratamiento del primer caso mediante una lógica con resultado desconocido.
+
+No es lo mismo que afirmar que todas las decisiones del NULL de SQL actual procedan sin cambios de ese documento. Sí permite ver el problema que se intentaba expresar: la base de datos no conoce siempre un valor para cada propiedad.
+
+## Cero también dice algo
+
+Si no conoces la edad de una persona, guardar cero no deja el dato «vacío»: afirma una edad concreta. Sustituir sistemáticamente ausencias por cero altera recuentos, medias y decisiones.
+
+La dificultad aparece al comparar. Si no sabes dos edades, no puedes concluir que sean iguales por el hecho de que ambas sean desconocidas. Tampoco puedes afirmar necesariamente que sean diferentes. Esa es la motivación de un tercer resultado lógico.
+
+## Un marcador no explica todos los motivos
+
+En SQL, [NULL](/articulos/null-en-sql/) obliga a utilizar reglas específicas de comparación y filtrado. Pero un único marcador no distingue por sí solo «no preguntado», «no aplicable» y «pendiente de verificar».
+
+Si esas situaciones cambian el comportamiento de la aplicación, necesitas modelarlas expresamente, por ejemplo con un estado adicional. La curiosidad histórica recuerda una decisión de diseño todavía actual: representar la ausencia también comunica significado, y elegir un valor de sustitución no es una operación neutral.

@@ -1,0 +1,31 @@
+---
+title: "¿De dónde viene el nombre SQL?"
+description: "SQL empezó como SEQUEL, un lenguaje pensado para consultar datos relacionales sin describir sus recorridos físicos."
+level: basico
+kind: curiosidad
+layer: datos
+prerequisites:
+  - que-es-sql
+updated: 2026-10-14
+sources:
+  - title: "IBM: Structured Query Language, origen e historia (en inglés)"
+    url: https://www.ibm.com/think/topics/structured-query-language
+---
+
+Antes de llamarse **SQL**, el lenguaje desarrollado por Donald Chamberlin y Raymond Boyce en IBM durante los años setenta se llamó **SEQUEL**, *Structured English Query Language*. La denominación posterior conserva la idea de lenguaje estructurado de consultas, *Structured Query Language*.
+
+El nombre ayuda a entender una decisión del diseño: acercar la consulta a una descripción de lo que se quiere obtener, en lugar de exigir que la persona programe cada recorrido de almacenamiento.
+
+## Pedir un resultado
+
+En [SQL](/articulos/que-es-sql/), una consulta que selecciona nombres de clientes de una ciudad expresa el conjunto que interesa. No especifica si el motor debe leer toda la tabla, consultar un índice o combinar accesos.
+
+Esa separación permite que el motor mejore el plan sin cambiar la intención de la sentencia. Puedes añadir un índice y conservar el mismo SQL; el [plan de ejecución](/articulos/planes-de-ejecucion-sql/) puede cambiar.
+
+## Un nombre no define todo el lenguaje
+
+Aunque «consulta» forme parte de sus siglas, SQL también permite definir tablas y modificar datos. Y aunque sus palabras recuerden al inglés, no es lenguaje natural: tiene una sintaxis formal y reglas precisas.
+
+Tampoco implica que todos los motores implementen exactamente las mismas funciones. Comparten un lenguaje estandarizado, pero conservan diferencias de dialecto y comportamiento que debes comprobar cuando trasladas una aplicación.
+
+La curiosidad del nombre sirve así para recordar la característica relevante: describes resultados y operaciones sobre datos, mientras el motor decide buena parte del trabajo físico necesario para obtenerlos.

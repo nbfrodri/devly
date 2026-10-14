@@ -5,8 +5,13 @@ steps:
   - stateful-y-stateless
   - escalado-vertical-y-horizontal
   - colas-de-mensajes
+  - contrapresion
   - garantias-de-entrega-de-mensajes
   - atomicidad-e-idempotencia
+  - limitacion-de-peticiones
+  - reintentos-de-peticiones
+  - monolito-y-microservicios
+  - circuit-breaker
   - replicacion-y-particionado
   - teorema-cap
   - consistencia-eventual

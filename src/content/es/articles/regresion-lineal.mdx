@@ -1,0 +1,74 @@
+---
+title: "¿Qué es la regresión lineal?"
+description: "La regresión lineal aproxima un valor numérico mediante una suma ponderada de características y permite estudiar sus errores."
+level: intermedio
+layer: datos
+prerequisites:
+  - clasificacion-y-regresion
+  - media-mediana-y-desviacion
+updated: 2026-10-14
+sources:
+  - title: "Google: Linear Regression, Machine Learning Crash Course (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/linear-regression
+---
+
+La **regresión lineal** es un modelo que predice un valor numérico mediante una combinación lineal de características. En el caso más sencillo ajusta una recta: predicción = intercepto + pendiente × entrada.
+
+## Qué problema resuelve
+
+Quieres estimar cuánto tarda una tarea según la cantidad de elementos que procesa. Tienes observaciones de tamaños y tiempos. Una recta resume una tendencia y ofrece un punto de partida interpretable para predecir, comparar y revisar errores.
+
+No supone que cualquier relación real sea una recta. Es una elección de modelo que debe comprobarse frente a los datos y al uso que necesitas hacer de ella.
+
+## Dos parámetros
+
+La **pendiente** indica cuánto cambia la predicción al aumentar una unidad la entrada. El **intercepto** es el valor predicho cuando la entrada vale cero.
+
+En `tiempo = 1 + 2 × elementos`, procesar cuatro elementos da una predicción de nueve unidades de tiempo. El intercepto podría representar un coste fijo, pero esa interpretación necesita contexto: si nunca observaste entradas cercanas a cero, no tienes por qué atribuirle un significado físico fiable.
+
+Con varias características, cada una tiene un peso. «Lineal» se refiere a la combinación de parámetros del modelo; puedes preparar características transformadas, pero seguirás necesitando evaluar el resultado y evitar interpretaciones injustificadas.
+
+## Ajustar con mínimos cuadrados
+
+El **residuo** de una observación es el valor real menos su predicción. Una forma habitual de entrenar el modelo minimiza la suma de residuos al cuadrado. Elevar al cuadrado evita que errores positivos y negativos se cancelen y penaliza con fuerza errores grandes.
+
+Este ejemplo de JavaScript calcula la recta para tres observaciones mediante las fórmulas de mínimos cuadrados de una variable:
+
+```js
+const xs = [1, 2, 3];
+const ys = [3, 5, 7];
+const media = (valores) => valores.reduce((a, b) => a + b, 0) / valores.length;
+const mx = media(xs);
+const my = media(ys);
+const numerador = xs.reduce((suma, x, i) => suma + (x - mx) * (ys[i] - my), 0);
+const denominador = xs.reduce((suma, x) => suma + (x - mx) ** 2, 0);
+const pendiente = numerador / denominador;
+const intercepto = my - pendiente * mx;
+
+console.log(pendiente); // 2
+console.log(intercepto); // 1
+console.log(intercepto + pendiente * 4); // 9
+```
+
+El caso está construido para ajustarse exactamente. Si todas las entradas fueran iguales, el denominador sería cero y no podrías estimar esa pendiente con esta fórmula. Una implementación de uso general debe validar su dominio y tratar degeneraciones.
+
+## Mirar los residuos
+
+Un error medio pequeño no cuenta toda la historia. Dibuja residuos frente a predicciones o entradas. Si aparece una curva, la recta puede estar dejando una estructura sin modelar. Si el error crece con el tamaño, la variabilidad tampoco es constante.
+
+Los [valores atípicos](/articulos/valores-atipicos/) pueden influir mucho porque el cuadrado amplifica errores grandes. Debes investigar su origen antes de eliminarlos.
+
+**¿Un ajuste perfecto con los datos de entrenamiento garantiza buenas predicciones?** No. Puede haber pocos datos, una selección sesgada o un uso fuera del rango observado. La evaluación con datos independientes sigue siendo necesaria.
+
+## Predecir no es explicar causas
+
+Un peso positivo describe una asociación en este modelo. No demuestra que intervenir sobre esa característica cause el cambio previsto. Variables omitidas, correlaciones entre entradas y sesgos de selección pueden alterar la interpretación.
+
+Extrapolar también es arriesgado: una recta ajustada entre tamaños pequeños puede fallar cuando aparece otro régimen de funcionamiento, como falta de memoria o saturación. Empieza con el modelo sencillo y amplíalo si sus errores y los requisitos justifican hacerlo.
+
+## Lo esencial
+
+- La predicción combina intercepto y características ponderadas.
+- Los mínimos cuadrados ajustan parámetros reduciendo residuos al cuadrado.
+- Revisa residuos, degeneraciones y datos independientes.
+- Asociación y extrapolación no ofrecen garantías causales.

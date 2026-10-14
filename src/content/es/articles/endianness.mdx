@@ -1,0 +1,42 @@
+---
+title: "¿Qué es el endianness?"
+description: "El endianness fija el orden de los bytes cuando un valor ocupa más de uno."
+level: basico
+kind: definicion
+layer: hardware
+prerequisites:
+  - que-es-un-byte
+  - sistema-hexadecimal
+updated: 2026-10-14
+sources:
+  - title: "MDN: Endianness (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/Endianness
+---
+
+El **endianness** es el orden de los bytes que representan un valor de varios bytes. En **big-endian** se almacena primero el byte más significativo; en **little-endian**, el menos significativo. «Primero» significa aquí en la dirección de memoria más baja.
+
+## El mismo número, otro orden
+
+El entero hexadecimal `0x1234` necesita dos bytes. Big-endian lo representa como `12 34`; little-endian, como `34 12`. El valor matemático no cambia: cambia su representación.
+
+Puedes elegir explícitamente el orden con `DataView` en JavaScript:
+
+```js
+const datos = new DataView(new ArrayBuffer(2));
+datos.setUint16(0, 0x1234, false);
+console.log(datos.getUint8(0).toString(16)); // "12"
+datos.setUint16(0, 0x1234, true);
+console.log(datos.getUint8(0).toString(16)); // "34"
+```
+
+El último argumento indica si se utiliza little-endian. Esta API permite definir el formato sin depender del orden nativo de la máquina que ejecuta el programa.
+
+## Dónde importa
+
+Al interpretar archivos binarios o paquetes, debes seguir el orden definido por su formato. Si lees `12 34` como little-endian cuando el emisor lo escribió en big-endian, obtendrás `0x3412`, otro número.
+
+No es lo mismo que invertir caracteres de un texto ni que cambiar el orden de los bits dentro de cada byte. Tampoco describe el sentido de escritura de un lenguaje humano.
+
+Para intercambiar datos, documenta tamaño, signo y orden de bytes. Saber solo que un campo es «un entero» deja demasiadas decisiones abiertas para quien tiene que leerlo.
+
+Los nombres tienen una historia literaria: [big-endian y little-endian](/articulos/el-origen-de-big-endian-y-little-endian/) aluden a una disputa sobre por qué extremo abrir un huevo.

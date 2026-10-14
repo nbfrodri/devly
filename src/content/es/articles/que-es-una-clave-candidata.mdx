@@ -1,0 +1,42 @@
+---
+title: "¿Qué es una clave candidata?"
+description: "Una clave candidata identifica cada fila de forma única sin columnas prescindibles para esa identificación."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - que-es-una-clave-primaria
+updated: 2026-10-14
+sources:
+  - title: "PostgreSQL: Constraints (en inglés)"
+    url: https://www.postgresql.org/docs/current/ddl-constraints.html
+---
+
+Una **clave candidata** es un conjunto mínimo de columnas capaz de identificar de forma única cada fila de una tabla. «Mínimo» significa que no puedes quitar ninguna de sus columnas sin perder esa propiedad, no que sea la clave con menos bytes.
+
+## Varias opciones para identificar
+
+Este ejemplo se ejecuta en SQLite:
+
+```sql
+CREATE TABLE cuentas (
+	id INTEGER PRIMARY KEY,
+	correo TEXT NOT NULL UNIQUE,
+	nombre TEXT NOT NULL
+);
+
+INSERT INTO cuentas VALUES (1, 'ana@ejemplo.com', 'Ana');
+SELECT id, correo FROM cuentas;
+```
+
+La consulta devuelve la fila con identificador 1 y correo `ana@ejemplo.com`. En este diseño, tanto `id` como `correo` identifican sin ambigüedad una cuenta. Ambos son candidatos; se ha elegido `id` como [clave primaria](/articulos/que-es-una-clave-primaria/). El correo queda como **clave alternativa**.
+
+La propiedad debe estar respaldada por las reglas del dominio y las restricciones de la tabla. Que hoy no haya dos nombres iguales no convierte `nombre` en clave candidata: mañana podrían registrarse dos personas llamadas Ana.
+
+## Unicidad y minimalidad
+
+El conjunto `(id, nombre)` también identifica cada fila, pero no es mínimo: `id` basta. Se denomina **superclave**. Una clave candidata es una superclave sin columnas sobrantes.
+
+Las claves pueden ser compuestas. Si una matrícula solo es única dentro de una provincia, quizá necesites ambas columnas. Ninguna debe poder retirarse.
+
+No confundas `UNIQUE` con una clave candidata completa cuando se permiten valores NULL: las reglas de unicidad de esos marcadores dependen del motor. En el ejemplo, `NOT NULL` elimina esa ambigüedad para el correo.

@@ -13,3 +13,5 @@ steps:
   - almacenamiento-de-objetos
   - nube-privada-virtual
   - gestion-de-identidades-y-accesos
+  - observabilidad
+  - presupuestos-de-error

@@ -1,0 +1,66 @@
+---
+title: "¿Qué es la ejecución fuera de orden?"
+description: "Un procesador puede adelantar operaciones independientes para aprovechar sus unidades, manteniendo el comportamiento arquitectónico exigido."
+level: avanzado
+layer: hardware
+prerequisites:
+  - segmentacion-del-procesador
+  - memoria-cache-del-procesador
+updated: 2026-10-14
+sources:
+  - title: "Intel: Software Developer's Manual, Volume 1, Basic Architecture (en inglés)"
+    url: https://cdrdv2.intel.com/v1/dl/getContent/671436
+---
+
+La **ejecución fuera de orden** permite a un procesador ejecutar operaciones listas antes que otras anteriores que están esperando, siempre que respete las dependencias y el comportamiento arquitectónico requerido. Aprovecha recursos que quedarían ociosos si siguiera cada paso de forma estrictamente secuencial.
+
+## Una espera no tiene por qué detenerlo todo
+
+Imagina cuatro operaciones: cargar un valor de memoria, sumarle uno, multiplicar dos valores independientes y guardar el resultado de la suma. Si la carga tarda, la suma y su escritura deben esperar. La multiplicación, en cambio, no necesita el valor cargado.
+
+Un procesador fuera de orden puede adelantarla si sus operandos y su unidad de ejecución están disponibles. No ha eliminado la espera de memoria: ha realizado otro trabajo útil mientras tanto.
+
+Esto es **paralelismo entre instrucciones** de un mismo flujo. No requiere que tu programa cree otro hilo, y tampoco significa que pueda adelantar cualquier operación sin mirar sus efectos.
+
+## Dependencias verdaderas y nombres reutilizados
+
+Una **dependencia de datos** existe cuando una operación necesita el resultado de otra. No puedes sumar un valor que todavía no se ha obtenido. Adelantar instrucciones exige reconocer esas relaciones.
+
+También hay interferencias por reutilizar un nombre de registro para valores distintos. El **renombrado de registros** permite asignar almacenamiento físico diferente a usos que comparten nombre arquitectónico, evitando algunas dependencias que solo existían por ese nombre.
+
+El renombrado no borra dependencias verdaderas. Si la multiplicación necesita el resultado de la suma, sigue sin poder ejecutarse antes de que ese resultado exista.
+
+## Planificar operaciones listas
+
+El procesador mantiene una ventana de trabajo y selecciona operaciones cuyos datos están disponibles y para las que hay recursos. La ventana, las unidades y los registros físicos son finitos: una espera larga todavía puede llenar estructuras y limitar el avance.
+
+Los fallos de caché y las cadenas de operaciones dependientes siguen importando. Una lista enlazada, donde cada dirección se obtiene leyendo el nodo anterior, ofrece menos independencia que muchos accesos conocidos de antemano.
+
+**¿Fuera de orden significa que siempre acaba antes?** No. Solo puede aprovechar independencia y recursos reales. La coordinación consume hardware y hay cargas que ofrecen pocas oportunidades.
+
+## Ejecutar y retirar
+
+Una operación puede haber calculado su resultado sin que este forme parte todavía del estado arquitectónico confirmado. La **retirada**, o *retirement*, consolida los efectos cuando corresponde.
+
+En diseños habituales con retirada ordenada, una estructura conserva resultados pendientes y permite que una excepción se presente en el punto correcto del programa. Así no basta con que una instrucción termine antes para que todos sus efectos se consideren definitivos.
+
+El detalle depende de la microarquitectura. La documentación de Intel describe el núcleo de ejecución fuera de orden y la unidad de retirada como responsabilidades separadas.
+
+## Especular añade otra dimensión
+
+La **ejecución especulativa** realiza trabajo antes de saber con certeza si será necesario, por ejemplo siguiendo una predicción de salto. Fuera de orden y especulación pueden colaborar, pero no son lo mismo: adelantar una multiplicación independiente no exige necesariamente adivinar una rama.
+
+Si una predicción falla, el procesador descarta resultados arquitectónicos del camino equivocado y recupera el flujo correcto. Ese trabajo desperdiciado tiene un coste; por eso los saltos difíciles de predecir pueden afectar al rendimiento.
+
+## Qué significa para quien programa
+
+Puedes mejorar oportunidades de ejecución manteniendo buena localidad y evitando cadenas innecesarias de dependencias, pero debes medir el caso real. Contar instrucciones aisladas no predice automáticamente el tiempo total.
+
+Tampoco deduzcas un modelo de memoria entre hilos solo a partir de la retirada: el orden observable de accesos tiene sus propias reglas. La [coherencia de caché](/articulos/coherencia-de-cache/) y las primitivas de sincronización resuelven responsabilidades diferentes.
+
+## Lo esencial
+
+- Se adelantan operaciones listas, no operaciones con dependencias pendientes.
+- Renombrar registros elimina algunas interferencias por nombres.
+- Ejecutar, especular y retirar son conceptos diferentes.
+- La ventana y los recursos son limitados: la memoria y las dependencias siguen condicionando el tiempo.

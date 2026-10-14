@@ -7,7 +7,7 @@ layer: aplicaciones
 prerequisites:
   - cliente-servidor
   - que-es-una-api
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "James Lewis y Martin Fowler: Microservices (en inglés)"
     url: https://martinfowler.com/articles/microservices.html
@@ -116,6 +116,8 @@ Un término medio muy razonable es el **monolito modular**: un solo despliegue, 
 ## El motivo real suele ser organizativo
 
 Los microservicios resuelven sobre todo un problema de personas: permiten que muchos equipos trabajen y publiquen sin esperarse unos a otros. Si hay un solo equipo, ese problema no existe, y lo que queda es el coste.
+
+Un [circuit breaker](/articulos/circuit-breaker/) evita seguir presionando temporalmente una dependencia que falla, con pruebas controladas para volver a admitir llamadas.
 
 ## Lo esencial
 

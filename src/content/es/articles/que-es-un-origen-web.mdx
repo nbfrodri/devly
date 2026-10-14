@@ -1,0 +1,37 @@
+---
+title: "¿Qué es un origen web?"
+description: "Un origen combina esquema, host y puerto para establecer límites de acceso entre recursos web."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - que-es-una-url
+updated: 2026-10-14
+sources:
+  - title: "MDN: Origin, origen (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Glossary/Origin
+---
+
+Un **origen web** es la combinación del esquema, el host y el puerto de una URL. El navegador lo utiliza para establecer límites entre documentos y recursos. Dos páginas comparten origen si coinciden los tres componentes.
+
+## Qué cambia el origen
+
+Tomando `https://curso.ejemplo.com/lecciones` como referencia:
+
+| Otra URL | ¿Mismo origen? | Motivo |
+| --- | --- | --- |
+| `https://curso.ejemplo.com/perfil` | Sí | Solo cambia la ruta |
+| `https://curso.ejemplo.com:443/perfil` | Sí | 443 es el puerto predeterminado de HTTPS |
+| `http://curso.ejemplo.com/perfil` | No | Cambia el esquema |
+| `https://api.ejemplo.com/perfil` | No | Cambia el host |
+| `https://curso.ejemplo.com:8443/perfil` | No | Cambia el puerto efectivo |
+
+La ruta, los parámetros de consulta y el fragmento no forman parte del origen. Tampoco basta con que las páginas pertenezcan a la misma empresa o compartan el final del dominio.
+
+## Para qué sirve
+
+La **política del mismo origen** restringe qué puede leer un documento de otro origen. [CORS](/articulos/que-es-cors/) permite que un servidor autorice ciertas lecturas desde otros orígenes. No convierte ambos en un único origen ni sustituye la autenticación.
+
+El origen también ayuda a delimitar [almacenamiento del navegador](/articulos/almacenamiento-en-el-navegador/), como `localStorage`. Las cookies siguen reglas propias de dominio, ruta y otros atributos; no debes trasladarles sin más el modelo de almacenamiento por origen.
+
+No confundas **origen** con **sitio**: las reglas de mismo sitio utilizadas en cookies agrupan direcciones de otra manera. Esa diferencia explica que dos subdominios puedan ser del mismo sitio y, aun así, tener orígenes distintos.

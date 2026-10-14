@@ -145,13 +145,15 @@ Por eso a veces un mismo código es más rápido con datos ordenados: un condici
 
 - **Más etapas.** Dividir más permite un reloj más rápido, pero cada fallo de predicción cuesta más. Hubo procesadores con más de treinta etapas; los actuales tienen menos.
 - **Superescalar.** Varias cadenas en paralelo, que inician varias instrucciones por ciclo.
-- **Ejecución fuera de orden.** El procesador mira por delante, y ejecuta las instrucciones cuyos datos ya están listos, aunque vengan después. Al final, presenta los resultados en el orden original.
+- [**Ejecución fuera de orden](/articulos/ejecucion-fuera-de-orden/).** El procesador mira por delante, y ejecuta las instrucciones cuyos datos ya están listos, aunque vengan después. Al final, presenta los resultados en el orden original.
 
 Todo esto ocurre sin que el programa lo sepa. Para quien programa, las instrucciones se ejecutan una tras otra. La realidad es mucho más paralela.
 
 ## Un efecto secundario
 
 La ejecución especulativa deja huellas: las instrucciones descartadas pueden haber traído datos a la [caché](/articulos/memoria-cache-del-procesador/). Las vulnerabilidades Spectre y Meltdown, de 2018, aprovechaban eso para leer memoria ajena. Es un recordatorio de que las optimizaciones del hardware también son superficie de ataque.
+
+La [ejecución fuera de orden](/articulos/ejecucion-fuera-de-orden/) adelanta operaciones independientes mientras otras esperan, conservando el comportamiento arquitectónico exigido.
 
 ## Lo esencial
 

@@ -34,6 +34,14 @@ console.log(iteracionesPorEpoca * epocas); // 200
 
 Con mil ejemplos en lotes de 50, una época son 20 iteraciones; diez épocas, 200 actualizaciones del modelo.
 
+## Lotes y actualizaciones
+
+El **tamaño de lote** es la cantidad de ejemplos que se procesa para calcular cada actualización en el esquema sencillo del ejemplo. Si mil ejemplos se agrupan de cien en cien, hay diez lotes por época. Si se agrupan de diez en diez, hay cien. No has cambiado la cantidad de ejemplos por época, sino la frecuencia de las actualizaciones.
+
+Un lote mayor suele exigir más memoria para las activaciones y puede aprovechar mejor el cálculo paralelo; uno menor produce estimaciones del gradiente con más variación. No hay un tamaño óptimo universal ni basta con elegir el mayor que quepa: hay que evaluar tiempo, memoria y resultado del modelo.
+
+Si la cantidad de ejemplos no es divisible por el tamaño de lote, hay que decidir si se conserva un último lote más pequeño o se descarta. Además, la **acumulación de gradientes** puede combinar varios minilotes antes de actualizar. En ese caso, «lotes procesados» y «actualizaciones del optimizador» dejan de coincidir uno a uno. Declara siempre qué convención utiliza tu entrenamiento.
+
 ## Cuántas épocas
 
 Es un [hiperparámetro](/articulos/que-es-un-hiperparametro/):

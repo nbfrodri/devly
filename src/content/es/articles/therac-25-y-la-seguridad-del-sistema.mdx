@@ -1,0 +1,30 @@
+---
+title: "Therac-25: cuando el software controla una máquina"
+description: "Los accidentes del Therac-25 muestran por qué la seguridad exige estudiar concurrencia, interfaz, barreras y respuesta a incidentes como un conjunto."
+level: intermedio
+kind: curiosidad
+layer: aplicaciones
+prerequisites:
+  - condiciones-de-carrera-y-bloqueos
+  - pruebas-de-software
+updated: 2026-10-14
+sources:
+  - title: "Nancy Leveson y Clark S. Turner: An Investigation of the Therac-25 Accidents, 1993 (en inglés)"
+    url: https://people.eecs.berkeley.edu/~bh/61a-pages/Volume2/Therac-25.pdf
+---
+
+El **Therac-25** era una máquina de radioterapia implicada en varios accidentes con sobredosis de radiación durante los años ochenta. Nancy Leveson y Clark S. Turner analizaron los sucesos y los factores técnicos y organizativos que permitieron que ocurrieran.
+
+Su investigación describe problemas de sincronización en software con acceso concurrente a variables compartidas. Las comprobaciones y modificaciones no siempre formaban operaciones indivisibles; ciertas secuencias de edición podían dejar estados incompatibles con la configuración real de la máquina.
+
+## El orden también es una entrada
+
+Dos interacciones con los mismos valores pueden producir resultados distintos si cambian el orden y el momento de los pasos. Esa es una razón por la que una [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) no se descubre necesariamente probando una lista de datos válidos una vez.
+
+Cuando el software controla un dispositivo, el estado que muestra la interfaz, el que conserva el programa y el del mecanismo físico deben coordinarse. Un mensaje poco claro o una recuperación que continúa desde un estado incoherente también forman parte del comportamiento del sistema.
+
+## Más allá de buscar una línea culpable
+
+La investigación no presenta los accidentes como un único error aislado que explica todos los casos. Examina diseño, pruebas, barreras de seguridad, comunicación de incidentes y respuestas a señales de fallo.
+
+La lección es estudiar las interacciones y las defensas del conjunto. Probar un componente por separado o asumir que el software no puede originar un estado peligroso deja preguntas esenciales sin responder. Las barreras independientes, el tratamiento explícito de fallos y aprender de incidentes necesitan diseñarse, no darse por supuestos.

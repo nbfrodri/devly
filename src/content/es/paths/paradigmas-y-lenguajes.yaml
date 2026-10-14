@@ -8,4 +8,6 @@ steps:
   - tipado-estatico-y-dinamico
   - compilador-e-interprete
   - como-funciona-un-compilador-por-dentro
+  - automatas-finitos
+  - gramaticas-formales
   - recoleccion-de-basura

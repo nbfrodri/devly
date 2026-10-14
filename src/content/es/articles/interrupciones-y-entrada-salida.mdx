@@ -84,7 +84,7 @@ Cada tipo de interrupción tiene un número, y una tabla indica qué manejador c
 
 Con dispositivos muy rápidos que generan millones de eventos, como una tarjeta de red a gran velocidad, las interrupciones constantes saturan al procesador. Los sistemas combinan las dos: usan interrupciones mientras el tráfico es bajo y pasan a sondeo cuando sube.
 
-## DMA: mover datos sin el procesador
+## [DMA](/articulos/acceso-directo-a-memoria-dma/): mover datos sin el procesador
 
 Copiar los datos de un disco a la memoria byte a byte, a través del procesador, lo tendría ocupado en una tarea mecánica.
 
@@ -123,6 +123,23 @@ Son una parte enorme del código de un sistema operativo, y una de las fuentes m
 ## Hasta el software
 
 Este modelo, pedir algo y que te avisen al terminar, se repite en niveles superiores. El bucle de eventos de [Node.js](/articulos/que-es-nodejs/) y las [promesas](/articulos/promesas-y-async-await/) de JavaScript aplican la misma idea: iniciar una operación lenta, seguir con otra cosa y reaccionar cuando termina. Debajo, el sistema operativo hace exactamente eso con interrupciones.
+
+## Interrupciones frente a sondeo
+
+En el **sondeo**, el software consulta repetidamente si el dispositivo tiene trabajo terminado. Con **interrupciones**, el dispositivo activa un aviso que provoca la atención del sistema. Para la misma recepción de un paquete, cambia quién inicia la comprobación y cuándo.
+
+| Criterio | Sondeo | Interrupciones |
+| --- | --- | --- |
+| Inicia la comprobación | El procesador consulta | El dispositivo notifica |
+| Con pocos eventos | Puede gastar consultas sin trabajo | Permite dedicar recursos a otra cosa |
+| Con muchos eventos | Puede amortizar comprobaciones por grupos | Atender cada aviso puede resultar costoso |
+| Latencia | Depende del ritmo y estrategia de consulta | Depende de entrega y atención del aviso |
+
+Si consultas una vez por segundo, un evento recién llegado puede esperar casi ese segundo. Consultar sin pausa reduce esa espera a cambio de ocupar CPU. Las interrupciones evitan muchas consultas vacías, pero tienen costes de entrada y atención.
+
+Por eso existen estrategias híbridas: utilizar avisos para detectar actividad y procesar después varios eventos mediante sondeo. Elegir depende de frecuencia, latencia y recursos, no de que una técnica sea siempre superior.
+
+Este sondeo consulta estado de dispositivos. No es la misma capa que el polling de una API HTTP, aunque comparta la idea de preguntar periódicamente. Y [DMA](/articulos/acceso-directo-a-memoria-dma/) resuelve mover datos, no decidir cuál de estas formas avisa de su finalización.
 
 ## Lo esencial
 

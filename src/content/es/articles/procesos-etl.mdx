@@ -103,11 +103,19 @@ Con el abaratamiento del almacenamiento y la potencia de los almacenes en [la nu
 | | ETL | ELT |
 | --- | --- | --- |
 | Dónde se transforma | En un sistema intermedio, antes de cargar | Dentro del destino, después de cargar |
-| Datos en bruto | No se conservan | Se conservan |
-| Cambiar una transformación | Hay que volver a extraer | Se recalcula desde lo cargado |
+| Datos en bruto | Pueden conservarse en una zona previa | Se cargan antes de transformar |
+| Cambiar una transformación | Se reprocesa el origen o una copia conservada | Se puede recalcular desde lo cargado si se conservó |
 | Herramienta de transformación | Programas específicos | Normalmente [SQL](/articulos/que-es-sql/) |
 
 ELT tiene una ventaja importante: si una transformación tenía un error, se corrige y se vuelve a ejecutar sobre los datos originales, que siguen ahí.
+
+### El mismo informe de dos formas
+
+Para sumar ventas por ciudad, un flujo ETL puede leer los registros, normalizar nombres y unidades en un proceso intermedio y cargar solo las filas preparadas en el almacén. Un flujo ELT carga primero los registros en una zona del destino y ejecuta allí la normalización y agregación. El informe final puede ser el mismo; cambian el lugar y el orden del trabajo.
+
+ETL encaja cuando necesitas retirar campos antes de entrar en el destino, aplicar una transformación que este no soporta o utilizar un motor específico. ELT encaja cuando el destino dispone de recursos de cálculo adecuados y quieres volver a transformar los datos cargados para usos diferentes.
+
+No debes convertir esa elección en una regla absoluta sobre conservar originales: un flujo ETL también puede archivarlos antes de transformar. Del mismo modo, ELT no garantiza retención indefinida ni exime de limpiar datos. Ambos necesitan controles de acceso, calidad, coste y conservación. El orden de las letras no sustituye esas decisiones.
 
 <Quiz
 	client:visible
@@ -135,6 +143,8 @@ Un proceso ETL se ejecuta miles de veces, sin nadie mirando. Tiene que soportar 
 - **Comprobado.** Recuentos y totales que deben cuadrar entre el origen y el destino.
 
 Una cifra equivocada en un informe que nadie detecta durante meses es peor que un proceso que se detiene con un error.
+
+La [captura de cambios, CDC](/articulos/captura-de-cambios-cdc/) permite alimentar destinos con inserciones, modificaciones y borrados sin copiar toda la fuente cada vez.
 
 ## Lo esencial
 

@@ -1,0 +1,101 @@
+---
+title: "¿Qué es el análisis amortizado?"
+description: "El análisis amortizado acota el coste total de una secuencia de operaciones, aunque algunas sean mucho más caras que otras."
+level: avanzado
+layer: programacion
+prerequisites:
+  - complejidad-algoritmica
+  - arrays
+updated: 2026-10-14
+sources:
+  - title: "Cornell CS 3110: Amortized Analysis and Dynamic Tables (en inglés)"
+    url: https://www.cs.cornell.edu/courses/cs3110/2009sp/lectures/lec21.html
+  - title: "Cornell CS 312: Hash Tables and Amortized Analysis (en inglés)"
+    url: https://www.cs.cornell.edu/courses/cs312/2008sp/lectures/lec20.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **análisis amortizado** estudia el coste total de una secuencia de operaciones y reparte ese coste entre ellas. Permite demostrar que una operación tiene coste pequeño a lo largo de la secuencia, aunque algunas ejecuciones concretas sean caras.
+
+## Por qué mirar una secuencia
+
+Imagina un [array](/articulos/arrays/) dinámico construido sobre un bloque de memoria con capacidad limitada. Añadir un elemento al final es barato mientras haya hueco. Cuando se llena, hay que reservar otro bloque y copiar los anteriores.
+
+Una inserción que copia `n` elementos cuesta O(n). Concluir que `n` inserciones cuestan O(n²) da una cota válida pero demasiado pesimista si el bloque crece de forma adecuada: las copias grandes no suceden en todas las inserciones.
+
+El análisis amortizado tiene en cuenta esa dependencia. Una operación cara cambia la estructura de manera que las siguientes puedan ser baratas.
+
+## Un modelo concreto
+
+Partimos de capacidad uno. Cuando el array está lleno, duplicamos su capacidad. Contamos una unidad por escribir el elemento nuevo y otra por cada elemento copiado. No medimos milisegundos: fijamos un modelo de coste para poder razonar.
+
+| Inserción | Capacidad después | Elementos copiados | Coste total del paso |
+| --- | --- | --- | --- |
+| 1 | 1 | 0 | 1 |
+| 2 | 2 | 1 | 2 |
+| 3 | 4 | 2 | 3 |
+| 4 | 4 | 0 | 1 |
+| 5 | 8 | 4 | 5 |
+| 6 | 8 | 0 | 1 |
+| 7 | 8 | 0 | 1 |
+| 8 | 8 | 0 | 1 |
+
+Las ocho inserciones cuestan quince unidades: ocho escrituras y siete copias. La más cara cuesta cinco, pero sería incorrecto cobrar cinco a todas.
+
+## Agregar los costes
+
+Las escrituras nuevas suman `n`. Las copias ocurren al pasar por capacidades 1, 2, 4, 8… La suma de esas potencias, hasta la última ampliación necesaria, es menor que `2n`.
+
+Por tanto, el trabajo total es menor que `3n`: O(n). Dividido entre `n` operaciones, el coste **amortizado** de insertar al final es O(1). La inserción que provoca una ampliación sigue teniendo coste real O(n).
+
+Puedes comprobar el recuento con esta simulación, sin depender del funcionamiento interno de los arrays de JavaScript:
+
+```js
+function costeInserciones(cantidad) {
+	let capacidad = 1;
+	let copias = 0;
+	for (let usados = 0; usados < cantidad; usados++) {
+		if (usados === capacidad) {
+			copias += usados;
+			capacidad *= 2;
+		}
+	}
+	return cantidad + copias;
+}
+
+console.log(costeInserciones(8)); // 15
+console.log(costeInserciones(9)); // 24
+```
+
+Con nueve elementos aparece otra copia de ocho. El salto local no destruye la cota de la secuencia.
+
+<Quiz
+	client:visible
+	question="¿O(1) amortizado garantiza que cada inserción termine en tiempo constante?"
+	options={["Sí, sin excepciones", "No: una inserción concreta puede copiar todos los elementos", "Solo si la entrada es aleatoria"]}
+	answer={1}
+/>
+
+## No es el caso medio
+
+El **caso medio** usa una distribución de entradas y calcula un coste esperado. El análisis amortizado puede garantizar una cota para cualquier secuencia permitida desde un estado inicial dado, sin suponer entradas aleatorias.
+
+En una [tabla hash](/articulos/tablas-hash/) pueden aparecer ambas ideas: coste esperado de las colisiones y coste amortizado del redimensionamiento. Conviene decir qué parte de la garantía depende del azar y cuál de sumar los cambios de capacidad.
+
+## Otras formas de demostrarlo
+
+El **método contable** cobra un pequeño extra en cada inserción barata y lo guarda como crédito para pagar futuras copias. El **método del potencial** asigna a cada estado una cantidad de trabajo acumulado; relaciona el coste real con el cambio de esa cantidad. Son otras formas de justificar la misma cota, no optimizaciones nuevas de la estructura.
+
+## Límites prácticos
+
+Crecer de uno en uno obliga a copiar 1 + 2 + 3… elementos y lleva a un coste total cuadrático. Duplicar evita ese patrón, a cambio de reservar espacio libre. Si además reduces capacidad al borrar, necesitas umbrales separados para no alternar ampliaciones y reducciones continuamente.
+
+En un sistema con plazos estrictos, una pausa ocasional larga puede seguir siendo inaceptable. O(1) amortizado no garantiza una latencia máxima constante.
+
+## Lo esencial
+
+- La garantía se obtiene sumando una secuencia completa.
+- Un coste amortizado constante permite operaciones individuales lineales.
+- No requiere una distribución aleatoria de entradas.
+- La política de crecimiento forma parte de la demostración.

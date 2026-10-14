@@ -4,7 +4,7 @@ Contrato para escribir artículos. Vale igual para una persona que para un model
 
 ## Flujo
 
-Los artículos pendientes están en [`docs/plans/content-backlog.md`](plans/content-backlog.md) y [`docs/plans/content-backlog-2.md`](plans/content-backlog-2.md). Elige de ahí, marca la casilla al publicar y apunta ahí las ideas nuevas.
+El plan actual es el [plan de contenido 7](plans/content-backlog-7.md), que busca los huecos del temario y amplía las definiciones, comparaciones y curiosidades. Los planes anteriores se conservan en `docs/plans/content-backlog*.md`. Elige del plan actual, marca la casilla al publicar y apunta ahí las ideas nuevas.
 
 1. Escribe el artículo en `src/content/es/articles/<slug>.mdx`.
 2. Míralo con `pnpm dev` y repasa la lista de comprobación de abajo.

@@ -169,6 +169,22 @@ Para decidir qué merece una alerta se fijan **objetivos de nivel de servicio**:
 - **Instrumentar.** El código tiene que emitir los datos. Existen estándares abiertos y bibliotecas que lo hacen automáticamente para lo más común.
 - **Ruido.** Muchos datos no son más comprensión. Lo que importa es poder hacer preguntas.
 
+## SLI, SLO y SLA
+
+Un **SLI** es un indicador medido, como la proporción de peticiones satisfactorias según una definición. Un **SLO** es el objetivo que estableces para ese indicador durante una ventana. Un **SLA** es un acuerdo de nivel de servicio que puede vincular condiciones y consecuencias al incumplimiento.
+
+Para el mismo servicio, puedes medir que el 99,95 % de solicitudes cumple el criterio, establecer un objetivo interno del 99,9 % y ofrecer un acuerdo externo con condiciones diferentes. Las cifras de este ejemplo son ilustrativas; el acuerdo real define qué entra en su medición.
+
+| Criterio | SLI | SLO | SLA |
+| --- | --- | --- | --- |
+| Naturaleza | Medida | Objetivo | Acuerdo |
+| Pregunta | ¿Qué está ocurriendo? | ¿Qué nivel queremos cumplir? | ¿Qué compromiso se ha establecido? |
+| Necesita definición | Sí: operaciones y resultado considerado | Sí: indicador, umbral y ventana | Sí: condiciones y consecuencias concretas |
+
+Un gráfico sin una definición clara no garantiza un indicador útil. Un SLO no es una medición y un SLA no hace que el sistema funcione mejor por existir. También es posible tener objetivos internos sin un acuerdo contractual externo.
+
+El [presupuesto de error](/articulos/presupuestos-de-error/) convierte el margen admitido por el SLO en una herramienta de decisión. No debes deducir consecuencias contractuales de ese cálculo interno: son responsabilidades diferentes.
+
 ## Lo esencial
 
 - La observabilidad es poder entender un sistema en producción por los datos que emite.

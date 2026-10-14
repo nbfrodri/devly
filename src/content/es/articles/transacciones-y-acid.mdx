@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - que-es-una-base-de-datos
   - que-es-sql
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "PostgreSQL: Transactions (documentación oficial, en inglés)"
     url: https://www.postgresql.org/docs/current/tutorial-transactions.html
@@ -135,7 +135,7 @@ Se consigue escribiendo los cambios en un registro en el disco antes de darlos p
 
 ## El aislamiento tiene niveles
 
-El aislamiento perfecto es costoso: obliga a que las transacciones se esperen unas a otras. Por eso las bases de datos ofrecen varios **niveles de aislamiento**, que cambian protección por rendimiento. Cómo se implementan, con varias versiones de cada fila, lo explica [una base de datos por dentro](/articulos/una-base-de-datos-por-dentro/).
+El aislamiento perfecto es costoso: obliga a que las transacciones se esperen unas a otras. Por eso las bases de datos ofrecen varios [**niveles de aislamiento**](/articulos/niveles-de-aislamiento/), que cambian protección por rendimiento. Cómo se implementan, con varias versiones de cada fila, lo explica [una base de datos por dentro](/articulos/una-base-de-datos-por-dentro/).
 
 | Nivel | Qué evita |
 | --- | --- |
@@ -154,6 +154,8 @@ El nivel por defecto varía de una base de datos a otra y no suele ser el más e
 ## Más allá de una sola base de datos
 
 Las garantías ACID son relativamente fáciles de dar dentro de una sola base de datos. Mantenerlas cuando los datos están repartidos entre varias máquinas es mucho más difícil, y muchas [bases de datos NoSQL](/articulos/bases-de-datos-nosql/) renuncian a parte de ellas a cambio de escalar mejor.
+
+Los [niveles de aislamiento](/articulos/niveles-de-aislamiento/) concretan las interferencias permitidas entre transacciones y las diferencias entre motores.
 
 ## Lo esencial
 

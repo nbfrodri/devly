@@ -1,0 +1,65 @@
+---
+title: "¿Qué es la captura de cambios de datos, CDC?"
+description: "CDC transforma cambios de una base de datos en un flujo que permite actualizar otros sistemas sin copiarlo todo cada vez."
+level: avanzado
+layer: datos
+prerequisites:
+  - procesos-etl
+  - una-base-de-datos-por-dentro
+  - colas-de-mensajes
+updated: 2026-10-14
+sources:
+  - title: "Debezium: Architecture (en inglés)"
+    url: https://debezium.io/documentation/reference/stable/architecture.html
+---
+
+La **captura de cambios de datos**, o **CDC** por *change data capture*, detecta inserciones, actualizaciones y borrados en una fuente y los convierte en información consumible por otros sistemas. Permite mantener destinos actualizados sin volver a copiar todas las filas en cada ejecución.
+
+## Qué problema resuelve
+
+Una tienda guarda productos en una base relacional y ofrece búsquedas en otro motor. Cuando cambia el precio o se retira un producto, el buscador debe enterarse.
+
+Consultar periódicamente todas las filas puede resultar caro. Buscar solo las que tienen una fecha de modificación ayuda, pero necesita reglas para marcas de tiempo, empates y borrados: una fila eliminada ya no aparece en la siguiente consulta.
+
+CDC proporciona una secuencia de cambios para actualizar esos destinos. El modo de capturarla depende de la tecnología y de los requisitos de consistencia.
+
+## El registro como fuente
+
+Algunos conectores utilizan el registro de transacciones del motor, como el WAL o mecanismos de registro binario. Interpretan los cambios confirmados y conservan una posición para continuar después de una interrupción.
+
+Esto no significa leer directamente cualquier archivo del disco sin conocer su formato. Los conectores utilizan interfaces y capacidades específicas del motor y necesitan permisos, configuración y retención compatibles con su forma de lectura.
+
+También hay soluciones basadas en consultas o disparadores. «CDC» describe la finalidad; no garantiza que todas las implementaciones tengan el mismo impacto, detalle o comportamiento ante fallos.
+
+## Estado inicial y cambios posteriores
+
+Para crear un índice de búsqueda desde cero necesitas primero los productos que ya existen. Una **instantánea inicial** obtiene ese estado; después se aplican cambios incrementales.
+
+La transición debe estar coordinada. Si copias filas y empiezas a escuchar cambios después, puedes perder modificaciones ocurridas entre ambos pasos. Si escuchas antes y vuelves a aplicar, necesitas gestionar solapamientos. El conector debe definir cómo representa ese punto de corte.
+
+## Un cambio de precio paso a paso
+
+El producto 7 cuesta 20. Una transacción lo actualiza a 25 y confirma. El capturador publica un cambio que identifica el producto, la operación y el valor relevante. El consumidor actualiza el documento 7 del buscador.
+
+Si el consumidor se detiene después de escribir pero antes de confirmar su avance, puede recibir otra vez el cambio al recuperarse. Aplicar «el precio del producto 7 es 25» de forma idempotente evita duplicar un efecto acumulativo.
+
+**¿Un evento recibido significa que todos los destinos ya están actualizados?** No. Cada consumidor tiene su propio progreso. La base de origen puede haber confirmado mientras el buscador todavía va por detrás.
+
+## Orden, borrados y esquema
+
+Necesitas saber qué orden se garantiza: por clave, por partición o por fuente. No supongas un orden global si el sistema no lo promete. Para cada borrado, el destino necesita información suficiente para eliminar o marcar el dato correcto.
+
+Los cambios de esquema también importan. Una columna renombrada o un tipo distinto puede romper consumidores aunque el conector siga funcionando. Versionar y probar el contrato del flujo forma parte del mantenimiento.
+
+La retención limita cuánto puedes retrasarte. Si el origen elimina el registro que aún necesitabas leer, recuperar desde la posición anterior puede ser imposible y requerir una nueva sincronización.
+
+## CDC no es event sourcing
+
+CDC suele describir modificaciones de almacenamiento: una fila cambió. [Event sourcing](/articulos/cqrs-y-event-sourcing/) conserva eventos del dominio como origen del estado: un pedido fue confirmado. No son intercambiables. Una actualización física puede no contener el motivo de negocio que necesitaría otro servicio.
+
+## Lo esencial
+
+- CDC propaga cambios en lugar de copiar repetidamente todo el estado.
+- La instantánea inicial y el flujo incremental deben coordinarse.
+- Duplicados, orden, borrados y evolución del esquema necesitan un contrato.
+- Capturar una fila modificada no equivale a publicar un evento de dominio.

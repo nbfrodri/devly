@@ -1,0 +1,30 @@
+---
+title: "Ariane 5: cuando reutilizar software cambia las suposiciones"
+description: "El fallo del vuelo 501 muestra que un componente probado puede dejar de ser válido al cambiar su entorno y sus rangos de entrada."
+level: intermedio
+kind: curiosidad
+layer: aplicaciones
+prerequisites:
+  - tipos-de-datos
+  - manejo-de-errores-y-excepciones
+updated: 2026-10-14
+sources:
+  - title: "ESA y CNES: Ariane 5 Flight 501 Failure, informe de la comisión, 1996 (en inglés)"
+    url: https://www-users.cse.umn.edu/~arnold/disasters/ariane5rep.html
+---
+
+El primer vuelo de Ariane 5, el 4 de junio de 1996, terminó en un fallo. El informe de investigación describe una excepción al convertir un valor de coma flotante de 64 bits a un entero con signo de 16 bits en el sistema de referencia inercial.
+
+El valor excedía el rango de destino. El software procedía de un contexto de Ariane 4 cuyas condiciones y suposiciones no eran las mismas que las del nuevo lanzador. El sistema redundante utilizaba el mismo software y sufrió el mismo problema.
+
+## Probado no significa válido en cualquier entorno
+
+Un componente puede haber funcionado durante años dentro de cierto rango y fallar cuando cambia ese rango. La reutilización conserva código; no conserva automáticamente las condiciones que justificaban sus decisiones.
+
+El ejemplo elemental es guardar un número en un [tipo](/articulos/tipos-de-datos/) que no puede representarlo. Pero el caso no se reduce a una conversión aislada: también intervenían funciones mantenidas tras el despegue, tratamiento de excepciones y validación del sistema completo.
+
+## Redundancia con una causa común
+
+Duplicar una unidad ayuda ante algunos fallos independientes. Si ambas ejecutan la misma lógica con las mismas entradas fuera de sus supuestos, pueden fallar de la misma manera. La cantidad de copias no demuestra diversidad de comportamiento.
+
+La lección para una aplicación corriente es revisar rangos, dependencias y supuestos al reutilizar. Las pruebas relevantes para el entorno anterior no sustituyen las del nuevo. Y un [manejo de excepciones](/articulos/manejo-de-errores-y-excepciones/) debe definir qué estado seguro puede mantenerse, en lugar de tratar cualquier interrupción del cálculo como un detalle local sin consecuencias.

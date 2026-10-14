@@ -1,0 +1,67 @@
+---
+title: "¿Qué es un disyuntor o circuit breaker?"
+description: "Un circuit breaker deja de llamar temporalmente a una dependencia que está fallando y prueba después si se ha recuperado."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - monolito-y-microservicios
+  - reintentos-de-peticiones
+updated: 2026-10-14
+sources:
+  - title: "Martin Fowler: Circuit Breaker (en inglés)"
+    url: https://martinfowler.com/bliki/CircuitBreaker.html
+---
+
+Un **disyuntor**, o *circuit breaker*, es un mecanismo que observa fallos en las llamadas a una dependencia y suspende temporalmente nuevos intentos cuando detecta un problema persistente. Después permite una cantidad controlada de llamadas para comprobar si se ha recuperado.
+
+## Qué problema resuelve
+
+Una tienda consulta un servicio de recomendaciones. Si cada consulta espera varios segundos hasta fallar, las peticiones de la tienda acumulan conexiones y tareas bloqueadas. El fallo de un servicio opcional puede acabar agotando los recursos del principal.
+
+Un timeout acota cada espera. Un [reintento](/articulos/reintentos-de-peticiones/) intenta recuperarse de un fallo transitorio. El disyuntor añade memoria entre llamadas: si la dependencia lleva fallando, evita repetir durante un tiempo un intento con pocas posibilidades de ayudar.
+
+## Tres estados
+
+**Cerrado** significa que las llamadas pasan. El mecanismo registra resultados y evalúa una política: por ejemplo, una proporción de fallos dentro de una ventana, con un mínimo de observaciones para no concluir demasiado a partir de una muestra diminuta.
+
+**Abierto** significa que las nuevas llamadas se rechazan rápidamente sin llegar a la dependencia. Esto reduce presión y libera recursos. No garantiza que la dependencia se repare; solo cambia cómo se comporta quien la utiliza.
+
+**Semiabierto** permite algunas llamadas de prueba después del periodo de espera. Si funcionan según la política, vuelve a cerrado. Si fallan, vuelve a abierto.
+
+```mermaid
+stateDiagram-v2
+	[*] --> Cerrado
+	Cerrado --> Abierto: Se supera el umbral de fallos
+	Abierto --> Semiabierto: Termina la espera
+	Semiabierto --> Cerrado: Pruebas correctas
+	Semiabierto --> Abierto: Vuelve a fallar
+```
+
+## Seguir una recuperación
+
+Imagina que el servicio de recomendaciones empieza a fallar. Durante la ventana inicial, algunas solicitudes experimentan timeouts. Al superar el umbral, el circuito abre. Las siguientes solicitudes de la tienda pueden mostrar una lista general en lugar de esperar recomendaciones personalizadas.
+
+Cuando transcurre la espera, no conviene enviar de golpe toda la carga acumulada. Pasan unas pruebas controladas. Si tienen éxito, se restablece el acceso. El umbral y el número de pruebas deben ajustarse a la carga y al coste real del servicio.
+
+**¿Qué significa un circuito cerrado?** Que deja pasar las llamadas, no que bloquea. La metáfora eléctrica puede resultar confusa si olvidas esa convención.
+
+## Elegir la degradación
+
+Una **alternativa de respaldo**, o *fallback*, debe respetar el significado del producto. Mostrar recomendaciones genéricas puede servir. Responder «pago completado» cuando no pudiste comprobar el pago sería inventar un resultado.
+
+También puedes devolver un error claro o aceptar un trabajo pendiente si existe un flujo duradero que lo respalde. Una respuesta aparentemente satisfactoria no es automáticamente una recuperación correcta.
+
+## Alcance y limitaciones
+
+Un circuito por cada instancia puede tomar decisiones distintas: una tiene pocos fallos y otra muchos. Un circuito demasiado amplio puede bloquear operaciones sanas porque otra operación del mismo servicio falla. Decide qué dependencia y qué tipos de llamada protege.
+
+No todos los errores cuentan igual. Una petición inválida rechazada de forma correcta no suele indicar que el servidor esté enfermo. En cambio, timeouts sostenidos o conexiones fallidas pueden ser relevantes.
+
+El disyuntor tampoco sustituye límites de concurrencia, colas limitadas ni aislamiento de recursos. Antes de abrir ya ha dejado pasar algunas llamadas; sin límites, podrían ser demasiadas. La [contrapresión](/articulos/contrapresion/) aborda otra parte del control de sobrecarga.
+
+## Lo esencial
+
+- El circuito cerrado permite, el abierto rechaza y el semiabierto prueba.
+- Recuerda fallos entre llamadas para evitar presión inútil sobre una dependencia.
+- Los umbrales y el alcance necesitan contexto y medición.
+- Una degradación debe conservar significado; no inventar éxito.

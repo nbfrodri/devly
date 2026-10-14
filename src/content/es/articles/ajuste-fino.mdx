@@ -9,6 +9,8 @@ prerequisites:
   - generacion-aumentada-por-recuperacion
 updated: 2026-10-14
 sources:
+  - title: "Google: Fine-tuning, Distillation and Prompt Engineering (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/llm/tuning
   - title: "Hugging Face: Ajuste fino de un modelo preentrenado"
     url: https://huggingface.co/learn/llm-course/es/chapter3/1
   - title: "Hu y otros: LoRA, Low-Rank Adaptation of Large Language Models (2021, en inglés)"
@@ -128,6 +130,22 @@ El orden razonable: primero instrucciones bien escritas, después RAG si falta i
 - **Seguridad.** Un ajuste puede debilitar las salvaguardas del modelo original, incluso sin pretenderlo.
 - **Datos personales.** Lo que se usa para ajustar puede acabar reproducido en las respuestas.
 - **Hay que evaluarlo**, con ejemplos que no se usaron para entrenar.
+
+## Entrenar desde cero, ajustar o destilar
+
+**Entrenar desde cero** aprende parámetros sin partir de los pesos ya entrenados de otro modelo. **Ajustar** continúa el entrenamiento de un modelo existente. **Destilar** entrena un modelo alumno utilizando señales de un modelo maestro, por ejemplo sus respuestas o distribuciones de salida.
+
+Para la misma tarea de clasificar documentos, podrías entrenar una arquitectura nueva con tus datos, adaptar una base preentrenada o entrenar un alumno para reproducir un comportamiento útil de un maestro. La decisión depende de recursos, datos, derechos de uso y requisitos de calidad y ejecución.
+
+| Criterio | Desde cero | Ajuste fino | Destilación |
+| --- | --- | --- | --- |
+| Punto de partida | Parámetros inicializados para aprender | Modelo preentrenado | Alumno que puede o no estar preentrenado |
+| Señal principal | Datos y objetivo de entrenamiento | Datos de adaptación | Enseñanza derivada del maestro y, cuando proceda, otros datos |
+| Finalidad típica | Aprender un modelo propio | Adaptar capacidades existentes | Transferir comportamiento a otro modelo |
+
+No son opciones completamente excluyentes: un alumno puede empezar de una base entrenada y ajustarse con ejemplos del maestro. Tampoco destilar equivale a copiar pesos ni a convertir automáticamente un archivo a menos bits; eso último se relaciona con [cuantización](/articulos/cuantizacion-de-modelos/).
+
+La destilación no garantiza que el alumno conserve todas las capacidades, y puede transmitir errores del maestro. Evalúa la tarea real con datos independientes. Ajustar tampoco crea por sí solo conocimiento siempre actualizado ni elimina la necesidad de recuperación de información cuando esa es la necesidad del producto.
 
 ## Lo esencial
 

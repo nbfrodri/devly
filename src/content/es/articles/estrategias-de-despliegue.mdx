@@ -130,7 +130,7 @@ Hay una distinción útil:
 - **Desplegar** es poner código en producción.
 - **Lanzar** es que los usuarios vean una funcionalidad.
 
-Los **interruptores de funcionalidad**, en inglés *feature flags*, las separan. El código nuevo se despliega apagado, tras una condición:
+Los [**interruptores o banderas de funcionalidad**](/articulos/que-es-una-bandera-de-funcionalidad/), en inglés *feature flags*, las separan. El código nuevo se despliega apagado, tras una condición:
 
 ```js
 const interruptores = { nuevoCarrito: false };
@@ -147,6 +147,17 @@ console.log(verCarrito()); // "carrito nuevo"
 
 Encenderlo no requiere desplegar, y apagarlo tampoco: es la vuelta atrás más rápida que hay. Se puede encender para el equipo, luego para unos pocos, luego para todos.
 
+| Criterio | Desplegar | Lanzar |
+| --- | --- | --- |
+| Qué cambia | La versión instalada | Quién puede utilizar el comportamiento |
+| Ejemplo | Instalar el código del carrito nuevo | Activarlo para el 5 % de las cuentas |
+| Verificación | Salud técnica y compatibilidad | Experiencia, errores y resultado para usuarios |
+| Reversión | Volver a otra versión si sigue siendo compatible | Desactivar la bandera si el sistema lo admite |
+
+En el mismo ejemplo, puedes desplegar el lunes con la bandera apagada, comprobar el sistema y lanzar el martes para un grupo. También puedes lanzar directamente durante el despliegue si la funcionalidad es sencilla y ese control adicional no aporta nada. Separarlos es una herramienta para coordinar cambios y reducir exposición, no una obligación para cada modificación.
+
+Desactivar no siempre basta: las compras ya guardadas, los mensajes enviados o los cambios de esquema no desaparecen. Y si una rama antigua deja de ser compatible con los datos nuevos, la bandera ya no ofrece una reversión segura. Verifica qué se puede recuperar antes de tratarla como un botón universal de deshacer.
+
 Su coste es que cada interruptor añade una rama al código. Los que ya no se usan se eliminan; si no, se acumulan y nadie sabe qué combinaciones están probadas.
 
 ## Requisitos de todas
@@ -162,6 +173,8 @@ Su coste es que cada interruptor añade una rama al código. Los que ya no se us
 - **Blue-green** cuando hace falta volver atrás al instante y se puede pagar el doble de infraestructura.
 - **Canary** cuando hay mucho tráfico, un fallo sale caro y se dispone de buenas métricas.
 - **Interruptores** además de cualquiera, para separar el despliegue del lanzamiento.
+
+Las [migraciones de base de datos](/articulos/migraciones-de-bases-de-datos/) coordinan esquema, datos y versiones del código mediante etapas compatibles.
 
 ## Lo esencial
 

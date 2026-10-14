@@ -6,7 +6,7 @@ layer: aplicaciones
 prerequisites:
   - que-es-una-api
   - que-es-http
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "R. T. Fielding: Architectural Styles and the Design of Network-based Software Architectures, capítulo 5 (2000, en inglés)"
     url: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm
@@ -130,6 +130,8 @@ En la práctica, la mayoría de las API que se llaman REST no llegan a esto. Se 
 - **Operaciones que no son recursos.** "Enviar un correo" o "calcular un presupuesto" no encajan bien en crear, leer, modificar y borrar.
 
 Para esos casos existen alternativas, como GraphQL, en la que el cliente pide exactamente los campos que quiere. La comparación está en [diferencias entre REST y GraphQL](/articulos/rest-frente-a-graphql/).
+
+La [evolución compatible de una API](/articulos/evolucion-compatible-de-api/) necesita conservar formatos y significado mientras conviven clientes de versiones diferentes.
 
 ## Lo esencial
 

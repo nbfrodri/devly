@@ -28,7 +28,7 @@ traceroute ejemplo.com
 
 ## El truco: paquetes que caducan
 
-Cada paquete IP lleva un campo **TTL**, tiempo de vida, que cada router que lo procesa reduce en uno. Si llega a cero, el router lo descarta y, según el protocolo de mensajes de control ICMP, puede avisar al remitente con un mensaje de **tiempo excedido**. Así se evita que un paquete dé vueltas para siempre en un bucle, como explica [enrutamiento](/articulos/enrutamiento/).
+Cada paquete IP lleva un campo [**TTL**](/articulos/ttl-en-ip/), tiempo de vida, que cada router que lo procesa reduce en uno. Si llega a cero, el router lo descarta y, según el protocolo de mensajes de control ICMP, puede avisar al remitente con un mensaje de **tiempo excedido**. Así se evita que un paquete dé vueltas para siempre en un bucle, como explica [enrutamiento](/articulos/enrutamiento/).
 
 Traceroute aprovecha esa regla:
 

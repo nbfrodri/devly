@@ -1,0 +1,53 @@
+---
+title: "¿Qué es NULL en SQL?"
+description: "NULL representa la ausencia de un valor y hace que las comparaciones puedan dar un resultado desconocido."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - que-es-sql
+updated: 2026-10-14
+sources:
+  - title: "SQLite: SQL Language Expressions (en inglés)"
+    url: https://www.sqlite.org/lang_expr.html
+  - title: "SQLite: NULL Handling (en inglés)"
+    url: https://www.sqlite.org/nulls.html
+---
+
+**NULL** es un marcador de ausencia de valor en SQL. Puede representar algo desconocido, todavía no registrado o no aplicable, según el diseño de la tabla. No equivale al número cero ni a un texto vacío.
+
+## Comparar una ausencia
+
+Estos ejemplos se ejecutan en orden en SQLite:
+
+```sql
+CREATE TABLE personas (nombre TEXT NOT NULL, edad INTEGER);
+INSERT INTO personas VALUES ('Ana', 0), ('Luis', NULL), ('Eva', 30);
+
+SELECT nombre FROM personas WHERE edad = NULL;
+SELECT nombre FROM personas WHERE edad IS NULL;
+```
+
+La primera consulta no devuelve ninguna fila. La segunda devuelve Luis. `=` compara valores; `IS NULL` pregunta específicamente por el marcador de ausencia.
+
+SQL utiliza **lógica de tres valores**: verdadero, falso y desconocido. Comparar una edad desconocida con 18 da desconocido. `WHERE` conserva solo las filas para las que la condición es verdadera.
+
+```sql
+SELECT nombre FROM personas WHERE edad >= 18;
+SELECT nombre FROM personas WHERE NOT (edad >= 18);
+```
+
+La primera devuelve Eva; la segunda, Ana. Luis no aparece en ninguna: negar una comparación desconocida sigue dando desconocido. Para incluirlo necesitas expresar esa decisión con `OR edad IS NULL`.
+
+## Contar y sustituir
+
+```sql
+SELECT COUNT(*), COUNT(edad) FROM personas;
+SELECT COALESCE(edad, -1) FROM personas WHERE nombre = 'Luis';
+```
+
+Los recuentos son 3 y 2: `COUNT(edad)` omite NULL. La última consulta devuelve -1 como sustitución explícita. Eso no convierte -1 en una edad conocida; solo cambia la presentación del resultado.
+
+Si un campo debe tener siempre un valor, declara `NOT NULL`. Y si necesitas distinguir «desconocido» de «no aplicable», diseña una representación explícita: un único NULL no explica por qué falta el dato.
+
+La [historia del tratamiento de información incompleta](/articulos/por-que-existe-null/) explica por qué desconocido y cero no pueden intercambiarse sin cambiar el significado.

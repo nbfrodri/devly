@@ -1,0 +1,69 @@
+---
+title: "¿Qué es la coherencia de caché?"
+description: "La coherencia coordina las copias de una ubicación de memoria que pueden conservar varias cachés de un equipo multinúcleo."
+level: avanzado
+layer: hardware
+prerequisites:
+  - memoria-cache-del-procesador
+  - procesadores-multinucleo
+updated: 2026-10-14
+sources:
+  - title: "Carnegie Mellon 15-418: Cache Coherence (en inglés)"
+    url: https://www.cs.cmu.edu/afs/cs/academic/class/15418-f24/www/lectures/10_cachecoherence.pdf
+---
+
+La **coherencia de caché** coordina las copias de una misma ubicación de memoria que pueden existir en las cachés de varios núcleos. Define cómo se propagan o invalidan esas copias cuando alguien escribe, para que no permanezcan indefinidamente versiones incompatibles.
+
+## El problema de tener varias copias
+
+Los núcleos A y B leen un contador que vale cero. Ambos pueden conservarlo en su caché. A escribe uno. Si B siguiera leyendo su copia antigua sin ninguna coordinación, no observaría el cambio aunque compartieran la misma memoria principal.
+
+La solución no consiste en prohibir cachés privadas ni en escribir cada operación inmediatamente en RAM. Un protocolo puede coordinar las copias y transferir datos entre cachés sin que la memoria principal esté siempre actualizada.
+
+## Lectores compartidos y escritor exclusivo
+
+Una idea común es permitir varias copias de lectura o una copia con permiso exclusivo para escribir. Antes de modificar, el núcleo obtiene los permisos necesarios e invalida otras copias cuando el protocolo lo exige.
+
+La unidad suele ser la **línea de caché**, no una variable individual. Dos variables cercanas pueden compartir línea y provocar tráfico de coherencia aunque pertenezcan a trabajos lógicamente independientes.
+
+Un protocolo simplificado como MSI utiliza tres estados: **modificado**, para una copia que contiene cambios no reflejados necesariamente en memoria; **compartido**, para copias legibles; e **inválido**, para una copia que no puede utilizarse. Existen protocolos con más estados y optimizaciones.
+
+## Una escritura paso a paso
+
+| Paso | Caché de A | Caché de B | Qué ocurre |
+| --- | --- | --- | --- |
+| Ambos leen cero | Compartida | Compartida | Dos copias de lectura |
+| A solicita escribir | Obtiene permiso de modificación | Se invalida | Se coordina la propiedad de la línea |
+| A escribe uno | Modificada, valor uno | Inválida | B no puede utilizar su antiguo cero |
+| B vuelve a leer | Cambia según el protocolo | Recibe una copia actualizada | Los datos pueden venir de otra caché |
+
+La tabla omite estados transitorios y mensajes concretos para mostrar la responsabilidad del protocolo. No pretende describir todos los procesadores con un único recorrido exacto.
+
+**¿Una línea modificada implica que RAM ya tiene el valor nuevo?** No. En una caché de escritura diferida puede mantenerse una copia más reciente en la jerarquía mientras el protocolo garantiza cómo obtenerla.
+
+## Cómo se encuentran las copias
+
+En esquemas de **observación compartida**, o *snooping*, las cachés observan peticiones sobre un medio de comunicación común. En esquemas con **directorio**, una estructura registra qué participantes pueden conservar copias y dirige la coordinación.
+
+Ambos necesitan tratar peticiones simultáneas y ordenar el acceso a una misma ubicación. Sus costes de mensajes, latencia y almacenamiento afectan a cómo escalan a más núcleos.
+
+## Coherencia no es consistencia
+
+La coherencia trata el acuerdo sobre una ubicación. La **consistencia de memoria** establece qué órdenes de observación se permiten entre operaciones, también sobre ubicaciones diferentes.
+
+Si un hilo escribe datos y luego una bandera, otro no puede deducir automáticamente que observar la bandera garantiza ver todos los datos sin seguir las reglas de sincronización del lenguaje y de la arquitectura. Una máquina coherente no convierte en correcto cualquier programa con accesos concurrentes.
+
+Utiliza primitivas del lenguaje, como bloqueos o operaciones atómicas con el contrato apropiado. No sustituyas ese contrato por una suposición sobre lo rápido que se comunicarán las cachés.
+
+## Falso compartido
+
+Cuando dos hilos actualizan variables distintas dentro de una misma línea, la propiedad puede desplazarse entre núcleos continuamente. Se llama **falso compartido**: la unidad física de coordinación es mayor que el dato lógico que cada hilo necesita.
+
+Reorganizar datos puede reducirlo, pero primero hay que medir. Separar todo por defecto también aumenta el espacio ocupado y puede perjudicar la localidad de otras operaciones.
+
+## Lo esencial
+
+- Varias cachés necesitan coordinar copias y permisos de escritura.
+- La memoria principal no tiene que estar actualizada tras cada escritura.
+- Coherencia por ubicación y consistencia entre operaciones son contratos diferentes.
+- Las líneas compartidas pueden producir costes aunque las variables sean distintas.
