@@ -3,7 +3,7 @@ title: ¿Qué es una dirección IP?
 description: Una dirección IP es el número que identifica a un dispositivo dentro de una red.
 level: basico
 layer: redes
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "RFC 791: Internet Protocol"
     url: https://www.rfc-editor.org/info/rfc791/
@@ -101,6 +101,8 @@ Una dirección que cambia se llama **dinámica**. Una **estática** es siempre l
 ## Direcciones y nombres
 
 Las personas no recuerdan números, así que escribimos nombres como `wikipedia.org`. Antes de conectarse, tu dispositivo consulta un servicio llamado [**DNS**](/articulos/que-es-dns/) que traduce ese nombre a la dirección IP correspondiente. El nombre es para ti; la IP es lo que usa la red.
+
+El tamaño de un paquete también está condicionado por la [MTU](/articulos/que-es-una-mtu/) de los enlaces del camino; poder enviarlo por el primer tramo no garantiza que quepa en los siguientes.
 
 ## Lo esencial
 

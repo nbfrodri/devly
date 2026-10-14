@@ -1,0 +1,29 @@
+---
+title: "¿Qué es el TTL en IP?"
+description: "El TTL limita cuánto puede seguir reenviándose un paquete IPv4 y evita que circule indefinidamente."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - enrutamiento
+updated: 2026-10-14
+sources:
+  - title: "RFC 791: Internet Protocol (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc791.html
+---
+
+El **TTL**, *Time To Live* o tiempo de vida, es un campo de la cabecera IPv4 que limita la vida del paquete en la red. Cada router lo reduce al reenviar; si se agota, descarta el paquete. Evita que un bucle de enrutamiento lo haga circular para siempre.
+
+## Un límite al recorrido
+
+Supón que sale con TTL 3. Después de pasar por un router queda 2; después de otro, 1. El siguiente no puede reenviarlo con un valor útil y lo descarta. Normalmente informa mediante un mensaje ICMP de tiempo excedido, aunque ese aviso puede filtrarse o limitarse.
+
+La definición original de IPv4 relaciona el campo con el tiempo y exige disminuirlo al menos en uno al procesar el datagrama. En la práctica funciona principalmente como límite de saltos. No debes interpretarlo como un cronómetro preciso en segundos de extremo a extremo.
+
+## Cómo lo aprovecha traceroute
+
+[Traceroute](/articulos/como-funciona-traceroute/) envía sondas con límites progresivos. Las respuestas de los equipos donde expiran permiten inferir saltos del camino. La ausencia de respuesta no demuestra que el tráfico normal tampoco pueda pasar.
+
+IPv6 utiliza un campo equivalente llamado **Hop Limit**, límite de saltos. El nombre expresa de forma más directa el uso habitual.
+
+No lo confundas con el **TTL de DNS**: ese valor indica durante cuánto tiempo puede conservarse en caché un registro DNS. Ambos limitan una vigencia, pero uno actúa sobre paquetes en tránsito y el otro sobre datos almacenados.

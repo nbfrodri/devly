@@ -1,0 +1,31 @@
+---
+title: "¿Qué es un cambio de contexto?"
+description: "Un cambio de contexto guarda el estado de ejecución de una tarea y restaura el de otra para continuarla."
+level: intermedio
+kind: definicion
+layer: sistemas
+prerequisites:
+  - planificador-de-procesos
+updated: 2026-10-14
+sources:
+  - title: "OSTEP: Limited Direct Execution (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf
+---
+
+Un **cambio de contexto** es la operación mediante la que el sistema guarda el estado necesario para reanudar una tarea y restaura el de otra. Permite que un procesador alterne entre ejecuciones sin que cada tarea tenga que empezar de nuevo.
+
+## Qué hay que conservar
+
+Piensa en dos hilos. Uno está sumando una lista y otro espera procesar un mensaje. Para interrumpir el primero y continuar el segundo, hace falta conservar registros, posición de ejecución y estado de pila, entre otros datos. Si pertenecen a procesos distintos, también puede cambiar el contexto de memoria.
+
+El [planificador](/articulos/planificador-de-procesos/) decide qué tarea debe ejecutarse; el mecanismo de cambio hace efectiva esa decisión. Son responsabilidades relacionadas, pero distintas.
+
+## Un coste que no hace trabajo de la aplicación
+
+Guardar y restaurar estado consume tiempo. También puede cambiar qué datos e instrucciones resultan útiles en las cachés. La repercusión depende del procesador, del sistema y de las cargas de trabajo: no existe una cifra universal aplicable a cualquier cambio.
+
+Por eso crear muchos más hilos de los necesarios puede empeorar el rendimiento. El problema no es únicamente repartir el tiempo, sino gastar demasiado en alternar y recuperar datos.
+
+## No es cualquier salto del programa
+
+Llamar a una función no cambia automáticamente la tarea planificada. Entrar en el núcleo mediante una llamada al sistema tampoco obliga a seleccionar otro hilo: puede volver al mismo. Del mismo modo, una interrupción puede atenderse y devolver el control a la ejecución interrumpida sin un cambio entre tareas.

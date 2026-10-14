@@ -1,0 +1,31 @@
+---
+title: "¿De dónde vienen big-endian y little-endian?"
+description: "Danny Cohen utilizó una disputa de Los viajes de Gulliver para explicar el desacuerdo sobre el orden de bytes."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - endianness
+updated: 2026-10-14
+sources:
+  - title: "Danny Cohen: On Holy Wars and a Plea for Peace, IEN 137, 1980 (en inglés)"
+    url: https://history.rfc-editor.org/ien/ien137.txt
+---
+
+Los nombres **big-endian** y **little-endian** recuerdan una disputa ficticia sobre por qué extremo abrir un huevo. Danny Cohen la utilizó en su documento de 1980 *On Holy Wars and a Plea for Peace* para hablar de desacuerdos reales sobre la representación de datos.
+
+La referencia procede de *Los viajes de Gulliver*, de Jonathan Swift. Cohen trasladó la imagen a dos formas de ordenar bytes: empezar por el extremo más significativo o por el menos significativo.
+
+## Un desacuerdo pequeño con efectos grandes
+
+El número hexadecimal `0x1234` puede escribirse como los bytes `12 34` o `34 12`. Ambos convenios funcionan si quien escribe y quien lee están de acuerdo. El problema aparece al comunicar sistemas que interpretan esos bytes con reglas distintas.
+
+La historia ayuda a recordar que [endianness](/articulos/endianness/) no describe dos valores matemáticos distintos. Describe dos representaciones del mismo valor. El orden debe conocerse antes de interpretar el mensaje.
+
+## Acordar la frontera
+
+No hace falta que todas las máquinas tengan el mismo orden nativo para intercambiar datos. Un protocolo o un formato puede establecer uno, y cada participante convierte al escribir y al leer.
+
+Esa decisión forma parte del contrato. Decir «aquí van dos bytes» no explica qué significan, como tampoco basta con decir «aquí va un número» sin especificar tamaño y signo.
+
+La petición de paz del título no elimina los costes de las conversiones ni las diferencias técnicas entre arquitecturas. Subraya una idea más útil para el desarrollo cotidiano: cuando hay representaciones diferentes, documenta y comprueba el acuerdo en la frontera en lugar de asumir que el receptor piensa como tu máquina.

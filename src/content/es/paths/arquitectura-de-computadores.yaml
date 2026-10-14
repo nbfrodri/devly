@@ -9,6 +9,7 @@ steps:
   - segmentacion-del-procesador
   - memoria-cache-del-procesador
   - procesadores-multinucleo
+  - la-ley-de-amdahl
   - interrupciones-y-entrada-salida
   - la-placa-base-y-los-buses
   - que-es-una-fpga

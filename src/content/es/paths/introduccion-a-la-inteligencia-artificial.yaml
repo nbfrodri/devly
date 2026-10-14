@@ -14,7 +14,9 @@ steps:
   - regularizacion-y-dropout
   - como-se-evalua-un-modelo-de-clasificacion
   - que-es-una-red-neuronal
+  - tensores-en-aprendizaje-automatico
   - descenso-del-gradiente
+  - checkpoints-de-modelos
   - retropropagacion
   - redes-convolucionales
   - aprendizaje-por-refuerzo

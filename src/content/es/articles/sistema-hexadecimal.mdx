@@ -128,6 +128,8 @@ Cada componente va de `00` a `ff`, de nada a todo. `#ff8800` es rojo al máximo,
 - **Olvidar la base al convertir.** `parseInt("10")` da 10; `parseInt("10", 16)` da 16.
 - **Pensar que es otro tipo de número.** El valor es el mismo; cambia la forma de escribirlo.
 
+Al guardar un número en varios bytes, su orden debe especificarse: eso es el [endianness](/articulos/endianness/). El orden de los bytes no cambia el valor matemático que se pretende representar.
+
 ## Lo esencial
 
 - El hexadecimal escribe los números en base 16, con las cifras del 0 al 9 y las letras de la A a la F.

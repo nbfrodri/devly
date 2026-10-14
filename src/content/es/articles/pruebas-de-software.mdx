@@ -5,7 +5,7 @@ level: basico
 layer: aplicaciones
 prerequisites:
   - funciones
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "Martin Fowler: Test Pyramid (en inglés)"
     url: https://martinfowler.com/bliki/TestPyramid.html
@@ -139,6 +139,8 @@ Los tipos de prueba según su alcance se comparan en [pruebas unitarias, de inte
 ## Comprobar una expectativa
 
 Cada comprobación explícita de una condición esperada es una [aserción](/articulos/que-es-una-asercion/). En las pruebas conviene expresar resultados observables, como el valor devuelto o el error esperado, para que una refactorización interna no rompa comprobaciones innecesarias.
+
+Una [prueba intermitente](/articulos/pruebas-intermitentes/) puede pasar o fallar según tiempos, orden o estado compartido. Repetirla hasta que pase no explica la causa.
 
 ## Lo esencial
 

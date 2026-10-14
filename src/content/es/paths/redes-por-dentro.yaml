@@ -11,9 +11,13 @@ steps:
   - puerta-de-enlace-predeterminada
   - protocolos-de-enrutamiento
   - como-funciona-traceroute
+  - ttl-en-ip
+  - que-es-una-direccion-ip
+  - que-es-una-mtu
   - subredes-y-cidr
   - que-es-nat
   - tcp-y-udp
   - ancho-de-banda-latencia-y-rendimiento
+  - jitter-de-red
   - proxy-y-proxy-inverso
   - como-viaja-un-paquete-por-internet

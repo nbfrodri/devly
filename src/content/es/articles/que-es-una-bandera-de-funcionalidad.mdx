@@ -1,0 +1,33 @@
+---
+title: "¿Qué es una bandera de funcionalidad?"
+description: "Una bandera permite activar un comportamiento sin desplegar otra versión del programa."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - estrategias-de-despliegue
+updated: 2026-10-14
+sources:
+  - title: "Pete Hodgson: Feature Toggles, Martin Fowler (en inglés)"
+    url: https://martinfowler.com/articles/feature-toggles.html
+---
+
+Una **bandera de funcionalidad**, o *feature flag*, es una decisión configurable que activa o desactiva un comportamiento del programa. Permite separar instalar código de hacerlo disponible para quienes lo utilizan.
+
+## Código instalado, comportamiento controlado
+
+Imagina que despliegas un buscador nuevo. La versión contiene tanto el buscador anterior como el nuevo. Una bandera decide cuál recibe cada petición. Puedes empezar con un grupo pequeño, observar los resultados y ampliar el acceso sin volver a desplegar el programa.
+
+No todas las banderas son un booleano global. La decisión puede depender del entorno o de un grupo estable de usuarios. Lo importante es que resulte predecible: si una persona cambia de grupo en cada petición, medir la experiencia y diagnosticar errores se vuelve difícil.
+
+## No sustituye a los permisos
+
+Ocultar un botón mediante una bandera no impide llamar a su API. Las decisiones de [autorización](/articulos/autenticacion-y-autorizacion/) deben comprobarse donde se ejecuta la operación. La bandera gestiona disponibilidad del comportamiento, no concede por sí sola acceso seguro.
+
+Tampoco es un reemplazo automático de una estrategia de despliegue. Desactivar una función no revierte una migración ni recupera los datos que haya modificado.
+
+## Su coste
+
+Cada bandera añade caminos que probar y mantener. Conviene asignarle una finalidad, un responsable y una condición de retirada. Una bandera temporal de lanzamiento que nunca se elimina acaba convirtiéndose en deuda técnica: nadie sabe si todavía es seguro cambiarla.
+
+Para una operación urgente de desactivación, comprueba además cómo se propaga la configuración y qué ocurre si el servicio que decide la bandera deja de responder.

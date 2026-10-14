@@ -37,6 +37,23 @@ Un cocinero que prepara tres platos, atendiendo cada uno mientras los otros se h
 
 La concurrencia es una forma de **organizar** el programa. El paralelismo es una forma de **ejecutarlo**, y requiere hardware con varios núcleos.
 
+### El mismo trabajo con uno o dos núcleos
+
+Imagina dos tareas A y B que necesitan diez milisegundos de CPU cada una, sin esperar a red o disco. En un núcleo puedes alternar cinco milisegundos de A, cinco de B y repetir. Ambas progresan de forma concurrente, pero el trabajo total sigue necesitando veinte milisegundos de CPU, más el coste de alternar.
+
+En dos núcleos puedes ejecutar A y B simultáneamente. Si son independientes y no aparecen otros costes, ambas acabarían en unos diez milisegundos. El paralelismo reduce el tiempo de ese cálculo; intercalarlo no crea capacidad adicional.
+
+| Criterio | Concurrencia | Paralelismo |
+| --- | --- | --- |
+| Pregunta principal | Cómo organizar varios trabajos en curso | Cómo ejecutarlos simultáneamente |
+| Un único núcleo | Puede ofrecerla intercalando | No ejecuta dos hilos de CPU simultáneamente |
+| Ventaja típica | Aprovechar esperas y mantener respuesta | Acelerar trabajo divisible |
+| Coste relevante | Coordinación y cambios de contexto | Reparto, comunicación y sincronización |
+
+Si A pasa diez milisegundos esperando una respuesta, el único núcleo puede aprovechar esa espera para ejecutar B. Esa mejora proviene de solapar espera y trabajo, no de hacer dos cálculos a la vez en el mismo núcleo. Para decidir, distingue primero una carga limitada por CPU de otra limitada por entrada y salida.
+
+Añadir núcleos tampoco garantiza una aceleración proporcional: la [ley de Amdahl](/articulos/la-ley-de-amdahl/) recuerda que el trabajo secuencial sigue limitando el conjunto.
+
 ## Qué es un hilo
 
 Un proceso tiene al menos un hilo, el principal. Puede crear más.

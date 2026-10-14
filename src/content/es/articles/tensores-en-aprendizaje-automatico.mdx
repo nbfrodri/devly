@@ -1,0 +1,30 @@
+---
+title: "¿Qué es un tensor en aprendizaje automático?"
+description: "Un tensor organiza datos en ejes y dimensiones para calcular con lotes, imágenes y parámetros de modelos."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - arrays
+  - que-es-una-red-neuronal
+updated: 2026-10-14
+sources:
+  - title: "PyTorch: Tensors, tutorial oficial (en inglés)"
+    url: https://docs.pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html
+---
+
+En aprendizaje automático, un **tensor** es una estructura de datos que organiza valores en cero o más ejes. Generaliza la idea de un escalar, un vector o una matriz y permite aplicar operaciones numéricas a conjuntos de datos estructurados.
+
+## Forma y dimensiones
+
+La **forma**, o *shape*, indica el tamaño de cada eje. Una tabla con dos filas y tres columnas tiene forma `(2, 3)`, dos ejes y seis elementos.
+
+Un lote de ocho imágenes de 32 por 32 píxeles y tres canales de color podría tener forma `(8, 32, 32, 3)`. Otra biblioteca puede esperar `(8, 3, 32, 32)`. La cantidad de elementos coincide, pero el significado de los ejes cambia. Es imprescindible conocer el orden que espera el modelo.
+
+## No es solo un array anidado
+
+Las bibliotecas también mantienen el tipo numérico, el dispositivo donde están los datos y detalles de su disposición en memoria. Un tensor puede operar en CPU o GPU; trasladarlo entre ambas tiene un coste.
+
+Cambiar su forma no equivale a cambiar el significado de los datos. **Reorganizar la forma** conservando la secuencia de elementos y **permutar ejes** son operaciones diferentes. Confundirlas puede producir resultados numéricamente válidos pero incorrectos para la tarea.
+
+Tampoco cualquier tensor representa datos de entrada: los parámetros y activaciones de una red suelen ser tensores. Y la palabra tiene un significado matemático más específico fuera de este uso práctico; aquí describe la estructura numérica utilizada por las bibliotecas de aprendizaje automático.

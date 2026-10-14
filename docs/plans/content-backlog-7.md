@@ -8,7 +8,7 @@ El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 
 
 ## Estado de ejecución
 
-Primera tanda: 14 tareas resueltas, con 13 artículos nuevos y la ampliación del problema de la parada en `maquina-de-turing`. El resto permanece pendiente.
+Dos tandas: **46 de 99 tareas resueltas**, con 34 artículos nuevos y ampliaciones de los existentes. Están cubiertas las 29 definiciones, seis conceptos, cinco comparaciones y seis curiosidades. Las casillas restantes siguen pendientes. La revisión visual en navegador queda pendiente: la sesión no dispone de un navegador conectado.
 
 ## Huecos detectados
 
@@ -90,8 +90,8 @@ Primera tanda: 14 tareas resueltas, con 13 artículos nuevos y la ampliación de
 ### Programación y herramientas
 
 - [x] ¿Qué es el ámbito de una variable? (variables y clausuras)
-- [ ] ¿Qué es una función pura? (programación funcional e inmutabilidad)
-- [ ] ¿Qué es un efecto secundario? (funciones y manejo de estado)
+- [x] ¿Qué es una función pura? (programación funcional e inmutabilidad) Cubierta y ampliada en `programacion-funcional`.
+- [x] ¿Qué es un efecto secundario? (funciones y manejo de estado) Cubierto y ampliado en `programacion-funcional`.
 - [x] ¿Qué es una aserción? (pruebas de software; distinguirla de validar entradas)
 - [x] ¿Qué es un iterador? (bucles y estructuras de datos)
 - [x] ¿Qué es un generador? (iteradores; definir después del anterior)
@@ -99,43 +99,43 @@ Primera tanda: 14 tareas resueltas, con 13 artículos nuevos y la ampliación de
 
 ### Aplicaciones e ingeniería
 
-- [ ] ¿Qué es un origen web? (CORS y almacenamiento en el navegador; esquema, host y puerto)
-- [ ] ¿Qué es la hidratación de una página? (SPA, MPA y renderizado en servidor)
-- [ ] ¿Qué es una bandera de funcionalidad? (estrategias de despliegue)
-- [ ] ¿Qué es una condición de aceptación? (requisitos y pruebas)
-- [ ] ¿Qué es una prueba flaky o intermitente? (pruebas de software y CI/CD)
+- [x] ¿Qué es un origen web? (CORS y almacenamiento en el navegador; esquema, host y puerto)
+- [x] ¿Qué es la hidratación de una página? (SPA, MPA y renderizado en servidor)
+- [x] ¿Qué es una bandera de funcionalidad? (estrategias de despliegue)
+- [x] ¿Qué es una condición de aceptación? (requisitos y pruebas)
+- [x] ¿Qué es una prueba flaky o intermitente? (pruebas de software y CI/CD)
 
 ### Datos y estadística
 
 - [x] ¿Qué es NULL en SQL? (SQL; valor desconocido y lógica de tres valores)
 - [x] ¿Qué es la cardinalidad en una consulta? (planes de ejecución; no confundirla con cardinalidad de relaciones)
 - [x] ¿Qué es una clave candidata? (modelo entidad-relación y clave primaria)
-- [ ] ¿Qué es un valor atípico? (preparación de datos y estadística descriptiva)
-- [ ] ¿Qué es una semilla aleatoria? (números pseudoaleatorios y reproducibilidad)
+- [x] ¿Qué es un valor atípico? (preparación de datos y estadística descriptiva)
+- [x] ¿Qué es una semilla aleatoria? (números pseudoaleatorios y reproducibilidad) Ampliada la cobertura de reproducibilidad en `numeros-aleatorios-y-pseudoaleatorios`.
 
 ### Sistemas y redes
 
-- [ ] ¿Qué es un descriptor de archivo? (archivos y llamadas al sistema)
-- [ ] ¿Qué es un inodo? (sistema de archivos; extraer solo si aporta claridad respecto al apartado existente)
-- [ ] ¿Qué es un cambio de contexto? (planificador de procesos)
-- [ ] ¿Qué es una MTU? (IP y recorrido de un paquete)
-- [ ] ¿Qué es el jitter de una red? (latencia y telecomunicaciones; distinguirlo del jitter de los reintentos)
-- [ ] ¿Qué es el TTL en IP? (traceroute; diferenciarlo del TTL de una caché DNS)
+- [x] ¿Qué es un descriptor de archivo? (archivos y llamadas al sistema)
+- [x] ¿Qué es un inodo? (sistema de archivos; extraer solo si aporta claridad respecto al apartado existente) Ampliado `sistema-de-archivos`, incluido su ciclo de vida y ámbito de identificación.
+- [x] ¿Qué es un cambio de contexto? (planificador de procesos)
+- [x] ¿Qué es una MTU? (IP y recorrido de un paquete)
+- [x] ¿Qué es el jitter de una red? (latencia y telecomunicaciones; distinguirlo del jitter de los reintentos)
+- [x] ¿Qué es el TTL en IP? (traceroute; diferenciarlo del TTL de una caché DNS)
 
 ### Hardware e IA
 
-- [ ] ¿Qué es el endianness? (bytes y representación de enteros)
-- [ ] ¿Qué es un fallo de caché? (jerarquía de memoria)
-- [ ] ¿Qué es un lote o batch de entrenamiento? (épocas e hiperparámetros)
-- [ ] ¿Qué es la tasa de aprendizaje? (descenso del gradiente)
-- [ ] ¿Qué es un checkpoint de un modelo? (entrenamiento y MLOps)
-- [ ] ¿Qué es un tensor en aprendizaje automático? (redes neuronales; formas y dimensiones con un ejemplo)
+- [x] ¿Qué es el endianness? (bytes y representación de enteros)
+- [x] ¿Qué es un fallo de caché? (jerarquía de memoria)
+- [x] ¿Qué es un lote o batch de entrenamiento? (épocas e hiperparámetros) Ampliado `que-es-una-epoca-de-entrenamiento` con tamaño, último lote y acumulación.
+- [x] ¿Qué es la tasa de aprendizaje? (descenso del gradiente) Ampliado `descenso-del-gradiente` con escala y programación de la tasa.
+- [x] ¿Qué es un checkpoint de un modelo? (entrenamiento y MLOps)
+- [x] ¿Qué es un tensor en aprendizaje automático? (redes neuronales; formas y dimensiones con un ejemplo)
 
 ## Comparaciones
 
 ### Programación y pruebas
 
-- [ ] Diferencias entre concurrencia y paralelismo (ampliar la distinción de hilos y concurrencia con el mismo trabajo ejecutado de ambas formas)
+- [x] Diferencias entre concurrencia y paralelismo (ampliar la distinción de hilos y concurrencia con el mismo trabajo ejecutado de ambas formas) Ampliado `hilos-y-concurrencia` con el mismo trabajo y una tabla.
 - [ ] Diferencias entre código síncrono y asíncrono (promesas y bucle de eventos; no confundir asincronía con paralelismo)
 - [ ] Diferencias entre un mutex y un semáforo (bloqueos y nuevo artículo de semáforos)
 - [ ] Diferencias entre igualdad e identidad (objetos, referencias y paso de argumentos; declarar el lenguaje de los ejemplos)
@@ -144,8 +144,8 @@ Primera tanda: 14 tareas resueltas, con 13 artículos nuevos y la ampliación de
 
 ### Aplicaciones y datos
 
-- [ ] Diferencias entre desplegar y lanzar una funcionalidad (CI/CD, estrategias de despliegue y banderas de funcionalidad)
-- [ ] Diferencias entre ETL y ELT (procesos ETL y almacenes de datos)
+- [x] Diferencias entre desplegar y lanzar una funcionalidad (CI/CD, estrategias de despliegue y banderas de funcionalidad) Ampliado `estrategias-de-despliegue` con tabla y límites de reversión.
+- [x] Diferencias entre ETL y ELT (procesos ETL y almacenes de datos) Ampliado y corregido `procesos-etl`.
 - [ ] Diferencias entre procesamiento por lotes y en streaming (MapReduce, Spark y Kafka)
 - [ ] Diferencias entre bloqueo optimista y pesimista (aislamiento y MVCC; resolver la misma actualización concurrente)
 - [ ] Diferencias entre una vista normal y una vista materializada (vistas y procedimientos almacenados; no repetir vista frente a tabla)
@@ -155,14 +155,14 @@ Primera tanda: 14 tareas resueltas, con 13 artículos nuevos y la ampliación de
 
 - [ ] Diferencias entre control de flujo y control de congestión (TCP; receptor frente a red)
 - [ ] Diferencias entre ancho de banda en hercios y tasa de bits (modulación; aclarar las unidades sin repetir latencia y rendimiento)
-- [ ] Diferencias entre enlaces duros y simbólicos (sistema de archivos; ampliar el apartado actual con borrado y cambio de destino)
+- [x] Diferencias entre enlaces duros y simbólicos (sistema de archivos; ampliar el apartado actual con borrado y cambio de destino) Ampliado `sistema-de-archivos` con renombrado, cambio de destino y tabla.
 - [ ] Diferencias entre interrupciones y sondeo de dispositivos (interrupciones y E/S; no confundir con polling HTTP)
 - [ ] Diferencias entre disponibilidad y durabilidad (almacenamiento de objetos, réplicas y copias de seguridad)
 - [ ] Diferencias entre SLI, SLO y SLA (observabilidad y presupuestos de error)
 
 ### IA y análisis de datos
 
-- [ ] Diferencias entre validación y prueba de un modelo (validación cruzada; uso de cada conjunto y fuga de datos)
+- [x] Diferencias entre validación y prueba de un modelo (validación cruzada; uso de cada conjunto y fuga de datos) Ampliado `validacion-cruzada` con ejemplo de selección y tabla.
 - [ ] Diferencias entre bagging y boosting (bosques aleatorios y gradient boosting; escribir después de ambos conceptos)
 - [ ] Diferencias entre entrenar desde cero, ajustar y destilar un modelo (ajuste fino y transferencia; explicar destilación antes de comparar)
 - [ ] Diferencias entre inferencia por lotes y en tiempo real (inferencia y MLOps; latencia, coste y actualización)
@@ -174,19 +174,19 @@ Cada propuesta debe conectar la historia con un concepto. Las pistas documentale
 - [ ] El error de división del Pentium: ¿cómo puede equivocarse un procesador? (coma flotante y validación de hardware; buscar documentación técnica de Intel)
 - [ ] El fallo del Ariane 5: cuando reutilizar software cambia las suposiciones (conversiones numéricas y requisitos; investigar el informe de la comisión de investigación de la ESA)
 - [ ] Therac-25: qué puede pasar cuando el software controla una máquina (concurrencia y seguridad; contrastar los estudios originales de los incidentes)
-- [ ] La misión Mars Climate Orbiter y las unidades de medida (contratos de interfaz y pruebas; investigar el informe de la NASA)
-- [ ] ¿Qué ocurrió con los paquetes de ARPANET el 1 de enero de 1983? (TCP/IP e historia de internet; buscar documentación de la transición desde NCP)
+- [x] La misión Mars Climate Orbiter y las unidades de medida (contratos de interfaz y pruebas; investigar el informe de la NASA)
+- [x] ¿Qué ocurrió con los paquetes de ARPANET el 1 de enero de 1983? (TCP/IP e historia de internet; buscar documentación de la transición desde NCP)
 - [ ] ¿Por qué Ethernet se llama Ethernet? (capa de enlace; investigar el memorando y los trabajos originales de sus creadores)
 - [ ] ¿Cómo se eligió la longitud de una dirección IPv4? (IPv4 e IPv6; distinguir decisiones documentadas de explicaciones retrospectivas)
-- [ ] ¿De dónde viene el nombre «SQL»? (SQL e historia de las bases de datos; investigar SEQUEL y System R)
-- [ ] El artículo que propuso las bases de datos relacionales (modelo relacional y normalización; investigar el trabajo de Codd y su contexto)
+- [x] ¿De dónde viene el nombre «SQL»? (SQL e historia de las bases de datos; investigar SEQUEL y System R)
+- [x] El artículo que propuso las bases de datos relacionales (modelo relacional y normalización; investigar el trabajo de Codd y su contexto)
 - [ ] ¿Por qué existe el valor NULL? (NULL y lógica de tres valores; investigar su diseño, sin reducirlo a «un dato vacío»)
 - [ ] ¿Qué es la paradoja de Simpson? (correlación, causalidad y agregación; ejemplo numérico reproducible y fuente académica)
 - [ ] La paradoja del cumpleaños y las colisiones de hash (probabilidad y tablas hash; calcular el caso y distinguir colisión de ataque)
-- [ ] ¿De dónde vienen big-endian y little-endian? (endianness; investigar el texto original de Danny Cohen)
+- [x] ¿De dónde vienen big-endian y little-endian? (endianness; investigar el texto original de Danny Cohen)
 - [ ] ¿Qué fue ELIZA y por qué parecía entender? (modelos de lenguaje y test de Turing; investigar el artículo original de Weizenbaum)
 - [ ] ¿Qué aprendió realmente el perceptrón? (redes neuronales e inviernos de la IA; investigar trabajos originales, sin atribuir el invierno a una sola causa)
-- [ ] La ley de Amdahl: por qué duplicar los núcleos no duplica la velocidad (multinúcleo y paralelismo; investigar el trabajo original y reproducir un cálculo)
+- [x] La ley de Amdahl: por qué duplicar los núcleos no duplica la velocidad (multinúcleo y paralelismo; investigar el trabajo original y reproducir un cálculo)
 
 ## Orden de trabajo y rutas
 

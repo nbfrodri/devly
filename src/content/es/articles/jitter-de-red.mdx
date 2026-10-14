@@ -1,0 +1,29 @@
+---
+title: "¿Qué es el jitter de una red?"
+description: "El jitter describe la variación del retardo de los paquetes, importante en audio y vídeo en tiempo real."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - ancho-de-banda-latencia-y-rendimiento
+updated: 2026-10-14
+sources:
+  - title: "RFC 3393: IP Packet Delay Variation Metric (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc3393.html
+---
+
+El **jitter** de una red es la variación del retardo entre paquetes. Una conexión puede tener una latencia media aceptable y, aun así, entregar paquetes con tiempos muy irregulares, perjudicando una llamada o una transmisión en directo.
+
+## Regularidad además de rapidez
+
+Imagina que cuatro paquetes tardan 20, 20, 20 y 20 milisegundos. En otra conexión tardan 5, 35, 5 y 35. Ambas tienen una media de 20, pero la segunda presenta más variación. La media no cuenta toda la experiencia.
+
+El retardo cambia cuando los paquetes encuentran colas diferentes, variaciones de carga o cambios de recorrido. No implica necesariamente que se hayan perdido: pueden llegar todos, pero demasiado tarde para reproducirlos en su momento previsto.
+
+## Amortiguar tiene un precio
+
+Un **búfer de jitter** retiene temporalmente los paquetes para reproducirlos con una cadencia más regular. Esperar más permite absorber variaciones mayores, a cambio de añadir latencia. Para una conversación, ese intercambio no puede crecer sin límite.
+
+No hay una única medida universal llamada jitter: hay métricas concretas de variación del retardo y sus resultados dependen de cómo se calculan. Al comparar herramientas, comprueba la definición utilizada y si mide una dirección o un recorrido de ida y vuelta.
+
+Tampoco es el mismo uso del término que añadir una espera aleatoria a los **reintentos**. En ese caso se introduce variación deliberada para que muchos clientes no repitan una petición al mismo tiempo. En una red de tiempo real, en cambio, la variación de llegada es algo que se intenta gestionar.

@@ -4,9 +4,12 @@ layer: aplicaciones
 steps:
   - control-de-versiones-con-git
   - pruebas-de-software
+  - que-es-una-asercion
+  - pruebas-intermitentes
   - desarrollo-guiado-por-pruebas
   - integracion-y-despliegue-continuos
   - estrategias-de-despliegue
+  - que-es-una-bandera-de-funcionalidad
   - que-es-docker
   - variables-de-entorno-y-secretos
   - contenedores-y-maquinas-virtuales

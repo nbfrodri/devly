@@ -4,6 +4,8 @@ layer: hardware
 steps:
   - que-es-un-bit
   - sistema-hexadecimal
+  - que-es-un-byte
+  - endianness
   - complemento-a-dos
   - codificacion-de-caracteres
   - por-que-0-1-mas-0-2-no-da-0-3

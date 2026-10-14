@@ -1,0 +1,31 @@
+---
+title: "¿Qué es una condición de aceptación?"
+description: "Una condición de aceptación expresa un resultado observable que debe cumplir una funcionalidad para darse por válida."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - requisitos-funcionales-y-no-funcionales
+updated: 2026-10-14
+sources:
+  - title: "Agile Alliance: Acceptance Testing (en inglés)"
+    url: https://agilealliance.org/glossary/acceptance-testing/
+---
+
+Una **condición de aceptación** es un criterio comprobable que permite decidir si una funcionalidad satisface una necesidad acordada. Describe un resultado observable, no necesariamente cómo implementar el código.
+
+## De una petición a un ejemplo
+
+«El filtro de precios debe funcionar bien» deja demasiadas preguntas abiertas. Para una tienda podrías acordar: «Dado un catálogo con productos de 10, 20 y 30 euros, cuando se fija un máximo de 20, aparecen los de 10 y 20 y se excluye el de 30».
+
+Ese ejemplo aclara que el máximo está incluido. También proporciona los datos, la acción y el resultado con los que una persona o una prueba automática pueden comprobarlo.
+
+Necesitarás condiciones adicionales para un filtro vacío, una combinación con otras categorías o un valor inválido, si esas situaciones forman parte del requisito. Ningún ejemplo aislado demuestra por sí solo toda la funcionalidad.
+
+## No es una lista de tareas técnicas
+
+«Crear un componente», «añadir una columna» o «escribir una función» describe trabajo interno. Puedes completar esas tareas y seguir sin satisfacer la necesidad de quien usa el producto.
+
+Tampoco equivale a una definición general de terminado, que puede exigir revisión, documentación o accesibilidad para cualquier cambio. Las condiciones de aceptación concretan el comportamiento de esta funcionalidad.
+
+Lo útil es acordarlas antes de implementar, junto con quienes conocen el problema. Las [pruebas de aceptación](/articulos/pruebas-de-software/) comprueban esos criterios; automatizarlas ayuda a detectar regresiones, pero no sustituye conversar sobre un requisito ambiguo.

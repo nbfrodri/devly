@@ -1,0 +1,29 @@
+---
+title: "¿Qué es un valor atípico?"
+description: "Un valor atípico se aparta del patrón de los datos y exige investigar su contexto antes de corregirlo o excluirlo."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - media-mediana-y-desviacion
+updated: 2026-10-14
+sources:
+  - title: "NIST: What Are Outliers in the Data? (en inglés)"
+    url: https://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm
+---
+
+Un **valor atípico**, u *outlier*, es una observación que se aparta de manera llamativa del patrón del resto de los datos, según el contexto y el criterio de análisis. Es una señal para investigar, no una prueba automática de error.
+
+## El contexto cambia la interpretación
+
+En los importes `10, 11, 12, 12, 500`, el 500 destaca. Quizá alguien escribió céntimos donde se esperaban euros; quizá es una compra real de un cliente grande. Borrarlo sin investigar puede ocultar precisamente el fenómeno que necesitas entender.
+
+Un valor también puede ser atípico por su combinación con otros. Una temperatura de 30 grados puede ser normal en verano y excepcional para un lugar y una fecha concretos. Examinar una columna aislada no siempre basta.
+
+## Detectar no es decidir
+
+Los gráficos y reglas estadísticas ayudan a señalar candidatos. Por ejemplo, un diagrama de caja suele marcar observaciones alejadas del rango central. Esa regla depende de la distribución y no es una ley que separe datos válidos e inválidos.
+
+Antes de excluir una observación, revisa su origen, unidades, fecha y proceso de medición. Si es un error corregible, conserva la corrección y su motivo. Si es válido, puedes utilizar medidas robustas, como la mediana, o un modelo adecuado para colas largas.
+
+No confundas valor atípico con dato ausente ni con fraude. Un dato extremo puede ser legítimo. Al [preparar datos para un modelo](/articulos/preparacion-de-datos/), documenta la decisión y evita elegir reglas mirando los resultados del conjunto de prueba.

@@ -1,0 +1,33 @@
+---
+title: "¿Qué es un checkpoint de un modelo?"
+description: "Un checkpoint conserva el estado de un entrenamiento para recuperar o reutilizar el modelo en ese punto."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - descenso-del-gradiente
+updated: 2026-10-14
+sources:
+  - title: "PyTorch: Saving and Loading Models (en inglés)"
+    url: https://docs.pytorch.org/tutorials/beginner/saving_loading_models.html
+---
+
+Un **checkpoint** es una instantánea guardada del estado de un modelo y, según la finalidad, de su entrenamiento. Permite recuperar un punto anterior sin repetir todo el trabajo desde el principio.
+
+## Guardar para usar o para continuar
+
+Si solo quieres hacer inferencia, puede bastar con los parámetros aprendidos y la información necesaria para reconstruir el modelo y preparar sus entradas. Para continuar entrenando, normalmente hace falta más: estado del optimizador, paso o época, programación de la tasa de aprendizaje y otros estados relevantes.
+
+Por ejemplo, un optimizador puede acumular información de gradientes anteriores. Restaurar solo los pesos conserva la función que calcula el modelo, pero no reproduce necesariamente la trayectoria de aprendizaje que habría seguido sin interrupción.
+
+## El último no siempre es el mejor
+
+Puedes guardar el último checkpoint para recuperar un trabajo interrumpido y otro seleccionado por su rendimiento de validación. Si el entrenamiento empieza a sobreajustar, la instantánea más reciente puede generalizar peor.
+
+Conviene guardar también la configuración, versiones y procedencia de los datos. Un archivo de pesos sin contexto puede resultar imposible de utilizar correctamente meses después.
+
+## No es una garantía completa
+
+Un checkpoint no sustituye la evaluación ni garantiza reproducibilidad exacta entre equipos y bibliotecas. Tampoco constituye por sí solo una copia de seguridad de todo el sistema: puede faltar el código, el preprocesamiento o los datos necesarios para reconstruirlo.
+
+Mantén separados el objetivo de recuperar el entrenamiento, el de distribuir un modelo para inferencia y el de conservar un historial verificable. Cada uno necesita información distinta.

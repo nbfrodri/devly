@@ -1,0 +1,30 @@
+---
+title: "¿Qué cambió en ARPANET el 1 de enero de 1983?"
+description: "La transición de NCP a TCP/IP necesitó preparación, pruebas y una fecha común de cambio."
+level: basico
+kind: curiosidad
+layer: redes
+prerequisites:
+  - modelos-osi-y-tcp-ip
+  - historia-de-internet
+updated: 2026-10-14
+sources:
+  - title: "RFC 801: NCP/TCP Transition Plan, 1981 (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc801.html
+---
+
+El 1 de enero de 1983 fue la fecha fijada para completar la transición de los equipos de ARPANET desde **NCP**, el protocolo anterior de comunicación entre hosts, a **TCP/IP**. El RFC 801, publicado en 1981, describe la preparación y el calendario del cambio.
+
+La fecha suele recordarse como un hito de internet. El documento muestra algo menos espectacular pero importante: no bastaba con anunciar un protocolo nuevo y esperar que todos los equipos lo adoptaran al mismo tiempo.
+
+## Una migración coordinada
+
+El plan incluía instalaciones previas, servicios que debían estar disponibles, pruebas y periodos para comprobar el funcionamiento sin NCP. El problema era de compatibilidad: una máquina preparada no podía comunicarse como se esperaba si los servicios de los que dependía seguían utilizando exclusivamente el protocolo anterior.
+
+Esa dificultad también aparece cuando hoy migras una API o un formato de mensajes. Hay que identificar productores, consumidores y servicios auxiliares, además de probar qué ocurre al retirar el mecanismo viejo.
+
+## Una fecha no es toda la historia
+
+El RFC documenta un plan, no un registro exhaustivo del estado final de cada máquina. Tampoco significa que aquel día nacieran de golpe todas las redes o todos los servicios de internet. Existían desarrollos anteriores y siguieron cambiando después.
+
+Lo que ayuda a recordar es el papel de [TCP/IP](/articulos/modelos-osi-y-tcp-ip/) en conectar sistemas y redes mediante acuerdos comunes. Un protocolo solo resulta útil cuando sus participantes lo implementan de forma compatible, y cambiar ese acuerdo exige tanto ingeniería de transición como especificaciones.
