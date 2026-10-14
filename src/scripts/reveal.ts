@@ -35,7 +35,7 @@ if (!reducedMotion.matches) {
 		.toArray<HTMLElement>(ITEMS)
 		.filter((item) => item.getBoundingClientRect().top > window.innerHeight);
 
-	gsap.set(belowTheFold, { opacity: 0 });
+	if (belowTheFold.length > 0) gsap.set(belowTheFold, { opacity: 0 });
 	ScrollTrigger.batch(belowTheFold, {
 		start: "top 100%",
 		once: true,

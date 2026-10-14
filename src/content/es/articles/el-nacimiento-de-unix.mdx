@@ -1,0 +1,43 @@
+---
+title: "¿Por qué Unix se llama así? El nacimiento de Unix"
+description: "Unix nació en 1969 en los Laboratorios Bell, cuando sus autores se quedaron sin el gran proyecto Multics. Su nombre es un juego de palabras con ese proyecto."
+level: basico
+kind: curiosidad
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+updated: 2026-10-13
+sources:
+  - title: "Dennis M. Ritchie: The Evolution of the Unix Time-sharing System (en inglés)"
+    url: https://www.nokia.com/bell-labs/about/dennis-m-ritchie/hist.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Unix** es un sistema operativo creado en 1969 en los Laboratorios Bell, en Estados Unidos, por Ken Thompson y Dennis Ritchie, entre otros. Sus ideas están en casi todo lo que usamos hoy: [Linux](/articulos/que-es-linux/), macOS, Android y la mayoría de los servidores de internet descienden de él o lo imitan.
+
+## Del fracaso de Multics
+
+A finales de los sesenta, los Laboratorios Bell participaban en **Multics**, un ambicioso proyecto de sistema operativo de tiempo compartido. Según cuenta Dennis Ritchie, el proyecto no conseguía entregar un sistema utilizable, y los Laboratorios se fueron retirando de él.
+
+Ritchie, Thompson y sus compañeros, que estaban entre los últimos de Bell que seguían trabajando en Multics, se quedaron sin el entorno de trabajo que les gustaba. Pidieron una máquina mediana para escribir un sistema propio, sin éxito. Entonces Thompson encontró un ordenador poco usado, un **PDP-7**, y empezó a escribir en él, en lenguaje ensamblador, las piezas de un sistema nuevo: un sistema de archivos, procesos y un intérprete de órdenes.
+
+Ritchie insiste en que Unix nació en 1969, no en 1974, cuando se dio a conocer públicamente.
+
+## El nombre
+
+Según el propio Ritchie, no fue hasta bien entrado 1970 cuando Brian Kernighan sugirió el nombre **Unix**, en lo que llama un juego de palabras algo malicioso con Multics. Donde Multics apuntaba a lo múltiple, Unix apuntaba a algo más pequeño y sencillo.
+
+## Las ideas que dejó
+
+- **Todo es un archivo**: los dispositivos se manejan como archivos especiales, una idea que el propio Ritchie se atribuye. Lo explica [sistema de archivos](/articulos/sistema-de-archivos/).
+- **Programas pequeños que se combinan**: cada herramienta hace una cosa y se encadenan con tuberías en la [terminal](/articulos/terminal-y-shell/).
+- **Escrito en un lenguaje de alto nivel**: Unix se reescribió en C, un lenguaje creado por Ritchie, lo que permitió llevarlo a otras máquinas.
+- **El tiempo de Unix**, que cuenta los segundos desde 1970, como explica [por qué el tiempo de Unix empieza en 1970](/articulos/por-que-el-tiempo-de-unix-empieza-en-1970/).
+
+## Lo esencial
+
+- Unix nació en 1969 en los Laboratorios Bell, tras la retirada del proyecto Multics.
+- Ken Thompson empezó a escribirlo en un PDP-7 poco usado.
+- El nombre, propuesto por Brian Kernighan en 1970, es un juego de palabras con Multics.
+- Sus ideas, como tratar todo como archivos y combinar programas pequeños, siguen en Linux y macOS.

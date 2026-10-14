@@ -1,0 +1,23 @@
+title: Historia de la informática
+description: "De las notas de Ada Lovelace a Deep Blue: las personas, máquinas e ideas que dieron forma a la informática."
+layer: hardware
+steps:
+  - breve-historia-de-la-informatica
+  - ada-lovelace-la-primera-programadora
+  - maquina-de-turing
+  - colossus-y-bletchley-park
+  - las-programadoras-del-eniac
+  - que-es-un-transistor
+  - grace-hopper
+  - el-nacimiento-de-unix
+  - margaret-hamilton-y-el-software-del-apolo
+  - el-intel-4004
+  - que-es-la-ley-de-moore
+  - historia-de-internet
+  - el-primer-mensaje-de-internet
+  - el-primer-virus-informatico
+  - el-gusano-morris
+  - la-primera-pagina-web
+  - por-que-linux-se-llama-linux
+  - el-test-de-turing
+  - que-fue-deep-blue

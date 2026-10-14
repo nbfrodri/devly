@@ -120,11 +120,11 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ## Curiosidades
 
-- [ ] ¿Por qué Unix se llama así?
+- [x] ¿Por qué Unix se llama así?
 - [ ] La ley de Conway: los sistemas copian la organización que los crea
-- [ ] Margaret Hamilton y el software del Apolo
-- [ ] ¿Qué fue Deep Blue?
-- [ ] Colossus y el descifrado en Bletchley Park
+- [x] Margaret Hamilton y el software del Apolo
+- [x] ¿Qué fue Deep Blue?
+- [x] Colossus y el descifrado en Bletchley Park
 - [ ] ¿De dónde salen los emojis?
-- [ ] ¿Por qué Linux se llama Linux?
-- [ ] El primer virus informático
+- [x] ¿Por qué Linux se llama Linux?
+- [x] El primer virus informático

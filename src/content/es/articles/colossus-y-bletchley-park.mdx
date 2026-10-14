@@ -1,0 +1,56 @@
+---
+title: "Colossus y el descifrado en Bletchley Park"
+description: "Colossus fue uno de los primeros ordenadores electrónicos. Se construyó en secreto para descifrar los mensajes del alto mando alemán y se ocultó durante décadas."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - breve-historia-de-la-informatica
+updated: 2026-10-13
+sources:
+  - title: "The National Museum of Computing: Colossus (en inglés)"
+    url: https://www.tnmoc.org/colossus
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Colossus** fue una de las primeras máquinas electrónicas de cálculo de la historia. Se construyó en el Reino Unido durante la Segunda Guerra Mundial, en el centro de descifrado de **Bletchley Park**, para romper el cifrado de las comunicaciones más secretas del alto mando alemán. Su existencia se mantuvo en secreto durante décadas.
+
+## El problema: la máquina Lorenz
+
+El alto mando alemán cifraba sus mensajes más importantes con una máquina de teletipo llamada **Lorenz**. No es la famosa Enigma: era otra máquina, más compleja, que combinaba el texto con una secuencia generada por varias ruedas. Para descifrar un mensaje había que averiguar la posición inicial de esas ruedas.
+
+Hacerlo a mano llevaba demasiado tiempo: cuando se conseguía, la información ya no servía.
+
+El primer Colossus se diseñó y construyó en la estación de investigación de Correos en Dollis Hill, en Londres, se entregó en Bletchley Park entre finales de 1943 y enero de 1944, y funcionaba a principios de febrero de 1944.
+
+## La solución: probar a gran velocidad
+
+Colossus no descifraba los mensajes por sí solo. Su trabajo era buscar las posiciones de unas ruedas concretas de la máquina Lorenz, las llamadas ruedas chi, comparando el mensaje cifrado con todas las posibilidades a gran velocidad:
+
+- El mensaje cifrado entraba en una **cinta de papel perforado**.
+- Unas **2500 válvulas de vacío** hacían los cálculos.
+- La máquina contaba coincidencias estadísticas para cada posición posible y señalaba la más probable.
+
+Es, en esencia, un ataque por fuerza bruta guiado por estadística, como los que describe [cifrado simétrico y asimétrico](/articulos/cifrado-simetrico-y-asimetrico/) al explicar por qué las claves deben ser largas.
+
+## El resultado
+
+Según el museo nacional de informática británico, que conserva una reconstrucción, Colossus redujo el tiempo necesario para averiguar las posiciones de las ruedas y permitió descifrar muchos más mensajes. Al final de la guerra, 550 personas, ayudadas por diez máquinas Colossus, habían descifrado 63 millones de caracteres de comunicaciones alemanas de alto nivel.
+
+## El secreto
+
+Terminada la guerra, la mayoría de las máquinas se desmantelaron y la información se clasificó. No se empezó a desclasificar hasta 1975. Durante treinta años, la historia de los primeros ordenadores se contó sin Colossus, y por eso a menudo se cita a [ENIAC](/articulos/las-programadoras-del-eniac/), presentado en 1946, como el primero.
+
+## La reconstrucción
+
+En 1992, Tony Sale y su equipo empezaron a reconstruir un Colossus funcional, que hoy se puede ver en el museo. En 2007, la reconstrucción participó en un desafío: descifrar un mensaje cifrado con Lorenz. Lo logró en tres horas y media, pero un ingeniero de software, Joachim Schueth, ganó la carrera con un programa en su ordenador personal que lo resolvió en 46 segundos.
+
+Es una buena medida del camino recorrido: lo que exigió una máquina secreta de miles de válvulas lo hace hoy un portátil en menos de un minuto.
+
+## Lo esencial
+
+- Colossus se construyó en Bletchley Park para descifrar la máquina Lorenz, no Enigma.
+- Buscaba, con estadística y a gran velocidad, la posición de las ruedas de la máquina de cifrado.
+- Ayudó a descifrar 63 millones de caracteres de comunicaciones alemanas.
+- Se mantuvo en secreto hasta 1975, por eso tardó en aparecer en la historia de la informática.

@@ -1,0 +1,52 @@
+---
+title: "El Intel 4004, el primer microprocesador"
+description: "En 1971, Intel metió todo un procesador en un solo chip de 2300 transistores. El microprocesador hizo posibles los ordenadores pequeños y baratos."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - que-es-un-transistor
+  - como-funciona-un-procesador
+updated: 2026-10-13
+sources:
+  - title: "Computer History Museum: 1971, Microprocessor Integrates CPU Function onto a Single Chip (en inglés)"
+    url: https://www.computerhistory.org/siliconengine/microprocessor-integrates-cpu-function-onto-a-single-chip/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **Intel 4004** fue el primer microprocesador comercial: un [procesador](/articulos/como-funciona-un-procesador/) completo en **un solo chip**. Antes, la unidad central de un ordenador se repartía entre muchos componentes. Desde entonces, el procesador es una pieza que cabe en la punta de un dedo.
+
+## De dónde salió
+
+Ted Hoff y Stanley Mazor, en Intel, concibieron el 4004 como parte de un conjunto de chips para una calculadora de la empresa japonesa Busicom. En lugar de diseñar chips a medida para cada función de la calculadora, propusieron un procesador general que se programara para hacerlas.
+
+En 1971, Federico Faggin, con la ayuda de Masatoshi Shima, aplicó su experiencia en una nueva técnica de fabricación de chips para meter los **2300 [transistores](/articulos/que-es-un-transistor/)** del 4004 en un encapsulado barato de 16 patillas, según el Museo de Historia de la Computación.
+
+## Cómo era
+
+- Trabajaba con datos de **4 bits**: un [byte](/articulos/que-es-un-byte/) entero no le cabía de una vez.
+- Tenía 2300 transistores. Un procesador actual tiene miles de millones.
+- Por sí solo no hacía nada: necesitaba memoria y chips de entrada y salida de la misma familia.
+
+```js
+const transistores4004 = 2300;
+const transistoresActual = 20e9;
+
+console.log(Math.round(transistoresActual / transistores4004)); // 8695652
+```
+
+Un procesador moderno con unos 20 000 millones de transistores tiene casi nueve millones de veces los del 4004. Es la [ley de Moore](/articulos/que-es-la-ley-de-moore/) a lo largo de medio siglo.
+
+## Por qué importa
+
+El 4004 era modesto incluso para su época. Su importancia está en la idea: un procesador **general y programable** en un chip barato. A partir de ahí, cambiar lo que hacía un aparato era cuestión de cambiar su programa, no su circuito.
+
+Sus sucesores llevaron a los ordenadores personales, y la misma idea está detrás de los [microcontroladores](/articulos/microcontrolador-y-microprocesador/) que hoy hay en lavadoras, coches y juguetes.
+
+## Lo esencial
+
+- El Intel 4004, de 1971, fue el primer microprocesador comercial.
+- Nació para una calculadora, como un procesador general en lugar de chips a medida.
+- Tenía 2300 transistores y trabajaba con 4 bits.
+- Su idea, un procesador programable en un solo chip, hizo posible la informática personal.
