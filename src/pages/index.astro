@@ -30,13 +30,13 @@ const firstPath =
 				<Search variant="hero" />
 				{
 					firstPath && (
-						<p class="muted">
-							¿No sabes por dónde empezar?{" "}
-							<a href={`/rutas/${firstPath.id}/`}>
+						<div class="hero-start">
+							<p>¿No sabes por dónde empezar?</p>
+							<a class="button button-primary" href={`/rutas/${firstPath.id}/`}>
 								Sigue la ruta de {firstPath.data.title.toLowerCase()}
+								<Icon name="arrow-right" />
 							</a>
-							.
-						</p>
+						</div>
 					)
 				}
 			</div>
@@ -68,11 +68,14 @@ const firstPath =
 				</ul>
 			</div>
 			<p class="section-actions">
-				<button class="text-button" type="button" data-shuffle>
+				<button class="button" type="button" data-shuffle>
 					<Icon name="refresh" />
 					Ver otras seis
 				</button>
-				<a href="/rutas/">Ver las {paths.length} rutas</a>
+				<a class="button button-primary" href="/rutas/">
+					Ver las {paths.length} rutas
+					<Icon name="arrow-right" />
+				</a>
 			</p>
 		</section>
 
@@ -84,11 +87,14 @@ const firstPath =
 				</ul>
 			</div>
 			<p class="section-actions">
-				<button class="text-button" type="button" data-shuffle>
+				<button class="button" type="button" data-shuffle>
 					<Icon name="refresh" />
 					Ver otros ocho
 				</button>
-				<a href="/articulos/">Ver los {articles.length} artículos</a>
+				<a class="button button-primary" href="/articulos/">
+					Ver los {articles.length} artículos
+					<Icon name="arrow-right" />
+				</a>
 			</p>
 		</section>
 	</div>

@@ -61,7 +61,9 @@ const id = `search-${variant}`;
 						placeholder: variant === "header" ? "Buscar un concepto" : "variable, DNS, proceso",
 					},
 				});
-				if (focusAfter) box.querySelector("input")?.focus();
+				const input = box.querySelector("input");
+				if (input) input.spellcheck = false;
+				if (focusAfter) input?.focus();
 			});
 		}
 
