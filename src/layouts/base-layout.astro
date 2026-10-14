@@ -1,5 +1,9 @@
 ---
 import "@/styles/global.css";
+import plex400 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url";
+import plex500 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2?url";
+import plex600 from "@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2?url";
+import bricolage from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-opsz-normal.woff2?url";
 import Icon from "@/components/icon.astro";
 import Logo from "@/components/logo.astro";
 import { LAYERS } from "@/lib/layers";
@@ -10,6 +14,8 @@ type Props = {
 };
 
 const { title, description } = Astro.props;
+// Preloaded so text is painted in the right typeface from the first frame.
+const fonts = [bricolage, plex400, plex500, plex600];
 const { pathname } = Astro.url;
 const links = [
 	{ href: "/capas/", label: "Capas" },
@@ -24,6 +30,11 @@ const links = [
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={description} />
+		{
+			fonts.map((font) => (
+				<link rel="preload" href={font} as="font" type="font/woff2" crossorigin />
+			))
+		}
 		<title>{title} | devly</title>
 		<script is:inline>
 			// Applied before first paint so a stored choice never flashes the other theme.
