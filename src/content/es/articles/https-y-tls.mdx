@@ -52,7 +52,7 @@ Si algo falla, muestra una advertencia. Ignorarla es renunciar a la garantía de
 
 ## El saludo inicial
 
-Antes de enviar datos, cliente y servidor realizan un intercambio llamado **handshake**. Simplificado, en la versión actual, TLS 1.3:
+Antes de enviar datos, cliente y servidor realizan un intercambio llamado **handshake**, que detalla [el saludo TLS paso a paso](/articulos/el-saludo-tls-paso-a-paso/). Simplificado, en la versión actual, TLS 1.3:
 
 1. **El cliente saluda.** Indica qué versiones y algoritmos admite y envía un dato para el acuerdo de claves.
 2. **El servidor responde.** Elige los algoritmos, envía su parte del acuerdo de claves y su certificado, y demuestra con una firma que posee la clave privada de ese certificado.

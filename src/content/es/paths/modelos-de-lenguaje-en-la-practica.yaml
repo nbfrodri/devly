@@ -5,6 +5,7 @@ steps:
   - modelos-de-lenguaje
   - redes-neuronales-recurrentes
   - que-es-un-transformer
+  - la-atencion-en-los-transformers
   - ventana-de-contexto-y-tokens
   - como-escribir-instrucciones-para-un-modelo
   - alucinaciones-de-los-modelos-de-lenguaje

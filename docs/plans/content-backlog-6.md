@@ -22,14 +22,14 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ### Datos y sistemas
 
-- [ ] Una base de datos por dentro: páginas, registro de escritura y MVCC (transacciones y ACID)
-- [ ] Registros distribuidos: cómo funciona Kafka (colas de mensajes)
-- [ ] El saludo TLS paso a paso (HTTPS y TLS)
+- [x] Una base de datos por dentro: páginas, registro de escritura y MVCC (transacciones y ACID)
+- [x] Registros distribuidos: cómo funciona Kafka (colas de mensajes)
+- [x] El saludo TLS paso a paso (HTTPS y TLS)
 
 ### Inteligencia artificial
 
-- [ ] La atención de los transformers paso a paso (transformer)
-- [ ] Sistemas de recomendación (embeddings)
+- [x] La atención de los transformers paso a paso (transformer)
+- [x] Sistemas de recomendación (embeddings)
 
 ## Revisión de los artículos existentes
 

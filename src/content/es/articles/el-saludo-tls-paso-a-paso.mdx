@@ -1,0 +1,80 @@
+---
+title: "¿Cómo funciona el saludo TLS paso a paso?"
+description: "Antes de enviar un solo dato, el navegador y el servidor acuerdan claves secretas sin que nadie pueda espiarlas, y el servidor demuestra quién es. En TLS 1.3 basta un viaje de ida y vuelta."
+level: avanzado
+layer: redes
+prerequisites:
+  - https-y-tls
+  - cifrado-simetrico-y-asimetrico
+  - que-es-un-certificado-digital
+updated: 2026-10-14
+sources:
+  - title: "RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3 (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc8446
+---
+
+import { Quiz } from "@/components/quiz";
+
+Cuando visitas una web con [HTTPS](/articulos/https-y-tls/), antes de que viaje la primera petición, el navegador y el servidor mantienen una breve conversación: el **saludo TLS** (*handshake*). En ella acuerdan qué algoritmos usar, generan claves secretas que nadie más conoce y el servidor demuestra su identidad. Este artículo sigue esa conversación en **TLS 1.3**, la versión actual, definida en el RFC 8446.
+
+## Lo que hay que conseguir
+
+1. **Un secreto compartido**, aunque todo lo que se dicen viaje por una red que cualquiera puede escuchar.
+2. **Autenticar al servidor**: asegurarse de que es quien dice ser y no un impostor en medio.
+3. Hacerlo **rápido**.
+
+## El intercambio Diffie-Hellman
+
+El problema del secreto se resuelve con un intercambio de claves **Diffie-Hellman**, sobre curvas elípticas. Cada lado genera un par de claves, envía su parte pública y, combinándola con su parte privada, ambos llegan al **mismo secreto**, sin que este viaje nunca por la red:
+
+```js
+import { createECDH } from "node:crypto";
+
+const navegador = createECDH("prime256v1");
+navegador.generateKeys();
+const servidor = createECDH("prime256v1");
+servidor.generateKeys();
+
+// Cada uno solo recibe la clave pública del otro.
+const secretoNavegador = navegador.computeSecret(servidor.getPublicKey());
+const secretoServidor = servidor.computeSecret(navegador.getPublicKey());
+
+console.log(secretoNavegador.equals(secretoServidor)); // true
+```
+
+Quien escuche la conversación ve las dos claves públicas, pero no puede calcular el secreto sin una de las privadas. Como las claves se generan nuevas para cada conexión, se obtiene **secreto hacia adelante**: aunque mañana se robe la clave del servidor, las conversaciones grabadas hoy no se podrán descifrar. El RFC lo convirtió en obligatorio: en TLS 1.3 se eliminaron los intercambios que no lo ofrecían.
+
+## La conversación
+
+```mermaid
+sequenceDiagram
+	participant N as Navegador
+	participant S as Servidor
+	N->>S: ClientHello: versiones, cifrados, su parte Diffie-Hellman
+	S->>N: ServerHello: cifrado elegido, su parte Diffie-Hellman
+	Note over N,S: Ambos calculan el secreto; desde aquí, todo va cifrado
+	S->>N: Certificado
+	S->>N: Prueba de que tiene la clave privada del certificado
+	S->>N: Finished
+	N->>S: Finished
+	N->>S: Petición HTTP cifrada
+```
+
+1. **ClientHello**: el navegador anuncia qué versiones y [algoritmos de cifrado](/articulos/cifrado-simetrico-y-asimetrico/) admite y, adelantándose, envía ya su parte del intercambio Diffie-Hellman.
+2. **ServerHello**: el servidor elige el cifrado y envía su parte. En este punto, los dos pueden calcular el secreto. Según el RFC, **todos los mensajes posteriores al ServerHello van cifrados**, una novedad de TLS 1.3.
+3. **Certificado**: el servidor envía su [certificado digital](/articulos/que-es-un-certificado-digital/), firmado por una autoridad en la que confía el navegador.
+4. **Prueba de identidad**: el servidor firma toda la conversación con la clave privada de su certificado. Solo quien la tenga puede hacerlo, así que un impostor que interceptara la conexión no podría.
+5. **Finished**: cada lado envía un resumen cifrado de todo lo hablado. Si alguien hubiera manipulado algún mensaje, no coincidiría.
+
+Como el navegador manda su parte del intercambio en el primer mensaje, basta **un viaje de ida y vuelta** antes de poder enviar datos.
+
+## Volver más rápido
+
+Si el navegador ya habló antes con ese servidor, puede reanudar la sesión con una clave compartida previa, e incluso enviar datos en el primer mensaje: el modo **0-RTT**. El RFC advierte que ese ahorro tiene un coste en seguridad, porque esos primeros datos se pueden reenviar. Por eso solo debe usarse con peticiones que no causen daño si se repiten.
+
+## Lo esencial
+
+- El saludo TLS acuerda un secreto compartido y autentica al servidor antes de enviar datos.
+- El secreto se obtiene con Diffie-Hellman: nunca viaja por la red y cambia en cada conexión.
+- El servidor prueba su identidad con su certificado y una firma sobre toda la conversación.
+- TLS 1.3 cifra casi todo el saludo y lo completa en un solo viaje de ida y vuelta.

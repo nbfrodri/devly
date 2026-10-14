@@ -1,0 +1,83 @@
+---
+title: "¿Cómo funciona la atención en los transformers, paso a paso?"
+description: "La atención decide, para cada palabra, cuánto debe fijarse en cada una de las demás. Se calcula con consultas, claves y valores, un producto escalar y una función softmax."
+level: avanzado
+layer: ia
+prerequisites:
+  - que-es-un-transformer
+  - embeddings
+updated: 2026-10-14
+sources:
+  - title: "Vaswani et al.: Attention Is All You Need (en inglés)"
+    url: https://arxiv.org/abs/1706.03762
+  - title: "Jay Alammar: The Illustrated Transformer (en inglés)"
+    url: https://jalammar.github.io/illustrated-transformer/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El [transformer](/articulos/que-es-un-transformer/), la arquitectura de los [modelos de lenguaje](/articulos/modelos-de-lenguaje/), se presentó en 2017 en un artículo cuyo título lo resume todo: *Attention Is All You Need*. Sus autores propusieron una red basada **solo en mecanismos de atención**, prescindiendo de la recurrencia y las convoluciones. Este artículo abre la caja y calcula una atención a mano.
+
+## La idea
+
+En la frase "el banco estaba lleno de gente porque era fin de mes", la palabra "banco" puede significar un asiento o una entidad financiera. Para entenderla hay que **mirar otras palabras**: "fin de mes" apunta a la entidad. La **atención** es el mecanismo que permite a cada palabra decidir **cuánto fijarse en cada una de las demás**, y construir una representación nueva que mezcla la información de las que importan.
+
+## Consulta, clave y valor
+
+Cada palabra llega como un vector, su [embedding](/articulos/embeddings/). A partir de él, el modelo calcula tres vectores, multiplicándolo por tres matrices aprendidas en el entrenamiento:
+
+| Vector | Papel | Analogía |
+| --- | --- | --- |
+| Consulta (*query*) | Lo que esta palabra busca | La pregunta que haces en una biblioteca |
+| Clave (*key*) | Lo que esta palabra ofrece para ser encontrada | La etiqueta del lomo de cada libro |
+| Valor (*value*) | La información que aporta si se le presta atención | El contenido del libro |
+
+## El cálculo, paso a paso
+
+Para una palabra:
+
+1. Se compara su **consulta** con la **clave** de cada palabra mediante un **producto escalar**: cuanto más se parecen, mayor el número.
+2. Se dividen esas puntuaciones por la raíz cuadrada del tamaño de los vectores. Como explica Jay Alammar en su guía ilustrada, en el artículo original los vectores tenían 64 dimensiones y se dividía por 8; esto estabiliza los gradientes durante el entrenamiento.
+3. Se pasan por una función **softmax**, que las convierte en pesos positivos que suman 1.
+4. La salida es la **suma de los valores**, cada uno multiplicado por su peso.
+
+Con tres palabras y vectores de dos dimensiones:
+
+```js
+const consultas = [[1, 0], [0, 1], [1, 1]];
+const claves = [[1, 0], [0, 1], [1, 1]];
+const valores = [[1, 0], [0, 1], [0.5, 0.5]];
+
+const producto = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
+const softmax = (xs) => {
+	const max = Math.max(...xs);
+	const e = xs.map((x) => Math.exp(x - max));
+	const suma = e.reduce((a, b) => a + b);
+	return e.map((x) => x / suma);
+};
+
+// Atención de la primera palabra sobre las tres.
+const puntuaciones = claves.map((k) => producto(consultas[0], k) / Math.sqrt(2));
+const pesos = softmax(puntuaciones);
+console.log(pesos.map((p) => p.toFixed(2)).join(" ")); // "0.40 0.20 0.40"
+
+const salida = [0, 1].map((j) => pesos.reduce((s, p, i) => s + p * valores[i][j], 0));
+console.log(salida.map((x) => x.toFixed(2)).join(" ")); // "0.60 0.40"
+```
+
+La primera palabra presta el 40 % de su atención a sí misma, otro 40 % a la tercera, que comparte su dirección, y solo un 20 % a la segunda. Su representación nueva mezcla los valores con esos pesos. El modelo hace este cálculo para **todas las palabras a la vez**, con matrices, lo que permite aprovechar al máximo las [GPU](/articulos/que-es-una-gpu/).
+
+## Varias cabezas
+
+Una sola atención capta un tipo de relación. El transformer usa **atención de múltiples cabezas**: varias atenciones en paralelo, cada una con sus propias matrices, que aprenden a fijarse en cosas distintas, como la sintaxis, a quién se refiere un pronombre o el tema. Sus resultados se combinan.
+
+## El precio
+
+Cada palabra se compara con todas las demás: con n palabras, n × n comparaciones. Duplicar la longitud del texto cuadruplica el trabajo. Es la razón principal de que la [ventana de contexto](/articulos/ventana-de-contexto-y-tokens/) de los modelos tenga un límite y de que ampliarla sea caro.
+
+## Lo esencial
+
+- La atención permite a cada palabra decidir cuánto fijarse en cada una de las demás.
+- Cada palabra genera una consulta, una clave y un valor.
+- Los pesos salen del producto escalar entre consulta y claves, escalado y pasado por softmax; la salida es la suma ponderada de los valores.
+- Comparar todas las palabras con todas hace que el coste crezca con el cuadrado de la longitud.

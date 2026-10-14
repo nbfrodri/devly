@@ -13,3 +13,4 @@ steps:
   - consenso-distribuido
   - latencia-de-cola
   - publicador-suscriptor
+  - como-funciona-kafka
