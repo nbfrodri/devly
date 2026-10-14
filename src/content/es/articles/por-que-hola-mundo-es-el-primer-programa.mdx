@@ -1,0 +1,81 @@
+---
+title: "¿Por qué «hola, mundo» es el primer programa?"
+description: "El ejemplo aparece en un tutorial de Brian Kernighan sobre el lenguaje B, a principios de los años setenta, y se hizo famoso con el libro de C."
+level: basico
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - funciones
+  - que-es-un-algoritmo
+updated: 2026-10-13
+sources:
+  - title: "Brian Kernighan: A Tutorial Introduction to the Language B, alojado por Nokia Bell Labs (en inglés)"
+    url: https://www.nokia.com/bell-labs/about/dennis-m-ritchie/btut.html
+  - title: "Brian Kernighan: página personal en la Universidad de Princeton (en inglés)"
+    url: https://www.cs.princeton.edu/~bwk/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Casi todos los cursos de programación empiezan con un programa que muestra en pantalla **"hola, mundo"**. La tradición viene de un ejemplo que **Brian Kernighan** escribió en un tutorial sobre el lenguaje **B**, en los Laboratorios Bell, a principios de los años setenta. Se hizo universal unos años después, cuando Kernighan lo usó en el libro que enseñó C a toda una generación.
+
+## El ejemplo original
+
+En el tutorial de B, que hoy aloja Nokia Bell Labs, el ejemplo aparece en la sección dedicada a las **variables externas**:
+
+```
+main( ) {
+	extrn a, b, c;
+	putchar(a); putchar(b); putchar(c); putchar('!*n');
+}
+
+a 'hell';
+b 'o, w';
+c 'orld';
+```
+
+La frase está partida en tres trozos raros: "hell", "o, w" y "orld". El motivo es técnico: en B, una constante de caracteres podía contener como mucho **cuatro** letras, las que cabían en una palabra de memoria de aquella máquina. Para escribir "hello, world" hacían falta tres. El `'!*n'` del final es un salto de línea.
+
+El ejemplo no pretendía ser el primer programa de nadie: servía para mostrar cómo funcionan las variables definidas fuera de una [función](/articulos/funciones/). Aun así, ya tenía la frase.
+
+## Por qué se extendió
+
+Después de B llegó **C**, creado por Dennis Ritchie. Kernighan escribió tutoriales de C y, junto con Ritchie, el libro *The C Programming Language*, de 1978. Su primer ejemplo era precisamente un programa que imprime "hello, world".
+
+El libro fue enormemente influyente, y su primer ejemplo se convirtió en una costumbre. Hoy casi cualquier lenguaje se presenta con su versión:
+
+```js
+console.log("hola, mundo"); // hola, mundo
+```
+
+## Por qué funciona como primer programa
+
+No es casualidad que se haya mantenido. Un programa que solo escribe una frase:
+
+- **Comprueba que todo funciona**: que el lenguaje está instalado, que se sabe ejecutar un programa y dónde aparece el resultado.
+- **Es mínimo**: deja ver la estructura básica de un programa en un lenguaje, sin nada más.
+- **Da un resultado visible** desde el primer minuto.
+
+Por eso se usa también para probar cualquier herramienta nueva: un compilador, un servidor, un entorno de desarrollo. Si "hola, mundo" funciona, lo básico está bien montado.
+
+## La frase
+
+Kernighan no ha dado una explicación especial de por qué eligió esas palabras. La frase es simple, amable y fácil de reconocer, y el resto lo hizo la costumbre.
+
+<Quiz
+	client:visible
+	question="¿Por qué el ejemplo original de B parte «hello, world» en tres trozos?"
+	options={[
+		"Para que fuera más difícil de leer",
+		"Porque una constante de caracteres en B admitía como mucho cuatro letras",
+		"Porque cada trozo se mostraba en una línea distinta",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El ejemplo aparece en un tutorial de Brian Kernighan sobre el lenguaje B, a principios de los años setenta.
+- En B la frase se partía en trozos de cuatro letras por una limitación del lenguaje.
+- Se hizo universal con el libro de C de Kernighan y Ritchie, de 1978.
+- Sirve como primer programa porque es mínimo y comprueba que todo está bien montado.

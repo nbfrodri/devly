@@ -1,0 +1,75 @@
+---
+title: "¿Por qué las direcciones de correo llevan una @?"
+description: "En 1971, Ray Tomlinson necesitaba separar el nombre del usuario del nombre de su ordenador, y eligió el único símbolo del teclado que no aparecería en un nombre."
+level: basico
+kind: curiosidad
+layer: redes
+prerequisites:
+  - el-primer-mensaje-de-internet
+  - que-es-un-dominio
+updated: 2026-10-13
+sources:
+  - title: "Internet Hall of Fame: Official Biography, Raymond Tomlinson (en inglés)"
+    url: https://www.internethalloffame.org/official-biography-raymond-tomlinson/
+  - title: "Raytheon: Email creator, Ray Tomlinson, inducted into Internet Hall of Fame (2012, en inglés)"
+    url: https://raytheon.mediaroom.com/index.php?s=43&item=2085
+  - title: "RFC 5322: Internet Message Format"
+    url: https://www.rfc-editor.org/info/rfc5322/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Las direcciones de correo llevan una **@** porque así lo decidió **Ray Tomlinson** en 1971, cuando creó el primer sistema para enviar mensajes entre ordenadores distintos de ARPANET, la red precursora de internet. Necesitaba separar el nombre del usuario del nombre del ordenador en el que tenía su buzón, y eligió ese símbolo.
+
+## El problema
+
+Antes de 1971 ya existía el correo, pero solo **dentro de un mismo ordenador**: varias personas que compartían una máquina podían dejarse mensajes. Bastaba con el nombre del destinatario.
+
+Tomlinson trabajaba en BBN, una empresa que participaba en la construcción de ARPANET, como cuenta el artículo sobre [el primer mensaje de internet](/articulos/el-primer-mensaje-de-internet/). Según su biografía oficial en el Internet Hall of Fame, combinó dos programas existentes: uno para enviar mensajes dentro de una máquina y otro para copiar archivos entre máquinas de la red. El resultado permitía enviar un mensaje a un usuario de **otro** ordenador.
+
+Para eso, la dirección tenía que decir dos cosas: quién y dónde.
+
+## La elección
+
+Tomlinson necesitaba un carácter que separara las dos partes y que no pudiera confundirse con un nombre. La @ tenía dos ventajas:
+
+- **No aparecía en los nombres** de personas ni de ordenadores.
+- **Ya significaba "en"**: en inglés se lee *at*, de modo que `usuario@ordenador` se lee "usuario en ordenador".
+
+Según la nota de Raytheon, la empresa de la que BBN formaba parte, Tomlinson eligió la @ para separar el correo local del de otras máquinas. La misma nota dice que con ello salvó el símbolo de una probable extinción.
+
+Su biografía oficial resume el resultado: el formato **usuario@máquina** se convirtió en el estándar de las direcciones de correo, como lo sigue siendo hoy.
+
+## Hoy
+
+La estructura no ha cambiado. A la izquierda de la @ va el nombre del buzón; a la derecha, el [dominio](/articulos/que-es-un-dominio/) que lo gestiona:
+
+```js
+const direccion = "ana@ejemplo.com";
+const [buzon, dominio] = direccion.split("@");
+
+console.log(buzon); // "ana"
+console.log(dominio); // "ejemplo.com"
+```
+
+El formato de los mensajes de correo se define hoy en el RFC 5322. Para entregar un mensaje, el servidor de correo busca en el [DNS](/articulos/que-es-dns/) qué servidor atiende el correo de ese dominio.
+
+Aunque el ejemplo parte la dirección en dos, validar direcciones de correo de verdad es más complicado de lo que parece, como advierte el artículo sobre [expresiones regulares](/articulos/expresiones-regulares/).
+
+<Quiz
+	client:visible
+	question="¿Por qué eligió Ray Tomlinson la @ para las direcciones de correo?"
+	options={[
+		"Porque era el símbolo más usado del teclado",
+		"Porque no aparecía en los nombres y ya significaba «en»",
+		"Porque lo imponía el protocolo de ARPANET",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Ray Tomlinson creó en 1971 el primer correo entre ordenadores distintos de ARPANET.
+- Necesitaba separar el usuario del ordenador, y eligió la @.
+- La eligió porque no aparecía en los nombres y en inglés ya significaba «en».
+- El formato usuario@dominio sigue siendo el estándar de las direcciones de correo.

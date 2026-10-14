@@ -1,0 +1,65 @@
+---
+title: "¿Por qué el teclado es QWERTY?"
+description: "La explicación popular dice que se diseñó para que no se atascaran las teclas de las máquinas de escribir. Un estudio de Kyoto apunta a otra causa: los operadores de telégrafo."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - codificacion-de-caracteres
+updated: 2026-10-13
+sources:
+  - title: "Language Log, Universidad de Pensilvania: QWERTY forever, path dependency (en inglés)"
+    url: https://languagelog.ldc.upenn.edu/nll/?p=68794
+  - title: "Koichi Yasuoka y Motoko Yasuoka: On the Prehistory of QWERTY, ZINBUN (2011, en inglés)"
+    url: http://hdl.handle.net/2433/139379
+---
+
+import { Quiz } from "@/components/quiz";
+
+El teclado **QWERTY**, llamado así por sus seis primeras letras, viene de las **máquinas de escribir** del siglo XIX. Su origen exacto se discute. La explicación más repetida dice que se diseñó para que las teclas no se atascaran. Un estudio de investigadores de la Universidad de Kioto propone otra: que la distribución se fue moldeando según las necesidades de sus primeros usuarios profesionales, los **operadores de telégrafo**.
+
+## La máquina de Sholes
+
+Christopher Latham Sholes, un editor de periódicos de Estados Unidos, desarrolló junto a otros socios una de las primeras máquinas de escribir comerciales. La patentó en 1868, y en 1874 la empresa Remington la puso a la venta. Su teclado, tras varias versiones, acabó siendo QWERTY.
+
+## La explicación popular: los atascos
+
+En aquellas máquinas, cada tecla movía una varilla que golpeaba el papel. Si se pulsaban muy deprisa dos teclas cuyas varillas estaban juntas, podían chocar y engancharse.
+
+Según esta versión, Sholes repartió por el teclado las combinaciones de letras más frecuentes para que sus varillas estuvieran lejos, y así evitar los atascos. A veces se añade que el objetivo era **ralentizar** a quien escribía, algo que no está documentado.
+
+El blog Language Log, de la Universidad de Pensilvania, señala que esta teoría **no es concluyente**: "er" es una de las parejas de letras más frecuentes en inglés, y en QWERTY quedan una al lado de la otra. Un prototipo de Sholes las separaba, pero ese diseño no llegó a fabricarse.
+
+## La explicación del telégrafo
+
+En un artículo de 2011, Koichi y Motoko Yasuoka, de la Universidad de Kioto, siguieron la evolución del teclado versión a versión, junto con el registro de quiénes usaban aquellas primeras máquinas.
+
+Según el resumen que hace Language Log, concluyeron que la mecánica de la máquina **no** determinó el diseño. La distribución habría surgido en respuesta a un grupo de usuarios concreto: los **operadores de telégrafo**, que debían transcribir a toda velocidad los mensajes que recibían en código Morse. A esos operadores, la disposición alfabética les resultaba confusa e ineficiente.
+
+## Por qué sigue aquí
+
+Sea cual sea su origen, la razón de que se siga usando está clara: la **costumbre**. Cuando millones de personas habían aprendido a escribir en QWERTY, y las academias lo enseñaban, cambiar costaba más de lo que se ganaba. Language Log usa este caso como ejemplo de **dependencia de la trayectoria**: una decisión del pasado se mantiene porque todo lo demás se construyó sobre ella.
+
+Se han propuesto distribuciones pensadas para escribir más deprisa, como la Dvorak, de los años treinta, que agrupa las letras más frecuentes en la fila central. Tienen seguidores, pero nunca han desplazado a QWERTY.
+
+En España se usa una variante con la **ñ**, y otros países tienen las suyas, como AZERTY en Francia o QWERTZ en Alemania.
+
+Lo mismo ocurre en informática con muchas otras decisiones: el [salto de línea](/articulos/salto-de-linea-en-windows-y-linux/) distinto en cada sistema, o el [kilobyte de 1024 bytes](/articulos/kilobyte-1000-o-1024/). Se mantienen porque cambiarlas rompería demasiadas cosas.
+
+<Quiz
+	client:visible
+	question="Según el estudio de la Universidad de Kioto, ¿qué influyó en la distribución QWERTY?"
+	options={[
+		"Evitar los atascos de las teclas",
+		"Las necesidades de los operadores de telégrafo",
+		"Ralentizar a quien escribía",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- QWERTY viene de las máquinas de escribir de Sholes, comercializadas por Remington en 1874.
+- La explicación popular, evitar atascos, no es concluyente.
+- Un estudio de 2011 de la Universidad de Kioto apunta a los operadores de telégrafo.
+- Se mantiene por costumbre: cambiar costaría más de lo que se ganaría.
