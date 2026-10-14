@@ -1,0 +1,79 @@
+---
+title: "¿Cómo funciona traceroute?"
+description: "Traceroute descubre los routers que hay entre tu equipo y un destino con un truco: envía paquetes que caducan a propósito, uno, dos, tres saltos más lejos."
+level: basico
+layer: redes
+prerequisites:
+  - enrutamiento
+  - que-es-una-direccion-ip
+updated: 2026-10-13
+sources:
+  - title: "RFC 792: Internet Control Message Protocol (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc792
+  - title: "Linux man-pages: tracepath(8) (en inglés)"
+    url: https://man7.org/linux/man-pages/man8/tracepath.8.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Traceroute** es una herramienta que muestra la lista de **routers** por los que pasan los paquetes desde tu equipo hasta un destino, y cuánto tarda cada tramo. En Windows se llama `tracert`, y en Linux existe también `tracepath`, que hace lo mismo sin permisos especiales.
+
+```bash
+traceroute ejemplo.com
+#  1  192.168.1.1     1.2 ms
+#  2  10.20.0.1       8.5 ms
+#  3  72.14.200.1    12.1 ms
+#  ...
+```
+
+## El truco: paquetes que caducan
+
+Cada paquete IP lleva un campo **TTL**, tiempo de vida, que cada router que lo procesa reduce en uno. Si llega a cero, el router lo descarta y, según el protocolo de mensajes de control ICMP, puede avisar al remitente con un mensaje de **tiempo excedido**. Así se evita que un paquete dé vueltas para siempre en un bucle, como explica [enrutamiento](/articulos/enrutamiento/).
+
+Traceroute aprovecha esa regla:
+
+1. Envía un paquete con **TTL 1**. El primer router lo reduce a cero, lo descarta y responde "tiempo excedido". Ya sabemos quién es el primer router y cuánto tarda.
+2. Envía otro con **TTL 2**. Lo descarta el segundo router.
+3. Y así, aumentando de uno en uno, hasta que responde el propio destino.
+
+```js
+const camino = ["192.168.1.1", "10.20.0.1", "72.14.200.1", "93.184.216.34"];
+
+function enviar(ttl) {
+	for (let salto = 0; salto < camino.length; salto++) {
+		if (salto === camino.length - 1) return `${camino[salto]} (destino)`;
+		ttl--;
+		if (ttl === 0) return `${camino[salto]} (tiempo excedido)`;
+	}
+}
+
+for (let ttl = 1; ttl <= 4; ttl++) console.log(ttl, enviar(ttl));
+// 1 192.168.1.1 (tiempo excedido)
+// 2 10.20.0.1 (tiempo excedido)
+// 3 72.14.200.1 (tiempo excedido)
+// 4 93.184.216.34 (destino)
+```
+
+Ningún router "sabe" que está participando en un traceroute: solo aplica la regla del TTL.
+
+## Cómo leer el resultado
+
+- **Cada línea es un salto**, con el tiempo de ida y vuelta hasta ese router. Normalmente se envían tres paquetes por salto.
+- **Asteriscos** (`* * *`): ese router no respondió. Muchos no envían avisos o los limitan, sin que haya un problema.
+- **Un salto brusco de tiempo**: suele indicar un tramo largo, como un cable submarino, o un enlace congestionado.
+- **El camino de vuelta puede ser otro**: el enrutamiento en internet no es simétrico.
+
+## Para qué sirve
+
+- Ver **dónde se corta** una conexión: hasta qué salto llega.
+- Ver **dónde aparece la latencia**: en tu red, en tu operador o lejos.
+- Entender por qué un servidor responde lento desde un sitio y no desde otro.
+
+`tracepath`, además, informa de la unidad máxima de transmisión del camino, el tamaño máximo de paquete que pasa sin fragmentarse.
+
+## Lo esencial
+
+- Traceroute descubre los routers del camino hacia un destino y el tiempo hasta cada uno.
+- Envía paquetes con TTL creciente; cada router que agota el TTL responde con un aviso de tiempo excedido.
+- Los asteriscos suelen ser routers que no responden, no fallos.
+- Sirve para localizar dónde se corta o se ralentiza una conexión.

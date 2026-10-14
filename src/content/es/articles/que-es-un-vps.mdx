@@ -1,0 +1,81 @@
+---
+title: "¿Qué es un VPS, un servidor privado virtual?"
+description: "Un VPS es una máquina virtual alquilada con su propio sistema operativo, IP y acceso de administrador. Da el control de un servidor propio sin comprar hardware, a cambio de mantenerlo tú."
+level: basico
+layer: sistemas
+prerequisites:
+  - que-es-un-hosting
+  - virtualizacion
+updated: 2026-10-13
+sources:
+  - title: "AWS: ¿Qué es un servidor privado virtual (VPS)?"
+    url: https://aws.amazon.com/es/what-is/vps/
+  - title: "Linux man-pages: sshd_config(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/sshd_config.5.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **VPS**, servidor privado virtual, es una [máquina virtual](/articulos/virtualizacion/) que un proveedor alquila: un servidor con su propio sistema operativo, su dirección IP y **acceso de administrador**, que comparte el hardware físico con otros clientes pero tiene **recursos reservados** para él. Como explica AWS, aloja todo el software y los datos necesarios para ejecutar una aplicación o un sitio web.
+
+Es el punto intermedio entre el alojamiento compartido y un servidor físico propio.
+
+## Dónde encaja
+
+| Opción | Qué te dan | Control | Mantenimiento |
+| --- | --- | --- | --- |
+| [Hosting](/articulos/que-es-un-hosting/) compartido | Espacio en un servidor que comparten muchos | Muy poco | Lo hace el proveedor |
+| VPS | Una máquina virtual con recursos reservados | Total sobre tu sistema | Tú |
+| Servidor dedicado | Una máquina física entera | Total, también del hardware | Tú |
+| Plataforma gestionada o [serverless](/articulos/que-es-serverless/) | Un sitio donde subir el código | Poco | El proveedor |
+
+Con un VPS eliges la distribución de [Linux](/articulos/que-es-linux/), instalas lo que quieras y lo configuras a tu manera. En la [nube](/articulos/computacion-en-la-nube/), una "instancia" de máquina virtual es esencialmente un VPS con más servicios alrededor.
+
+## Lo que te dan y lo que es tuyo
+
+- **Recursos reservados**: núcleos de procesador, memoria y disco garantizados. No te afecta tanto lo que hagan los vecinos del mismo servidor físico como en un hosting compartido.
+- **Una IP pública** y acceso por **SSH** como administrador.
+- **La responsabilidad** de todo lo que hay dentro: actualizaciones, seguridad, copias, monitorización.
+
+Esa última parte es la que más se olvida. Un VPS sin actualizar y con contraseñas débiles acaba formando parte de una red de equipos comprometidos en cuestión de días.
+
+## Primeros pasos con un VPS
+
+Lo habitual al recibir uno, con la [terminal](/articulos/terminal-y-shell/):
+
+```bash
+# Actualizar el sistema
+sudo apt update && sudo apt upgrade
+
+# Crear un usuario propio en lugar de trabajar como root
+sudo adduser ana
+sudo usermod -aG sudo ana
+```
+
+Y en la configuración del servidor SSH, `/etc/ssh/sshd_config`, desactivar el acceso por contraseña y el acceso directo como administrador, para entrar solo con claves:
+
+```ini
+PasswordAuthentication no
+PermitRootLogin no
+```
+
+Después:
+
+- Un [cortafuegos](/articulos/cortafuegos/) que solo deje abiertos los puertos necesarios, normalmente SSH, HTTP y HTTPS.
+- Un [proxy inverso](/articulos/proxy-y-proxy-inverso/) como [Nginx](/articulos/que-es-nginx/) delante de la aplicación, con [HTTPS](/articulos/https-y-tls/).
+- La aplicación como [servicio](/articulos/servicios-y-demonios/) que se reinicia sola si falla.
+- [Copias de seguridad](/articulos/copias-de-seguridad/) fuera del propio VPS.
+- Actualizaciones de seguridad automáticas.
+
+## Cuándo compensa
+
+**Sí**: proyectos personales, aplicaciones pequeñas y medianas, aprender administración de sistemas, servicios que necesitan un proceso siempre encendido o software que una plataforma gestionada no permite.
+
+**No tanto**: cuando no quieres ni puedes mantener un servidor, cuando el tráfico varía mucho y necesitas [escalar](/articulos/escalado-vertical-y-horizontal/) solo, o para una web estática, que cualquier servicio de alojamiento estático sirve mejor y gratis.
+
+## Lo esencial
+
+- Un VPS es una máquina virtual alquilada con sistema, IP y acceso de administrador propios.
+- Comparte hardware con otros, pero con recursos reservados.
+- Da el control de un servidor propio sin comprar hardware.
+- A cambio, la seguridad, las actualizaciones y las copias son responsabilidad tuya.

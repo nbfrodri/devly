@@ -1,0 +1,68 @@
+---
+title: "¿Qué es ARP?"
+description: "ARP es el protocolo que averigua la dirección MAC que corresponde a una IP dentro de la red local. Sin él, un paquete no podría entregarse al equipo de al lado."
+level: basico
+kind: concepto
+layer: redes
+prerequisites:
+  - que-es-una-direccion-mac
+  - que-es-una-direccion-ip
+  - capa-de-enlace
+updated: 2026-10-13
+sources:
+  - title: "RFC 826: An Ethernet Address Resolution Protocol (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc826
+  - title: "Linux man-pages: ip-neighbour(8) (en inglés)"
+    url: https://man7.org/linux/man-pages/man8/ip-neighbour.8.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**ARP**, protocolo de resolución de direcciones, es el mecanismo con el que un equipo averigua **qué [dirección MAC](/articulos/que-es-una-direccion-mac/) corresponde a una [dirección IP](/articulos/que-es-una-direccion-ip/)** dentro de su red local. Lo definió en 1982 el RFC 826, para convertir direcciones de protocolo, como las IP, en direcciones físicas de la red local, como las de Ethernet.
+
+## Por qué hace falta
+
+Las IP sirven para encontrar un equipo en cualquier lugar del mundo. Pero dentro de una red local, los datos viajan en tramas de la [capa de enlace](/articulos/capa-de-enlace/), que se entregan por dirección MAC. Para enviar un paquete al equipo `192.168.1.35`, o a la [puerta de enlace](/articulos/puerta-de-enlace-predeterminada/), primero hay que saber su MAC.
+
+## Cómo funciona
+
+1. El equipo envía a **toda la red** (difusión) una pregunta: "¿quién tiene la IP 192.168.1.35? Dímelo a mí".
+2. Todos los equipos la reciben, pero solo el que tiene esa IP **responde**, directamente al que preguntó, con su MAC.
+3. El que preguntó **guarda** la respuesta en su **tabla ARP** durante un tiempo, para no preguntar cada vez.
+
+```js
+const tablaArp = new Map();
+const red = { "192.168.1.1": "aa:bb:cc:00:00:01", "192.168.1.35": "aa:bb:cc:00:00:35" };
+let preguntas = 0;
+
+function macDe(ip) {
+	if (!tablaArp.has(ip)) {
+		preguntas++; // difusión: "¿quién tiene esta IP?"
+		tablaArp.set(ip, red[ip]);
+	}
+	return tablaArp.get(ip);
+}
+
+macDe("192.168.1.35");
+macDe("192.168.1.35");
+console.log(macDe("192.168.1.1"), preguntas); // aa:bb:cc:00:00:01 2
+```
+
+La segunda consulta a la misma IP sale de la tabla, sin preguntar a la red. En Linux, la tabla se consulta con `ip neigh`; su página de manual recuerda que la tabla de vecinos de IPv4 también se llama tabla ARP.
+
+## Solo dentro de la red local
+
+ARP nunca sale de la red local. Para un destino en otra red, el equipo pregunta por la MAC de su **puerta de enlace**, y le entrega el paquete. Cada router del camino repite el proceso en cada red que cruza: la IP de destino se mantiene, pero la MAC cambia en cada salto.
+
+En IPv6, ARP se sustituye por un mecanismo equivalente, el descubrimiento de vecinos.
+
+## Su punto débil
+
+ARP se diseñó sin autenticación: cualquiera puede responder. Un atacante en la misma red puede enviar respuestas falsas, "la IP de la puerta de enlace es mi MAC", y hacer pasar el tráfico de otros por su equipo. Es el **envenenamiento ARP**, y la razón por la que una wifi pública no es de fiar sin [HTTPS](/articulos/https-y-tls/) o una [VPN](/articulos/vpn-y-tuneles/).
+
+## Lo esencial
+
+- ARP traduce una dirección IP en la dirección MAC correspondiente dentro de la red local.
+- Pregunta a toda la red, responde solo el dueño de la IP, y la respuesta se guarda en la tabla ARP.
+- Para salir de la red, se busca la MAC de la puerta de enlace; la MAC cambia en cada salto.
+- No tiene autenticación, lo que permite el envenenamiento ARP.

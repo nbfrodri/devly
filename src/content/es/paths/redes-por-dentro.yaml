@@ -5,8 +5,14 @@ steps:
   - modelos-osi-y-tcp-ip
   - tipos-de-redes
   - capa-de-enlace
+  - que-es-arp
   - enrutamiento
+  - puerta-de-enlace-predeterminada
+  - protocolos-de-enrutamiento
+  - como-funciona-traceroute
   - subredes-y-cidr
+  - que-es-nat
   - tcp-y-udp
   - ancho-de-banda-latencia-y-rendimiento
   - proxy-y-proxy-inverso
+  - como-viaja-un-paquete-por-internet

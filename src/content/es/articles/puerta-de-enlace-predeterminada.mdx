@@ -1,0 +1,70 @@
+---
+title: "¿Qué es la puerta de enlace predeterminada?"
+description: "La puerta de enlace predeterminada es el router al que un equipo envía todo lo que no va a su propia red. En casa, suele ser el router de la conexión a internet."
+level: basico
+kind: concepto
+layer: redes
+prerequisites:
+  - enrutamiento
+  - subredes-y-cidr
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: ip-route(8) (en inglés)"
+    url: https://man7.org/linux/man-pages/man8/ip-route.8.html
+  - title: "RFC 1812: Requirements for IP Version 4 Routers (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc1812
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **puerta de enlace predeterminada** (*default gateway*) es la dirección del router al que un equipo envía todos los paquetes cuyo destino **no está en su propia red local**. Es la salida por defecto: "si no sé dónde está, se lo doy a él".
+
+En una casa, es el router que da acceso a internet, con direcciones típicas como `192.168.1.1`.
+
+## Cómo decide un equipo
+
+Antes de enviar un paquete, un equipo compara la dirección de destino con su propia red, usando la máscara de [subred](/articulos/subredes-y-cidr/):
+
+- Si el destino está **en la misma red**, lo envía directamente al otro equipo.
+- Si **no**, lo envía a la puerta de enlace, que se encargará de llevarlo más allá.
+
+```js
+const ip = (t) => t.split(".").reduce((n, o) => n * 256 + Number(o), 0);
+const mismaRed = (a, b, bits) => ip(a) >>> (32 - bits) === ip(b) >>> (32 - bits);
+
+const yo = "192.168.1.20";
+const destino = (d) => (mismaRed(yo, d, 24) ? "directo" : "puerta de enlace");
+
+console.log(destino("192.168.1.35")); // "directo"
+console.log(destino("93.184.216.34")); // "puerta de enlace"
+```
+
+## En la tabla de rutas
+
+La puerta de enlace es, en realidad, la **ruta por defecto** de la tabla de [enrutamiento](/articulos/enrutamiento/): la que se usa cuando ninguna otra coincide. En Linux aparece al consultar la tabla:
+
+```bash
+ip route
+# default via 192.168.1.1 dev wlan0
+# 192.168.1.0/24 dev wlan0 proto kernel scope link src 192.168.1.20
+```
+
+La primera línea es la puerta de enlace; la segunda dice que la red local `192.168.1.0/24` se alcanza directamente.
+
+## Cómo se configura
+
+Casi siempre, sola: el servidor DHCP del router la entrega junto con la IP del equipo al conectarse. En servidores se configura a mano.
+
+## Cuando falla
+
+- **Sin puerta de enlace**, o con una equivocada, el equipo ve los demás equipos de su red pero no llega a internet.
+- Para enviar el paquete a la puerta de enlace, el equipo necesita su dirección física: la averigua con [ARP](/articulos/que-es-arp/).
+
+Todo el recorrido, desde que un equipo envía un paquete hasta que llega al otro lado del mundo, lo cuenta [cómo viaja un paquete por internet](/articulos/como-viaja-un-paquete-por-internet/).
+
+## Lo esencial
+
+- La puerta de enlace predeterminada es el router que recibe todo lo que no va a la red local.
+- El equipo decide comparando el destino con su red mediante la máscara.
+- Es la ruta por defecto de la tabla de enrutamiento.
+- Sin ella, o mal configurada, hay red local pero no internet.

@@ -9,6 +9,7 @@ steps:
   - que-es-una-cdn
   - que-es-serverless
   - virtualizacion
+  - que-es-un-vps
   - almacenamiento-de-objetos
   - nube-privada-virtual
   - gestion-de-identidades-y-accesos

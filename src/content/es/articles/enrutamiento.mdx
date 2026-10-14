@@ -101,7 +101,7 @@ Esta regla permite tener una ruta general para un bloque grande y excepciones pa
 
 `0.0.0.0/0` coincide con cualquier dirección. Es la **ruta por defecto**: adónde enviar lo que no encaja con nada más específico.
 
-Tu ordenador tiene una tabla muy corta: su red local y una ruta por defecto que apunta al router de casa, su **puerta de enlace**. Todo lo que no es local se lo entrega a él.
+Tu ordenador tiene una tabla muy corta: su red local y una ruta por defecto que apunta al router de casa, su **[puerta de enlace](/articulos/puerta-de-enlace-predeterminada/)**. Todo lo que no es local se lo entrega a él.
 
 <Quiz
 	client:visible
@@ -116,12 +116,12 @@ Un error de configuración puede hacer que dos routers se pasen un paquete el un
 
 Cada router resta uno antes de reenviarlo. Si llega a cero, lo descarta y avisa al remitente.
 
-Ese mecanismo es el que aprovecha la herramienta `traceroute`. Envía paquetes con TTL 1, luego 2, luego 3, y con los avisos que recibe reconstruye la lista de routers del camino.
+Ese mecanismo es el que aprovecha la herramienta [`traceroute`](/articulos/como-funciona-traceroute/). Envía paquetes con TTL 1, luego 2, luego 3, y con los avisos que recibe reconstruye la lista de routers del camino.
 
 ## Cómo se construyen las tablas
 
 - **Enrutamiento estático.** Alguien escribe las rutas a mano. Sirve para redes pequeñas.
-- **Enrutamiento dinámico.** Los routers se intercambian información mediante **protocolos de enrutamiento** y calculan las rutas solos. Si un enlace cae, recalculan.
+- **Enrutamiento dinámico.** Los routers se intercambian información mediante **[protocolos de enrutamiento](/articulos/protocolos-de-enrutamiento/)** y calculan las rutas solos. Si un enlace cae, recalculan.
 
 La red de routers y enlaces es un [grafo](/articulos/grafos/), y calcular las rutas es un problema de caminos más cortos sobre él.
 
