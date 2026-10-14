@@ -1,0 +1,142 @@
+---
+title: "Diferencias entre PUT y PATCH"
+description: "Los dos modifican un recurso en HTTP. PUT lo sustituye entero por lo que se envía; PATCH aplica solo los cambios indicados."
+level: intermedio
+kind: comparacion
+layer: redes
+prerequisites:
+  - que-es-http
+  - que-es-rest
+  - get-y-post
+updated: 2026-10-13
+sources:
+  - title: "MDN: PUT"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Methods/PUT
+  - title: "MDN: PATCH"
+    url: https://developer.mozilla.org/es/docs/Web/HTTP/Methods/PATCH
+  - title: "RFC 9110: HTTP Semantics"
+    url: https://www.rfc-editor.org/info/rfc9110/
+  - title: "RFC 5789: PATCH Method for HTTP"
+    url: https://www.rfc-editor.org/info/rfc5789/
+  - title: "RFC 7396: JSON Merge Patch"
+    url: https://www.rfc-editor.org/info/rfc7396/
+  - title: "RFC 6902: JavaScript Object Notation (JSON) Patch"
+    url: https://www.rfc-editor.org/info/rfc6902/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**PUT** y **PATCH** son dos métodos de [HTTP](/articulos/que-es-http/) para modificar un recurso que ya existe. **PUT** lo **sustituye entero**: lo que se envía pasa a ser el recurso completo. **PATCH** aplica **solo los cambios** que se indican, y deja el resto como estaba.
+
+En una API [REST](/articulos/que-es-rest/), los dos se usan para actualizar, junto con [GET y POST](/articulos/get-y-post/) para leer y crear, y DELETE para borrar.
+
+## PUT: sustituir
+
+```http
+PUT /usuarios/42
+Content-Type: application/json
+
+{"nombre": "Ana", "ciudad": "Sevilla"}
+```
+
+El servidor guarda **exactamente** eso como el usuario 42. Si antes tenía también un correo y no se ha enviado, el correo desaparece.
+
+Por eso, con PUT hay que enviar el recurso **completo**, aunque solo cambie un campo.
+
+## PATCH: modificar una parte
+
+```http
+PATCH /usuarios/42
+Content-Type: application/merge-patch+json
+
+{"ciudad": "Sevilla"}
+```
+
+Solo cambia la ciudad. El nombre y el correo se quedan como estaban.
+
+## La diferencia en código
+
+```js
+const usuario = { nombre: "Ana", correo: "ana@ejemplo.com", ciudad: "Madrid" };
+
+const put = (_actual, nuevo) => ({ ...nuevo });
+
+function patch(actual, cambios) {
+	const resultado = { ...actual };
+
+	for (const [campo, valor] of Object.entries(cambios)) {
+		if (valor === null) delete resultado[campo];
+		else resultado[campo] = valor;
+	}
+
+	return resultado;
+}
+
+console.log(JSON.stringify(put(usuario, { nombre: "Ana", ciudad: "Sevilla" }))); // {"nombre":"Ana","ciudad":"Sevilla"}
+console.log(JSON.stringify(patch(usuario, { ciudad: "Sevilla" }))); // {"nombre":"Ana","correo":"ana@ejemplo.com","ciudad":"Sevilla"}
+console.log(JSON.stringify(patch(usuario, { correo: null }))); // {"nombre":"Ana","ciudad":"Madrid"}
+```
+
+Con PUT, el correo se pierde porque no se envió. Con PATCH, solo cambia la ciudad, y un `null` sirve para borrar un campo. Es el formato llamado **JSON Merge Patch**, definido en el RFC 7396.
+
+## Dos formatos de PATCH
+
+El RFC 5789, que define PATCH, no dice cómo describir los cambios: lo decide el formato que se envía. Los dos más usados:
+
+- **JSON Merge Patch**: se envía un objeto con los campos nuevos, como en el ejemplo. Simple, pero no permite, por ejemplo, añadir un elemento a una lista sin reenviarla entera.
+- **JSON Patch**, del RFC 6902: se envía una lista de operaciones.
+
+```json
+[
+	{ "op": "replace", "path": "/ciudad", "value": "Sevilla" },
+	{ "op": "add", "path": "/etiquetas/-", "value": "cliente-vip" },
+	{ "op": "remove", "path": "/correo" }
+]
+```
+
+Más potente y más complejo.
+
+## Idempotencia
+
+Un método es **[idempotente](/articulos/atomicidad-e-idempotencia/)** si repetir la petición tiene el mismo efecto que hacerla una vez.
+
+- **PUT es idempotente**: enviar dos veces el mismo usuario completo deja el mismo resultado. Por eso se puede reintentar sin miedo si se pierde la respuesta.
+- **PATCH no tiene por qué serlo**: depende de los cambios. "Pon la ciudad en Sevilla" sí lo es; "añade un elemento a la lista", no, porque repetido añadiría dos.
+
+## Comparación
+
+| | PUT | PATCH |
+| --- | --- | --- |
+| Qué envía el cliente | El recurso completo | Solo los cambios |
+| Campos no enviados | Se pierden | Se conservan |
+| Idempotente | Sí | No necesariamente |
+| Tamaño de la petición | El de todo el recurso | El de los cambios |
+| Puede crear el recurso | Sí, si no existía y el servidor lo permite | Normalmente no |
+| Especificación | RFC 9110 | RFC 5789 |
+
+## Cuál usar
+
+- **PUT** cuando el cliente tiene el recurso completo y quiere reemplazarlo, por ejemplo al guardar un formulario que muestra todos los campos.
+- **PATCH** cuando se cambia una parte de un recurso grande, o varios clientes pueden modificar campos distintos del mismo recurso a la vez.
+
+Con PUT hay un riesgo concreto: si dos clientes leen el recurso, cada uno cambia un campo distinto y los dos lo guardan con PUT, el segundo sobrescribe el cambio del primero sin saberlo. PATCH reduce el problema, porque cada uno envía solo su cambio. Para evitarlo del todo, el servidor puede rechazar una actualización si el recurso ha cambiado desde que el cliente lo leyó.
+
+En la práctica, muchas API usan PATCH para casi todas las actualizaciones, porque es más flexible y envía menos datos.
+
+<Quiz
+	client:visible
+	question="Un recurso tiene nombre, correo y ciudad. Se hace un PUT enviando solo el nombre y la ciudad. ¿Qué pasa con el correo?"
+	options={[
+		"Se conserva",
+		"Desaparece, porque PUT sustituye el recurso entero",
+		"El servidor devuelve un error siempre",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- PUT sustituye el recurso entero por lo que se envía; los campos omitidos se pierden.
+- PATCH aplica solo los cambios indicados y conserva el resto.
+- PUT es idempotente; PATCH no tiene por qué serlo.
+- Los cambios de un PATCH se describen con formatos como JSON Merge Patch o JSON Patch.

@@ -4,6 +4,7 @@ layer: aplicaciones
 steps:
   - que-es-una-api
   - que-es-rest
+  - put-y-patch
   - que-es-nodejs
   - que-es-un-middleware
   - autenticacion-y-autorizacion
