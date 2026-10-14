@@ -1,0 +1,126 @@
+---
+title: "Diferencias entre FAT y NTFS"
+description: "FAT es un sistema de archivos sencillo y universal, que entienden casi todos los dispositivos. NTFS es el de Windows: más robusto, con permisos y registro de cambios."
+level: intermedio
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - sistema-de-archivos
+  - discos-duros-y-ssd
+updated: 2026-10-13
+sources:
+  - title: "Microsoft: Comparación de la funcionalidad de los sistemas de archivos"
+    url: https://learn.microsoft.com/es-es/windows/win32/fileio/filesystem-functionality-comparison
+  - title: "Microsoft: Información general sobre NTFS"
+    url: https://learn.microsoft.com/es-es/windows-server/storage/file-server/ntfs-overview
+  - title: "Microsoft: Especificación del sistema de archivos exFAT"
+    url: https://learn.microsoft.com/es-es/windows/win32/fileio/exfat-specification
+  - title: "Linux Kernel: VFAT (en inglés)"
+    url: https://docs.kernel.org/filesystems/vfat.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**FAT** y **NTFS** son dos [sistemas de archivos](/articulos/sistema-de-archivos/): dos formas de organizar los datos de un disco o una memoria USB en archivos y carpetas. **FAT** es antiguo y sencillo, y lo entiende casi cualquier dispositivo: ordenadores con cualquier sistema operativo, cámaras, consolas, televisores. **NTFS** es el sistema de archivos de Windows: más robusto, con permisos, cifrado y un registro de cambios que protege ante cortes de corriente.
+
+## FAT
+
+Nació a finales de los años setenta y fue el sistema de archivos de MS-DOS y de las primeras versiones de Windows. Su nombre viene de su pieza central: la **tabla de asignación de archivos**, *File Allocation Table*.
+
+### Cómo funciona
+
+El disco se divide en bloques de tamaño fijo, llamados **clústeres**. Un archivo grande ocupa varios, y no tienen por qué estar seguidos. La tabla indica, para cada clúster, cuál es el siguiente del mismo archivo: es una [lista enlazada](/articulos/listas-enlazadas/) guardada en el disco.
+
+```js
+const tabla = { 2: 3, 3: 7, 7: "fin" };
+
+function clusteres(primero) {
+	const cadena = [];
+	let actual = primero;
+
+	while (actual !== "fin") {
+		cadena.push(actual);
+		actual = tabla[actual];
+	}
+
+	return cadena;
+}
+
+console.log(clusteres(2).join(" ")); // "2 3 7"
+```
+
+El directorio dice que el archivo empieza en el clúster 2. La tabla lleva del 2 al 3, del 3 al 7, y el 7 es el último.
+
+Es sencillo, y por eso es fácil de implementar en cualquier aparato. Pero leer un archivo fragmentado obliga a saltar por el disco, y la tabla no guarda nada más: ni dueño, ni permisos.
+
+### Sus variantes
+
+| Variante | Rasgo principal |
+| --- | --- |
+| FAT12 y FAT16 | Las originales, para disquetes y discos pequeños |
+| FAT32 | La más usada; límite de 4 GiB por archivo |
+| exFAT | Versión moderna, sin el límite de 4 GiB, pensada para memorias extraíbles |
+
+El límite más conocido de FAT32 es el tamaño máximo de un archivo:
+
+```js
+const maximoFat32 = 2 ** 32 - 1;
+const pelicula = 5e9;
+
+console.log((maximoFat32 / 2 ** 30).toFixed(0)); // "4"
+console.log(pelicula > maximoFat32); // true
+```
+
+Un vídeo de 5 GB no cabe en una memoria USB formateada en FAT32, aunque la memoria tenga espacio libre de sobra. Es el error que hace descubrir a mucha gente qué sistema de archivos tiene su memoria.
+
+## NTFS
+
+Microsoft lo introdujo en 1993 con Windows NT, y es el sistema de archivos de Windows desde entonces.
+
+- **Registro de cambios.** Antes de modificar la estructura del disco, anota lo que va a hacer en un registro, en inglés *journal*. Si se va la luz a mitad, al arrancar consulta el registro y deja el disco en un estado coherente, sin tener que revisarlo entero. La tabla comparativa de Microsoft lo indica como una de las diferencias con FAT32, que no tiene registro.
+- **Permisos.** Cada archivo y carpeta tiene una lista de quién puede leer, escribir o ejecutar, como explica [permisos y usuarios](/articulos/permisos-y-usuarios/).
+- **Cifrado y compresión** por archivo.
+- **Archivos y volúmenes enormes**, muy por encima de lo que se usa en la práctica.
+- **Metadatos ricos**: fechas, atributos, vínculos, cuotas de espacio por usuario.
+
+## Comparación
+
+| | FAT32 | exFAT | NTFS |
+| --- | --- | --- | --- |
+| Tamaño máximo de archivo | 4 GiB | Enorme | Enorme |
+| Registro de cambios | No | No | Sí |
+| Permisos | No | No | Sí |
+| Cifrado y compresión | No | No | Sí |
+| Compatibilidad | Casi universal | Muy amplia | Windows; otros sistemas, con soporte variable |
+| Uso típico | Dispositivos antiguos y sencillos | Memorias USB y tarjetas | El disco del sistema en Windows |
+
+## Cuál usar
+
+- **Disco del sistema en Windows**: NTFS. Es lo que se instala por defecto.
+- **Memoria USB o tarjeta para compartir** entre Windows, macOS, Linux, cámaras o televisores: **exFAT**, si todos los dispositivos lo admiten. Si alguno es antiguo, FAT32, con su límite de 4 GiB.
+- **Discos en Linux**: sus propios sistemas de archivos, como ext4, como cuenta [la jerarquía de directorios de Linux](/articulos/jerarquia-de-directorios-de-linux/). Linux puede leer y escribir FAT y NTFS, pero no son su opción natural.
+
+## Un apunte práctico
+
+Ni FAT ni NTFS están pensados para que un disco se desconecte en plena escritura. En FAT, al no haber registro de cambios, retirar una memoria sin "expulsarla" puede dejar archivos dañados. Por eso los sistemas operativos piden expulsarla antes: se aseguran de que todo lo pendiente se ha escrito.
+
+Y formatear con un sistema u otro **borra** lo que hubiera. Si hay que cambiar, primero se hace [copia de seguridad](/articulos/copias-de-seguridad/).
+
+<Quiz
+	client:visible
+	question="Un vídeo de 6 GB no se puede copiar a una memoria USB con espacio libre. ¿Cuál es la causa más probable?"
+	options={[
+		"La memoria está dañada",
+		"La memoria está formateada en FAT32, que no admite archivos de más de 4 GiB",
+		"El vídeo está cifrado",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- FAT y NTFS son sistemas de archivos: formas de organizar los datos de un disco.
+- FAT es sencillo y universal; FAT32 no admite archivos de más de 4 GiB.
+- exFAT moderniza FAT para memorias extraíbles, sin ese límite.
+- NTFS, el de Windows, añade registro de cambios, permisos, cifrado y compresión.
+- Para compartir memorias entre sistemas, exFAT; para el disco de Windows, NTFS.

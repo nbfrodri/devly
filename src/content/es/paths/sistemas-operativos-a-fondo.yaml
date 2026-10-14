@@ -10,6 +10,7 @@ steps:
   - planificador-de-procesos
   - memoria-virtual
   - sistema-de-archivos
+  - fat-y-ntfs
   - permisos-y-usuarios
   - terminal-y-shell
   - que-es-linux
