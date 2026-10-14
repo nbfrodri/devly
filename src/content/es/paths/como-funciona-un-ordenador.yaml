@@ -3,8 +3,10 @@ description: De los bits al programa en ejecución, de abajo arriba.
 layer: hardware
 steps:
   - que-es-un-bit
+  - puertas-logicas
   - codificacion-de-caracteres
   - como-funciona-un-procesador
+  - memoria-ram-y-almacenamiento
   - compilador-e-interprete
   - que-es-un-sistema-operativo
   - que-es-un-proceso

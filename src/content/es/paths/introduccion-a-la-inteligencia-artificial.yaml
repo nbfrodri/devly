@@ -3,7 +3,9 @@ description: Cómo aprende un programa a partir de ejemplos y qué es una red ne
 layer: ia
 steps:
   - que-es-el-aprendizaje-automatico
+  - sobreajuste-y-subajuste
   - que-es-una-red-neuronal
+  - descenso-del-gradiente
   - modelos-de-lenguaje
   - embeddings
   - model-context-protocol

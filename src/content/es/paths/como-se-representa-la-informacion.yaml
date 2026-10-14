@@ -1,0 +1,9 @@
+title: Cómo se representa la información
+description: Cómo se convierten en bits los números, el texto y los decimales.
+layer: hardware
+steps:
+  - que-es-un-bit
+  - sistema-hexadecimal
+  - complemento-a-dos
+  - codificacion-de-caracteres
+  - por-que-0-1-mas-0-2-no-da-0-3

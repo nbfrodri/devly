@@ -1,0 +1,164 @@
+---
+title: "¿Qué son las puertas lógicas?"
+description: "Una puerta lógica es un circuito mínimo que combina bits según una regla. Con millones de ellas se construye un procesador."
+level: basico
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - logica-booleana
+updated: 2026-10-13
+sources:
+  - title: "Claude E. Shannon: A Symbolic Analysis of Relay and Switching Circuits (1937, en inglés)"
+    url: https://dspace.mit.edu/handle/1721.1/11173
+  - title: "Nand2Tetris: curso libre para construir un ordenador desde las puertas lógicas (en inglés)"
+    url: https://www.nand2tetris.org/course
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **puerta lógica** es un circuito electrónico muy pequeño que recibe uno o varios [bits](/articulos/que-es-un-bit/) y produce otro bit según una regla fija. Son las piezas elementales con las que se construye cualquier circuito digital, incluido un procesador.
+
+## Qué problema resuelven
+
+Un ordenador tiene que sumar, comparar y tomar decisiones, y solo dispone de electricidad: tensión o ausencia de tensión.
+
+Hace falta un puente entre la lógica y la física. Lo descubrió Claude Shannon en 1937: las operaciones de la [lógica booleana](/articulos/logica-booleana/), con sus valores verdadero y falso, pueden realizarse con circuitos de interruptores. Un circuito cerrado es un 1; uno abierto, un 0.
+
+A partir de ahí, diseñar un circuito que calcule se convirtió en un problema de lógica.
+
+## De qué están hechas
+
+Una puerta se construye con **transistores**. Un transistor funciona como un interruptor que no se acciona con el dedo, sino con electricidad: según la tensión que recibe en una de sus patas, deja pasar o no la corriente entre las otras dos.
+
+Combinando unos pocos transistores se obtiene una puerta. Un procesador actual contiene miles de millones.
+
+## Las puertas básicas
+
+Cada puerta corresponde a una operación lógica. Su comportamiento se describe con una **tabla de verdad**, que da la salida para cada combinación de entradas.
+
+### NOT
+
+Tiene una entrada y la invierte.
+
+| A | Salida |
+| --- | --- |
+| 0 | 1 |
+| 1 | 0 |
+
+### AND
+
+Da 1 solo si las dos entradas son 1.
+
+### OR
+
+Da 1 si al menos una entrada es 1.
+
+### XOR
+
+Da 1 si las entradas son distintas.
+
+| A | B | AND | OR | XOR |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 1 | 1 |
+| 1 | 0 | 0 | 1 | 1 |
+| 1 | 1 | 1 | 1 | 0 |
+
+### NAND y NOR
+
+Son AND y OR con la salida invertida. NAND da 0 solo cuando las dos entradas son 1.
+
+En JavaScript, estas operaciones existen para trabajar bit a bit:
+
+```js
+console.log(1 & 1); // 1
+console.log(1 & 0); // 0
+console.log(1 | 0); // 1
+console.log(1 ^ 1); // 0
+console.log(1 ^ 0); // 1
+```
+
+`&` es AND, `|` es OR y `^` es XOR.
+
+## Una sola puerta basta
+
+Con puertas NAND se puede construir cualquier otra. Por eso se dice que NAND es una puerta **universal**.
+
+```js
+const nand = (a, b) => (a & b ? 0 : 1);
+
+const not = (a) => nand(a, a);
+const and = (a, b) => not(nand(a, b));
+const or = (a, b) => nand(not(a), not(b));
+
+console.log(not(1)); // 0
+console.log(and(1, 1)); // 1
+console.log(or(0, 0)); // 0
+console.log(or(0, 1)); // 1
+```
+
+Aquí NOT, AND y OR están hechas solo con NAND. Tiene una consecuencia práctica: en una fábrica de chips es más sencillo producir muy bien un único tipo de puerta y repetirlo.
+
+## De las puertas a la aritmética
+
+Sumar dos bits tiene cuatro casos:
+
+| A | B | Suma | Acarreo |
+| --- | --- | --- | --- |
+| 0 | 0 | 0 | 0 |
+| 0 | 1 | 1 | 0 |
+| 1 | 0 | 1 | 0 |
+| 1 | 1 | 0 | 1 |
+
+1 más 1 es 2, que en binario se escribe `10`: un 0 y "me llevo una". Ese 1 que pasa a la siguiente posición es el **acarreo**.
+
+Si comparas las columnas con las tablas anteriores, la suma es XOR y el acarreo es AND. Dos puertas forman un **semisumador**:
+
+```js
+function semisumador(a, b) {
+	return { suma: a ^ b, acarreo: a & b };
+}
+
+console.log(semisumador(1, 1).suma); // 0
+console.log(semisumador(1, 1).acarreo); // 1
+console.log(semisumador(1, 0).suma); // 1
+```
+
+Añadiendo otra entrada para el acarreo que viene de la posición anterior se obtiene un **sumador completo**. Encadenando 64 de ellos, un circuito que suma números de 64 bits.
+
+Así se construye todo. La unidad que hace las operaciones dentro de un [procesador](/articulos/como-funciona-un-procesador/) es una gran combinación de puertas.
+
+<Quiz
+	client:visible
+	question="¿Qué puerta lógica calcula el acarreo al sumar dos bits?"
+	options={["AND", "OR", "XOR"]}
+	answer={0}
+/>
+
+## Circuitos que recuerdan
+
+Los circuitos anteriores dan una salida que depende solo de las entradas de ese instante. Se llaman **combinacionales**.
+
+Si la salida de una puerta se conecta de vuelta a una entrada, el circuito puede mantener un valor aunque las entradas cambien. Ese circuito, llamado **biestable**, guarda un bit. Es la base de los registros del procesador y de la memoria.
+
+Los circuitos con memoria se llaman **secuenciales**, y necesitan una señal de reloj que marque cuándo deben actualizar lo que guardan.
+
+## La escalera completa
+
+| Nivel | Qué es |
+| --- | --- |
+| Transistor | Un interruptor controlado por electricidad |
+| Puerta lógica | Unos pocos transistores que realizan una operación |
+| Circuito | Puertas combinadas: sumadores, biestables |
+| Componente | Circuitos combinados: unidad aritmética, registros, memoria |
+| Procesador | Todos los componentes trabajando juntos |
+
+Cada nivel usa el de abajo sin preocuparse de cómo está hecho. Es la misma idea de capas que organiza toda la informática.
+
+## Lo esencial
+
+- Una puerta lógica combina bits según una operación de la lógica booleana.
+- Se construye con transistores, que actúan como interruptores.
+- Las básicas son NOT, AND, OR y XOR; con NAND se pueden construir todas.
+- Sumar dos bits requiere una XOR para la suma y una AND para el acarreo.
+- Realimentando puertas se obtienen circuitos capaces de guardar un bit.

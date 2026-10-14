@@ -1,0 +1,147 @@
+---
+title: "¿Por qué 0,1 + 0,2 no da 0,3?"
+description: "En casi todos los lenguajes, sumar 0,1 y 0,2 da 0,30000000000000004. No es un fallo: es la forma en que los ordenadores guardan los decimales."
+level: basico
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "David Goldberg: What Every Computer Scientist Should Know About Floating-Point Arithmetic (1991, en inglés)"
+    url: https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+  - title: "Python: Aritmética de punto flotante, problemas y limitaciones"
+    url: https://docs.python.org/es/3/tutorial/floatingpoint.html
+  - title: "MDN: Number.EPSILON (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+---
+
+import { Quiz } from "@/components/quiz";
+
+Abre la consola de cualquier navegador y suma 0,1 más 0,2. El resultado no es 0,3.
+
+```js
+console.log(0.1 + 0.2); // 0.30000000000000004
+console.log(0.1 + 0.2 === 0.3); // false
+```
+
+No es un error de JavaScript. Ocurre igual en Python, en Java, en C y en casi cualquier lenguaje. Es una consecuencia de cómo guardan los ordenadores los números con decimales.
+
+## El mismo problema, en decimal
+
+Intenta escribir un tercio con decimales: 0,3333... No acaba nunca. Si solo tienes sitio para diez cifras, escribes 0,3333333333 y aceptas un pequeño error.
+
+Y si sumas tres veces ese número, obtienes 0,9999999999, no 1.
+
+No es que las matemáticas fallen. Es que un tercio no se puede escribir de forma exacta en base 10 con un número finito de cifras.
+
+## En binario le pasa a 0,1
+
+Los ordenadores trabajan en [binario](/articulos/que-es-un-bit/), y en binario las cifras tras la coma valen un medio, un cuarto, un octavo, y así sucesivamente.
+
+Algunos números encajan a la perfección:
+
+| Decimal | Binario |
+| --- | --- |
+| 0,5 | 0,1 |
+| 0,25 | 0,01 |
+| 0,75 | 0,11 |
+
+Otros no. Un décimo no se puede escribir como suma de medios, cuartos y octavos. En binario es periódico:
+
+```
+0,0001100110011001100110011...
+```
+
+El grupo `0011` se repite sin fin, igual que el 3 de un tercio.
+
+Como la memoria es finita, el ordenador corta en algún punto y guarda el número más cercano que puede representar. Lo que se guarda al escribir `0.1` no es exactamente un décimo, sino algo como:
+
+```js
+console.log((0.1).toFixed(20)); // "0.10000000000000000555"
+```
+
+Lo mismo le pasa a 0,2 y a 0,3. Al sumar las aproximaciones de 0,1 y 0,2, los pequeños errores no se cancelan, y el resultado es un número ligeramente distinto de la aproximación de 0,3.
+
+En cambio, con números que sí encajan en binario no hay sorpresa:
+
+```js
+console.log(0.5 + 0.25 === 0.75); // true
+```
+
+## La coma flotante
+
+El formato que usan los ordenadores para estos números se llama **coma flotante**, y está definido en un estándar internacional, el IEEE 754. Por eso todos los lenguajes dan el mismo resultado.
+
+Guarda cada número como en la notación científica: unas cifras significativas y un exponente que indica dónde va la coma. El formato más común usa 64 [bits](/articulos/que-es-un-bit/), lo que da unas quince o dieciséis cifras decimales de precisión.
+
+Es un compromiso muy bueno: con el mismo tamaño representa desde números minúsculos hasta enormes. El precio es que casi ningún decimal se guarda de forma exacta.
+
+## Cómo convivir con ello
+
+### No comparar con igualdad
+
+Preguntar si dos números con decimales son exactamente iguales rara vez funciona. Se comprueba si están lo bastante cerca:
+
+```js
+function casiIguales(a, b) {
+	return Math.abs(a - b) < Number.EPSILON;
+}
+
+console.log(casiIguales(0.1 + 0.2, 0.3)); // true
+```
+
+`Number.EPSILON` es una distancia minúscula, válida para números de tamaño cercano a 1. Para valores grandes hay que usar una tolerancia proporcional a su magnitud.
+
+### El dinero, en enteros
+
+Nunca se guarda dinero en coma flotante. Un céntimo de error por operación, multiplicado por millones de operaciones, es un problema serio.
+
+Lo habitual es trabajar en la unidad más pequeña, los céntimos, con números enteros, que sí son exactos:
+
+```js
+const precioEnCentimos = 10 + 20;
+
+console.log(precioEnCentimos); // 30
+console.log(precioEnCentimos / 100); // 0.3
+```
+
+La división solo se hace al final, para mostrar el importe. Las bases de datos y muchos lenguajes ofrecen además tipos decimales exactos, pensados para esto.
+
+### Redondear al mostrar
+
+El error está en una cifra muy lejana. Al mostrar el número con los decimales que interesan, desaparece:
+
+```js
+console.log((0.1 + 0.2).toFixed(2)); // "0.30"
+```
+
+## También afecta a los enteros grandes
+
+En JavaScript todos los números corrientes son de coma flotante, también los enteros. Eso significa que solo son exactos hasta cierto tamaño:
+
+```js
+console.log(Number.MAX_SAFE_INTEGER); // 9007199254740991
+console.log(9007199254740992 + 1); // 9007199254740992
+```
+
+Por encima de ese límite, sumar 1 puede no cambiar nada. Para enteros mayores existe otro tipo, `BigInt`.
+
+<Quiz
+	client:visible
+	question="¿Por qué 0,1 no se guarda de forma exacta en un ordenador?"
+	options={[
+		"Porque JavaScript tiene un error",
+		"Porque en binario tiene infinitas cifras y hay que cortarlo",
+		"Porque los ordenadores no admiten decimales",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Sumar 0,1 y 0,2 da 0,30000000000000004 en casi cualquier lenguaje.
+- La causa es que 0,1 tiene infinitas cifras en binario, como un tercio en decimal, y se guarda aproximado.
+- El formato de coma flotante es un estándar: no es un fallo de ningún lenguaje.
+- Los decimales se comparan con un margen, no con igualdad exacta.
+- El dinero se guarda en enteros o en tipos decimales exactos.

@@ -1,0 +1,138 @@
+---
+title: "¿Qué son el sobreajuste y el subajuste?"
+description: "Un modelo sobreajustado memoriza los ejemplos y falla con datos nuevos; uno subajustado no llega a captar el patrón."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+updated: 2026-10-13
+sources:
+  - title: "Google: Sobreajuste (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/overfitting?hl=es-419
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, libro de texto libre (en inglés)"
+    url: https://www.deeplearningbook.org/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **sobreajuste** (*overfitting*) ocurre cuando un modelo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) se adapta tanto a sus datos de entrenamiento que falla con datos nuevos. El **subajuste** (*underfitting*) es lo contrario: el modelo es demasiado simple y no capta el patrón ni siquiera en los datos con los que aprendió.
+
+Son los dos modos de fracasar al entrenar un modelo.
+
+## El objetivo es generalizar
+
+Un modelo no se entrena para acertar los ejemplos que ya conoce. Para eso bastaría una tabla. Se entrena para acertar con casos que **no ha visto**. A esa capacidad se le llama **generalizar**.
+
+Piensa en dos estudiantes ante un examen:
+
+- Uno memoriza las respuestas de los ejercicios resueltos. Si el examen repite esos ejercicios, saca un diez. Si cambia los números, no sabe qué hacer.
+- Otro entiende el método. Quizá cometa algún error, pero resuelve problemas nuevos.
+
+El primero ha sobreajustado. El segundo ha generalizado.
+
+## Sobreajuste
+
+Un modelo sobreajustado ha aprendido los ejemplos con todos sus detalles, incluidos los que eran casualidad: el **ruido** de los datos.
+
+Los datos reales nunca son limpios. Tienen errores de medida, casos raros, coincidencias. Un modelo con mucha capacidad puede aprenderse esas rarezas como si fueran reglas.
+
+Este ejemplo lleva la idea al extremo, con un "modelo" que memoriza:
+
+```js
+const entrenamiento = [
+	{ x: 1, y: 2 },
+	{ x: 2, y: 4 },
+	{ x: 3, y: 6 },
+];
+
+const memoria = new Map(entrenamiento.map((caso) => [caso.x, caso.y]));
+const modeloQueMemoriza = (x) => memoria.get(x) ?? 0;
+const modeloQueGeneraliza = (x) => 2 * x;
+
+console.log(modeloQueMemoriza(2)); // 4
+console.log(modeloQueGeneraliza(2)); // 4
+
+console.log(modeloQueMemoriza(10)); // 0
+console.log(modeloQueGeneraliza(10)); // 20
+```
+
+Con un dato que conocía, los dos aciertan. Con uno nuevo, el que memoriza no tiene nada que decir.
+
+### Cómo se detecta
+
+El sobreajuste no se ve mirando solo los datos de entrenamiento: ahí el modelo va perfecto. Se ve comparando dos mediciones:
+
+| | Error en entrenamiento | Error en datos nuevos |
+| --- | --- | --- |
+| Buen ajuste | Bajo | Bajo |
+| Sobreajuste | Muy bajo | Alto |
+| Subajuste | Alto | Alto |
+
+La señal del sobreajuste es la **distancia** entre los dos. Por eso se reserva siempre una parte de los datos que no se usa al entrenar.
+
+Durante el entrenamiento se observa algo característico: el error en los datos de entrenamiento baja sin parar, mientras que el error en los datos reservados baja al principio y, a partir de cierto punto, empieza a subir. En ese punto el modelo deja de aprender el patrón y empieza a memorizar.
+
+## Subajuste
+
+El modelo es demasiado simple para el problema. Intentar describir con una línea recta unos datos que dibujan una curva es el caso típico: por mucho que se entrene, la recta no puede doblarse.
+
+Se reconoce porque el error es alto en todas partes, también en los datos de entrenamiento.
+
+Sus causas habituales:
+
+- Un modelo con poca capacidad.
+- Pocas características, o poco informativas.
+- Un entrenamiento demasiado corto.
+
+<Quiz
+	client:visible
+	question="Un modelo acierta el 99 % en los datos de entrenamiento y el 60 % en datos nuevos. ¿Qué le pasa?"
+	options={["Subajuste", "Sobreajuste", "Está bien ajustado"]}
+	answer={1}
+/>
+
+## El equilibrio
+
+Los dos problemas tiran en direcciones opuestas:
+
+- Un modelo **demasiado simple** se equivoca porque parte de supuestos rígidos. Se dice que tiene mucho **sesgo**.
+- Un modelo **demasiado flexible** cambia mucho según los ejemplos concretos que le toquen. Se dice que tiene mucha **varianza**.
+
+Aumentar la complejidad reduce el sesgo y sube la varianza. El objetivo es el punto intermedio en el que el error con datos nuevos es mínimo.
+
+## Cómo combatir el sobreajuste
+
+- **Más datos.** Es el remedio más eficaz. Con muchos ejemplos, memorizar deja de ser posible y las casualidades se compensan.
+- **Un modelo más simple.** Menos parámetros, menos capacidad para memorizar.
+- **Regularización.** Se penaliza al modelo por ser complejo, de modo que solo se complica si de verdad mejora.
+- **Parada temprana.** Se detiene el entrenamiento cuando el error en los datos reservados deja de bajar.
+- **Aumento de datos.** Se crean ejemplos nuevos transformando los existentes, por ejemplo girando o recortando imágenes.
+- **Descarte** (*dropout*). En [redes neuronales](/articulos/que-es-una-red-neuronal/), se desactivan neuronas al azar durante el entrenamiento, para que la red no dependa de ninguna en particular.
+
+Para el subajuste, lo contrario: un modelo más capaz, mejores características o más entrenamiento.
+
+## Tres conjuntos de datos
+
+Para medir bien se dividen los datos en tres partes:
+
+| Conjunto | Para qué |
+| --- | --- |
+| Entrenamiento | Ajustar los parámetros del modelo |
+| Validación | Comparar variantes y decidir cuándo parar |
+| Prueba | Medir el resultado final, una sola vez |
+
+El conjunto de prueba no debe influir en ninguna decisión. Si se usa para elegir entre modelos, acaba filtrándose información y la medida final deja de ser fiable: es otra forma, más sutil, de sobreajustar.
+
+Cuando hay pocos datos se usa la **validación cruzada**: se divide en varias partes y se entrena varias veces, usando cada vez una parte distinta para validar.
+
+## Una trampa relacionada
+
+Si en los datos de entrenamiento se cuela información que no estará disponible al usar el modelo de verdad, las mediciones salen excelentes y el modelo fracasa después. Se llama **fuga de datos**. Un resultado demasiado bueno es motivo para sospechar.
+
+## Lo esencial
+
+- Un modelo se entrena para acertar con datos que no ha visto.
+- El sobreajuste es memorizar los ejemplos, ruido incluido: error bajo en entrenamiento y alto en datos nuevos.
+- El subajuste es un modelo demasiado simple: error alto en los dos.
+- Se detectan comparando el error en entrenamiento con el error en datos reservados.
+- Contra el sobreajuste ayudan más datos, modelos más simples, regularización y parar a tiempo.

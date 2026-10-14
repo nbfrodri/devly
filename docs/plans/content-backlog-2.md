@@ -66,7 +66,7 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 - [ ] Diferencias entre aplicaciones nativas, híbridas y PWA
 - [ ] ¿Qué es el internet de las cosas? (TCP y UDP)
 - [ ] El protocolo MQTT (colas de mensajes)
-- [ ] Diferencias entre microcontrolador y microprocesador (procesador)
+- [x] Diferencias entre microcontrolador y microprocesador (procesador)
 
 ## Blockchain
 
@@ -76,8 +76,8 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Inteligencia artificial
 
-- [ ] Sobreajuste y subajuste (aprendizaje automático)
-- [ ] El descenso del gradiente (red neuronal)
+- [x] Sobreajuste y subajuste (aprendizaje automático)
+- [x] El descenso del gradiente (red neuronal)
 - [ ] ¿Qué es un transformer? (modelo de lenguaje)
 - [ ] Ventana de contexto y tokens (modelo de lenguaje)
 - [ ] Generación aumentada por recuperación, RAG (embeddings)
@@ -85,8 +85,8 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Hardware
 
-- [ ] Puertas lógicas (lógica booleana, bit)
-- [ ] Memoria RAM y almacenamiento (procesador)
+- [x] Puertas lógicas (lógica booleana, bit)
+- [x] Memoria RAM y almacenamiento (procesador)
 
 ## Ética y derecho
 

@@ -1,0 +1,162 @@
+---
+title: "¿Cómo se representan los números negativos? El complemento a dos"
+description: "El complemento a dos es la forma en que los ordenadores guardan los números enteros negativos usando solo bits."
+level: intermedio
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - sistema-hexadecimal
+updated: 2026-10-13
+sources:
+  - title: "Thomas Finley: Two's Complement, apuntes de la Universidad de Cornell (en inglés)"
+    url: https://www.cs.cornell.edu/~tomf/notes/cps104/twoscomp.html
+  - title: "MDN: Bitwise NOT (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_NOT
+  - title: "Nand2Tetris: curso libre para construir un ordenador desde las puertas lógicas (en inglés)"
+    url: https://www.nand2tetris.org/course
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **complemento a dos** es el método que usan casi todos los ordenadores para representar números enteros negativos en binario. Permite guardar positivos y negativos con los mismos [bits](/articulos/que-es-un-bit/) y sumarlos con el mismo circuito.
+
+## Qué problema resuelve
+
+En binario solo hay ceros y unos. No existe un signo menos. Para representar números negativos hay que decidir cómo codificar el signo con bits.
+
+### La idea obvia y por qué falla
+
+Lo primero que se ocurre es reservar un bit para el signo: 0 si es positivo, 1 si es negativo. Con 8 bits, `00000101` sería 5 y `10000101`, −5. Se llama **signo y magnitud**.
+
+Tiene dos defectos:
+
+- **Hay dos ceros.** `00000000` y `10000000` serían +0 y −0: dos representaciones para el mismo número.
+- **La suma no funciona tal cual.** Sumar un positivo y un negativo exige un circuito distinto, que compare signos y decida si suma o resta.
+
+## La idea del complemento a dos
+
+Imagina un cuentakilómetros de tres cifras. Si marca 000 y retrocedes un kilómetro, pasa a 999. En ese aparato, 999 se comporta como −1: si le sumas 1, vuelve a 000.
+
+El complemento a dos hace lo mismo en binario. Con 8 bits, el número que hay "justo antes" de `00000000` es `11111111`. Ese es el −1.
+
+| Binario | Valor |
+| --- | --- |
+| 01111111 | 127 |
+| 00000001 | 1 |
+| 00000000 | 0 |
+| 11111111 | −1 |
+| 11111110 | −2 |
+| 10000000 | −128 |
+
+El primer bit sigue indicando el signo: 0 para positivos, 1 para negativos. Pero el resto no es la magnitud tal cual.
+
+## Cómo se obtiene un negativo
+
+Para cambiar el signo de un número:
+
+1. Se invierten todos los bits.
+2. Se suma 1.
+
+Con el 5:
+
+| Paso | Resultado |
+| --- | --- |
+| 5 en binario | 00000101 |
+| Invertir los bits | 11111010 |
+| Sumar 1 | 11111011 |
+
+`11111011` es −5. El mismo procedimiento sirve para volver: invertir y sumar 1 da de nuevo `00000101`.
+
+```js
+function negar(numero) {
+	return ~numero + 1;
+}
+
+console.log(negar(5)); // -5
+console.log(negar(-5)); // 5
+console.log(~5); // -6
+```
+
+El operador `~` invierte los bits. Por sí solo da −6, porque falta sumar 1.
+
+## Por qué es tan cómodo
+
+**La suma no cambia.** Para sumar un positivo y un negativo se usa el mismo circuito de siempre, sin mirar los signos:
+
+| | Binario | Valor |
+| --- | --- | --- |
+| | 00000101 | 5 |
+| + | 11111101 | −3 |
+| = | 00000010 | 2 |
+
+En la suma sale un acarreo por la izquierda que no cabe en los 8 bits y se descarta. El resultado es correcto.
+
+Las consecuencias:
+
+- **Restar es sumar.** Para calcular `a − b`, se suma `a` con el negativo de `b`. El procesador no necesita un circuito para restar.
+- **Hay un solo cero.**
+
+Por eso lo adoptó prácticamente toda la industria: simplifica las [puertas lógicas](/articulos/puertas-logicas/) necesarias.
+
+## El rango
+
+Con `n` bits se representan los enteros desde −2 elevado a `n − 1` hasta 2 elevado a `n − 1`, menos 1.
+
+| Bits | Mínimo | Máximo |
+| --- | --- | --- |
+| 8 | −128 | 127 |
+| 16 | −32 768 | 32 767 |
+| 32 | −2 147 483 648 | 2 147 483 647 |
+
+Hay un negativo más que positivos. El cero ocupa una de las combinaciones del lado positivo.
+
+<Quiz
+	client:visible
+	question="Con 8 bits en complemento a dos, ¿qué número representa 11111111?"
+	options={["255", "−1", "−127"]}
+	answer={1}
+/>
+
+## El desbordamiento
+
+¿Qué pasa si se suma 1 al máximo? Con 8 bits, 127 es `01111111`. Al sumarle 1 queda `10000000`, que es −128.
+
+El número da la vuelta, como el cuentakilómetros. Se llama **desbordamiento** (*overflow*).
+
+```js
+const numeros = new Int8Array(1);
+
+numeros[0] = 127;
+numeros[0] = numeros[0] + 1;
+
+console.log(numeros[0]); // -128
+```
+
+`Int8Array` guarda enteros de 8 bits con signo, así que reproduce el comportamiento exacto.
+
+El desbordamiento ha causado fallos reales, y es la raíz del [problema del año 2038](/articulos/el-efecto-2000-y-el-problema-de-2038/): un contador de segundos de 32 bits que, al pasar su máximo, salta a un valor negativo.
+
+## Con signo y sin signo
+
+Los mismos bits pueden interpretarse de dos formas:
+
+| Bits | Sin signo | Con signo |
+| --- | --- | --- |
+| 11111111 | 255 | −1 |
+| 10000000 | 128 | −128 |
+
+Muchos lenguajes tienen tipos distintos para cada caso. Un entero **sin signo** de 8 bits va de 0 a 255; uno **con signo**, de −128 a 127. Los bits son idénticos: lo que cambia es el [tipo](/articulos/tipos-de-datos/) con el que el programa los lee.
+
+Confundir los dos es una fuente clásica de errores, sobre todo al comparar un valor con signo y otro sin él.
+
+## Y en JavaScript
+
+Los números normales de JavaScript no son enteros en complemento a dos, sino números de coma flotante. Por eso representan enteros de forma exacta solo hasta cierto límite, y a partir de ahí [pierden precisión](/articulos/por-que-0-1-mas-0-2-no-da-0-3/). Los operadores de bits, como `~`, sí trabajan con enteros de 32 bits en complemento a dos.
+
+## Lo esencial
+
+- El complemento a dos representa los enteros negativos de modo que la suma funcione sin casos especiales.
+- Para cambiar el signo de un número se invierten sus bits y se suma 1.
+- Hay un solo cero, y restar equivale a sumar el negativo.
+- Con `n` bits, el rango va de −2 elevado a `n − 1` hasta 2 elevado a `n − 1`, menos 1.
+- Al pasar del máximo, el valor da la vuelta al mínimo: es el desbordamiento.

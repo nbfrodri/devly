@@ -1,0 +1,125 @@
+---
+title: "Diferencias entre la memoria RAM y el almacenamiento"
+description: "La RAM es rápida y se borra al apagar; el almacenamiento es lento y permanente. Un ordenador necesita los dos."
+level: basico
+kind: comparacion
+layer: hardware
+prerequisites:
+  - como-funciona-un-procesador
+updated: 2026-10-13
+sources:
+  - title: "Operating Systems: Three Easy Pieces, I/O Devices (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf
+  - title: "Operating Systems: Three Easy Pieces, Hard Disk Drives (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf
+  - title: "Operating Systems: Three Easy Pieces, Flash-based SSDs (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **memoria RAM** es donde un ordenador guarda lo que está usando en este momento: es muy rápida, pero se vacía al apagarlo. El **almacenamiento** es donde guarda lo que debe conservarse: es más lento, pero permanente. Se confunden a menudo porque las dos se miden en gigabytes.
+
+## Por qué hacen falta dos
+
+Lo ideal sería una única memoria rápida, grande, barata y que no se borrase. No existe. Cada tecnología ofrece unas cualidades a costa de otras:
+
+- Lo rápido es caro y, en general, pierde su contenido sin corriente.
+- Lo barato y permanente es lento.
+
+La solución es combinar varias, cada una para lo que hace bien.
+
+Piensa en una mesa de trabajo y un archivador. En la mesa tienes lo que estás usando, a mano, pero el espacio es limitado y hay que recogerla al acabar. En el archivador cabe todo y se queda guardado, pero ir a buscar algo lleva tiempo.
+
+## La memoria RAM
+
+RAM significa *random access memory*, memoria de acceso aleatorio: se puede leer o escribir cualquier posición directamente, sin recorrer las anteriores.
+
+- **Es rápida.** El [procesador](/articulos/como-funciona-un-procesador/) lee y escribe en ella continuamente.
+- **Es volátil.** Necesita corriente para conservar los datos. Al apagar, se pierde todo.
+- **Es limitada y cara** por gigabyte, comparada con el almacenamiento.
+
+Contiene los programas en ejecución y los datos con los que trabajan. Cuando abres un programa, se copia del almacenamiento a la RAM, porque el procesador no puede trabajar a la velocidad que necesita directamente sobre el disco.
+
+Por eso, si se va la luz, pierdes lo que no habías guardado: estaba solo en la RAM.
+
+## El almacenamiento
+
+Es **persistente**: conserva los datos sin corriente. Aquí están el sistema operativo, los programas instalados y tus archivos, organizados por el [sistema de archivos](/articulos/sistema-de-archivos/).
+
+Hay dos tecnologías principales.
+
+### Disco duro mecánico (HDD)
+
+Guarda los datos en platos magnéticos que giran, y los lee un cabezal que se mueve sobre ellos.
+
+Para leer un dato hay que desplazar el cabezal a su sitio y esperar a que el plato gire. Esas esperas mecánicas lo hacen lento, sobre todo cuando los datos están dispersos.
+
+- **A favor:** mucha capacidad por poco dinero.
+- **En contra:** lento, sensible a los golpes, con piezas que se desgastan.
+
+### Unidad de estado sólido (SSD)
+
+Guarda los datos en chips de memoria **flash**, sin ninguna pieza móvil. Llega a cualquier dato de forma electrónica, sin esperas mecánicas.
+
+- **A favor:** mucho más rápida, silenciosa, resistente a los golpes.
+- **En contra:** más cara por gigabyte, y cada celda admite un número limitado de escrituras antes de desgastarse.
+
+Cambiar un disco mecánico por una SSD es una de las mejoras que más se notan en un ordenador: arranca y abre programas mucho más deprisa.
+
+## Comparación
+
+| | RAM | SSD | Disco mecánico |
+| --- | --- | --- | --- |
+| Conserva los datos sin corriente | No | Sí | Sí |
+| Velocidad | Muy alta | Alta | Baja |
+| Coste por gigabyte | Alto | Medio | Bajo |
+| Capacidad habitual | Gigabytes | Cientos de gigabytes | Terabytes |
+| Guarda | Lo que se está usando | Sistema, programas y archivos | Grandes volúmenes, copias |
+
+Las diferencias de velocidad no son pequeñas. Acceder a la RAM lleva del orden de nanosegundos; a una SSD, microsegundos; a un disco mecánico, milisegundos. Entre un extremo y otro hay un factor de un millón.
+
+<Quiz
+	client:visible
+	question="Estás escribiendo un documento y se va la luz antes de guardar. ¿Dónde estaba lo que has perdido?"
+	options={["En la memoria RAM", "En la SSD", "En el procesador"]}
+	answer={0}
+/>
+
+## Qué pasa cuando falta RAM
+
+Cuanto más programas abres, más RAM se ocupa. Cuando se llena, el sistema operativo no se detiene: mueve al almacenamiento lo que lleva tiempo sin usarse, para hacer sitio. Es el mecanismo de la [memoria virtual](/articulos/memoria-virtual/).
+
+Funciona, pero el almacenamiento es mucho más lento que la RAM. Si el sistema pasa el tiempo moviendo datos de un lado a otro, todo se ralentiza. Por eso un ordenador con poca RAM va a tirones al abrir muchas cosas, y por eso ampliar la RAM lo arregla.
+
+Lo que no hace más RAM es acelerar un ordenador al que ya le sobraba.
+
+## La jerarquía completa
+
+RAM y almacenamiento son dos escalones de una escalera más larga:
+
+| Nivel | Velocidad | Capacidad |
+| --- | --- | --- |
+| Registros del procesador | La mayor | Unos pocos valores |
+| Caché del procesador | Muy alta | Megabytes |
+| Memoria RAM | Alta | Gigabytes |
+| SSD | Media | Cientos de gigabytes |
+| Disco mecánico | Baja | Terabytes |
+
+Cuanto más cerca del procesador, más rápido, más pequeño y más caro. Cada nivel guarda una copia de lo más usado del nivel inferior, que es la idea de una [caché](/articulos/que-es-una-cache/).
+
+La jerarquía funciona porque los programas no usan todos los datos por igual: en un momento dado trabajan con una parte pequeña, que cabe en los niveles rápidos.
+
+## Confusiones frecuentes
+
+- **"Tengo 512 GB de memoria."** Casi siempre es almacenamiento. La RAM de un ordenador personal suele ser de 8, 16 o 32 gigabytes.
+- **"Más almacenamiento hace que vaya más rápido."** No. Tener más espacio no acelera nada; que el almacenamiento sea una SSD en lugar de un disco mecánico, sí.
+- **"Si cierro el programa, los datos siguen en la RAM."** El sistema recupera esa memoria para otros usos.
+
+## Lo esencial
+
+- La RAM es rápida y volátil; guarda lo que está en uso.
+- El almacenamiento es más lento y persistente; guarda lo que debe conservarse.
+- Una SSD no tiene partes móviles y es mucho más rápida que un disco mecánico.
+- Cuando la RAM se agota, el sistema usa el almacenamiento como apoyo, y todo va más lento.
+- Las dos forman parte de una jerarquía que va de lo pequeño y rápido a lo grande y lento.

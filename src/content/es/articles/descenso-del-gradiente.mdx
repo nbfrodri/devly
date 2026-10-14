@@ -1,0 +1,154 @@
+---
+title: "¿Qué es el descenso del gradiente?"
+description: "El descenso del gradiente es el método con el que un modelo ajusta sus parámetros paso a paso para reducir su error."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+updated: 2026-10-13
+sources:
+  - title: "Google: Descenso de gradientes (Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/linear-regression/gradient-descent?hl=es-419
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, libro de texto libre (en inglés)"
+    url: https://www.deeplearningbook.org/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **descenso del gradiente** es el algoritmo con el que se entrenan la mayoría de los modelos de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/), incluidas las [redes neuronales](/articulos/que-es-una-red-neuronal/). Ajusta los parámetros del modelo poco a poco, siempre en la dirección que reduce el error.
+
+## El problema
+
+Entrenar un modelo es encontrar los valores de sus parámetros que hacen que se equivoque lo menos posible.
+
+Con un parámetro se podría probar valores hasta dar con el mejor. Un modelo real tiene millones o miles de millones. Probar combinaciones es imposible.
+
+Hace falta un método que diga, en cada momento, hacia dónde mover cada parámetro.
+
+## La función de pérdida
+
+Primero hay que medir el error con un número. De eso se encarga la **función de pérdida**: compara las predicciones del modelo con las respuestas correctas y devuelve un valor. Cuanto mayor, peor.
+
+Entrenar pasa a ser un problema preciso: encontrar los parámetros que hacen mínima la pérdida.
+
+## La idea: bajar una montaña con niebla
+
+Estás en una montaña, de noche y con niebla, y quieres llegar al valle. No ves el paisaje. Lo único que notas es la inclinación del suelo bajo tus pies.
+
+Una estrategia sensata: tantea en qué dirección baja más el terreno, da un paso hacia allí y repite.
+
+El descenso del gradiente hace eso mismo:
+
+- La **altura** es la pérdida.
+- Tu **posición** son los valores de los parámetros.
+- La **inclinación** es el gradiente.
+
+## El gradiente
+
+El **gradiente** indica, para cada parámetro, cuánto cambiaría la pérdida si ese parámetro aumentase un poco. Apunta en la dirección en que la pérdida crece más deprisa.
+
+Como se quiere reducirla, se da un paso en sentido contrario. De ahí el nombre: se **desciende** siguiendo el gradiente.
+
+## El algoritmo
+
+1. Se parte de unos parámetros cualesquiera, normalmente al azar.
+2. Se calcula el gradiente de la pérdida.
+3. Se mueve cada parámetro un poco en sentido contrario a su gradiente.
+4. Se repite hasta que la pérdida deja de bajar.
+
+Este ejemplo busca el valor de `w` que hace mínima la pérdida `(w − 3)²`. La respuesta es 3, donde la pérdida vale cero. Su pendiente es `2 × (w − 3)`.
+
+```js
+function entrenar(tasaDeAprendizaje, pasos) {
+	let w = 0;
+
+	for (let i = 0; i < pasos; i++) {
+		const gradiente = 2 * (w - 3);
+		w = w - tasaDeAprendizaje * gradiente;
+	}
+
+	return w;
+}
+
+const resultado = entrenar(0.1, 100);
+console.log(Math.abs(resultado - 3) < 0.001); // true
+```
+
+El programa no "sabe" que la respuesta es 3. Parte de 0, mira la pendiente y avanza. Cuando `w` es menor que 3, la pendiente es negativa y `w` aumenta; cuando se pasa, la pendiente es positiva y `w` disminuye. Cerca del mínimo la pendiente se hace pequeña y los pasos se acortan solos.
+
+## La tasa de aprendizaje
+
+El tamaño de cada paso lo fija la **tasa de aprendizaje**. Es el ajuste más delicado del entrenamiento.
+
+| Tasa | Qué ocurre |
+| --- | --- |
+| Demasiado pequeña | Avanza con tanta lentitud que el entrenamiento no acaba |
+| Adecuada | Baja de forma constante hasta el mínimo |
+| Demasiado grande | Se pasa de largo, rebota de un lado a otro y puede alejarse |
+
+```js
+function entrenar(tasaDeAprendizaje, pasos) {
+	let w = 0;
+
+	for (let i = 0; i < pasos; i++) {
+		w = w - tasaDeAprendizaje * 2 * (w - 3);
+	}
+
+	return w;
+}
+
+console.log(Math.abs(entrenar(0.1, 50) - 3) < 0.01); // true
+console.log(Math.abs(entrenar(0.0001, 50) - 3) < 0.01); // false
+console.log(Math.abs(entrenar(1.1, 50) - 3) < 0.01); // false
+```
+
+Con una tasa de 0,1 llega. Con 0,0001, tras cincuenta pasos apenas se ha movido. Con 1,1, cada paso lo lanza más lejos que el anterior y el valor se dispara.
+
+La tasa de aprendizaje no la aprende el modelo: la elige quien lo entrena. A los valores de este tipo se les llama **hiperparámetros**.
+
+<Quiz
+	client:visible
+	question="¿Qué pasa si la tasa de aprendizaje es demasiado grande?"
+	options={[
+		"El entrenamiento es muy lento",
+		"Los pasos se pasan del mínimo y el modelo puede no converger",
+		"El modelo aprende más rápido sin inconvenientes",
+	]}
+	answer={1}
+/>
+
+## No usar todos los datos en cada paso
+
+Calcular el gradiente exacto exige recorrer todos los ejemplos de entrenamiento. Con millones de ejemplos, cada paso sería lentísimo.
+
+En la práctica se usa una muestra:
+
+- **Descenso del gradiente estocástico** (SGD): cada paso usa un solo ejemplo, elegido al azar. Rápido, pero errático.
+- **Por minilotes**: cada paso usa un grupo pequeño, de decenas o cientos de ejemplos. Es el punto medio y lo que se usa casi siempre.
+
+El gradiente de un minilote es una aproximación con ruido. Ese ruido, además de salir barato, ayuda a escapar de zonas donde el modelo podría quedarse atascado.
+
+Una pasada completa por todos los datos se llama **época**. Entrenar un modelo lleva muchas.
+
+## El paisaje real no es un cuenco
+
+En el ejemplo, la pérdida tiene un único mínimo. Las de los modelos reales tienen formas mucho más accidentadas:
+
+- **Mínimos locales**: hondonadas que no son el punto más bajo de todo el paisaje. Desde dentro, cualquier dirección sube.
+- **Mesetas**: zonas casi llanas donde el gradiente es tan pequeño que apenas se avanza.
+
+El descenso del gradiente no garantiza encontrar el mejor mínimo posible. En la práctica, los que encuentra suelen ser suficientemente buenos. Existen variantes, como las que añaden **inercia** o adaptan la tasa de aprendizaje de cada parámetro, que avanzan mejor por esos paisajes.
+
+## En una red neuronal
+
+Una red tiene parámetros repartidos en muchas capas. El algoritmo de **retropropagación** calcula el gradiente de todos ellos de forma eficiente, recorriendo la red desde la salida hacia la entrada.
+
+Los dos trabajan juntos: la retropropagación calcula hacia dónde mover cada peso, y el descenso del gradiente lo mueve.
+
+## Lo esencial
+
+- El descenso del gradiente ajusta los parámetros paso a paso para reducir la pérdida.
+- El gradiente indica en qué dirección crece la pérdida; se avanza en la contraria.
+- La tasa de aprendizaje fija el tamaño del paso: si es pequeña, tarda; si es grande, no converge.
+- En la práctica se calcula con minilotes de ejemplos, no con todos los datos.
+- No garantiza el mejor mínimo posible, pero suele encontrar uno bueno.
