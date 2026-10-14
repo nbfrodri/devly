@@ -1,0 +1,58 @@
+---
+title: "¿Qué es la temperatura de un modelo de lenguaje?"
+description: "La temperatura controla cuánto azar hay al elegir cada palabra: baja da respuestas previsibles; alta, más variadas."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - probabilidad-basica
+updated: 2026-10-13
+sources:
+  - title: "Anthropic: Glossary, temperature (en inglés)"
+    url: https://docs.claude.com/en/docs/about-claude/glossary
+  - title: "Google: Machine Learning Glossary (en inglés)"
+    url: https://developers.google.com/machine-learning/glossary
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **temperatura** es un ajuste que controla **cuánto azar** interviene cuando un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) elige la siguiente palabra. Con temperatura baja, el modelo elige casi siempre la opción más probable, y sus respuestas son previsibles. Con temperatura alta, se arriesga más, y las respuestas son más variadas.
+
+## Cómo funciona
+
+En cada paso, el modelo asigna una puntuación a cada posible siguiente token. Esas puntuaciones se convierten en [probabilidades](/articulos/probabilidad-basica/). La temperatura las **concentra** o las **reparte**:
+
+```js
+function probabilidades(puntuaciones, temperatura) {
+	const exponenciales = puntuaciones.map((p) => Math.exp(p / temperatura));
+	const total = exponenciales.reduce((a, b) => a + b, 0);
+	return exponenciales.map((e) => e / total);
+}
+
+const puntuaciones = [2, 1, 0.5];
+
+console.log(probabilidades(puntuaciones, 0.2)[0].toFixed(2)); // "0.99"
+console.log(probabilidades(puntuaciones, 1)[0].toFixed(2)); // "0.63"
+console.log(probabilidades(puntuaciones, 2)[0].toFixed(2)); // "0.48"
+```
+
+La misma opción tiene un 99 % de probabilidades con temperatura 0,2, un 63 % con 1 y un 48 % con 2. Cuanto más alta la temperatura, más se reparten las opciones.
+
+## Cuál usar
+
+| Temperatura | Resultado | Conviene para |
+| --- | --- | --- |
+| Baja | Coherente, repetible | Extraer datos, clasificar, responder preguntas concretas |
+| Media | Equilibrado | Uso general |
+| Alta | Creativo, variado, menos fiable | Ideas, escritura creativa |
+
+Según el glosario de Anthropic, las temperaturas altas favorecen elecciones de palabras poco habituales o sorprendentes, y las bajas, respuestas más conservadoras y deterministas.
+
+## Lo que no hace
+
+Bajar la temperatura no hace que el modelo diga la verdad: solo que elija lo más probable. Si lo más probable es falso, lo dirá con más seguridad. Las [alucinaciones](/articulos/alucinaciones-de-los-modelos-de-lenguaje/) no se arreglan con este ajuste.
+
+## Con qué no confundirla
+
+No tiene que ver con la temperatura física del hardware. El nombre viene de una analogía con la física: a más temperatura, más agitación, más desorden.

@@ -1,0 +1,52 @@
+---
+title: "¿Qué es un depurador?"
+description: "Un depurador es una herramienta que permite detener un programa en un punto, ejecutarlo paso a paso e inspeccionar sus valores para encontrar errores."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - manejo-de-errores-y-excepciones
+updated: 2026-10-13
+sources:
+  - title: "Chrome DevTools: Debug JavaScript (en inglés)"
+    url: https://developer.chrome.com/docs/devtools/javascript
+  - title: "Node.js: Debugging (en inglés)"
+    url: https://nodejs.org/en/learn/getting-started/debugging
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **depurador**, en inglés *debugger*, es una herramienta que permite **detener** un programa en un punto concreto, **avanzar paso a paso** e **inspeccionar** el valor de cada variable en ese momento. Sirve para encontrar por qué un programa no hace lo que debería.
+
+El nombre viene de *bug*, como se cuenta en [por qué se llama bug a un error](/articulos/por-que-se-llama-bug-a-un-error/).
+
+## Qué permite hacer
+
+| Función | Para qué |
+| --- | --- |
+| Punto de interrupción | Parar la ejecución al llegar a una línea |
+| Paso a paso | Ejecutar una línea cada vez |
+| Entrar en una función | Seguir la ejecución dentro de una llamada |
+| Inspeccionar | Ver el valor de las variables |
+| Pila de llamadas | Ver qué funciones han llevado hasta aquí |
+| Punto condicional | Parar solo si se cumple una condición |
+
+En JavaScript, la palabra `debugger` en el código detiene la ejecución si las herramientas del navegador están abiertas:
+
+```javascript
+function calcularTotal(pedido) {
+	debugger;
+	return pedido.lineas.reduce((suma, l) => suma + l.precio, 0);
+}
+```
+
+Los navegadores traen un depurador en sus herramientas de desarrollo, y [Node.js](/articulos/que-es-nodejs/) puede conectarse a uno. Los [IDE](/articulos/que-es-un-ide/) lo integran.
+
+## Frente a imprimir valores
+
+La forma más primitiva de depurar es llenar el código de `console.log`. Funciona, pero obliga a adivinar qué mirar, modificar el código y volver a ejecutar cada vez. Con un depurador se para en el sitio y se mira todo.
+
+## Con qué no confundirlo
+
+- **[Linter](/articulos/que-es-un-linter/)**: analiza el código sin ejecutarlo. El depurador trabaja mientras se ejecuta.
+- **[Pruebas](/articulos/pruebas-de-software/)**: detectan que algo falla. El depurador ayuda a encontrar por qué.

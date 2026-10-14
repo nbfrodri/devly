@@ -1,0 +1,50 @@
+---
+title: "¿Qué es un parámetro de un modelo de IA?"
+description: "Los parámetros son los números que un modelo ajusta durante el entrenamiento, como los pesos de una red neuronal. En ellos queda lo aprendido."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+  - que-es-el-aprendizaje-automatico
+updated: 2026-10-13
+sources:
+  - title: "Google: Machine Learning Glossary (en inglés)"
+    url: https://developers.google.com/machine-learning/glossary
+---
+
+import { Quiz } from "@/components/quiz";
+
+Los **parámetros** de un modelo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) son los números que el modelo **ajusta durante el entrenamiento**. En una [red neuronal](/articulos/que-es-una-red-neuronal/), son sus **pesos** y **sesgos**. Todo lo que el modelo ha aprendido queda guardado en esos números.
+
+## Cuántos hay
+
+Una capa de una red que conecta 784 entradas, los píxeles de una imagen de 28 por 28, con 128 neuronas:
+
+```js
+const entradas = 784;
+const neuronas = 128;
+
+const pesos = entradas * neuronas;
+const sesgos = neuronas;
+
+console.log(pesos + sesgos); // 100480
+```
+
+Más de cien mil parámetros en una sola capa pequeña. Los grandes [modelos de lenguaje](/articulos/modelos-de-lenguaje/) tienen miles de millones. Cuando se dice que un modelo tiene "70 mil millones de parámetros", se habla de esto.
+
+## Cómo se ajustan
+
+Al principio son números al azar y el modelo no acierta nada. El entrenamiento los corrige poco a poco para reducir el error, con la [retropropagación](/articulos/retropropagacion/) y el [descenso del gradiente](/articulos/descenso-del-gradiente/).
+
+## Más parámetros
+
+- **A favor**: más capacidad para aprender patrones complejos.
+- **En contra**: más datos y más cálculo para entrenar, más memoria para usarlo, y más riesgo de [sobreajuste](/articulos/sobreajuste-y-subajuste/).
+
+Cada parámetro ocupa memoria: con 2 bytes por número, un modelo de 7 mil millones de parámetros necesita unos 14 gigabytes solo para cargarlos. Es una de las razones del límite de las [GPU](/articulos/que-es-una-gpu/).
+
+## Con qué no confundirlo
+
+- **[Hiperparámetro](/articulos/que-es-un-hiperparametro/)**: lo decide una persona antes de entrenar, no se aprende.
+- **Parámetro de una función**: en programación, es cada dato que recibe una [función](/articulos/funciones/). Mismo nombre, otro sentido.

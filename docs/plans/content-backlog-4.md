@@ -15,8 +15,8 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [x] ¿Qué es un algoritmo?
 - [ ] ¿Qué es un lenguaje de programación?
 - [ ] ¿Qué es el código fuente?
-- [ ] ¿Qué es una biblioteca?
-- [ ] ¿Qué es un framework?
+- [x] ¿Qué es una biblioteca? Cubierta en la comparación entre biblioteca y framework.
+- [x] ¿Qué es un framework? Cubierto en la comparación entre biblioteca y framework.
 - [x] ¿Qué es un SDK?
 - [x] ¿Qué es la sintaxis?
 - [x] ¿Qué es un literal?
@@ -24,13 +24,13 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [ ] ¿Qué es un puntero o una referencia?
 - [x] ¿Qué es un objeto?
 - [x] ¿Qué es una clase?
-- [ ] ¿Qué es una interfaz?
+- [x] ¿Qué es una interfaz?
 - [x] ¿Qué es un callback?
 - [x] ¿Qué es la refactorización?
 - [x] ¿Qué es la deuda técnica?
-- [ ] ¿Qué es el código espagueti?
+- [x] ¿Qué es el código espagueti?
 - [x] ¿Qué es un linter?
-- [ ] ¿Qué es un depurador?
+- [x] ¿Qué es un depurador?
 - [x] ¿Qué es un IDE?
 
 ### Web y aplicaciones
@@ -39,44 +39,44 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [x] ¿Qué es un dominio?
 - [x] ¿Qué es un puerto?
 - [ ] ¿Qué es un endpoint?
-- [ ] ¿Qué es un webhook?
+- [x] ¿Qué es un webhook?
 - [x] ¿Qué es un código de estado HTTP?
 - [x] ¿Qué es una cabecera HTTP?
 - [x] ¿Qué es localhost?
 - [x] ¿Qué es un certificado digital?
 - [ ] ¿Qué es un hosting?
-- [ ] ¿Qué es el SEO técnico?
+- [x] ¿Qué es el SEO técnico?
 
 ### Datos y sistemas
 
-- [ ] ¿Qué es una clave primaria?
-- [ ] ¿Qué es una consulta?
-- [ ] ¿Qué es un esquema de base de datos?
-- [ ] ¿Qué es un byte?
+- [x] ¿Qué es una clave primaria?
+- [x] ¿Qué es una consulta?
+- [x] ¿Qué es un esquema de base de datos?
+- [x] ¿Qué es un byte?
 - [ ] ¿Qué es un archivo?
-- [ ] ¿Qué es el kernel?
-- [ ] ¿Qué es un driver?
+- [x] ¿Qué es el kernel?
+- [x] ¿Qué es un driver?
 - [x] ¿Qué es el firmware?
-- [ ] ¿Qué es una máquina virtual de un lenguaje?
+- [x] ¿Qué es una máquina virtual de un lenguaje?
 - [x] ¿Qué es una dirección MAC?
 
 ### Seguridad
 
 - [x] ¿Qué es el phishing?
 - [x] ¿Qué es el malware?
-- [ ] ¿Qué es el ransomware?
+- [x] ¿Qué es el ransomware?
 - [x] ¿Qué es un ataque de denegación de servicio?
 - [x] ¿Qué es la autenticación en dos factores?
-- [ ] ¿Qué es una vulnerabilidad de día cero?
+- [x] ¿Qué es una vulnerabilidad de día cero?
 - [x] ¿Qué es la ingeniería social?
 
 ### IA
 
-- [ ] ¿Qué es un parámetro de un modelo?
-- [ ] ¿Qué es un hiperparámetro?
-- [ ] ¿Qué es un conjunto de datos?
-- [ ] ¿Qué es la inferencia?
-- [ ] ¿Qué es la temperatura de un modelo?
+- [x] ¿Qué es un parámetro de un modelo?
+- [x] ¿Qué es un hiperparámetro?
+- [x] ¿Qué es un conjunto de datos?
+- [x] ¿Qué es la inferencia?
+- [x] ¿Qué es la temperatura de un modelo?
 
 ## Comparaciones
 

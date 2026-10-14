@@ -1,0 +1,48 @@
+---
+title: "¿Qué es el ransomware?"
+description: "El ransomware es un programa malicioso que cifra los archivos de una víctima y exige un rescate a cambio de la clave para recuperarlos."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-el-malware
+  - copias-de-seguridad
+updated: 2026-10-13
+sources:
+  - title: "CISA: Stop Ransomware (en inglés)"
+    url: https://www.cisa.gov/stopransomware
+  - title: "CISA: Ransomware Guide (en inglés)"
+    url: https://www.cisa.gov/stopransomware/ransomware-guide
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **ransomware** es un tipo de [malware](/articulos/que-es-el-malware/) que **cifra** los archivos de una víctima, o bloquea sus sistemas, y exige un **rescate**, normalmente en criptomonedas, a cambio de la clave para recuperarlos. El nombre une *ransom*, rescate, y *software*.
+
+## Cómo actúa
+
+1. **Entra**, a menudo por un correo de [phishing](/articulos/que-es-el-phishing/), una vulnerabilidad sin corregir o credenciales robadas.
+2. **Se extiende** por la red, buscando otros equipos y, especialmente, las copias de seguridad.
+3. **Cifra** los archivos con un [cifrado](/articulos/cifrado-simetrico-y-asimetrico/) fuerte. Sin la clave, no hay forma práctica de recuperarlos.
+4. **Pide el rescate**, con un plazo.
+
+Muchos grupos practican además la **doble extorsión**: antes de cifrar, se llevan una copia de los datos y amenazan con publicarlos.
+
+## Cómo protegerse
+
+Las agencias de ciberseguridad, como la estadounidense CISA, coinciden en lo básico:
+
+- **[Copias de seguridad](/articulos/copias-de-seguridad/) desconectadas o inmutables**, que el ataque no pueda alcanzar. Es la defensa más importante, porque permite recuperar sin pagar.
+- **Actualizar** sistemas y programas.
+- **[Autenticación en dos factores](/articulos/que-es-la-autenticacion-en-dos-factores/)**, sobre todo en el acceso remoto.
+- **Mínimos privilegios**, para limitar hasta dónde se extiende.
+- **Segmentar la red** con [cortafuegos](/articulos/cortafuegos/).
+- **Un plan de respuesta**, ensayado antes de necesitarlo.
+
+## ¿Pagar?
+
+Las autoridades lo desaconsejan: no garantiza recuperar los datos, financia nuevos ataques y marca a la víctima como dispuesta a pagar.
+
+## Con qué no confundirlo
+
+El ransomware usa cifrado, la misma técnica que protege los datos. La diferencia es quién tiene la clave.

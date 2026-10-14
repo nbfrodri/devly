@@ -1,0 +1,58 @@
+---
+title: "¿Qué es un webhook?"
+description: "Un webhook es una petición HTTP que un servicio envía a otro automáticamente cuando ocurre algo, para avisarle sin que tenga que preguntar."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - que-es-una-api
+  - que-es-http
+updated: 2026-10-13
+sources:
+  - title: "GitHub: Acerca de los webhooks"
+    url: https://docs.github.com/es/webhooks/about-webhooks
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **webhook** es una petición [HTTP](/articulos/que-es-http/) que un servicio envía **automáticamente** a otro cuando ocurre algo, para avisarle. En lugar de que tu aplicación pregunte una y otra vez "¿ha pasado algo?", el otro servicio la llama cuando pasa.
+
+## Un ejemplo
+
+Una tienda usa un servicio de pagos. Cuando un cliente paga, el servicio de pagos envía una petición POST a una dirección que la tienda le indicó:
+
+```http
+POST /webhooks/pagos HTTP/1.1
+Content-Type: application/json
+
+{"evento": "pago.completado", "pedido": 512, "importe": 49.99}
+```
+
+La tienda recibe el aviso y marca el pedido como pagado.
+
+## Por qué existen
+
+La alternativa es preguntar cada cierto tiempo, lo que explica [polling, long polling, Server-Sent Events y WebSockets](/articulos/polling-sse-y-websockets/): desperdicia peticiones y llega con retraso. Con un webhook, el aviso llega en el momento y solo cuando hay algo.
+
+Los usan servicios de pagos, plataformas de código como GitHub para avisar de cada cambio, y herramientas de mensajería.
+
+## Seguridad
+
+La dirección del webhook es pública: cualquiera podría enviarle peticiones falsas. Por eso el emisor **firma** cada mensaje con un secreto compartido, y el receptor comprueba la firma:
+
+```js
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+const secreto = "secreto-compartido";
+const cuerpo = '{"evento":"pago.completado","pedido":512}';
+const firma = createHmac("sha256", secreto).update(cuerpo).digest("hex");
+
+const esperada = createHmac("sha256", secreto).update(cuerpo).digest("hex");
+console.log(timingSafeEqual(Buffer.from(firma), Buffer.from(esperada))); // true
+```
+
+Además, un webhook puede llegar **más de una vez**: el receptor debe ser [idempotente](/articulos/atomicidad-e-idempotencia/), para no marcar dos veces el mismo pago.
+
+## Con qué no confundirlo
+
+Es una forma de usar una [API](/articulos/que-es-una-api/), al revés de lo habitual: en vez de llamar tú al servicio, el servicio te llama a ti.

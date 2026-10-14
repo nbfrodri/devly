@@ -1,0 +1,50 @@
+---
+title: "¿Qué es una clave primaria?"
+description: "Una clave primaria es la columna, o columnas, que identifican de forma única cada fila de una tabla. No puede repetirse ni estar vacía."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Constraints (en inglés)"
+    url: https://www.postgresql.org/docs/current/ddl-constraints.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **clave primaria** es la columna, o el conjunto de columnas, que **identifica de forma única** cada fila de una tabla en una [base de datos relacional](/articulos/que-es-una-base-de-datos/). Dos filas no pueden tener la misma, y no puede estar vacía.
+
+## Un ejemplo
+
+```sql
+CREATE TABLE clientes (
+	id SERIAL PRIMARY KEY,
+	correo TEXT UNIQUE NOT NULL,
+	nombre TEXT NOT NULL
+);
+```
+
+`id` es la clave primaria. La base de datos rechazará cualquier fila con un `id` repetido o nulo, y crea automáticamente un [índice](/articulos/indices-de-bases-de-datos/) sobre ella para buscar deprisa.
+
+## Para qué sirve
+
+- **Identificar** una fila sin ambigüedad: actualizar o borrar exactamente esa.
+- **Relacionar** tablas: otras tablas guardan ese valor como **clave foránea**. Cada pedido guarda el `id` de su cliente.
+
+## Natural o artificial
+
+- **Natural**: un dato que ya es único en el mundo real, como un número de documento.
+- **Artificial**: un número o un identificador generado sin significado, como `id`.
+
+Se suelen preferir las artificiales. Los datos reales cambian o resultan no ser tan únicos como se creía: un correo se puede cambiar, un documento puede estar mal escrito. Un identificador sin significado nunca necesita cambiar.
+
+## Compuesta
+
+A veces la clave son varias columnas juntas. En una tabla que une pedidos y productos, la pareja `(pedido_id, producto_id)` identifica cada línea, como explica el [modelo entidad-relación](/articulos/modelo-entidad-relacion/).
+
+## Con qué no confundirla
+
+- **Clave foránea**: apunta a la clave primaria de otra tabla. Puede repetirse.
+- **Columna única**: también impide repetidos, como `correo` en el ejemplo, pero una tabla puede tener varias. Clave primaria solo hay una.

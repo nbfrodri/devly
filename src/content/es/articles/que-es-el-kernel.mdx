@@ -1,0 +1,47 @@
+---
+title: "¿Qué es el kernel?"
+description: "El kernel, o núcleo, es la parte central del sistema operativo: la que se ejecuta con todos los privilegios y gestiona el procesador, la memoria y los dispositivos."
+level: basico
+kind: definicion
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+  - llamadas-al-sistema
+updated: 2026-10-13
+sources:
+  - title: "The Linux Kernel Archives: About Linux Kernel (en inglés)"
+    url: https://www.kernel.org/category/about.html
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Limited Direct Execution (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **kernel**, o **núcleo**, es la parte central de un [sistema operativo](/articulos/que-es-un-sistema-operativo/). Es el programa que se ejecuta con **todos los privilegios** y gestiona los recursos del equipo: reparte el procesador entre los procesos, administra la memoria y habla con los dispositivos.
+
+Todo lo demás, los programas, las herramientas y hasta el escritorio, funciona encima de él y le pide lo que necesita.
+
+## Qué hace
+
+| Tarea | Ejemplo |
+| --- | --- |
+| Procesos | Crearlos, terminarlos y decidir cuál usa el procesador, con el [planificador](/articulos/planificador-de-procesos/) |
+| Memoria | Dar a cada proceso su espacio, con [memoria virtual](/articulos/memoria-virtual/) |
+| Dispositivos | Hablar con el hardware, mediante [controladores](/articulos/que-es-un-driver/) |
+| Archivos | Organizar los datos en el [sistema de archivos](/articulos/sistema-de-archivos/) |
+| Red | Enviar y recibir datos |
+| Seguridad | Hacer cumplir los [permisos](/articulos/permisos-y-usuarios/) |
+
+## La frontera con los programas
+
+El procesador distingue un modo privilegiado, el del kernel, y uno restringido, el de los programas. Un programa no puede tocar el hardware directamente: se lo pide al kernel mediante una [llamada al sistema](/articulos/llamadas-al-sistema/). Esa separación es lo que impide que un programa defectuoso tumbe todo el equipo.
+
+## Kernel y sistema operativo
+
+No son lo mismo. El kernel es solo el núcleo. Un sistema operativo completo incluye además utilidades, bibliotecas, servicios y, a menudo, un entorno gráfico.
+
+Es la razón de que Linux, en sentido estricto, sea un kernel, como explica [qué es Linux](/articulos/que-es-linux/). Android usa ese mismo kernel con un sistema completamente distinto encima.
+
+## Diseños
+
+Un kernel puede incluir casi todo el sistema o solo lo mínimo, como compara [núcleo monolítico y micronúcleo](/articulos/nucleo-monolitico-y-micronucleo/).

@@ -1,0 +1,44 @@
+---
+title: "¿Qué es un driver o controlador?"
+description: "Un driver es el software que permite al sistema operativo comunicarse con un dispositivo concreto, como una impresora o una tarjeta gráfica."
+level: basico
+kind: definicion
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+  - interrupciones-y-entrada-salida
+updated: 2026-10-13
+sources:
+  - title: "Microsoft: ¿Qué es un controlador?"
+    url: https://learn.microsoft.com/es-es/windows-hardware/drivers/gettingstarted/what-is-a-driver-
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **driver**, o **controlador**, es un componente de software que permite que el [sistema operativo](/articulos/que-es-un-sistema-operativo/) y un dispositivo se comuniquen. Microsoft lo define así: cuando una aplicación necesita leer datos de un dispositivo, llama a una función que implementa el controlador, y este se encarga de hablar con el hardware.
+
+## Por qué hacen falta
+
+Cada dispositivo, una tarjeta gráfica, una impresora, un ratón, tiene su propia forma de funcionar: sus registros, sus órdenes, sus rarezas, como explica [interrupciones y entrada y salida](/articulos/interrupciones-y-entrada-salida/). El sistema operativo no puede conocerlos todos.
+
+El controlador traduce. El resto del sistema habla con una interfaz común, "imprime esto", y el controlador lo convierte en lo que entiende ese modelo concreto de impresora.
+
+```
+Aplicación → sistema operativo → controlador → dispositivo
+```
+
+## De dónde vienen
+
+- Los sistemas operativos traen controladores para lo más habitual.
+- Los fabricantes publican los de sus dispositivos.
+- En [Linux](/articulos/que-es-linux/), muchos forman parte del propio núcleo.
+
+## Por qué importan
+
+- **Estabilidad**: en muchos sistemas, los controladores se ejecutan con todos los privilegios del núcleo. Un controlador defectuoso puede bloquear el equipo entero. Es uno de los argumentos a favor de los [micronúcleos](/articulos/nucleo-monolitico-y-micronucleo/).
+- **Seguridad**: por lo mismo, un controlador con un fallo es una puerta de entrada.
+- **Rendimiento**: un controlador de gráficos actualizado puede mejorar mucho un juego.
+
+## Con qué no confundirlo
+
+El **[firmware](/articulos/que-es-el-firmware/)** vive **dentro** del dispositivo. El controlador vive en el sistema operativo y habla con ese firmware.

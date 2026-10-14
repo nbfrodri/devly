@@ -1,0 +1,42 @@
+---
+title: "¿Qué es el código espagueti?"
+description: "Código espagueti es el código enredado, sin estructura clara, en el que el flujo salta de un sitio a otro y cuesta seguir qué hace."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - que-es-la-deuda-tecnica
+  - que-es-la-refactorizacion
+updated: 2026-10-13
+sources:
+  - title: "Brian Foote y Joseph Yoder: Big Ball of Mud (en inglés)"
+    url: http://www.laputan.org/mud/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Se llama **código espagueti** al código enredado y sin estructura clara: el flujo salta de un sitio a otro, todo depende de todo y seguir qué hace es como intentar seguir un espagueti en un plato. Es una de las expresiones más antiguas de la jerga de la programación.
+
+## Cómo se reconoce
+
+- **Funciones enormes** que hacen muchas cosas.
+- **Saltos** de un lado a otro del programa, difíciles de seguir.
+- **Variables globales** que cualquier parte modifica.
+- **Condiciones anidadas** a muchos niveles.
+- **Código duplicado** con pequeñas variaciones.
+- **Miedo a tocarlo**: cualquier cambio rompe algo inesperado.
+
+El término nació en la época en que los programas usaban mucho la instrucción `goto`, que saltaba a cualquier línea. Esos saltos, dibujados, parecían un plato de espaguetis. La programación estructurada, con [bucles](/articulos/bucles/), [condicionales](/articulos/condicionales/) y [funciones](/articulos/funciones/), nació en parte para evitarlo.
+
+## La gran bola de barro
+
+Brian Foote y Joseph Yoder describieron en un artículo conocido la **gran bola de barro**: un sistema sin arquitectura reconocible, que crece a base de parches. Lo presentan como la arquitectura más común en la práctica, y entre sus sinónimos citan precisamente el código espagueti.
+
+No suele ser fruto de la incompetencia, sino de las prisas, de los requisitos que cambian y de no dedicar tiempo a ordenar. Es una forma de [deuda técnica](/articulos/que-es-la-deuda-tecnica/).
+
+## Cómo se combate
+
+- **[Refactorizar](/articulos/que-es-la-refactorizacion/)** poco a poco, con [pruebas](/articulos/pruebas-de-software/) que protejan cada paso.
+- **Funciones pequeñas** con una sola responsabilidad, como pide uno de los [principios SOLID](/articulos/principios-solid/).
+- **Revisiones de código** antes de incorporar cambios.
+

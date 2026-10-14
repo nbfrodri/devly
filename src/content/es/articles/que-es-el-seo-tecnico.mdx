@@ -1,0 +1,51 @@
+---
+title: "¿Qué es el SEO técnico?"
+description: "El SEO técnico es la parte del posicionamiento en buscadores que depende de cómo está construida una web: que se pueda rastrear, que cargue rápido y que su HTML se entienda."
+level: basico
+kind: definicion
+layer: aplicaciones
+prerequisites:
+  - que-es-html
+  - rendimiento-web-y-core-web-vitals
+updated: 2026-10-13
+sources:
+  - title: "MDN: SEO"
+    url: https://developer.mozilla.org/es/docs/Glossary/SEO
+  - title: "Google Search Central: Guía de optimización para buscadores (SEO) para principiantes"
+    url: https://developers.google.com/search/docs/fundamentals/seo-starter-guide?hl=es
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **SEO**, optimización para motores de búsqueda, es el conjunto de prácticas para que una web aparezca bien en los resultados de los buscadores. El **SEO técnico** es la parte que depende de **cómo está construida** la web, no de su contenido: que el buscador pueda encontrar, leer y entender las páginas.
+
+## Qué incluye
+
+| Aspecto | Qué se busca |
+| --- | --- |
+| Rastreo | Que el buscador encuentre todas las páginas, con enlaces y un mapa del sitio |
+| Contenido en el HTML | Que el texto esté en el [HTML](/articulos/que-es-html/), no solo generado por JavaScript |
+| URL claras | Direcciones legibles y estables |
+| Títulos y descripciones | Un `<title>` y una descripción propios en cada página |
+| HTML semántico | Encabezados ordenados, enlaces con texto que los describa |
+| Velocidad | Buenas [Core Web Vitals](/articulos/rendimiento-web-y-core-web-vitals/) |
+| Móvil | Una web [adaptable](/articulos/diseno-adaptable/) |
+| [HTTPS](/articulos/https-y-tls/) | Conexión segura |
+| Duplicados | Indicar cuál es la versión principal de una página repetida |
+
+```html
+<title>¿Qué es el SEO técnico? | devly</title>
+<meta name="description" content="La parte del posicionamiento que depende de cómo está construida una web." />
+<link rel="canonical" href="https://devly.nbfrodri.workers.dev/articulos/que-es-el-seo-tecnico/" />
+```
+
+## Por qué importa al programar
+
+Muchas decisiones técnicas afectan a los buscadores. Una [aplicación de una sola página](/articulos/spa-mpa-y-renderizado-en-servidor/) que genera todo con JavaScript puede no mostrar su contenido al buscador. Generar el HTML en el servidor o al construir el sitio lo evita.
+
+## Con qué no confundirlo
+
+- El **SEO de contenido** trata de qué se escribe y para quién. El técnico, de que eso se pueda leer.
+- **La publicidad en buscadores** son anuncios de pago. El SEO busca aparecer en los resultados normales.
+
+La guía de Google insiste en que lo más importante es crear contenido útil para las personas. El SEO técnico solo quita los obstáculos.

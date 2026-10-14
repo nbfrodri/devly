@@ -1,0 +1,52 @@
+---
+title: "¿Qué es un byte?"
+description: "Un byte son 8 bits. Es la unidad básica con la que se mide la memoria y el tamaño de los archivos, y puede tomar 256 valores distintos."
+level: basico
+kind: definicion
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "NIST: Prefixes for binary multiples (en inglés)"
+    url: https://physics.nist.gov/cuu/Units/binary.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **byte** es un grupo de **8 [bits](/articulos/que-es-un-bit/)**. Es la unidad básica con la que se mide la memoria, el almacenamiento y el tamaño de los archivos. Se abrevia con **B** mayúscula.
+
+## Cuánto cabe en un byte
+
+Con 8 bits hay 2⁸ combinaciones posibles:
+
+```js
+console.log(2 ** 8); // 256
+console.log((255).toString(2)); // "11111111"
+console.log((255).toString(16)); // "ff"
+```
+
+Un byte puede representar un número del 0 al 255, o un carácter. Por eso los bytes se escriben a menudo con dos cifras [hexadecimales](/articulos/sistema-hexadecimal/), de `00` a `ff`.
+
+## Un carácter, un byte… no siempre
+
+En el código ASCII, cada carácter ocupa un byte. En UTF-8, la [codificación](/articulos/codificacion-de-caracteres/) habitual hoy, los caracteres básicos ocupan uno, y los demás, más:
+
+```js
+console.log(Buffer.from("n").length); // 1
+console.log(Buffer.from("ñ").length); // 2
+console.log(Buffer.from("€").length); // 3
+```
+
+## Bits y bytes
+
+La confusión más frecuente:
+
+- Los **archivos** y la memoria se miden en **bytes**: B, KB, MB.
+- La **velocidad** de una conexión, en **bits** por segundo: b, Kb, Mb.
+
+Una conexión de 100 Mb/s transfiere como mucho unos 12,5 MB por segundo. Además, un kilobyte puede ser 1000 o 1024 bytes, según quién cuente, como explica [kilobyte, 1000 o 1024](/articulos/kilobyte-1000-o-1024/).
+
+## Por qué 8
+
+No siempre fue así: hubo máquinas con "bytes" de 6 o 9 bits. Los 8 bits se impusieron en los años sesenta con ordenadores muy extendidos de la época, y hoy son universales. El estándar del NIST lo da por hecho: un byte, 2³ bits.

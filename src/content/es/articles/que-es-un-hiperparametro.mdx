@@ -1,0 +1,46 @@
+---
+title: "¿Qué es un hiperparámetro?"
+description: "Un hiperparámetro es una decisión sobre el modelo o el entrenamiento que se fija antes de entrenar y no se aprende de los datos, como la tasa de aprendizaje."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - que-es-un-parametro-de-un-modelo
+  - validacion-cruzada
+updated: 2026-10-13
+sources:
+  - title: "Google: Machine Learning Glossary (en inglés)"
+    url: https://developers.google.com/machine-learning/glossary
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **hiperparámetro** es un valor que **decide una persona antes de entrenar** un modelo, y que no se aprende de los datos. Controla cómo es el modelo o cómo aprende.
+
+La diferencia con un [parámetro](/articulos/que-es-un-parametro-de-un-modelo/) es quién lo fija: los parámetros los ajusta el entrenamiento; los hiperparámetros, quien diseña el modelo.
+
+## Ejemplos
+
+| Hiperparámetro | Qué controla |
+| --- | --- |
+| Tasa de aprendizaje | Cuánto se mueven los pesos en cada paso del [descenso del gradiente](/articulos/descenso-del-gradiente/) |
+| Número de capas y neuronas | El tamaño de una red |
+| Número de épocas | Cuántas veces se recorren los datos |
+| Tamaño del lote | Cuántos ejemplos se procesan a la vez |
+| Fuerza de la [regularización](/articulos/regularizacion-y-dropout/) | Cuánto se frena el sobreajuste |
+| k | En los [vecinos más cercanos](/articulos/vecinos-mas-cercanos/), cuántos se consultan |
+| Profundidad máxima | En un [árbol de decisión](/articulos/arboles-de-decision/) |
+
+## Cómo se eligen
+
+No hay una fórmula. Se prueban varios valores y se comparan los resultados, siempre con datos que el modelo no usó para entrenar, normalmente con [validación cruzada](/articulos/validacion-cruzada/).
+
+- **Búsqueda en rejilla**: probar todas las combinaciones de una lista.
+- **Búsqueda aleatoria**: probar combinaciones al azar. Suele encontrar buenos valores antes.
+- **Métodos guiados**: usar los resultados anteriores para decidir qué probar después.
+
+Nunca se eligen mirando el conjunto de prueba final: el resultado sería optimista.
+
+## Por qué importan
+
+Un mismo modelo puede ser excelente o inútil según sus hiperparámetros. Una tasa de aprendizaje demasiado alta hace que el entrenamiento no converja; una demasiado baja, que tarde una eternidad.

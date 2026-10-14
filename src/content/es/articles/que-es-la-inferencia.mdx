@@ -1,0 +1,51 @@
+---
+title: "¿Qué es la inferencia en IA?"
+description: "La inferencia es usar un modelo ya entrenado para obtener una respuesta con datos nuevos. Es lo que ocurre cada vez que se le hace una pregunta a un modelo."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - que-es-un-parametro-de-un-modelo
+updated: 2026-10-13
+sources:
+  - title: "Google: Machine Learning Glossary (en inglés)"
+    url: https://developers.google.com/machine-learning/glossary
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **inferencia** es la fase en la que un modelo **ya entrenado** se usa para hacer predicciones con datos nuevos. Entrenar es aprender; inferir es aplicar lo aprendido.
+
+Cada vez que un asistente responde una pregunta, un filtro decide si un correo es spam o un móvil reconoce una cara, se está haciendo inferencia.
+
+## Entrenamiento e inferencia
+
+| | Entrenamiento | Inferencia |
+| --- | --- | --- |
+| Qué hace | Ajusta los [parámetros](/articulos/que-es-un-parametro-de-un-modelo/) | Los usa, sin cambiarlos |
+| Cuántas veces | Una, o pocas | Millones |
+| Coste por vez | Enorme | Pequeño |
+| Dónde | Centros de datos con muchas [GPU](/articulos/que-es-una-gpu/) | Servidores, móviles, navegadores |
+| Qué importa | Que el modelo aprenda bien | Rapidez y coste por respuesta |
+
+En la inferencia solo se hace la pasada **hacia delante** de la red: los datos entran y sale el resultado. No hay [retropropagación](/articulos/retropropagacion/).
+
+## Por qué importa su coste
+
+Un modelo se entrena una vez y se usa sin parar. Con millones de usuarios, el coste acumulado de la inferencia supera con frecuencia al del entrenamiento.
+
+Por eso se optimiza:
+
+- **Cuantización**: guardar los parámetros con menos precisión, para ocupar menos y calcular más deprisa.
+- **Modelos más pequeños** para tareas concretas.
+- **Hardware especializado**, incluidos chips en los móviles.
+- **[Caché](/articulos/que-es-una-cache/)** de respuestas o de partes del contexto.
+
+## En los modelos de lenguaje
+
+Un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) genera la respuesta **token a token**: cada uno es una pasada por la red. Por eso las respuestas largas tardan más y cuestan más. La [temperatura](/articulos/que-es-la-temperatura-de-un-modelo/) decide cómo se elige cada token durante la inferencia.
+
+## Con qué no confundirla
+
+En lógica, "inferir" es deducir una conclusión a partir de premisas. En aprendizaje automático, el término se usa simplemente para "usar el modelo".

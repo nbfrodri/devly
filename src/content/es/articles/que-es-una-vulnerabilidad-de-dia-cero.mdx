@@ -1,0 +1,47 @@
+---
+title: "¿Qué es una vulnerabilidad de día cero?"
+description: "Es un fallo de seguridad que nadie conocía, o que aún no tiene corrección, cuando se empieza a explotar. El fabricante ha tenido «cero días» para arreglarlo."
+level: basico
+kind: definicion
+layer: redes
+prerequisites:
+  - que-es-la-ciberseguridad
+  - que-es-el-malware
+updated: 2026-10-13
+sources:
+  - title: "NIST: Glossary, zero day attack (en inglés)"
+    url: https://csrc.nist.gov/glossary/term/zero_day_attack
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **vulnerabilidad de día cero** es un fallo de seguridad que **no se conocía**, o para el que todavía **no existe corrección**, en el momento en que alguien empieza a aprovecharlo. El nombre indica que el fabricante ha tenido "cero días" para solucionarlo.
+
+El glosario del NIST define el **ataque de día cero** como el que explota una vulnerabilidad de hardware, firmware o software no conocida previamente.
+
+## El ciclo de una vulnerabilidad
+
+1. Alguien introduce un error en el código, sin saberlo.
+2. Alguien lo **descubre**.
+3. Si lo descubre un atacante y lo usa antes de que se sepa, es un **día cero**.
+4. El fabricante se entera y publica una **corrección**.
+5. Los usuarios **actualizan**.
+
+Entre el paso 4 y el 5 hay otro periodo de riesgo: la corrección revela dónde estaba el fallo, y quien no actualiza queda expuesto a un ataque ya conocido. Muchos de los ataques más dañinos no usan días cero, sino fallos corregidos hace tiempo en equipos sin actualizar.
+
+## Por qué son tan valiosos
+
+Contra un día cero no sirven las actualizaciones, porque no existen. Por eso se compran y se venden: lo que vale uno depende de lo extendido que esté el software afectado. Los usan grupos criminales y agencias de inteligencia.
+
+## Cómo se reduce el riesgo
+
+No se puede parchear lo que no se conoce, pero sí limitar el daño:
+
+- **Defensa en capas**: que un fallo en una pieza no dé acceso a todo, como explica [qué es la ciberseguridad](/articulos/que-es-la-ciberseguridad/).
+- **Mínimos privilegios** y aislamiento.
+- **Vigilancia**: detectar comportamientos anómalos, como explica [observabilidad](/articulos/observabilidad/).
+- **Actualizar deprisa** cuando aparece la corrección.
+
+## Divulgación responsable
+
+Quien descubre un fallo de buena fe suele avisar al fabricante en privado y darle un plazo antes de hacerlo público. Muchas empresas pagan recompensas por ello.

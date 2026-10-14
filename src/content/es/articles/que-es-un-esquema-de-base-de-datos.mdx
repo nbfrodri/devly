@@ -1,0 +1,48 @@
+---
+title: "¿Qué es el esquema de una base de datos?"
+description: "El esquema es la estructura de una base de datos: qué tablas tiene, qué columnas y de qué tipo, y cómo se relacionan."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+  - modelo-entidad-relacion
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Schemas (en inglés)"
+    url: https://www.postgresql.org/docs/current/ddl-schemas.html
+  - title: "PostgreSQL: Constraints (en inglés)"
+    url: https://www.postgresql.org/docs/current/ddl-constraints.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **esquema** de una [base de datos](/articulos/que-es-una-base-de-datos/) es su **estructura**: qué tablas tiene, qué columnas tiene cada una y de qué tipo, qué restricciones se aplican y cómo se relacionan las tablas. Es el plano; los datos son lo que se guarda siguiendo ese plano.
+
+## Un ejemplo
+
+```sql
+CREATE TABLE pedidos (
+	id SERIAL PRIMARY KEY,
+	cliente_id INTEGER NOT NULL REFERENCES clientes (id),
+	fecha DATE NOT NULL,
+	total NUMERIC CHECK (total >= 0)
+);
+```
+
+Esa definición forma parte del esquema: la tabla, sus columnas, sus tipos, la [clave primaria](/articulos/que-es-una-clave-primaria/), la relación con `clientes` y la regla de que el total no sea negativo.
+
+## Cambiar el esquema
+
+Las aplicaciones evolucionan, y el esquema con ellas: una columna nueva, una tabla más. Esos cambios se escriben en **migraciones**: archivos con las órdenes necesarias, numerados y guardados en el [control de versiones](/articulos/control-de-versiones-con-git/), que se aplican en orden en cada entorno.
+
+En una tabla grande en producción, algunos cambios bloquean la tabla durante mucho tiempo. Se hacen por pasos, como explica [estrategias de despliegue](/articulos/estrategias-de-despliegue/).
+
+## Esquema fijo o flexible
+
+- Las bases **relacionales** exigen el esquema por adelantado: un dato que no encaja se rechaza.
+- Muchas [bases NoSQL](/articulos/bases-de-datos-nosql/), como [MongoDB](/articulos/que-es-mongodb/), admiten documentos de forma variable. El esquema no desaparece: pasa al código de la aplicación.
+
+## Un segundo sentido
+
+En PostgreSQL y otros sistemas, un "esquema" es también un **espacio de nombres** dentro de una base de datos: una carpeta lógica que agrupa tablas. Así pueden convivir dos tablas `usuarios` en esquemas distintos.

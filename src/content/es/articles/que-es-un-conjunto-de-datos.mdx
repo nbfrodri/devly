@@ -1,0 +1,54 @@
+---
+title: "¿Qué es un conjunto de datos?"
+description: "Un conjunto de datos, o dataset, es la colección de ejemplos con la que se entrena, valida y evalúa un modelo de aprendizaje automático."
+level: basico
+kind: definicion
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - preparacion-de-datos
+updated: 2026-10-13
+sources:
+  - title: "Google: Machine Learning Glossary (en inglés)"
+    url: https://developers.google.com/machine-learning/glossary
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **conjunto de datos**, en inglés *dataset*, es una colección organizada de ejemplos. En [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/), es el material con el que el modelo aprende: miles de correos clasificados como spam o no, millones de imágenes con su descripción, el historial de precios de un producto.
+
+## Cómo es
+
+Suele tener forma de tabla: cada **fila** es un ejemplo, y cada **columna**, una característica.
+
+| superficie | habitaciones | barrio | precio |
+| --- | --- | --- | --- |
+| 80 | 3 | centro | 320 000 |
+| 55 | 2 | norte | 190 000 |
+
+En un problema [supervisado](/articulos/aprendizaje-supervisado-y-no-supervisado/), una columna es la **etiqueta**: lo que se quiere predecir, aquí el precio.
+
+## Tres partes
+
+Un conjunto de datos se divide para usarlo con honestidad:
+
+| Parte | Para qué |
+| --- | --- |
+| Entrenamiento | Aprender |
+| Validación | Elegir el modelo y sus [hiperparámetros](/articulos/que-es-un-hiperparametro/) |
+| Prueba | Medir el resultado final, una sola vez |
+
+Evaluar con los datos de entrenamiento engaña: un modelo que los memoriza parece perfecto, como explica [sobreajuste y subajuste](/articulos/sobreajuste-y-subajuste/).
+
+## La calidad lo es todo
+
+Un modelo no puede ser mejor que sus datos. Problemas frecuentes:
+
+- **Errores y huecos**, que se tratan al [preparar los datos](/articulos/preparacion-de-datos/).
+- **Etiquetas incorrectas.**
+- **Falta de representación**: si un grupo aparece poco, el modelo funcionará peor con él. Es una fuente de [sesgos](/articulos/sesgos-en-los-algoritmos/).
+- **Datos antiguos**: el mundo cambia y el modelo se queda atrás.
+
+## Con qué no confundirlo
+
+Una **[base de datos](/articulos/que-es-una-base-de-datos/)** guarda la información de una aplicación mientras funciona. Un conjunto de datos es una colección, normalmente fija, preparada para analizar o entrenar.

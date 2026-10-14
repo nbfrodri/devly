@@ -1,0 +1,51 @@
+---
+title: "¿Qué es una consulta en una base de datos?"
+description: "Una consulta es una petición a una base de datos para obtener o modificar datos. En las bases relacionales se escribe en SQL."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - que-es-sql
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Querying a Table (en inglés)"
+    url: https://www.postgresql.org/docs/current/tutorial-select.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **consulta**, en inglés *query*, es una petición a una [base de datos](/articulos/que-es-una-base-de-datos/): "dame los clientes de Madrid", "suma las ventas de octubre", "marca este pedido como enviado". En las bases de datos relacionales se escribe en [SQL](/articulos/que-es-sql/).
+
+## Un ejemplo
+
+```sql
+SELECT nombre, correo
+FROM clientes
+WHERE ciudad = 'Madrid'
+ORDER BY nombre;
+```
+
+Pide el nombre y el correo de los clientes de Madrid, ordenados. El resultado es otra tabla, con las filas que cumplen la condición.
+
+## Tipos
+
+Aunque "consulta" suele referirse a leer, en sentido amplio cualquier orden lo es:
+
+| Orden | Hace |
+| --- | --- |
+| `SELECT` | Leer |
+| `INSERT` | Añadir filas |
+| `UPDATE` | Modificar filas |
+| `DELETE` | Borrar filas |
+
+## Lo que pasa por dentro
+
+SQL es declarativo: la consulta dice **qué** se quiere, no cómo conseguirlo. La base de datos elabora un **plan** para obtenerlo: qué [índices](/articulos/indices-de-bases-de-datos/) usar, en qué orden unir las tablas. La misma consulta puede tardar milisegundos o minutos según ese plan.
+
+## Precaución
+
+Las consultas nunca se construyen pegando texto que viene del usuario. Es la causa de la [inyección SQL](/articulos/inyeccion-sql/). Los valores se pasan como parámetros aparte.
+
+## Con qué no confundirla
+
+En los motores de búsqueda, una "consulta" es lo que se escribe en el buscador. Mismo nombre, distinto contexto.
