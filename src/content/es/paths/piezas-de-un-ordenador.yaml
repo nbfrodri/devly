@@ -6,6 +6,7 @@ steps:
   - como-funciona-un-procesador
   - memoria-ram-y-almacenamiento
   - discos-duros-y-ssd
+  - raid
   - que-es-una-gpu
   - la-placa-base-y-los-buses
   - fuente-de-alimentacion

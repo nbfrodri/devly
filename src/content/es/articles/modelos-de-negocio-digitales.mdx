@@ -1,0 +1,97 @@
+---
+title: "Modelos de negocio digitales: suscripción, publicidad y comisión"
+description: "Cómo ganan dinero los productos digitales: cobrando una cuota periódica, vendiendo la atención de los usuarios a anunciantes o quedándose un porcentaje de cada venta."
+level: basico
+layer: aplicaciones
+prerequisites:
+  - diseno-centrado-en-el-usuario
+updated: 2026-10-13
+sources:
+  - title: "Stripe: How subscriptions work (en inglés)"
+    url: https://docs.stripe.com/billing/subscriptions/overview
+  - title: "Google Ads Help: About the ad auction (en inglés)"
+    url: https://support.google.com/google-ads/answer/1722122
+  - title: "Apple: App Store Small Business Program (en inglés)"
+    url: https://developer.apple.com/app-store/small-business-program/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un producto digital puede ser técnicamente excelente y aun así fracasar si no tiene una forma sostenible de ganar dinero. El **modelo de negocio** es esa forma: quién paga, por qué y cuánto. Condiciona decisiones técnicas y de diseño, desde qué datos se recogen hasta qué funciones se construyen.
+
+Los tres modelos más comunes son la suscripción, la publicidad y la comisión.
+
+## Suscripción
+
+El usuario paga una **cuota periódica**, mensual o anual, por usar el servicio: plataformas de vídeo, música, software como servicio.
+
+Técnicamente exige guardar los datos de pago para cobros futuros, generar facturas, reintentar cobros fallidos y gestionar el ciclo de vida de cada suscripción: prueba, activa, impagada, cancelada. Pasarelas como Stripe lo automatizan.
+
+Las cifras clave:
+
+- **Ingreso medio por usuario** al mes.
+- **Tasa de abandono** (*churn*): qué parte de los clientes se va cada mes.
+- **Valor de vida del cliente**: cuánto deja un cliente durante todo el tiempo que se queda.
+
+```js
+const valorDeVida = (ingresoMensual, margen, abandonoMensual) => (ingresoMensual * margen) / abandonoMensual;
+
+console.log(valorDeVida(10, 0.8, 0.05)); // 160
+```
+
+Un cliente que paga 10 euros al mes, con un 80 % de margen y un 5 % de abandono mensual, deja de media unos 160 euros. Si captarlo cuesta más, el negocio pierde dinero con cada cliente nuevo. Reducir el abandono suele valer más que conseguir clientes.
+
+## Publicidad
+
+El servicio es gratuito y quien paga es el **anunciante**, que compra la atención de los usuarios: buscadores, redes sociales, medios en línea.
+
+En los grandes sistemas, cada espacio publicitario se adjudica en una **subasta**. Google explica que, en cada búsqueda, se celebran subastas distintas para cada posición de anuncio, y que la posición depende de un valor que combina la puja, el contexto de la búsqueda y la calidad del anuncio en ese momento.
+
+```js
+const impresiones = 500_000;
+const costePorMil = 2; // euros por cada mil impresiones
+
+console.log((impresiones / 1000) * costePorMil); // 1000
+```
+
+Medio millón de impresiones a 2 euros el millar dan 1000 euros. Hacen falta audiencias enormes para vivir de la publicidad.
+
+Sus implicaciones: incentiva maximizar el tiempo de uso y recoger datos para segmentar, con las obligaciones del [RGPD](/articulos/rgpd-y-proteccion-de-datos/) y los dilemas que recoge [ética en la informática](/rutas/etica-y-derecho-en-la-informatica/). Si no pagas por el producto, tu atención es lo que se vende.
+
+## Comisión
+
+La plataforma pone en contacto a compradores y vendedores y se queda un **porcentaje de cada transacción**: tiendas de aplicaciones, mercados en línea, plataformas de reservas o de reparto.
+
+Por ejemplo, el programa para pequeños desarrolladores de la App Store de Apple aplica una comisión reducida del 15 % a quienes ingresaron hasta un millón de dólares el año anterior; por encima, se aplica la comisión estándar.
+
+```js
+const ventas = 200_000;
+const comision = 0.15;
+
+console.log(ventas * comision); // 30000
+```
+
+Su reto es el del huevo y la gallina: sin vendedores no hay compradores, y al revés. Por eso estas plataformas suelen empezar subvencionando uno de los dos lados.
+
+## Otros modelos
+
+| Modelo | Cómo funciona | Ejemplo típico |
+| --- | --- | --- |
+| Freemium | Gratis lo básico, de pago lo avanzado | Herramientas en la nube, aplicaciones |
+| Pago por uso | Se paga por lo que se consume | La [computación en la nube](/articulos/computacion-en-la-nube/) |
+| Venta única | Un pago y el producto es tuyo | Videojuegos, software tradicional |
+| Licencia a empresas | Contratos por puestos o volumen | Software empresarial |
+| Código abierto con servicios | El software es libre; se cobra soporte o alojamiento | Bases de datos, como explica [software libre](/articulos/software-libre-y-codigo-abierto/) |
+
+## Por qué le importa a quien desarrolla
+
+- Determina la arquitectura: un modelo de pago por uso necesita medir el consumo con precisión.
+- Determina qué se mide: tasa de conversión, abandono, retención, como en las [pruebas A/B](/articulos/pruebas-a-b/).
+- Determina los riesgos: un fallo en el cobro es un fallo del negocio.
+
+## Lo esencial
+
+- La suscripción cobra una cuota periódica; su cifra clave es el abandono.
+- La publicidad cobra a los anunciantes por la atención de los usuarios, a menudo mediante subastas.
+- La comisión se queda un porcentaje de cada transacción entre terceros.
+- El modelo elegido condiciona la arquitectura, las métricas y las decisiones éticas del producto.

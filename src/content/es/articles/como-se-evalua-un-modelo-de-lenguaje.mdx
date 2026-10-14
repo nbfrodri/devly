@@ -1,0 +1,71 @@
+---
+title: "¿Cómo se evalúa un modelo de lenguaje?"
+description: "Medir si un modelo de lenguaje es bueno es difícil: sus respuestas son texto libre. Se usan bancos de pruebas, comparaciones entre modelos y evaluaciones propias de cada caso."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - como-se-evalua-un-modelo-de-clasificacion
+updated: 2026-10-13
+sources:
+  - title: "Hendrycks et al.: Measuring Massive Multitask Language Understanding (MMLU) (en inglés)"
+    url: https://arxiv.org/abs/2009.03300
+  - title: "Stanford CRFM: Holistic Evaluation of Language Models (HELM) (en inglés)"
+    url: https://crfm.stanford.edu/helm/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Evaluar un clasificador es relativamente sencillo: se compara su respuesta con la correcta y se calculan [precisión y exhaustividad](/articulos/como-se-evalua-un-modelo-de-clasificacion/). Con un [modelo de lenguaje](/articulos/modelos-de-lenguaje/) es mucho más difícil: responde con texto libre, la misma idea se puede decir de mil formas y muchas preguntas no tienen una única respuesta correcta.
+
+## Bancos de pruebas
+
+Un **banco de pruebas** (*benchmark*) es un conjunto fijo de preguntas con sus respuestas, que permite comparar modelos en las mismas condiciones. Uno de los más citados es **MMLU**, que reúne 57 materias, desde matemáticas elementales hasta historia, informática o derecho, en preguntas de opción múltiple. Sus autores lo diseñaron para medir conocimiento del mundo y capacidad de resolver problemas.
+
+Con preguntas de opción múltiple, puntuar es fácil. Con respuestas abiertas, no:
+
+```js
+const preguntas = [
+	{ pregunta: "Capital de Francia", correcta: "París" },
+	{ pregunta: "2+2", correcta: "4" },
+	{ pregunta: "Autor del Quijote", correcta: "Cervantes" },
+	{ pregunta: "Planeta rojo", correcta: "Marte" },
+];
+const respuestas = { "Capital de Francia": "parís", "2+2": "4", "Autor del Quijote": "Miguel de Cervantes", "Planeta rojo": "Marte" };
+
+const normalizar = (t) => t.trim().toLowerCase();
+const exacta = preguntas.filter((p) => normalizar(respuestas[p.pregunta]) === normalizar(p.correcta)).length;
+const contiene = preguntas.filter((p) => normalizar(respuestas[p.pregunta]).includes(normalizar(p.correcta))).length;
+
+console.log(exacta / preguntas.length, contiene / preguntas.length); // 0.75 1
+```
+
+"Miguel de Cervantes" es correcta, pero la coincidencia exacta la da por mala. Según cómo se puntúe, el mismo modelo saca un 75 % o un 100 %. Los detalles de la evaluación cambian los resultados.
+
+## Los problemas de los bancos de pruebas
+
+- **Contaminación**: si las preguntas del banco aparecieron en los datos de entrenamiento, el modelo puede recordarlas en lugar de razonar. Como los modelos se entrenan con enormes cantidades de texto de internet, es difícil descartarlo.
+- **Saturación**: cuando los modelos superan el 90 % en un banco, deja de distinguir entre ellos y hace falta otro más difícil.
+- **No es tu caso**: sacar buena nota en historia no dice si el modelo resumirá bien tus contratos.
+- **Una sola cifra engaña**: un modelo puede ser muy preciso y a la vez lento, caro o propenso a inventar.
+
+Por eso el proyecto HELM, de Stanford, propone una evaluación **holística**: muchos escenarios y muchas métricas a la vez, no solo la precisión, sino también la robustez, la imparcialidad, la eficiencia o la tendencia a generar contenido dañino, publicadas de forma transparente.
+
+## Otras formas de evaluar
+
+- **Comparaciones humanas**: se muestran dos respuestas de modelos distintos a la misma pregunta y una persona elige la mejor. Con muchas comparaciones se forma una clasificación.
+- **Un modelo como juez**: otro modelo puntúa las respuestas según unos criterios. Es barato y escala, pero tiene sus propios sesgos, por ejemplo preferir respuestas largas.
+- **Evaluaciones propias**: para un uso concreto, lo más útil es construir un conjunto de casos reales de ese uso, con las respuestas esperadas, y ejecutarlo con cada cambio de modelo o de [instrucciones](/articulos/como-escribir-instrucciones-para-un-modelo/), como se ejecutan las [pruebas](/articulos/pruebas-de-software/) en el software.
+
+## Lo que se mide además de acertar
+
+- **[Alucinaciones](/articulos/alucinaciones-de-los-modelos-de-lenguaje/)**: cuántas veces inventa datos.
+- **Seguridad**: si se le puede convencer de hacer lo que no debe, como explica [inyección de instrucciones](/articulos/inyeccion-de-instrucciones/).
+- **Coste y latencia**: cuánto tarda y cuánto cuesta cada respuesta.
+
+## Lo esencial
+
+- Evaluar un modelo de lenguaje es difícil porque responde con texto libre.
+- Los bancos de pruebas como MMLU comparan modelos con las mismas preguntas.
+- Sufren contaminación y saturación, y no reflejan cada caso de uso.
+- Lo más útil para un uso concreto es un conjunto propio de casos reales, ejecutado con cada cambio.

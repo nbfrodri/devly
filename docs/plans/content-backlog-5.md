@@ -68,22 +68,22 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ### Hardware
 
-- [ ] RAID: varios discos como uno (discos duros y SSD)
-- [ ] ¿Qué es una FPGA? (puertas lógicas)
-- [ ] Computación cuántica: qué es un cúbit (bit)
+- [x] RAID: varios discos como uno (discos duros y SSD)
+- [x] ¿Qué es una FPGA? (puertas lógicas)
+- [x] Computación cuántica: qué es un cúbit (bit)
 
 ### Inteligencia artificial
 
-- [ ] Aprendizaje por transferencia (ajuste fino)
-- [ ] IA explicable (árboles de decisión, sesgos)
-- [ ] Cómo se evalúa un modelo de lenguaje
-- [ ] Seguridad de la IA: inyección de instrucciones y salvaguardas
+- [x] Aprendizaje por transferencia (ajuste fino)
+- [x] IA explicable (árboles de decisión, sesgos)
+- [x] Cómo se evalúa un modelo de lenguaje
+- [x] Seguridad de la IA: inyección de instrucciones y salvaguardas
 
 ### Negocio digital, ética y derecho
 
-- [ ] Modelos de negocio digitales: suscripción, publicidad, comisión
-- [ ] Propiedad intelectual del software (licencias de software)
-- [ ] Accesibilidad y ley (accesibilidad web)
+- [x] Modelos de negocio digitales: suscripción, publicidad, comisión
+- [x] Propiedad intelectual del software (licencias de software)
+- [x] Accesibilidad y ley (accesibilidad web)
 
 ## Definiciones
 

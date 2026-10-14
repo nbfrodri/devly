@@ -1,0 +1,71 @@
+---
+title: "Accesibilidad y ley: qué obliga a una web a ser accesible"
+description: "En España y la Unión Europea, la ley obliga a las webs del sector público a ser accesibles, y la Ley Europea de Accesibilidad extiende la obligación a muchos productos y servicios privados."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - accesibilidad-web
+updated: 2026-10-13
+sources:
+  - title: "BOE: Real Decreto 1112/2018, sobre accesibilidad de los sitios web y aplicaciones del sector público"
+    url: https://www.boe.es/buscar/act.php?id=BOE-A-2018-12699
+  - title: "W3C WAI: Web Accessibility Laws and Policies, European Union (en inglés)"
+    url: https://www.w3.org/WAI/policies/european-union/
+  - title: "Comisión Europea: European Accessibility Act (en inglés)"
+    url: https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en
+  - title: "W3C WAI: Web Accessibility Laws and Policies (en inglés)"
+    url: https://www.w3.org/WAI/policies/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La [accesibilidad web](/articulos/accesibilidad-web/) es una buena práctica, pero también, cada vez más, una **obligación legal**. En la Unión Europea hay dos normas principales: una para el sector público y otra, más reciente, que alcanza a muchas empresas privadas. Este artículo resume el marco; ante un caso concreto, conviene consultar la norma o a un profesional.
+
+## El sector público
+
+La **Directiva europea de accesibilidad web**, de 2016, obliga a que los sitios web y las aplicaciones móviles del sector público sean accesibles. En España se incorporó con el **Real Decreto 1112/2018**, que se aplica a:
+
+- La Administración General del Estado, las comunidades autónomas y las entidades locales.
+- El sector público institucional.
+- Los servicios gestionados por ellas, como hospitales, colegios, universidades o bibliotecas públicas.
+
+Les exige, además de cumplir los requisitos de accesibilidad:
+
+- Publicar y mantener actualizada una **declaración de accesibilidad**, que explique qué partes cumplen y cuáles no.
+- Ofrecer un mecanismo para que cualquier persona usuaria informe de incumplimientos, presente quejas y haga sugerencias.
+
+Las excepciones existen, por ejemplo cuando el cumplimiento supone una carga desproporcionada, pero el real decreto aclara que no valen como excusa la falta de prioridad, de tiempo o de conocimiento.
+
+## La norma técnica: EN 301 549
+
+¿Qué significa "accesible" en la práctica? La ley remite a una norma técnica europea, la **EN 301 549**. Según la iniciativa de accesibilidad del W3C, para el contenido web incluye literalmente los criterios de las [pautas WCAG](/articulos/accesibilidad-web/) 2.1 en su nivel **AA**. En la práctica, cumplir las WCAG 2.1 AA es la referencia.
+
+## El sector privado: la Ley Europea de Accesibilidad
+
+La **Directiva (UE) 2019/882**, conocida como Ley Europea de Accesibilidad, amplía la obligación a una serie de **productos y servicios**, también privados, como:
+
+- Ordenadores y sistemas operativos, teléfonos inteligentes.
+- Cajeros automáticos y máquinas de venta de billetes y de facturación.
+- Servicios bancarios.
+- Comercio electrónico.
+- Libros electrónicos.
+- Servicios de transporte aéreo, por autobús, ferrocarril y vía navegable.
+
+Los Estados miembros tenían que incorporarla a su legislación nacional antes de junio de 2022, y la Comisión Europea vigila su aplicación. Para una tienda en línea, significa que el proceso de compra completo debe poder usarse con lector de pantalla, solo con teclado y con zoom, entre otras cosas. Las fechas de aplicación y las excepciones concretas están en la norma de cada país.
+
+## Qué hacer en un proyecto
+
+1. Saber si te afecta: sector público, o un producto o servicio de los incluidos.
+2. Tomar como objetivo las **WCAG 2.1 nivel AA**, mejor aún las 2.2.
+3. Comprobarlo con herramientas automáticas y, sobre todo, con pruebas manuales y [con usuarios](/articulos/pruebas-con-usuarios/), incluidos usuarios de tecnologías de apoyo.
+4. Documentarlo: la declaración de accesibilidad, cuando se exige.
+5. Incluirlo desde el diseño, en el [sistema de diseño](/articulos/sistemas-de-diseno/) y en los [requisitos no funcionales](/articulos/requisitos-funcionales-y-no-funcionales/). Arreglarlo al final cuesta mucho más.
+
+Más allá de la ley, una web accesible es mejor para todo el mundo: también para quien usa el móvil al sol, tiene un brazo escayolado o una conexión lenta.
+
+## Lo esencial
+
+- Las webs y aplicaciones del sector público deben ser accesibles; en España lo regula el Real Decreto 1112/2018.
+- La referencia técnica es la norma EN 301 549, que incorpora las WCAG 2.1 nivel AA.
+- La Ley Europea de Accesibilidad extiende la obligación a productos y servicios privados como la banca o el comercio electrónico.
+- Lo práctico es diseñar con las WCAG desde el principio y documentar el cumplimiento.

@@ -11,3 +11,5 @@ steps:
   - procesadores-multinucleo
   - interrupciones-y-entrada-salida
   - la-placa-base-y-los-buses
+  - que-es-una-fpga
+  - que-es-un-cubit

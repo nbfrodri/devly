@@ -1,0 +1,78 @@
+---
+title: "¿Qué es la IA explicable?"
+description: "La IA explicable busca que un modelo pueda justificar sus decisiones de forma comprensible. Es necesaria para confiar en él, detectar errores y cumplir la ley."
+level: intermedio
+layer: ia
+prerequisites:
+  - arboles-de-decision
+  - sesgos-en-los-algoritmos
+updated: 2026-10-13
+sources:
+  - title: "NIST IR 8312: Four Principles of Explainable Artificial Intelligence (en inglés)"
+    url: https://doi.org/10.6028/NIST.IR.8312
+  - title: "Christoph Molnar: Interpretable Machine Learning (en inglés)"
+    url: https://christophm.github.io/interpretable-ml-book/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **IA explicable** es el conjunto de técnicas que permiten entender **por qué** un modelo de inteligencia artificial toma una decisión. Muchos modelos, sobre todo las redes neuronales grandes, son **cajas negras**: dan una respuesta, pero no dicen cómo han llegado a ella.
+
+Como resume el libro de Christoph Molnar, los ordenadores no suelen explicar sus predicciones, y eso causa problemas que van desde la falta de confianza hasta errores que nadie detecta.
+
+## Por qué importa
+
+- **Confianza**: un médico no debería seguir un diagnóstico que no entiende.
+- **Detectar errores**: un modelo puede acertar por razones equivocadas, como detectar un objeto por el fondo de la foto en lugar de por el objeto.
+- **Detectar [sesgos](/articulos/sesgos-en-los-algoritmos/)**: saber si un modelo de crédito pesa el código postal como sustituto del origen.
+- **Derechos**: el [RGPD](/articulos/rgpd-y-proteccion-de-datos/) da a las personas garantías frente a decisiones automatizadas que les afectan.
+
+## Los cuatro principios del NIST
+
+El instituto de normas estadounidense propone cuatro principios para un sistema explicable:
+
+| Principio | Qué pide |
+| --- | --- |
+| Explicación | El sistema da una razón o prueba de sus resultados |
+| Significativa | La explicación la entiende quien la recibe |
+| Precisión de la explicación | La explicación refleja de verdad cómo funciona el sistema |
+| Límites del conocimiento | El sistema solo actúa en las condiciones para las que se diseñó, y avisa cuando no está seguro |
+
+El informe insiste en que no hay una explicación válida para todos: un desarrollador, un juez y un cliente necesitan explicaciones distintas.
+
+## Dos caminos
+
+**Modelos interpretables por naturaleza.** Un [árbol de decisión](/articulos/arboles-de-decision/) o una regresión lineal se pueden leer directamente: se ven las reglas o el peso de cada variable. A veces son tan precisos como los complejos, y entonces son la mejor opción.
+
+**Explicar modelos complejos desde fuera.** Cuando hace falta un modelo de caja negra, se estudia su comportamiento. Una técnica sencilla es la **importancia por permutación**: se desordena una variable y se mide cuánto empeora el modelo. Si empeora mucho, esa variable era importante.
+
+```js
+const filas = [
+	{ a: 3, b: 1, y: 7 },
+	{ a: 1, b: 2, y: 4 },
+	{ a: 4, b: 0, y: 8 },
+	{ a: 2, b: 3, y: 7 },
+];
+const modelo = (f) => 2 * f.a + f.b;
+const error = (datos) => datos.reduce((s, f) => s + Math.abs(modelo(f) - f.y), 0) / datos.length;
+
+function permutar(variable) {
+	const valores = filas.map((f) => f[variable]).reverse();
+	return error(filas.map((f, i) => ({ ...f, [variable]: valores[i] })));
+}
+
+console.log(error(filas), permutar("a"), permutar("b")); // 0 4 2
+```
+
+Desordenar `a` dispara el error más que desordenar `b`: el modelo depende más de `a`. Otras técnicas conocidas, como SHAP o LIME, atribuyen a cada variable una parte de cada predicción concreta.
+
+## Cuidado con las explicaciones
+
+Una explicación puede ser convincente y falsa. Las técnicas que explican desde fuera dan una **aproximación** del comportamiento del modelo, no su razonamiento real. Por eso el NIST pide que la explicación sea precisa, no solo comprensible. Y en los [modelos de lenguaje](/articulos/modelos-de-lenguaje/), la justificación que el propio modelo escribe no tiene por qué corresponder con cómo llegó a la respuesta.
+
+## Lo esencial
+
+- La IA explicable busca entender por qué un modelo toma cada decisión.
+- Importa para confiar, detectar errores y sesgos, y respetar derechos de las personas afectadas.
+- El NIST pide explicaciones que existan, se entiendan, sean fieles al modelo y reconozcan sus límites.
+- Se usan modelos interpretables o técnicas que estudian un modelo complejo desde fuera, como la permutación.

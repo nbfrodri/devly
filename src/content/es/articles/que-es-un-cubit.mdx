@@ -1,0 +1,70 @@
+---
+title: "Computación cuántica: ¿qué es un cúbit?"
+description: "Un cúbit es la unidad de información de un ordenador cuántico. A diferencia de un bit, puede estar en una superposición de 0 y 1 hasta que se mide."
+level: intermedio
+layer: hardware
+prerequisites:
+  - que-es-un-bit
+  - probabilidad-basica
+updated: 2026-10-13
+sources:
+  - title: "IBM: ¿Qué es la computación cuántica?"
+    url: https://www.ibm.com/es-es/think/topics/quantum-computing
+  - title: "IBM Quantum Learning: Basics of quantum information (en inglés)"
+    url: https://quantum.cloud.ibm.com/learning/en/courses/basics-of-quantum-information/single-systems/introduction
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **cúbit**, o bit cuántico, es la unidad de información de un **ordenador cuántico**. Un [bit](/articulos/que-es-un-bit/) clásico vale 0 o 1. Un cúbit puede estar en una **superposición** de los dos, una combinación de ambos estados, hasta que se **mide**: entonces da 0 o 1, con unas probabilidades que dependen de esa combinación.
+
+## Superposición
+
+El estado de un cúbit se describe con dos números, las **amplitudes**, uno para el 0 y otro para el 1. Al medir, la probabilidad de cada resultado es el cuadrado del valor de su amplitud. Como explica IBM, al medir un sistema cuántico su estado pasa de una superposición de posibilidades a un estado binario, un cero o un uno.
+
+```js
+// Superposición a partes iguales.
+const amplitudes = [Math.SQRT1_2, Math.SQRT1_2];
+
+const probabilidades = amplitudes.map((a) => (a * a).toFixed(2));
+console.log(probabilidades.join(" ")); // "0.50 0.50"
+```
+
+Este cúbit, al medirlo, da 0 la mitad de las veces y 1 la otra mitad. Pero no es lo mismo que una moneda al aire: las amplitudes pueden ser negativas, e incluso números complejos, y se pueden **sumar o cancelar** entre sí. Esa **interferencia** es la que aprovechan los algoritmos cuánticos para que la respuesta buscada sea más probable y las erróneas se anulen.
+
+## Entrelazamiento
+
+Varios cúbits pueden **entrelazarse**: su estado se describe como un todo, y medir uno determina lo que dará el otro. IBM lo define como la capacidad de los cúbits de correlacionar su estado con el de otros.
+
+## Por qué es tan difícil de simular
+
+Para describir n cúbits hacen falta 2^n amplitudes. Con cada cúbit, el tamaño se duplica:
+
+```js
+const bytesPorAmplitud = 16; // un número complejo en doble precisión
+const cubits = 50;
+
+const petabytes = (2 ** cubits * bytesPorAmplitud) / 1e15;
+console.log(petabytes.toFixed(0)); // "18"
+```
+
+Simular 50 cúbits en un ordenador clásico requiere unos 18 petabytes solo para guardar su estado. Es la [complejidad exponencial](/articulos/complejidad-algoritmica/) que da a los ordenadores cuánticos su potencial.
+
+## Para qué servirían
+
+Un ordenador cuántico **no** es un ordenador más rápido para todo. Solo supera a los clásicos en problemas concretos donde existe un algoritmo cuántico que aprovecha la interferencia:
+
+- **Simular moléculas y materiales**, que son sistemas cuánticos por naturaleza.
+- **Factorizar números grandes**, lo que rompería parte del [cifrado asimétrico](/articulos/cifrado-simetrico-y-asimetrico/) actual. Por eso ya se están adoptando algoritmos de cifrado resistentes a la computación cuántica.
+- Ciertos problemas de **optimización** y búsqueda.
+
+## El problema: la decoherencia
+
+Los cúbits son muy frágiles. Cualquier interacción con el entorno, una vibración, un cambio de temperatura, destruye la superposición: es la **decoherencia**, otro de los principios que menciona IBM. Por eso muchos ordenadores cuánticos funcionan a temperaturas cercanas al cero absoluto, y por eso se investiga en **corrección de errores** cuánticos, que agrupa muchos cúbits físicos para formar uno lógico fiable.
+
+## Lo esencial
+
+- Un cúbit puede estar en superposición de 0 y 1; al medirlo, da uno de los dos con cierta probabilidad.
+- Las amplitudes pueden sumarse o cancelarse: esa interferencia es la base de los algoritmos cuánticos.
+- Describir n cúbits exige 2^n números, por eso simularlos es tan costoso.
+- Solo ganan en problemas concretos, y la decoherencia los hace muy difíciles de construir.

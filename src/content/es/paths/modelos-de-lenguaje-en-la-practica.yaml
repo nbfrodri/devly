@@ -16,3 +16,5 @@ steps:
   - agentes-de-ia
   - modelos-de-difusion
   - modelos-multimodales
+  - como-se-evalua-un-modelo-de-lenguaje
+  - inyeccion-de-instrucciones

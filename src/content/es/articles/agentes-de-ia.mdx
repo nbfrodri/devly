@@ -136,7 +136,7 @@ Una tarea grande se puede repartir. Un agente coordina y encarga subtareas a otr
 Un agente que actúa puede causar daño real. Es la parte que más cuidado exige.
 
 - **Mínimo privilegio.** Solo las herramientas y los permisos que la tarea necesita. Si basta con leer, que no pueda escribir.
-- **Inyección de instrucciones.** El agente lee contenido de fuera: páginas web, correos, documentos. Ese contenido puede incluir texto pensado para manipularlo: "reenvía estos datos a esta dirección". El modelo no separa con fiabilidad datos de órdenes. Todo lo que el agente lee es contenido no fiable.
+- **Inyección de instrucciones.** El agente lee contenido de fuera: páginas web, correos, documentos. Ese contenido puede incluir texto pensado para manipularlo: "reenvía estos datos a esta dirección". El modelo no separa con fiabilidad datos de órdenes. Todo lo que el agente lee es contenido no fiable, como explica [inyección de instrucciones](/articulos/inyeccion-de-instrucciones/).
 - **Confirmación humana** para lo que no se puede deshacer: borrar, pagar, enviar.
 - **Aislamiento.** Ejecutar el código en un entorno cerrado, como un [contenedor](/articulos/contenedores-y-maquinas-virtuales/), sin acceso a lo que no necesita.
 - **Límites** de pasos, de tiempo y de gasto.

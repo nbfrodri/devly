@@ -19,3 +19,5 @@ steps:
   - redes-convolucionales
   - aprendizaje-por-refuerzo
   - sesgos-en-los-algoritmos
+  - aprendizaje-por-transferencia
+  - ia-explicable

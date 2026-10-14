@@ -1,0 +1,88 @@
+---
+title: "¿Qué es RAID? Varios discos como uno"
+description: "RAID combina varios discos en uno solo para ganar velocidad, capacidad o tolerancia a fallos. Según el nivel, sobrevive a la avería de uno o dos discos."
+level: intermedio
+layer: hardware
+prerequisites:
+  - discos-duros-y-ssd
+  - copias-de-seguridad
+updated: 2026-10-13
+sources:
+  - title: "Patterson, Gibson y Katz: A Case for Redundant Arrays of Inexpensive Disks (RAID), 1987 (en inglés)"
+    url: https://www2.eecs.berkeley.edu/Pubs/TechRpts/1987/5853.html
+  - title: "ArchWiki: RAID (en inglés)"
+    url: https://wiki.archlinux.org/title/RAID
+  - title: "The Linux Kernel documentation: RAID arrays (en inglés)"
+    url: https://docs.kernel.org/admin-guide/md.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**RAID** es una forma de combinar varios [discos](/articulos/discos-duros-y-ssd/) para que el sistema los vea como **uno solo**. Según cómo se repartan los datos, se gana **velocidad**, **capacidad** o **tolerancia a fallos**: que el sistema siga funcionando aunque se estropee un disco.
+
+El nombre viene de un artículo de 1987 de la Universidad de California en Berkeley, de David Patterson, Garth Gibson y Randy Katz: *Redundant Arrays of Inexpensive Disks*, conjuntos redundantes de discos baratos. Proponían sustituir los grandes discos caros de la época por varios discos de ordenador personal, y describían cinco niveles.
+
+## Las dos técnicas
+
+- **Reparto en bandas** (*striping*): los datos se trocean y cada trozo va a un disco distinto. Se leen y escriben varios discos a la vez, así que es más rápido.
+- **Redundancia**: guardar información extra para reconstruir los datos si un disco falla, ya sea una **copia** completa o una **paridad**.
+
+## Los niveles más usados
+
+| Nivel | Cómo funciona | Discos mínimos | Capacidad útil con 4 discos de 2 TB | Aguanta la avería de |
+| --- | --- | --- | --- | --- |
+| RAID 0 | Solo bandas | 2 | 8 TB | Ningún disco: si falla uno, se pierde todo |
+| RAID 1 | Espejo: cada disco es una copia | 2 | 2 TB | Todos menos uno |
+| RAID 5 | Bandas con paridad repartida | 3 | 6 TB | Un disco |
+| RAID 6 | Bandas con doble paridad | 4 | 4 TB | Dos discos |
+| RAID 10 | Espejos combinados en bandas | 4 | 4 TB | Uno por cada pareja |
+
+```js
+const capacidad = (nivel, discos, tamano) =>
+	({ 0: discos * tamano, 1: tamano, 5: (discos - 1) * tamano, 6: (discos - 2) * tamano, 10: (discos / 2) * tamano })[nivel];
+
+console.log([0, 1, 5, 6, 10].map((n) => capacidad(n, 4, 2)).join(" ")); // "8 2 6 4 4"
+```
+
+## La paridad: reconstruir lo perdido
+
+RAID 5 no copia los datos: guarda un bloque de **paridad** calculado con la operación XOR, la "o exclusiva" de las [puertas lógicas](/articulos/puertas-logicas/). Si se pierde cualquier bloque, se recalcula a partir de los demás:
+
+```js
+const a = 0b10110010;
+const b = 0b01101100;
+const c = 0b11100001;
+
+const paridad = a ^ b ^ c;
+console.log(paridad.toString(2).padStart(8, "0")); // "00111111"
+
+// Se estropea el disco que guardaba b: se reconstruye.
+const recuperado = a ^ c ^ paridad;
+console.log(recuperado === b); // true
+```
+
+Es la misma idea que la [detección y corrección de errores](/articulos/deteccion-y-correccion-de-errores/). RAID 6 guarda dos paridades distintas para sobrevivir a dos averías.
+
+El precio de la paridad: cada escritura obliga a recalcularla, lo que hace las escrituras más lentas. Y mientras se reconstruye un disco, el conjunto está en riesgo: si falla otro antes de terminar, en RAID 5 se pierde todo. Con discos grandes, la reconstrucción puede durar horas, una de las razones por las que se prefiere RAID 6 o RAID 10.
+
+## Por hardware o por software
+
+- **Por hardware**: una tarjeta controladora gestiona los discos y el sistema operativo ve un solo disco.
+- **Por software**: lo hace el propio sistema operativo. En Linux, el controlador `md` y la herramienta `mdadm`.
+
+## RAID no es una copia de seguridad
+
+Es el malentendido más peligroso. RAID protege de **la avería de un disco**. No protege de:
+
+- Borrar un archivo por error: se borra en todos los discos a la vez.
+- Un [ransomware](/articulos/que-es-el-ransomware/) que cifra los datos: los cifra en todos.
+- Un incendio, un robo o un fallo de la controladora que corrompe el conjunto.
+
+Para eso hacen falta [copias de seguridad](/articulos/copias-de-seguridad/) separadas. RAID da disponibilidad; las copias, recuperación.
+
+## Lo esencial
+
+- RAID combina varios discos en uno para ganar velocidad, capacidad o tolerancia a fallos.
+- RAID 0 reparte en bandas sin redundancia; RAID 1 duplica; RAID 5 y 6 usan paridad; RAID 10 combina espejos y bandas.
+- La paridad con XOR permite reconstruir el disco perdido a partir de los demás.
+- RAID no sustituye a las copias de seguridad: protege del fallo de un disco, no de borrados ni ataques.

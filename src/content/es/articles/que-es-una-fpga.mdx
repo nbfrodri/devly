@@ -1,0 +1,80 @@
+---
+title: "¿Qué es una FPGA?"
+description: "Una FPGA es un chip cuyos circuitos se pueden reconfigurar después de fabricarlo. En lugar de ejecutar un programa, se convierte en el circuito que describas."
+level: avanzado
+layer: hardware
+prerequisites:
+  - puertas-logicas
+  - circuitos-secuenciales-y-biestables
+updated: 2026-10-13
+sources:
+  - title: "fpga4fun: What are FPGAs? (en inglés)"
+    url: https://www.fpga4fun.com/FPGAinfo1.html
+  - title: "fpga4fun: How FPGAs work (en inglés)"
+    url: https://www.fpga4fun.com/FPGAinfo2.html
+  - title: "Lattice Semiconductor: What is an FPGA? (en inglés)"
+    url: https://www.latticesemi.com/what-is-an-fpga
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **FPGA**, matriz de puertas programable en campo, es un chip de **lógica digital programable**: sus circuitos no están fijados de fábrica, sino que se **configuran** después, y se pueden reconfigurar tantas veces como haga falta. Una FPGA no ejecuta un programa como un [procesador](/articulos/como-funciona-un-procesador/): **se convierte** en el circuito que se le describe.
+
+## Procesador, ASIC y FPGA
+
+| | Procesador | ASIC (chip a medida) | FPGA |
+| --- | --- | --- | --- |
+| Qué hace | Ejecuta instrucciones una tras otra | Un circuito fijo para una tarea | Un circuito configurable |
+| Flexibilidad | Total: cambias el programa | Ninguna tras fabricarlo | Alta: se reconfigura |
+| Velocidad en una tarea concreta | Media | Máxima | Alta |
+| Coste de desarrollo | Bajo | Muy alto | Medio |
+| Paralelismo | Limitado a sus núcleos | Total | Total |
+
+En una FPGA, cada parte del circuito trabaja a la vez, en paralelo. Un procesador, en cambio, comparte sus recursos entre instrucciones.
+
+## Por dentro: tablas de consulta
+
+Una FPGA está formada por miles de **celdas lógicas** conectadas por una red de cables configurable. Cada celda tiene:
+
+- Una pequeña **tabla de consulta**, o LUT, que puede implementar cualquier función lógica de unas pocas entradas.
+- Un **biestable**, para guardar un bit, como explica [circuitos secuenciales y biestables](/articulos/circuitos-secuenciales-y-biestables/).
+- Un multiplexor para usar o saltarse el biestable.
+
+La LUT es la clave: en lugar de construir la función con [puertas](/articulos/puertas-logicas/), se guarda su tabla de verdad entera. Una LUT de 4 entradas tiene 16 casillas, una por combinación:
+
+```js
+// La función (x AND y AND z) OR w, guardada como tabla.
+const lut = Array.from({ length: 16 }, (_, i) => {
+	const [x, y, z, w] = [(i >> 3) & 1, (i >> 2) & 1, (i >> 1) & 1, i & 1];
+	return (x & y & z) | w;
+});
+
+console.log(lut.join("")); // "0101010101010111"
+console.log(lut[0b1110], lut[0b1100]); // 1 0
+```
+
+Cambiar la función es cambiar los 16 bits de la tabla. Con miles de LUT y las conexiones adecuadas, se puede construir cualquier circuito digital, incluso un procesador entero.
+
+## Cómo se programa
+
+1. Se **describe** el circuito con un lenguaje de descripción de hardware, como VHDL o Verilog.
+2. Las herramientas del fabricante lo **compilan**: deciden qué LUT usar y cómo conectarlas.
+3. El resultado es un archivo binario que se **carga** en la FPGA y la configura.
+
+Describir hardware no es programar: no hay una secuencia de instrucciones, sino circuitos que funcionan todos a la vez.
+
+## Para qué se usan
+
+- **Prototipos de chips**: probar un diseño antes de fabricar un ASIC carísimo.
+- **Procesamiento de señales** y telecomunicaciones, donde hay que tratar datos en tiempo real.
+- **Aceleradores** en centros de datos, para tareas concretas.
+- **Equipos que se fabrican en pocas unidades**, donde un chip a medida no compensa.
+
+Su gran ventaja frente a un ASIC, como resume Lattice, es que se pueden reprogramar según las necesidades, lo que sale rentable a largo plazo.
+
+## Lo esencial
+
+- Una FPGA es un chip de lógica digital que se configura después de fabricarlo.
+- No ejecuta un programa: se convierte en el circuito descrito, que trabaja en paralelo.
+- Está hecha de celdas con tablas de consulta y biestables, unidas por conexiones configurables.
+- Se usa para prototipos de chips, tiempo real y aceleradores, entre el procesador y el chip a medida.
