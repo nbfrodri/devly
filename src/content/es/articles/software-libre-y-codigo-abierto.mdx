@@ -1,0 +1,88 @@
+---
+title: "¿Qué es el software libre y el código abierto?"
+description: "El software libre garantiza la libertad de usar, estudiar, modificar y compartir un programa. El código abierto defiende casi lo mismo con argumentos prácticos."
+level: basico
+layer: sistemas
+prerequisites:
+  - licencias-de-software
+  - que-es-linux
+updated: 2026-10-13
+sources:
+  - title: "GNU: ¿Qué es el software libre?"
+    url: https://www.gnu.org/philosophy/free-sw.es.html
+  - title: "GNU: Por qué el «código abierto» pierde de vista lo esencial del software libre"
+    url: https://www.gnu.org/philosophy/open-source-misses-the-point.es.html
+  - title: "Open Source Initiative: The Open Source Definition (en inglés)"
+    url: https://opensource.org/osd
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **software libre** es el que respeta la libertad de quien lo usa: se puede ejecutar, estudiar, modificar y compartir. El **código abierto** es un movimiento posterior que defiende casi lo mismo, pero con otro enfoque: no como una cuestión de libertad, sino como una forma mejor de desarrollar software.
+
+En la práctica, casi todo lo que es libre es también de código abierto, y al revés. La diferencia está en los motivos.
+
+## El software libre
+
+Lo definió Richard Stallman, fundador del proyecto GNU y de la Free Software Foundation, en los años ochenta. Un programa es libre si garantiza **cuatro libertades**:
+
+| Libertad | Permite |
+| --- | --- |
+| 0 | Ejecutar el programa con cualquier propósito |
+| 1 | Estudiar cómo funciona y modificarlo |
+| 2 | Redistribuir copias |
+| 3 | Distribuir versiones modificadas |
+
+Las libertades 1 y 3 exigen tener el **código fuente**: sin él no se puede estudiar ni modificar un programa.
+
+"Libre" se refiere a libertad, no a precio. En inglés, *free* significa las dos cosas, y de ahí la aclaración habitual: libre como en "libertad de expresión", no como en "barra libre". Se puede cobrar por software libre.
+
+Para Stallman, es una cuestión **ética**: el software privativo, el que no respeta esas libertades, da a su autor poder sobre los usuarios.
+
+## El código abierto
+
+En 1998, un grupo de personas del movimiento creyó que el término "libre" asustaba a las empresas, y propuso **código abierto**, *open source*. Crearon la Open Source Initiative, que mantiene una definición con diez criterios que debe cumplir una licencia: libre redistribución, acceso al código, permitir obras derivadas, no discriminar a personas ni usos, entre otros.
+
+El argumento es **práctico**: cuando el código es abierto, muchas personas pueden revisarlo, mejorarlo y corregirlo, y el resultado es mejor software.
+
+## La diferencia
+
+| | Software libre | Código abierto |
+| --- | --- | --- |
+| Lo promueve | Free Software Foundation | Open Source Initiative |
+| Desde | Años ochenta | 1998 |
+| Argumento | Ético: la libertad de los usuarios | Práctico: un modelo de desarrollo mejor |
+| Licencias aceptadas | Casi las mismas | Casi las mismas |
+
+La Free Software Foundation critica que hablar solo de "código abierto" deja fuera lo esencial, la libertad. La Open Source Initiative se centra en las ventajas técnicas y económicas. Para no tomar partido, a veces se usa la expresión combinada, software libre y de código abierto.
+
+## Lo que no es
+
+- **No es gratuito por definición**, aunque casi siempre lo sea.
+- **No es lo mismo que tener el código visible.** Un programa cuyo código se puede leer pero no modificar ni redistribuir no es libre ni abierto. Es lo que se llama código disponible, como explica el artículo sobre [licencias de software](/articulos/licencias-de-software/).
+- **No es de dominio público.** Tiene autor y licencia; la licencia concede las libertades.
+
+## Dónde está
+
+Gran parte de la infraestructura del mundo es software libre o de código abierto: el núcleo de [Linux](/articulos/que-es-linux/), los servidores web como [Nginx](/articulos/que-es-nginx/), las bases de datos como [PostgreSQL](/articulos/que-es-postgresql/), [Git](/articulos/control-de-versiones-con-git/), los navegadores en buena parte, y los lenguajes de programación y sus herramientas.
+
+Empresas que compiten entre sí colaboran en los mismos proyectos, porque compartir el mantenimiento les sale más barato que hacerlo cada una por su cuenta.
+
+## Un problema pendiente
+
+Muchos proyectos de los que depende media internet los mantienen unas pocas personas, a menudo voluntarias y sin financiación. Cuando una de esas piezas tiene un fallo grave, el problema se extiende a todos los que la usan. La sostenibilidad de ese trabajo es uno de los grandes debates del sector.
+
+<Quiz
+	client:visible
+	question="¿A qué se refiere «libre» en «software libre»?"
+	options={["A que es gratis", "A la libertad de usar, estudiar, modificar y compartir el programa", "A que no tiene autor"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- El software libre garantiza cuatro libertades: usar, estudiar y modificar, redistribuir y distribuir versiones modificadas.
+- "Libre" se refiere a libertad, no a precio.
+- El código abierto defiende lo mismo con argumentos prácticos, y nació en 1998.
+- Tener el código visible no basta: la licencia debe conceder esas libertades.
+- Gran parte de la infraestructura de internet es software libre.

@@ -1,0 +1,91 @@
+---
+title: "Diferencias entre Linux, Windows y macOS"
+description: "Los tres sistemas operativos de escritorio más usados tienen orígenes, modelos y filosofías distintos. Para quien desarrolla, la diferencia más práctica es Unix frente a Windows."
+level: basico
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+  - que-es-linux
+updated: 2026-10-13
+sources:
+  - title: "Microsoft: Información general de los componentes de Windows"
+    url: https://learn.microsoft.com/es-es/windows-hardware/drivers/kernel/overview-of-windows-components
+  - title: "Apple: Kernel Programming Guide, Kernel Architecture Overview (en inglés)"
+    url: https://developer.apple.com/library/archive/documentation/Darwin/Conceptual/KernelProgramming/Architecture/Architecture.html
+  - title: "The Linux Kernel Archives: About Linux Kernel (en inglés)"
+    url: https://www.kernel.org/category/about.html
+  - title: "Microsoft: ¿Qué es el Subsistema de Windows para Linux?"
+    url: https://learn.microsoft.com/es-es/windows/wsl/about
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Linux**, **Windows** y **macOS** son los tres [sistemas operativos](/articulos/que-es-un-sistema-operativo/) de ordenador más extendidos. Hacen lo mismo, gestionar el hardware y ejecutar programas, con orígenes y filosofías muy distintos. Para quien programa, la diferencia más útil es otra: macOS y Linux pertenecen a la familia **Unix**, y Windows no.
+
+## Origen y modelo
+
+| | Linux | Windows | macOS |
+| --- | --- | --- | --- |
+| Quién lo hace | Comunidad y empresas | Microsoft | Apple |
+| Código | Libre y abierto | Cerrado | Cerrado, con partes abiertas |
+| Precio | Gratuito | De pago, normalmente incluido con el equipo | Incluido con los equipos de Apple |
+| Hardware | Casi cualquiera | Casi cualquiera | Solo el de Apple |
+| Núcleo | [Linux, monolítico](/articulos/nucleo-monolitico-y-micronucleo/) | Windows NT, híbrido | XNU, híbrido |
+| Familia | Tipo Unix | Propia | Unix certificado |
+
+[Linux](/articulos/que-es-linux/) se distribuye en muchas [distribuciones](/articulos/distribuciones-de-linux/) distintas. Windows y macOS son productos de una sola empresa.
+
+## Dónde se usa cada uno
+
+- **Windows** domina en el escritorio, en empresas y en videojuegos.
+- **macOS** es habitual en diseño, edición de audio y vídeo y, cada vez más, entre quienes desarrollan software.
+- **Linux** domina en servidores, en [la nube](/articulos/computacion-en-la-nube/), en [contenedores](/articulos/que-es-docker/) y en dispositivos integrados. Android usa su núcleo.
+
+## Diferencias que se notan al programar
+
+| | Linux y macOS | Windows |
+| --- | --- | --- |
+| Separador de rutas | `/` | `\` |
+| Raíz del sistema de archivos | Una sola, `/` | Una por unidad: `C:\`, `D:\` |
+| Mayúsculas en nombres de archivo | Linux las distingue; macOS normalmente no | No las distingue |
+| [Final de línea](/articulos/salto-de-linea-en-windows-y-linux/) | LF | CR LF |
+| Terminal habitual | Bash o Zsh | PowerShell |
+| Permisos | Usuario, grupo y otros | Listas de control de acceso |
+| Ejecutables | Cualquier archivo con permiso de ejecución | Por la extensión, como `.exe` |
+
+Un programa que construye rutas uniendo textos con `/`, o que confunde `Foto.jpg` con `foto.jpg`, funciona en un sistema y falla en otro. Por eso los lenguajes ofrecen funciones para manejar rutas sin depender del sistema.
+
+## Por qué tanta gente desarrolla en Unix
+
+Casi todo el software de servidor acaba ejecutándose en Linux. Desarrollar en un sistema de la misma familia reduce sorpresas: las mismas órdenes de [terminal](/articulos/terminal-y-shell/), las mismas rutas, los mismos [permisos](/articulos/permisos-y-usuarios/).
+
+macOS ofrece un entorno Unix con aplicaciones comerciales. Linux, el mismo sistema que el servidor.
+
+Windows lo resolvió con el **Subsistema de Windows para Linux**, WSL, que ejecuta un entorno Linux completo dentro de Windows. Y los contenedores permiten tener el mismo entorno en cualquiera de los tres.
+
+## Otras diferencias
+
+- **Instalación de programas.** Linux usa [gestores de paquetes](/articulos/gestores-de-paquetes/) desde el principio. Windows y macOS tienen tiendas oficiales e instaladores, y hoy también gestores de paquetes.
+- **Actualizaciones.** En Windows y macOS las decide el fabricante. En Linux, cada distribución, y el usuario tiene más control.
+- **Personalización.** Linux permite cambiar prácticamente todo; macOS, lo que Apple decide.
+- **Compatibilidad.** Windows mantiene la compatibilidad con programas de hace décadas. macOS ha cambiado varias veces de [arquitectura de procesador](/articulos/arquitecturas-x86-y-arm/), y en cada cambio dejó atrás programas antiguos.
+
+## Ninguno es mejor en abstracto
+
+Depende del uso, de los programas que se necesitan y de las preferencias. Lo que se aprende en uno, procesos, archivos, permisos, red, sirve para los tres.
+
+<Quiz
+	client:visible
+	question="¿Qué dos de estos sistemas pertenecen a la familia Unix?"
+	options={["Windows y macOS", "Linux y macOS", "Linux y Windows"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Linux es libre y lo desarrolla una comunidad; Windows y macOS son productos de una empresa.
+- Linux domina en servidores y la nube; Windows, en el escritorio; macOS, en sectores creativos y de desarrollo.
+- macOS y Linux son de la familia Unix; Windows tiene su propio diseño.
+- Las rutas, los finales de línea y las mayúsculas en los nombres causan errores entre sistemas.
+- WSL y los contenedores permiten trabajar con Linux desde cualquier sistema.

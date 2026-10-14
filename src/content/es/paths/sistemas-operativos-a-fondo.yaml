@@ -3,6 +3,9 @@ description: Cómo gestiona el sistema la memoria y los archivos, y cómo se man
 layer: sistemas
 steps:
   - que-es-un-sistema-operativo
+  - llamadas-al-sistema
+  - nucleo-monolitico-y-micronucleo
+  - arranque-de-un-sistema-operativo
   - que-es-un-proceso
   - planificador-de-procesos
   - memoria-virtual
@@ -11,3 +14,6 @@ steps:
   - terminal-y-shell
   - que-es-linux
   - distribuciones-de-linux
+  - senales-y-comunicacion-entre-procesos
+  - sistemas-operativos-de-tiempo-real
+  - linux-windows-y-macos

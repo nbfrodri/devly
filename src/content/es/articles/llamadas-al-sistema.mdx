@@ -1,0 +1,104 @@
+---
+title: "¿Qué es una llamada al sistema?"
+description: "Una llamada al sistema es la forma en que un programa pide un servicio al núcleo del sistema operativo: abrir un archivo, crear un proceso, enviar datos por la red."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+  - que-es-un-proceso
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: syscalls(2) (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/syscalls.2.html
+  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Mechanism: Limited Direct Execution (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf
+  - title: "Node.js: process (en inglés)"
+    url: https://nodejs.org/api/process.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **llamada al sistema**, en inglés *system call* o *syscall*, es la forma en que un programa pide un servicio al **núcleo** del [sistema operativo](/articulos/que-es-un-sistema-operativo/): leer un archivo, crear un [proceso](/articulos/que-es-un-proceso/), reservar memoria, abrir una conexión de red.
+
+Es la frontera entre los programas y el núcleo. Todo lo que un programa hace con el mundo exterior pasa por ella.
+
+## Por qué hacen falta
+
+Un programa corriente no puede tocar directamente el hardware, ni la memoria de otros programas, ni los archivos de otros usuarios. Si pudiera, cualquier fallo, o cualquier programa malicioso, tumbaría el sistema o leería lo que no debe.
+
+Para impedirlo, el [procesador](/articulos/como-funciona-un-procesador/) tiene al menos dos **modos**:
+
+| Modo | Quién | Qué puede hacer |
+| --- | --- | --- |
+| Usuario | Los programas | Solo ejecutar instrucciones corrientes sobre su propia memoria |
+| Núcleo | El sistema operativo | Todo: hardware, memoria de cualquiera, instrucciones privilegiadas |
+
+Un programa que intenta una operación privilegiada en modo usuario provoca una excepción, y el sistema operativo lo detiene.
+
+Para hacer algo privilegiado, el programa lo **pide** al núcleo. Esa petición es la llamada al sistema.
+
+## Cómo funciona
+
+1. El programa coloca en los registros el número de la llamada que quiere y sus argumentos.
+2. Ejecuta una instrucción especial que provoca un **salto controlado** al núcleo y cambia a modo privilegiado. Funciona como una [interrupción](/articulos/interrupciones-y-entrada-salida/).
+3. El núcleo comprueba que la petición es válida y que el programa tiene permiso.
+4. Hace el trabajo.
+5. Devuelve el resultado y vuelve al programa, en modo usuario.
+
+El salto no va a cualquier sitio: solo a los puntos de entrada que el núcleo preparó al arrancar. El programa no puede elegir ejecutar código arbitrario del núcleo.
+
+## Algunas llamadas
+
+Linux tiene unos cuantos cientos. Las más habituales:
+
+| Llamada | Qué hace |
+| --- | --- |
+| `open`, `read`, `write`, `close` | Trabajar con archivos |
+| `fork`, `execve` | Crear un proceso y cargar un programa en él |
+| `exit` | Terminar el proceso |
+| `mmap` | Reservar memoria |
+| `socket`, `connect` | Comunicarse por la red |
+| `getpid` | Obtener el identificador del proceso |
+| `kill` | Enviar una [señal](/articulos/senales-y-comunicacion-entre-procesos/) a otro proceso |
+
+## Casi nunca se llaman directamente
+
+Los programas no las usan a mano. Las bibliotecas del lenguaje las envuelven en funciones cómodas.
+
+```js
+import { readFileSync } from "node:fs";
+
+const contenido = readFileSync("/proc/self/stat", "utf8");
+
+console.log(typeof process.pid); // "number"
+console.log(contenido.split(" ")[0] === String(process.pid)); // true
+```
+
+Para leer ese archivo, Node.js hace por debajo las llamadas `open`, `read` y `close`. Y `process.pid` se obtiene con `getpid`. El archivo `/proc/self/stat` no existe en ningún disco: lo genera el núcleo de [Linux](/articulos/que-es-linux/) cuando se lee, con datos del propio proceso.
+
+## Tienen un coste
+
+Cambiar de modo, comprobar permisos y volver lleva tiempo, mucho más que una llamada a una función normal. Por eso los programas que hacen muchas operaciones pequeñas van lentos, y se agrupan: leer un archivo en bloques grandes en lugar de byte a byte.
+
+## Las ves con una herramienta
+
+En Linux, la orden `strace` muestra cada llamada al sistema que hace un programa mientras se ejecuta. Es una forma muy directa de ver qué hace realmente: qué archivos abre, a qué se conecta, dónde se queda esperando.
+
+<Quiz
+	client:visible
+	question="¿Por qué un programa no puede leer directamente el disco y necesita una llamada al sistema?"
+	options={[
+		"Porque sería demasiado lento",
+		"Porque solo el núcleo, en modo privilegiado, puede acceder al hardware, para proteger el sistema",
+		"Porque el disco no tiene dirección",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Una llamada al sistema es una petición de un programa al núcleo del sistema operativo.
+- El procesador separa el modo usuario, limitado, del modo núcleo, con todos los privilegios.
+- La llamada provoca un salto controlado al núcleo, que comprueba permisos y hace el trabajo.
+- Las bibliotecas de cada lenguaje las envuelven en funciones cómodas.
+- Cambiar de modo tiene un coste, por eso conviene agrupar operaciones.

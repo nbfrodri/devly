@@ -1,0 +1,105 @@
+---
+title: "¿Qué pasa al encender un ordenador? El arranque del sistema operativo"
+description: "Del botón de encendido al escritorio pasan varias etapas: el firmware comprueba el hardware, un cargador elige el sistema y el núcleo pone en marcha todo lo demás."
+level: basico
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+  - la-placa-base-y-los-buses
+  - que-es-el-firmware
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: boot(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/boot.7.html
+  - title: "Linux man-pages: bootup(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/bootup.7.html
+  - title: "GNU GRUB Manual (en inglés)"
+    url: https://www.gnu.org/software/grub/manual/grub/grub.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Cuando se pulsa el botón de encendido, el ordenador no sabe todavía que existe un [sistema operativo](/articulos/que-es-un-sistema-operativo/). Arrancar es una cadena de etapas, en la que cada programa carga al siguiente, más capaz: primero el firmware, después un cargador de arranque, después el núcleo y, al final, los servicios y la sesión del usuario.
+
+Se le llama *bootstrapping*, de la expresión inglesa que habla de levantarse tirando de los cordones de las propias botas: un sistema que se pone en marcha a sí mismo.
+
+## 1. El firmware
+
+Al recibir corriente, el [procesador](/articulos/como-funciona-un-procesador/) empieza a ejecutar desde una dirección fija, donde está el [firmware](/articulos/que-es-el-firmware/) de la [placa base](/articulos/la-placa-base-y-los-buses/), grabado en una memoria permanente.
+
+El firmware:
+
+1. **Comprueba el hardware**: la memoria, el procesador, los dispositivos básicos. Si algo esencial falla, avisa con pitidos o luces.
+2. **Lo inicializa**: configura la memoria y los buses.
+3. **Busca desde dónde arrancar**, según un orden configurable: disco, memoria USB, red.
+
+### BIOS y UEFI
+
+Durante décadas este firmware fue la **BIOS**, muy limitada: leía el primer sector del disco, de 512 bytes, y ejecutaba lo que hubiera ahí.
+
+Hoy es **UEFI**, su sucesora, mucho más capaz:
+
+| | BIOS | UEFI |
+| --- | --- | --- |
+| Qué carga | El primer sector del disco | Un programa desde una partición específica |
+| Tamaño de disco de arranque | Limitado | Muy grande |
+| Interfaz | Texto | Puede ser gráfica, con ratón |
+| Arranque seguro | No | Sí |
+
+El **arranque seguro** comprueba que lo que se carga está firmado por alguien de confianza. Protege contra programas maliciosos que intentan instalarse antes que el sistema operativo, donde serían casi imposibles de detectar.
+
+## 2. El cargador de arranque
+
+Es un programa pequeño cuyo trabajo es encontrar el núcleo, cargarlo en memoria y pasarle el control. En Linux, el más común es GRUB.
+
+Si hay varios sistemas instalados, el cargador muestra un menú para elegir. También puede pasar opciones al núcleo, por ejemplo para arrancar en un modo de recuperación.
+
+## 3. El núcleo
+
+El núcleo toma el control y:
+
+- Detecta y configura el hardware, cargando los controladores necesarios.
+- Pone en marcha la gestión de [memoria](/articulos/memoria-virtual/) y de [procesos](/articulos/que-es-un-proceso/).
+- Monta el sistema de archivos principal.
+- Ejecuta el **primer proceso** del sistema.
+
+Ese primer proceso tiene el identificador 1, y es el antepasado de todos los demás.
+
+## 4. El sistema de inicio
+
+El proceso 1 es el **sistema de inicio**. En la mayoría de las distribuciones de Linux actuales es systemd. Arranca todos los [servicios](/articulos/servicios-y-demonios/) en el orden que exigen sus dependencias: la red, el registro de eventos, el servidor gráfico. Muchos, en paralelo.
+
+Las dependencias se resuelven con una [ordenación topológica](/articulos/ordenacion-topologica/): no se arranca el servidor web antes que la red.
+
+## 5. La sesión
+
+Por último aparece la pantalla de acceso. Tras iniciar sesión, se cargan el escritorio y los programas del usuario.
+
+```
+Encendido → firmware → cargador → núcleo → proceso 1 → servicios → sesión
+```
+
+## Cuando falla
+
+Saber las etapas ayuda a diagnosticar:
+
+- **Pitidos y pantalla negra**: el firmware ha encontrado un problema de hardware.
+- **"No se encuentra un dispositivo de arranque"**: el firmware no encuentra el cargador.
+- **Error del cargador**: no encuentra el núcleo, o su configuración está mal.
+- **El núcleo se detiene con un error**: un controlador o el sistema de archivos principal.
+- **Arranca, pero falta algo**: un servicio no se ha iniciado. Sus registros lo explican.
+
+<Quiz
+	client:visible
+	question="¿Qué es lo primero que se ejecuta al encender un ordenador?"
+	options={["El núcleo del sistema operativo", "El firmware de la placa base", "El escritorio"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Arrancar es una cadena: firmware, cargador de arranque, núcleo, sistema de inicio y sesión.
+- El firmware, hoy UEFI, comprueba e inicializa el hardware y busca desde dónde arrancar.
+- El arranque seguro comprueba que lo que se carga está firmado por alguien de confianza.
+- El cargador carga el núcleo, que configura el hardware y lanza el primer proceso.
+- El sistema de inicio arranca los servicios respetando sus dependencias.

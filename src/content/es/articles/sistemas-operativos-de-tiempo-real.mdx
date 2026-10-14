@@ -1,0 +1,98 @@
+---
+title: "¿Qué es un sistema operativo de tiempo real?"
+description: "Un sistema operativo de tiempo real garantiza que cada tarea responde dentro de un plazo fijo. No es el más rápido, sino el más predecible."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - que-es-un-sistema-operativo
+  - planificador-de-procesos
+  - microcontrolador-y-microprocesador
+updated: 2026-10-13
+sources:
+  - title: "FreeRTOS: RTOS fundamentals (en inglés)"
+    url: https://www.freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/01-RTOS-fundamentals
+  - title: "seL4: About (en inglés)"
+    url: https://sel4.systems/About/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **sistema operativo de tiempo real**, o RTOS por sus siglas en inglés, es un [sistema operativo](/articulos/que-es-un-sistema-operativo/) que garantiza que cada tarea se atiende **dentro de un plazo conocido**. Lo importante no es que sea rápido, sino que sea **predecible**: que una respuesta llegue siempre a tiempo, no casi siempre.
+
+## Qué problema resuelve
+
+Un sistema operativo de escritorio está diseñado para que todo vaya bien **en promedio**. Si el ratón se queda congelado medio segundo de vez en cuando, molesta, pero no pasa nada.
+
+En otros sistemas, una respuesta tardía es un fallo:
+
+- El airbag de un coche debe dispararse en milésimas de segundo tras el impacto. Una respuesta correcta que llega tarde no sirve.
+- El control de un motor, de un brazo robótico o de un marcapasos.
+- Los mandos de vuelo de un avión.
+
+Ahí no basta con ir rápido normalmente. Hace falta una garantía.
+
+## Estricto y flexible
+
+| Tipo | Si se incumple un plazo | Ejemplos |
+| --- | --- | --- |
+| Tiempo real estricto | Es un fallo del sistema, potencialmente grave | Airbags, frenos, control de vuelo |
+| Tiempo real flexible | Baja la calidad, pero el sistema sigue sirviendo | Audio y vídeo en directo, videojuegos |
+
+## Cómo lo consigue
+
+### Planificación por prioridades estrictas
+
+El [planificador](/articulos/planificador-de-procesos/) de un sistema de escritorio intenta repartir el procesador de forma justa. El de un RTOS hace otra cosa: **siempre ejecuta la tarea de mayor prioridad que esté lista**, y le quita el procesador a cualquier otra en el instante en que la necesita.
+
+La tarea que vigila el impacto tiene la máxima prioridad. Cuando ocurre algo, se ejecuta de inmediato, aunque otra tarea estuviera a mitad de su trabajo.
+
+### Tiempos acotados
+
+Cada operación del sistema, cambiar de tarea, atender una [interrupción](/articulos/interrupciones-y-entrada-salida/), reservar memoria, tiene un tiempo máximo conocido. Se evita todo lo que pueda tardar de forma impredecible: la memoria virtual con paginación al disco, la reserva de memoria dinámica sin límite, las cachés difíciles de prever.
+
+### Pequeño
+
+Muchos RTOS caben en unos pocos kilobytes y funcionan en un [microcontrolador](/articulos/microcontrolador-y-microprocesador/). Ofrecen lo mínimo: tareas, prioridades, temporizadores y mecanismos para que las tareas se comuniquen.
+
+## Un problema clásico: la inversión de prioridad
+
+Una tarea de baja prioridad tiene un recurso compartido. La de alta prioridad lo necesita y espera. Mientras, una tarea de prioridad media, que no necesita el recurso, se pone a ejecutar y retrasa a la baja, que no puede terminar y liberarlo. La tarea más importante queda bloqueada por una que no tiene nada que ver.
+
+Es un caso de las [condiciones de carrera y bloqueos](/articulos/condiciones-de-carrera-y-bloqueos/) con consecuencias graves. La solución habitual es la **herencia de prioridad**: mientras la tarea baja tiene el recurso que necesita la alta, se le sube temporalmente la prioridad.
+
+## Comparación
+
+| | Sistema de propósito general | Tiempo real |
+| --- | --- | --- |
+| Objetivo | Rendimiento medio y equidad | Cumplir plazos siempre |
+| Planificación | Reparto justo | Prioridad estricta |
+| Peor caso | Puede ser muy lento | Está acotado |
+| Tamaño | Grande | A menudo diminuto |
+| Ejemplos | Linux, Windows, macOS | FreeRTOS, Zephyr, QNX |
+
+Linux, que es de propósito general, tiene variantes y opciones para comportarse de forma cercana al tiempo real flexible.
+
+## Dónde está
+
+En casi cualquier aparato con electrónica: coches, que llevan decenas de pequeños ordenadores; electrodomésticos; dispositivos médicos; equipos industriales; dispositivos del [internet de las cosas](/articulos/internet-de-las-cosas/); satélites.
+
+En los más críticos, se exige además demostrar que el sistema es correcto. Algunos núcleos pequeños, como seL4, tienen una demostración matemática de su corrección.
+
+<Quiz
+	client:visible
+	question="¿Qué es lo más importante en un sistema operativo de tiempo real?"
+	options={[
+		"Ser el más rápido en promedio",
+		"Garantizar que cada tarea responde dentro de un plazo",
+		"Ejecutar muchos programas a la vez",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Un RTOS garantiza que las tareas responden dentro de un plazo conocido.
+- Importa la predictibilidad, no la velocidad media.
+- Ejecuta siempre la tarea de mayor prioridad, y acota el tiempo de cada operación.
+- La inversión de prioridad es un riesgo clásico, que se resuelve con herencia de prioridad.
+- Está en coches, equipos médicos, industria y dispositivos integrados.

@@ -1,0 +1,13 @@
+title: Linux para desarrolladores
+description: "Lo que hay que saber de Linux para trabajar a diario con servidores, contenedores y la terminal."
+layer: sistemas
+steps:
+  - que-es-linux
+  - distribuciones-de-linux
+  - jerarquia-de-directorios-de-linux
+  - terminal-y-shell
+  - permisos-y-usuarios
+  - gestores-de-paquetes
+  - servicios-y-demonios
+  - tareas-programadas-cron
+  - software-libre-y-codigo-abierto

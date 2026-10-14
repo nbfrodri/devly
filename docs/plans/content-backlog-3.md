@@ -15,7 +15,7 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 - [x] La jerarquía de memoria y la caché del procesador
 - [x] ¿Qué es una GPU?
 - [x] Buses, puertos y periféricos
-- [ ] ¿Qué hace la BIOS o UEFI al encender un ordenador?
+- [x] ¿Qué hace la BIOS o UEFI al encender un ordenador?
 - [x] Compresión de datos: con pérdida y sin pérdida
 - [x] Cómo se representa una imagen: píxeles, color y formatos
 - [x] Cómo se representa el sonido: muestreo y cuantización
@@ -49,11 +49,11 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes co
 
 - [x] El planificador: cómo se reparte el procesador
 - [x] Permisos y usuarios
-- [ ] Señales y comunicación entre procesos
-- [ ] El arranque de un sistema operativo
-- [ ] Gestores de paquetes
-- [ ] Servicios y demonios
-- [ ] Diferencias entre Linux, Windows y macOS
+- [x] Señales y comunicación entre procesos
+- [x] El arranque de un sistema operativo
+- [x] Gestores de paquetes
+- [x] Servicios y demonios
+- [x] Diferencias entre Linux, Windows y macOS
 
 ## Redes y telecomunicaciones (había 11)
 
@@ -85,8 +85,8 @@ Pedido por el usuario el 2026-10-14: artículos sobre tecnologías con nombre pr
 
 - [x] ¿Qué es Linux? El núcleo y el sistema
 - [x] Distribuciones de Linux: qué las diferencia
-- [ ] La jerarquía de directorios de Linux (sistema de archivos)
-- [ ] ¿Qué es el software libre y el código abierto? (licencias de software)
+- [x] La jerarquía de directorios de Linux (sistema de archivos)
+- [x] ¿Qué es el software libre y el código abierto? (licencias de software)
 
 ## Más hardware
 

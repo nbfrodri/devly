@@ -1,0 +1,110 @@
+---
+title: "¿Cómo se programan tareas periódicas? Cron"
+description: "Cron es el programa de los sistemas tipo Unix que ejecuta órdenes en momentos fijos: cada noche, cada lunes, cada quince minutos."
+level: basico
+layer: sistemas
+prerequisites:
+  - servicios-y-demonios
+  - terminal-y-shell
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: crontab(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/crontab.5.html
+  - title: "Linux man-pages: systemd.service(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/systemd.service.5.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Cron** es un [demonio](/articulos/servicios-y-demonios/) de los sistemas tipo Unix que ejecuta órdenes de forma automática en momentos programados: cada noche a las tres, cada lunes, cada quince minutos. Las tareas se describen en una tabla llamada **crontab**.
+
+Es la forma clásica de automatizar el mantenimiento: [copias de seguridad](/articulos/copias-de-seguridad/), limpieza de archivos antiguos, envío de informes.
+
+## La sintaxis
+
+Cada línea de un crontab tiene **cinco campos** de tiempo y la orden a ejecutar:
+
+```
+┌───────────── minuto (0-59)
+│ ┌─────────── hora (0-23)
+│ │ ┌───────── día del mes (1-31)
+│ │ │ ┌─────── mes (1-12)
+│ │ │ │ ┌───── día de la semana (0-7; 0 y 7 son domingo)
+│ │ │ │ │
+0 3 * * *   /usr/local/bin/copia-de-seguridad.sh
+```
+
+Se lee: a las 3:00, todos los días.
+
+| Símbolo | Significado | Ejemplo |
+| --- | --- | --- |
+| `*` | Cualquier valor | `*` en el mes: todos los meses |
+| `,` | Lista | `1,15`: los días 1 y 15 |
+| `-` | Rango | `1-5`: de lunes a viernes |
+| `/` | Cada tantos | `*/15`: cada 15 |
+
+Algunos ejemplos:
+
+| Expresión | Cuándo |
+| --- | --- |
+| `*/15 * * * *` | Cada 15 minutos |
+| `0 9 * * 1-5` | A las 9:00, de lunes a viernes |
+| `30 2 1 * *` | El día 1 de cada mes, a las 2:30 |
+| `0 0 * * 0` | Cada domingo a medianoche |
+
+Para comprobar qué minutos de una hora cumple un campo:
+
+```js
+function minutos(campo) {
+	const [rango, paso = "1"] = campo.split("/");
+	const todos = Array.from({ length: 60 }, (_, i) => i);
+	const base = rango === "*" ? todos : rango.split(",").map(Number);
+
+	return base.filter((m) => m % Number(paso) === 0);
+}
+
+console.log(minutos("*/15").join(" ")); // "0 15 30 45"
+console.log(minutos("5,35").join(" ")); // "5 35"
+```
+
+La expresión de cron se ha extendido mucho más allá de este programa: la usan las plataformas de integración continua, los servicios en la nube y [Kubernetes](/articulos/que-es-kubernetes/) para tareas periódicas.
+
+## Usarlo
+
+```bash
+crontab -e     # editar las tareas del usuario actual
+crontab -l     # listarlas
+```
+
+## Trampas habituales
+
+- **Otro entorno.** Cron no carga la configuración de la sesión del usuario. Las [variables de entorno](/articulos/variables-de-entorno-y-secretos/) y la ruta de búsqueda de programas son mínimas. Una orden que funciona en la terminal puede fallar en cron porque no encuentra un programa. Conviene usar rutas completas.
+- **El silencio.** Si la tarea falla, nadie se entera. Hay que guardar la salida en un registro, o mejor, vigilar que la tarea se ha ejecutado.
+- **La zona horaria** del servidor, que puede no ser la que se cree.
+- **El cambio de hora.** Una tarea programada para las 2:30 puede no ejecutarse, o hacerlo dos veces, el día en que el reloj se adelanta o se atrasa.
+- **Solapamiento.** Si una tarea tarda más que su intervalo, la siguiente empieza antes de que termine la anterior. Hay que impedir que se ejecuten a la vez, o que sean [idempotentes](/articulos/atomicidad-e-idempotencia/).
+- **Equipo apagado.** Si el ordenador está apagado a la hora prevista, la tarea no se ejecuta.
+
+## Alternativas
+
+Los sistemas con systemd ofrecen **temporizadores**, que hacen lo mismo con algunas ventajas: registran cada ejecución, pueden ejecutar al arrancar lo que se perdió estando apagado, y se gestionan como cualquier otro servicio.
+
+En aplicaciones distribuidas, con varios servidores, cron en cada máquina ejecutaría la tarea varias veces. Se usa un planificador central, o una [cola de mensajes](/articulos/colas-de-mensajes/).
+
+<Quiz
+	client:visible
+	question="¿Qué significa la expresión de cron «0 9 * * 1-5»?"
+	options={[
+		"A las 9:00 del día 1 al 5 de cada mes",
+		"A las 9:00 de lunes a viernes",
+		"Cada 9 minutos, 5 veces",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Cron ejecuta órdenes en momentos programados, descritos en un crontab.
+- Cada línea tiene cinco campos: minuto, hora, día del mes, mes y día de la semana.
+- Cron no tiene el entorno de la terminal: conviene usar rutas completas.
+- Hay que vigilar las tareas, evitar que se solapen y tener en cuenta la hora del servidor.

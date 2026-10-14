@@ -1,0 +1,111 @@
+---
+title: "¿Cómo se comunican los procesos? Señales, tuberías y sockets"
+description: "Los procesos están aislados, pero a menudo necesitan colaborar. El sistema operativo ofrece varios mecanismos: señales, tuberías, sockets y memoria compartida."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - que-es-un-proceso
+  - llamadas-al-sistema
+  - terminal-y-shell
+updated: 2026-10-13
+sources:
+  - title: "Linux man-pages: signal(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/signal.7.html
+  - title: "Linux man-pages: pipe(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/pipe.7.html
+  - title: "Linux man-pages: unix(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/unix.7.html
+  - title: "Node.js: Child process (en inglés)"
+    url: https://nodejs.org/api/child_process.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Cada [proceso](/articulos/que-es-un-proceso/) tiene su memoria aislada: ninguno puede leer la de otro. Es lo que protege al sistema. Pero muchas veces los procesos necesitan colaborar, avisarse o intercambiar datos. El sistema operativo ofrece para ello mecanismos de **comunicación entre procesos**, o IPC por sus siglas en inglés.
+
+## Señales
+
+Una **señal** es un aviso breve que se envía a un proceso. No lleva datos: solo un número, que indica qué ha pasado.
+
+| Señal | Cuándo se envía | Efecto habitual |
+| --- | --- | --- |
+| `SIGINT` | Al pulsar Ctrl+C en la terminal | Interrumpir |
+| `SIGTERM` | Para pedir que termine | Terminar de forma ordenada |
+| `SIGKILL` | Para forzar que termine | Terminar inmediatamente |
+| `SIGHUP` | Al cerrarse la terminal | A menudo, recargar la configuración |
+| `SIGSEGV` | Al acceder a memoria prohibida | Terminar, el famoso fallo de segmentación |
+| `SIGCHLD` | Al terminar un proceso hijo | Aviso al padre |
+
+Un proceso puede **capturar** la mayoría de las señales y decidir qué hacer: por ejemplo, al recibir `SIGTERM`, guardar su trabajo y cerrar las conexiones antes de salir.
+
+```javascript
+process.on("SIGTERM", () => {
+	console.log("Cerrando de forma ordenada...");
+	servidor.close(() => process.exit(0));
+});
+```
+
+`SIGKILL` no se puede capturar: el núcleo elimina el proceso sin darle opción. Por eso, para detener un programa, lo correcto es enviar primero `SIGTERM` y recurrir a `SIGKILL` solo si no responde.
+
+En la terminal se envían con la orden `kill`, que, pese a su nombre, sirve para cualquier señal.
+
+## Tuberías
+
+Una **tubería**, en inglés *pipe*, es un canal en un solo sentido: lo que un proceso escribe por un extremo, otro lo lee por el otro, en orden.
+
+Es lo que hace el símbolo `|` de la [terminal](/articulos/terminal-y-shell/):
+
+```bash
+cat registro.txt | grep error | wc -l
+```
+
+Son tres procesos distintos, conectados: la salida de cada uno es la entrada del siguiente.
+
+Un programa puede hacer lo mismo con otro proceso:
+
+```js
+import { spawnSync } from "node:child_process";
+
+const resultado = spawnSync("sort", { input: "pera\nmanzana\nuva\n" });
+
+console.log(resultado.stdout.toString().trim().split("\n").join(" ")); // "manzana pera uva"
+```
+
+Node.js lanza el programa `sort` como un proceso aparte, le envía el texto por una tubería y lee la respuesta por otra.
+
+## Sockets
+
+Un **socket** es un extremo de una comunicación en **los dos sentidos**. Los de red conectan procesos en máquinas distintas, mediante [TCP o UDP](/articulos/tcp-y-udp/). Los **sockets locales** hacen lo mismo dentro de una máquina, sin pasar por la red, y son más rápidos.
+
+Muchos servicios los usan: una base de datos puede atender a las aplicaciones del mismo equipo por un socket local.
+
+## Memoria compartida
+
+Dos procesos pueden pedir al sistema que una misma zona de memoria aparezca en el espacio de ambos. Es el mecanismo **más rápido**: no hay que copiar nada. También el más delicado, porque tiene los riesgos de los [hilos](/articulos/hilos-y-concurrencia/): si los dos escriben a la vez, aparecen [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/), y hacen falta mecanismos de sincronización.
+
+## Comparación
+
+| Mecanismo | Datos | Sentido | Alcance | Velocidad |
+| --- | --- | --- | --- | --- |
+| Señal | Solo un número | Uno | Misma máquina | Inmediata |
+| Tubería | Un flujo de bytes | Uno | Misma máquina | Alta |
+| Socket local | Un flujo de bytes o mensajes | Dos | Misma máquina | Alta |
+| Socket de red | Un flujo de bytes o mensajes | Dos | Cualquier máquina | Depende de la red |
+| Memoria compartida | Lo que se quiera | Dos | Misma máquina | La mayor |
+
+A mayor escala, los servicios distribuidos se comunican con [API](/articulos/que-es-una-api/) o [colas de mensajes](/articulos/colas-de-mensajes/), que en el fondo usan sockets.
+
+<Quiz
+	client:visible
+	question="¿Qué señal conviene enviar primero para detener un programa de forma ordenada?"
+	options={["SIGKILL", "SIGTERM", "SIGSEGV"]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Los procesos están aislados y se comunican con mecanismos del sistema operativo.
+- Las señales son avisos sin datos; SIGTERM pide terminar y SIGKILL lo fuerza.
+- Las tuberías conectan la salida de un proceso con la entrada de otro, como `|` en la terminal.
+- Los sockets comunican en los dos sentidos, en la misma máquina o por la red.
+- La memoria compartida es la más rápida, y la que más cuidado exige.
