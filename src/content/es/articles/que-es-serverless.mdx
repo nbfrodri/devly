@@ -1,0 +1,142 @@
+---
+title: "¿Qué es serverless?"
+description: "En serverless entregas funciones y el proveedor las ejecuta cuando hacen falta. Hay servidores, pero no los gestionas ni pagas por tenerlos parados."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - computacion-en-la-nube
+  - stateful-y-stateless
+updated: 2026-10-13
+sources:
+  - title: "CNCF: Serverless Whitepaper v1.0 (en inglés)"
+    url: https://github.com/cncf/wg-serverless/blob/master/whitepapers/serverless-overview/README.md
+  - title: "AWS: ¿Qué es AWS Lambda?"
+    url: https://docs.aws.amazon.com/es_es/lambda/latest/dg/welcome.html
+  - title: "Cloudflare: How Workers works (en inglés)"
+    url: https://developers.cloudflare.com/workers/reference/how-workers-works/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Serverless** es un modelo de [computación en la nube](/articulos/computacion-en-la-nube/) en el que el desarrollador entrega código y el proveedor se ocupa de todo lo necesario para ejecutarlo: crea los servidores cuando llegan peticiones, los multiplica si hay muchas y los elimina cuando no hay ninguna. Se paga solo por lo que se ejecuta.
+
+El nombre, "sin servidor", confunde. Servidores hay. Lo que desaparece es la tarea de gestionarlos.
+
+## Qué problema resuelve
+
+Con un servidor tradicional, aunque sea alquilado, hay que:
+
+- Decidir de antemano cuánta capacidad contratar.
+- Pagar por él las veinticuatro horas, reciba visitas o no.
+- Mantener el sistema operativo actualizado.
+- Preparar cómo ampliar la capacidad si crece el tráfico.
+
+Muchas aplicaciones pasan casi todo el tiempo sin hacer nada. Una herramienta interna que se usa veinte veces al día mantiene encendido un servidor para trabajar unos segundos.
+
+Serverless elimina esas cuatro tareas.
+
+## Funciones como servicio
+
+La forma más conocida es **FaaS**, *functions as a service*. La unidad que se despliega no es una aplicación, sino una **función**: un fragmento de código que responde a un **evento**.
+
+Un evento puede ser:
+
+- Una petición [HTTP](/articulos/que-es-http/).
+- Un archivo subido a un almacén.
+- Un mensaje en una [cola](/articulos/colas-de-mensajes/).
+- Una hora programada.
+- Un cambio en una base de datos.
+
+Una función que responde a una petición tiene este aspecto. El ejemplo muestra la forma; la firma exacta depende de cada proveedor.
+
+```javascript
+export default {
+	async fetch(peticion) {
+		const direccion = new URL(peticion.url);
+		const nombre = direccion.searchParams.get("nombre") ?? "mundo";
+
+		return new Response(`Hola, ${nombre}`);
+	},
+};
+```
+
+No hay código que arranque un servidor ni que escuche en un puerto. Solo lo que hay que hacer cuando llega la petición.
+
+## Qué ocurre por debajo
+
+1. Llega un evento.
+2. El proveedor busca un entorno listo para esa función. Si no hay ninguno, crea uno.
+3. Ejecuta la función y devuelve el resultado.
+4. Mantiene el entorno un rato, por si llega otra petición.
+5. Si no llega, lo elimina.
+
+Si llegan mil peticiones a la vez, crea los entornos necesarios. Si no llega ninguna, no hay nada en marcha. A esto último se le llama **escalar a cero**.
+
+## Sus propiedades
+
+- **Sin administración.** Ni sistema operativo ni parches.
+- **Escalado automático**, de cero a miles y de vuelta.
+- **Pago por uso.** Se cobra por invocaciones y por tiempo de ejecución, en fracciones de segundo. Sin tráfico, el coste es nulo o casi.
+- **Sin estado.** Cada ejecución puede ocurrir en un entorno distinto. Lo que la función guarde en memoria o en disco no está garantizado en la siguiente.
+- **Efímero.** Las ejecuciones tienen un tiempo máximo, de segundos o minutos.
+
+Lo que debe conservarse va fuera: en una [base de datos](/articulos/que-es-una-base-de-datos/) o en un almacén de archivos. Es el diseño [stateless](/articulos/stateful-y-stateless/) llevado al extremo.
+
+## El arranque en frío
+
+Cuando no hay un entorno preparado, crearlo lleva un tiempo. Esa primera petición tarda más. Es el **arranque en frío**.
+
+Cuánto tarda depende de la tecnología:
+
+- Las plataformas que ejecutan cada función en un [contenedor](/articulos/contenedores-y-maquinas-virtuales/) o una máquina virtual ligera pueden tardar de décimas de segundo a varios segundos, según el lenguaje y el tamaño del código.
+- Las que usan **aislados**, el mismo mecanismo con el que un navegador separa unas pestañas de otras dentro de un solo [proceso](/articulos/que-es-un-proceso/), arrancan en milisegundos. A cambio, admiten menos lenguajes y funciones más limitadas.
+
+Para un trabajo en segundo plano, el arranque en frío no importa. Para una [API](/articulos/que-es-una-api/) que un usuario espera, puede notarse.
+
+## Más allá de las funciones
+
+El término cubre cualquier servicio con las mismas propiedades: sin servidores que gestionar, escalado automático y pago por uso. Hay bases de datos, colas y almacenes de archivos serverless.
+
+Usar servicios ya hechos del proveedor para autenticación, datos o notificaciones, en lugar de construirlos, se conoce como **BaaS**, *backend as a service*.
+
+<Quiz
+	client:visible
+	question="¿Por qué una función serverless no debe guardar datos importantes en su memoria?"
+	options={[
+		"Porque la memoria es de pago",
+		"Porque la siguiente ejecución puede ocurrir en otro entorno, que no los tiene",
+		"Porque el lenguaje no lo permite",
+	]}
+	answer={1}
+/>
+
+## Cuándo encaja
+
+- **Tráfico irregular o escaso.** No se paga por el tiempo sin uso.
+- **Picos imprevisibles.** El escalado es inmediato.
+- **Tareas disparadas por eventos**: procesar una imagen recién subida, enviar un correo, ejecutar algo cada noche.
+- **Equipos pequeños**, que no quieren dedicar tiempo a operar servidores.
+- **Prototipos**, que empiezan gratis.
+
+## Cuándo no
+
+- **Carga alta y constante.** Pagar por cada invocación acaba costando más que un servidor siempre encendido.
+- **Tareas largas**, que superan el tiempo máximo.
+- **Conexiones permanentes.** Mantener un [WebSocket](/articulos/websockets/) abierto encaja mal con un entorno que vive segundos, aunque hay servicios específicos para ello.
+- **Latencia muy baja y estable**, si el arranque en frío es un problema.
+
+## Sus costes
+
+- **Dependencia del proveedor.** Cada uno tiene sus eventos, sus límites y sus servicios. Migrar es reescribir.
+- **Depurar es más difícil.** No hay una máquina a la que entrar a mirar. Hacen falta buenos registros.
+- **Las conexiones a bases de datos.** Mil funciones a la vez abren mil conexiones, y una base de datos tradicional no las soporta. Se necesita un intermediario que las reparta.
+- **Muchas piezas pequeñas.** Una aplicación hecha de cien funciones tiene los problemas de los [microservicios](/articulos/monolito-y-microservicios/).
+- **Facturas sorpresa.** Un error que haga que una función se llame a sí misma sin parar se escala solo, y se cobra.
+
+## Lo esencial
+
+- En serverless entregas código, y el proveedor lo ejecuta y lo escala.
+- Las funciones responden a eventos y no conservan estado.
+- Se paga por uso, y sin tráfico no hay coste.
+- El arranque en frío retrasa la primera petición tras un periodo de inactividad.
+- Conviene para cargas variables y tareas por eventos; no para cargas constantes ni tareas largas.

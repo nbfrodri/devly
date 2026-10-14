@@ -1,0 +1,127 @@
+---
+title: "¿Qué es la computación en la nube? IaaS, PaaS y SaaS"
+description: "La nube es alquilar capacidad de cómputo por internet y pagar por lo que se usa. IaaS, PaaS y SaaS indican cuánto gestiona el proveedor."
+level: basico
+layer: sistemas
+prerequisites:
+  - cliente-servidor
+  - contenedores-y-maquinas-virtuales
+updated: 2026-10-13
+sources:
+  - title: "NIST SP 800-145: The NIST Definition of Cloud Computing (en inglés)"
+    url: https://csrc.nist.gov/pubs/sp/800/145/final
+  - title: "AWS: Marco de Buena Arquitectura"
+    url: https://docs.aws.amazon.com/es_es/wellarchitected/latest/framework/welcome.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **computación en la nube** consiste en usar por internet recursos informáticos que pertenecen a otro, servidores, almacenamiento, bases de datos, pagando por lo que se consume, en lugar de comprarlos y mantenerlos. **IaaS**, **PaaS** y **SaaS** son los tres niveles en que se ofrece, según cuánto trabajo asume el proveedor.
+
+"La nube" no es un lugar etéreo. Son centros de datos enormes, llenos de ordenadores, propiedad de una empresa que alquila su capacidad.
+
+## Qué problema resuelve
+
+Antes de la nube, poner en marcha un servicio exigía comprar servidores. Eso implica:
+
+- **Pagar por adelantado**, sin saber si el proyecto va a funcionar.
+- **Esperar semanas** a que lleguen las máquinas y se instalen.
+- **Adivinar la capacidad.** Si se compra de menos, el servicio se cae cuando llega el éxito. Si se compra de más, el dinero queda parado.
+- **Mantenerlo todo**: electricidad, refrigeración, discos que se rompen, seguridad física.
+
+Con la nube, un servidor se obtiene en minutos con una petición a una [API](/articulos/que-es-una-api/), se paga por horas o segundos, y se devuelve cuando ya no hace falta.
+
+## Qué la define
+
+El instituto de estándares de Estados Unidos, el NIST, publicó en 2011 la definición que se usa como referencia. Señala cinco características:
+
+| Característica | Significado |
+| --- | --- |
+| Autoservicio bajo demanda | El cliente obtiene recursos por sí mismo, sin hablar con nadie |
+| Acceso amplio por red | Se usa por internet, desde cualquier dispositivo |
+| Recursos compartidos | El proveedor reparte las mismas máquinas entre muchos clientes |
+| Elasticidad rápida | La capacidad crece y se reduce según la demanda |
+| Servicio medido | Se mide el consumo, y se cobra por él |
+
+Si falta alguna, no es nube en sentido estricto. Un servidor alquilado por meses, con contrato y sin poder ampliarlo en el momento, es alojamiento tradicional.
+
+Lo que hace posible compartir las máquinas es la virtualización: las [máquinas virtuales y los contenedores](/articulos/contenedores-y-maquinas-virtuales/) permiten que un ordenador físico aloje a muchos clientes aislados entre sí.
+
+## Los tres modelos de servicio
+
+La diferencia es **quién gestiona qué**.
+
+### IaaS: infraestructura como servicio
+
+El proveedor alquila las piezas básicas: máquinas virtuales, discos, redes. Tú instalas y mantienes todo lo demás, empezando por el [sistema operativo](/articulos/que-es-un-sistema-operativo/).
+
+Da el máximo control y exige el máximo trabajo. Es lo más parecido a tener servidores propios.
+
+### PaaS: plataforma como servicio
+
+El proveedor gestiona también el sistema operativo, las actualizaciones y el entorno de ejecución. Tú entregas el código de la aplicación, y la plataforma se ocupa de ejecutarlo y de ampliarlo.
+
+Se pierde control sobre los detalles y se gana tiempo.
+
+### SaaS: software como servicio
+
+El proveedor ofrece una aplicación terminada, que se usa desde el navegador. No se gestiona nada: ni servidores ni código. El correo web o un editor de documentos en línea son SaaS.
+
+### El reparto
+
+| Capa | Servidores propios | IaaS | PaaS | SaaS |
+| --- | --- | --- | --- | --- |
+| Aplicación | Tú | Tú | Tú | Proveedor |
+| Datos | Tú | Tú | Tú | Proveedor |
+| Entorno de ejecución | Tú | Tú | Proveedor | Proveedor |
+| Sistema operativo | Tú | Tú | Proveedor | Proveedor |
+| Virtualización | Tú | Proveedor | Proveedor | Proveedor |
+| Máquinas y red | Tú | Proveedor | Proveedor | Proveedor |
+| Edificio y energía | Tú | Proveedor | Proveedor | Proveedor |
+
+Una comparación habitual es la de comer pizza: hacerla en casa con tus ingredientes, comprarla congelada y hornearla, pedirla a domicilio o ir al restaurante. En todos los casos hay pizza; cambia cuánto haces tú.
+
+Hay modelos intermedios, como las [funciones serverless](/articulos/que-es-serverless/), que quedan entre PaaS y SaaS.
+
+<Quiz
+	client:visible
+	question="Subes el código de tu aplicación y la plataforma se encarga del sistema operativo y de ejecutarlo. ¿Qué modelo es?"
+	options={["IaaS", "PaaS", "SaaS"]}
+	answer={1}
+/>
+
+## Modelos de despliegue
+
+Aparte de qué se alquila, importa de quién es la infraestructura:
+
+- **Nube pública.** De un proveedor, abierta a cualquiera. Es lo que se suele entender por nube.
+- **Nube privada.** Para una sola organización, que la gestiona ella u otro.
+- **Nube híbrida.** Combinación de varias, con datos y aplicaciones que se mueven entre ellas.
+
+## La responsabilidad se comparte
+
+Un malentendido peligroso es creer que, al estar en la nube, la seguridad es cosa del proveedor.
+
+El proveedor responde de la seguridad **de** la nube: los edificios, las máquinas, la red. El cliente responde de la seguridad **en** la nube: quién tiene acceso, cómo se configuran los servicios, qué datos se exponen.
+
+Muchas de las filtraciones de datos conocidas no se deben a un fallo del proveedor, sino a un almacén de archivos que alguien dejó configurado como público.
+
+## Lo que cuesta
+
+- **El precio a largo plazo.** Alquilar es más barato para empezar y para cargas variables. Para una carga grande y constante, puede salir más caro que comprar.
+- **Facturas imprevisibles.** Pagar por uso significa que un error, o un pico de tráfico, se convierte en dinero.
+- **Dependencia del proveedor.** Cuantos más servicios específicos de un proveedor se usan, más cuesta marcharse.
+- **Latencia y ubicación.** Los datos están en un centro concreto, con su distancia y sus leyes. Eso afecta a la velocidad y al cumplimiento de normas de protección de datos.
+- **Los fallos existen.** Un centro de datos puede caer. Por eso los proveedores se dividen en regiones y zonas independientes, y un servicio importante se reparte entre varias.
+
+## Lo que cambia al diseñar
+
+En la nube, las máquinas se tratan como algo sustituible. No se cuida un servidor concreto: se describe cómo debe ser y se crean o destruyen los que hagan falta. Para que eso funcione, la aplicación no debe guardar nada importante en la máquina, como explica el artículo sobre [stateful y stateless](/articulos/stateful-y-stateless/), y así puede [escalar horizontalmente](/articulos/escalado-vertical-y-horizontal/).
+
+## Lo esencial
+
+- La nube es alquilar recursos informáticos por internet y pagar por uso.
+- La definen el autoservicio, la elasticidad y la medición del consumo.
+- En IaaS alquilas máquinas, en PaaS entregas tu código y en SaaS usas una aplicación hecha.
+- Cuanto más gestiona el proveedor, menos trabajo y menos control.
+- La seguridad de lo que configuras sigue siendo responsabilidad tuya.

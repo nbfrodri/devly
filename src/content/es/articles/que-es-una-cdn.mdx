@@ -1,0 +1,131 @@
+---
+title: "¿Qué es una CDN?"
+description: "Una red de distribución de contenido guarda copias de un sitio en servidores repartidos por el mundo, para servirlo desde cerca de cada usuario."
+level: basico
+layer: redes
+prerequisites:
+  - que-es-http
+  - que-es-una-cache
+  - que-es-dns
+updated: 2026-10-13
+sources:
+  - title: "web.dev: Content delivery networks (en inglés)"
+    url: https://web.dev/articles/content-delivery-networks
+  - title: "MDN: CDN"
+    url: https://developer.mozilla.org/es/docs/Glossary/CDN
+  - title: "RFC 9111: HTTP Caching"
+    url: https://www.rfc-editor.org/info/rfc9111/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **CDN**, del inglés *content delivery network* o red de distribución de contenido, es un conjunto de servidores repartidos por el mundo que guardan copias del contenido de un sitio web y lo entregan a cada usuario desde el más cercano.
+
+## Qué problema resuelve
+
+Los datos viajan rápido, pero no al instante. Una petición desde Madrid a un servidor en California cruza un océano y un continente, pasando por muchos [routers](/articulos/enrutamiento/). Ida y vuelta, son del orden de cien milisegundos o más.
+
+Y cargar una página no es una petición. Establecer la conexión [TCP](/articulos/tcp-y-udp/) y negociar [TLS](/articulos/https-y-tls/) ya exige varios viajes, antes de pedir el primer archivo. La distancia se paga varias veces.
+
+Ninguna mejora en el servidor arregla esto: el límite lo pone la física. La única solución es **acercar el contenido al usuario**.
+
+## Cómo funciona
+
+Una CDN tiene servidores en muchas ciudades. Cada ubicación se llama **punto de presencia**, y sus máquinas, **servidores de borde**, porque están en el borde de la red, cerca de los usuarios. El servidor del sitio, el que tiene el contenido original, es el **origen**.
+
+Cuando alguien pide un archivo:
+
+1. La petición llega al servidor de borde más cercano.
+2. Si ese servidor tiene una copia vigente, la entrega. Es un **acierto de caché**, y el origen ni se entera.
+3. Si no la tiene, la pide al origen, la entrega al usuario y **se queda una copia**. Es un **fallo de caché**.
+4. El siguiente usuario de esa zona que pida lo mismo recibe la copia.
+
+Es una [caché](/articulos/que-es-una-cache/) repartida por el planeta.
+
+### Cómo se llega al servidor cercano
+
+Hay dos técnicas, que suelen combinarse:
+
+- **Por [DNS](/articulos/que-es-dns/).** Al resolver el nombre del sitio, la CDN responde con la dirección de un servidor próximo a quien pregunta.
+- **Con anycast.** La misma [dirección IP](/articulos/que-es-una-direccion-ip/) se anuncia desde todos los puntos de presencia, y la propia red lleva cada paquete al más cercano.
+
+## Qué se puede guardar
+
+- **Contenido estático.** Imágenes, hojas de [CSS](/articulos/que-es-css/), JavaScript, tipografías, vídeo. Es igual para todos los usuarios y cambia poco: lo ideal para una CDN.
+- **Contenido dinámico.** Lo que se genera para cada usuario, como un carrito de compra. No se puede guardar sin más, porque se serviría a una persona lo que era de otra.
+
+Entre los dos hay mucho terreno: una portada de noticias es igual para todos, aunque cambie cada pocos minutos. Se puede guardar un tiempo corto.
+
+## Quién decide cuánto dura la copia
+
+El origen, con cabeceras de [HTTP](/articulos/que-es-http/). La principal es `Cache-Control`:
+
+```http
+Cache-Control: public, max-age=31536000, immutable
+```
+
+| Directiva | Significado |
+| --- | --- |
+| `max-age=N` | La copia vale durante N segundos |
+| `s-maxage=N` | Lo mismo, pero solo para cachés compartidas como una CDN |
+| `public` | Cualquier caché puede guardarla |
+| `private` | Solo el navegador del usuario; la CDN no |
+| `no-store` | Nadie debe guardarla |
+| `immutable` | El contenido no va a cambiar mientras la copia sea vigente |
+
+El tiempo que una copia se considera válida es su **TTL**. Elegirlo es un compromiso: si es largo, hay más aciertos pero los cambios tardan en verse; si es corto, ocurre al revés.
+
+## Cuando el contenido cambia
+
+Actualizar un archivo cuyas copias están por medio mundo es el problema difícil. Hay dos soluciones.
+
+### Purgar
+
+Se pide a la CDN que elimine sus copias. Funciona, pero no alcanza a las que ya guardaron los navegadores.
+
+### Cambiar el nombre
+
+Es la técnica preferida para los archivos estáticos. El nombre incluye una huella del contenido, calculada con una [función hash](/articulos/funciones-hash/):
+
+```
+estilos.3f9a1c.css
+```
+
+Si el archivo cambia, su huella cambia, y el nombre también. Para las cachés es un archivo nuevo. Los antiguos pueden guardarse un año entero sin riesgo, porque un nombre dado nunca tendrá otro contenido.
+
+La página [HTML](/articulos/que-es-html/) que menciona esos nombres se guarda poco tiempo, o nada, para que los cambios lleguen pronto. Las herramientas de construcción de sitios web generan estos nombres solas.
+
+<Quiz
+	client:visible
+	question="Un usuario pide una imagen y el servidor de borde no la tiene. ¿Qué ocurre?"
+	options={[
+		"El usuario recibe un error",
+		"El borde la pide al origen, la entrega y guarda una copia",
+		"La petición se redirige a otro continente",
+	]}
+	answer={1}
+/>
+
+## Qué más aporta
+
+- **Menos carga en el origen.** La mayoría de las peticiones no llegan a él. Un servidor modesto puede sostener un sitio con mucho tráfico.
+- **Aguantar picos.** Una avalancha de visitas se reparte entre miles de máquinas.
+- **Disponibilidad.** Algunas CDN siguen sirviendo la copia guardada si el origen cae.
+- **Protección.** Absorben ataques de denegación de servicio, que intentan tumbar un sitio a base de tráfico, y filtran peticiones maliciosas.
+- **Optimización.** Comprimen, convierten imágenes a formatos más ligeros y usan versiones recientes de los protocolos.
+- **Código en el borde.** Algunas permiten ejecutar funciones en sus servidores, una forma de [serverless](/articulos/que-es-serverless/).
+
+## Precauciones
+
+- **Guardar por error contenido privado.** Si una respuesta con datos de un usuario se marca como guardable, la CDN puede entregársela a otro. Lo personal lleva `private` o `no-store`.
+- **Ver contenido antiguo.** Con un TTL largo y sin cambio de nombre, los usuarios siguen viendo la versión vieja.
+- **Un intermediario más.** La CDN ve todo el tráfico, y si falla, el sitio falla con ella.
+- **No arregla un origen lento** para el contenido que no se puede guardar.
+
+## Lo esencial
+
+- Una CDN sirve copias del contenido desde servidores cercanos a cada usuario.
+- Reduce la latencia, que depende de la distancia, y descarga al servidor de origen.
+- Funciona como una caché: acierto si tiene la copia, fallo si debe pedirla.
+- El origen controla la duración de las copias con `Cache-Control`.
+- Poner una huella del contenido en el nombre del archivo evita servir versiones antiguas.

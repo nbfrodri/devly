@@ -1,0 +1,134 @@
+---
+title: "Diferencias entre escalado vertical y horizontal"
+description: "Escalar en vertical es usar una máquina más potente; en horizontal, añadir más máquinas. Cada uno tiene su límite y su coste."
+level: basico
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - cliente-servidor
+  - stateful-y-stateless
+updated: 2026-10-13
+sources:
+  - title: "Microsoft Azure: Diseño para escalar horizontalmente"
+    url: https://learn.microsoft.com/es-es/azure/architecture/guide/design-principles/scale-out
+  - title: "The Twelve-Factor App: Procesos"
+    url: https://12factor.net/es/processes
+  - title: "AWS: Marco de Buena Arquitectura"
+    url: https://docs.aws.amazon.com/es_es/wellarchitected/latest/framework/welcome.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Escalar** un sistema es aumentar su capacidad para atender más carga. Hay dos formas. El **escalado vertical** consiste en usar una máquina más potente. El **escalado horizontal**, en añadir más máquinas y repartir el trabajo entre ellas.
+
+## El punto de partida
+
+Una aplicación empieza en un servidor. Mientras los usuarios son pocos, sobra. Cuando crecen, el servidor se queda corto: las respuestas se vuelven lentas y, al final, deja de responder.
+
+Hay que darle más capacidad, y hay dos direcciones.
+
+## Escalado vertical
+
+Se sustituye la máquina por otra mejor: más [procesador](/articulos/como-funciona-un-procesador/), más [memoria](/articulos/memoria-ram-y-almacenamiento/), discos más rápidos. En inglés, *scale up*.
+
+Es como cambiar una furgoneta por un camión.
+
+**A favor:**
+
+- **Es simple.** La aplicación no cambia. Sigue habiendo una sola máquina.
+- **No hay que coordinar nada.** Todos los datos están en un sitio.
+
+**En contra:**
+
+- **Tiene techo.** Existe una máquina más grande que todas las demás, y después de ella no hay nada.
+- **El precio no es proporcional.** Una máquina el doble de potente cuesta bastante más del doble en la gama alta.
+- **Sigue siendo un único punto de fallo.** Si esa máquina cae, cae el servicio.
+- **Ampliar suele exigir parar**, aunque sea unos minutos.
+
+## Escalado horizontal
+
+Se añaden más máquinas iguales y un [balanceador de carga](/articulos/balanceador-de-carga/) reparte las peticiones entre ellas. En inglés, *scale out*.
+
+Es como poner más furgonetas en lugar de un camión.
+
+**A favor:**
+
+- **No tiene un techo claro.** Siempre se puede añadir otra máquina.
+- **Tolera fallos.** Si una cae, las demás siguen atendiendo.
+- **Se ajusta a la demanda.** Se añaden máquinas en las horas punta y se quitan de madrugada. En [la nube](/articulos/computacion-en-la-nube/) esto se automatiza, y se llama **autoescalado**.
+- **Usa máquinas corrientes**, más baratas por unidad de potencia.
+
+**En contra:**
+
+- **La aplicación tiene que estar preparada.**
+- **Es un sistema distribuido**, con todo lo que eso complica.
+
+## El requisito: no guardar estado
+
+Con varias máquinas, dos peticiones seguidas del mismo usuario pueden llegar a servidores distintos. Si el primero guardó algo en su memoria, la sesión del usuario o un archivo subido, el segundo no lo tiene.
+
+Por eso el escalado horizontal exige que los servidores de la aplicación sean [stateless](/articulos/stateful-y-stateless/): que no guarden nada propio entre una petición y la siguiente. El estado se lleva a un lugar compartido, como una [base de datos](/articulos/que-es-una-base-de-datos/) o un almacén de [sesiones](/articulos/sesiones-y-tokens/).
+
+Cuando los servidores son intercambiables, añadir o quitar uno no afecta a nadie.
+
+## El estado es lo difícil
+
+Esto explica por qué escalar una aplicación suele ser fácil y escalar su base de datos, no.
+
+Los servidores de aplicación no guardan datos, así que se multiplican sin problema. Pero la base de datos **es** el estado. Repartirla entre varias máquinas obliga a decidir cómo se copian y se dividen los datos, lo que se trata en [replicación y particionado](/articulos/replicacion-y-particionado/), y a aceptar los límites que describe el [teorema CAP](/articulos/teorema-cap/).
+
+De ahí que el camino habitual sea:
+
+1. Escalar la base de datos en vertical mientras se pueda.
+2. Añadir réplicas de lectura.
+3. Poner una [caché](/articulos/que-es-una-cache/) delante.
+4. Particionar los datos solo cuando no queda otra opción.
+
+## Comparación
+
+| | Vertical | Horizontal |
+| --- | --- | --- |
+| Qué se hace | Una máquina más potente | Más máquinas |
+| Límite | El de la mayor máquina disponible | Muy alto |
+| Cambios en la aplicación | Ninguno | Debe ser stateless |
+| Tolerancia a fallos | No mejora | Mejora |
+| Complejidad | Baja | Alta |
+| Ajuste a la demanda | Lento, a saltos | Rápido, gradual |
+| Encaja con | Bases de datos, sistemas pequeños | Servidores web, cargas variables |
+
+<Quiz
+	client:visible
+	question="¿Qué necesita una aplicación para escalar horizontalmente sin problemas?"
+	options={[
+		"Un servidor con más memoria",
+		"Que sus servidores no guarden estado propio entre peticiones",
+		"Una base de datos NoSQL",
+	]}
+	answer={1}
+/>
+
+## No siempre duplica
+
+Dos máquinas no dan exactamente el doble de capacidad. Parte del trabajo no se puede repartir: si todas las peticiones acaban esperando a la misma base de datos, añadir servidores de aplicación no sirve de nada.
+
+Antes de escalar hay que saber **qué** está limitando al sistema. Añadir capacidad en el sitio equivocado es gastar sin mejorar.
+
+## Y antes de escalar, optimizar
+
+Una consulta sin [índice](/articulos/indices-de-bases-de-datos/) puede tardar mil veces más de lo necesario. Corregirla cuesta minutos y equivale a multiplicar las máquinas. Muchas veces un sistema no necesita más capacidad, sino dejar de malgastar la que tiene.
+
+## Cómo elegir
+
+No son excluyentes, y lo normal es combinarlas.
+
+- **Empieza en vertical.** Es más simple, y una sola máquina moderna aguanta mucho más de lo que se suele pensar.
+- **Pasa a horizontal** cuando necesites tolerar la caída de una máquina, cuando la carga varíe mucho a lo largo del día o cuando te acerques al techo.
+- **Diseña sin estado desde el principio.** Cuesta poco y deja abierta la puerta.
+
+## Lo esencial
+
+- Escalar en vertical es usar una máquina mayor; en horizontal, usar más máquinas.
+- El vertical es simple, pero tiene techo y no protege de fallos.
+- El horizontal crece sin un límite claro y tolera fallos, pero exige servidores sin estado.
+- Lo difícil de escalar es el estado: la base de datos.
+- Antes de escalar conviene medir dónde está el límite.

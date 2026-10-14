@@ -1,0 +1,10 @@
+title: La nube por dentro
+description: Qué se alquila en la nube y cómo se reparte la carga entre máquinas.
+layer: sistemas
+steps:
+  - computacion-en-la-nube
+  - contenedores-y-maquinas-virtuales
+  - escalado-vertical-y-horizontal
+  - balanceador-de-carga
+  - que-es-una-cdn
+  - que-es-serverless

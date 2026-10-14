@@ -1,0 +1,12 @@
+title: Sistemas distribuidos
+description: Lo que cambia cuando un sistema vive en varias máquinas que pueden fallar.
+layer: sistemas
+steps:
+  - stateful-y-stateless
+  - escalado-vertical-y-horizontal
+  - colas-de-mensajes
+  - atomicidad-e-idempotencia
+  - replicacion-y-particionado
+  - teorema-cap
+  - consistencia-eventual
+  - consenso-distribuido

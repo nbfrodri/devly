@@ -1,0 +1,152 @@
+---
+title: "¿Qué es el consenso distribuido?"
+description: "El consenso es conseguir que varias máquinas se pongan de acuerdo en un valor aunque algunas fallen. Es la base de los sistemas distribuidos fiables."
+level: avanzado
+layer: sistemas
+prerequisites:
+  - teorema-cap
+  - replicacion-y-particionado
+updated: 2026-10-13
+sources:
+  - title: "Ongaro y Ousterhout: In Search of an Understandable Consensus Algorithm, Raft (2014, en inglés)"
+    url: https://raft.github.io/raft.pdf
+  - title: "Leslie Lamport: Paxos Made Simple (2001, en inglés)"
+    url: https://lamport.azurewebsites.net/pubs/paxos-simple.pdf
+  - title: "Lamport, Shostak y Pease: The Byzantine Generals Problem (1982, en inglés)"
+    url: https://lamport.azurewebsites.net/pubs/byz.pdf
+  - title: "Sitio de Raft, con una visualización interactiva (en inglés)"
+    url: https://raft.github.io/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **consenso distribuido** es el problema de conseguir que varias máquinas se pongan de acuerdo en un mismo valor, aunque algunas fallen y los mensajes entre ellas se retrasen o se pierdan. Un **algoritmo de consenso** es un procedimiento que lo logra.
+
+Parece un asunto teórico, y sostiene buena parte de la infraestructura actual.
+
+## Qué problema resuelve
+
+En una base de datos con [un líder y varias réplicas](/articulos/replicacion-y-particionado/), el líder falla. Hay que elegir otro. ¿Quién decide?
+
+Si cada réplica decide por su cuenta, dos pueden proclamarse líder a la vez. Cada una acepta escrituras distintas y los datos se bifurcan. Esta situación se llama **cerebro dividido**, y es de las peores que puede sufrir un sistema: no hay forma automática de reconciliar las dos historias.
+
+Hace falta que todas lleguen a la **misma** decisión. Lo mismo ocurre al decidir:
+
+- Quién tiene un bloqueo.
+- En qué orden se aplican unas operaciones.
+- Cuál es la configuración vigente.
+- Si una transacción repartida entre varias máquinas se confirma o se cancela.
+
+## Por qué es difícil
+
+Una máquina no puede distinguir entre otra que ha fallado y otra que solo va lenta. Si no contesta, pudo caerse, pudo perderse el mensaje, o la respuesta puede estar de camino.
+
+En esas condiciones, un algoritmo de consenso debe cumplir:
+
+| Propiedad | Significado |
+| --- | --- |
+| Acuerdo | Ninguna máquina decide un valor distinto que otra |
+| Validez | El valor decidido lo propuso alguna de ellas |
+| Terminación | Todas las que siguen en marcha acaban decidiendo |
+
+Las dos primeras son de **seguridad**: que no ocurra nada incorrecto. La tercera es de **progreso**: que acabe ocurriendo algo.
+
+Un resultado teórico de 1985 demostró que, en una red donde los mensajes pueden tardar un tiempo ilimitado, ningún algoritmo determinista garantiza las tres cosas si puede fallar una sola máquina. Los algoritmos reales lo sortean sin romper nunca el acuerdo: garantizan siempre la seguridad, y el progreso cuando la red se comporta razonablemente, apoyándose en tiempos de espera.
+
+## La idea central: la mayoría
+
+Casi todos los algoritmos se apoyan en lo mismo: una decisión vale cuando la acepta **más de la mitad** de las máquinas. Ese grupo es un **cuórum**.
+
+Dos mayorías siempre tienen al menos una máquina en común. No pueden existir dos grupos mayoritarios que decidan cosas distintas sin que alguna máquina esté en los dos y lo impida.
+
+```js
+const mayoria = (maquinas) => Math.floor(maquinas / 2) + 1;
+const fallosTolerados = (maquinas) => maquinas - mayoria(maquinas);
+
+console.log(mayoria(3)); // 2
+console.log(mayoria(5)); // 3
+console.log(fallosTolerados(3)); // 1
+console.log(fallosTolerados(5)); // 2
+console.log(fallosTolerados(4)); // 1
+```
+
+Con 3 máquinas se tolera la caída de 1; con 5, de 2. Con 4 se tolera lo mismo que con 3. Por eso estos grupos tienen casi siempre un número impar de miembros.
+
+Esto resuelve el cerebro dividido: si la red se parte en dos, solo un lado puede tener mayoría. El otro sabe que no la tiene y se detiene. Es la elección de consistencia sobre disponibilidad del [teorema CAP](/articulos/teorema-cap/).
+
+## Raft
+
+**Paxos**, descrito por Leslie Lamport, fue durante años el algoritmo de referencia, con fama de difícil de entender. **Raft** se publicó en 2014 con el objetivo declarado de ser comprensible, y es el más usado en sistemas nuevos.
+
+Raft divide el problema en partes.
+
+### Un líder
+
+En cada momento hay, como mucho, un líder. Los clientes le envían las operaciones, y él las reparte. El tiempo se divide en **mandatos** numerados, y en cada mandato hay un líder como máximo.
+
+### Elección
+
+1. El líder envía latidos periódicos a los demás.
+2. Si un seguidor deja de recibirlos durante un tiempo, supone que el líder ha caído. Se declara candidato, aumenta el número de mandato y pide el voto.
+3. Cada máquina vota una sola vez por mandato.
+4. Quien reúne los votos de la mayoría es el nuevo líder.
+
+Para que no se presenten todas a la vez y se repartan los votos, cada una espera un tiempo **aleatorio** antes de presentarse. Lo normal es que una se adelante y gane.
+
+### Replicación del registro
+
+Cada máquina guarda un **registro**: la lista ordenada de operaciones.
+
+1. El líder añade la operación a su registro.
+2. La envía a los seguidores.
+3. Cuando la mayoría la ha guardado, la operación queda **confirmada**.
+4. El líder la aplica y responde al cliente.
+
+Una operación confirmada no se pierde: cualquier líder futuro la tendrá, porque para ganar una elección hay que estar al menos tan al día como la mayoría, y una máquina con el registro atrasado no recibe votos.
+
+Como todas las máquinas aplican las mismas operaciones en el mismo orden, todas llegan al mismo estado. Esta técnica se llama **máquina de estados replicada**.
+
+<Quiz
+	client:visible
+	question="¿Por qué los grupos de consenso suelen tener un número impar de máquinas?"
+	options={[
+		"Porque es más barato",
+		"Porque añadir una más hasta un número par no permite tolerar más fallos",
+		"Porque los algoritmos no funcionan con números pares",
+	]}
+	answer={1}
+/>
+
+## Fallos bizantinos
+
+Raft y Paxos suponen que las máquinas pueden fallar **parándose**, pero no mentir. Una máquina que funciona sigue el protocolo.
+
+Si alguna puede enviar información falsa, por un error grave o porque un atacante la controla, el problema es más duro. Se conoce como el **problema de los generales bizantinos**, por un artículo de 1982 que lo plantea con generales que deben acordar un ataque sabiendo que entre ellos hay traidores.
+
+Su resultado: para tolerar *f* participantes maliciosos hacen falta al menos *3f + 1* en total. Para aguantar a uno, cuatro.
+
+Dentro de un centro de datos, donde las máquinas son de la misma organización, basta con tolerar paradas. Los sistemas abiertos, donde cualquiera participa y nadie se fía de nadie, necesitan tolerancia bizantina. Es el caso de las cadenas de bloques.
+
+## Dónde se usa
+
+Rara vez se implementa a mano: es fácil hacerlo mal, y los errores aparecen solo en combinaciones raras de fallos. Se usan sistemas que ya lo incluyen:
+
+- **Almacenes de coordinación**, pequeños y muy fiables, donde otros sistemas guardan quién es el líder, la configuración o los bloqueos. El orquestador de [contenedores](/articulos/que-es-docker/) Kubernetes guarda todo su estado en uno, basado en Raft.
+- **Bases de datos distribuidas** que ofrecen consistencia fuerte. Usan un grupo de consenso por cada partición de datos.
+- **Sistemas de [colas de mensajes](/articulos/colas-de-mensajes/)**, para decidir qué copia manda en cada momento.
+
+## Lo que cuesta
+
+- **Latencia.** Cada decisión espera a la mayoría. Si las máquinas están en continentes distintos, cada escritura paga ese viaje.
+- **No escala añadiendo máquinas.** Más miembros significa más mensajes por decisión. Los grupos son de 3, 5 o 7.
+- **Sin mayoría, se para.** Es deliberado: mejor no responder que responder mal.
+
+Por eso se reserva para lo que de verdad exige acuerdo. Los datos que toleran diferencias temporales usan [consistencia eventual](/articulos/consistencia-eventual/), que es más barata.
+
+## Lo esencial
+
+- El consenso consiste en que varias máquinas acuerden un valor pese a fallos y retrasos.
+- Evita situaciones como dos líderes simultáneos.
+- Se basa en mayorías: dos mayorías siempre comparten una máquina.
+- Raft elige un líder por votación y confirma cada operación cuando la mayoría la guarda.
+- Si las máquinas pueden mentir, hacen falta algoritmos bizantinos, más costosos.

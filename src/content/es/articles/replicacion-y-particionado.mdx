@@ -1,0 +1,159 @@
+---
+title: "¿Qué son la replicación y el particionado de datos?"
+description: "Replicar es tener copias de los mismos datos en varias máquinas; particionar es repartir datos distintos entre ellas. Resuelven problemas diferentes."
+level: avanzado
+layer: datos
+prerequisites:
+  - que-es-una-base-de-datos
+  - teorema-cap
+  - escalado-vertical-y-horizontal
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: High Availability, Load Balancing, and Replication (en inglés)"
+    url: https://www.postgresql.org/docs/current/high-availability.html
+  - title: "MongoDB: Sharding (en inglés)"
+    url: https://www.mongodb.com/docs/manual/sharding/
+  - title: "DeCandia y otros: Dynamo, Amazon’s Highly Available Key-value Store (2007, en inglés)"
+    url: https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+**Replicar** es mantener copias de los mismos datos en varias máquinas. **Particionar** es dividir los datos y guardar cada parte en una máquina distinta. Son las dos técnicas con las que una [base de datos](/articulos/que-es-una-base-de-datos/) se reparte entre varios servidores, y resuelven problemas diferentes.
+
+| | Replicación | Particionado |
+| --- | --- | --- |
+| Qué hay en cada máquina | Los mismos datos | Datos distintos |
+| Para qué | Sobrevivir a fallos y repartir lecturas | Guardar más datos y repartir escrituras |
+
+Lo habitual en un sistema grande es usar las dos: los datos se parten, y cada parte se replica.
+
+## Replicación
+
+### Para qué
+
+- **Disponibilidad.** Si una máquina falla, otra tiene los datos.
+- **Más lecturas.** Las consultas se reparten entre las copias.
+- **Cercanía.** Una copia en cada continente responde antes a los usuarios de allí.
+
+Lo difícil no es copiar una vez, sino mantener las copias iguales mientras los datos cambian.
+
+### Con un líder
+
+El esquema más común. Una copia es el **líder**, o primario, y acepta todas las escrituras. Las demás son **seguidoras**, o réplicas: reciben los cambios del líder y los aplican en el mismo orden. Las lecturas pueden ir a cualquiera.
+
+Si el líder falla, una seguidora ocupa su lugar. Elegir cuál, sin que dos se crean líderes a la vez, es un problema de [consenso](/articulos/consenso-distribuido/).
+
+### Síncrona o asíncrona
+
+¿Cuándo le dice el líder al cliente que la escritura está hecha?
+
+| | Síncrona | Asíncrona |
+| --- | --- | --- |
+| El líder confirma | Cuando la réplica tiene el dato | En cuanto lo guarda él |
+| Si el líder cae | No se pierde nada | Se pueden perder los últimos cambios |
+| Velocidad de escritura | Menor | Mayor |
+| Si la réplica cae | Las escrituras se detienen | El líder sigue |
+
+Es la elección entre consistencia y disponibilidad que describe el [teorema CAP](/articulos/teorema-cap/).
+
+### El retraso de las réplicas
+
+Con replicación asíncrona, una réplica va siempre un poco por detrás. Normalmente milisegundos; con carga, segundos.
+
+Efecto típico: un usuario cambia su nombre, la página se recarga leyendo de una réplica que aún no tiene el cambio, y ve el nombre antiguo. Parece que el cambio se ha perdido.
+
+Los datos acaban coincidiendo, y a eso se le llama [consistencia eventual](/articulos/consistencia-eventual/). Una solución habitual es leer del líder los datos que el propio usuario acaba de modificar.
+
+### Otros esquemas
+
+- **Varios líderes.** Más de una copia acepta escrituras. Útil entre centros de datos lejanos, pero dos líderes pueden modificar el mismo dato a la vez y hay que resolver el conflicto.
+- **Sin líder.** Cualquier copia acepta escrituras. El cliente escribe en varias y lee de varias, y un número mínimo de respuestas decide.
+
+## Particionado
+
+### Para qué
+
+La replicación no ayuda cuando los datos no caben en una máquina, o cuando hay más escrituras de las que un líder puede atender: cada copia lo contiene todo.
+
+Particionar divide los datos en trozos, llamados **particiones** o *shards*, y cada uno vive en una máquina. Cada máquina guarda menos y recibe menos escrituras.
+
+La pregunta es cómo decidir a qué partición va cada dato. Se elige un campo, la **clave de partición**, y un criterio.
+
+### Por rangos
+
+Cada partición guarda un intervalo de claves: de la A a la F en una, de la G a la M en otra.
+
+- **A favor:** las consultas por rango, como "todos los pedidos de marzo", tocan una sola partición.
+- **En contra:** el reparto puede ser desigual. Si la clave es la fecha, todas las escrituras de hoy van a la misma partición.
+
+### Por hash
+
+Se calcula un [hash](/articulos/funciones-hash/) de la clave y ese número decide la partición. Las claves quedan repartidas de forma uniforme.
+
+```js
+function particion(clave, total) {
+	let suma = 0;
+
+	for (const caracter of clave) {
+		suma = suma + caracter.charCodeAt(0);
+	}
+
+	return suma % total;
+}
+
+const claves = ["ana", "luis", "marta", "pablo"];
+
+console.log(claves.map((c) => particion(c, 3)).join(" ")); // "1 1 2 1"
+console.log(claves.map((c) => particion(c, 4)).join(" ")); // "0 1 1 2"
+```
+
+El hash del ejemplo es deliberadamente simple; los reales reparten mejor.
+
+- **A favor:** carga equilibrada.
+- **En contra:** las claves cercanas quedan dispersas, así que una consulta por rango tiene que preguntar a todas las particiones.
+
+### Añadir una máquina
+
+El ejemplo anterior muestra un problema. Al pasar de 3 a 4 particiones, tres de las cuatro claves cambian de sitio. Con datos reales, añadir una máquina obligaría a mover casi todo.
+
+La solución es el **hash consistente**: una forma de asignar claves en la que, al añadir o quitar una máquina, solo se mueve una fracción pequeña de los datos. Lo popularizó Dynamo, el almacén de Amazon descrito en un artículo de 2007.
+
+### Particiones calientes
+
+Si una clave recibe mucha más actividad que las demás, su partición se satura mientras las otras descansan. Pasa, por ejemplo, con la cuenta de una celebridad en una red social. Elegir bien la clave de partición es la decisión más importante, y la más difícil de cambiar después.
+
+<Quiz
+	client:visible
+	question="Una base de datos tiene tantos datos que no caben en un servidor. ¿Qué técnica lo resuelve?"
+	options={[
+		"La replicación",
+		"El particionado",
+		"Ninguna: hay que borrar datos",
+	]}
+	answer={1}
+/>
+
+## Lo que se pierde al particionar
+
+En una sola máquina, muchas cosas son fáciles. Repartidas, no.
+
+- **Los [JOIN](/articulos/tipos-de-join/) entre particiones** son lentos o no existen.
+- **Las [transacciones](/articulos/transacciones-y-acid/) que tocan varias particiones** necesitan protocolos de coordinación costosos.
+- **Las consultas que no usan la clave de partición** tienen que preguntar a todas.
+- **Los identificadores únicos** ya no se pueden generar con un simple contador.
+
+Por eso muchas [bases de datos NoSQL](/articulos/bases-de-datos-nosql/), diseñadas para repartirse, renunciaron a los JOIN y limitaron las transacciones.
+
+## Cuándo usar cada una
+
+- **Replicación:** casi siempre. Una base de datos en producción sin ninguna copia depende de que una máquina no falle.
+- **Particionado:** cuanto más tarde, mejor. Añade mucha complejidad. Antes conviene agotar las alternativas: una máquina mayor, índices, réplicas de lectura, caché.
+
+## Lo esencial
+
+- Replicar es copiar los mismos datos en varias máquinas; particionar, repartir datos distintos.
+- La replicación da disponibilidad y más capacidad de lectura.
+- Con un líder, las escrituras van a una copia y las demás la siguen, con cierto retraso si es asíncrona.
+- El particionado da más capacidad de almacenamiento y de escritura.
+- Particionar complica las consultas y las transacciones, así que se deja para cuando no hay otra opción.

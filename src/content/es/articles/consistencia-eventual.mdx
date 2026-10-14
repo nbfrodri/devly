@@ -1,0 +1,165 @@
+---
+title: "¿Qué es la consistencia eventual?"
+description: "Un sistema con consistencia eventual admite que sus copias difieran un tiempo, y garantiza que acabarán coincidiendo si dejan de llegar cambios."
+level: avanzado
+layer: datos
+prerequisites:
+  - teorema-cap
+  - replicacion-y-particionado
+updated: 2026-10-13
+sources:
+  - title: "Werner Vogels: Eventually Consistent (2008, en inglés)"
+    url: https://www.allthingsdistributed.com/2008/12/eventually_consistent.html
+  - title: "DeCandia y otros: Dynamo, Amazon’s Highly Available Key-value Store (2007, en inglés)"
+    url: https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
+  - title: "Jepsen: Consistency Models (en inglés)"
+    url: https://jepsen.io/consistency
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **consistencia eventual** es una garantía de los sistemas que guardan [copias de los datos](/articulos/replicacion-y-particionado/) en varias máquinas: si dejan de llegar cambios, todas las copias acabarán teniendo el mismo valor. Mientras tanto, pueden diferir, y dos lecturas pueden dar respuestas distintas.
+
+El nombre viene del inglés *eventual consistency*, donde *eventual* significa "al final", no "quizá". Se podría decir "consistencia al cabo de un tiempo".
+
+## Qué problema resuelve
+
+Un sistema con varias copias puede hacer dos cosas cuando recibe una escritura:
+
+- **Esperar** a que todas las copias la tengan antes de confirmar. Las lecturas siempre ven lo último, pero cada escritura es lenta y, si una copia no responde, hay que rechazar la operación.
+- **Confirmar enseguida** y propagar el cambio después. Es rápido y funciona aunque haya copias inaccesibles, pero durante un momento las copias no coinciden.
+
+Lo primero es **consistencia fuerte**. Lo segundo, consistencia eventual. El [teorema CAP](/articulos/teorema-cap/) explica por qué hay que elegir: cuando la red falla entre las copias, no se puede tener a la vez una respuesta siempre y una respuesta siempre actual.
+
+La consistencia eventual elige responder.
+
+## Un ejemplo
+
+```js
+const replicaA = { valor: "azul", version: 1 };
+const replicaB = { valor: "azul", version: 1 };
+
+replicaA.valor = "rojo";
+replicaA.version = 2;
+
+console.log(replicaA.valor); // "rojo"
+console.log(replicaB.valor); // "azul"
+
+function sincronizar(x, y) {
+	const reciente = x.version >= y.version ? x : y;
+	Object.assign(x, reciente);
+	Object.assign(y, reciente);
+}
+
+sincronizar(replicaA, replicaB);
+
+console.log(replicaB.valor); // "rojo"
+```
+
+Tras escribir en A, quien lea de B obtiene el valor antiguo. Cuando las réplicas se sincronizan, coinciden. El intervalo entre un momento y otro se llama **ventana de inconsistencia**. En condiciones normales dura milisegundos; con problemas de red, puede alargarse.
+
+## Dónde lo has visto
+
+- El contador de "me gusta" de una publicación, que varía al recargar.
+- Un comentario recién enviado que tarda unos segundos en aparecerle a otra persona.
+- El [DNS](/articulos/que-es-dns/): al cambiar un registro, cada servidor del mundo conserva el antiguo hasta que caduca su copia.
+- Una [CDN](/articulos/que-es-una-cdn/) que sigue sirviendo la versión anterior de un archivo.
+
+En todos esos casos, ver un dato algo antiguo no hace daño a nadie.
+
+## Qué promete y qué no
+
+Promete una sola cosa: **convergencia**. Sin cambios nuevos, las copias acabarán iguales.
+
+No promete:
+
+- **Cuándo.** No hay plazo.
+- **Qué se lee entretanto.** Puede ser el valor nuevo o el antiguo.
+- **Que las lecturas avancen.** Se puede leer el valor nuevo y, a continuación, el antiguo, si la segunda lectura va a una copia más retrasada.
+
+Lo último es lo que más desconcierta a los usuarios, y por eso existen garantías intermedias.
+
+## Garantías intermedias
+
+Entre la consistencia fuerte y la eventual hay una gama. Dos puntos son especialmente útiles:
+
+| Garantía | Qué asegura |
+| --- | --- |
+| Leer tus propias escrituras | Quien modifica un dato ve siempre su cambio, aunque otros tarden en verlo |
+| Lecturas monótonas | Una vez visto un valor, no se vuelve a ver uno anterior |
+
+Con las dos, el sistema sigue siendo eventual, pero cada usuario tiene una experiencia coherente: no ve desaparecer lo que acaba de escribir ni retroceder el tiempo.
+
+Se consiguen, por ejemplo, dirigiendo las lecturas de un usuario siempre a la misma copia, o leyendo del líder los datos que él mismo acaba de cambiar.
+
+## Escrituras simultáneas
+
+El caso difícil: dos clientes modifican el mismo dato en copias distintas antes de que se sincronicen. Al propagarse los cambios, hay dos versiones. ¿Cuál vale?
+
+### Gana la última
+
+Cada escritura lleva una marca de tiempo, y se conserva la más reciente. Es simple, y **pierde datos**: una de las dos escrituras se descarta sin avisar. Además, los relojes de máquinas distintas nunca coinciden del todo, así que "la última" puede no serlo.
+
+### Conservar las dos
+
+El sistema detecta que las versiones son simultáneas, guarda ambas y deja que la aplicación las combine. Dynamo lo hacía con el carrito de la compra: ante dos versiones, las unía, de modo que un producto añadido no se perdía nunca. A cambio, uno eliminado podía reaparecer.
+
+### Datos que se combinan solos
+
+Hay estructuras diseñadas para que cualquier par de versiones pueda fusionarse sin conflicto y dé el mismo resultado en todas las copias, sea cual sea el orden. Se llaman **CRDT**. Un contador que solo crece, o un conjunto al que solo se añaden elementos, son los ejemplos más simples. Los editores de documentos colaborativos usan variantes de esta idea.
+
+## Ajustar la consistencia: cuórums
+
+Algunas bases de datos dejan elegir en cada operación. Con **N** copias, una escritura se da por buena cuando la confirman **W**, y una lectura consulta **R**.
+
+Si **W + R > N**, el grupo de copias que se lee y el que se escribió comparten al menos una. La lectura ve la escritura más reciente.
+
+```js
+const copias = 3;
+
+console.log(2 + 2 > copias); // true
+console.log(1 + 1 > copias); // false
+```
+
+Con W = 2 y R = 2, la lectura siempre incluye una copia actualizada. Con W = 1 y R = 1, las operaciones son más rápidas y siguen funcionando con dos copias caídas, pero una lectura puede dar un valor antiguo.
+
+<Quiz
+	client:visible
+	question="¿Qué garantiza la consistencia eventual?"
+	options={[
+		"Que toda lectura devuelve el último valor escrito",
+		"Que, sin cambios nuevos, todas las copias acabarán coincidiendo",
+		"Que las copias se sincronizan en menos de un segundo",
+	]}
+	answer={1}
+/>
+
+## Cuándo basta
+
+- Contadores, valoraciones y estadísticas.
+- Publicaciones y comentarios.
+- Catálogos de productos.
+- Cachés y resultados de búsqueda.
+
+## Cuándo no
+
+- **Saldos y pagos.** Dos retiradas simultáneas que leen el mismo saldo antiguo pueden gastar el dinero dos veces.
+- **Existencias limitadas.** Vender la última entrada a dos personas.
+- **Unicidad.** Dos personas registrando el mismo nombre de usuario.
+- **Permisos.** Quitar un acceso que una copia sigue concediendo.
+
+Para estos casos hacen falta [transacciones](/articulos/transacciones-y-acid/) y consistencia fuerte.
+
+Un mismo producto suele mezclar los dos modelos: consistencia fuerte para el pago, eventual para las recomendaciones.
+
+## No solo en bases de datos
+
+Aparece siempre que un cambio se propaga de forma asíncrona. Un sistema que comunica sus servicios con [colas de mensajes](/articulos/colas-de-mensajes/) es eventualmente consistente: entre que se crea un pedido y se descuenta del almacén pasa un tiempo. Para que converja, cada paso debe poder repetirse sin efectos duplicados, como explica [atomicidad e idempotencia](/articulos/atomicidad-e-idempotencia/).
+
+## Lo esencial
+
+- La consistencia eventual admite que las copias difieran un tiempo y garantiza que acabarán iguales.
+- Se elige para tener disponibilidad y rapidez aunque fallen máquinas o la red.
+- No fija un plazo ni asegura qué se lee mientras tanto.
+- Las escrituras simultáneas producen conflictos que hay que resolver.
+- Es suficiente para muchos datos, y no para dinero, existencias o unicidad.

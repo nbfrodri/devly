@@ -14,15 +14,15 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Nube y sistemas distribuidos
 
-- [ ] ¿Qué es la computación en la nube? IaaS, PaaS y SaaS (cliente-servidor)
-- [ ] Diferencias entre escalado vertical y horizontal (stateful y stateless)
-- [ ] ¿Qué es un balanceador de carga? (modelos OSI y TCP/IP)
-- [ ] ¿Qué es una CDN? (DNS, HTTP)
-- [ ] ¿Qué es serverless?
-- [ ] Colas de mensajes (pilas y colas)
-- [ ] Replicación y particionado de datos (teorema CAP)
-- [ ] Consistencia eventual (teorema CAP)
-- [ ] ¿Qué es el consenso distribuido? (teorema CAP)
+- [x] ¿Qué es la computación en la nube? IaaS, PaaS y SaaS (cliente-servidor)
+- [x] Diferencias entre escalado vertical y horizontal (stateful y stateless)
+- [x] ¿Qué es un balanceador de carga? (modelos OSI y TCP/IP)
+- [x] ¿Qué es una CDN? (DNS, HTTP)
+- [x] ¿Qué es serverless?
+- [x] Colas de mensajes (pilas y colas)
+- [x] Replicación y particionado de datos (teorema CAP)
+- [x] Consistencia eventual (teorema CAP)
+- [x] ¿Qué es el consenso distribuido? (teorema CAP)
 
 ## DevOps y operación
 

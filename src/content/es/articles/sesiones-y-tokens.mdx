@@ -119,7 +119,7 @@ La segunda devuelve el estado al servidor. Si hay que consultar un almacén en c
 
 ## El punto débil de las sesiones: escalar
 
-Con un solo servidor, guardar las sesiones en memoria funciona. Con varios aparece un problema: la sesión creada en uno no existe en los demás.
+Con un solo servidor, guardar las sesiones en memoria funciona. Con varios, detrás de un [balanceador de carga](/articulos/balanceador-de-carga/), aparece un problema: la sesión creada en uno no existe en los demás.
 
 Se resuelve guardándolas en un almacén compartido y rápido, normalmente una base de datos clave-valor en memoria. Funciona muy bien, a cambio de una pieza más que mantener.
 

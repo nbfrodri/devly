@@ -1,0 +1,161 @@
+---
+title: "¿Qué es un balanceador de carga?"
+description: "Un balanceador reparte las peticiones entre varios servidores, para que ninguno se sature y el servicio siga si uno falla."
+level: intermedio
+layer: redes
+prerequisites:
+  - cliente-servidor
+  - modelos-osi-y-tcp-ip
+updated: 2026-10-13
+sources:
+  - title: "Google: Site Reliability Engineering, cap. 19, Load Balancing at the Frontend (en inglés)"
+    url: https://sre.google/sre-book/load-balancing-frontend/
+  - title: "Google: Site Reliability Engineering, cap. 20, Load Balancing in the Datacenter (en inglés)"
+    url: https://sre.google/sre-book/load-balancing-datacenter/
+  - title: "nginx: Using nginx as HTTP load balancer (en inglés)"
+    url: https://nginx.org/en/docs/http/load_balancing.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **balanceador de carga** es un componente que recibe las peticiones de los clientes y las reparte entre varios servidores. Su función es que ninguno se sature y que el servicio siga funcionando aunque alguno falle.
+
+Es la pieza que hace posible el [escalado horizontal](/articulos/escalado-vertical-y-horizontal/).
+
+## Qué problema resuelve
+
+Cuando un servidor no basta, se ponen varios. Pero eso plantea dos preguntas:
+
+- **¿A cuál se conecta cada cliente?** Los clientes conocen una dirección, no una lista de máquinas.
+- **¿Qué pasa si una se cae?** Los clientes que le tocaban se quedarían sin servicio.
+
+El balanceador se coloca delante. Los clientes se conectan a él, y él decide a qué servidor enviar cada petición. Para el cliente hay un solo servicio.
+
+Es lo que hace el encargado de un supermercado que dirige a los clientes hacia la caja con menos cola, y que deja de mandar gente a la caja que se ha cerrado.
+
+## Cómo reparte
+
+El criterio de reparto es el **algoritmo de balanceo**.
+
+### Por turnos
+
+El más simple, llamado *round robin*: una petición a cada servidor, en orden, y vuelta a empezar.
+
+```js
+const servidores = ["a", "b", "c"];
+let turno = 0;
+
+function elegir() {
+	const servidor = servidores[turno % servidores.length];
+	turno = turno + 1;
+	return servidor;
+}
+
+const reparto = [];
+for (let i = 0; i < 5; i++) {
+	reparto.push(elegir());
+}
+
+console.log(reparto.join(" ")); // "a b c a b"
+```
+
+Funciona bien si todas las peticiones cuestan parecido y todos los servidores son iguales. Si un servidor es más potente, se le puede dar más **peso** para que reciba más turnos.
+
+### Menos conexiones
+
+Envía la petición al servidor que tiene menos trabajo en curso. Se adapta mejor cuando unas peticiones tardan mucho más que otras.
+
+```js
+const conexiones = { a: 12, b: 3, c: 7 };
+
+function menosOcupado() {
+	const ordenados = Object.entries(conexiones).sort((x, y) => x[1] - y[1]);
+	return ordenados[0][0];
+}
+
+console.log(menosOcupado()); // "b"
+```
+
+### Por hash
+
+Se calcula un [hash](/articulos/funciones-hash/) de algún dato de la petición, como la dirección del cliente, y ese valor decide el servidor. El mismo cliente acaba siempre en el mismo sitio.
+
+| Algoritmo | Criterio | Conviene cuando |
+| --- | --- | --- |
+| Por turnos | Uno a cada uno, en orden | Peticiones y servidores homogéneos |
+| Por turnos con peso | Más turnos al más potente | Servidores de distinta capacidad |
+| Menos conexiones | Al que menos trabajo tiene | Peticiones de duración variable |
+| Por hash | Según un dato de la petición | Hace falta que un cliente repita servidor |
+
+## Comprobaciones de salud
+
+Repartir no basta: hay que saber a quién **no** enviar.
+
+El balanceador pregunta a cada servidor cada pocos segundos si está bien, normalmente con una petición a una dirección preparada para eso. Si un servidor deja de contestar, o contesta con error, lo saca del reparto. Cuando se recupera, lo vuelve a incluir.
+
+Esto es lo que da **alta disponibilidad**: un servidor puede caer sin que los usuarios lo noten. También permite actualizar la aplicación sin cortes, sacando los servidores del reparto de uno en uno.
+
+## Capa 4 y capa 7
+
+Los balanceadores se clasifican por el nivel del [modelo OSI](/articulos/modelos-osi-y-tcp-ip/) en el que trabajan.
+
+| | Capa 4, transporte | Capa 7, aplicación |
+| --- | --- | --- |
+| Qué ve | Direcciones IP y puertos | La petición [HTTP](/articulos/que-es-http/) completa |
+| Decide según | Origen y destino de la conexión | Ruta, cabeceras, cookies |
+| Coste | Muy bajo | Mayor |
+| Permite | Repartir cualquier protocolo sobre [TCP o UDP](/articulos/tcp-y-udp/) | Enviar `/api` a unos servidores y `/imagenes` a otros |
+
+Uno de capa 7 entiende lo que transporta, y por eso puede hacer más cosas.
+
+## Qué más suele hacer
+
+Como todo el tráfico pasa por él, es un buen sitio para tareas comunes:
+
+- **Terminar TLS.** Descifra las conexiones [HTTPS](/articulos/https-y-tls/) en un solo punto, y los servidores se ahorran ese trabajo.
+- **Enrutar por contenido.** Dirige cada tipo de petición al grupo de servidores que la atiende.
+- **Limitar peticiones** y bloquear tráfico abusivo.
+- **Comprimir** respuestas y servir desde [caché](/articulos/que-es-una-cache/).
+
+Un servidor intermedio que hace estas tareas en nombre de los servidores se llama **proxy inverso**. Un balanceador de capa 7 es un proxy inverso que además reparte.
+
+## El problema de las sesiones
+
+Si un servidor guarda en su memoria la sesión de un usuario, la siguiente petición de ese usuario tiene que volver al mismo servidor. Hay dos maneras de resolverlo.
+
+- **Sesiones pegajosas.** El balanceador envía siempre al mismo cliente al mismo servidor. Funciona, pero reparte peor y, si ese servidor cae, sus usuarios pierden la sesión.
+- **Servidores sin estado.** La sesión se guarda en un almacén compartido y cualquier servidor atiende cualquier petición. Es la solución preferible, y se explica en [stateful y stateless](/articulos/stateful-y-stateless/).
+
+<Quiz
+	client:visible
+	question="¿Cómo sabe un balanceador que debe dejar de enviar peticiones a un servidor caído?"
+	options={[
+		"El servidor le avisa antes de caer",
+		"Comprueba periódicamente el estado de cada servidor",
+		"No lo sabe: los clientes reintentan",
+	]}
+	answer={1}
+/>
+
+## ¿Y si cae el balanceador?
+
+Es una objeción razonable: se ha eliminado un punto único de fallo poniendo otro delante.
+
+La respuesta es poner más de uno. Lo habitual es tener dos o más balanceadores, con uno preparado para asumir la dirección del otro si deja de responder. Los balanceadores que ofrecen los proveedores de la nube ya vienen así.
+
+## Repartir desde más lejos
+
+Para repartir entre centros de datos de distintos continentes se usan otros mecanismos, antes de que la petición llegue a ningún balanceador:
+
+- **Por [DNS](/articulos/que-es-dns/).** El nombre del servicio se resuelve a direcciones distintas según el lugar desde el que se pregunta.
+- **Con anycast.** La misma [dirección IP](/articulos/que-es-una-direccion-ip/) se anuncia desde varios lugares, y el [enrutamiento](/articulos/enrutamiento/) de internet lleva cada paquete al más cercano.
+
+Es lo que hace una [CDN](/articulos/que-es-una-cdn/).
+
+## Lo esencial
+
+- Un balanceador reparte las peticiones entre varios servidores, tras una sola dirección.
+- El reparto puede ser por turnos, por carga o por hash.
+- Con comprobaciones de salud, deja de usar los servidores que fallan.
+- En capa 4 ve conexiones; en capa 7 entiende HTTP y puede enrutar por contenido.
+- Funciona mejor con servidores sin estado, y él mismo debe estar duplicado.

@@ -11,3 +11,4 @@ steps:
   - bases-de-datos-nosql
   - sql-frente-a-nosql
   - teorema-cap
+  - replicacion-y-particionado
