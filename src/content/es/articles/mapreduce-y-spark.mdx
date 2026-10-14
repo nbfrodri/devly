@@ -1,0 +1,85 @@
+---
+title: "¿Qué son MapReduce y Spark? Procesamiento distribuido de datos"
+description: "MapReduce reparte el procesamiento de enormes volúmenes de datos entre muchas máquinas en dos fases: transformar y agrupar. Spark lo hace más rápido, en memoria."
+level: intermedio
+layer: datos
+prerequisites:
+  - escalado-vertical-y-horizontal
+  - programacion-funcional
+  - replicacion-y-particionado
+updated: 2026-10-13
+sources:
+  - title: "Dean y Ghemawat: MapReduce, Simplified Data Processing on Large Clusters (2004, en inglés)"
+    url: https://research.google/pubs/mapreduce-simplified-data-processing-on-large-clusters/
+  - title: "Apache Spark: documentación (en inglés)"
+    url: https://spark.apache.org/docs/latest/
+---
+
+import { Quiz } from "@/components/quiz";
+
+**MapReduce** es un modelo para procesar enormes volúmenes de datos repartiendo el trabajo entre muchas máquinas. Divide cualquier cálculo en dos fases: **map**, que transforma cada dato por separado, y **reduce**, que combina los resultados que comparten una clave. **Spark** es su sucesor más extendido: aplica la misma idea, pero manteniendo los datos en memoria, y es mucho más rápido.
+
+## El problema
+
+Contar cuántas veces aparece cada palabra en miles de millones de páginas web. Ninguna máquina puede leerlas todas en un tiempo razonable, ni guardarlas. Hay que repartir el trabajo entre cientos o miles de máquinas, y eso trae problemas difíciles: cómo dividir los datos, qué pasa si una máquina falla, cómo juntar los resultados.
+
+En 2004, Jeffrey Dean y Sanjay Ghemawat, de Google, publicaron MapReduce: un modelo en el que el programador solo escribe dos funciones, y el sistema se encarga de todo lo demás.
+
+## Las fases
+
+1. **Map**: cada máquina procesa su parte de los datos y emite pares de clave y valor. Para contar palabras: por cada palabra, `(palabra, 1)`.
+2. **Barajar**: el sistema agrupa todos los pares con la misma clave en la misma máquina.
+3. **Reduce**: para cada clave, se combinan sus valores. Para contar: sumar los unos.
+
+```js
+const documentos = ["el gato", "el perro"];
+
+const pares = documentos.flatMap((texto) =>
+	texto.split(" ").map((palabra) => [palabra, 1]),
+);
+
+const grupos = new Map();
+for (const [palabra, uno] of pares) {
+	grupos.set(palabra, [...(grupos.get(palabra) ?? []), uno]);
+}
+
+const cuentas = Object.fromEntries(
+	[...grupos].map(([palabra, unos]) => [palabra, unos.reduce((a, b) => a + b, 0)]),
+);
+
+console.log(JSON.stringify(cuentas)); // {"el":2,"gato":1,"perro":1}
+```
+
+En un clúster, cada documento lo procesaría una máquina distinta, y cada palabra se sumaría en otra. Los nombres vienen de dos operaciones de la [programación funcional](/articulos/programacion-funcional/).
+
+## Por qué funcionó
+
+- **Paralelismo automático**: el mismo programa sirve para un megabyte o para un petabyte.
+- **Tolerancia a fallos**: si una máquina cae, el sistema repite su parte en otra. Con miles de máquinas, siempre falla alguna.
+- **Llevar el cálculo a los datos**: cada máquina procesa lo que tiene en su disco, en lugar de mover los datos por la red.
+
+Su implementación libre más conocida fue **Hadoop**.
+
+## Spark
+
+MapReduce escribe en disco entre cada fase. Para cálculos con muchos pasos, como los del [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/), que recorren los datos muchas veces, eso es muy lento.
+
+**Apache Spark** mantiene los datos intermedios en **memoria** y permite encadenar muchas transformaciones. Además ofrece una interfaz mucho más cómoda, incluido [SQL](/articulos/que-es-sql/) y tablas de datos similares a las de una hoja de cálculo.
+
+| | MapReduce | Spark |
+| --- | --- | --- |
+| Datos intermedios | En disco | En memoria |
+| Velocidad | Lenta para muchos pasos | Mucho más rápida |
+| Programación | Dos funciones | Muchas operaciones, SQL |
+| Uso hoy | Sistemas heredados | Procesamiento de datos a gran escala |
+
+## ¿Hace falta?
+
+Solo con volúmenes que no caben en una máquina. Un ordenador actual procesa en minutos decenas de gigabytes, y un clúster añade mucha complejidad. Muchos análisis que hace años exigían Hadoop hoy se hacen en un solo equipo, o en un [almacén de datos](/articulos/almacen-de-datos-y-lago-de-datos/) en la nube.
+
+## Lo esencial
+
+- MapReduce reparte un cálculo entre muchas máquinas en dos fases: map y reduce.
+- El sistema se encarga de repartir, agrupar por clave y repetir lo que falla.
+- Spark aplica la misma idea en memoria, y es mucho más rápido para cálculos de muchos pasos.
+- Solo compensan con volúmenes de datos que no caben en una máquina.

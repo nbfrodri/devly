@@ -4,10 +4,14 @@ layer: datos
 steps:
   - que-es-una-base-de-datos
   - modelo-entidad-relacion
+  - que-es-una-clave-foranea
   - que-es-sql
+  - delete-truncate-y-drop
   - tipos-de-join
+  - funciones-de-ventana-en-sql
   - normalizacion-de-bases-de-datos
   - indices-de-bases-de-datos
+  - que-es-un-indice-compuesto
   - vistas-y-procedimientos-almacenados
   - transacciones-y-acid
   - que-es-postgresql
@@ -20,3 +24,4 @@ steps:
   - teorema-cap
   - replicacion-y-particionado
   - copias-de-seguridad
+  - calidad-de-datos

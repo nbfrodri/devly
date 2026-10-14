@@ -1,0 +1,56 @@
+---
+title: "¿Qué es una clave foránea?"
+description: "Una clave foránea es una columna que guarda la clave primaria de otra tabla, para relacionarlas. La base de datos impide que apunte a algo que no existe."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - que-es-una-clave-primaria
+  - modelo-entidad-relacion
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Constraints, Foreign Keys (en inglés)"
+    url: https://www.postgresql.org/docs/current/ddl-constraints.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **clave foránea**, o ajena, es una columna que guarda el valor de la [clave primaria](/articulos/que-es-una-clave-primaria/) de **otra tabla**, para relacionar las dos. La base de datos se encarga de que siempre apunte a una fila que existe.
+
+## Un ejemplo
+
+```sql
+CREATE TABLE pedidos (
+	id SERIAL PRIMARY KEY,
+	cliente_id INTEGER NOT NULL REFERENCES clientes (id),
+	fecha DATE NOT NULL
+);
+```
+
+`cliente_id` es una clave foránea: cada pedido guarda el `id` de su cliente.
+
+## Qué garantiza
+
+La **integridad referencial**:
+
+- No se puede crear un pedido con un `cliente_id` que no existe.
+- No se puede borrar un cliente que tiene pedidos, salvo que se indique qué hacer con ellos.
+
+Ese "qué hacer" se configura:
+
+| Opción | Al borrar el cliente… |
+| --- | --- |
+| Impedir (por defecto) | Se rechaza el borrado |
+| `ON DELETE CASCADE` | Se borran también sus pedidos |
+| `ON DELETE SET NULL` | Los pedidos quedan sin cliente |
+
+## Para qué sirve
+
+- **Relacionar** tablas, como explica el [modelo entidad-relación](/articulos/modelo-entidad-relacion/).
+- **Combinar** datos con [JOIN](/articulos/tipos-de-join/).
+- **Evitar datos huérfanos**, una de las fuentes de mala [calidad de datos](/articulos/calidad-de-datos/).
+
+## Con qué no confundirla
+
+- **Clave primaria**: identifica cada fila de su tabla y no se repite. Una clave foránea sí puede repetirse: un cliente tiene muchos pedidos.
+- Una clave foránea no crea un índice automáticamente en todas las bases de datos. Si se usa mucho para buscar, conviene crearlo.

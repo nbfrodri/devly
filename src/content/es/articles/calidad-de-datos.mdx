@@ -1,0 +1,74 @@
+---
+title: "¿Qué es la calidad de datos?"
+description: "Unos datos tienen calidad si son adecuados para el uso que se les va a dar: completos, exactos, coherentes, actuales y válidos."
+level: basico
+layer: datos
+prerequisites:
+  - preparacion-de-datos
+  - que-es-una-base-de-datos
+updated: 2026-10-13
+sources:
+  - title: "UK Government: The Government Data Quality Framework (en inglés)"
+    url: https://www.gov.uk/government/publications/the-government-data-quality-framework
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **calidad de datos** mide si unos datos son **adecuados para el uso** que se les va a dar. No hay datos perfectos en abstracto: los mismos datos pueden servir para un informe mensual y no para facturar. Se valora con varias dimensiones, como si están completos, si son exactos o si están al día.
+
+## Por qué importa
+
+Las decisiones, los informes y los modelos de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) heredan los defectos de sus datos. Un cliente duplicado recibe dos cartas; una fecha mal escrita desordena un informe; un modelo entrenado con etiquetas erróneas aprende errores.
+
+## Las dimensiones
+
+El marco de calidad de datos del gobierno británico, una de las referencias públicas, usa dimensiones como estas:
+
+| Dimensión | Pregunta | Ejemplo de fallo |
+| --- | --- | --- |
+| Completitud | ¿Falta algo? | Clientes sin correo |
+| Exactitud | ¿Refleja la realidad? | Una dirección antigua |
+| Unicidad | ¿Hay duplicados? | La misma persona dos veces |
+| Coherencia | ¿Cuadra entre sistemas? | Un pedido sin cliente |
+| Actualidad | ¿Está al día? | Precios del año pasado |
+| Validez | ¿Cumple el formato y las reglas? | Una edad de 250 años |
+
+## Medirla
+
+La calidad se mide con reglas automáticas:
+
+```js
+const clientes = [
+	{ correo: "ana@ejemplo.com", edad: 34 },
+	{ correo: null, edad: 41 },
+	{ correo: "luis@ejemplo", edad: 250 },
+	{ correo: "ana@ejemplo.com", edad: 34 },
+];
+
+const completos = clientes.filter((c) => c.correo).length / clientes.length;
+const validos = clientes.filter((c) => c.edad >= 0 && c.edad <= 120).length;
+const unicos = new Set(clientes.map((c) => c.correo)).size;
+
+console.log(completos); // 0.75
+console.log(validos); // 3
+console.log(unicos); // 3
+```
+
+Un cuarto de los clientes no tiene correo, uno tiene una edad imposible y hay un duplicado.
+
+## Mejor prevenir
+
+Corregir datos después es caro. Es más eficaz impedir que entren mal:
+
+- **Restricciones** en la base de datos: tipos, campos obligatorios, unicidad, [claves foráneas](/articulos/que-es-una-clave-foranea/).
+- **Validación** en los formularios y en las [API](/articulos/que-es-una-api/).
+- **Una sola fuente de verdad** para cada dato, en lugar de copias que se desincronizan.
+- **Comprobaciones automáticas** en los [procesos ETL](/articulos/procesos-etl/), que detengan la carga si algo no cuadra.
+- **Responsables**: alguien a cargo de cada conjunto de datos.
+
+## Lo esencial
+
+- Unos datos tienen calidad si sirven para el uso previsto.
+- Se valora en dimensiones: completitud, exactitud, unicidad, coherencia, actualidad y validez.
+- Se mide con reglas automáticas.
+- Prevenir con restricciones y validación es más barato que corregir después.

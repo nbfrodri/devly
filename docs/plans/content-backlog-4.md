@@ -115,7 +115,7 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 
 Solo con fuente comprobable. Si no se encuentra, se deja sin marcar con una nota.
 
-- [ ] ¿De dónde viene la palabra "algoritmo"? Pendiente: el diccionario de la RAE propone un origen distinto del que se suele contar (al-Juarismi), y no se encontró otra fuente fiable que lo aclare.
+- [x] ¿De dónde viene la palabra "algoritmo"?
 - [x] ¿Por qué el primer programador fue una mujer? Ada Lovelace y la máquina analítica
 - [x] ¿Qué fue ENIAC y quién lo programó?
 - [x] ¿Por qué un kilobyte son 1000 o 1024 bytes?

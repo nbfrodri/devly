@@ -1,0 +1,56 @@
+---
+title: "¿De dónde viene la palabra «algoritmo»?"
+description: "La explicación más extendida la relaciona con al-Juarismi, un matemático persa del siglo IX. El diccionario de la RAE apunta con dudas a otro origen."
+level: basico
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - que-es-un-algoritmo
+updated: 2026-10-13
+sources:
+  - title: "MacTutor, Universidad de St Andrews: Al-Khwarizmi (en inglés)"
+    url: https://mathshistory.st-andrews.ac.uk/Biographies/Al-Khwarizmi/
+  - title: "RAE: algoritmo"
+    url: https://dle.rae.es/algoritmo
+---
+
+import { Quiz } from "@/components/quiz";
+
+La palabra **algoritmo** tiene un origen con dos explicaciones. La más extendida la relaciona con **al-Juarismi**, un matemático persa del siglo IX que trabajó en Bagdad. El diccionario de la Real Academia Española propone, con un "quizá", otro camino: una expresión árabe que significaba "cálculo con cifras arábigas". Las dos coinciden en algo: la palabra viene del árabe y de la forma de calcular con las cifras que hoy usamos.
+
+## Al-Juarismi
+
+Muhammad ibn Musa al-Juarismi vivió aproximadamente entre los años 780 y 850, y trabajó en la Casa de la Sabiduría de Bagdad.
+
+Según su biografía en el archivo de historia de las matemáticas MacTutor, de la Universidad de St Andrews, escribió un tratado sobre las **cifras indoarábigas**, el sistema de diez cifras con el cero que usamos hoy. El original en árabe se perdió, pero se conservó una traducción latina cuyo título empezaba con su nombre latinizado: *Algoritmi de numero Indorum*, "al-Juarismi sobre los números de los indios".
+
+De *Algoritmi* habría salido *algorismo*, el nombre que se dio en Europa al arte de calcular con esas cifras, y de ahí *algoritmo*.
+
+Su otro gran libro, sobre la resolución de ecuaciones, tenía en el título la palabra *al-jabr*, de la que viene **álgebra**.
+
+## La versión de la RAE
+
+El Diccionario de la lengua española da una etimología distinta, precedida de un "quizá": del latín tardío *algobarismus*, abreviación del árabe clásico *ḥisābu lġubār*, "cálculo mediante cifras arábigas".
+
+Las etimologías antiguas suelen tener zonas de duda, y no es raro que las fuentes discrepen. Lo seguro es el origen árabe y el vínculo con la forma de calcular con cifras.
+
+## De calcular a la informática
+
+Durante siglos, "algoritmo" designó los procedimientos de cálculo aritmético. Con la informática pasó a significar cualquier secuencia finita de pasos bien definidos para resolver un problema, como explica [qué es un algoritmo](/articulos/que-es-un-algoritmo/).
+
+Uno de los algoritmos más antiguos que se conocen, el de Euclides, de hace más de dos mil años, calcula el máximo común divisor de dos números:
+
+```js
+function mcd(a, b) {
+	return b === 0 ? a : mcd(b, a % b);
+}
+
+console.log(mcd(48, 18)); // 6
+```
+
+## Lo esencial
+
+- "Algoritmo" se suele derivar del nombre de al-Juarismi, matemático del siglo IX.
+- Su tratado sobre las cifras indoarábigas se conoció en latín como *Algoritmi de numero Indorum*.
+- La RAE propone, con dudas, otro origen árabe: "cálculo mediante cifras arábigas".
+- Su obra sobre ecuaciones dio nombre al álgebra.

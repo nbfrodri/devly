@@ -53,10 +53,10 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ### Datos
 
-- [ ] Funciones de ventana en SQL (SQL)
-- [ ] Calidad de datos
-- [ ] Series temporales (visualización de datos)
-- [ ] Procesamiento distribuido de datos: MapReduce y Spark
+- [x] Funciones de ventana en SQL (SQL)
+- [x] Calidad de datos
+- [x] Series temporales (visualización de datos)
+- [x] Procesamiento distribuido de datos: MapReduce y Spark
 
 ### Probabilidad, estadística y simulación
 
@@ -87,9 +87,9 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ## Definiciones
 
-- [ ] ¿Qué es un índice compuesto?
-- [ ] ¿Qué es una clave foránea?
-- [ ] ¿Qué es un esquema en estrella?
+- [x] ¿Qué es un índice compuesto?
+- [x] ¿Qué es una clave foránea?
+- [x] ¿Qué es un esquema en estrella?
 - [ ] ¿Qué es un percentil?
 - [ ] ¿Qué es la latencia de cola?
 - [ ] ¿Qué es un sistema de archivos con registro (journaling)?
@@ -106,8 +106,8 @@ Mismas reglas que siempre: [guía de contenido](../content-guide.md), fuentes ab
 
 ## Comparaciones
 
-- [ ] Diferencias entre una vista y una tabla
-- [ ] Diferencias entre DELETE, TRUNCATE y DROP
+- [x] Diferencias entre una vista y una tabla
+- [x] Diferencias entre DELETE, TRUNCATE y DROP
 - [ ] Diferencias entre escalado de datos: normalizar y estandarizar
 - [ ] Diferencias entre precisión y exactitud de un modelo
 - [ ] Diferencias entre swap y memoria RAM

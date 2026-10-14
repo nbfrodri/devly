@@ -1,0 +1,83 @@
+---
+title: "Diferencias entre DELETE, TRUNCATE y DROP"
+description: "Las tres eliminan cosas de una base de datos. DELETE borra filas concretas, TRUNCATE vacía una tabla entera y DROP elimina la tabla con su estructura."
+level: basico
+kind: comparacion
+layer: datos
+prerequisites:
+  - que-es-sql
+  - transacciones-y-acid
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: DELETE (en inglés)"
+    url: https://www.postgresql.org/docs/current/sql-delete.html
+  - title: "PostgreSQL: TRUNCATE (en inglés)"
+    url: https://www.postgresql.org/docs/current/sql-truncate.html
+  - title: "PostgreSQL: DROP TABLE (en inglés)"
+    url: https://www.postgresql.org/docs/current/sql-droptable.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**DELETE**, **TRUNCATE** y **DROP** son tres órdenes de [SQL](/articulos/que-es-sql/) que eliminan cosas, a escalas distintas. **DELETE** borra **las filas que cumplan una condición**. **TRUNCATE** vacía **todas las filas** de una tabla de golpe. **DROP** elimina **la tabla entera**, con su estructura, sus índices y sus datos.
+
+## DELETE
+
+```sql
+DELETE FROM pedidos WHERE fecha < '2020-01-01';
+```
+
+Borra fila a fila las que cumplen la condición. Sin `WHERE`, las borra todas.
+
+- Permite elegir qué filas.
+- Activa los disparadores de la tabla.
+- Se puede deshacer dentro de una [transacción](/articulos/transacciones-y-acid/).
+- Con muchas filas, es lento.
+
+## TRUNCATE
+
+```sql
+TRUNCATE TABLE registros;
+```
+
+Vacía la tabla entera sin recorrerla fila a fila. La tabla sigue existiendo, vacía.
+
+- Mucho más rápido que un DELETE sin condición.
+- No permite elegir filas.
+- No activa los disparadores de borrado por fila.
+- No se puede usar si otras tablas apuntan a esta con [claves foráneas](/articulos/que-es-una-clave-foranea/), salvo que se indique que se vacíen también.
+
+## DROP
+
+```sql
+DROP TABLE registros_antiguos;
+```
+
+Elimina la tabla: las columnas, los índices, los permisos y los datos. Ya no existe.
+
+## Comparación
+
+| | DELETE | TRUNCATE | DROP |
+| --- | --- | --- | --- |
+| Qué elimina | Filas elegidas | Todas las filas | La tabla entera |
+| La tabla sigue existiendo | Sí | Sí, vacía | No |
+| Admite condición | Sí | No | No |
+| Velocidad con muchas filas | Lenta | Rápida | Rápida |
+| Disparadores por fila | Sí | No | No |
+
+En PostgreSQL, las tres se pueden deshacer si se ejecutan dentro de una transacción que todavía no se ha confirmado. En otros sistemas, TRUNCATE y DROP pueden confirmarse solas al instante.
+
+## Precaución
+
+Son de las órdenes más peligrosas que existen. Un `DELETE` sin `WHERE` en la base de datos de producción es un error clásico. Antes de ejecutarlas:
+
+- Probar primero la condición con un `SELECT`.
+- Hacerlas dentro de una transacción, para poder deshacer.
+- Tener una [copia de seguridad](/articulos/copias-de-seguridad/) reciente y probada.
+
+## Lo esencial
+
+- DELETE borra las filas que cumplen una condición, y sin ella las borra todas.
+- TRUNCATE vacía la tabla de golpe, más rápido, sin poder elegir filas.
+- DROP elimina la tabla entera, con su estructura.
+- Las tres son peligrosas: transacción y copia de seguridad antes de ejecutarlas.

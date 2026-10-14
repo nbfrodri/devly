@@ -1,0 +1,110 @@
+---
+title: "¿Qué son las funciones de ventana en SQL?"
+description: "Una función de ventana calcula algo sobre un grupo de filas relacionadas con cada fila, sin juntarlas en una: totales acumulados, rankings, medias móviles."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-sql
+  - tipos-de-join
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Window Functions, tutorial (en inglés)"
+    url: https://www.postgresql.org/docs/current/tutorial-window.html
+  - title: "PostgreSQL: Window Functions, referencia (en inglés)"
+    url: https://www.postgresql.org/docs/current/functions-window.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **función de ventana** en [SQL](/articulos/que-es-sql/) calcula un valor para cada fila a partir de un **conjunto de filas relacionadas**, su ventana, sin agruparlas en una sola. Permite obtener totales acumulados, posiciones en una clasificación o comparaciones con la fila anterior, conservando el detalle de cada fila.
+
+## El problema
+
+`GROUP BY` resume: si se agrupan las ventas por mes, se obtiene una fila por mes y se pierde el detalle. A veces se quieren las dos cosas a la vez: cada venta **y** el total de su mes, o cada mes **y** el acumulado hasta él.
+
+## La sintaxis
+
+Una función de ventana lleva la cláusula `OVER`, que define la ventana:
+
+```sql
+SELECT mes, total,
+	SUM(total) OVER (ORDER BY mes) AS acumulado,
+	RANK() OVER (ORDER BY total DESC) AS posicion
+FROM ventas_mensuales;
+```
+
+- `SUM(total) OVER (ORDER BY mes)` suma el total desde el primer mes hasta el actual.
+- `RANK() OVER (ORDER BY total DESC)` da la posición de cada mes según sus ventas.
+
+Lo mismo, imitado en JavaScript:
+
+```js
+const ventas = [
+	{ mes: 1, total: 100 },
+	{ mes: 2, total: 150 },
+	{ mes: 3, total: 120 },
+];
+
+let suma = 0;
+const acumulado = ventas.map((v) => (suma = suma + v.total));
+
+const posiciones = ventas.map(
+	(v) => 1 + ventas.filter((otro) => otro.total > v.total).length,
+);
+
+console.log(acumulado.join(" ")); // "100 250 370"
+console.log(posiciones.join(" ")); // "3 1 2"
+```
+
+Cada mes conserva su fila, con dos datos calculados sobre la ventana.
+
+## Particiones
+
+`PARTITION BY` reinicia la ventana para cada grupo:
+
+```sql
+SELECT tienda, mes, total,
+	SUM(total) OVER (PARTITION BY tienda ORDER BY mes) AS acumulado_tienda
+FROM ventas;
+```
+
+El acumulado empieza de cero para cada tienda.
+
+## Las más usadas
+
+| Función | Qué devuelve |
+| --- | --- |
+| `ROW_NUMBER()` | Un número correlativo |
+| `RANK()` | La posición, con empates |
+| `LAG(columna)` | El valor de la fila anterior |
+| `LEAD(columna)` | El valor de la fila siguiente |
+| `SUM`, `AVG`, `COUNT` | La agregación sobre la ventana |
+
+`LAG` permite comparar con el periodo anterior sin [JOIN](/articulos/tipos-de-join/): el crecimiento respecto al mes pasado.
+
+## Marcos
+
+Se puede limitar qué filas entran en la ventana. Una **media móvil** de tres meses:
+
+```sql
+AVG(total) OVER (ORDER BY mes ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)
+```
+
+Es una herramienta clásica para analizar [series temporales](/articulos/series-temporales/).
+
+<Quiz
+	client:visible
+	question="¿Qué diferencia hay entre GROUP BY y una función de ventana?"
+	options={[
+		"Ninguna",
+		"GROUP BY junta las filas en una por grupo; la función de ventana conserva cada fila y añade el cálculo",
+		"La función de ventana solo funciona con números",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- Una función de ventana calcula sobre un grupo de filas sin juntarlas en una.
+- `OVER` define la ventana; `PARTITION BY` la reinicia por grupo; `ORDER BY` la ordena.
+- Sirven para acumulados, posiciones, comparaciones con la fila anterior y medias móviles.

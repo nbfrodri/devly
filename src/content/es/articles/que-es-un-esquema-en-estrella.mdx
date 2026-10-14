@@ -1,0 +1,51 @@
+---
+title: "¿Qué es un esquema en estrella?"
+description: "Es la forma de organizar un almacén de datos: una tabla central de hechos, con las cifras, rodeada de tablas de dimensiones, con el contexto."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - almacen-de-datos-y-lago-de-datos
+  - oltp-y-olap
+updated: 2026-10-13
+sources:
+  - title: "Kimball Group: Dimensional Modeling Techniques (en inglés)"
+    url: https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **esquema en estrella** es la forma clásica de organizar un [almacén de datos](/articulos/almacen-de-datos-y-lago-de-datos/) para el análisis. Tiene una **tabla de hechos** en el centro, con las cifras que se miden, rodeada de **tablas de dimensiones**, con el contexto por el que se analizan. Dibujado, parece una estrella.
+
+```
+              Fecha
+                │
+Producto ── Ventas ── Tienda
+                │
+             Cliente
+```
+
+## Las piezas
+
+- **Hechos**: cada suceso que se mide, con sus números. Una fila por venta: importe, unidades.
+- **Dimensiones**: el quién, qué, cuándo y dónde. La fecha, con su día, mes y trimestre; el producto, con su categoría; la tienda, con su ciudad y región.
+
+## Por qué así
+
+Las preguntas de negocio tienen siempre la misma forma: "una cifra, desglosada por algo". Ventas por región y mes; unidades por categoría y tienda.
+
+```sql
+SELECT f.mes, t.region, SUM(v.importe)
+FROM ventas v
+JOIN fechas f ON f.id = v.fecha_id
+JOIN tiendas t ON t.id = v.tienda_id
+GROUP BY f.mes, t.region;
+```
+
+Con el esquema en estrella, cualquiera de esas preguntas es la tabla de hechos unida a las dimensiones que interesan, y agrupada.
+
+## Con qué no confundirlo
+
+Una base de datos operativa, la de [OLTP](/articulos/oltp-y-olap/), se [normaliza](/articulos/normalizacion-de-bases-de-datos/) para evitar repeticiones. El esquema en estrella hace lo contrario a propósito: repite datos en las dimensiones, por ejemplo el nombre de la región en cada tienda, para que las consultas de análisis sean simples y rápidas.
+
+Si las dimensiones se normalizan, partiéndolas en varias tablas, el resultado se llama **esquema en copo de nieve**.

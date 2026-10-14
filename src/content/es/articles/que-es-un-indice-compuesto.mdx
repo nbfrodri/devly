@@ -1,0 +1,48 @@
+---
+title: "¿Qué es un índice compuesto?"
+description: "Un índice compuesto cubre varias columnas a la vez. El orden de las columnas importa: sirve para buscar por la primera, o por la primera y la segunda, pero no por la segunda sola."
+level: basico
+kind: definicion
+layer: datos
+prerequisites:
+  - indices-de-bases-de-datos
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: Multicolumn Indexes (en inglés)"
+    url: https://www.postgresql.org/docs/current/indexes-multicolumn.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **índice compuesto**, o multicolumna, es un [índice](/articulos/indices-de-bases-de-datos/) que ordena las filas por **varias columnas** a la vez, en un orden concreto: primero por la primera, y en caso de empate, por la segunda.
+
+## Un ejemplo
+
+```sql
+CREATE INDEX idx_apellido_nombre ON clientes (apellido, nombre);
+```
+
+Funciona como una guía telefónica: ordenada por apellido y, dentro de cada apellido, por nombre.
+
+## El orden de las columnas importa
+
+Con ese índice:
+
+| Consulta | ¿Usa el índice? |
+| --- | --- |
+| `WHERE apellido = 'García'` | Sí |
+| `WHERE apellido = 'García' AND nombre = 'Ana'` | Sí, y muy eficiente |
+| `WHERE nombre = 'Ana'` | No de forma eficiente |
+
+Es la misma razón por la que una guía telefónica no ayuda a encontrar a todas las personas que se llaman Ana: están repartidas por toda la guía. El índice sirve para la columna inicial, o para las iniciales en orden.
+
+Por eso la regla práctica es poner primero la columna que más se usa para filtrar, y la que más reduce el número de filas.
+
+## Cuándo usarlo
+
+- Cuando las consultas filtran a menudo por varias columnas juntas.
+- Cuando se filtra por una y se ordena por otra: `WHERE cliente_id = 42 ORDER BY fecha`.
+
+## Con qué no confundirlo
+
+Dos índices de una columna cada uno no equivalen a uno compuesto. Y un índice compuesto no sustituye a todos los de sus columnas por separado. Como cualquier índice, acelera las lecturas y ralentiza un poco las escrituras.

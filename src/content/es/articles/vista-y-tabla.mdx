@@ -1,0 +1,57 @@
+---
+title: "Diferencias entre una vista y una tabla"
+description: "Una tabla guarda datos. Una vista guarda una consulta, y muestra su resultado como si fuera una tabla cada vez que se consulta."
+level: basico
+kind: comparacion
+layer: datos
+prerequisites:
+  - vistas-y-procedimientos-almacenados
+  - que-es-sql
+updated: 2026-10-13
+sources:
+  - title: "PostgreSQL: CREATE VIEW (en inglés)"
+    url: https://www.postgresql.org/docs/current/sql-createview.html
+  - title: "PostgreSQL: Materialized Views (en inglés)"
+    url: https://www.postgresql.org/docs/current/rules-materializedviews.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **tabla** guarda datos: sus filas existen en el disco. Una **vista** guarda una **consulta**: no tiene datos propios, y cada vez que se consulta muestra el resultado de esa consulta como si fuera una tabla. Se explica en detalle en [vistas y procedimientos almacenados](/articulos/vistas-y-procedimientos-almacenados/).
+
+## En la práctica
+
+```sql
+CREATE TABLE pedidos (id SERIAL PRIMARY KEY, cliente_id INT, total NUMERIC, pagado BOOLEAN);
+
+CREATE VIEW pedidos_pendientes AS
+SELECT id, cliente_id, total FROM pedidos WHERE NOT pagado;
+```
+
+`pedidos` guarda filas. `pedidos_pendientes` no guarda nada: al consultarla, se ejecuta su `SELECT` sobre `pedidos`. Si se paga un pedido, desaparece de la vista al instante, sin hacer nada.
+
+## Comparación
+
+| | Tabla | Vista | Vista materializada |
+| --- | --- | --- | --- |
+| Guarda datos | Sí | No | Sí, el resultado |
+| Datos actualizados | Siempre | Siempre | Desde el último refresco |
+| Ocupa espacio | Sí | Casi nada | Sí |
+| Velocidad de consulta | Directa | La de su consulta | Directa |
+| Se puede insertar en ella | Sí | Solo en vistas simples | No |
+| Uso | Guardar información | Simplificar consultas, limitar el acceso | Acelerar informes costosos |
+
+## Cuándo usar una vista
+
+- **Simplificar**: una consulta larga con varios [JOIN](/articulos/tipos-de-join/) se usa como si fuera una tabla.
+- **Limitar el acceso**: dar permiso sobre una vista que muestra solo ciertas columnas o filas.
+- **Estabilidad**: si cambian las tablas de debajo, se ajusta la vista y lo demás sigue funcionando.
+
+Una vista no acelera nada por sí misma: cada consulta ejecuta su definición. Para eso existen las **vistas materializadas**, que guardan el resultado y se refrescan cuando se indica.
+
+## Lo esencial
+
+- Una tabla guarda datos; una vista guarda una consulta.
+- Una vista siempre muestra datos actuales y casi no ocupa espacio.
+- Una vista simplifica y protege, pero no es más rápida que su consulta.
+- Una vista materializada guarda el resultado, a cambio de tener que refrescarlo.

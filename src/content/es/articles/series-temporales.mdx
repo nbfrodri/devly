@@ -1,0 +1,73 @@
+---
+title: "¿Qué es una serie temporal?"
+description: "Una serie temporal es una secuencia de medidas ordenadas en el tiempo. Analizarla es separar la tendencia, los ciclos y el ruido para entenderla o predecirla."
+level: intermedio
+layer: datos
+prerequisites:
+  - media-mediana-y-desviacion
+  - visualizacion-de-datos
+updated: 2026-10-13
+sources:
+  - title: "Hyndman y Athanasopoulos: Forecasting, Principles and Practice, 3.ª edición, libro libre (en inglés)"
+    url: https://otexts.com/fpp3/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **serie temporal** es una secuencia de medidas tomadas en momentos sucesivos: las ventas de cada día, la temperatura de cada hora, las visitas de una web por minuto. Lo que la distingue de otros datos es que **el orden importa**: cada valor depende en parte de los anteriores.
+
+## Sus componentes
+
+Al mirar una serie se suelen distinguir:
+
+| Componente | Qué es | Ejemplo |
+| --- | --- | --- |
+| Tendencia | La dirección a largo plazo | Las ventas crecen año a año |
+| Estacionalidad | Un patrón que se repite con periodo fijo | Más ventas cada diciembre |
+| Ciclos | Subidas y bajadas sin periodo fijo | Crisis económicas |
+| Ruido | La variación aleatoria que queda | Un día suelto raro |
+
+Separarlos ayuda a entender qué está pasando: ¿ha subido el consumo porque crece, o porque es invierno?
+
+## Suavizar
+
+Una técnica básica para ver la tendencia es la **media móvil**: sustituir cada punto por la media de los últimos valores.
+
+```js
+const datos = [10, 12, 11, 15, 14, 18, 17];
+
+function mediaMovil(serie, ventana) {
+	return serie
+		.slice(ventana - 1)
+		.map((_, i) => serie.slice(i, i + ventana).reduce((a, b) => a + b, 0) / ventana);
+}
+
+console.log(mediaMovil(datos, 3).map((v) => v.toFixed(1)).join(" ")); // "11.0 12.7 13.3 15.7 16.3"
+```
+
+Los datos suben y bajan; la media móvil deja ver que la tendencia es creciente. En SQL se calcula con [funciones de ventana](/articulos/funciones-de-ventana-en-sql/).
+
+## Predecir
+
+El uso más común es **pronosticar**: cuánto se venderá el mes que viene, cuánta electricidad hará falta mañana. El libro de Hyndman y Athanasopoulos, una referencia libre del campo, recorre los métodos, de los más simples a los más elaborados:
+
+- **Ingenuo**: el próximo valor será igual al último. Sorprendentemente difícil de batir a corto plazo.
+- **Estacional ingenuo**: igual que el mismo periodo del ciclo anterior.
+- **Suavizado exponencial**: da más peso a los datos recientes.
+- **Modelos que capturan la relación entre cada valor y los anteriores.**
+- **Aprendizaje automático**, incluidas las [redes recurrentes](/articulos/redes-neuronales-recurrentes/).
+
+Un pronóstico debe ir acompañado de su **incertidumbre**: un intervalo, no solo un número.
+
+## Trampas
+
+- **Validar respetando el tiempo**: se entrena con el pasado y se prueba con lo posterior, nunca al azar, como advierte [validación cruzada](/articulos/validacion-cruzada/).
+- **Correlaciones espurias**: dos series que crecen con el tiempo parecen relacionadas aunque no lo estén, como explica [correlación y causalidad](/articulos/correlacion-y-causalidad/).
+- **Cambios de régimen**: un suceso nuevo puede invalidar todo lo aprendido del pasado.
+
+## Lo esencial
+
+- Una serie temporal es una secuencia de medidas ordenadas en el tiempo.
+- Se descompone en tendencia, estacionalidad, ciclos y ruido.
+- La media móvil suaviza la serie y deja ver la tendencia.
+- Para predecir, hay métodos que van del valor anterior a modelos complejos, siempre con su incertidumbre.
