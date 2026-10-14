@@ -1,0 +1,154 @@
+---
+title: "¿Qué es una blockchain?"
+description: "Una cadena de bloques es un registro compartido entre muchos ordenadores en el que cada bloque queda sellado por el anterior, de modo que no se puede alterar sin que se note."
+level: intermedio
+layer: datos
+prerequisites:
+  - funciones-hash
+  - cifrado-simetrico-y-asimetrico
+  - consenso-distribuido
+updated: 2026-10-13
+sources:
+  - title: "Satoshi Nakamoto: Bitcoin, un sistema de dinero en efectivo electrónico peer-to-peer (2008)"
+    url: https://bitcoin.org/es/bitcoin-documento
+  - title: "Ethereum: Introducción a Ethereum"
+    url: https://ethereum.org/es/developers/docs/intro-to-ethereum/
+  - title: "Ethereum: Mecanismos de consenso"
+    url: https://ethereum.org/es/developers/docs/consensus-mechanisms/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **blockchain**, o **cadena de bloques**, es un registro de datos que comparten muchos ordenadores, organizado en bloques enlazados de forma que modificar uno antiguo invalida todos los siguientes. Permite que participantes que no se conocen ni se fían unos de otros mantengan un mismo historial sin una autoridad central.
+
+Su primera aplicación fue Bitcoin, descrita en 2008 en un artículo firmado con el seudónimo Satoshi Nakamoto.
+
+## Qué problema resuelve
+
+El dinero digital tiene un problema que las monedas físicas no tienen: un archivo se puede copiar. Si el dinero es información, ¿qué impide gastar el mismo dos veces? Es el problema del **doble gasto**.
+
+La solución tradicional es un intermediario: un banco que lleva las cuentas y dice quién tiene qué. Funciona, a cambio de depender de él. Puede equivocarse, bloquear una cuenta o cerrar.
+
+La pregunta de Bitcoin era si se podía llevar ese registro **entre todos**, sin nadie al mando, y sin que los participantes tuvieran que confiar entre sí.
+
+## Las piezas
+
+### Transacciones firmadas
+
+Cada participante tiene un par de claves, como explica el artículo sobre [cifrado asimétrico](/articulos/cifrado-simetrico-y-asimetrico/). La **clave privada** firma las transacciones; la **pública** permite a cualquiera comprobar la firma.
+
+No hay cuentas con nombre y contraseña. Quien posee la clave privada controla los fondos. Si se pierde, no hay a quién reclamar; si alguien la roba, tampoco.
+
+### Bloques encadenados
+
+Las transacciones se agrupan en **bloques**. Cada bloque incluye el [hash](/articulos/funciones-hash/) del anterior: su huella digital.
+
+Ahí está la idea. Si se cambia un dato de un bloque antiguo, su hash cambia. El bloque siguiente, que guardaba el hash original, deja de coincidir. Y así toda la cadena.
+
+```js
+import { createHash } from "node:crypto";
+
+const hash = (texto) => createHash("sha256").update(texto).digest("hex");
+
+function crearBloque(datos, anterior) {
+	return { datos, anterior, hash: hash(anterior + datos) };
+}
+
+const inicial = crearBloque("inicio", "0");
+const segundo = crearBloque("Ana paga 5 a Luis", inicial.hash);
+const tercero = crearBloque("Luis paga 2 a Marta", segundo.hash);
+const cadena = [inicial, segundo, tercero];
+
+function esValida(bloques) {
+	return bloques.every((bloque, i) => {
+		const hashCorrecto = bloque.hash === hash(bloque.anterior + bloque.datos);
+		const bienEnlazado = i === 0 || bloque.anterior === bloques[i - 1].hash;
+
+		return hashCorrecto && bienEnlazado;
+	});
+}
+
+console.log(esValida(cadena)); // true
+
+segundo.datos = "Ana paga 500 a Luis";
+
+console.log(esValida(cadena)); // false
+```
+
+Cambiar un 5 por un 500 en el segundo bloque rompe la cadena. Para ocultarlo habría que recalcular ese bloque y todos los posteriores.
+
+### Una red sin centro
+
+No hay un servidor. Miles de ordenadores, llamados **nodos**, guardan cada uno una copia completa de la cadena y comprueban por su cuenta cada transacción y cada bloque. Se comunican directamente entre sí.
+
+### Consenso
+
+Falta lo más difícil: ¿quién añade el siguiente bloque, y cómo se ponen todos de acuerdo en cuál es la cadena válida?
+
+Es un problema de [consenso distribuido](/articulos/consenso-distribuido/), en su versión más dura: cualquiera puede participar, nadie se identifica y algunos intentarán hacer trampa.
+
+Cada red lo resuelve con un **mecanismo de consenso**. Los dos principales, la [prueba de trabajo y la prueba de participación](/articulos/prueba-de-trabajo-y-prueba-de-participacion/), hacen que añadir un bloque cueste algo, energía o dinero inmovilizado, para que reescribir la historia sea carísimo.
+
+## Por qué no se puede cambiar
+
+Las piezas se refuerzan.
+
+- Alterar un bloque obliga a rehacer todos los siguientes, por los hashes.
+- Rehacer cada bloque cuesta, por el mecanismo de consenso.
+- Mientras tanto, el resto de la red sigue añadiendo bloques a la cadena auténtica, y hay que alcanzarla.
+
+Para lograrlo, un atacante necesitaría más recursos que todos los demás participantes juntos. De ahí que se hable de un **ataque del 51 %**.
+
+Cuantos más bloques se han añadido después de una transacción, más segura está. Por eso se espera a tener varias **confirmaciones** antes de darla por definitiva.
+
+<Quiz
+	client:visible
+	question="¿Qué ocurre si alguien modifica una transacción en un bloque antiguo de la cadena?"
+	options={[
+		"Nada: los bloques son independientes",
+		"El hash de ese bloque cambia y deja de coincidir con el que guarda el siguiente",
+		"La red borra automáticamente toda la cadena",
+	]}
+	answer={1}
+/>
+
+## Públicas y privadas
+
+| | Pública | Con permiso |
+| --- | --- | --- |
+| Quién participa | Cualquiera | Organizaciones autorizadas |
+| Quién valida | Cualquiera que cumpla las reglas | Validadores conocidos |
+| Confianza necesaria | Ninguna | Alguna, entre los miembros |
+| Ejemplos | Bitcoin, Ethereum | Redes de consorcios empresariales |
+
+En las segundas, como los participantes están identificados, el consenso es mucho más simple y rápido. También se discute si hace falta una cadena de bloques: entre partes conocidas, una base de datos compartida y auditada suele bastar.
+
+## Más que dinero
+
+Bitcoin registra quién posee cuánto. Ethereum generalizó la idea: la cadena guarda también programas, llamados [contratos inteligentes](/articulos/contratos-inteligentes/), que todos los nodos ejecutan y cuyo resultado nadie puede alterar.
+
+## Sus límites
+
+- **Es lenta.** Bitcoin procesa unas pocas transacciones por segundo; una red de pagos tradicional, miles. Es el precio de que miles de nodos comprueben todo.
+- **Es cara.** Cada transacción paga una comisión, que sube cuando hay demanda.
+- **Crece sin parar.** Nada se borra. Cada nodo guarda la historia entera.
+- **Los datos son públicos.** En una cadena pública, todas las transacciones están a la vista. Las direcciones no llevan nombre, pero se pueden rastrear y a menudo vincular con personas.
+- **No se puede corregir.** Un envío a una dirección equivocada no tiene vuelta atrás. No hay servicio de atención al cliente.
+- **Garantiza lo que hay dentro, no lo de fuera.** Asegura que un dato no se ha modificado desde que se anotó. No asegura que fuera cierto. Si alguien registra que un contenedor lleva café y lleva otra cosa, la cadena conserva fielmente la mentira.
+- **El consumo de energía** de las redes con prueba de trabajo.
+
+## ¿Hace falta una?
+
+La pregunta útil es si hay varias partes que deben compartir un registro, **no se fían unas de otras** y **no aceptan a un tercero** que lo administre.
+
+Si alguna de esas condiciones falla, y falla casi siempre, una [base de datos](/articulos/que-es-una-base-de-datos/) normal es más rápida, más barata y más simple. Con [replicación](/articulos/replicacion-y-particionado/) y un registro de cambios firmado se obtiene buena parte de las garantías.
+
+Muchos proyectos han usado una cadena de bloques donde no hacía falta. Lo que ofrece de verdad, eliminar la necesidad de confiar en un administrador, solo vale la pena cuando esa confianza es el problema.
+
+## Lo esencial
+
+- Una blockchain es un registro compartido, formado por bloques enlazados mediante hashes.
+- Cambiar un bloque antiguo invalida todos los posteriores.
+- Las transacciones se autorizan con firmas digitales; no hay cuentas con contraseña.
+- Un mecanismo de consenso decide quién añade bloques y hace costoso reescribir la historia.
+- Es lenta y cara: solo compensa cuando no se puede confiar en un administrador común.

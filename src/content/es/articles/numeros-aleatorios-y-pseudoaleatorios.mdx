@@ -1,0 +1,192 @@
+---
+title: "¿Cómo genera un ordenador números aleatorios?"
+description: "Un ordenador sigue instrucciones exactas, así que el azar lo imita con fórmulas. La diferencia entre números pseudoaleatorios y aleatorios de verdad importa en seguridad."
+level: intermedio
+layer: programacion
+prerequisites:
+  - probabilidad-basica
+  - funciones
+updated: 2026-10-13
+sources:
+  - title: "MDN: Math.random()"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+  - title: "MDN: Crypto.getRandomValues()"
+    url: https://developer.mozilla.org/es/docs/Web/API/Crypto/getRandomValues
+  - title: "RFC 4086: Randomness Requirements for Security"
+    url: https://www.rfc-editor.org/info/rfc4086/
+  - title: "RANDOM.ORG: Introduction to Randomness and Random Numbers (en inglés)"
+    url: https://www.random.org/randomness/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un ordenador es una máquina **determinista**: con las mismas instrucciones y los mismos datos, hace siempre lo mismo. Por eso no puede producir azar por sí solo. Lo que genera son números **pseudoaleatorios**: una secuencia calculada con una fórmula, que parece aleatoria sin serlo. Para obtener números **aleatorios de verdad** tiene que tomar la imprevisibilidad del mundo físico.
+
+La diferencia es irrelevante para un videojuego y decisiva para la seguridad.
+
+## Para qué hacen falta
+
+- **Juegos**: barajar, repartir, generar mundos.
+- **Simulaciones**, como el [método de Monte Carlo](/articulos/metodo-de-monte-carlo/).
+- **Muestreo**: elegir a quién se enseña una versión nueva.
+- **Algoritmos**: elegir un pivote, repartir carga, esperar un tiempo variable antes de reintentar.
+- **Criptografía**: claves, tokens de sesión, identificadores imposibles de adivinar.
+- **Aprendizaje automático**: los valores iniciales de una [red neuronal](/articulos/que-es-una-red-neuronal/).
+
+## Generadores pseudoaleatorios
+
+Un generador pseudoaleatorio parte de un número inicial, la **semilla**, y aplica una fórmula para obtener el siguiente. A ese le aplica la misma fórmula, y así sucesivamente.
+
+Uno de los más antiguos y simples multiplica, suma y toma el resto de una división:
+
+```js
+function crearGenerador(semilla) {
+	let estado = semilla;
+
+	return () => {
+		estado = (estado * 75 + 74) % 65537;
+		return estado;
+	};
+}
+
+const a = crearGenerador(1);
+const b = crearGenerador(1);
+
+const primera = [a(), a(), a()];
+const segunda = [b(), b(), b()];
+
+console.log(primera.join(" ")); // "149 11249 57305"
+console.log(primera.join() === segunda.join()); // true
+```
+
+Los números saltan de un lado a otro sin patrón aparente. Y sin embargo, **la misma semilla produce exactamente la misma secuencia**.
+
+Los generadores actuales usan fórmulas mucho mejores, pero el principio es idéntico.
+
+### Sus propiedades
+
+- **Deterministas.** Quien conoce la semilla conoce toda la secuencia.
+- **Periódicos.** El estado interno tiene un número finito de valores, así que antes o después la secuencia se repite. En los buenos generadores, ese periodo es astronómico.
+- **Rápidos.** Son unas pocas operaciones.
+
+### La semilla como ventaja
+
+Que sean reproducibles es a menudo lo que se busca.
+
+- **Depurar.** Un fallo que aparece con ciertos números se puede repetir.
+- **[Pruebas](/articulos/pruebas-de-software/).** Una prueba que usa azar da siempre el mismo resultado si se fija la semilla.
+- **Ciencia.** Otra persona puede repetir una simulación y obtener lo mismo.
+- **Juegos.** Un mundo entero generado a partir de un número corto, que se puede compartir.
+
+Cuando no se indica semilla, el sistema elige una que cambia en cada ejecución.
+
+## El problema: son predecibles
+
+Con algunos generadores, basta observar unos cuantos números de salida para deducir el estado interno y calcular todos los siguientes.
+
+Si esos números se usan para algo que debe ser secreto, el sistema está roto. La documentación de `Math.random`, la función de JavaScript, lo advierte: no proporciona números seguros desde el punto de vista criptográfico y no debe usarse para nada relacionado con la seguridad.
+
+Un token de recuperación de contraseña generado con `Math.random` se puede adivinar.
+
+## Azar de verdad: la entropía
+
+La imprevisibilidad real viene de fuera del programa. El [sistema operativo](/articulos/que-es-un-sistema-operativo/) recoge **entropía**, medida de lo impredecible, de fenómenos físicos:
+
+- Los instantes exactos en que llegan las pulsaciones de teclado, los movimientos del ratón y los paquetes de red.
+- Las variaciones de tiempo en los discos.
+- Circuitos del [procesador](/articulos/como-funciona-un-procesador/) diseñados para producir ruido eléctrico.
+
+Hay servicios que usan fuentes más llamativas, como el ruido atmosférico.
+
+Esas fuentes son lentas y no perfectamente uniformes. Por eso no se usan directamente.
+
+## Generadores criptográficamente seguros
+
+Combinan los dos mundos. El sistema operativo reúne entropía y con ella alimenta, como semilla, un generador especial: un **generador pseudoaleatorio criptográficamente seguro**.
+
+Sigue siendo una fórmula, pero diseñada para que, aunque alguien vea millones de números de salida, no pueda deducir ni los anteriores ni los siguientes. Suele construirse con [funciones hash](/articulos/funciones-hash/) o [cifrados](/articulos/cifrado-simetrico-y-asimetrico/).
+
+En JavaScript se accede con `crypto`:
+
+```js
+const bytes = crypto.getRandomValues(new Uint8Array(4));
+const identificador = crypto.randomUUID();
+
+console.log(bytes.length); // 4
+console.log(identificador.length); // 36
+```
+
+| | Pseudoaleatorio común | Criptográficamente seguro |
+| --- | --- | --- |
+| Ejemplo | `Math.random()` | `crypto.getRandomValues()` |
+| Velocidad | Muy alta | Algo menor |
+| Predecible | Sí, observando la salida | No |
+| Reproducible con semilla | Sí | No |
+| Uso | Juegos, simulaciones, pruebas | Claves, tokens, contraseñas |
+
+La regla es simple: **si un atacante ganaría algo adivinando el número, se usa el seguro**.
+
+<Quiz
+	client:visible
+	question="Hay que generar un token para restablecer una contraseña. ¿Qué generador se usa?"
+	options={[
+		"Math.random(), porque es más rápido",
+		"Uno criptográficamente seguro, como crypto.getRandomValues()",
+		"La hora actual en milisegundos",
+	]}
+	answer={1}
+/>
+
+## Errores habituales
+
+### Usar la hora como fuente
+
+La hora actual no es aleatoria: es fácil de acotar. Si un identificador se deriva del instante en que se creó, un atacante que sepa aproximadamente cuándo fue tiene pocas opciones que probar.
+
+### Introducir sesgo
+
+Convertir un número aleatorio a un rango con el resto de una división puede hacer que unos valores salgan más que otros.
+
+Si el generador da números del 0 al 9 y se quiere un valor del 0 al 2, el resto de dividir entre 3 da: 0 para 0, 3, 6 y 9; 1 para 1, 4 y 7; 2 para 2, 5 y 8. El 0 sale cuatro veces de diez, y los otros, tres. En un sorteo o en criptografía, ese desequilibrio importa.
+
+### Barajar mal
+
+Ordenar una lista con un criterio aleatorio parece que baraja, y deja unas ordenaciones más probables que otras. El algoritmo correcto recorre la lista e intercambia cada elemento con otro elegido al azar entre los que quedan.
+
+```js
+function barajar(lista, aleatorio) {
+	const copia = [...lista];
+
+	for (let i = copia.length - 1; i > 0; i--) {
+		const j = Math.floor(aleatorio() * (i + 1));
+		[copia[i], copia[j]] = [copia[j], copia[i]];
+	}
+
+	return copia;
+}
+
+const barajada = barajar([1, 2, 3, 4, 5], Math.random);
+
+console.log(barajada.length); // 5
+console.log(barajada.toSorted().join(" ")); // "1 2 3 4 5"
+```
+
+El resultado cambia en cada ejecución, pero siempre contiene los mismos cinco elementos.
+
+### Compartir semilla
+
+Dos servidores que arrancan con la misma semilla generan los mismos identificadores "únicos".
+
+## ¿Es azar si pasa las pruebas?
+
+No se puede demostrar que una secuencia sea aleatoria. Lo que hay son baterías de pruebas estadísticas que buscan patrones: si cada valor sale con la frecuencia esperada, si hay rachas demasiado largas, si un número ayuda a predecir el siguiente.
+
+Pasarlas dice que un generador se **comporta** como el azar, que es lo que necesita una simulación. No dice que sea impredecible, que es lo que necesita la seguridad. Son dos exigencias distintas.
+
+## Lo esencial
+
+- Un ordenador es determinista: el azar lo imita con una fórmula y una semilla.
+- La misma semilla da la misma secuencia, lo que es útil para depurar y probar.
+- Un generador común es predecible y no sirve para la seguridad.
+- El azar real se obtiene de fenómenos físicos, la entropía, que recoge el sistema operativo.
+- Para claves y tokens se usa siempre un generador criptográficamente seguro.

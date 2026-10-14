@@ -1,0 +1,10 @@
+title: Blockchain
+description: De las funciones hash y las firmas a un registro compartido sin administrador.
+layer: datos
+steps:
+  - funciones-hash
+  - cifrado-simetrico-y-asimetrico
+  - consenso-distribuido
+  - que-es-una-blockchain
+  - prueba-de-trabajo-y-prueba-de-participacion
+  - contratos-inteligentes

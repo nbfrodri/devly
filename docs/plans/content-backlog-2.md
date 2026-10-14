@@ -7,10 +7,10 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 ## Probabilidad y simulación
 
 - [x] El método de Monte Carlo (media, mediana y desviación típica)
-- [ ] Probabilidad básica: sucesos, independencia y probabilidad condicionada
-- [ ] Números aleatorios y pseudoaleatorios (funciones hash)
-- [ ] La distribución normal (media, mediana y desviación típica)
-- [ ] Diferencias entre correlación y causalidad
+- [x] Probabilidad básica: sucesos, independencia y probabilidad condicionada
+- [x] Números aleatorios y pseudoaleatorios (funciones hash)
+- [x] La distribución normal (media, mediana y desviación típica)
+- [x] Diferencias entre correlación y causalidad
 
 ## Nube y sistemas distribuidos
 
@@ -70,9 +70,9 @@ Entre paréntesis, el artículo ya publicado del que parte cada uno.
 
 ## Blockchain
 
-- [ ] ¿Qué es una blockchain? (funciones hash, cifrado asimétrico)
-- [ ] Prueba de trabajo y prueba de participación (consenso distribuido)
-- [ ] ¿Qué es un contrato inteligente?
+- [x] ¿Qué es una blockchain? (funciones hash, cifrado asimétrico)
+- [x] Prueba de trabajo y prueba de participación (consenso distribuido)
+- [x] ¿Qué es un contrato inteligente?
 
 ## Inteligencia artificial
 

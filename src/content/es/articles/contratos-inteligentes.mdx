@@ -1,0 +1,158 @@
+---
+title: "¿Qué es un contrato inteligente?"
+description: "Un contrato inteligente es un programa guardado en una blockchain que se ejecuta tal como está escrito, sin que nadie pueda detenerlo ni cambiarlo."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-una-blockchain
+  - funciones
+updated: 2026-10-13
+sources:
+  - title: "Ethereum: Introducción a los contratos inteligentes"
+    url: https://ethereum.org/es/developers/docs/smart-contracts/
+  - title: "Ethereum: Seguridad de los contratos inteligentes"
+    url: https://ethereum.org/es/developers/docs/smart-contracts/security/
+  - title: "Ethereum: Gas y comisiones"
+    url: https://ethereum.org/es/developers/docs/gas/
+  - title: "Solidity: Introduction to Smart Contracts (en inglés)"
+    url: https://docs.soliditylang.org/en/latest/introduction-to-smart-contracts.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **contrato inteligente** es un programa almacenado en una [blockchain](/articulos/que-es-una-blockchain/). Todos los nodos de la red lo ejecutan y comprueban el resultado, de modo que hace exactamente lo que dice su código, sin que nadie, ni siquiera quien lo escribió, pueda alterarlo o impedirlo.
+
+El nombre engaña en sus dos palabras: no es un contrato en sentido legal, y no tiene nada de inteligente. Es un programa que se ejecuta de forma automática y verificable.
+
+## La idea
+
+Una máquina expendedora es un buen modelo. Introduces el dinero, eliges el producto y la máquina lo entrega. No hay dependiente ni negociación: las reglas están en el mecanismo.
+
+Un contrato inteligente aplica eso a acuerdos con dinero digital. "Si para tal fecha se han reunido 100 monedas, se entregan al creador del proyecto; si no, se devuelven a cada aportante." Nadie custodia los fondos ni decide: lo hace el código.
+
+```js
+function crearRecaudacion(objetivo) {
+	const aportes = new Map();
+	let total = 0;
+
+	return {
+		aportar(quien, cantidad) {
+			aportes.set(quien, (aportes.get(quien) ?? 0) + cantidad);
+			total = total + cantidad;
+		},
+		total: () => total,
+		cerrar: () =>
+			total >= objetivo ? "fondos al creador" : "devolución a los aportantes",
+	};
+}
+
+const recaudacion = crearRecaudacion(100);
+recaudacion.aportar("ana", 60);
+recaudacion.aportar("luis", 30);
+
+console.log(recaudacion.total()); // 90
+console.log(recaudacion.cerrar()); // "devolución a los aportantes"
+```
+
+La lógica es corriente. Lo distinto es dónde se ejecuta: en un servidor, habría que fiarse de quien lo administra. En una blockchain, cualquiera puede leer el código y comprobar que eso, y nada más, es lo que ocurrirá.
+
+## Cómo funcionan
+
+La plataforma más conocida es Ethereum. Allí:
+
+- Un contrato tiene **código** y **estado**: sus variables, guardadas en la cadena.
+- Tiene una **dirección**, como una cuenta, y puede recibir y enviar fondos.
+- Se ejecuta cuando alguien le envía una **transacción** que llama a una de sus funciones.
+- **Todos los nodos** ejecutan esa llamada y deben llegar al mismo resultado.
+
+Se escriben en lenguajes propios. El más usado es Solidity:
+
+```solidity
+contract Contador {
+    uint256 public cuenta;
+
+    function incrementar() public {
+        cuenta += 1;
+    }
+}
+```
+
+### Determinismo
+
+Para que miles de nodos obtengan el mismo resultado, el código debe ser **determinista**. No puede consultar la hora del sistema, generar [números aleatorios](/articulos/numeros-aleatorios-y-pseudoaleatorios/) corrientes ni llamar a una [API](/articulos/que-es-una-api/) externa: cada nodo obtendría algo distinto.
+
+### Gas
+
+Si cualquiera pudiera ejecutar código gratis en todos los nodos, bastaría un bucle infinito para paralizar la red.
+
+Por eso cada operación tiene un precio, medido en **gas**. Quien envía la transacción paga por el cómputo que consume, y fija un máximo. Si se agota, la ejecución se detiene, los cambios se deshacen y lo gastado no se devuelve.
+
+Es una solución práctica al [problema de la parada](/articulos/maquina-de-turing/): como no se puede saber de antemano si un programa terminará, se le limita el presupuesto.
+
+Tiene una consecuencia para quien programa: cada operación, y sobre todo cada dato guardado, cuesta dinero al usuario. Se escribe con una austeridad que no existe en el software corriente.
+
+## Sus propiedades
+
+- **Inmutable.** Una vez desplegado, el código no se puede modificar.
+- **Transparente.** El código y todas sus ejecuciones son públicos.
+- **Sin intermediario.** Nadie puede detenerlo, censurarlo o saltárselo.
+- **Atómico.** Una transacción se completa entera o no deja rastro, como en una [transacción de base de datos](/articulos/transacciones-y-acid/).
+
+## Para qué se usan
+
+- **Tokens.** Monedas y activos digitales definidos por un contrato que lleva la cuenta de quién tiene cuánto.
+- **Finanzas descentralizadas.** Préstamos e intercambios gestionados por código, sin banco.
+- **Propiedad digital.** Registros de quién posee un objeto único.
+- **Organizaciones.** Fondos comunes cuyo uso se decide por votación de los miembros, ejecutada por un contrato.
+
+<Quiz
+	client:visible
+	question="Se descubre un error en un contrato inteligente ya desplegado. ¿Qué se puede hacer?"
+	options={[
+		"Editar el código, como en cualquier aplicación",
+		"Nada sobre ese código: es inmutable; como mucho, desplegar otro contrato",
+		"Pedir a la red que lo borre",
+	]}
+	answer={1}
+/>
+
+## El código es la ley, con sus errores
+
+La inmutabilidad es la virtud y el mayor riesgo. En el software normal, un error se corrige y se despliega. Aquí el código defectuoso sigue en marcha, controlando fondos reales, a la vista de todo el mundo, incluidos quienes buscan cómo explotarlo.
+
+El caso más conocido ocurrió en 2016. Un contrato llamado The DAO, que reunía fondos de miles de personas, tenía un fallo: enviaba el dinero **antes** de anotar que lo había enviado. Un atacante hizo que, al recibir el pago, su propio contrato volviera a llamar a la función de retirada, una y otra vez, antes de que el saldo se actualizara. Se llevó decenas de millones de dólares.
+
+Ese tipo de fallo se llama **reentrada**. Es pariente de las [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/): el estado se comprueba en un momento y se modifica en otro, y entre medias ocurre algo.
+
+El contrato hizo lo que decía su código. No lo que querían sus autores.
+
+Por eso el desarrollo de contratos es distinto:
+
+- **Auditorías** externas antes de desplegar.
+- **Pruebas exhaustivas** y verificación formal, que demuestra matemáticamente ciertas propiedades.
+- **Código mínimo.** Cada línea es superficie de ataque.
+- **Bibliotecas ya auditadas**, en lugar de escribir lo propio.
+- **Mecanismos de pausa o de actualización**, que permiten corregir. Tienen un coste: devuelven a alguien el poder de cambiar las reglas, que es lo que se pretendía evitar.
+
+## El problema de los datos externos
+
+Un contrato solo ve lo que hay en la cadena. No sabe cuánto vale el euro, qué tiempo hace ni quién ganó un partido.
+
+Para traer esos datos se usan **oráculos**: servicios que los publican en la cadena. Y con ellos vuelve la confianza: el contrato es tan fiable como su oráculo. Un contrato perfecto con un dato falso ejecuta fielmente un resultado erróneo.
+
+Muchos ataques no explotan el contrato, sino que manipulan la fuente de datos de la que depende.
+
+## Lo que no son
+
+- **No son contratos legales.** Que un programa transfiera fondos no significa que la ley lo reconozca como acuerdo, ni que no se pueda reclamar ante un juez.
+- **No interpretan intenciones.** Un contrato legal admite matices, buena fe, circunstancias imprevistas. El código, no.
+- **No eliminan la confianza.** La desplazan: hacia quien escribió el código, quien lo auditó, quien gestiona el oráculo y quien tiene las claves de actualización.
+- **No son privados.** Todo lo que guardan es público.
+
+## Lo esencial
+
+- Un contrato inteligente es un programa guardado y ejecutado en una blockchain.
+- Hace lo que dice su código, sin que nadie pueda impedirlo ni alterarlo.
+- Cada operación cuesta gas, lo que limita el cómputo y evita abusos.
+- Al ser inmutable, un error no se puede corregir, y ha costado fortunas.
+- Para datos de fuera depende de oráculos, que reintroducen la necesidad de confiar.

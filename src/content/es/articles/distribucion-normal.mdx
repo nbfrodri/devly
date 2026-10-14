@@ -1,0 +1,166 @@
+---
+title: "¿Qué es la distribución normal?"
+description: "La distribución normal es la forma de campana que adoptan muchos datos: la mayoría cerca de la media y cada vez menos al alejarse."
+level: intermedio
+layer: datos
+prerequisites:
+  - media-mediana-y-desviacion
+  - probabilidad-basica
+updated: 2026-10-13
+sources:
+  - title: "OpenStax: Introducción a la estadística, cap. 6, La distribución normal"
+    url: https://openstax.org/books/introducci%C3%B3n-estad%C3%ADstica/pages/6-introduccion
+  - title: "OpenStax: Introducción a la estadística, 6.1 La distribución normal estándar"
+    url: https://openstax.org/books/introducci%C3%B3n-estad%C3%ADstica/pages/6-1-la-distribucion-normal-estandar
+  - title: "OpenStax: Introducción a la estadística, cap. 7, El teorema del límite central"
+    url: https://openstax.org/books/introducci%C3%B3n-estad%C3%ADstica/pages/7-introduccion
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **distribución normal** es un patrón que siguen muchos conjuntos de datos: la mayoría de los valores se agrupan cerca de la media, y cada vez hay menos a medida que uno se aleja de ella, por igual hacia los dos lados. Dibujada, tiene forma de campana, y por eso se la llama **campana de Gauss**.
+
+## Qué es una distribución
+
+Una **distribución** describe cómo se reparten los valores de un dato: cuáles son frecuentes y cuáles raros.
+
+Si se mide la estatura de mil adultos y se cuenta cuántos hay en cada tramo, salen muchos alrededor de la media, bastantes algo más altos o más bajos, y muy pocos extremos. Eso es una campana.
+
+## Sus propiedades
+
+- **Simétrica.** La mitad izquierda es el reflejo de la derecha.
+- **Un solo pico**, en el centro.
+- **Media, mediana y moda coinciden.**
+- **Las colas no acaban**: se acercan a cero sin llegar. Los valores extremos son posibles, solo muy improbables.
+
+Queda definida por dos números, los del artículo sobre [media, mediana y desviación típica](/articulos/media-mediana-y-desviacion/):
+
+| Parámetro | Qué determina |
+| --- | --- |
+| Media | Dónde está el centro de la campana |
+| Desviación típica | Cómo de ancha es |
+
+Con poca desviación, la campana es alta y estrecha: los datos se parecen mucho entre sí. Con mucha, es baja y ancha.
+
+## La regla 68-95-99,7
+
+En cualquier distribución normal, los datos se reparten así:
+
+| Distancia a la media | Proporción de los datos |
+| --- | --- |
+| Hasta 1 desviación típica | 68 % |
+| Hasta 2 | 95 % |
+| Hasta 3 | 99,7 % |
+
+Si la estatura media es de 170 cm con una desviación de 10 cm, el 68 % de las personas mide entre 160 y 180, y el 95 %, entre 150 y 190.
+
+Esta regla da una medida de lo raro que es un valor. Algo a más de 3 desviaciones de la media aparece unas 3 veces de cada mil.
+
+## Puntuación típica
+
+Para saber cómo de inusual es un valor se calcula a cuántas desviaciones típicas está de la media. Es su **puntuación típica**, o puntuación z.
+
+```js
+const puntuacionZ = (valor, media, desviacion) => (valor - media) / desviacion;
+
+console.log(puntuacionZ(190, 170, 10)); // 2
+console.log(puntuacionZ(165, 170, 10)); // -0.5
+console.log(puntuacionZ(170, 170, 10)); // 0
+```
+
+Quien mide 190 está 2 desviaciones por encima: más alto que el 97,5 % de la gente, aproximadamente.
+
+La utilidad es que permite comparar cosas con unidades distintas. ¿Qué es más excepcional, una nota de 8 en un examen de media 6 y desviación 1, o un 85 en otro de media 70 y desviación 10? El primero está 2 desviaciones por encima; el segundo, 1,5.
+
+## Por qué aparece tanto
+
+No es casualidad. Lo explica el **teorema del límite central**: cuando un valor es el resultado de **sumar muchos efectos pequeños e independientes**, su distribución se acerca a la normal, sea cual sea la distribución de cada efecto.
+
+Un dado no sigue una campana: sus seis caras son igual de probables. Pero la suma de varios dados, sí.
+
+```js
+function sumas(dados) {
+	let cuentas = { 0: 1 };
+
+	for (let d = 0; d < dados; d++) {
+		const siguientes = {};
+
+		for (const [suma, veces] of Object.entries(cuentas)) {
+			for (let cara = 1; cara <= 6; cara++) {
+				const total = Number(suma) + cara;
+				siguientes[total] = (siguientes[total] ?? 0) + veces;
+			}
+		}
+
+		cuentas = siguientes;
+	}
+
+	return Object.values(cuentas);
+}
+
+console.log(sumas(1).join(" ")); // "1 1 1 1 1 1"
+console.log(sumas(2).join(" ")); // "1 2 3 4 5 6 5 4 3 2 1"
+console.log(sumas(3).join(" ")); // "1 3 6 10 15 21 25 27 27 25 21 15 10 6 3 1"
+```
+
+Cada línea cuenta de cuántas formas se obtiene cada suma. Con un dado, todas iguales: plano. Con dos, un triángulo. Con tres, ya se ve la campana: muchas formas de sacar los valores centrales, y pocas de sacar los extremos.
+
+La estatura depende de muchos genes y de factores del entorno, cada uno con un efecto pequeño. Un error de medida es la suma de muchas pequeñas perturbaciones. Por eso tantas magnitudes resultan normales.
+
+### La consecuencia más útil
+
+El teorema dice además que **la media de una muestra** sigue aproximadamente una normal, aunque los datos originales no lo hagan, si la muestra es suficientemente grande.
+
+Es lo que permite sacar conclusiones de una parte: las encuestas, los márgenes de error, decidir en una prueba A/B si la versión nueva es de verdad mejor.
+
+<Quiz
+	client:visible
+	question="En una distribución normal, ¿qué proporción de los datos queda a menos de 2 desviaciones típicas de la media?"
+	options={["El 68 %", "El 95 %", "El 50 %"]}
+	answer={1}
+/>
+
+## No todo es normal
+
+Suponer que unos datos son normales cuando no lo son es un error frecuente, con consecuencias serias.
+
+| Datos | Por qué no son normales |
+| --- | --- |
+| Ingresos, patrimonio | Unos pocos valores enormes: cola larga a la derecha |
+| Tiempos de respuesta de un servidor | No pueden ser negativos, y hay peticiones lentísimas |
+| Visitas por página, seguidores por cuenta | Unos pocos concentran casi todo |
+| Tamaño de archivos | Muchos pequeños y algunos gigantes |
+
+Son distribuciones **asimétricas** o **de cola larga**. En ellas:
+
+- **La media engaña.** La arrastran los valores extremos. Se usa la mediana.
+- **La regla 68-95-99,7 no vale.**
+- **Los extremos son mucho más frecuentes** de lo que predice una campana.
+
+Lo último es lo peligroso. Un modelo que supone normalidad dirá que cierto suceso extremo ocurre una vez en miles de años, y en datos de cola larga ocurre cada década. Parte de las crisis financieras se han atribuido a ese error.
+
+En la práctica, los tiempos de respuesta se describen con percentiles y no con media y desviación, como explica el artículo sobre [observabilidad](/articulos/observabilidad/).
+
+Los fenómenos que surgen de **multiplicar** efectos, o donde el éxito atrae más éxito, no dan campanas.
+
+## Mirar antes de suponer
+
+La comprobación más sencilla es dibujar un **histograma**: el recuento de datos por tramos. Si no parece una campana simétrica, no es normal.
+
+Señales rápidas: la media y la mediana difieren mucho; los datos no pueden bajar de cero y están cerca de él; hay valores a muchas desviaciones de la media.
+
+## En informática
+
+- **Detección de anomalías.** Marcar como sospechoso lo que se aleja más de 3 desviaciones de lo habitual.
+- **Aprendizaje automático.** Los pesos iniciales de una [red neuronal](/articulos/que-es-una-red-neuronal/) suelen tomarse de una normal, y muchos modelos suponen errores normales.
+- **Pruebas A/B.**
+- **Simulación.** Generar datos realistas para un [método de Monte Carlo](/articulos/metodo-de-monte-carlo/).
+- **Ruido.** El de una señal o una imagen se modela a menudo como normal.
+
+## Lo esencial
+
+- La distribución normal tiene forma de campana, simétrica alrededor de la media.
+- Queda definida por la media y la desviación típica.
+- El 68 %, el 95 % y el 99,7 % de los datos están a 1, 2 y 3 desviaciones de la media.
+- Aparece cuando un valor es la suma de muchos efectos pequeños e independientes.
+- Muchos datos reales no son normales, y tratarlos como tales lleva a subestimar los extremos.

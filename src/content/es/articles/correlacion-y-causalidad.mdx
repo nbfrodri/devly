@@ -1,0 +1,171 @@
+---
+title: "Diferencias entre correlación y causalidad"
+description: "Que dos cosas varíen juntas no significa que una cause la otra. Distinguirlo es la base de leer bien cualquier dato."
+level: basico
+kind: comparacion
+layer: datos
+prerequisites:
+  - media-mediana-y-desviacion
+  - probabilidad-basica
+updated: 2026-10-13
+sources:
+  - title: "OpenStax: Introducción a la estadística, cap. 12, Regresión lineal y correlación"
+    url: https://openstax.org/books/introducci%C3%B3n-estad%C3%ADstica/pages/12-introduccion
+  - title: "Tyler Vigen: Spurious Correlations (en inglés)"
+    url: https://www.tylervigen.com/spurious-correlations
+---
+
+import { Quiz } from "@/components/quiz";
+
+Dos variables tienen **correlación** cuando tienden a cambiar a la vez: si una sube, la otra suele subir, o suele bajar. Hay **causalidad** cuando el cambio de una **produce** el cambio de la otra. Lo primero se observa en los datos. Lo segundo es una afirmación mucho más fuerte, y los datos por sí solos rara vez la demuestran.
+
+La frase que lo resume: **correlación no implica causalidad**.
+
+## Correlación
+
+Se mide con el **coeficiente de correlación**, un número entre −1 y 1.
+
+| Valor | Significado |
+| --- | --- |
+| Cerca de 1 | Cuando una sube, la otra sube |
+| Cerca de −1 | Cuando una sube, la otra baja |
+| Cerca de 0 | No hay relación lineal |
+
+```js
+function correlacion(x, y) {
+	const media = (v) => v.reduce((a, b) => a + b, 0) / v.length;
+	const mediaX = media(x);
+	const mediaY = media(y);
+
+	let conjunta = 0;
+	let variacionX = 0;
+	let variacionY = 0;
+
+	for (let i = 0; i < x.length; i++) {
+		conjunta += (x[i] - mediaX) * (y[i] - mediaY);
+		variacionX += (x[i] - mediaX) ** 2;
+		variacionY += (y[i] - mediaY) ** 2;
+	}
+
+	return conjunta / Math.sqrt(variacionX * variacionY);
+}
+
+const helados = [40, 50, 60, 70];
+const ahogamientos = [2, 3, 4, 5];
+
+console.log(correlacion(helados, ahogamientos).toFixed(2)); // "1.00"
+console.log(correlacion([1, 2, 3, 4], [8, 6, 4, 2]).toFixed(2)); // "-1.00"
+console.log(correlacion([-2, -1, 0, 1, 2], [4, 1, 0, 1, 4]).toFixed(2)); // "0.00"
+```
+
+En el primer caso, los meses con más ventas de helados tienen más ahogamientos. La correlación es perfecta.
+
+El tercero enseña un límite: la segunda lista es el cuadrado de la primera. Están completamente relacionadas, y el coeficiente da 0, porque solo detecta relaciones **en línea recta**. Una correlación nula no significa que no haya relación.
+
+## Por qué no basta
+
+¿Los helados provocan ahogamientos? No. Cuando hace calor, se venden más helados y más gente se baña.
+
+Cuando A y B están correlacionadas, hay varias explicaciones posibles, y solo una es "A causa B".
+
+### Una tercera variable
+
+Algo causa las dos. Es el caso de los helados: el calor. Esa variable oculta se llama **factor de confusión**.
+
+Otro ejemplo: los niños con pies más grandes leen mejor. No es que el pie ayude a leer. Los niños mayores tienen los pies más grandes y más años de escuela. La edad lo explica todo.
+
+### La causa va al revés
+
+B causa A. Las ciudades con más policías tienen más delitos. No porque la policía los cause: donde hay más delincuencia se destinan más agentes.
+
+### Casualidad
+
+Si se comparan suficientes series de datos, algunas coincidirán por puro azar. Hay colecciones enteras de ejemplos absurdos: series sin ninguna relación posible, cuyas gráficas suben y bajan casi a la vez durante años.
+
+Quien busca entre miles de variables acaba encontrando correlaciones. No significan nada.
+
+### Los datos están filtrados
+
+La forma de reunir los datos crea la relación. Se llama **sesgo de selección**.
+
+El caso más conocido es de la Segunda Guerra Mundial. Se estudiaban los impactos en los aviones que regresaban, para reforzar las zonas más dañadas. El estadístico Abraham Wald señaló el error: esos eran los aviones que **habían vuelto**. Los impactos en esas zonas no los derribaban. Había que reforzar las zonas donde no había marcas, porque los aviones alcanzados ahí no regresaban.
+
+Estudiar solo a quienes sobreviven a un filtro, las empresas que triunfaron, los usuarios que siguen activos, lleva a conclusiones equivocadas.
+
+### Y a veces, sí
+
+A causa B. Fumar causa cáncer de pulmón. Pero establecerlo llevó décadas y muchos tipos de pruebas, no una gráfica.
+
+<Quiz
+	client:visible
+	question="Las ventas de helados y los ahogamientos aumentan a la vez. ¿Cuál es la explicación más razonable?"
+	options={[
+		"Comer helado hace que la gente se ahogue",
+		"Un tercer factor, el calor, aumenta las dos cosas",
+		"Los ahogamientos aumentan las ventas de helados",
+	]}
+	answer={1}
+/>
+
+## Cómo se establece una causa
+
+### El experimento
+
+La herramienta más sólida es el **experimento controlado aleatorizado**:
+
+1. Se divide a los participantes en dos grupos **al azar**.
+2. A uno se le aplica el cambio; al otro, no. Este es el **grupo de control**.
+3. Se comparan los resultados.
+
+La clave es el azar. Al repartir así, los dos grupos son parecidos en todo, edad, hábitos, lo que sea, incluido lo que nadie ha pensado en medir. Si después difieren, la única diferencia sistemática entre ellos es el cambio.
+
+El experimento no **observa** quién usa algo: **decide** quién lo usa. Eso elimina las terceras variables y la causa invertida.
+
+En el desarrollo de productos se llama **prueba A/B**: la mitad de los usuarios, elegidos al azar, ve la versión nueva, y se compara. Se combina con las [estrategias de despliegue](/articulos/estrategias-de-despliegue/) que exponen una versión a una parte de los usuarios.
+
+### Cuando no se puede experimentar
+
+No siempre es posible, ni ético: no se puede obligar a nadie a fumar. Entonces se acumulan indicios:
+
+- **Orden temporal.** La causa va antes que el efecto.
+- **Relación con la dosis.** A más exposición, más efecto.
+- **Un mecanismo plausible.** Se entiende cómo una cosa produce la otra.
+- **Repetición.** Aparece en estudios distintos, con poblaciones distintas.
+- **Descartar alternativas.** Se comparan grupos parecidos en lo demás.
+
+Ninguno prueba nada por sí solo. Juntos pueden convencer.
+
+## En el trabajo con datos
+
+- **"Los usuarios que usan esta función se quedan más."** Puede que la función retenga. O que los usuarios más comprometidos, que se habrían quedado igual, sean quienes la descubren. Obligar a todos a usarla no cambiaría nada. Solo un experimento lo aclara.
+- **"Desde el despliegue, las ventas han subido."** También empezó la campaña de Navidad.
+- **"Los equipos que hacen más pruebas tienen menos fallos."** Quizá los equipos más cuidadosos hacen las dos cosas.
+
+Con los modelos de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) pasa lo mismo, a escala. Un modelo aprende correlaciones, no causas. Si en los datos de entrenamiento las fotos de lobos tenían nieve de fondo, puede aprender a reconocer la nieve. Funciona con esos datos y falla en cuanto cambia el contexto.
+
+Por eso un modelo que **predice** bien no dice qué pasará si se **interviene**. Saber que quienes compran pañales compran cerveza no dice que regalar pañales aumente la venta de cerveza.
+
+## La correlación sigue siendo útil
+
+No hay que despreciarla.
+
+- **Para predecir, basta.** Si el aumento de consultas sobre síntomas anticipa un brote de gripe, sirve para prepararse, aunque las consultas no causen la gripe.
+- **Es una pista.** Señala dónde merece la pena investigar.
+
+El error no es usar correlaciones. Es **actuar como si fueran causas**: cambiar una cosa esperando que la otra la siga.
+
+## Preguntas ante un dato
+
+1. ¿Puede haber algo que cause las dos cosas?
+2. ¿Puede ser al revés?
+3. ¿Cómo se eligieron los datos? ¿Quién falta?
+4. ¿Cuántas comparaciones se hicieron hasta encontrar esta?
+5. ¿Es un experimento o una observación?
+
+## Lo esencial
+
+- Correlación es que dos variables cambian juntas; causalidad, que una produce el cambio de la otra.
+- Una correlación puede deberse a un tercer factor, a la causa inversa, al azar o a cómo se eligieron los datos.
+- El coeficiente de correlación solo mide relaciones lineales.
+- La forma más fiable de establecer una causa es un experimento con reparto al azar.
+- La correlación sirve para predecir, y no para saber qué pasará si se cambia algo.

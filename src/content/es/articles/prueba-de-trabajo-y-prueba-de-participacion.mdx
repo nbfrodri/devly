@@ -1,0 +1,167 @@
+---
+title: "Diferencias entre prueba de trabajo y prueba de participación"
+description: "Los dos mecanismos con los que una blockchain decide quién añade el siguiente bloque: gastar energía en cálculos o arriesgar dinero propio."
+level: avanzado
+kind: comparacion
+layer: datos
+prerequisites:
+  - que-es-una-blockchain
+  - consenso-distribuido
+  - funciones-hash
+updated: 2026-10-13
+sources:
+  - title: "Ethereum: Prueba de trabajo (PoW)"
+    url: https://ethereum.org/es/developers/docs/consensus-mechanisms/pow/
+  - title: "Ethereum: Prueba de participación (PoS)"
+    url: https://ethereum.org/es/developers/docs/consensus-mechanisms/pos/
+  - title: "Satoshi Nakamoto: Bitcoin, un sistema de dinero en efectivo electrónico peer-to-peer (2008)"
+    url: https://bitcoin.org/es/bitcoin-documento
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **prueba de trabajo** y la **prueba de participación** son los dos mecanismos principales con los que una [blockchain](/articulos/que-es-una-blockchain/) pública decide quién añade el siguiente bloque. En la primera, el derecho se gana gastando energía en cálculos. En la segunda, inmovilizando dinero propio como garantía.
+
+En inglés, *proof of work* y *proof of stake*, abreviadas PoW y PoS.
+
+## El problema que comparten
+
+En una red abierta, cualquiera puede participar sin identificarse. Si el acuerdo se decidiera por votación, un atacante crearía un millón de identidades falsas y ganaría siempre. Se llama **ataque Sybil**.
+
+Los algoritmos de [consenso](/articulos/consenso-distribuido/) clásicos, basados en mayorías de máquinas conocidas, no sirven aquí: crear una identidad es gratis.
+
+La solución de ambos mecanismos es la misma idea: que el poder de decisión dependa de **algo escaso, que no se pueda falsificar**. No se vota con identidades, sino con recursos.
+
+- En prueba de trabajo, el recurso es **capacidad de cálculo**.
+- En prueba de participación, es **dinero** de la propia red.
+
+## Prueba de trabajo
+
+Es el mecanismo original de Bitcoin.
+
+### El acertijo
+
+Para añadir un bloque hay que encontrar un número, el **nonce**, tal que el [hash](/articulos/funciones-hash/) del bloque junto con ese número empiece por cierta cantidad de ceros.
+
+Una función hash es impredecible: no hay forma de calcular el número adecuado. Solo se puede probar uno, y otro, y otro.
+
+```js
+import { createHash } from "node:crypto";
+
+const hash = (texto) => createHash("sha256").update(texto).digest("hex");
+
+function minar(datos, ceros) {
+	const objetivo = "0".repeat(ceros);
+	let nonce = 0;
+
+	while (!hash(datos + nonce).startsWith(objetivo)) {
+		nonce = nonce + 1;
+	}
+
+	return nonce;
+}
+
+const nonce = minar("bloque 1", 3);
+
+console.log(hash(`bloque 1${nonce}`).startsWith("000")); // true
+console.log(nonce > 0); // true
+```
+
+Encontrar el número exige miles de intentos. **Comprobar** que es correcto, uno solo. Esa asimetría es la clave: el trabajo es difícil de hacer y trivial de verificar.
+
+A quienes hacen esos cálculos se les llama **mineros**. El primero que encuentra un número válido publica el bloque y recibe una recompensa, en monedas nuevas y en las comisiones de las transacciones.
+
+### La dificultad
+
+Cada cero adicional multiplica el trabajo. La red ajusta la **dificultad** para que, sume la potencia que sume, aparezca un bloque cada cierto tiempo: unos diez minutos en Bitcoin. Si entran más mineros, el acertijo se endurece.
+
+### Por qué da seguridad
+
+La cadena válida es la que acumula más trabajo. Para reescribir un bloque antiguo, un atacante tendría que rehacer su cálculo y el de todos los posteriores, y hacerlo más deprisa que el resto de la red junta, que sigue avanzando.
+
+Necesitaría más de la mitad de la potencia total. Eso significa máquinas especializadas y electricidad por un valor enorme, gastadas de verdad.
+
+### Su coste
+
+El gasto de energía no es un defecto accidental: es lo que da la seguridad. Y es inmenso. La red de Bitcoin consume tanta electricidad como un país de tamaño medio.
+
+Además, la minería ha acabado concentrada en quienes tienen máquinas especializadas y electricidad barata, que se agrupan en grandes consorcios.
+
+## Prueba de participación
+
+Sustituye el gasto de energía por un depósito.
+
+### Cómo funciona
+
+1. Quien quiere validar bloques **inmoviliza** una cantidad de monedas de la red como garantía. Pasa a ser un **validador**.
+2. En cada turno, el protocolo elige al azar a un validador para proponer el bloque. Cuanto mayor es el depósito, más probable es salir elegido.
+3. Otros validadores comprueban el bloque y **dan fe** de él.
+4. Quienes participan correctamente reciben una recompensa.
+
+No hay acertijo. Proponer un bloque no cuesta apenas cálculo.
+
+### El castigo
+
+¿Qué impide a un validador hacer trampa, si no le cuesta nada intentarlo?
+
+Su depósito. Si firma dos bloques contradictorios o da fe de algo inválido, el protocolo lo detecta y **destruye parte o todo su depósito**. Se llama *slashing*, recorte.
+
+En prueba de trabajo, atacar cuesta electricidad. En prueba de participación, atacar cuesta el dinero inmovilizado, que se pierde.
+
+### Finalidad
+
+Cuando una mayoría amplia de validadores, medida por depósito, ha dado fe de un bloque, este queda **finalizado**: revertirlo exigiría que una parte enorme de los validadores perdiera sus fondos. En prueba de trabajo no hay un momento así; la certeza solo crece con cada bloque posterior.
+
+### El caso de Ethereum
+
+Ethereum funcionó con prueba de trabajo hasta septiembre de 2022, cuando pasó a prueba de participación. Según sus desarrolladores, el cambio redujo su consumo de energía en más de un 99,9 %.
+
+<Quiz
+	client:visible
+	question="En prueba de participación, ¿qué desincentiva que un validador haga trampa?"
+	options={[
+		"El gasto de electricidad",
+		"La pérdida del depósito que ha inmovilizado",
+		"Que su identidad es pública",
+	]}
+	answer={1}
+/>
+
+## Comparación
+
+| | Prueba de trabajo | Prueba de participación |
+| --- | --- | --- |
+| Recurso escaso | Capacidad de cálculo | Monedas inmovilizadas |
+| Quién propone | Quien resuelve antes el acertijo | Un validador elegido al azar |
+| Coste de atacar | Máquinas y electricidad | El depósito, que se destruye |
+| Consumo de energía | Enorme | Bajo |
+| Equipo necesario | Especializado | Un ordenador corriente |
+| Finalidad | Probabilística | Explícita |
+| Trayectoria | Desde 2009 | Más reciente, más compleja |
+
+## Críticas a cada una
+
+**A la prueba de trabajo:** el consumo de energía, los residuos de las máquinas que quedan obsoletas y la concentración de la minería.
+
+**A la prueba de participación:**
+
+- **Favorece a quien ya tiene.** Más depósito da más recompensas, que se pueden volver a depositar.
+- **Concentración.** Mucha gente delega en grandes servicios, que acaban controlando una parte considerable.
+- **Complejidad.** Las reglas son más intrincadas, y hay más donde equivocarse.
+- **La seguridad es interna.** Depende del valor de la propia moneda. Si se hunde, atacar es más barato.
+
+Ninguna elimina la concentración de poder. La trasladan: de quien tiene electricidad barata a quien tiene capital.
+
+## Lo que tienen en común
+
+Las dos aceptan un límite que ningún sistema así puede evitar: quien controle la mayoría del recurso puede atacar la red. Lo que garantizan es que conseguir esa mayoría sea tan caro que no compense.
+
+Y las dos son deliberadamente ineficientes comparadas con una base de datos. Un sistema entre partes que se fían unas de otras no necesita ninguna.
+
+## Lo esencial
+
+- Ambos mecanismos deciden quién añade bloques en una red donde cualquiera participa.
+- Hacen depender el poder de un recurso escaso, para que las identidades falsas no sirvan.
+- En prueba de trabajo se compite resolviendo un acertijo que gasta energía.
+- En prueba de participación se deposita dinero, que se pierde si se hace trampa.
+- La segunda consume mucha menos energía, a cambio de más complejidad.
