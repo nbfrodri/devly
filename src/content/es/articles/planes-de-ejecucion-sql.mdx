@@ -1,0 +1,103 @@
+---
+title: "¿Cómo se lee un plan de ejecución SQL?"
+description: "Un plan muestra qué recorridos, índices, combinaciones y ordenaciones utilizará el motor para resolver una consulta."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-sql
+  - indices-de-bases-de-datos
+updated: 2026-10-14
+sources:
+  - title: "SQLite: EXPLAIN QUERY PLAN (en inglés)"
+    url: https://www.sqlite.org/eqp.html
+  - title: "SQLite: Query Planning (en inglés)"
+    url: https://www.sqlite.org/queryplanner.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **plan de ejecución** describe las operaciones que un motor de base de datos elige para resolver una consulta: qué tablas recorre, qué índices utiliza, cómo combina filas y si necesita ordenarlas aparte.
+
+## Por qué necesitas verlo
+
+SQL describe el resultado, no un algoritmo detallado. Dos consultas que parecen parecidas pueden provocar trabajos muy distintos. Antes de añadir índices o reescribir una sentencia, necesitas comprobar qué está haciendo realmente el motor.
+
+El **optimizador** elige entre alternativas utilizando la estructura de la consulta, los índices disponibles y las estadísticas que tenga sobre los datos. El plan permite revisar esa elección. No debes deducirla solo leyendo el orden de las cláusulas SQL.
+
+## Un ejemplo reproducible
+
+Ejecuta estos bloques en orden en SQLite:
+
+```sql
+CREATE TABLE pedidos (
+	id INTEGER PRIMARY KEY,
+	cliente_id INTEGER NOT NULL,
+	total INTEGER NOT NULL
+);
+
+INSERT INTO pedidos VALUES
+	(1, 7, 20), (2, 7, 50), (3, 9, 10), (4, 8, 40);
+
+EXPLAIN QUERY PLAN
+SELECT id, total FROM pedidos
+WHERE cliente_id = 7
+ORDER BY total;
+```
+
+La consulta normal devolvería los pedidos 1 y 2, con totales 20 y 50. `EXPLAIN QUERY PLAN` devuelve la descripción del trabajo previsto en lugar de esas filas.
+
+Sin un índice apropiado, aparecen un `SCAN pedidos`, que recorre la tabla, y un `USE TEMP B-TREE FOR ORDER BY`, que indica una estructura temporal para ordenar. La presentación exacta depende de la versión de SQLite: interpreta las operaciones, no copies su formato como si fuera una interfaz estable para programas.
+
+## Buscar en lugar de recorrer
+
+```sql
+CREATE INDEX idx_pedidos_cliente_total
+ON pedidos (cliente_id, total);
+
+EXPLAIN QUERY PLAN
+SELECT id, total FROM pedidos
+WHERE cliente_id = 7
+ORDER BY total;
+```
+
+Ahora el motor puede usar `SEARCH pedidos USING COVERING INDEX idx_pedidos_cliente_total (cliente_id=?)`.
+
+**SEARCH** indica que accede a un subconjunto usando una condición. **COVERING INDEX**, o índice de cobertura, significa que el índice contiene lo necesario para responder sin consultar después las filas de la tabla. En este ejemplo, el identificador entero primario también está disponible a través del índice de SQLite.
+
+El orden `(cliente_id, total)` agrupa los pedidos de cada cliente y, dentro del grupo, los ordena por total. Así puede resolver filtro y ordenación con la misma estructura; ya no necesita el árbol temporal del primer plan.
+
+<Quiz
+	client:visible
+	question="¿Qué indica COVERING INDEX?"
+	options={["Que el índice contiene los datos necesarios para esa consulta", "Que la consulta devuelve toda la tabla", "Que el índice no ocupa espacio"]}
+	answer={0}
+/>
+
+## Leer una combinación
+
+En una consulta con varios `JOIN`, SQLite muestra recorridos anidados. El orden del árbol revela qué fuente se recorre por fuera y cuál se consulta por cada fila exterior. Un recorrido barato repetido millones de veces puede convertirse en el coste dominante.
+
+No basta, por tanto, con buscar la palabra `INDEX`. Pregunta cuántas veces se repite una operación, qué condiciones puede aprovechar y cuántos datos tendrá que visitar. La cantidad de filas producida es su [cardinalidad](/articulos/cardinalidad-de-una-consulta/). Un `SCAN` tampoco significa siempre un error: para una tabla pequeña o una consulta que necesita casi todas las filas, recorrer puede ser la mejor elección.
+
+## Plan y medición son cosas distintas
+
+`EXPLAIN QUERY PLAN` describe la estrategia, pero no mide cuánto tarda ni cuántas filas reales procesa cada paso. Otros motores tienen herramientas como `EXPLAIN ANALYZE`, que ejecutan la consulta y añaden mediciones. No las confundas con una inspección que solo planifica, especialmente si la sentencia modifica datos.
+
+El ejemplo usa cuatro filas para que puedas seguirlo. Para evaluar rendimiento necesitas un volumen y una distribución representativos: no demuestra una mejora de tiempo en una tabla diminuta.
+
+## Un procedimiento útil
+
+1. Comprueba que la consulta devuelve el resultado correcto.
+2. Guarda su plan y mide con datos representativos.
+3. Localiza recorridos amplios, repeticiones y ordenaciones evitables.
+4. Cambia una cosa, como un [índice compuesto](/articulos/que-es-un-indice-compuesto/).
+5. Revisa de nuevo plan, tiempo y coste de escritura del índice.
+
+No elimines condiciones ni cambies el significado para conseguir un plan más vistoso. Optimizar significa conservar el resultado utilizando menos recursos.
+
+## Lo esencial
+
+- El plan muestra el algoritmo elegido para tu SQL.
+- `SCAN`, `SEARCH`, cobertura y estructuras temporales explican trabajos diferentes.
+- Un índice puede ayudar tanto a filtrar como a ordenar.
+- Interpreta el plan junto con mediciones y datos representativos.

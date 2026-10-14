@@ -1,0 +1,29 @@
+---
+title: "¿Qué es la cardinalidad en una consulta?"
+description: "La cardinalidad indica cuántas filas produce una operación; estimarla ayuda al motor a elegir un plan."
+level: intermedio
+kind: definicion
+layer: datos
+prerequisites:
+  - planes-de-ejecucion-sql
+updated: 2026-10-14
+sources:
+  - title: "PostgreSQL: Using EXPLAIN (en inglés)"
+    url: https://www.postgresql.org/docs/current/using-explain.html
+---
+
+La **cardinalidad** de un resultado es la cantidad de filas que contiene. En un [plan de consulta](/articulos/planes-de-ejecucion-sql/), interesa también la cardinalidad de cada paso: cuántas filas entrega un filtro o una combinación a la operación siguiente.
+
+## Estimada y real
+
+Imagina una tabla con un millón de pedidos. El motor estima que `WHERE estado = 'pendiente'` devolverá cien filas. Puede elegir un índice para localizar esas pocas filas y luego buscar información relacionada para cada una.
+
+Si en realidad hay ochocientas mil pendientes, aquella estrategia puede hacer muchas más operaciones de las previstas. El problema no es solo que la tabla sea grande: la estimación sobre la distribución de sus valores era incorrecta.
+
+La **cardinalidad estimada** se calcula antes de ejecutar, a partir de estadísticas y reglas del optimizador. La **real** se obtiene observando la ejecución. Herramientas como `EXPLAIN ANALYZE` de PostgreSQL permiten comparar ambas; ejecutan la consulta y no deben confundirse con una inspección sin ejecución.
+
+## Un término con varios usos
+
+En el [modelo entidad-relación](/articulos/modelo-entidad-relacion/), cardinalidad describe restricciones como uno a muchos. Al hablar de una columna, también se utiliza para la cantidad de valores distintos. Conviene aclarar cuál de estos sentidos estás usando.
+
+No es lo mismo cardinalidad que **selectividad**, la proporción de filas que satisface una condición. Un filtro que conserva el 1 % puede devolver diez o un millón de filas según la tabla. Para interpretar el coste de una consulta necesitas tanto proporciones como cantidades.

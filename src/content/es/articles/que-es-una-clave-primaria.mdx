@@ -44,6 +44,10 @@ Se suelen preferir las artificiales. Los datos reales cambian o resultan no ser 
 
 A veces la clave son varias columnas juntas. En una tabla que une pedidos y productos, la pareja `(pedido_id, producto_id)` identifica cada línea, como explica el [modelo entidad-relación](/articulos/modelo-entidad-relacion/).
 
+## Otras formas de identificar
+
+Una tabla puede tener varias [claves candidatas](/articulos/que-es-una-clave-candidata/). La primaria es la elegida como identificador principal; las demás siguen necesitando sus restricciones de unicidad y ausencia de NULL si deben identificar cada fila.
+
 ## Con qué no confundirla
 
 - **Clave foránea**: apunta a la clave primaria de otra tabla. Puede repetirse.

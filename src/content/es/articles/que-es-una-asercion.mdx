@@ -1,0 +1,42 @@
+---
+title: "¿Qué es una aserción?"
+description: "Una aserción comprueba una condición que el programa o una prueba esperan que sea cierta."
+level: basico
+kind: definicion
+layer: programacion
+prerequisites:
+  - pruebas-de-software
+updated: 2026-10-14
+sources:
+  - title: "Node.js: Assert, documentación oficial (en inglés)"
+    url: https://nodejs.org/api/assert.html
+---
+
+Una **aserción** es una comprobación explícita de algo que debería ser cierto en ese punto de la ejecución. Si la condición no se cumple, informa de un fallo. Es una pieza básica de las [pruebas automáticas](/articulos/pruebas-de-software/).
+
+## Un ejemplo
+
+Este programa puede ejecutarse como un módulo de Node.js. Comprueba tanto un resultado correcto como el tipo de error de una comprobación que falla:
+
+```js
+import assert from "node:assert/strict";
+
+assert.equal(2 + 3, 5);
+console.log("Suma comprobada"); // "Suma comprobada"
+
+try {
+	assert.equal(2 + 3, 6);
+} catch (error) {
+	console.log(error.name); // "AssertionError"
+}
+```
+
+La primera aserción no produce salida: la comprobación ha pasado. La segunda lanza una excepción porque el valor real no coincide con el esperado. El `catch` solo está aquí para mostrar el resultado; en una prueba normalmente dejas que el ejecutor registre el fallo.
+
+## No sustituye la validación
+
+Una **validación de entradas** comprueba datos que pueden ser incorrectos de forma normal, como una edad escrita en un formulario. Debe producir una respuesta prevista para quien usa el programa. Una aserción suele expresar una expectativa del código o de su prueba: «si hemos llegado hasta aquí, esta propiedad debe cumplirse».
+
+No uses aserciones que puedan desactivarse como única defensa ante datos externos. Algunos entornos permiten eliminarlas o ignorarlas. La biblioteca concreta importa: `console.assert` tampoco se comporta como `assert` de Node.js.
+
+Una buena aserción comprueba el comportamiento relevante: el saldo final, los elementos devueltos o un error esperado. Comprobar detalles internos sin necesidad hace que las pruebas fallen con refactorizaciones que conservan el comportamiento.

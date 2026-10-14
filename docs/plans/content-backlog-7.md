@@ -6,6 +6,10 @@ La revisión se basa en los artículos, sus apartados, los seis planes anteriore
 
 El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 16 curiosidades. Algunas podrán resolverse ampliando artículos existentes.
 
+## Estado de ejecución
+
+Primera tanda: 14 tareas resueltas, con 13 artículos nuevos y la ampliación del problema de la parada en `maquina-de-turing`. El resto permanece pendiente.
+
 ## Huecos detectados
 
 | Área | Cobertura actual | Siguiente hueco |
@@ -30,11 +34,11 @@ El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 
 
 ### Teoría de la computación y lenguajes
 
-- [ ] ¿Qué es un autómata finito? (máquina de Turing y expresiones regulares; ejemplo de un reconocedor de cadenas)
-- [ ] ¿Qué es una gramática formal? (compilador por dentro; distinguir reglas sintácticas de significado)
-- [ ] ¿Qué es el problema de la parada? (ampliar la introducción de máquina de Turing con el argumento y sus límites)
-- [ ] ¿Qué son P, NP y los problemas NP-completos? (complejidad algorítmica; verificar frente a resolver, sin identificar NP con «no polinómico»)
-- [ ] ¿Qué es el análisis amortizado? (arrays y tablas hash; diferenciarlo del caso medio)
+- [x] ¿Qué es un autómata finito? (máquina de Turing y expresiones regulares; ejemplo de un reconocedor de cadenas)
+- [x] ¿Qué es una gramática formal? (compilador por dentro; distinguir reglas sintácticas de significado)
+- [x] ¿Qué es el problema de la parada? (ampliar la introducción de máquina de Turing con el argumento y sus límites)
+- [x] ¿Qué son P, NP y los problemas NP-completos? (complejidad algorítmica; verificar frente a resolver, sin identificar NP con «no polinómico»)
+- [x] ¿Qué es el análisis amortizado? (arrays y tablas hash; diferenciarlo del caso medio)
 
 ### Ingeniería del software y aplicaciones
 
@@ -46,7 +50,7 @@ El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 
 
 ### Datos y bases de datos
 
-- [ ] ¿Cómo se lee un plan de ejecución SQL? (índices y PostgreSQL; usar SQLite para los ejemplos ejecutables)
+- [x] ¿Cómo se lee un plan de ejecución SQL? (índices y PostgreSQL; usar SQLite para los ejemplos ejecutables)
 - [ ] ¿Qué son los niveles de aislamiento de una transacción? (ACID y MVCC; reproducir anomalías, distinguiendo lo que permite cada motor)
 - [ ] ¿Qué es la captura de cambios de datos, CDC? (ETL y WAL; límites frente a consultas periódicas y event sourcing)
 - [ ] ¿Qué es la regresión lineal? (estadística y aprendizaje automático; ajuste, residuos y límites de interpretación)
@@ -85,13 +89,13 @@ El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 
 
 ### Programación y herramientas
 
-- [ ] ¿Qué es el ámbito de una variable? (variables y clausuras)
+- [x] ¿Qué es el ámbito de una variable? (variables y clausuras)
 - [ ] ¿Qué es una función pura? (programación funcional e inmutabilidad)
 - [ ] ¿Qué es un efecto secundario? (funciones y manejo de estado)
-- [ ] ¿Qué es una aserción? (pruebas de software; distinguirla de validar entradas)
-- [ ] ¿Qué es un iterador? (bucles y estructuras de datos)
-- [ ] ¿Qué es un generador? (iteradores; definir después del anterior)
-- [ ] ¿Qué es una ABI? (binarios y arranque de programas; diferenciarla de una API)
+- [x] ¿Qué es una aserción? (pruebas de software; distinguirla de validar entradas)
+- [x] ¿Qué es un iterador? (bucles y estructuras de datos)
+- [x] ¿Qué es un generador? (iteradores; definir después del anterior)
+- [x] ¿Qué es una ABI? (binarios y arranque de programas; diferenciarla de una API)
 
 ### Aplicaciones e ingeniería
 
@@ -103,9 +107,9 @@ El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 
 
 ### Datos y estadística
 
-- [ ] ¿Qué es NULL en SQL? (SQL; valor desconocido y lógica de tres valores)
-- [ ] ¿Qué es la cardinalidad en una consulta? (planes de ejecución; no confundirla con cardinalidad de relaciones)
-- [ ] ¿Qué es una clave candidata? (modelo entidad-relación y clave primaria)
+- [x] ¿Qué es NULL en SQL? (SQL; valor desconocido y lógica de tres valores)
+- [x] ¿Qué es la cardinalidad en una consulta? (planes de ejecución; no confundirla con cardinalidad de relaciones)
+- [x] ¿Qué es una clave candidata? (modelo entidad-relación y clave primaria)
 - [ ] ¿Qué es un valor atípico? (preparación de datos y estadística descriptiva)
 - [ ] ¿Qué es una semilla aleatoria? (números pseudoaleatorios y reproducibilidad)
 

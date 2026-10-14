@@ -33,7 +33,7 @@ A los errores de un programa se les llama *bugs*, por una [historia curiosa](/ar
 
 ## Cómo es una prueba
 
-Toda prueba sigue tres pasos: preparar los datos, ejecutar el código y comprobar el resultado. Esa comprobación se llama **aserción**.
+Toda prueba sigue tres pasos: preparar los datos, ejecutar el código y comprobar el resultado. Esa comprobación se llama [**aserción**](/articulos/que-es-una-asercion/).
 
 ```js
 import assert from "node:assert/strict";
@@ -135,6 +135,10 @@ La **cobertura** mide qué porcentaje del código se ejecuta durante las pruebas
 ## Para comparar
 
 Los tipos de prueba según su alcance se comparan en [pruebas unitarias, de integración y de extremo a extremo](/articulos/pruebas-unitarias-de-integracion-y-de-extremo-a-extremo/).
+
+## Comprobar una expectativa
+
+Cada comprobación explícita de una condición esperada es una [aserción](/articulos/que-es-una-asercion/). En las pruebas conviene expresar resultados observables, como el valor devuelto o el error esperado, para que una refactorización interna no rompa comprobaciones innecesarias.
 
 ## Lo esencial
 

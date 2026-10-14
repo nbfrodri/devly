@@ -4,6 +4,7 @@ layer: sistemas
 steps:
   - compilador-e-interprete
   - que-es-un-binario
+  - que-es-una-abi
   - virtualizacion
   - emuladores
   - ingenieria-inversa

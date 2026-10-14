@@ -1,0 +1,45 @@
+---
+title: "¿Qué es un iterador?"
+description: "Un iterador entrega los elementos de una secuencia uno a uno y avisa cuando se han terminado."
+level: intermedio
+kind: definicion
+layer: programacion
+prerequisites:
+  - bucles
+  - arrays
+updated: 2026-10-14
+sources:
+  - title: "MDN: Iteradores y generadores"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Iterators_and_generators
+---
+
+Un **iterador** es un objeto que permite obtener el siguiente elemento de una secuencia sin conocer cómo está almacenada. En JavaScript, su método `next()` devuelve un objeto con `value`, el valor, y `done`, que indica si el recorrido ha terminado.
+
+## Avanzar paso a paso
+
+```js
+const recorrido = ["Ana", "Luis"].values();
+
+console.log(recorrido.next().value); // "Ana"
+console.log(recorrido.next().value); // "Luis"
+console.log(recorrido.next().done); // true
+```
+
+El iterador conserva una posición. Cada llamada lo hace avanzar: pedir el siguiente elemento no reinicia la secuencia. Para recorrer este array desde el principio otra vez, puedes pedir un nuevo iterador con `values()`.
+
+## Iterador e iterable
+
+Un **iterable** es un valor que ofrece una forma de obtener un iterador. En JavaScript lo hace mediante `Symbol.iterator`. Los arrays son iterables, y por eso puedes usarlos con `for...of`:
+
+```js
+const nombres = ["Ana", "Luis"];
+console.log(typeof nombres[Symbol.iterator]); // "function"
+```
+
+No son sinónimos. Un iterador describe un recorrido en curso; un iterable ofrece ese recorrido. Un objeto puede cumplir ambos protocolos, como sucede con los objetos producidos por los [generadores](/articulos/que-es-un-generador/).
+
+## No implica cargarlo todo
+
+La secuencia no tiene por qué existir como un array completo en memoria. El siguiente valor puede calcularse cuando se solicita. Esto permite consumir solo un prefijo de una secuencia muy grande, o incluso de una secuencia sin fin.
+
+El iterador tampoco garantiza por sí solo que el siguiente paso sea barato. Puede hacer un cálculo costoso. Y un iterador síncrono no representa automáticamente una lectura de red pendiente: para resultados que llegan de forma asíncrona existe un protocolo de iteración diferente.

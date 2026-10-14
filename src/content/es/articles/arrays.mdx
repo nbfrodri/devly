@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - que-es-una-variable
   - bucles
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "MDN: Array"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array
@@ -133,6 +133,10 @@ Acceder a un elemento por su índice es inmediato, tenga el array diez elementos
 - **Empezar a contar en 1** y saltarse el primer elemento.
 - **Pasarse por uno** en un bucle: la condición correcta es `i < array.length`, no `i <= array.length`.
 - **Esperar que `map` cambie el array original.** Devuelve uno nuevo, que hay que guardar.
+
+## Recorrer y ampliar
+
+Un [iterador](/articulos/que-es-un-iterador/) permite obtener los elementos uno a uno sin que quien consume la secuencia controle su representación. En las implementaciones de arrays dinámicos, el coste de ampliar la capacidad se estudia mediante [análisis amortizado](/articulos/analisis-amortizado/): una ampliación puede ser cara aunque insertar al final sea barato a lo largo de muchas operaciones.
 
 ## Lo esencial
 
