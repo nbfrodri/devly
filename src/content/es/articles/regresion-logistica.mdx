@@ -1,0 +1,67 @@
+---
+title: "¿Qué es la regresión logística?"
+description: "La regresión logística transforma una combinación de características en una probabilidad para una clasificación binaria."
+level: intermedio
+layer: datos
+prerequisites:
+  - regresion-lineal
+  - como-se-evalua-un-modelo-de-clasificacion
+updated: 2026-10-14
+sources:
+  - title: "Google: Logistic Regression, Machine Learning Crash Course (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/logistic-regression
+---
+
+La **regresión logística** es un modelo que estima la probabilidad de una clase, habitualmente en un problema binario. Combina características mediante pesos y transforma esa puntuación con una función que produce valores entre cero y uno.
+
+## Por qué no basta una recta
+
+Quieres clasificar mensajes como correo no deseado o legítimo. Una regresión lineal corriente puede producir valores negativos o mayores que uno; no son probabilidades válidas.
+
+La regresión logística conserva una puntuación lineal, pero aplica la **función sigmoide**: `1 / (1 + exp(-z))`, donde `z` es la puntuación. A medida que `z` aumenta, la probabilidad se acerca a uno; si disminuye mucho, se acerca a cero.
+
+Se llama regresión por su formulación estadística, aunque se utiliza para [clasificación](/articulos/clasificacion-y-regresion/). El nombre no convierte su salida en una predicción de cualquier magnitud numérica.
+
+## De puntuación a probabilidad
+
+En una situación simplificada, una característica indica cuántas señales sospechosas tiene un mensaje. Hemos fijado unos pesos didácticos; este código no entrena un detector real:
+
+```js
+const sigmoide = (z) => 1 / (1 + Math.exp(-z));
+const probabilidad = (senales) => sigmoide(-2 + 2 * senales);
+
+console.log(probabilidad(0).toFixed(3)); // "0.119"
+console.log(probabilidad(1).toFixed(3)); // "0.500"
+console.log(probabilidad(2).toFixed(3)); // "0.881"
+```
+
+Los pesos determinan cómo influyen las entradas antes de la transformación. En un modelo entrenado, se aprenden a partir de ejemplos etiquetados, no se eligen solo porque una salida parezca convincente.
+
+## Entrenar y decidir son etapas distintas
+
+El entrenamiento suele minimizar una **pérdida logarítmica**, que penaliza asignar poca probabilidad a la respuesta correcta. Una predicción muy segura y equivocada recibe una penalización grande. El [descenso del gradiente](/articulos/descenso-del-gradiente/) puede ajustar los pesos para reducir esa pérdida.
+
+Después, para producir una etiqueta, eliges un **umbral**. Con umbral 0,5 clasificas como positiva una probabilidad igual o superior a ese valor. Pero 0,5 no es una obligación del modelo.
+
+Si perder un mensaje legítimo resulta muy costoso, quizá exijas una probabilidad mayor antes de enviarlo automáticamente a spam. Si quieres revisar manualmente todos los casos sospechosos, podrías usar otro umbral para esa cola de revisión. La decisión depende del coste de falsos positivos y negativos.
+
+**¿Cambiar el umbral cambia los pesos aprendidos?** No por sí solo. Cambia cómo conviertes sus probabilidades en decisiones. Debes evaluar ese procedimiento completo con datos adecuados.
+
+## Una probabilidad no es certeza
+
+Que el modelo produzca 0,9 no demuestra que tenga razón en el 90 % de cualquier grupo o entorno. La **calibración** estudia si los valores predichos corresponden a frecuencias observadas en datos representativos.
+
+El cambio de distribución o una selección poco representativa puede empeorar esa relación. También puede haber clases desequilibradas: una exactitud alta no basta para saber si detecta los positivos relevantes. Utiliza métricas y umbrales ajustados al problema.
+
+## Sus límites
+
+En las características elegidas, la frontera de decisión del caso binario básico es lineal. Si las clases requieren relaciones más complejas, necesitas transformar características o elegir otro modelo. Más complejidad no elimina la necesidad de validación.
+
+El preprocesamiento forma parte del sistema. Si escalas las entradas al entrenar, debes aplicar la misma transformación al predecir. Y no debes aprender ese escalado utilizando el conjunto reservado para la prueba final.
+
+## Lo esencial
+
+- La sigmoide convierte una puntuación lineal en un valor entre cero y uno.
+- El entrenamiento aprende pesos; el umbral determina etiquetas.
+- Evalúa errores, calibración y costes de las decisiones.
+- El nombre «regresión» no impide que se utilice para clasificación.

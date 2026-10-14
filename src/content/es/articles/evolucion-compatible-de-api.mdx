@@ -1,0 +1,62 @@
+---
+title: "¿Cómo evoluciona una API sin romper a sus clientes?"
+description: "Evolucionar una API exige conservar acuerdos de formato y significado, introducir cambios compatibles y planificar las retiradas."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - que-es-rest
+  - requisitos-funcionales-y-no-funcionales
+updated: 2026-10-14
+sources:
+  - title: "Google AIP-180: Backwards Compatibility (en inglés)"
+    url: https://google.aip.dev/180
+---
+
+La **evolución compatible de una API** permite cambiar una implementación o ampliar un contrato manteniendo operativos los clientes que siguen utilizando la versión anterior del acuerdo. La compatibilidad depende tanto del formato como del significado y del comportamiento observable.
+
+## El cliente no se actualiza cuando tú quieras
+
+Una API puede tener aplicaciones móviles antiguas, integraciones de terceros o procesos que se ejecutan una vez al mes. Desplegar el servidor no despliega automáticamente todos esos consumidores.
+
+Imagina una respuesta con un importe en céntimos. Cambiarlo a euros sin cambiar el tipo numérico puede superar una validación de esquema y aun así multiplicar o dividir por cien los cálculos del cliente. La forma del mensaje no es todo el contrato.
+
+## Qué cambios suelen romper
+
+Eliminar o renombrar un campo utilizado, cambiar su tipo o exigir un parámetro antes opcional puede romper al consumidor. También pueden hacerlo nuevas restricciones, cambios en la interpretación de errores o en el orden de resultados si ese orden formaba parte del acuerdo.
+
+Añadir un campo suele ser compatible si los clientes toleran campos desconocidos, pero no es una ley universal. Un consumidor que valida una lista cerrada de propiedades podría rechazarlo. Añadir un valor a una enumeración puede dejar a un cliente sin un caso previsto en su lógica.
+
+Por eso necesitas definir qué extensiones deben tolerarse y probar consumidores reales, no limitarte a clasificar «añadir siempre seguro; borrar siempre peligroso».
+
+## Introducir antes de retirar
+
+Supón que `nombre` debe convertirse en `nombreVisible`. Puedes introducir el nuevo campo manteniendo el anterior, documentar cuál utilizar, actualizar clientes y observar qué consumidores siguen dependiendo del viejo.
+
+Si ambos describen lo mismo, deben mantenerse coherentes durante la transición. Si su significado cambia, documenta la diferencia: duplicar nombres no soluciona una discrepancia semántica.
+
+Una vez completada la migración y cumplida la política de retirada, puedes eliminar el campo antiguo en una versión que lo permita. La retirada necesita evidencia, no simplemente que el cambio lleve varias semanas disponible.
+
+**¿Que no haya llamadas hoy demuestra que un cliente desapareció?** No. Puede ejecutarse con poca frecuencia. Considera ventanas de uso y compromisos de soporte acordados.
+
+## Versionar ayuda a coordinar
+
+Una versión permite expresar un contrato distinto y conservar temporalmente el anterior. Puedes distinguirla en la ruta, las cabeceras u otro mecanismo documentado. Ninguna ubicación convierte por sí sola un cambio en compatible.
+
+Mantener dos versiones también tiene coste: correcciones, pruebas, documentación y seguimiento. No necesitas crear una versión nueva por cada mejora compatible. Sí necesitas una política clara cuando el consumidor deba cambiar para conservar el comportamiento.
+
+## Comprobar la transición
+
+Las [pruebas de contrato](/articulos/pruebas-de-contrato/) ayudan a verificar expectativas de consumidores conocidos. Combínalas con ejemplos de error, valores límite, unidades y reglas de ausencia de campos. Revisa también las bibliotecas cliente: un cambio puede ser compatible en el mensaje y no en una firma generada.
+
+Observa el uso de la versión anterior sin registrar datos sensibles innecesarios. Comunica calendario y alternativa a los consumidores afectados; la documentación debe mostrar cómo migrar, no solo indicar que lo viejo está obsoleto.
+
+## No confundas adaptación con tolerancia ilimitada
+
+Un servidor no debe aceptar silenciosamente datos inválidos para aparentar compatibilidad. Si el requisito necesita cambiar, expresa un nuevo contrato y una transición explícita. Ocultar errores puede conservar respuestas de éxito mientras corrompe los resultados.
+
+## Lo esencial
+
+- El acuerdo incluye significado, unidades, errores y expectativas de los clientes.
+- Añadir campos no es compatible bajo cualquier implementación de consumidor.
+- Introduce alternativas y migra antes de retirar.
+- Versionado, contratos y observación ayudan, pero necesitan una política de soporte.

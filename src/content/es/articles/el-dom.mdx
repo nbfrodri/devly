@@ -6,7 +6,7 @@ layer: aplicaciones
 prerequisites:
   - que-es-html
   - arboles-binarios-de-busqueda
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "MDN: Introducción al DOM"
     url: https://developer.mozilla.org/es/docs/Web/API/Document_Object_Model/Introduction
@@ -173,6 +173,8 @@ Hay dos maneras de insertar contenido, y la diferencia importa:
 - `innerHTML` lo interpreta como HTML.
 
 Usar `innerHTML` con datos que vienen de un usuario abre la puerta a que se ejecute código ajeno en la página, el ataque conocido como [cross-site scripting](/articulos/cross-site-scripting-xss/).
+
+El DOM es una entrada del [recorrido de renderizado del navegador](/articulos/como-dibuja-una-pagina-el-navegador/): después se calculan estilos, geometría, pintura y composición.
 
 ## Lo esencial
 

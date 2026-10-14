@@ -71,7 +71,7 @@ const iguales = tonoAgudo.every(
 console.log(iguales); // true
 ```
 
-Un tono de 30 hercios muestreado 40 veces por segundo produce exactamente las mismas muestras que uno de 10 hercios. Una vez digitalizado, es imposible distinguirlos. Se llama **aliasing**.
+Un tono de 30 hercios muestreado 40 veces por segundo produce exactamente las mismas muestras que uno de 10 hercios. Una vez digitalizado, es imposible distinguirlos. Se llama [**aliasing**](/articulos/aliasing/).
 
 Por eso, antes de muestrear, se filtra la señal para eliminar lo que esté por encima del límite.
 
@@ -147,6 +147,8 @@ Las muestras son puntos, y entre ellos el conversor reconstruye una curva suave.
 Para escuchar música, que el sonido llegue con un segundo de retraso no importa. Para una llamada o para tocar un instrumento, sí.
 
 El audio se procesa en pequeños bloques de muestras. Bloques grandes dan estabilidad; bloques pequeños, menos retraso pero más riesgo de cortes. En una videollamada, a eso se suma la [latencia de la red](/articulos/ancho-de-banda-latencia-y-rendimiento/) y su variación.
+
+El [aliasing](/articulos/aliasing/) se evita limitando la banda antes de muestrear: una vez confundidas las muestras, no basta con analizarlas más tiempo.
 
 ## Lo esencial
 

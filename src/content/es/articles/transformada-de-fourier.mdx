@@ -1,0 +1,83 @@
+---
+title: "¿Para qué sirve la transformada de Fourier al procesar señales?"
+description: "La transformada de Fourier representa una señal mediante componentes de frecuencia y permite analizar tonos, ruido y filtros."
+level: intermedio
+layer: redes
+prerequisites:
+  - senales-analogicas-y-digitales
+  - aliasing
+updated: 2026-10-14
+sources:
+  - title: "Steven W. Smith: The Scientist and Engineer's Guide to DSP, capítulo 8 (en inglés)"
+    url: https://www.dspguide.com/CH8.PDF
+---
+
+La **transformada de Fourier** cambia la representación de una señal para expresar su contenido en frecuencias. En lugar de preguntar qué valor tiene en cada instante, permite estudiar qué componentes oscilatorias contribuyen a ella y con qué amplitud y fase.
+
+## Otra representación de los mismos datos
+
+Un fragmento de audio puede contener varios tonos superpuestos. Su gráfica temporal muestra una onda complicada. Su representación en frecuencia puede revelar componentes dominantes que resultan difíciles de reconocer mirando solo los valores sucesivos.
+
+No se trata necesariamente de perder información. Una transformada completa con su fase y su inversa puede reconstruir la secuencia original dentro de la precisión numérica. Una gráfica que conserva solo magnitudes, en cambio, omite información que puede ser necesaria para reconstruirla.
+
+## La versión que calcula un programa
+
+La **transformada discreta de Fourier**, o DFT, opera sobre una secuencia finita de muestras y produce otra secuencia de coeficientes. Cada coeficiente corresponde a una frecuencia de la rejilla utilizada.
+
+La **FFT**, transformada rápida de Fourier, es una familia de algoritmos para calcular la DFT de forma eficiente. No es otra transformación con un significado diferente: evita parte del trabajo que haría el cálculo directo.
+
+## Encontrar dos componentes
+
+Este ejemplo construye ocho muestras con dos cosenos y calcula la amplitud de tres componentes mediante una DFT directa:
+
+```js
+const N = 8;
+const senal = Array.from({ length: N }, (_, n) =>
+	Math.cos(2 * Math.PI * n / N) + 0.5 * Math.cos(2 * Math.PI * 3 * n / N));
+
+function amplitud(k) {
+	let real = 0;
+	let imaginaria = 0;
+	for (let n = 0; n < N; n++) {
+		const angulo = 2 * Math.PI * k * n / N;
+		real += senal[n] * Math.cos(angulo);
+		imaginaria -= senal[n] * Math.sin(angulo);
+	}
+	return 2 * Math.hypot(real, imaginaria) / N;
+}
+
+console.log(amplitud(1).toFixed(2)); // "1.00"
+console.log(amplitud(2).toFixed(2)); // "0.00"
+console.log(amplitud(3).toFixed(2)); // "0.50"
+```
+
+La normalización está elegida para estas componentes de una señal real, distintas de continua y de Nyquist. No debes aplicar sin más el factor dos a todos los coeficientes de cualquier transformada.
+
+La señal del ejemplo contiene ciclos que encajan exactamente en la ventana. Eso hace fácil reconocer las amplitudes; no representa todos los casos de una grabación real.
+
+## Traducir componentes a hercios
+
+Si hay `N` muestras tomadas a frecuencia `fs`, la separación de las componentes es `fs / N`. Con ocho muestras a ocho muestras por segundo, los índices uno y tres representan uno y tres hercios.
+
+Observar durante más tiempo permite una rejilla más fina manteniendo la frecuencia de muestreo. Añadir ceros puede interpolar la representación, pero no equivale a haber observado información adicional de la señal.
+
+**¿Una FFT más larga siempre descubre dos tonos cercanos?** No. Importan la duración real observada, el ruido, la ventana y la separación de los tonos.
+
+## Ventanas y fuga espectral
+
+Una grabación es un fragmento finito. Si su final y su inicio no encajan con la extensión periódica implícita del análisis, la energía de una componente se reparte entre varias posiciones. Se llama **fuga espectral**.
+
+Una **ventana** pondera las muestras para controlar ese efecto, con intercambios entre anchura de picos y atenuación de componentes lejanas. No elimina todos los compromisos ni sustituye muestrear correctamente.
+
+## Para qué sirve
+
+Puedes analizar vibraciones, localizar tonos, estudiar interferencias o comprobar qué frecuencias atenúa un filtro. En comunicaciones, permite relacionar señales con sus bandas y portadoras.
+
+El [aliasing](/articulos/aliasing/) sigue siendo un límite anterior: transformar datos afectados no revela por sí solo qué frecuencia física se confundió durante la adquisición.
+
+## Lo esencial
+
+- La representación temporal y la frecuencial muestran aspectos distintos de una señal.
+- DFT es la transformación; FFT, una forma eficiente de calcularla.
+- Duración, fase y ventana importan al interpretar el resultado.
+- Una gráfica de magnitud no contiene necesariamente toda la información original.

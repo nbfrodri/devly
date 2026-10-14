@@ -7,7 +7,7 @@ layer: aplicaciones
 prerequisites:
   - transacciones-y-acid
   - que-es-rest
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "RFC 9110: HTTP Semantics, métodos idempotentes"
     url: https://www.rfc-editor.org/info/rfc9110/
@@ -154,6 +154,8 @@ La solución es que los dos pasos sean **atómicos**: se guardan en la misma tra
 - **"Idempotente significa que no cambia nada."** Puede cambiar algo la primera vez. Lo que no hace es cambiar más al repetirse.
 - **"Si es atómica, es segura de reintentar."** No. Dos transferencias atómicas son dos transferencias.
 - **"Idempotente significa que devuelve siempre lo mismo."** La idempotencia habla del efecto, no de la respuesta. Borrar dos veces puede responder primero "borrado" y después "no existe", y sigue siendo idempotente.
+
+Diseñar [reintentos](/articulos/reintentos-de-peticiones/) exige combinar idempotencia con límites de tiempo y carga: un timeout no demuestra que la operación no se haya aplicado.
 
 ## Lo esencial
 

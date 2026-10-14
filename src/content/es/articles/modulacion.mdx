@@ -153,6 +153,22 @@ La usan el wifi, las [redes móviles](/articulos/redes-moviles/) desde la cuarta
 
 Es el trabajo de la capa física del [modelo OSI](/articulos/modelos-osi-y-tcp-ip/). Por encima, la [capa de enlace](/articulos/capa-de-enlace/) ya solo ve bits.
 
+## Ancho de banda en hercios frente a tasa de bits
+
+En señales, el **ancho de banda** expresa un intervalo de frecuencias y se mide en hercios. La **tasa de bits** cuenta información binaria transmitida por unidad de tiempo y se mide en bits por segundo. En redes también se utiliza «ancho de banda» informalmente para una capacidad en bits por segundo; conviene aclarar el sentido.
+
+| Criterio | Banda de frecuencia | Tasa de bits |
+| --- | --- | --- |
+| Unidad | Hz | bit/s |
+| Qué describe | Intervalo de frecuencias utilizado o disponible | Cantidad de bits por unidad de tiempo |
+| Depende de | Medio, filtrado y asignación espectral | Modulación, codificación y condiciones del canal |
+
+Supón un sistema que utiliza 20 kHz y transporta 40 kbit/s. Su eficiencia espectral es dos bits por segundo y hercio. Es un ejemplo de unidades, no una ley que convierta cada hercio en dos bits. Otra modulación, otra codificación o un nivel de ruido distinto pueden cambiar la tasa alcanzable y la fiabilidad.
+
+Tampoco confundas tasa de símbolos con tasa de bits: un símbolo puede representar varios bits, y parte de lo transmitido puede destinarse a control o redundancia. Para calcular datos útiles, necesitas conocer esas convenciones además de las cifras del enlace.
+
+La [transformada de Fourier](/articulos/transformada-de-fourier/) permite estudiar las componentes de frecuencia de una señal y relacionarlas con su banda.
+
 ## Lo esencial
 
 - Modular es variar una onda portadora para que transporte información.

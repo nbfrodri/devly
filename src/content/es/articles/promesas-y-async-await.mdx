@@ -189,6 +189,23 @@ En serie tarda unos 200 milisegundos; a la vez, unos 100. Es una de las optimiza
 - **No tratar los rechazos.**
 - **Creer que hace el código más rápido.** No acelera nada: evita bloquear mientras se espera.
 
+## Código síncrono frente a asíncrono
+
+En código **síncrono**, una llamada devuelve su resultado o error antes de que quien llama continúe. En una operación **asíncrona**, la finalización puede notificarse después, permitiendo que la ejecución continúe entre tanto. No es lo mismo que ejecutar cálculos en paralelo.
+
+Para la misma descarga de dos recursos, una secuencia síncrona espera a terminar el primero antes de iniciar el segundo. Un diseño asíncrono puede iniciar ambos y esperar sus resultados sin bloquear el hilo durante toda la espera. También puede iniciar uno después de otro si el segundo depende del primero: asincronía no elimina dependencias.
+
+| Criterio | Síncrono | Asíncrono |
+| --- | --- | --- |
+| Resultado de la llamada | Disponible al volver, o se lanza un error | La finalización se representa o notifica después |
+| Espera del hilo | Puede permanecer bloqueado | Puede atender otro trabajo mientras la operación espera |
+| Orden entre tareas | Directo en la secuencia de llamadas | Necesita dependencias explícitas |
+| Ejecución en otra CPU | No se deduce | Tampoco se deduce |
+
+Usa la forma que corresponda a la interfaz y al entorno. Para operaciones con esperas en una interfaz interactiva, evitar bloquear suele ser importante. Para un cálculo pequeño, añadir una promesa no lo acelera. Una función asíncrona que hace mucho cálculo antes de ceder el control sigue ocupando el hilo durante ese cálculo.
+
+La concurrencia que consigues al solapar esperas se distingue del paralelismo en [hilos y concurrencia](/articulos/hilos-y-concurrencia/).
+
 ## Lo esencial
 
 - Una promesa representa un resultado futuro, y está pendiente, cumplida o rechazada.

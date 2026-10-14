@@ -49,3 +49,5 @@ SELECT COALESCE(edad, -1) FROM personas WHERE nombre = 'Luis';
 Los recuentos son 3 y 2: `COUNT(edad)` omite NULL. La última consulta devuelve -1 como sustitución explícita. Eso no convierte -1 en una edad conocida; solo cambia la presentación del resultado.
 
 Si un campo debe tener siempre un valor, declara `NOT NULL`. Y si necesitas distinguir «desconocido» de «no aplicable», diseña una representación explícita: un único NULL no explica por qué falta el dato.
+
+La [historia del tratamiento de información incompleta](/articulos/por-que-existe-null/) explica por qué desconocido y cero no pueden intercambiarse sin cambiar el significado.

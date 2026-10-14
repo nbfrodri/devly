@@ -1,0 +1,72 @@
+---
+title: "¿Qué es el aliasing y cómo se evita?"
+description: "El aliasing hace que señales distintas produzcan las mismas muestras cuando no se limita su contenido antes de muestrear."
+level: intermedio
+layer: redes
+prerequisites:
+  - senales-analogicas-y-digitales
+  - como-se-representa-el-sonido
+updated: 2026-10-14
+sources:
+  - title: "Steven W. Smith: The Scientist and Engineer's Guide to DSP, capítulo 3 (en inglés)"
+    url: https://www.dspguide.com/CH3.PDF
+---
+
+El **aliasing** ocurre cuando señales diferentes resultan indistinguibles después del muestreo. Componentes que no se han muestreado con suficiente rapidez pueden aparecer como otras frecuencias en los datos digitales.
+
+## Qué problema resuelve entenderlo
+
+Muestrear no conserva la señal continua entera: conserva sus valores en ciertos instantes. Si dos señales coinciden en esos instantes, la secuencia obtenida no contiene información para decidir cuál era la original.
+
+Esto importa en audio, sensores, imágenes y comunicaciones. Una frecuencia aparente en los datos no tiene por qué corresponder a la misma frecuencia en la entrada física si la adquisición no controló el aliasing.
+
+## Dos tonos con las mismas muestras
+
+Muestreamos mil veces por segundo. Un coseno de cien hercios y otro de novecientos hercios coinciden en esos instantes, aunque entre muestras sigan recorridos diferentes.
+
+```js
+const fs = 1000;
+const muestras = (frecuencia) => Array.from({ length: 8 }, (_, n) =>
+	Math.cos(2 * Math.PI * frecuencia * n / fs));
+
+const baja = muestras(100);
+const alta = muestras(900);
+console.log(baja.every((valor, i) => Math.abs(valor - alta[i]) < 1e-9)); // true
+```
+
+La tolerancia compara resultados numéricos de coma flotante. La coincidencia matemática procede de la periodicidad del coseno: añadir vueltas enteras no cambia su valor en los instantes elegidos.
+
+No puedes arreglarlo escuchando o analizando con más atención la misma secuencia. Ambas señales son compatibles con las muestras. Necesitas información o restricciones adicionales sobre la entrada.
+
+## La banda que puedes representar
+
+Para una señal de banda base limitada en frecuencia, la condición de muestreo exige una frecuencia de muestreo suficientemente superior al doble de la frecuencia más alta que quieres conservar. La mitad de la frecuencia de muestreo se conoce como **frecuencia de Nyquist**.
+
+El límite exacto requiere tratar condiciones matemáticas de la señal; en la práctica no se diseña aprovechando una igualdad ideal sin margen. Un seno justo a la mitad de la frecuencia de muestreo puede quedar mal representado según su fase. Además, los filtros reales necesitan una banda de transición.
+
+**Si solo te interesan frecuencias de hasta cien hercios, ¿puedes ignorar el resto antes de medir?** No. Una componente mayor puede plegarse precisamente dentro de la banda que te interesa.
+
+## Filtrar antes de perder información
+
+Un **filtro antialiasing** atenúa las componentes que no deben entrar en la banda muestreada. Antes de una conversión analógica a digital actúa en la parte analógica, aunque una cadena de adquisición pueda combinar técnicas analógicas y digitales.
+
+Después de muestrear, un filtro no puede distinguir automáticamente un tono legítimo de cien hercios de un alias de novecientos si ambos ya producen los mismos datos. Puede quitar componentes, pero no recuperar por sí solo su procedencia.
+
+## Reducir una frecuencia de muestreo
+
+El mismo problema aparece al tomar una muestra de cada varias de una señal digital. Si pasas de mil a quinientas muestras por segundo, el nuevo límite es menor. Antes de descartar muestras necesitas filtrar las frecuencias que no cabrán en la nueva representación.
+
+Aumentar después la cantidad de muestras mediante interpolación no deshace el aliasing que ya ocurrió. Generar valores intermedios y recuperar la información perdida son tareas distintas.
+
+## Qué comprobar en una adquisición
+
+Identifica la banda de interés, el contenido posible fuera de ella, la frecuencia real de muestreo y el filtro de entrada. Comprueba también qué hace cualquier etapa que reduzca la tasa de datos. Un sensor que entrega números ya procesados puede haber realizado parte de esa cadena internamente.
+
+La [transformada de Fourier](/articulos/transformada-de-fourier/) ayuda a estudiar frecuencias, pero tampoco identifica por sí sola cuál de las señales físicas compatibles originó una secuencia afectada.
+
+## Lo esencial
+
+- Muestrear conserva valores en instantes concretos, no la señal continua completa.
+- Distintas frecuencias pueden producir muestras iguales.
+- Limita la banda antes de muestrear o reducir la tasa.
+- Filtrar después no recupera automáticamente la información confundida.

@@ -1,0 +1,68 @@
+---
+title: "¿Qué es un semáforo en programación concurrente?"
+description: "Un semáforo coordina tareas mediante permisos: consumir uno puede obligar a esperar hasta que otra tarea lo libere."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - hilos-y-concurrencia
+  - condiciones-de-carrera-y-bloqueos
+updated: 2026-10-14
+sources:
+  - title: "OSTEP: Semaphores (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-sema.pdf
+---
+
+Un **semáforo** es un mecanismo de sincronización que administra una cantidad de permisos. Una tarea adquiere un permiso para continuar y otra operación lo libera. Si no hay permisos disponibles, adquirir puede bloquear la tarea hasta que aparezca alguno.
+
+## Qué problema resuelve
+
+Supón que hay tres impresoras y veinte trabajos pendientes. Permitir que todos utilicen una a la vez no funciona. Protegerlo todo con un único cerrojo tampoco aprovecha las tres: solo dejaría pasar un trabajo.
+
+Un semáforo iniciado con tres permisos limita a tres los trabajos admitidos simultáneamente. No elige por sí mismo qué impresora corresponde a cada uno: esa asignación sigue necesitando una estructura coordinada. Limitar cuántas tareas pasan y proteger cómo eligen un recurso son problemas relacionados, pero diferentes.
+
+## Adquirir y liberar
+
+La operación de **adquisición** comprueba y consume un permiso de forma atómica. No es una variable corriente que primero consultas y después disminuyes: dos tareas podrían observar el mismo valor antes de modificarlo.
+
+La **liberación** devuelve un permiso y puede despertar a una tarea que esperaba. Las bibliotecas ofrecen nombres como `acquire` y `release`, o `wait` y `post`. Algunas permiten tiempos máximos o una adquisición no bloqueante; hay que comprobar el contrato de la utilizada.
+
+Con capacidad dos, A y B adquieren los permisos. C espera. Cuando A libera, C puede entrar. Si B falla y nunca libera, la capacidad efectiva queda reducida. Por eso la liberación debe estar asociada a una salida garantizada, también ante excepciones.
+
+**Si hay cero permisos, ¿significa que no quedan tareas?** No. Puede significar justamente que todos los recursos están ocupados y muchas tareas esperan.
+
+## Productor y consumidor
+
+Una cola limitada de capacidad tres permite ilustrar dos semáforos:
+
+- `huecos`, iniciado en tres, cuenta posiciones libres.
+- `elementos`, iniciado en cero, cuenta elementos disponibles.
+
+El productor adquiere un hueco, inserta y libera un elemento. El consumidor adquiere un elemento, extrae y libera un hueco. Un cerrojo independiente protege la modificación concreta de la cola si esta no es ya segura entre hilos.
+
+El orden importa. No debes mantener ocupado el cerrojo de la cola mientras esperas un elemento que solo puede insertar otro hilo adquiriendo ese mismo cerrojo: impedirías el progreso que necesitas.
+
+## Mutex frente a semáforo
+
+Un **mutex** representa exclusión mutua y normalmente tiene un propietario: el hilo que lo adquiere debe liberarlo. Un semáforo cuenta permisos y puede coordinar señales entre tareas diferentes. Un semáforo binario permite comportamientos de exclusión, pero no es automáticamente equivalente a cualquier mutex.
+
+| Criterio | Mutex | Semáforo |
+| --- | --- | --- |
+| Finalidad típica | Proteger una sección crítica | Limitar recursos o señalar disponibilidad |
+| Capacidad | Un propietario a la vez | Un número configurable de permisos |
+| Quién libera | El propietario según el contrato | Puede ser otra tarea según el uso |
+| Ejemplo | Modificar una lista compartida | Admitir tres trabajos simultáneos |
+
+Para el mismo almacén de impresoras, el mutex protege la lista de impresoras libres y el semáforo limita cuántas tareas intentan obtener una. No necesitas sustituir uno por otro: pueden colaborar.
+
+## No resuelve toda la concurrencia
+
+Un semáforo no garantiza por sí solo orden justo, ausencia de inanición ni ausencia de bloqueos mutuos. Tampoco limita cuántas tareas esperan si tu programa sigue creándolas sin control: solo limita las que consiguen permisos.
+
+Liberar dos veces puede admitir más trabajo del previsto. Cancelar una tarea exige saber si ya adquirió el permiso para no devolver uno inexistente. Una biblioteca con gestores de recursos reduce errores, pero no elimina la necesidad de entender ese ciclo de vida.
+
+## Lo esencial
+
+- Un semáforo administra permisos mediante operaciones atómicas.
+- La adquisición puede esperar; la liberación permite avanzar a otra tarea.
+- Productores y consumidores necesitan coordinar huecos, elementos y acceso a la cola.
+- Un mutex protege propiedad exclusiva; un semáforo expresa disponibilidad o capacidad.

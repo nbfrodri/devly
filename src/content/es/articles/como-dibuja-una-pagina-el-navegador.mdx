@@ -1,0 +1,73 @@
+---
+title: "¿Cómo dibuja una página el navegador?"
+description: "El navegador transforma HTML y CSS en estructuras, calcula estilos y posiciones, pinta y compone la imagen que ves."
+level: intermedio
+layer: aplicaciones
+prerequisites:
+  - el-dom
+  - que-es-css
+updated: 2026-10-14
+sources:
+  - title: "MDN: Populating the Page, How Browsers Work (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work
+---
+
+El navegador dibuja una página mediante varias etapas: interpreta documentos y estilos, calcula qué aspecto tiene cada elemento, determina su geometría, genera instrucciones de pintura y combina el resultado para mostrarlo. Modificar una página puede obligarlo a repetir parte de ese trabajo.
+
+## De bytes a estructuras
+
+El HTML recibido se analiza para construir el [DOM](/articulos/el-dom/), una representación de sus elementos y relaciones. Las hojas CSS también se analizan para representar reglas y valores. La descarga y el análisis de recursos pueden solaparse; la página no necesita siempre esperar a que llegue todo para empezar a mostrarse.
+
+JavaScript puede consultar y modificar estas estructuras. Eso introduce dependencias: un script puede necesitar el documento construido, y ciertas consultas pueden exigir que el navegador actualice cálculos pendientes antes de responder.
+
+## Calcular estilos
+
+El **cálculo de estilos** decide los valores aplicables a cada elemento. Intervienen selectores, herencia, cascada y condiciones como el tamaño de pantalla.
+
+Si cambias una clase, no has pintado nuevos píxeles directamente. Has cambiado una entrada de ese cálculo. El navegador determina qué resultados quedan afectados y qué etapas necesita repetir.
+
+Un nodo del DOM tampoco equivale necesariamente a una caja visible. Un elemento oculto con `display: none` no participa en la distribución normal de cajas; otros elementos pueden generar varias cajas o contenido adicional.
+
+## Calcular geometría
+
+La etapa de **layout**, o disposición, determina dimensiones y posiciones. Tiene en cuenta el contenido, el espacio disponible y reglas como flexbox o grid. Si cambia el ancho de una caja, puede cambiar el salto de líneas y la posición de elementos posteriores.
+
+Por ejemplo, un párrafo que pasa de ocupar cuatro líneas a seis desplaza lo que viene después. No es solo repintar su color: la geometría ha cambiado.
+
+**¿Cambiar el color del texto obliga siempre a calcular de nuevo su tamaño?** No. El color no cambia por sí mismo sus dimensiones; puede requerir pintura sin el mismo trabajo geométrico que cambiar la fuente o el ancho.
+
+## Pintar no es presentar todavía
+
+La **pintura** establece cómo se dibujan fondos, bordes, texto e imágenes. El resultado se convierte en píxeles mediante rasterización. La **composición** combina las superficies o capas pertinentes para producir la imagen final.
+
+Las capas no son una correspondencia simple de «un elemento HTML, una capa». El navegador decide cómo organizarlas y reutilizar resultados. Demasiadas superficies también consumen memoria y recursos.
+
+```mermaid
+flowchart TD
+	A[HTML y CSS] --> B[DOM y reglas de estilo]
+	B --> C[Cálculo de estilos]
+	C --> D[Layout: tamaños y posiciones]
+	D --> E[Pintura y rasterización]
+	E --> F[Composición y presentación]
+```
+
+El esquema resume responsabilidades; un navegador real utiliza paralelismo, cachés y actualizaciones parciales.
+
+## Qué cambia al actualizar
+
+Cambiar un ancho puede afectar a layout y pintura. Cambiar un color suele afectar a pintura. Algunas transformaciones y cambios de opacidad pueden aprovechar composición sin recalcular toda la geometría, pero no debes prometerlo para cualquier elemento y situación: depende de su estado y del navegador.
+
+La **invalidación** marca qué resultados ya no son utilizables. Una implementación eficiente intenta repetir solo el trabajo necesario, aunque un pequeño cambio en un elemento padre puede tener consecuencias amplias.
+
+## Evitar trabajo forzado
+
+Alternar muchas escrituras de estilos con lecturas que necesitan geometría actual puede forzar cálculos repetidos. Agrupar lecturas y cambios cuando el flujo lo permite ayuda a evitar ese patrón. Eso no significa que leer tamaños sea siempre incorrecto: a veces es necesario para una interacción.
+
+Utiliza las herramientas de rendimiento del navegador para distinguir ejecución de JavaScript, layout y pintura. Un problema visual lento no se arregla necesariamente reduciendo el tiempo de una función: puede estar en el trabajo de renderizado que provoca.
+
+## Lo esencial
+
+- DOM y CSS son entradas para construir la representación visual.
+- Estilo, layout, pintura y composición resuelven trabajos diferentes.
+- Un cambio puede invalidar solo parte del recorrido.
+- Mide la etapa costosa antes de elegir una optimización.

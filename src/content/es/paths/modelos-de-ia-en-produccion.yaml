@@ -1,0 +1,17 @@
+title: Modelos de IA en producción
+description: "Del conjunto de datos al modelo desplegado: evaluación, versiones, seguimiento y cambios del entorno."
+layer: ia
+steps:
+  - que-es-el-aprendizaje-automatico
+  - que-es-un-conjunto-de-datos
+  - clasificacion-y-regresion
+  - preparacion-de-datos
+  - sobreajuste-y-subajuste
+  - validacion-cruzada
+  - como-se-evalua-un-modelo-de-clasificacion
+  - que-es-la-inferencia
+  - integracion-y-despliegue-continuos
+  - observabilidad
+  - mlops
+  - calidad-de-datos
+  - deriva-de-datos-y-de-concepto

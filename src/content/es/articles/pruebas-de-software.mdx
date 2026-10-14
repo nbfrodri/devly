@@ -7,6 +7,8 @@ prerequisites:
   - funciones
 updated: 2026-10-14
 sources:
+  - title: "Martin Fowler: Mocks Aren't Stubs (en inglés)"
+    url: https://martinfowler.com/articles/mocksArentStubs.html
   - title: "Martin Fowler: Test Pyramid (en inglés)"
     url: https://martinfowler.com/bliki/TestPyramid.html
   - title: "Ham Vocke: The Practical Test Pyramid (en inglés)"
@@ -141,6 +143,26 @@ Los tipos de prueba según su alcance se comparan en [pruebas unitarias, de inte
 Cada comprobación explícita de una condición esperada es una [aserción](/articulos/que-es-una-asercion/). En las pruebas conviene expresar resultados observables, como el valor devuelto o el error esperado, para que una refactorización interna no rompa comprobaciones innecesarias.
 
 Una [prueba intermitente](/articulos/pruebas-intermitentes/) puede pasar o fallar según tiempos, orden o estado compartido. Repetirla hasta que pase no explica la causa.
+
+## Mock, stub y fake
+
+Los **dobles de prueba** sustituyen dependencias, pero no todos tienen el mismo papel. Un **stub** entrega respuestas preparadas; un **fake** ofrece una implementación simplificada que funciona dentro de unos límites; un **mock** incorpora expectativas sobre interacciones que después se verifican. Los nombres de las bibliotecas no siempre utilizan esta terminología con la misma precisión.
+
+Para probar una compra, un stub de inventario puede responder «hay tres unidades». Un fake puede mantener un pequeño inventario en memoria y permitir reservas y consultas. Un mock puede comprobar que se solicitó una reserva concreta exactamente una vez.
+
+| Criterio | Stub | Fake | Mock |
+| --- | --- | --- | --- |
+| Papel | Dar respuestas previstas | Simular comportamiento con una implementación sencilla | Verificar interacciones esperadas |
+| Estado interno | No es imprescindible | Suele mantenerlo | Puede registrar llamadas |
+| Comprobación central | Resultado del código probado | Resultado y cambios del modelo simplificado | Llamadas, argumentos u orden relevante |
+
+Elige un stub si necesitas controlar una respuesta; un fake si varios casos necesitan un comportamiento coherente; un mock si la interacción forma parte del requisito. Comprobar llamadas internas que no importan para el resultado puede volver frágil una prueba ante refactorizaciones.
+
+Ningún doble demuestra por sí solo que la dependencia real se comporta igual. Las [pruebas de contrato](/articulos/pruebas-de-contrato/) ayudan a conectar esa simulación con un proveedor real. Conserva también las comprobaciones de integración que necesite el sistema.
+
+Las [pruebas basadas en propiedades](/articulos/pruebas-basadas-en-propiedades/) exploran reglas generales mediante entradas generadas y buscan contraejemplos pequeños.
+
+Las [pruebas de carga y de estrés](/articulos/pruebas-de-carga-y-estres/) estudian capacidad, límites y recuperación bajo escenarios definidos.
 
 ## Lo esencial
 

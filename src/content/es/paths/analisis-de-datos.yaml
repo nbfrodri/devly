@@ -7,7 +7,14 @@ steps:
   - correlacion-y-causalidad
   - visualizacion-de-datos
   - preparacion-de-datos
+  - valores-atipicos
+  - clasificacion-y-regresion
+  - regresion-lineal
+  - como-se-evalua-un-modelo-de-clasificacion
+  - regresion-logistica
   - procesos-etl
+  - una-base-de-datos-por-dentro
+  - captura-de-cambios-cdc
   - almacen-de-datos-y-lago-de-datos
   - series-temporales
   - que-es-un-esquema-en-estrella

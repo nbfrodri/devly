@@ -5,7 +5,7 @@ level: basico
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "Operating Systems: Three Easy Pieces, The Abstraction: The Process (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf
@@ -63,7 +63,7 @@ Un proceso bloqueado no consume tiempo de procesador. Por eso un programa que es
 
 El sistema operativo deja que un proceso use un núcleo durante un intervalo muy corto y después da paso a otro. La parte que decide a quién le toca es el [**planificador**](/articulos/planificador-de-procesos/).
 
-Cambiar de un proceso a otro se llama **cambio de contexto**. El sistema guarda el estado del proceso que sale (por dónde iba y qué tenía en los registros) y restaura el del que entra. Cuando al primero le vuelve a tocar, continúa exactamente donde lo dejó, sin haberse enterado de la pausa.
+Cambiar de un proceso a otro se llama [**cambio de contexto**](/articulos/cambio-de-contexto/). El sistema guarda el estado del proceso que sale (por dónde iba y qué tenía en los registros) y restaura el del que entra. Cuando al primero le vuelve a tocar, continúa exactamente donde lo dejó, sin haberse enterado de la pausa.
 
 Estos cambios ocurren muchas veces por segundo. De ahí la impresión de que todo funciona a la vez aunque haya pocos núcleos.
 

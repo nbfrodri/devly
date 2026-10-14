@@ -12,4 +12,6 @@ steps:
   - planes-de-ejecucion-sql
   - cardinalidad-de-una-consulta
   - transacciones-y-acid
+  - una-base-de-datos-por-dentro
+  - niveles-de-aislamiento
   - funciones-de-ventana-en-sql

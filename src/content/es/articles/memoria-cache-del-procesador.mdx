@@ -141,7 +141,7 @@ Si dos [hilos](/articulos/hilos-y-concurrencia/), en núcleos distintos, modific
 
 Para la mayoría del código, nada de esto importa. Pesa en lo que procesa grandes volúmenes de datos en bucles muy ejecutados: cálculo numérico, videojuegos, bases de datos, compresión.
 
-Y antes de reorganizar los datos hay que **medir**. Existen herramientas que cuentan los fallos de caché de un programa.
+Y antes de reorganizar los datos hay que **medir**. Existen herramientas que cuentan los [fallos de caché](/articulos/fallos-de-cache/) de un programa.
 
 ## Un asunto de seguridad
 
@@ -150,6 +150,8 @@ Que un acceso tarde más o menos según esté o no en la caché es una diferenci
 En 2018 se dieron a conocer dos vulnerabilidades, Spectre y Meltdown, que combinaban esa medición con la ejecución anticipada de instrucciones para leer memoria ajena. Afectaban a casi todos los procesadores, y corregirlas costó rendimiento.
 
 Cuando una petición no encuentra el dato en un nivel, ocurre un [fallo de caché](/articulos/fallos-de-cache/). Puede resolverse en otro nivel sin llegar necesariamente a RAM.
+
+La [coherencia de caché](/articulos/coherencia-de-cache/) coordina copias y permisos entre núcleos, con un contrato distinto de la consistencia de memoria.
 
 ## Lo esencial
 

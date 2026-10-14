@@ -1,0 +1,42 @@
+---
+title: "La paradoja de Simpson: cuando agrupar invierte la comparación"
+description: "Un método puede tener mejor tasa en cada grupo y peor tasa global porque los grupos pesan de manera diferente."
+level: intermedio
+kind: curiosidad
+layer: datos
+prerequisites:
+  - correlacion-y-causalidad
+updated: 2026-10-14
+sources:
+  - title: "Judea Pearl: Understanding Simpson's Paradox, UCLA (en inglés)"
+    url: https://ftp.cs.ucla.edu/pub/stat_ser/r414.pdf
+---
+
+La **paradoja de Simpson** aparece cuando una relación observada dentro de varios grupos cambia o se invierte al agregarlos. El promedio total no es una votación entre las tasas de los grupos: depende también de cuánto pesa cada grupo en cada alternativa.
+
+## Un ejemplo construido
+
+Dos sistemas resuelven casos fáciles y difíciles. Estos números son didácticos, no resultados de un experimento real:
+
+| Grupo | A: aciertos / casos | B: aciertos / casos |
+| --- | --- | --- |
+| Fáciles | 90 / 100: 90 % | 19 / 20: 95 % |
+| Difíciles | 1 / 10: 10 % | 20 / 100: 20 % |
+| Total | 91 / 110: 82,7 % | 39 / 120: 32,5 % |
+
+B tiene mejor tasa dentro de ambos grupos. Sin embargo, A recibió muchos más casos fáciles y su tasa global es mayor.
+
+```js
+console.log((100 * 91 / 110).toFixed(1)); // "82.7"
+console.log((100 * 39 / 120).toFixed(1)); // "32.5"
+```
+
+No hay una contradicción aritmética. Cambian los pesos con los que se combinan las tasas.
+
+## Agrupar o separar no es una receta automática
+
+El análisis de Pearl destaca que decidir qué comparación responde a una pregunta causal necesita conocer cómo se generaron los datos. Separar por cualquier variable disponible tampoco garantiza una conclusión correcta.
+
+En este ejemplo no puedes decidir cómo rendirían ambos sistemas ante la misma población únicamente mirando el total. Necesitas un diseño de evaluación comparable y entender la asignación de casos.
+
+La lección al leer una métrica es preguntar por sus denominadores y grupos. Una mejora global puede proceder de cambios en la mezcla de entradas, aunque no haya mejorado el comportamiento dentro de los segmentos que te importan.

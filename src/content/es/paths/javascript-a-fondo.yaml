@@ -6,6 +6,7 @@ steps:
   - que-es-un-iterador
   - que-es-un-generador
   - inmutabilidad
+  - igualdad-e-identidad
   - manejo-de-errores-y-excepciones
   - promesas-y-async-await
   - el-bucle-de-eventos

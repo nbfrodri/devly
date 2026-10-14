@@ -1,0 +1,81 @@
+---
+title: "¿Qué son los bosques aleatorios?"
+description: "Un bosque aleatorio combina árboles entrenados con variación de datos y características para reducir la dependencia de un solo árbol."
+level: intermedio
+layer: ia
+prerequisites:
+  - arboles-de-decision
+  - sobreajuste-y-subajuste
+updated: 2026-10-14
+sources:
+  - title: "Leo Breiman: Random Forests, 2001 (en inglés)"
+    url: https://www.stat.berkeley.edu/~breiman/randomforest2001.pdf
+  - title: "scikit-learn: Ensembles, Random Forests (en inglés)"
+    url: https://scikit-learn.org/stable/modules/ensemble.html
+---
+
+Un **bosque aleatorio**, o *random forest*, combina las predicciones de varios árboles de decisión introduciendo variación durante su entrenamiento. Busca obtener un resultado más estable que el de un único árbol muy dependiente de los datos concretos que recibió.
+
+## Por qué varios árboles
+
+Un [árbol de decisión](/articulos/arboles-de-decision/) puede aprender reglas muy específicas. Pequeños cambios en los datos pueden alterar sus primeras divisiones y producir un árbol distinto. Un árbol profundo puede además memorizar particularidades del entrenamiento.
+
+Combinar árboles ayuda si sus errores no coinciden siempre. Crear cien copias idénticas del mismo árbol no aporta esa diversidad. La aleatoriedad intenta producir modelos diferentes que sigan capturando señales útiles.
+
+## Variar datos y características
+
+El método clásico toma muestras de entrenamiento con reemplazo: una observación puede aparecer varias veces y otra quedar fuera de la muestra de un árbol. Este procedimiento se conoce como **bootstrap**.
+
+Además, al buscar una división, cada árbol considera un subconjunto aleatorio de características. Así no todos eligen siempre la misma variable dominante para separar los datos desde la raíz.
+
+La combinación de muestreo y selección de características reduce la correlación entre árboles. Los detalles configurables y sus valores predeterminados dependen de la implementación; «bosque» no implica que cualquier biblioteca tenga exactamente la misma configuración.
+
+## Agregar resultados
+
+Para regresión se promedian habitualmente valores predichos. Para clasificación se combinan votos o probabilidades según la implementación.
+
+Este ejemplo solo muestra una agregación de probabilidades ya calculadas; no entrena árboles:
+
+```js
+const probabilidades = [0.8, 0.6, 0.7];
+const media = probabilidades.reduce((suma, p) => suma + p, 0) / probabilidades.length;
+
+console.log(media.toFixed(2)); // "0.70"
+console.log(media >= 0.5); // true
+```
+
+Un modelo disidente puede quedar compensado por otros. Eso no garantiza que el grupo tenga razón: si todos aprendieron el mismo sesgo o utilizan información filtrada del futuro, la combinación conserva el problema.
+
+**¿Más árboles siempre arreglan malos datos?** No. Pueden estabilizar el modelo, pero no inventan etiquetas correctas ni corrigen una división de evaluación equivocada.
+
+## Evaluar sin engañarte
+
+Las observaciones que no entran en la muestra de un árbol pueden utilizarse para una evaluación **fuera de bolsa**, u *out-of-bag*, bajo las condiciones del procedimiento. Es una herramienta útil, pero no reemplaza automáticamente una evaluación final independiente del proceso de selección.
+
+Cuando hay datos temporales o grupos relacionados, el muestreo y la evaluación necesitan respetar esas relaciones. Una muestra aleatoria ordinaria puede ofrecer una estimación demasiado optimista.
+
+## Bagging frente a boosting
+
+**Bagging** construye modelos sobre versiones remuestreadas de los datos y combina sus resultados. Los bosques aleatorios añaden variación de características a esa idea. **Boosting** construye una secuencia donde los modelos posteriores corrigen aspectos que la combinación anterior todavía no resolvía.
+
+| Criterio | Bagging y bosques | Gradient boosting |
+| --- | --- | --- |
+| Relación entre modelos | Pueden entrenarse de manera bastante independiente | Cada etapa depende del resultado anterior |
+| Diversidad | Muestreo y características | Corrección sucesiva de la función objetivo |
+| Combinación | Promedio o votación | Suma de contribuciones escaladas |
+| Ajustes importantes | Cantidad, tamaño y diversidad de árboles | Etapas, complejidad y tasa de aprendizaje |
+
+Para el mismo conjunto tabular, puedes comparar ambos con las mismas particiones y presupuesto de evaluación. No existe una superioridad universal: el resultado depende de datos, ajustes y restricciones. El funcionamiento de la segunda opción se desarrolla en [gradient boosting](/articulos/gradient-boosting/).
+
+## Costes y límites
+
+Muchos árboles ocupan más memoria y tardan más en predecir que uno. Los bosques ofrecen herramientas de importancia de variables, pero esas medidas pueden depender del método y no demuestran causalidad.
+
+Empieza por una referencia sencilla, evalúa con datos separados y revisa errores relevantes. La complejidad del conjunto no elimina la necesidad de entender cómo se utilizará su salida.
+
+## Lo esencial
+
+- Un bosque combina árboles diversos para estabilizar predicciones.
+- Bootstrap y selección de características evitan que todos sean iguales.
+- Agregar modelos no elimina sesgos ni fuga de datos.
+- Bagging combina modelos; boosting construye correcciones sucesivas.

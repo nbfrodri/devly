@@ -1,0 +1,70 @@
+---
+title: "¿Qué es MLOps?"
+description: "MLOps organiza datos, entrenamiento, evaluación, despliegue y seguimiento para mantener modelos como sistemas reproducibles y operables."
+level: intermedio
+layer: ia
+prerequisites:
+  - integracion-y-despliegue-continuos
+  - que-es-un-conjunto-de-datos
+  - validacion-cruzada
+updated: 2026-10-14
+sources:
+  - title: "Google Cloud: MLOps, Continuous Delivery and Automation Pipelines (en inglés)"
+    url: https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
+---
+
+**MLOps** reúne prácticas para desarrollar, desplegar y mantener sistemas de aprendizaje automático de forma controlada. Amplía la entrega de software para incluir datos, entrenamiento, evaluación y seguimiento del comportamiento de los modelos.
+
+## El código no describe todo el resultado
+
+Dos entrenamientos con el mismo código pueden producir modelos distintos si cambian los datos, la configuración, el orden de las muestras o ciertas operaciones numéricas. Un archivo de pesos tampoco explica por sí solo cómo se prepararon sus entradas.
+
+El sistema que llega a producción incluye esas dependencias. Para reconstruir un resultado necesitas conservar versiones y relaciones entre código, datos, transformaciones, configuración, modelo y evaluación.
+
+## Una canalización con responsabilidades
+
+Una **canalización** organiza pasos: obtener y validar datos, preparar características, entrenar, evaluar, registrar un artefacto y desplegarlo si cumple las condiciones acordadas.
+
+Cada paso debe producir resultados identificables. Si falla la validación de datos, no tiene sentido continuar entrenando como si nada. Si la evaluación no mejora una referencia relevante, el nuevo modelo no debe promocionarse solo porque terminó sin errores.
+
+La automatización permite repetir el procedimiento y registrar evidencia. No convierte automáticamente en correcta una selección de datos o una métrica equivocadas.
+
+## Qué versionar
+
+Conserva la configuración del experimento, la procedencia y versión de los datos, el preprocesamiento y las dependencias relevantes. Registra también las métricas y condiciones de evaluación: un valor aislado de exactitud sin conocer el conjunto usado resulta difícil de comparar.
+
+Un [checkpoint](/articulos/checkpoints-de-modelos/) puede ayudar a continuar el entrenamiento, pero el artefacto para inferencia puede necesitar además vocabulario, escaladores o reglas de categorías. La compatibilidad de todo el conjunto debe verificarse.
+
+## Inferencia por lotes y en tiempo real
+
+La **inferencia por lotes** procesa grupos de entradas para producir resultados destinados a un uso posterior. La **inferencia en tiempo real** atiende solicitudes que necesitan una respuesta dentro de un plazo interactivo u operativo.
+
+| Criterio | Por lotes | En tiempo real |
+| --- | --- | --- |
+| Ejemplo | Puntuar cada noche el catálogo | Responder a una búsqueda actual |
+| Latencia relevante | Fin de la ejecución y frescura del resultado | Plazo de cada solicitud |
+| Utilización | Puede agrupar y planificar trabajo | Debe responder a demanda variable |
+| Recuperación | Reanudar o repetir particiones | Gestionar fallos y límites por solicitud |
+
+El mismo modelo puede utilizarse de ambas formas. No confundas agrupar varias solicitudes dentro de un servidor con convertir el producto en un proceso nocturno: existe también agrupación interna para aprovechar el hardware manteniendo un plazo corto.
+
+**¿Un modelo que predice bien fuera de línea está listo para servir peticiones?** No necesariamente. Faltan medir memoria, latencia, concurrencia y compatibilidad con las entradas reales.
+
+## Desplegar y observar
+
+Puedes introducir un modelo de forma gradual, comparar con el anterior y conservar una vía de recuperación. La evaluación debe considerar segmentos y consecuencias de los errores, no solo una métrica global.
+
+Después del despliegue, observa datos, predicciones, rendimiento y calidad cuando llegan etiquetas. La [deriva](/articulos/deriva-de-datos-y-de-concepto/) puede revelar que el entorno cambió. También puede haber una diferencia entre cómo se preparan características al entrenar y al servir.
+
+## Automatizar con criterios
+
+Entrenar periódicamente o ante una señal es una decisión del sistema. El entrenamiento automático no obliga a publicar automáticamente cualquier resultado. Puedes automatizar comprobaciones y mantener una aprobación cuando el impacto o la incertidumbre lo justifiquen.
+
+Empieza con un procedimiento sencillo que puedas repetir y auditar. Añade infraestructura cuando exista una necesidad de escala, coordinación o tiempo de entrega, evitando construir una plataforma antes de conocer el flujo real.
+
+## Lo esencial
+
+- El artefacto depende de datos y transformaciones además del código.
+- Cada etapa debe validar y registrar lo que produce.
+- Lotes y tiempo real tienen restricciones operativas diferentes.
+- Desplegar no termina el trabajo: hay que seguir calidad, deriva y rendimiento.

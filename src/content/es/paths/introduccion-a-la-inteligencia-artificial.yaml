@@ -7,6 +7,7 @@ steps:
   - preparacion-de-datos
   - vecinos-mas-cercanos
   - arboles-de-decision
+  - bosques-aleatorios
   - agrupamiento-y-k-medias
   - reduccion-de-dimensionalidad
   - sobreajuste-y-subajuste
@@ -16,6 +17,8 @@ steps:
   - que-es-una-red-neuronal
   - tensores-en-aprendizaje-automatico
   - descenso-del-gradiente
+  - que-es-una-funcion-de-perdida
+  - gradient-boosting
   - checkpoints-de-modelos
   - retropropagacion
   - redes-convolucionales

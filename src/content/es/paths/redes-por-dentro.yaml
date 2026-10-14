@@ -17,6 +17,7 @@ steps:
   - subredes-y-cidr
   - que-es-nat
   - tcp-y-udp
+  - control-de-congestion-tcp
   - ancho-de-banda-latencia-y-rendimiento
   - jitter-de-red
   - proxy-y-proxy-inverso

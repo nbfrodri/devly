@@ -3,6 +3,7 @@ description: "Cómo se define, se diseña y se mantiene un software que dura: re
 layer: aplicaciones
 steps:
   - requisitos-funcionales-y-no-funcionales
+  - condiciones-de-aceptacion
   - uml
   - principios-solid
   - patrones-de-diseno
@@ -10,4 +11,9 @@ steps:
   - arquitectura-orientada-a-eventos
   - cqrs-y-event-sourcing
   - revision-de-codigo
+  - pruebas-de-software
+  - que-es-una-asercion
+  - pruebas-basadas-en-propiedades
+  - observabilidad
+  - pruebas-de-carga-y-estres
   - que-es-la-deuda-tecnica

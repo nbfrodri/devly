@@ -1,0 +1,60 @@
+---
+title: "¿Cómo se diseñan los reintentos de una petición?"
+description: "Un reintento necesita límites, tiempos de espera y garantías sobre qué ocurre si la primera petición ya se había aplicado."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - atomicidad-e-idempotencia
+  - limitacion-de-peticiones
+updated: 2026-10-14
+sources:
+  - title: "Amazon Builders' Library: Timeouts, Retries and Backoff with Jitter (en inglés)"
+    url: https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
+---
+
+Un **reintento** repite una operación que no ha terminado con una respuesta utilizable. Puede recuperar fallos transitorios, pero también duplicar efectos o agravar una sobrecarga. Diseñarlo consiste en decidir qué repetir, cuánto esperar y cuándo dejar de hacerlo.
+
+## Una respuesta perdida no equivale a una operación perdida
+
+Envías una orden para crear un pedido y se agota el tiempo de espera. Hay varias posibilidades: la petición no llegó, sigue ejecutándose o ya creó el pedido pero su respuesta se perdió. El cliente no puede distinguirlas solo por observar el timeout.
+
+Repetir sin coordinación puede crear dos pedidos. La [idempotencia](/articulos/atomicidad-e-idempotencia/) permite que repetir el mismo intento lógico conserve un único efecto, por ejemplo mediante una clave que el servidor almacena y asocia al resultado. Esa clave debe mantenerse entre reintentos del mismo trabajo.
+
+## Primero, un presupuesto de tiempo
+
+El **timeout** limita cuánto esperas por un intento. El **plazo total** limita la operación completa, incluidas esperas y reintentos. Si cada intento puede esperar varios segundos sin respetar un plazo global, una petición breve puede convertirse en una espera muy larga.
+
+Debes incluir conexión, negociación y lectura según el contrato del cliente utilizado. No todas las opciones de timeout cubren las mismas fases. También hay que cancelar el trabajo cuando ya no sirve, si las capas implicadas lo permiten.
+
+## Qué errores repetir
+
+Un fallo de conectividad temporal o una respuesta de sobrecarga puede justificar otro intento. Un dato inválido o una autorización rechazada normalmente exige corregir la causa. La política necesita conocer la operación y el contrato del servicio, no una regla ciega de «repetir cualquier excepción».
+
+Cuando un servidor indica una espera mediante `Retry-After`, esa señal debe interpretarse dentro de tus límites de tiempo y del contrato. Esperar más de lo que le queda de vida a la petición no aporta una respuesta útil.
+
+## Espera exponencial con variación
+
+El **backoff exponencial** aumenta la espera entre intentos, por ejemplo 100, 200 y 400 milisegundos, hasta un máximo. El **jitter** añade variación para que muchos clientes no vuelvan todos a la vez.
+
+Si mil clientes fallan juntos y todos esperan exactamente un segundo, producen una segunda oleada sincronizada. Distribuir los intentos reduce ese pico, aunque no crea capacidad nueva en el servidor.
+
+**¿Basta con esperar para hacer segura una escritura?** No. La espera controla la carga; la idempotencia y el protocolo controlan sus efectos. Resuelven problemas diferentes.
+
+## El peligro de multiplicar intentos
+
+Si tres capas hacen hasta tres intentos cada una, una solicitud puede provocar hasta 27 llamadas en la capa final. Durante un fallo, precisamente cuando menos capacidad hay, el sistema recibe más trabajo.
+
+Conviene decidir dónde vive la política, limitar el número y la tasa de reintentos y compartir el presupuesto de tiempo. Un intento adicional debe tener una posibilidad razonable de ayudar, no ser una obligación automática.
+
+## Un recorrido concreto
+
+Para un pedido con clave de idempotencia K, el primer intento termina sin respuesta. El cliente comprueba que queda plazo, espera un intervalo con jitter y repite con K. Si el servidor ya completó el pedido, recupera el resultado asociado; si no, el contrato debe garantizar cómo evita ejecuciones simultáneas duplicadas.
+
+Al agotarse el presupuesto, el cliente comunica incertidumbre o inicia una consulta de estado según el producto. Inventar una respuesta de éxito o crear otra clave ocultaría el problema.
+
+## Lo esencial
+
+- Timeout no significa que el servidor no haya aplicado la operación.
+- Reintentar escrituras exige entender su idempotencia.
+- Limita intentos y plazo total; utiliza espera y jitter cuando corresponda.
+- Evita políticas anidadas que multipliquen la carga durante un fallo.

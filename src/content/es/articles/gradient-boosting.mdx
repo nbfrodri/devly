@@ -1,0 +1,76 @@
+---
+title: "¿Qué es el gradient boosting?"
+description: "Gradient boosting construye una predicción sumando modelos que corrigen gradualmente el error de la combinación anterior."
+level: intermedio
+layer: ia
+prerequisites:
+  - arboles-de-decision
+  - que-es-una-funcion-de-perdida
+  - descenso-del-gradiente
+updated: 2026-10-14
+sources:
+  - title: "scikit-learn: Gradient Boosting, documentación oficial (en inglés)"
+    url: https://scikit-learn.org/stable/modules/ensemble.html
+---
+
+El **gradient boosting** es un método que construye un modelo aditivo por etapas. Cada modelo nuevo aproxima una dirección que reduce la pérdida de la combinación actual. Los árboles pequeños son una elección frecuente para esas correcciones.
+
+## Qué problema resuelve
+
+Un árbol poco profundo puede no representar una relación compleja. Hacerlo muy grande puede producir sobreajuste. Boosting propone otra forma de aumentar capacidad: sumar muchas correcciones pequeñas y controlar cuánto aporta cada una.
+
+No se entrenan todos los árboles para luego promediarlos sin más. La etapa siguiente utiliza información sobre lo que todavía falla en la combinación anterior. Ese carácter secuencial lo diferencia del [bagging y los bosques aleatorios](/articulos/bosques-aleatorios/).
+
+## Empezar con una predicción sencilla
+
+En regresión con error cuadrático, puedes empezar prediciendo la media de las respuestas para todos los casos. Después calculas los residuos: valor real menos predicción.
+
+Entrenas un modelo pequeño para aproximar esos residuos y añades una fracción de su salida a la predicción actual. Repites el proceso con los errores que quedan.
+
+Para otras pérdidas, la corrección se relaciona con el gradiente negativo respecto a la predicción. No siempre equivale a restar una etiqueta de clase de un número y entrenar sobre ese residuo literal.
+
+## Una etapa con números
+
+Hay dos casos con respuestas uno y tres. Empezamos prediciendo dos para ambos. Sus residuos son menos uno y uno. Supongamos que un pequeño árbol logra representar esa corrección:
+
+```js
+const reales = [1, 3];
+const predicciones = [2, 2];
+const residuos = reales.map((y, i) => y - predicciones[i]);
+const tasa = 0.5;
+const nuevas = predicciones.map((p, i) => p + tasa * residuos[i]);
+const mse = (valores) => valores.reduce((s, p, i) => s + (reales[i] - p) ** 2, 0) / reales.length;
+
+console.log(mse(predicciones)); // 1
+console.log(nuevas.join(" ")); // "1.5 2.5"
+console.log(mse(nuevas)); // 0.25
+```
+
+El código ilustra la actualización suponiendo que ya se obtuvo la corrección. No implementa el entrenamiento de un árbol ni demuestra cómo generalizará a ejemplos nuevos.
+
+## Por qué reducir la contribución
+
+La **tasa de aprendizaje** controla cuánto aporta cada etapa. Una tasa menor suele necesitar más etapas para conseguir el mismo ajuste. Eso puede ayudar a controlar el aprendizaje, pero también cuesta más tiempo y no evita por sí solo el sobreajuste.
+
+La cantidad de árboles, su profundidad y la tasa interactúan. No conviene juzgar un ajuste cambiando una cifra sin considerar las otras. Para elegirlos se utilizan datos de validación, nunca una inspección repetida del conjunto de prueba final.
+
+**¿Que cada etapa reduzca la pérdida de entrenamiento garantiza mejor resultado externo?** No. Puedes seguir ajustando particularidades del entrenamiento cuando el rendimiento de validación ya empeora.
+
+## Detener y regularizar
+
+La **parada temprana** observa una medida de validación y detiene la construcción cuando deja de mejorar según una regla definida. También puedes limitar complejidad de los árboles, tamaño mínimo de hojas o cantidad de etapas, entre otras opciones.
+
+Estas decisiones deben formar parte de un procedimiento reproducible. Si pruebas muchas configuraciones y eliges la mejor, necesitas una evaluación independiente que no haya participado en la selección.
+
+## Lo que se gana y lo que cuesta
+
+Boosting puede representar relaciones no lineales mediante la suma de modelos sencillos y funciona bien en muchos problemas tabulares. Eso es una razón para evaluarlo, no para declararlo ganador de cualquier tarea.
+
+Su construcción por etapas introduce dependencias y puede complicar el ajuste. La inferencia también combina las contribuciones de varios modelos. Las bibliotecas optimizan ese trabajo de formas diferentes; conviene medir tiempo, memoria y calidad con las restricciones reales del sistema.
+
+## Lo esencial
+
+- El modelo final suma contribuciones, no solo votos independientes.
+- Cada etapa intenta reducir la pérdida de la combinación anterior.
+- Residuos y gradientes coinciden en ciertos casos, no en todas las pérdidas.
+- Tasa, complejidad, etapas y validación controlan el resultado.

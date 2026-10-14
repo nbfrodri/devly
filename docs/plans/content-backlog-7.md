@@ -8,7 +8,11 @@ El plan reúne **99 tareas**: 32 conceptos, 29 definiciones, 22 comparaciones y 
 
 ## Estado de ejecución
 
-Dos tandas: **46 de 99 tareas resueltas**, con 34 artículos nuevos y ampliaciones de los existentes. Están cubiertas las 29 definiciones, seis conceptos, cinco comparaciones y seis curiosidades. Las casillas restantes siguen pendientes. La revisión visual en navegador queda pendiente: la sesión no dispone de un navegador conectado.
+**99 de 99 tareas implementadas** en `feat/content-plan-7`: 72 artículos nuevos; las otras 27 tareas se cubren con ampliaciones y apartados de comparación dentro de los conceptos correspondientes. El sitio pasa de 461 a 533 artículos. Las casillas registran la implementación en esta rama; la publicación del sitio depende de su integración en `main`.
+
+Se ampliaron las rutas existentes y se añadió «Modelos de IA en producción» porque cubre un recorrido propio de evaluación, despliegue y seguimiento, distinto de la introducción a los modelos. Verificación: `pnpm check`, 558 tests, auditoría de prerrequisitos y enlaces entrantes y 35 ejemplos ejecutados (34 bloques JavaScript/SQL y uno de Python con SQLite).
+
+Pendiente de revisión manual: apariencia y comportamiento en navegador, incluidos los cuatro diagramas Mermaid nuevos. No hay un navegador conectado en esta sesión; se hizo una comprobación HTTP puntual con Astro y se verificó la construcción estática completa. La comprobación adicional del parser de Mermaid en Node no pudo ejecutarse por la dependencia de DOMPurify de un DOM de navegador.
 
 ## Huecos detectados
 
@@ -27,7 +31,7 @@ Dos tandas: **46 de 99 tareas resueltas**, con 34 artículos nuevos y ampliacion
 - Seguir la [guía de contenido](../content-guide.md): fuentes primarias abiertas y comprobadas, ejemplos ejecutados y un solo concepto por artículo.
 - Antes de escribir, revisar los artículos indicados y buscar el término en el contenido. Si ya está suficientemente explicado, ampliar o enlazar el artículo existente y marcar la tarea con una nota; no crear otro para aumentar la cuenta.
 - Las definiciones aclaran un término en 200–400 palabras. Las comparaciones enlazan los conceptos de ambos lados; si falta uno, escribirlo antes o ampliar el artículo de partida.
-- Las curiosidades de este plan son **propuestas de investigación**, con fuentes aún por comprobar. No dar por cierta una anécdota por estar aquí: contrastar la fuente original y descartar la propuesta si no se puede respaldar.
+- Las curiosidades requieren investigación antes de redactarse: contrastar la fuente original y descartar una propuesta si no se puede respaldar. Las fuentes comprobadas constan en cada artículo implementado.
 - En cada tanda, enlazar los artículos nuevos desde los existentes que los mencionan y ampliar las rutas que encajen. Marcar cada casilla al publicar, anotando si se ha resuelto mediante una ampliación.
 
 ## Conceptos para completar el temario
@@ -42,48 +46,48 @@ Dos tandas: **46 de 99 tareas resueltas**, con 34 artículos nuevos y ampliacion
 
 ### Ingeniería del software y aplicaciones
 
-- [ ] ¿Qué son las pruebas basadas en propiedades? (pruebas de software; propiedades, generación y reducción de casos)
-- [ ] ¿Qué son las pruebas de contrato? (API y microservicios; compatibilidad entre consumidor y proveedor)
-- [ ] ¿Cómo evoluciona una API sin romper a sus clientes? (REST y requisitos; compatibilidad, retirada y versionado)
-- [ ] ¿Qué es una migración de base de datos? (SQL y CI/CD; cambios compatibles mediante expandir, migrar y contraer)
-- [ ] ¿Cómo dibuja una página el navegador? (DOM, CSS y rendimiento web; estilo, layout, pintura y composición)
+- [x] ¿Qué son las pruebas basadas en propiedades? (pruebas de software; propiedades, generación y reducción de casos)
+- [x] ¿Qué son las pruebas de contrato? (API y microservicios; compatibilidad entre consumidor y proveedor)
+- [x] ¿Cómo evoluciona una API sin romper a sus clientes? (REST y requisitos; compatibilidad, retirada y versionado)
+- [x] ¿Qué es una migración de base de datos? (SQL y CI/CD; cambios compatibles mediante expandir, migrar y contraer)
+- [x] ¿Cómo dibuja una página el navegador? (DOM, CSS y rendimiento web; estilo, layout, pintura y composición)
 
 ### Datos y bases de datos
 
 - [x] ¿Cómo se lee un plan de ejecución SQL? (índices y PostgreSQL; usar SQLite para los ejemplos ejecutables)
-- [ ] ¿Qué son los niveles de aislamiento de una transacción? (ACID y MVCC; reproducir anomalías, distinguiendo lo que permite cada motor)
-- [ ] ¿Qué es la captura de cambios de datos, CDC? (ETL y WAL; límites frente a consultas periódicas y event sourcing)
-- [ ] ¿Qué es la regresión lineal? (estadística y aprendizaje automático; ajuste, residuos y límites de interpretación)
-- [ ] ¿Qué es la regresión logística? (clasificación y evaluación de modelos; probabilidades, umbral y límites)
+- [x] ¿Qué son los niveles de aislamiento de una transacción? (ACID y MVCC; reproducir anomalías, distinguiendo lo que permite cada motor)
+- [x] ¿Qué es la captura de cambios de datos, CDC? (ETL y WAL; límites frente a consultas periódicas y event sourcing)
+- [x] ¿Qué es la regresión lineal? (estadística y aprendizaje automático; ajuste, residuos y límites de interpretación)
+- [x] ¿Qué es la regresión logística? (clasificación y evaluación de modelos; probabilidades, umbral y límites)
 
 ### Sistemas, concurrencia y fiabilidad
 
-- [ ] ¿Qué es un semáforo en programación concurrente? (hilos y bloqueos; contador de permisos y ejemplo productor-consumidor)
-- [ ] ¿Qué es la contrapresión o backpressure? (colas de mensajes; qué sucede cuando el consumidor no da abasto)
-- [ ] ¿Cómo se diseñan los reintentos de una petición? (idempotencia y limitación de peticiones; timeout, espera exponencial y jitter)
-- [ ] ¿Qué es un disyuntor o circuit breaker? (microservicios y reintentos; estados y recuperación)
-- [ ] ¿Qué son los presupuestos de error? (observabilidad; partir de indicadores y objetivos de servicio)
+- [x] ¿Qué es un semáforo en programación concurrente? (hilos y bloqueos; contador de permisos y ejemplo productor-consumidor)
+- [x] ¿Qué es la contrapresión o backpressure? (colas de mensajes; qué sucede cuando el consumidor no da abasto)
+- [x] ¿Cómo se diseñan los reintentos de una petición? (idempotencia y limitación de peticiones; timeout, espera exponencial y jitter)
+- [x] ¿Qué es un disyuntor o circuit breaker? (microservicios y reintentos; estados y recuperación)
+- [x] ¿Qué son los presupuestos de error? (observabilidad; partir de indicadores y objetivos de servicio)
 
 ### Redes y telecomunicaciones
 
-- [ ] ¿Qué es el aliasing y cómo se evita? (muestreo de señales y sonido; desarrollar lo ya introducido, con ejemplos de frecuencias)
-- [ ] ¿Para qué sirve la transformada de Fourier al procesar señales? (señales y modulación; aplicación a audio, sin convertirlo en una lección de matemática pura)
-- [ ] ¿Qué es un filtro digital? (Fourier y muestreo; ejemplo de media móvil y límites)
-- [ ] ¿Cómo funciona el control de congestión de TCP? (TCP y UDP; distinguirlo del control de flujo)
+- [x] ¿Qué es el aliasing y cómo se evita? (muestreo de señales y sonido; desarrollar lo ya introducido, con ejemplos de frecuencias)
+- [x] ¿Para qué sirve la transformada de Fourier al procesar señales? (señales y modulación; aplicación a audio, sin convertirlo en una lección de matemática pura)
+- [x] ¿Qué es un filtro digital? (Fourier y muestreo; ejemplo de media móvil y límites)
+- [x] ¿Cómo funciona el control de congestión de TCP? (TCP y UDP; distinguirlo del control de flujo)
 
 ### Hardware y arquitectura
 
-- [ ] ¿Qué es la coherencia de caché? (caché del procesador y multinúcleo; distinguir coherencia de consistencia de memoria)
-- [ ] ¿Qué es la ejecución fuera de orden? (segmentación del procesador; dependencias, especulación y retiro)
-- [ ] ¿Qué es el acceso directo a memoria, DMA? (interrupciones y E/S; transferencia sin copiar cada dato desde la CPU)
+- [x] ¿Qué es la coherencia de caché? (caché del procesador y multinúcleo; distinguir coherencia de consistencia de memoria)
+- [x] ¿Qué es la ejecución fuera de orden? (segmentación del procesador; dependencias, especulación y retiro)
+- [x] ¿Qué es el acceso directo a memoria, DMA? (interrupciones y E/S; transferencia sin copiar cada dato desde la CPU)
 
 ### Inteligencia artificial en producción
 
-- [ ] ¿Qué son los bosques aleatorios? (árboles de decisión; muestreo, combinación y evaluación)
-- [ ] ¿Qué es el gradient boosting? (árboles de decisión y función de pérdida; modelos que corrigen errores sucesivos)
-- [ ] ¿Qué es la deriva de datos y de concepto? (calidad de datos y evaluación; detectar cambios y decidir cuándo reentrenar)
-- [ ] ¿Qué es MLOps? (CI/CD, conjuntos de datos y evaluación; versiones, despliegue y seguimiento de modelos)
-- [ ] ¿Qué es la cuantización de un modelo de IA? (parámetros e inferencia; distinguirla de la cuantización de señales y vectores)
+- [x] ¿Qué son los bosques aleatorios? (árboles de decisión; muestreo, combinación y evaluación)
+- [x] ¿Qué es el gradient boosting? (árboles de decisión y función de pérdida; modelos que corrigen errores sucesivos)
+- [x] ¿Qué es la deriva de datos y de concepto? (calidad de datos y evaluación; detectar cambios y decidir cuándo reentrenar)
+- [x] ¿Qué es MLOps? (CI/CD, conjuntos de datos y evaluación; versiones, despliegue y seguimiento de modelos)
+- [x] ¿Qué es la cuantización de un modelo de IA? (parámetros e inferencia; distinguirla de la cuantización de señales y vectores)
 
 ## Definiciones
 
@@ -136,56 +140,56 @@ Dos tandas: **46 de 99 tareas resueltas**, con 34 artículos nuevos y ampliacion
 ### Programación y pruebas
 
 - [x] Diferencias entre concurrencia y paralelismo (ampliar la distinción de hilos y concurrencia con el mismo trabajo ejecutado de ambas formas) Ampliado `hilos-y-concurrencia` con el mismo trabajo y una tabla.
-- [ ] Diferencias entre código síncrono y asíncrono (promesas y bucle de eventos; no confundir asincronía con paralelismo)
-- [ ] Diferencias entre un mutex y un semáforo (bloqueos y nuevo artículo de semáforos)
-- [ ] Diferencias entre igualdad e identidad (objetos, referencias y paso de argumentos; declarar el lenguaje de los ejemplos)
-- [ ] Diferencias entre mock, stub y fake (ampliar los dobles de prueba introducidos en pruebas de software)
-- [ ] Diferencias entre pruebas de carga y de estrés (pruebas de software y observabilidad)
+- [x] Diferencias entre código síncrono y asíncrono (promesas y bucle de eventos; no confundir asincronía con paralelismo) Ampliada en `promesas-y-async-await`.
+- [x] Diferencias entre un mutex y un semáforo (bloqueos y nuevo artículo de semáforos) Incluida con tabla y caso compartido en `semaforos-en-concurrencia`.
+- [x] Diferencias entre igualdad e identidad (objetos, referencias y paso de argumentos; declarar el lenguaje de los ejemplos)
+- [x] Diferencias entre mock, stub y fake (ampliar los dobles de prueba introducidos en pruebas de software) Ampliada en `pruebas-de-software`.
+- [x] Diferencias entre pruebas de carga y de estrés (pruebas de software y observabilidad)
 
 ### Aplicaciones y datos
 
 - [x] Diferencias entre desplegar y lanzar una funcionalidad (CI/CD, estrategias de despliegue y banderas de funcionalidad) Ampliado `estrategias-de-despliegue` con tabla y límites de reversión.
 - [x] Diferencias entre ETL y ELT (procesos ETL y almacenes de datos) Ampliado y corregido `procesos-etl`.
-- [ ] Diferencias entre procesamiento por lotes y en streaming (MapReduce, Spark y Kafka)
-- [ ] Diferencias entre bloqueo optimista y pesimista (aislamiento y MVCC; resolver la misma actualización concurrente)
-- [ ] Diferencias entre una vista normal y una vista materializada (vistas y procedimientos almacenados; no repetir vista frente a tabla)
-- [ ] Diferencias entre copia de seguridad, réplica y snapshot (copias de seguridad y replicación; qué fallo permite recuperar cada una)
+- [x] Diferencias entre procesamiento por lotes y en streaming (MapReduce, Spark y Kafka) Ampliada en `mapreduce-y-spark`.
+- [x] Diferencias entre bloqueo optimista y pesimista (aislamiento y MVCC; resolver la misma actualización concurrente) Incluida en `niveles-de-aislamiento`, con comprobación de versión ejecutada en SQLite.
+- [x] Diferencias entre una vista normal y una vista materializada (vistas y procedimientos almacenados; no repetir vista frente a tabla) Ampliada y matizada en `vistas-y-procedimientos-almacenados`.
+- [x] Diferencias entre copia de seguridad, réplica y snapshot (copias de seguridad y replicación; qué fallo permite recuperar cada una) Ampliada en `copias-de-seguridad`.
 
 ### Redes, sistemas y hardware
 
-- [ ] Diferencias entre control de flujo y control de congestión (TCP; receptor frente a red)
-- [ ] Diferencias entre ancho de banda en hercios y tasa de bits (modulación; aclarar las unidades sin repetir latencia y rendimiento)
+- [x] Diferencias entre control de flujo y control de congestión (TCP; receptor frente a red) Incluida con tabla en `control-de-congestion-tcp`.
+- [x] Diferencias entre ancho de banda en hercios y tasa de bits (modulación; aclarar las unidades sin repetir latencia y rendimiento) Ampliada en `modulacion`.
 - [x] Diferencias entre enlaces duros y simbólicos (sistema de archivos; ampliar el apartado actual con borrado y cambio de destino) Ampliado `sistema-de-archivos` con renombrado, cambio de destino y tabla.
-- [ ] Diferencias entre interrupciones y sondeo de dispositivos (interrupciones y E/S; no confundir con polling HTTP)
-- [ ] Diferencias entre disponibilidad y durabilidad (almacenamiento de objetos, réplicas y copias de seguridad)
-- [ ] Diferencias entre SLI, SLO y SLA (observabilidad y presupuestos de error)
+- [x] Diferencias entre interrupciones y sondeo de dispositivos (interrupciones y E/S; no confundir con polling HTTP) Ampliada en `interrupciones-y-entrada-salida`.
+- [x] Diferencias entre disponibilidad y durabilidad (almacenamiento de objetos, réplicas y copias de seguridad) Incluida en `almacenamiento-de-objetos`.
+- [x] Diferencias entre SLI, SLO y SLA (observabilidad y presupuestos de error) Incluida en `observabilidad`, conectada con presupuestos de error.
 
 ### IA y análisis de datos
 
 - [x] Diferencias entre validación y prueba de un modelo (validación cruzada; uso de cada conjunto y fuga de datos) Ampliado `validacion-cruzada` con ejemplo de selección y tabla.
-- [ ] Diferencias entre bagging y boosting (bosques aleatorios y gradient boosting; escribir después de ambos conceptos)
-- [ ] Diferencias entre entrenar desde cero, ajustar y destilar un modelo (ajuste fino y transferencia; explicar destilación antes de comparar)
-- [ ] Diferencias entre inferencia por lotes y en tiempo real (inferencia y MLOps; latencia, coste y actualización)
+- [x] Diferencias entre bagging y boosting (bosques aleatorios y gradient boosting; escribir después de ambos conceptos) Incluida con tabla en `bosques-aleatorios` y enlazada a `gradient-boosting`.
+- [x] Diferencias entre entrenar desde cero, ajustar y destilar un modelo (ajuste fino y transferencia; explicar destilación antes de comparar) Ampliada en `ajuste-fino`.
+- [x] Diferencias entre inferencia por lotes y en tiempo real (inferencia y MLOps; latencia, coste y actualización) Incluida con tabla y criterios operativos en `mlops`.
 
 ## Curiosidades
 
-Cada propuesta debe conectar la historia con un concepto. Las pistas documentales indican dónde investigar; no son fuentes verificadas ni sustituyen abrir y comprobar los documentos antes de citar.
+Cada curiosidad conecta la historia con un concepto. Las pistas documentales de esta lista fueron puntos de partida; los documentos comprobados se citan en los artículos correspondientes.
 
-- [ ] El error de división del Pentium: ¿cómo puede equivocarse un procesador? (coma flotante y validación de hardware; buscar documentación técnica de Intel)
-- [ ] El fallo del Ariane 5: cuando reutilizar software cambia las suposiciones (conversiones numéricas y requisitos; investigar el informe de la comisión de investigación de la ESA)
-- [ ] Therac-25: qué puede pasar cuando el software controla una máquina (concurrencia y seguridad; contrastar los estudios originales de los incidentes)
+- [x] El error de división del Pentium: ¿cómo puede equivocarse un procesador? (coma flotante y validación de hardware; buscar documentación técnica de Intel)
+- [x] El fallo del Ariane 5: cuando reutilizar software cambia las suposiciones (conversiones numéricas y requisitos; investigar el informe de la comisión de investigación de la ESA)
+- [x] Therac-25: qué puede pasar cuando el software controla una máquina (concurrencia y seguridad; contrastar los estudios originales de los incidentes)
 - [x] La misión Mars Climate Orbiter y las unidades de medida (contratos de interfaz y pruebas; investigar el informe de la NASA)
 - [x] ¿Qué ocurrió con los paquetes de ARPANET el 1 de enero de 1983? (TCP/IP e historia de internet; buscar documentación de la transición desde NCP)
-- [ ] ¿Por qué Ethernet se llama Ethernet? (capa de enlace; investigar el memorando y los trabajos originales de sus creadores)
-- [ ] ¿Cómo se eligió la longitud de una dirección IPv4? (IPv4 e IPv6; distinguir decisiones documentadas de explicaciones retrospectivas)
+- [x] ¿Por qué Ethernet se llama Ethernet? (capa de enlace; investigar el memorando y los trabajos originales de sus creadores)
+- [x] ¿Cómo se eligió la longitud de una dirección IPv4? (IPv4 e IPv6; distinguir decisiones documentadas de explicaciones retrospectivas)
 - [x] ¿De dónde viene el nombre «SQL»? (SQL e historia de las bases de datos; investigar SEQUEL y System R)
 - [x] El artículo que propuso las bases de datos relacionales (modelo relacional y normalización; investigar el trabajo de Codd y su contexto)
-- [ ] ¿Por qué existe el valor NULL? (NULL y lógica de tres valores; investigar su diseño, sin reducirlo a «un dato vacío»)
-- [ ] ¿Qué es la paradoja de Simpson? (correlación, causalidad y agregación; ejemplo numérico reproducible y fuente académica)
-- [ ] La paradoja del cumpleaños y las colisiones de hash (probabilidad y tablas hash; calcular el caso y distinguir colisión de ataque)
+- [x] ¿Por qué existe el valor NULL? (NULL y lógica de tres valores; investigar su diseño, sin reducirlo a «un dato vacío»)
+- [x] ¿Qué es la paradoja de Simpson? (correlación, causalidad y agregación; ejemplo numérico reproducible y fuente académica)
+- [x] La paradoja del cumpleaños y las colisiones de hash (probabilidad y tablas hash; calcular el caso y distinguir colisión de ataque)
 - [x] ¿De dónde vienen big-endian y little-endian? (endianness; investigar el texto original de Danny Cohen)
-- [ ] ¿Qué fue ELIZA y por qué parecía entender? (modelos de lenguaje y test de Turing; investigar el artículo original de Weizenbaum)
-- [ ] ¿Qué aprendió realmente el perceptrón? (redes neuronales e inviernos de la IA; investigar trabajos originales, sin atribuir el invierno a una sola causa)
+- [x] ¿Qué fue ELIZA y por qué parecía entender? (modelos de lenguaje y test de Turing; investigar el artículo original de Weizenbaum)
+- [x] ¿Qué aprendió realmente el perceptrón? (redes neuronales e inviernos de la IA; investigar trabajos originales, sin atribuir el invierno a una sola causa)
 - [x] La ley de Amdahl: por qué duplicar los núcleos no duplica la velocidad (multinúcleo y paralelismo; investigar el trabajo original y reproducir un cálculo)
 
 ## Orden de trabajo y rutas

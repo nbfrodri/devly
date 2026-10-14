@@ -8,6 +8,8 @@ prerequisites:
   - sistema-de-archivos
 updated: 2026-10-14
 sources:
+  - title: "Amazon S3: Data Protection, documentación oficial (en inglés)"
+    url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/DataDurability.html
   - title: "Google Cloud: What is object storage? (en inglés)"
     url: https://cloud.google.com/learn/what-is-object-storage
   - title: "AWS: ¿Qué es Amazon S3?"
@@ -78,6 +80,21 @@ Se accede a los objetos con peticiones HTTP: `PUT` para subir, `GET` para descar
 ## Seguridad
 
 Un cubo mal configurado, accesible públicamente sin querer, es una de las causas más repetidas de filtraciones de datos. Los proveedores permiten controlar el acceso con políticas del cubo y con [gestión de identidades y accesos](/articulos/gestion-de-identidades-y-accesos/), y lo prudente es que todo sea privado salvo lo que deba ser público.
+
+## Disponibilidad frente a durabilidad
+
+La **disponibilidad** expresa si el servicio puede atender operaciones dentro de unas condiciones. La **durabilidad** se refiere a conservar los datos. Un objeto puede seguir guardado y resultar temporalmente inaccesible; un servicio puede responder correctamente a muchas solicitudes mientras un dato concreto se ha perdido.
+
+| Criterio | Disponibilidad | Durabilidad |
+| --- | --- | --- |
+| Pregunta | ¿Puedo utilizarlo ahora según el objetivo? | ¿Se conserva lo almacenado? |
+| Fallo ilustrativo | Una interrupción impide leer | El contenido ya no puede recuperarse |
+| Medición | Indicador y ventana definidos | Probabilidad o historial de pérdida según el modelo |
+| Técnicas relacionadas | Redundancia de servicio y recuperación | Redundancia de datos, comprobación y recuperación |
+
+Para una foto, una avería de red puede impedir verla sin destruirla. Borrar su única versión válida puede perderla aunque el sistema continúe atendiendo otras operaciones. No traduzcas una cifra de durabilidad en minutos de disponibilidad: tienen denominadores y contratos distintos.
+
+Las garantías dependen de la clase de almacenamiento y su configuración. Replicar datos no sustituye protegerlos frente a cambios autorizados por error o conservar versiones históricas. Una estrategia de [copias de seguridad](/articulos/copias-de-seguridad/) necesita contemplar también esos casos.
 
 ## Lo esencial
 

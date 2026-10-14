@@ -1,0 +1,75 @@
+---
+title: "¿Qué es una migración de base de datos?"
+description: "Una migración aplica un cambio controlado al esquema o a los datos y debe coordinarse con las versiones del código que los utilizan."
+level: intermedio
+layer: datos
+prerequisites:
+  - que-es-sql
+  - integracion-y-despliegue-continuos
+updated: 2026-10-14
+sources:
+  - title: "Martin Fowler: Parallel Change (en inglés)"
+    url: https://martinfowler.com/bliki/ParallelChange.html
+  - title: "SQLite: ALTER TABLE (en inglés)"
+    url: https://www.sqlite.org/lang_altertable.html
+---
+
+Una **migración de base de datos** es un cambio versionado y controlado del esquema o de los datos. Puede crear una tabla, añadir una columna, transformar valores o introducir una restricción. Forma parte de la evolución del programa, no de una edición manual independiente del código.
+
+## Qué problema resuelve
+
+El código nuevo necesita una columna que no existe en producción. Crear la columna solo en tu máquina no prepara el resto de entornos. Tampoco basta con desplegar ambas cosas «a la vez»: durante un despliegue pueden convivir instancias nuevas y antiguas.
+
+Una migración permite registrar qué cambio debe aplicarse y comprobar en qué estado está cada entorno. El sistema que las ejecuta suele mantener un historial para no repetirlas accidentalmente. Aun así, la fiabilidad depende de su contrato ante errores y ejecuciones simultáneas.
+
+## Expandir, migrar y contraer
+
+El **cambio paralelo** divide una transición incompatible en etapas. Primero amplías el esquema de forma compatible. Después adaptas código y datos. Finalmente retiras lo antiguo cuando ya no queda ningún consumidor que lo necesite.
+
+Imagina que `nombre` pasa a llamarse `nombre_visible`. Renombrar directamente puede romper el código antiguo. Los siguientes bloques funcionan en orden en SQLite y muestran una transición pequeña:
+
+```sql
+CREATE TABLE perfiles (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL);
+INSERT INTO perfiles VALUES (1, 'Ana');
+
+ALTER TABLE perfiles ADD COLUMN nombre_visible TEXT;
+UPDATE perfiles SET nombre_visible = nombre;
+SELECT nombre, nombre_visible FROM perfiles;
+```
+
+La consulta devuelve Ana en ambas columnas. El esquema ya admite el campo nuevo y el antiguo sigue disponible.
+
+## Coordinar las escrituras
+
+Copiar una vez no garantiza que ambos campos permanezcan iguales mientras el programa sigue recibiendo cambios. Necesitas una estrategia durante la convivencia: una versión de la aplicación que escriba ambos, una sincronización controlada u otro mecanismo adecuado al sistema.
+
+```sql
+UPDATE perfiles
+SET nombre = 'Ana María', nombre_visible = 'Ana María'
+WHERE id = 1;
+
+SELECT nombre_visible FROM perfiles WHERE id = 1;
+```
+
+La consulta devuelve Ana María. El ejemplo muestra una actualización coherente, pero no implementa toda una aplicación ni sincroniza automáticamente escritores antiguos. Antes de retirar `nombre`, debes garantizar que han dejado de escribir versiones que solo conocen esa columna.
+
+**¿Es suficiente esperar a que acabe la copia inicial?** No: mientras existan escrituras, también necesitas tratar los cambios posteriores y las carreras durante la copia.
+
+## Migrar datos puede tardar
+
+Una tabla pequeña oculta costes. Actualizar millones de filas puede generar bloqueos, registro de escritura y carga de disco. Conviene estudiar lotes reanudables, ritmo de ejecución y cómo verificar que ninguna fila queda sin transformar.
+
+La estrategia depende del motor y del cambio. Que una operación sea rápida en SQLite local no demuestra que otra base de datos pueda aplicarla sin bloquear en producción.
+
+## Contraer y recuperar
+
+La retirada llega después de migrar lectores y escritores, comprobar datos y cumplir la ventana de compatibilidad. Algunas modificaciones en SQLite requieren reconstruir tablas; su documentación describe las capacidades y limitaciones de `ALTER TABLE`.
+
+Una migración inversa no equivale a una recuperación segura. Si eliminaste información, volver al esquema anterior no la reconstruye. Prepara copias y comprueba restauración cuando el cambio pueda perder datos. A veces la recuperación más adecuada es avanzar con una corrección compatible, no volver a ejecutar una transformación destructiva al revés.
+
+## Lo esencial
+
+- Versiona cambios de esquema y datos junto con el código que los necesita.
+- Amplía, migra y retira en etapas compatibles.
+- La copia inicial y las escrituras concurrentes necesitan coordinación.
+- Reversión de esquema y recuperación de datos son problemas distintos.

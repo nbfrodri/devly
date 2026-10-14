@@ -31,7 +31,7 @@ const mse = reales.reduce((s, r, i) => s + (r - predichos[i]) ** 2, 0) / reales.
 console.log(mae, mse); // 2.25 12.75
 ```
 
-La última predicción falla por 7. En el MAE cuenta 7; en el MSE, al elevarlo al cuadrado, cuenta 49 y domina el resultado. Como señala el curso de Google, la diferencia está en su sensibilidad a los valores atípicos: el MSE los castiga mucho más. Elegir una u otra es decidir qué errores importan más.
+La última predicción falla por 7. En el MAE cuenta 7; en el MSE, al elevarlo al cuadrado, cuenta 49 y domina el resultado. Como señala el curso de Google, la diferencia está en su sensibilidad a los [valores atípicos](/articulos/valores-atipicos/): el MSE los castiga mucho más. Elegir una u otra es decidir qué errores importan más.
 
 ## En clasificación
 

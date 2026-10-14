@@ -5,7 +5,7 @@ level: basico
 layer: redes
 prerequisites:
   - que-es-una-direccion-ip
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "RFC 9293: Transmission Control Protocol (TCP)"
     url: https://www.rfc-editor.org/info/rfc9293/
@@ -107,6 +107,8 @@ La elección depende de qué es peor para cada aplicación: perder datos o esper
 ## HTTP y la capa de transporte
 
 Las versiones clásicas de HTTP funcionan sobre TCP. La más reciente, HTTP/3, funciona sobre **QUIC**, un protocolo que se apoya en UDP y construye por encima sus propias garantías de entrega y de orden. Es un ejemplo de lo dicho antes: UDP sirve de base cuando una aplicación quiere decidir por sí misma cómo conseguir la fiabilidad.
+
+El [control de congestión de TCP](/articulos/control-de-congestion-tcp/) protege el camino compartido; se combina con el control de flujo que protege al receptor.
 
 ## Lo esencial
 

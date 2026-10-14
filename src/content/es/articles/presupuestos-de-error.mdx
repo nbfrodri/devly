@@ -1,0 +1,66 @@
+---
+title: "¿Qué son los presupuestos de error?"
+description: "Un presupuesto de error expresa cuánto incumplimiento permite un objetivo de fiabilidad y ayuda a decidir cuándo priorizar estabilidad."
+level: intermedio
+layer: sistemas
+prerequisites:
+  - observabilidad
+updated: 2026-10-14
+sources:
+  - title: "Google SRE: Embracing Risk (en inglés)"
+    url: https://sre.google/sre-book/embracing-risk/
+  - title: "Google SRE: Service Level Objectives (en inglés)"
+    url: https://sre.google/sre-book/service-level-objectives/
+---
+
+Un **presupuesto de error** es la cantidad de incumplimiento compatible con un objetivo de fiabilidad durante una ventana definida. Permite hablar de riesgo con una medida compartida y decidir cuándo conviene priorizar estabilidad frente a otros cambios.
+
+## Primero define qué es funcionar
+
+Una aplicación puede tener todos sus procesos activos y, aun así, responder demasiado tarde o devolver errores. Antes de calcular un presupuesto necesitas un **indicador de nivel de servicio**, o SLI, que represente una experiencia relevante: por ejemplo, la proporción de peticiones válidas que terminan correctamente en menos de un tiempo acordado.
+
+El **objetivo de nivel de servicio**, o SLO, fija cuánto de ese indicador se pretende conseguir. La ventana puede ser un mes natural o un periodo móvil; no son intercambiables. También debes definir qué peticiones cuentan y qué significa «correctamente».
+
+## Calcular un caso
+
+Imagina un SLO del 99,9 % de peticiones satisfactorias durante un mes y un millón de peticiones consideradas. El incumplimiento permitido es el 0,1 %: mil peticiones.
+
+Si ya han fallado seiscientas, quedan cuatrocientas de presupuesto para esa ventana. No significa que debas provocar esas cuatrocientas ni que cada fallo resulte aceptable para cada usuario. Significa que el indicador agregado todavía está dentro del objetivo acordado.
+
+```js
+const peticiones = 1_000_000;
+const permitidas = peticiones * (1 - 0.999);
+const consumidas = 600;
+
+console.log(Math.round(permitidas)); // 1000
+console.log(Math.round(permitidas - consumidas)); // 400
+```
+
+El redondeo evita presentar residuos de coma flotante como fracciones artificiales de una petición.
+
+## No mezcles tiempo y peticiones
+
+Un objetivo de disponibilidad medido como proporción de tiempo permite calcular minutos de incumplimiento. Uno medido por peticiones calcula peticiones malas. Una caída durante tráfico alto y otra durante tráfico bajo pueden durar lo mismo y consumir presupuestos muy distintos en el segundo modelo.
+
+**¿Puedes convertir siempre el 0,1 % en una cantidad fija de minutos?** No. Solo si la definición del indicador y su ventana están basadas en tiempo. El denominador forma parte del contrato.
+
+## Una política para utilizarlo
+
+El presupuesto resulta útil cuando existe una política acordada. Mientras queda margen suficiente, el equipo puede introducir cambios con los controles habituales. Si se consume demasiado rápido o se agota, puede priorizar corregir fallos, limitar lanzamientos arriesgados o mejorar recuperación.
+
+No basta con revisar el total al terminar el mes. La **tasa de consumo** muestra si se está gastando mucho presupuesto en poco tiempo. Un incidente que consume en una hora lo previsto para semanas merece atención aunque el valor agregado todavía no haya cruzado el límite.
+
+La política debe incluir excepciones razonadas, como corregir una vulnerabilidad urgente. El presupuesto informa una decisión de ingeniería; no es una prohibición automática de cualquier despliegue.
+
+## Elegir un objetivo útil
+
+Prometer el 100 % deja presupuesto cero y no elimina los fallos reales. Un objetivo extremadamente alto puede exigir una complejidad y un coste que no aporten valor proporcional. Debe basarse en necesidades de quienes utilizan el servicio y en lo que se puede medir de forma fiable.
+
+Un agregado también puede ocultar desigualdad: la mayoría recibe buen servicio mientras un grupo pequeño falla siempre. Revisa segmentos relevantes y no utilices el promedio para ignorar un problema concentrado.
+
+## Lo esencial
+
+- El presupuesto depende de un SLI, un SLO y una ventana explícitos.
+- Puede contarse en tiempo, peticiones u otra unidad según el indicador.
+- Su ritmo de consumo importa además del total.
+- Necesita una política compartida para convertirse en decisiones de trabajo.

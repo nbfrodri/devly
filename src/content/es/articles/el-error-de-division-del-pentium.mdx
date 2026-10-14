@@ -1,0 +1,30 @@
+---
+title: "El error de división del Pentium: cuando falla el hardware"
+description: "Unas entradas ausentes en una tabla interna hicieron incorrectas ciertas divisiones de los primeros Pentium."
+level: intermedio
+kind: curiosidad
+layer: hardware
+prerequisites:
+  - coma-flotante
+  - la-alu-y-la-aritmetica-binaria
+updated: 2026-10-14
+sources:
+  - title: "Intel: Statistical Analysis of Floating Point Flaw in the Pentium Processor, 1994 (en inglés)"
+    url: https://www.ardent-tool.com/CPU/Intel/fdiv/white11.pdf
+---
+
+En 1994 se hizo conocido un fallo de división en coma flotante de los primeros procesadores Pentium. El informe técnico de Intel describe cómo cinco entradas críticas ausentes en una tabla interna podían provocar resultados incorrectos para ciertas combinaciones de operandos.
+
+No era el redondeo normal de [coma flotante](/articulos/coma-flotante/). La implementación del algoritmo contenía un defecto: algunas divisiones no producían el resultado que debía ofrecer esa operación.
+
+## Una tabla también forma parte del cálculo
+
+Una unidad aritmética no resuelve necesariamente una operación compleja mediante una única pieza elemental. Puede utilizar pasos intermedios y tablas para elegir cómo continuar. Si faltan valores en esa lógica, un circuito capaz de ejecutar millones de operaciones puede equivocarse en un caso específico.
+
+El informe explica tanto el mecanismo como un análisis de su frecuencia bajo determinados supuestos. Es importante separar esas preguntas: que un error sea poco frecuente para unas entradas no convierte un resultado incorrecto en correcto ni describe todas las cargas de trabajo.
+
+## Qué recuerda al probar software
+
+Comparar resultados con otra implementación o con identidades numéricas puede ayudar a descubrir diferencias, pero tampoco cualquier identidad se conserva exactamente en aritmética finita. Necesitas distinguir tolerancias esperadas de incumplimientos reales del contrato.
+
+La curiosidad conecta dos capas que a menudo se estudian por separado: las pruebas verifican programas, pero esos programas se ejecutan sobre hardware que también requiere validación. Tener un algoritmo matemáticamente correcto no garantiza que todas sus implementaciones, físicas o de software, lo sean.

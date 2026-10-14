@@ -9,6 +9,8 @@ prerequisites:
   - replicacion-y-particionado
 updated: 2026-10-14
 sources:
+  - title: "Apache Spark: Structured Streaming Programming Guide (en inglés)"
+    url: https://spark.apache.org/docs/latest/streaming/index.html
   - title: "Dean y Ghemawat: MapReduce, Simplified Data Processing on Large Clusters (2004, en inglés)"
     url: https://research.google/pubs/mapreduce-simplified-data-processing-on-large-clusters/
   - title: "Apache Spark: documentación (en inglés)"
@@ -76,6 +78,23 @@ MapReduce escribe en disco entre cada fase. Para cálculos con muchos pasos, com
 ## ¿Hace falta?
 
 Solo con volúmenes que no caben en una máquina. Un ordenador actual procesa en minutos decenas de gigabytes, y un clúster añade mucha complejidad. Muchos análisis que hace años exigían Hadoop hoy se hacen en un solo equipo, o en un [almacén de datos](/articulos/almacen-de-datos-y-lago-de-datos/) en la nube.
+
+## Procesamiento por lotes frente a streaming
+
+El procesamiento **por lotes** trabaja con un conjunto delimitado de entradas; el **streaming** trata una fuente que continúa produciendo datos. La diferencia principal no es que uno sea siempre lento y otro instantáneo, sino cómo se define el conjunto y cuándo se consideran completos sus resultados.
+
+Para calcular ventas diarias, un lote puede leer todos los pedidos del día y producir un total al terminar. Un flujo puede mantener totales por ventanas a medida que llegan pedidos, actualizándolos según las reglas acordadas. Ambos necesitan tratar duplicados y fallos.
+
+| Criterio | Lotes | Streaming |
+| --- | --- | --- |
+| Entrada | Conjunto delimitado | Flujo continuo o potencialmente sin final |
+| Resultado | Al completar el trabajo o sus particiones | Incremental, a menudo por ventanas |
+| Tiempo relevante | Duración y frescura del lote | Retraso de procesamiento y llegada de eventos |
+| Dificultad típica | Reprocesar y coordinar grandes conjuntos | Eventos tardíos, estado y actualización de resultados |
+
+Un evento puede llevar una hora de origen distinta de la hora en que llega al sistema. Para cerrar una ventana debes definir cuánto retraso admites y qué harás con datos posteriores. Ignorarlo puede cambiar un total sin que nadie sepa si es definitivo.
+
+Los sistemas también pueden ejecutar streaming mediante microlotes. El mecanismo interno no elimina la semántica de flujo continuo. Elige según la frescura requerida, las posibilidades de reproceso y la complejidad que el producto pueda justificar.
 
 ## Lo esencial
 

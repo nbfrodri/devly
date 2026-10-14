@@ -5,7 +5,7 @@ level: avanzado
 layer: sistemas
 prerequisites:
   - hilos-y-concurrencia
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "Operating Systems: Three Easy Pieces, Locks (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf
@@ -157,6 +157,8 @@ La forma más segura de no tener condiciones de carrera es no compartir datos mo
 - **Datos que no cambian.** Si nadie los modifica, pueden leerlos todos a la vez. Es una de las razones del interés por la [programación funcional](/articulos/programacion-funcional/).
 - **Paso de mensajes.** Cada tarea tiene sus propios datos y se comunica con las demás enviando mensajes.
 - **Dejárselo a la base de datos.** Las [transacciones](/articulos/transacciones-y-acid/) resuelven este mismo problema para los datos guardados.
+
+La investigación del [Therac-25](/articulos/therac-25-y-la-seguridad-del-sistema/) muestra cómo la concurrencia interactúa con interfaz, dispositivos y barreras de seguridad.
 
 ## Lo esencial
 

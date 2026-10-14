@@ -68,7 +68,7 @@ GROUP BY 1;
 REFRESH MATERIALIZED VIEW ventas_por_mes;
 ```
 
-Consultarla es instantáneo. A cambio, los datos solo están al día tras **refrescarla**. Es una [caché](/articulos/que-es-una-cache/) dentro de la base de datos, con el mismo dilema: rapidez frente a frescura.
+Consultarla puede ahorrar el cálculo de la agregación, aunque leer sus filas y utilizar índices sigue teniendo un coste. A cambio, los datos reflejan el último **refresco**. Es una [caché](/articulos/que-es-una-cache/) dentro de la base de datos, con el mismo dilema: coste de lectura frente a frescura.
 
 | | Vista | Vista materializada |
 | --- | --- | --- |
@@ -140,6 +140,23 @@ Su peligro es que son invisibles: quien lee el código de la aplicación no ve q
 - **Procedimientos y disparadores**: con moderación, para operaciones intensivas en datos o reglas que deben cumplirse siempre. La lógica de negocio principal suele estar mejor en la aplicación.
 
 Sea cual sea el caso, el código de la base de datos se guarda en el [control de versiones](/articulos/control-de-versiones-con-git/), como cualquier otro.
+
+## Elegir entre vista normal y materializada
+
+Para el mismo informe de ventas por mes, una **vista normal** conserva la definición y obtiene el resultado al consultarla dentro de la visibilidad de la transacción. Una **materializada** conserva un resultado calculado, cuya frescura depende de su mantenimiento o actualización.
+
+| Criterio | Normal | Materializada |
+| --- | --- | --- |
+| Qué persiste | La consulta | Su resultado almacenado |
+| Cambio en las tablas | Se refleja según la instantánea consultada | Puede no aparecer hasta actualizar |
+| Lectura costosa | El motor vuelve a resolver la consulta | Puede reutilizar resultados ya preparados |
+| Escritura y mantenimiento | Sin almacenar ese resultado aparte | Necesita mantener o regenerar datos |
+
+Si el informe se consulta muchas veces y tolera retraso, materializar puede ahorrar trabajo. Si necesita reflejar los datos visibles en cada consulta, una vista normal evita esa copia mantenida, aunque el coste dependa de índices y plan.
+
+No describas una vista materializada como «instantánea de consultar»: leer muchos resultados o carecer de índices adecuados también cuesta. Tampoco todas las bases ofrecen mantenimiento automático o incremental. PostgreSQL y SQLite no tienen las mismas capacidades nativas; una tabla calculada manualmente en SQLite no adquiere por ello todas las garantías de una vista materializada de otro motor.
+
+La vista normal tampoco evita el [aislamiento transaccional](/articulos/niveles-de-aislamiento/): «actual» significa lo visible según la consulta y su transacción, no necesariamente todos los cambios ocurridos en cualquier otra sesión.
 
 ## Lo esencial
 

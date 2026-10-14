@@ -1,0 +1,74 @@
+---
+title: "¿Qué es un filtro digital?"
+description: "Un filtro digital transforma muestras para modificar componentes de una señal; una media móvil es un ejemplo sencillo con límites concretos."
+level: intermedio
+layer: redes
+prerequisites:
+  - transformada-de-fourier
+updated: 2026-10-14
+sources:
+  - title: "Steven W. Smith: The Scientist and Engineer's Guide to DSP, capítulo 15 (en inglés)"
+    url: https://www.dspguide.com/CH15.PDF
+---
+
+Un **filtro digital** transforma una secuencia de muestras para modificar ciertas características de una señal. Puede suavizar variaciones, atenuar bandas de frecuencia, resaltar cambios o compensar efectos de un sistema de adquisición.
+
+## Qué problema resuelve
+
+Un sensor mide una magnitud que cambia lentamente, pero entrega valores con variaciones rápidas. Mostrar cada oscilación puede dificultar ver la tendencia. Un filtro puede reducir parte de esa variación, a cambio de modificar también la respuesta a cambios auténticos.
+
+Ese intercambio importa: suavizar no equivale a recuperar automáticamente la verdad. Un pico puede ser ruido o un evento real. El diseño del filtro debe partir de qué señal necesitas conservar y qué interferencia quieres reducir.
+
+## Una media móvil
+
+Un filtro sencillo sustituye cada muestra por la media de varias muestras cercanas. En una versión causal de tres posiciones, utiliza la actual y las dos anteriores. Cada salida combina sus entradas con pesos de un tercio.
+
+```js
+function mediaMovilTres(entrada) {
+	const salida = [];
+	for (let i = 2; i < entrada.length; i++) {
+		salida.push((entrada[i] + entrada[i - 1] + entrada[i - 2]) / 3);
+	}
+	return salida;
+}
+
+console.log(mediaMovilTres([0, 0, 9, 0, 0]).join(" ")); // "3 3 3"
+console.log(mediaMovilTres([6, 6, 6, 6, 6]).join(" ")); // "6 6 6"
+```
+
+El ejemplo devuelve solo posiciones que disponen de las tres muestras; no añade ceros ni inventa valores al principio. La primera salida corresponde a la tercera muestra de entrada.
+
+El pico de nueve se reparte entre tres salidas. Una señal constante permanece igual porque los pesos suman uno. Son propiedades del filtro elegido, no garantías generales de cualquier transformación.
+
+## Una operación, dos puntos de vista
+
+En tiempo, el filtro combina valores vecinos. En frecuencia, tiene una **respuesta frecuencial** que indica qué amplitud y fase introduce en cada componente.
+
+La media móvil suele describirse como suavizado o paso bajo porque conserva variaciones lentas y atenúa algunas rápidas. Pero su respuesta no es un corte perfecto: atenúa de manera desigual y puede dejar pasar componentes que querrías eliminar. No basta con nombrarla «paso bajo» para usarla como cualquier filtro antialiasing.
+
+**Si aumentas la ventana, ¿solo quitas más ruido?** No. También extiendes la mezcla entre instantes y puedes borrar o retrasar detalles útiles.
+
+## Retardo y bordes
+
+Una media móvil causal necesita observar varias muestras y desplaza la respuesta. Si controlas una máquina o reaccionas a una medida en directo, ese retardo forma parte de la latencia del sistema.
+
+En análisis fuera de línea puedes utilizar muestras posteriores para centrar la ventana, pero eso no es posible al predecir el presente con datos que todavía no existen. Confundir ambos usos puede introducir información futura en una evaluación.
+
+En los extremos debes decidir qué hacer: producir menos salidas, extender valores o usar otra regla. La elección cambia el resultado. Documentarla evita que dos implementaciones llamadas igual difieran en las primeras muestras.
+
+## FIR e IIR
+
+Un filtro **FIR**, de respuesta finita al impulso, combina un número finito de entradas recientes. La media móvil es un ejemplo. Un filtro **IIR**, de respuesta infinita al impulso, utiliza realimentación de salidas anteriores y puede mantener una respuesta más larga con pocos coeficientes.
+
+La realimentación exige estudiar estabilidad y precisión numérica. No hace falta una arquitectura complicada para empezar, pero tampoco debes extrapolar las propiedades de la media a cualquier filtro con memoria.
+
+## Elegir y comprobar
+
+Define frecuencia de muestreo, banda que quieres conservar, atenuación necesaria, retardo admisible y tratamiento de bordes. Prueba señales constantes, impulsos y componentes de frecuencia conocidas. Después comprueba datos representativos del uso real.
+
+## Lo esencial
+
+- Filtrar modifica la señal, no solo aquello que llamas ruido.
+- Una media móvil combina entradas y tiene respuesta frecuencial y retardo.
+- Causalidad y tratamiento de bordes forman parte del contrato.
+- El filtro adecuado depende de la banda, la latencia y la precisión requeridas.
