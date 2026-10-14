@@ -1,0 +1,82 @@
+---
+title: "¿Por qué los índices empiezan en cero?"
+description: "Contar desde cero no es un capricho: tiene una explicación práctica y otra matemática."
+level: basico
+kind: curiosidad
+layer: programacion
+prerequisites:
+  - arrays
+updated: 2026-10-13
+sources:
+  - title: "E. W. Dijkstra: Why numbering should start at zero, EWD831 (1982, en inglés)"
+    url: https://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD831.html
+  - title: "Dennis M. Ritchie: The Development of the C Language (en inglés)"
+    url: https://www.bell-labs.com/usr/dmr/www/chist.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+En la mayoría de los lenguajes de programación, el primer elemento de un [array](/articulos/arrays/) tiene el índice 0, no el 1. A quien empieza le parece un capricho pensado para confundir. Tiene dos explicaciones, y las dos son razonables.
+
+## La explicación práctica: el índice es una distancia
+
+Un array se guarda en la memoria como una fila de casillas contiguas. El programa sabe dónde empieza la fila. Para llegar a un elemento, calcula cuánto tiene que avanzar desde ese punto.
+
+- Para llegar al primero, no avanza nada: 0 posiciones.
+- Para llegar al segundo, avanza 1.
+- Para llegar al tercero, avanza 2.
+
+Visto así, el índice no es "el número de orden" del elemento. Es su **desplazamiento** desde el principio.
+
+En el lenguaje C, que influyó en casi todos los posteriores, esta idea es explícita: acceder al elemento `i` de un array significa "ve al inicio y avanza `i` posiciones". Con esa definición, el primer elemento solo puede ser el 0.
+
+Empezar en 1 obligaría a restar uno en cada acceso, o a desperdiciar la primera casilla.
+
+## La explicación matemática: los intervalos
+
+En 1982, Edsger Dijkstra, uno de los científicos de la computación más influyentes, escribió una nota breve defendiendo el cero. Su argumento no habla de memoria, sino de cómo conviene describir un rango de números.
+
+Para decir "los números 2, 3, 4 y 5" hay cuatro formas, según se incluyan o no los extremos. Dijkstra defendió una: incluir el principio y excluir el final. Es decir, desde 2 hasta 6 sin llegar a 6.
+
+Esa convención tiene dos propiedades cómodas:
+
+- **La longitud es una resta.** De 2 a 6 hay 6 − 2 = 4 elementos.
+- **Los rangos consecutivos encajan.** Donde termina uno empieza el siguiente: de 2 a 6 y de 6 a 9, sin solaparse y sin dejar hueco.
+
+Con esa convención, ¿por dónde debe empezar una lista de `n` elementos? Si empieza en 0, el rango es de 0 a `n`: el límite superior coincide con el número de elementos. Si empieza en 1, el rango es de 1 a `n + 1`, y aparece un "más uno" que no aporta nada.
+
+Es exactamente la forma de los bucles habituales:
+
+```js
+const letras = ["a", "b", "c"];
+const recorridas = [];
+
+for (let i = 0; i < letras.length; i++) {
+	recorridas.push(i);
+}
+
+console.log(recorridas.join(" ")); // "0 1 2"
+console.log(letras.slice(1, 3).join(" ")); // "b c"
+console.log(letras.slice(1, 3).length); // 2
+```
+
+El bucle va de 0 a `length`, sin incluirlo. Y `slice(1, 3)` devuelve los elementos desde el 1 hasta el 3 sin incluirlo: dos elementos, 3 − 1.
+
+## No todos los lenguajes lo hacen
+
+Empezar en cero es una convención, no una ley. Lenguajes como Fortran, MATLAB, R o Lua cuentan desde 1. Muchos nacieron pensados para matemáticas y ciencia, donde las fórmulas suelen numerar desde 1, y para quien viene de ahí resulta más natural.
+
+Ninguna opción es "correcta". Cada una simplifica unas operaciones y complica otras.
+
+## El error que provoca
+
+Sea cual sea la convención, el cambio entre "contar" y "indexar" es la causa de uno de los errores más frecuentes en programación: pasarse o quedarse corto por uno. Se le llama **error por uno** (*off-by-one*).
+
+El caso típico es olvidar que el último elemento de una lista de `n` está en la posición `n - 1`, no en la `n`.
+
+## Lo esencial
+
+- En la mayoría de los lenguajes, el índice de un array es la distancia desde su inicio, y por eso el primero es el 0.
+- Dijkstra argumentó que, describiendo los rangos con el inicio incluido y el final excluido, empezar en cero es lo más limpio.
+- Con esa convención, la longitud de un rango es una simple resta.
+- Algunos lenguajes empiezan en 1; es una elección de diseño.

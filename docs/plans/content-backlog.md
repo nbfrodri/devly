@@ -79,10 +79,10 @@ Marca cada artículo al publicarlo. El orden dentro de cada bloque es el orden d
 
 Fuera de la cuenta de los 50, para intercalar:
 
-- [ ] ¿Por qué se llama "bug" a un error?
-- [ ] ¿Por qué los índices empiezan en cero?
-- [ ] El efecto 2000 y el problema del año 2038
-- [ ] ¿Por qué el teclado es QWERTY?
+- [x] ¿Por qué se llama "bug" a un error?
+- [x] ¿Por qué los índices empiezan en cero?
+- [x] El efecto 2000 y el problema del año 2038
+- [ ] ¿Por qué el teclado es QWERTY? Pendiente: la patente de 1878 se puede citar, pero no encontré una fuente comprobable sobre el motivo de la distribución, y la explicación habitual (evitar atascos) está discutida.
 
 ## Después de estos 50
 

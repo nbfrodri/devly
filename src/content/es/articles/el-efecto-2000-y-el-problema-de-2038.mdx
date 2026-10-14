@@ -1,0 +1,91 @@
+---
+title: "El efecto 2000 y el problema del año 2038"
+description: "Dos fechas en las que los ordenadores se quedan sin sitio para contar el tiempo, y por qué la segunda aún está por llegar."
+level: basico
+kind: curiosidad
+layer: sistemas
+prerequisites:
+  - que-es-un-bit
+updated: 2026-10-13
+sources:
+  - title: "RFC 2626: The Internet and the Millennium Problem (Year 2000)"
+    url: https://www.rfc-editor.org/info/rfc2626/
+  - title: "The Open Group: POSIX, Seconds Since the Epoch (en inglés)"
+    url: https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap04.html
+  - title: "The Linux Kernel: ktime accessors (documentación oficial, en inglés)"
+    url: https://www.kernel.org/doc/html/latest/core-api/timekeeping.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **efecto 2000** fue el temor, a finales de los años noventa, a que muchos programas fallaran al llegar el 1 de enero de 2000. El **problema del año 2038** es un fallo parecido que afectará a sistemas que cuentan el tiempo de cierta manera. Los dos tienen la misma raíz: reservar demasiado poco sitio para guardar una fecha.
+
+## El efecto 2000
+
+En los años sesenta y setenta, la memoria y el almacenamiento eran carísimos. Cada carácter ahorrado contaba. Era habitual guardar el año con solo dos cifras: `75` en lugar de `1975`.
+
+Nadie pensaba que aquellos programas seguirían en uso décadas después. Muchos lo estaban.
+
+El problema: tras el `99` viene el `00`. Para esos programas, el año 2000 era indistinguible del 1900.
+
+Las consecuencias posibles iban de lo anecdótico a lo serio. Calcular una edad o unos intereses restando años daba un resultado negativo. Ordenar por fecha colocaba lo más reciente al principio. Un sistema podía decidir que un producto había caducado hacía un siglo.
+
+### Qué pasó
+
+Durante los años previos, empresas y gobiernos de todo el mundo revisaron y corrigieron sus sistemas, con un coste enorme. El propio internet fue objeto de una revisión protocolo por protocolo.
+
+El 1 de enero de 2000 llegó sin catástrofes. Hubo fallos, casi todos menores.
+
+De ahí nació la idea de que fue una alarma exagerada. Es la conclusión equivocada: los problemas graves no ocurrieron en buena medida porque se trabajó para evitarlos. Es la paradoja de la prevención: cuando funciona, parece que no hacía falta.
+
+## El problema de 2038
+
+Muchos sistemas, en especial los de la familia Unix, no guardan la fecha como día, mes y año. Guardan un solo número: **los segundos transcurridos desde el 1 de enero de 1970**, a medianoche en tiempo universal. A ese instante se le llama la **época**.
+
+Es una idea práctica: comparar dos momentos o calcular cuánto ha pasado entre ellos se reduce a operar con números.
+
+La cuestión es cuántos [bits](/articulos/que-es-un-bit/) se reservan para ese número. Durante décadas fueron 32, con signo. El valor máximo que cabe ahí es 2 elevado a 31, menos 1.
+
+```js
+const maximo = 2 ** 31 - 1;
+
+console.log(maximo); // 2147483647
+console.log(new Date(maximo * 1000).toISOString()); // "2038-01-19T03:14:07.000Z"
+```
+
+Ese número de segundos se alcanza el **19 de enero de 2038 a las 03:14:07**, tiempo universal.
+
+Un segundo después, el contador se desborda. En un número con signo, el siguiente valor tras el máximo es el mínimo negativo, lo que el sistema interpretaría como una fecha de diciembre de 1901.
+
+### En qué se parece y en qué no
+
+| | Efecto 2000 | Problema de 2038 |
+| --- | --- | --- |
+| Causa | Años guardados con dos cifras | Segundos guardados en 32 bits |
+| Fecha | 1 de enero de 2000 | 19 de enero de 2038 |
+| Dónde | Sobre todo en programas de gestión | En sistemas operativos, archivos y dispositivos |
+
+### La solución
+
+Usar 64 bits en lugar de 32. Con 64 bits, el contador alcanza para cientos de miles de millones de años.
+
+Los sistemas operativos actuales ya lo hacen. El riesgo que queda está en lo que no se actualiza:
+
+- **Dispositivos integrados** que funcionan durante décadas: equipos industriales, aparatos médicos, sistemas de vehículos.
+- **Formatos de archivo y protocolos** que reservan 32 bits para una fecha.
+- **Programas antiguos** que nadie ha vuelto a compilar.
+
+Y el fallo no espera a 2038. Cualquier cálculo que mire hacia el futuro lo encuentra antes: una hipoteca a treinta años ya necesita fechas posteriores.
+
+## La lección
+
+Los dos casos enseñan lo mismo. Una decisión razonable en su momento, ahorrar unos bytes, se convierte en un problema porque el software dura mucho más de lo que sus autores imaginan.
+
+Al elegir cómo representar un dato, conviene preguntarse qué valor máximo tendrá que soportar, y durante cuánto tiempo.
+
+## Lo esencial
+
+- El efecto 2000 se debió a guardar los años con dos cifras.
+- No causó grandes daños porque se corrigió a tiempo, no porque el riesgo fuera inventado.
+- Muchos sistemas cuentan el tiempo en segundos desde 1970, y con 32 bits ese contador se desborda en enero de 2038.
+- La solución es usar 64 bits; el riesgo está en los sistemas que no se actualizan.
