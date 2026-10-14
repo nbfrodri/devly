@@ -1,0 +1,154 @@
+---
+title: "Diferencias entre «como mucho una vez», «al menos una vez» y «exactamente una vez»"
+description: "Son las tres garantías que puede dar un sistema al entregar un mensaje: que no se repita, que no se pierda, o las dos cosas. La tercera es la más difícil."
+level: intermedio
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - colas-de-mensajes
+  - atomicidad-e-idempotencia
+  - tcp-y-udp
+updated: 2026-10-13
+sources:
+  - title: "RabbitMQ: Reliability Guide (en inglés)"
+    url: https://www.rabbitmq.com/docs/reliability
+  - title: "AWS: Entrega al menos una vez en las colas estándar de Amazon SQS"
+    url: https://docs.aws.amazon.com/es_es/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html
+  - title: "AWS: Procesamiento exactamente una vez en las colas FIFO de Amazon SQS"
+    url: https://docs.aws.amazon.com/es_es/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues-exactly-once-processing.html
+  - title: "OASIS: MQTT Version 5.0 (en inglés)"
+    url: https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Cuando un sistema envía un mensaje a otro a través de una red, puede prometer tres cosas distintas sobre su entrega:
+
+- **Como mucho una vez**: el mensaje llega una vez o ninguna. Puede perderse, pero nunca se repite.
+- **Al menos una vez**: el mensaje llega seguro, pero puede llegar repetido.
+- **Exactamente una vez**: llega una vez, ni se pierde ni se repite.
+
+Son las **garantías de entrega**, y aparecen en [colas de mensajes](/articulos/colas-de-mensajes/), en protocolos como [MQTT](/articulos/protocolo-mqtt/) y en cualquier comunicación entre servicios.
+
+## El problema de fondo
+
+Un emisor envía un mensaje y espera una **confirmación**. Si no llega, no puede saber qué ha pasado:
+
+1. El mensaje se perdió por el camino.
+2. El mensaje llegó y se procesó, pero se perdió la confirmación.
+3. El receptor está tardando.
+
+Desde fuera, los tres casos se ven igual: silencio. Y la red no ofrece forma de distinguirlos.
+
+El emisor tiene que elegir qué hacer ante la duda. Esa elección es la garantía.
+
+## Como mucho una vez
+
+El emisor envía el mensaje **y no reintenta**. Si se pierde, se pierde.
+
+- **A favor:** lo más simple y rápido. Nunca hay duplicados.
+- **En contra:** se pierden mensajes.
+
+Encaja cuando perder alguno no importa y el siguiente lo corrige: la lectura de un sensor cada segundo, la posición de un jugador en un videojuego. Es el comportamiento de enviar por [UDP](/articulos/tcp-y-udp/) sin más, y el nivel 0 de calidad de servicio de MQTT.
+
+## Al menos una vez
+
+El emisor **reintenta hasta recibir la confirmación**. El mensaje no se pierde, pero en el caso 2, en el que llegó y solo se perdió la confirmación, el receptor lo recibe **dos veces**.
+
+```js
+const procesados = [];
+let confirmacionesPerdidas = 1;
+
+function enviar(mensaje) {
+	procesados.push(mensaje);
+
+	if (confirmacionesPerdidas > 0) {
+		confirmacionesPerdidas = confirmacionesPerdidas - 1;
+		return false;
+	}
+
+	return true;
+}
+
+while (!enviar("cobrar pedido 512")) {}
+
+console.log(procesados.length); // 2
+```
+
+El mensaje llegó la primera vez, pero la confirmación se perdió. El emisor reintentó, y el cobro se procesó dos veces.
+
+Es la garantía más habitual: la que ofrecen la mayoría de las colas de mensajes, como las colas estándar de Amazon SQS según su documentación, y el nivel 1 de MQTT. Funciona bien **si el receptor tolera los duplicados**.
+
+## Exactamente una vez
+
+Lo que todos quieren: cada mensaje procesado una sola vez. Y es lo más difícil.
+
+En sentido estricto, **entregar** exactamente una vez a través de una red que puede perder mensajes no es posible: el emisor nunca puede estar seguro de si el receptor lo recibió. Lo que sí se puede conseguir es **procesar** exactamente una vez, combinando dos piezas:
+
+1. **Al menos una vez** en la entrega: reintentar hasta confirmar.
+2. **Eliminar duplicados** en el receptor: recordar qué mensajes ya se procesaron e ignorar los repetidos.
+
+```js
+const procesados = [];
+const vistos = new Set();
+let confirmacionesPerdidas = 1;
+
+function recibir({ id, contenido }) {
+	if (!vistos.has(id)) {
+		vistos.add(id);
+		procesados.push(contenido);
+	}
+
+	if (confirmacionesPerdidas > 0) {
+		confirmacionesPerdidas = confirmacionesPerdidas - 1;
+		return false;
+	}
+
+	return true;
+}
+
+const mensaje = { id: "pago-512", contenido: "cobrar pedido 512" };
+while (!recibir(mensaje)) {}
+
+console.log(procesados.length); // 1
+```
+
+El mensaje llega dos veces, pero el receptor reconoce su identificador y lo procesa solo una. Es lo que hacen las colas FIFO de Amazon SQS con un identificador de deduplicación, y el nivel 2 de MQTT con un intercambio de cuatro mensajes.
+
+Otra forma de conseguir el mismo efecto es que la operación sea **[idempotente](/articulos/atomicidad-e-idempotencia/)**: que procesarla dos veces dé el mismo resultado que una. "Marcar el pedido 512 como pagado" lo es; "sumar 10 euros al saldo", no.
+
+## Comparación
+
+| | Como mucho una vez | Al menos una vez | Exactamente una vez |
+| --- | --- | --- | --- |
+| ¿Se pierden mensajes? | Pueden perderse | No | No |
+| ¿Se repiten? | No | Pueden repetirse | No, en el procesamiento |
+| Cómo se consigue | Enviar sin reintentar | Reintentar hasta confirmar | Reintentar y eliminar duplicados |
+| Coste | Mínimo | Bajo | Alto: hay que recordar lo procesado |
+| En MQTT | Nivel 0 | Nivel 1 | Nivel 2 |
+| Encaja con | Datos que se renuevan sin cesar | La mayoría de los casos | Pagos, inventario |
+
+## La trampa de "exactamente una vez"
+
+Cuando un sistema anuncia "exactamente una vez", conviene preguntar **dentro de qué límites**. La garantía suele cubrir el tramo que controla ese sistema. Si el receptor, además de procesar el mensaje, envía un correo o llama a otra API, esos efectos externos pueden repetirse igualmente.
+
+Por eso la recomendación práctica es diseñar los consumidores para que **sean idempotentes**, sea cual sea la garantía que prometa la cola. Es la defensa que funciona siempre.
+
+<Quiz
+	client:visible
+	question="Un sistema ofrece entrega «al menos una vez». ¿Qué debe hacer quien recibe los mensajes?"
+	options={[
+		"Nada: cada mensaje llega una sola vez",
+		"Tolerar duplicados, por ejemplo siendo idempotente o recordando qué ha procesado",
+		"Reenviar cada mensaje para asegurarse",
+	]}
+	answer={1}
+/>
+
+## Lo esencial
+
+- "Como mucho una vez" no reintenta: puede perder mensajes, nunca los repite.
+- "Al menos una vez" reintenta hasta confirmar: no pierde, pero puede repetir.
+- "Exactamente una vez" combina reintentos con eliminación de duplicados o idempotencia.
+- La causa del problema es que, sin confirmación, el emisor no sabe si el mensaje llegó.
+- Lo más robusto es que el receptor tolere duplicados, prometa lo que prometa el sistema.

@@ -1,0 +1,65 @@
+---
+title: "Diferencias entre usar una máquina virtual y un contenedor para desarrollar"
+description: "Las dos dan un entorno aislado y repetible. La máquina virtual simula un ordenador completo; el contenedor comparte el núcleo y arranca en segundos."
+level: intermedio
+kind: comparacion
+layer: sistemas
+prerequisites:
+  - contenedores-y-maquinas-virtuales
+  - que-es-docker
+updated: 2026-10-13
+sources:
+  - title: "Docker: Docker overview (en inglés)"
+    url: https://docs.docker.com/get-started/docker-overview/
+  - title: "Microsoft: Contenedores frente a máquinas virtuales"
+    url: https://learn.microsoft.com/es-es/virtualization/windowscontainers/about/containers-vs-vm
+---
+
+import { Quiz } from "@/components/quiz";
+
+Para trabajar en un proyecto hace falta su entorno: un lenguaje en cierta versión, una base de datos, unas herramientas. Tanto una **máquina virtual** como un **contenedor** permiten tener ese entorno aislado del resto del equipo y igual para todo el equipo. La diferencia está en qué aíslan: la máquina virtual simula **un ordenador completo**, con su propio sistema operativo; el contenedor **comparte el núcleo** del sistema y solo aísla los procesos.
+
+El artículo sobre [contenedores y máquinas virtuales](/articulos/contenedores-y-maquinas-virtuales/) explica el funcionamiento de cada uno. Aquí se comparan para el día a día del desarrollo.
+
+## Lo que ambos resuelven
+
+- **"En mi máquina funciona."** Todos trabajan con el mismo entorno, descrito en un archivo.
+- **Proyectos con versiones distintas** de lo mismo, sin conflictos.
+- **Empezar rápido**: quien llega al proyecto arranca el entorno en lugar de instalar todo a mano.
+
+## Comparación
+
+| | Máquina virtual | Contenedor |
+| --- | --- | --- |
+| Qué incluye | Un sistema operativo completo | Solo la aplicación y sus dependencias |
+| Arranque | Minutos | Segundos |
+| Tamaño | Gigabytes | Megabytes |
+| Recursos | Reserva memoria y procesador | Consume lo que usa |
+| Aislamiento | Muy fuerte | Más débil: comparten núcleo |
+| Otro sistema operativo | Sí, cualquiera | Del mismo tipo que el núcleo anfitrión |
+| Parecido a producción | Bueno | Muy bueno, si producción usa contenedores |
+
+## Cuándo usar cada uno
+
+**Contenedores**, con [Docker](/articulos/que-es-docker/), son la opción habitual hoy:
+
+- Arrancar la base de datos, la caché y la aplicación con una sola orden.
+- Usar en desarrollo la misma imagen que en producción.
+- Entornos ligeros que se crean y se destruyen sin coste.
+
+**Máquinas virtuales** siguen teniendo sentido cuando:
+
+- Hace falta **otro sistema operativo** completo: probar en Windows desde Linux, o en una distribución concreta con su núcleo.
+- Se trabaja con algo que toca el **núcleo**: controladores, configuraciones del sistema, el arranque.
+- Se necesita un **aislamiento fuerte**, por ejemplo para analizar software sospechoso.
+
+## Un detalle práctico
+
+En Windows y macOS, los contenedores de Linux necesitan un núcleo Linux, así que las herramientas ejecutan por debajo **una máquina virtual ligera** que los aloja. Es transparente, pero explica por qué en esos sistemas consumen algo más.
+
+## Lo esencial
+
+- Las dos dan un entorno aislado y repetible para desarrollar.
+- La máquina virtual simula un ordenador completo; el contenedor comparte el núcleo.
+- Los contenedores arrancan en segundos y se parecen a producción: son la opción habitual.
+- Las máquinas virtuales sirven para otro sistema operativo, trabajo con el núcleo o aislamiento fuerte.

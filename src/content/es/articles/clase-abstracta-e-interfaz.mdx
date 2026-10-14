@@ -1,0 +1,108 @@
+---
+title: "Diferencias entre una clase abstracta y una interfaz"
+description: "Una interfaz solo dice qué debe ofrecer algo. Una clase abstracta además aporta parte del código, y obliga a heredar de ella."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - que-es-una-interfaz
+  - que-es-una-clase
+  - herencia-y-composicion
+updated: 2026-10-13
+sources:
+  - title: "TypeScript: Classes (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/2/classes.html
+  - title: "TypeScript: Object Types (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/2/objects.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **[interfaz](/articulos/que-es-una-interfaz/)** describe solo **qué** debe ofrecer un objeto: sus métodos y propiedades, sin código. Una **clase abstracta** es una [clase](/articulos/que-es-una-clase/) que no se puede instanciar directamente: puede incluir **parte del código**, y deja otras partes para que las completen las clases que heredan de ella.
+
+## Interfaz
+
+```ts
+interface Figura {
+	area(): number;
+}
+
+class Circulo implements Figura {
+	constructor(private radio: number) {}
+	area() { return Math.PI * this.radio ** 2; }
+}
+```
+
+La interfaz no aporta nada de código. Cualquier clase que tenga un método `area` la cumple. Una clase puede cumplir **varias** interfaces a la vez.
+
+## Clase abstracta
+
+```ts
+abstract class Figura {
+	abstract area(): number;
+
+	describir() {
+		return `Área: ${this.area()}`;
+	}
+}
+```
+
+`area` queda pendiente; `describir` ya está hecho, y lo heredan todas las figuras.
+
+JavaScript no tiene clases abstractas, pero se puede imitar:
+
+```js
+class Figura {
+	constructor() {
+		if (new.target === Figura) throw new Error("Figura es abstracta");
+	}
+
+	describir() {
+		return `Área: ${this.area()}`;
+	}
+}
+
+class Cuadrado extends Figura {
+	constructor(lado) {
+		super();
+		this.lado = lado;
+	}
+
+	area() {
+		return this.lado ** 2;
+	}
+}
+
+console.log(new Cuadrado(3).describir()); // "Área: 9"
+
+try {
+	new Figura();
+} catch (error) {
+	console.log(error.message); // "Figura es abstracta"
+}
+```
+
+## Comparación
+
+| | Interfaz | Clase abstracta |
+| --- | --- | --- |
+| Contiene código | No | Sí, en parte |
+| Se instancia | No | No |
+| Cuántas se pueden usar | Varias a la vez | Normalmente una, por herencia |
+| Relación | "Se comporta como" | "Es un" |
+| Estado, atributos con valor | No | Sí |
+| Acoplamiento | Bajo | Mayor: se hereda su implementación |
+
+## Cuál elegir
+
+- **Interfaz** cuando se quiere definir un contrato que cosas muy distintas pueden cumplir. Es la opción más flexible, y la que encaja con la idea de [preferir la composición a la herencia](/articulos/herencia-y-composicion/).
+- **Clase abstracta** cuando varias clases comparten de verdad una parte del código y una relación "es un" clara.
+
+En la práctica, las interfaces se usan mucho más. Algunos lenguajes, como Go, ni siquiera tienen herencia de clases.
+
+## Lo esencial
+
+- Una interfaz solo define qué métodos debe tener algo, sin código.
+- Una clase abstracta puede aportar parte del código y no se instancia.
+- Una clase puede cumplir varias interfaces, pero heredar normalmente de una sola clase.
+- Las interfaces dan más flexibilidad; las clases abstractas, código compartido.

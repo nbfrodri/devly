@@ -153,6 +153,8 @@ Por eso los consumidores deben ser **idempotentes**: procesar dos veces el mismo
 	answer={1}
 />
 
+Las tres garantías se comparan con ejemplos en [como mucho una vez, al menos una vez y exactamente una vez](/articulos/garantias-de-entrega-de-mensajes/).
+
 ## Mensajes que nunca funcionan
 
 Un mensaje mal formado fallará siempre. Si se reintenta sin fin, bloquea a los demás. Tras un número de intentos, se aparta a una **cola de mensajes fallidos**, donde alguien puede examinarlo.

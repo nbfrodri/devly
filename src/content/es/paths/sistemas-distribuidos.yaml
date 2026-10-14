@@ -5,6 +5,7 @@ steps:
   - stateful-y-stateless
   - escalado-vertical-y-horizontal
   - colas-de-mensajes
+  - garantias-de-entrega-de-mensajes
   - atomicidad-e-idempotencia
   - replicacion-y-particionado
   - teorema-cap

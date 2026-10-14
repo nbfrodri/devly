@@ -86,21 +86,21 @@ Mismas reglas que siempre: fuentes abiertas y comprobadas, ejemplos ejecutados, 
 - [x] Diferencias entre paso por valor y paso por referencia
 - [x] Diferencias entre programación imperativa y declarativa
 - [x] Diferencias entre herencia y composición
-- [ ] Diferencias entre una clase abstracta y una interfaz
-- [ ] Diferencias entre recursión e iteración
-- [ ] Diferencias entre un array y una lista enlazada
-- [ ] Diferencias entre una tabla hash y un árbol de búsqueda
-- [ ] Diferencias entre búsqueda en anchura y en profundidad
+- [x] Diferencias entre una clase abstracta y una interfaz
+- [x] Diferencias entre recursión e iteración
+- [x] Diferencias entre un array y una lista enlazada
+- [x] Diferencias entre una tabla hash y un árbol de búsqueda
+- [x] Diferencias entre búsqueda en anchura y en profundidad
 - [x] Diferencias entre una biblioteca y un framework
 - [x] Diferencias entre GET y POST
 - [x] Diferencias entre cookies y localStorage
-- [ ] Diferencias entre autenticación por sesión y por clave de API
+- [x] Diferencias entre autenticación por sesión y por clave de API
 - [x] Diferencias entre HTTP/1.1, HTTP/2 y HTTP/3
 - [x] Diferencias entre polling, long polling, Server-Sent Events y WebSockets
 - [x] Diferencias entre JavaScript y TypeScript
 - [x] Diferencias entre Git y GitHub
 - [x] Diferencias entre merge y rebase en Git
-- [ ] Diferencias entre una máquina virtual y un contenedor de cara al desarrollo
+- [x] Diferencias entre una máquina virtual y un contenedor de cara al desarrollo
 - [ ] Diferencias entre RAM y ROM
 - [ ] Diferencias entre CPU, GPU y NPU
 - [ ] Diferencias entre hub, switch y router

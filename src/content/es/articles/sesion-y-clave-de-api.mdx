@@ -1,0 +1,76 @@
+---
+title: "Diferencias entre autenticación por sesión y por clave de API"
+description: "Las sesiones identifican a una persona que ha iniciado sesión en un navegador. Las claves de API identifican a un programa que llama a un servicio."
+level: intermedio
+kind: comparacion
+layer: aplicaciones
+prerequisites:
+  - autenticacion-y-autorizacion
+  - sesiones-y-tokens
+  - que-es-una-api
+updated: 2026-10-13
+sources:
+  - title: "OWASP: Session Management Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+  - title: "OWASP: REST Security Cheat Sheet (en inglés)"
+    url: https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **sesión** identifica a una **persona** que ha iniciado sesión, normalmente en un navegador: tras escribir su contraseña, recibe un identificador temporal que la acompaña mientras usa la aplicación. Una **clave de API** identifica a un **programa** que llama a un servicio: es una credencial larga y duradera que el programa envía en cada petición.
+
+Las dos responden a la pregunta de la [autenticación](/articulos/autenticacion-y-autorizacion/), quién eres, en situaciones distintas.
+
+## Sesión
+
+1. La persona introduce sus credenciales.
+2. El servidor crea una sesión y envía un identificador en una cookie.
+3. El navegador lo devuelve en cada petición.
+4. Al cerrar sesión, o pasado un tiempo, deja de valer.
+
+Se explica en detalle en [diferencias entre sesiones y tokens](/articulos/sesiones-y-tokens/).
+
+## Clave de API
+
+1. El desarrollador genera una clave en el panel del servicio.
+2. La guarda en la configuración de su programa, como un [secreto](/articulos/variables-de-entorno-y-secretos/).
+3. El programa la envía en una cabecera en cada petición:
+
+```http
+GET /v1/pedidos HTTP/1.1
+Authorization: Bearer clave-de-ejemplo-123
+```
+
+La clave no caduca sola: dura hasta que alguien la revoca.
+
+## Comparación
+
+| | Sesión | Clave de API |
+| --- | --- | --- |
+| Identifica a | Una persona | Un programa o una cuenta |
+| Cómo se obtiene | Iniciando sesión | Generándola en un panel |
+| Duración | Corta, caduca sola | Larga, hasta revocarla |
+| Dónde viaja | Cookie | Cabecera de la petición |
+| Uso típico | Aplicación web en el navegador | Integración entre servicios, scripts |
+| Riesgo si se roba | Limitado por su caducidad | Alto: sirve hasta que se revoca |
+
+## Buenas prácticas con las claves de API
+
+- **Nunca en el código** ni en el repositorio, ni en una aplicación que se ejecuta en el navegador o en un móvil, donde cualquiera puede extraerla.
+- **Permisos mínimos**: una clave de solo lectura si basta con leer.
+- **Una clave por uso**, para poder revocar una sin afectar a las demás.
+- **Rotarlas** cada cierto tiempo y revocar las que no se usen.
+- **Siempre por [HTTPS](/articulos/https-y-tls/)**.
+- **[Limitar las peticiones](/articulos/limitacion-de-peticiones/)** por clave.
+
+## Cuando una persona usa un servicio de terceros
+
+Si una aplicación necesita actuar en nombre de una persona en otro servicio, por ejemplo leer su calendario, no se le pide su contraseña ni una clave permanente. Se usa [OAuth 2.0](/articulos/oauth-2-y-openid-connect/), que entrega a la aplicación un permiso limitado y revocable.
+
+## Lo esencial
+
+- Las sesiones identifican a personas en un navegador; las claves de API, a programas.
+- Una sesión es temporal; una clave de API dura hasta que se revoca.
+- Las claves de API son secretos: nunca en el código ni en el cliente.
+- Para actuar en nombre de una persona en otro servicio se usa OAuth, no claves permanentes.

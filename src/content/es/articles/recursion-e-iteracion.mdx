@@ -1,0 +1,83 @@
+---
+title: "Diferencias entre recursión e iteración"
+description: "Las dos repiten un cálculo. La iteración lo hace con un bucle; la recursión, con una función que se llama a sí misma. Cualquiera puede convertirse en la otra."
+level: basico
+kind: comparacion
+layer: programacion
+prerequisites:
+  - recursividad
+  - bucles
+  - pila-y-monticulo-de-memoria
+updated: 2026-10-13
+sources:
+  - title: "MDN: Recursión"
+    url: https://developer.mozilla.org/es/docs/Glossary/Recursion
+  - title: "MDN: Bucles e iteración"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Loops_and_iteration
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **iteración** repite un cálculo con un [bucle](/articulos/bucles/). La **recursión** lo hace con una [función que se llama a sí misma](/articulos/recursividad/) con un problema más pequeño, hasta llegar a un caso que se resuelve directamente. Todo lo que se hace con una se puede hacer con la otra.
+
+## El mismo cálculo, de las dos formas
+
+Sumar los números del 1 al n:
+
+```js
+const sumaRecursiva = (n) => (n === 0 ? 0 : n + sumaRecursiva(n - 1));
+
+function sumaIterativa(n) {
+	let suma = 0;
+	for (let i = 1; i <= n; i++) suma = suma + i;
+	return suma;
+}
+
+console.log(sumaRecursiva(100)); // 5050
+console.log(sumaIterativa(100000)); // 5000050000
+
+try {
+	sumaRecursiva(1e6);
+} catch (error) {
+	console.log(error.name); // "RangeError"
+}
+```
+
+Las dos dan el mismo resultado. Pero la recursiva, con un millón, falla: cada llamada ocupa un hueco en la **pila**, y la pila se agota, como explica [la pila y el montículo](/articulos/pila-y-monticulo-de-memoria/). La iterativa no tiene ese límite.
+
+## Comparación
+
+| | Recursión | Iteración |
+| --- | --- | --- |
+| Cómo repite | La función se llama a sí misma | Un bucle |
+| Memoria | Un marco de pila por llamada | Constante |
+| Límite de profundidad | Sí, el tamaño de la pila | No |
+| Velocidad | Algo más lenta, por las llamadas | Algo más rápida |
+| Claridad | Muy clara para problemas con estructura recursiva | Muy clara para recorridos lineales |
+
+## Cuándo es mejor la recursión
+
+Cuando el problema **es recursivo por naturaleza**:
+
+- Recorrer **árboles**: un árbol es un nodo con subárboles. Recorrer las carpetas de un disco, el [DOM](/articulos/el-dom/) de una página o un [árbol de búsqueda](/articulos/arboles-binarios-de-busqueda/).
+- **Divide y vencerás**: [quicksort](/articulos/quicksort/), la ordenación por mezcla.
+- **[Vuelta atrás](/articulos/vuelta-atras/)**: probar opciones y retroceder.
+
+Escritos con bucles, estos problemas necesitan una pila manual y quedan mucho más enrevesados.
+
+## Cuándo es mejor la iteración
+
+Cuando se recorre algo **lineal** o se repite un número de veces: sumar una lista, contar, buscar en un array. Y siempre que la profundidad pueda ser muy grande.
+
+## Recursión sin pila
+
+Algunos lenguajes optimizan las **llamadas en cola**: si la llamada recursiva es lo último que hace la función, reutilizan el mismo marco de pila y no se agota. Los lenguajes funcionales dependen de ello. JavaScript, en la práctica, no lo hace en casi ningún entorno.
+
+Y la [programación dinámica](/articulos/programacion-dinamica/) suele empezar con una versión recursiva que después se convierte en un bucle que rellena una tabla.
+
+## Lo esencial
+
+- La iteración repite con un bucle; la recursión, con una función que se llama a sí misma.
+- Cada llamada recursiva ocupa pila, y una recursión muy profunda la agota.
+- La recursión es más clara para árboles y problemas que se dividen; la iteración, para recorridos lineales.
+- Cualquier algoritmo recursivo se puede reescribir con un bucle y una pila.

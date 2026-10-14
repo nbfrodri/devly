@@ -1,0 +1,78 @@
+---
+title: "Diferencias entre un array y una lista enlazada"
+description: "Un array guarda los elementos juntos en memoria y permite acceder a cualquiera al instante. Una lista enlazada los guarda sueltos, unidos por enlaces, y facilita insertar."
+level: basico
+kind: comparacion
+layer: programacion
+prerequisites:
+  - arrays
+  - listas-enlazadas
+  - complejidad-algoritmica
+updated: 2026-10-13
+sources:
+  - title: "MDN: Array"
+    url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array
+  - title: "Sedgewick y Wayne: Algorithms, 1.3 Bags, Queues, and Stacks (en inglés)"
+    url: https://algs4.cs.princeton.edu/13stacks/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **[array](/articulos/arrays/)** guarda sus elementos **seguidos** en la memoria, uno detrás de otro. Una **[lista enlazada](/articulos/listas-enlazadas/)** los guarda **sueltos**, en cualquier sitio, y cada uno apunta al siguiente. Esa diferencia determina qué operaciones son rápidas en cada una.
+
+## Acceder a un elemento
+
+En un array, la posición de cada elemento se calcula: si empieza en cierta dirección y cada elemento ocupa lo mismo, el quinto está a cinco elementos del principio. Acceder a cualquiera es inmediato, **O(1)**.
+
+En una lista enlazada no hay forma de saltar: para llegar al quinto hay que pasar por los cuatro anteriores. Es **O(n)**.
+
+## Insertar al principio
+
+En un array, insertar al principio obliga a **desplazar** todos los elementos una posición.
+
+En una lista enlazada basta con crear un nodo y hacer que apunte al que era el primero:
+
+```js
+let lista = null;
+
+for (const valor of [3, 2, 1]) {
+	lista = { valor, siguiente: lista };
+}
+
+const valores = [];
+for (let nodo = lista; nodo; nodo = nodo.siguiente) valores.push(nodo.valor);
+
+console.log(valores.join(" ")); // "1 2 3"
+```
+
+Cada inserción al principio es una sola operación, sea cual sea el tamaño.
+
+## Comparación
+
+| Operación | Array | Lista enlazada |
+| --- | --- | --- |
+| Acceder por posición | O(1) | O(n) |
+| Insertar o borrar al principio | O(n) | O(1) |
+| Insertar o borrar al final | O(1) normalmente | O(1) si se guarda el último |
+| Insertar en medio, teniendo ya el nodo | O(n) | O(1) |
+| Buscar un valor | O(n) | O(n) |
+| Memoria extra | Ninguna | Un enlace por elemento |
+| Uso de la [caché](/articulos/memoria-cache-del-procesador/) | Excelente | Mala |
+
+## La sorpresa: la caché
+
+Sobre el papel, la lista enlazada gana al insertar. En la práctica, el array suele ser más rápido casi para todo.
+
+La razón es la [caché del procesador](/articulos/memoria-cache-del-procesador/). Los elementos de un array están juntos y llegan a la caché en bloques. Los nodos de una lista están dispersos, y cada salto puede obligar a ir a la memoria principal, mucho más lenta. Desplazar mil elementos seguidos de un array puede costar menos que seguir mil enlaces.
+
+## Cuándo usar cada una
+
+- **Array**: casi siempre. Es la estructura por defecto en JavaScript, Python y la mayoría de los lenguajes.
+- **Lista enlazada**: cuando se insertan y borran muchos elementos en posiciones que ya se tienen localizadas, y nunca se accede por posición. Por ejemplo, para implementar una [cola](/articulos/pilas-y-colas/) o una caché que reordena elementos constantemente.
+
+## Lo esencial
+
+- Un array guarda los elementos seguidos; una lista enlazada, sueltos y unidos por enlaces.
+- El array accede a cualquier posición al instante; la lista tiene que recorrerse.
+- La lista inserta al principio o en un punto conocido en tiempo constante.
+- Por la caché del procesador, el array suele ser más rápido en la práctica.

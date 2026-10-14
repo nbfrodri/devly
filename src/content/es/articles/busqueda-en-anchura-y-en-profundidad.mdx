@@ -1,0 +1,101 @@
+---
+title: "Diferencias entre búsqueda en anchura y en profundidad"
+description: "Las dos recorren un grafo. La búsqueda en anchura avanza por niveles y encuentra el camino más corto; la de profundidad sigue cada rama hasta el final antes de volver."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - grafos
+  - pilas-y-colas
+  - recursividad
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 4.1 Undirected Graphs (en inglés)"
+    url: https://algs4.cs.princeton.edu/41graph/
+  - title: "Jeff Erickson: Algorithms, cap. 6, Depth-First Search (en inglés)"
+    url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/06-dfs.pdf
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **búsqueda en anchura**, o BFS, y la **búsqueda en profundidad**, o DFS, son las dos formas básicas de recorrer un [grafo](/articulos/grafos/). La de anchura visita primero todos los vecinos del punto de partida, después los vecinos de estos, y así **por niveles**. La de profundidad sigue un camino **todo lo que puede**, y solo al llegar al final retrocede y prueba otra rama.
+
+## El mismo grafo, dos órdenes
+
+```
+    A
+   / \
+  B   C
+  |   |
+  D   E
+```
+
+```js
+const grafo = { A: ["B", "C"], B: ["D"], C: ["E"], D: [], E: [] };
+
+function anchura(inicio) {
+	const visitados = [inicio];
+	const cola = [inicio];
+
+	while (cola.length > 0) {
+		const actual = cola.shift();
+		for (const vecino of grafo[actual]) {
+			if (!visitados.includes(vecino)) {
+				visitados.push(vecino);
+				cola.push(vecino);
+			}
+		}
+	}
+
+	return visitados;
+}
+
+function profundidad(actual, visitados = []) {
+	visitados.push(actual);
+	for (const vecino of grafo[actual]) {
+		if (!visitados.includes(vecino)) profundidad(vecino, visitados);
+	}
+	return visitados;
+}
+
+console.log(anchura("A").join(" ")); // "A B C D E"
+console.log(profundidad("A").join(" ")); // "A B D C E"
+```
+
+La de anchura visita B y C, los vecinos de A, antes de bajar a D. La de profundidad baja de A a B y de B a D antes de volver a probar C.
+
+La diferencia está en la estructura que guarda lo pendiente: una **[cola](/articulos/pilas-y-colas/)** en anchura, lo primero que entra es lo primero que sale; una **pila** en profundidad, que aquí es la propia pila de llamadas de la [recursión](/articulos/recursividad/).
+
+## Comparación
+
+| | Anchura | Profundidad |
+| --- | --- | --- |
+| Orden | Por niveles | Rama a rama |
+| Estructura | Cola | Pila o recursión |
+| Camino más corto, sin pesos | Lo encuentra | No lo garantiza |
+| Memoria | Puede ser mucha: todo un nivel a la vez | Poca: el camino actual |
+| Detectar ciclos | Posible | Natural |
+| Ordenación topológica | Con el algoritmo de Kahn | Natural |
+
+## Cuándo usar cada una
+
+**Anchura** cuando importa la **distancia**:
+
+- El camino con menos pasos entre dos puntos, en un grafo sin pesos.
+- Los amigos de tus amigos en una red social, nivel a nivel.
+- Explorar primero lo cercano.
+
+**Profundidad** cuando hay que **explorar todo** o seguir estructuras:
+
+- Detectar ciclos y hacer la [ordenación topológica](/articulos/ordenacion-topologica/).
+- Encontrar componentes conectados.
+- Resolver laberintos y problemas de [vuelta atrás](/articulos/vuelta-atras/).
+
+Si las aristas tienen pesos, ninguna de las dos da el camino más corto: hace falta el [algoritmo de Dijkstra](/articulos/algoritmo-de-dijkstra/).
+
+## Lo esencial
+
+- La búsqueda en anchura recorre por niveles con una cola.
+- La búsqueda en profundidad sigue cada rama hasta el final con una pila o recursión.
+- La de anchura encuentra el camino con menos pasos; la de profundidad no.
+- La de profundidad usa menos memoria y encaja con ciclos y dependencias.

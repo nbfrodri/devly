@@ -1,0 +1,75 @@
+---
+title: "Diferencias entre una tabla hash y un árbol de búsqueda"
+description: "Las dos guardan pares de clave y valor. La tabla hash busca en tiempo constante pero no mantiene orden; el árbol equilibrado es algo más lento y mantiene las claves ordenadas."
+level: intermedio
+kind: comparacion
+layer: programacion
+prerequisites:
+  - tablas-hash
+  - arboles-equilibrados
+updated: 2026-10-13
+sources:
+  - title: "Sedgewick y Wayne: Algorithms, 3.4 Hash Tables (en inglés)"
+    url: https://algs4.cs.princeton.edu/34hash/
+  - title: "Sedgewick y Wayne: Algorithms, 3.3 Balanced Search Trees (en inglés)"
+    url: https://algs4.cs.princeton.edu/33balanced/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **[tabla hash](/articulos/tablas-hash/)** y un **[árbol de búsqueda equilibrado](/articulos/arboles-equilibrados/)** sirven para lo mismo: guardar pares de clave y valor y encontrar un valor por su clave. La tabla hash es más rápida para buscar una clave concreta. El árbol mantiene las claves **ordenadas**, lo que permite operaciones que la tabla hash no puede hacer.
+
+## Cómo encuentran una clave
+
+- **Tabla hash**: calcula un [hash](/articulos/funciones-hash/) de la clave, que indica directamente dónde está. En promedio, **O(1)**.
+- **Árbol**: compara la clave con la del nodo y baja a la izquierda o a la derecha. **O(log n)**.
+
+Con un millón de claves, la tabla hash hace unas pocas operaciones; el árbol, unas veinte comparaciones.
+
+## Lo que el árbol hace y la tabla hash no
+
+La tabla hash reparte las claves sin orden. El árbol las tiene ordenadas, así que puede:
+
+- **Recorrerlas en orden.**
+- **Buscar un rango**: todas las claves entre dos valores.
+- **Encontrar la menor, la mayor o la más cercana** a un valor.
+
+```js
+const precios = new Map([
+	["teclado", 40],
+	["monitor", 180],
+	["raton", 15],
+]);
+
+console.log(precios.get("monitor")); // 180
+
+const ordenadas = [...precios.keys()].toSorted();
+console.log(ordenadas.join(" ")); // "monitor raton teclado"
+```
+
+Un `Map` de JavaScript busca por clave de forma directa, pero para tener las claves ordenadas hay que ordenarlas aparte cada vez. Un árbol las mantiene ordenadas siempre.
+
+## Comparación
+
+| | Tabla hash | Árbol de búsqueda equilibrado |
+| --- | --- | --- |
+| Buscar una clave | O(1) en promedio | O(log n) |
+| Peor caso | O(n), con muchas colisiones | O(log n), garantizado |
+| Orden de las claves | No | Sí |
+| Rangos, mínimo, máximo | Hay que recorrer todo | Eficiente |
+| Requisito de las claves | Que se puedan resumir con un hash | Que se puedan comparar |
+| Ejemplos | `Map` y objetos de JavaScript, diccionarios de Python | Mapas ordenados de Java y C++, [índices de bases de datos](/articulos/indices-de-bases-de-datos/) |
+
+## Cuál usar
+
+- **Tabla hash** cuando solo se busca por clave exacta: cachés, recuentos, conjuntos de elementos vistos. Es la opción por defecto.
+- **Árbol** cuando hacen falta el orden o los rangos: clasificaciones, búsquedas por intervalos de fechas, el siguiente evento en el tiempo.
+
+Las bases de datos ofrecen los dos tipos de índice: el de [árbol B](/articulos/arboles-b/), por defecto, porque admite rangos y orden; y a veces uno por hash, solo para igualdades.
+
+## Lo esencial
+
+- Las dos guardan pares de clave y valor.
+- La tabla hash busca en tiempo constante en promedio, pero no mantiene orden.
+- El árbol equilibrado busca en tiempo logarítmico y mantiene las claves ordenadas.
+- Para rangos, recorridos en orden y mínimos, el árbol; para búsquedas exactas, la tabla hash.
