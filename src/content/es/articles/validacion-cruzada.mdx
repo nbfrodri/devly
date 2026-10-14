@@ -1,0 +1,137 @@
+---
+title: "¿Qué es la validación cruzada?"
+description: "La validación cruzada estima cómo funcionará un modelo con datos nuevos, entrenándolo y probándolo varias veces con distintas partes de los datos."
+level: intermedio
+layer: ia
+prerequisites:
+  - sobreajuste-y-subajuste
+  - como-se-evalua-un-modelo-de-clasificacion
+updated: 2026-10-13
+sources:
+  - title: "scikit-learn: Cross-validation, evaluating estimator performance (en inglés)"
+    url: https://scikit-learn.org/stable/modules/cross_validation.html
+  - title: "Google: Machine Learning Crash Course, Dividing the original dataset (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/overfitting/dividing-datasets
+  - title: "James, Witten, Hastie, Tibshirani y Taylor: An Introduction to Statistical Learning, libro libre (en inglés)"
+    url: https://www.statlearning.com/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **validación cruzada** es una técnica para estimar cómo se comportará un modelo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) con datos que no ha visto. Divide los datos en varias partes, entrena el modelo varias veces, cada vez dejando fuera una parte distinta para probarlo, y promedia los resultados.
+
+## Qué problema resuelve
+
+Lo que importa de un modelo no es cómo funciona con los datos con los que aprendió, sino con datos nuevos. Medirlo con los mismos datos de entrenamiento engaña: un modelo que los ha memorizado sacaría una nota perfecta. Es el [sobreajuste](/articulos/sobreajuste-y-subajuste/).
+
+La solución básica es apartar una parte de los datos, el **conjunto de prueba**, y no usarla para entrenar.
+
+Pero una sola división tiene problemas:
+
+- **Depende de la suerte.** Si la parte apartada resulta fácil, el modelo parece mejor de lo que es. Si resulta difícil, peor.
+- **Desperdicia datos.** Lo que se aparta no se usa para aprender. Con pocos datos, duele.
+
+## Validación cruzada en k partes
+
+La forma más común:
+
+1. Se divide el conjunto en **k partes** iguales, por ejemplo 5.
+2. Se entrena con 4 partes y se evalúa con la quinta.
+3. Se repite 5 veces, dejando fuera cada vez una parte distinta.
+4. El resultado es la **media** de las 5 evaluaciones.
+
+```js
+function particiones(total, k) {
+	const tamano = total / k;
+
+	return Array.from({ length: k }, (_, i) => {
+		const prueba = Array.from({ length: tamano }, (_, j) => i * tamano + j);
+		const entrenamiento = Array.from({ length: total }, (_, j) => j).filter(
+			(j) => !prueba.includes(j),
+		);
+
+		return { entrenamiento, prueba };
+	});
+}
+
+const rondas = particiones(10, 5);
+
+console.log(rondas.length); // 5
+console.log(rondas[0].prueba.join(" ")); // "0 1"
+console.log(rondas[0].entrenamiento.length); // 8
+console.log(rondas.flatMap((r) => r.prueba).length); // 10
+```
+
+Cada dato se usa exactamente una vez para probar y cuatro para entrenar. Ninguno se desperdicia, y ninguna división afortunada decide el resultado.
+
+```js
+const puntuaciones = [0.8, 0.85, 0.9, 0.75, 0.8];
+const media = puntuaciones.reduce((a, b) => a + b, 0) / puntuaciones.length;
+
+console.log(media.toFixed(2)); // "0.82"
+```
+
+Además de la media, la **dispersión** entre las rondas es informativa. Si unas dan 0,9 y otras 0,6, el modelo es inestable, o los datos son muy heterogéneos.
+
+Valores habituales de k son 5 y 10. Más rondas dan una estimación más fiable, a costa de entrenar más veces.
+
+## Para qué se usa
+
+### Comparar modelos
+
+¿Un [árbol de decisión](/articulos/arboles-de-decision/) o unos [vecinos más cercanos](/articulos/vecinos-mas-cercanos/)? Se evalúan los dos con validación cruzada, con las mismas particiones, y se compara.
+
+### Ajustar hiperparámetros
+
+Los **hiperparámetros** son decisiones que no se aprenden de los datos: la profundidad de un árbol, el k de los vecinos, la fuerza de la [regularización](/articulos/regularizacion-y-dropout/). Se prueban varios valores y se elige el que mejor resultado medio da.
+
+## La trampa: probar demasiadas veces
+
+Si se prueban cien configuraciones y se elige la mejor según la validación cruzada, ese resultado es **optimista**: se ha elegido, en parte, la que tuvo más suerte con esas particiones.
+
+Por eso se mantienen tres conjuntos:
+
+| Conjunto | Para qué |
+| --- | --- |
+| Entrenamiento | Aprender |
+| Validación | Elegir el modelo y sus hiperparámetros |
+| Prueba | Una sola evaluación final, al acabar |
+
+La validación cruzada hace el papel del segundo. El conjunto de prueba se aparta al principio **y no se toca** hasta el final. Si se consulta para tomar decisiones, deja de ser una medida honesta.
+
+<Quiz
+	client:visible
+	question="En validación cruzada con 5 partes, ¿cuántas veces se usa cada dato para evaluar?"
+	options={["Ninguna", "Una", "Cinco"]}
+	answer={1}
+/>
+
+## Cuidado con cómo se divide
+
+Dividir al azar no siempre es correcto.
+
+- **Clases desequilibradas.** Si solo el 2 % de los casos son fraude, una partición puede quedarse sin ninguno. Se usa la versión **estratificada**, que mantiene las proporciones en cada parte.
+- **Grupos.** Si hay varias fotos del mismo paciente, deben ir todas a la misma parte. Si no, el modelo se evalúa con un paciente que ya ha visto, y parece mejor de lo que es.
+- **Series temporales.** Con datos que avanzan en el tiempo, no se puede entrenar con el futuro para predecir el pasado. Se entrena con lo anterior y se prueba con lo posterior.
+
+## La fuga de datos
+
+Es el error que más resultados falsos produce: información del conjunto de prueba se cuela en el entrenamiento.
+
+Un caso típico: se [escalan](/articulos/preparacion-de-datos/) los datos calculando la media y la desviación con **todos** los datos, y después se divide. La media ya contenía información de los datos de prueba.
+
+La regla: **todo lo que se aprende de los datos se aprende solo con la parte de entrenamiento**, en cada ronda. Las bibliotecas ofrecen formas de encadenar la preparación y el modelo para que se haga bien de forma automática.
+
+Si un modelo da resultados sorprendentemente buenos, lo primero es buscar una fuga.
+
+## Lo que cuesta
+
+Entrenar k veces cuesta k veces más. Para modelos pequeños, no importa. Para una red neuronal grande, que tarda días en entrenarse, no es viable, y se usa una sola división en entrenamiento, validación y prueba, con muchos datos.
+
+## Lo esencial
+
+- La validación cruzada estima el rendimiento con datos nuevos entrenando y evaluando varias veces.
+- En k partes, cada dato se usa una vez para evaluar y el resto para entrenar.
+- Sirve para comparar modelos y ajustar hiperparámetros.
+- El conjunto de prueba final se aparta y no se usa hasta el final.
+- Hay que dividir con cuidado: por grupos, por tiempo, y sin fugas de información.

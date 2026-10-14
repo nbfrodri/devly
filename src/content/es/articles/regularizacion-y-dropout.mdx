@@ -1,0 +1,131 @@
+---
+title: "¿Qué es la regularización? Dropout y otras técnicas"
+description: "La regularización limita la complejidad de un modelo para que no memorice los datos de entrenamiento y generalice mejor."
+level: intermedio
+layer: ia
+prerequisites:
+  - sobreajuste-y-subajuste
+  - que-es-una-red-neuronal
+  - descenso-del-gradiente
+updated: 2026-10-13
+sources:
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, cap. 7, Regularization (en inglés)"
+    url: https://www.deeplearningbook.org/contents/regularization.html
+  - title: "Srivastava y otros: Dropout, A Simple Way to Prevent Neural Networks from Overfitting (2014, en inglés)"
+    url: https://jmlr.org/papers/v15/srivastava14a.html
+  - title: "Google: Machine Learning Crash Course, Overfitting, L2 regularization (en inglés)"
+    url: https://developers.google.com/machine-learning/crash-course/overfitting/regularization
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **regularización** es el conjunto de técnicas que limitan la complejidad de un modelo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) para que no se ajuste en exceso a sus datos de entrenamiento. Es la herramienta principal contra el [sobreajuste](/articulos/sobreajuste-y-subajuste/).
+
+## Qué problema resuelve
+
+Un modelo con mucha capacidad, como una [red neuronal](/articulos/que-es-una-red-neuronal/) con millones de parámetros, puede aprenderse de memoria los datos de entrenamiento, incluido su ruido. Acierta con ellos y falla con datos nuevos.
+
+Reducir el tamaño del modelo es una opción, pero un modelo pequeño puede quedarse corto. La regularización permite usar un modelo capaz y, a la vez, impedir que use esa capacidad para memorizar.
+
+La idea de fondo es preferir las explicaciones **simples**. Entre dos modelos que explican igual de bien los datos, el más simple suele generalizar mejor.
+
+## Penalizar los pesos grandes
+
+Un modelo que sobreajusta suele tener pesos enormes: para pasar exactamente por cada punto, la función tiene que retorcerse.
+
+La regularización **L2** añade al error un término proporcional a la suma de los cuadrados de los pesos. El modelo ya no busca solo equivocarse poco, sino equivocarse poco **con pesos pequeños**.
+
+```js
+function pesoAjustado(xs, ys, lambda) {
+	const sumaXY = xs.reduce((s, x, i) => s + x * ys[i], 0);
+	const sumaXX = xs.reduce((s, x) => s + x * x, 0);
+
+	return sumaXY / (sumaXX + lambda);
+}
+
+const xs = [1, 2, 3];
+const ys = [2, 4, 6.5];
+
+console.log(pesoAjustado(xs, ys, 0).toFixed(2)); // "2.11"
+console.log(pesoAjustado(xs, ys, 10).toFixed(2)); // "1.23"
+```
+
+Es una recta que pasa por el origen. Sin regularización, la pendiente que mejor se ajusta es 2,11. Con una penalización fuerte, el peso se reduce a 1,23: el modelo renuncia a ajustarse del todo a cambio de ser más moderado.
+
+El número **lambda** decide cuánto pesa la penalización. Es un hiperparámetro: demasiado poco no evita el sobreajuste, y demasiado provoca subajuste. Se elige probando, con [validación cruzada](/articulos/validacion-cruzada/).
+
+### L1
+
+La regularización **L1** penaliza el valor absoluto de los pesos. Tiene un efecto distinto: lleva muchos pesos **exactamente a cero**. El modelo prescinde de las características que no aportan, y se vuelve más sencillo de interpretar.
+
+| | L1 | L2 |
+| --- | --- | --- |
+| Penaliza | Valor absoluto de los pesos | Cuadrado de los pesos |
+| Efecto | Muchos pesos a cero | Todos los pesos pequeños |
+| Útil para | Seleccionar características | Uso general |
+
+## Dropout
+
+Es una técnica específica de las redes neuronales, propuesta en 2014 y muy extendida.
+
+Durante el entrenamiento, en cada paso se **desactiva al azar** una parte de las neuronas, por ejemplo la mitad. Su salida se pone a cero, y la red tiene que funcionar sin ellas.
+
+```js
+const activaciones = [2, 4, 6, 8];
+const mascara = [1, 0, 1, 0];
+const probabilidadDeApagar = 0.5;
+
+const conDropout = activaciones.map(
+	(a, i) => (a * mascara[i]) / (1 - probabilidadDeApagar),
+);
+
+console.log(conDropout.join(" ")); // "4 0 12 0"
+```
+
+Las neuronas que siguen activas se multiplican para compensar, de forma que la señal total se mantiene parecida. En cada paso, la máscara cambia.
+
+### Por qué funciona
+
+- **Impide la dependencia mutua.** Una neurona no puede confiar en que otra concreta esté presente para corregir sus errores. Cada una tiene que aprender algo útil por sí misma.
+- **Es como entrenar muchas redes a la vez.** Cada máscara es una red distinta, más pequeña. Al final, la red completa se comporta como un promedio de todas ellas, y los promedios generalizan mejor.
+
+Al usar la red ya entrenada, el dropout se **desactiva**: se usan todas las neuronas.
+
+<Quiz
+	client:visible
+	question="¿Qué hace el dropout durante el entrenamiento de una red neuronal?"
+	options={[
+		"Elimina definitivamente las neuronas menos útiles",
+		"Desactiva al azar una parte de las neuronas en cada paso",
+		"Reduce la tasa de aprendizaje",
+	]}
+	answer={1}
+/>
+
+## Otras técnicas
+
+- **Parada temprana.** Se vigila el error en los datos de validación durante el entrenamiento, y se detiene cuando deja de bajar, aunque el de entrenamiento siga bajando. Es simple y muy eficaz.
+- **Aumento de datos.** Se generan variantes de los ejemplos: imágenes giradas, recortadas o con otro brillo. El modelo ve más variedad y aprende lo esencial, no los detalles de cada foto.
+- **Más datos.** La regularización más efectiva. Es difícil memorizar un millón de ejemplos.
+- **Normalización por lotes**, que estabiliza el entrenamiento y tiene un ligero efecto regularizador.
+- **Limitar la estructura.** En un [árbol de decisión](/articulos/arboles-de-decision/), limitar la profundidad es regularizar.
+
+## Cuándo usarla
+
+Casi siempre se aplica algo, porque el sobreajuste es el problema habitual con modelos capaces.
+
+La señal está en comparar los errores:
+
+| Error en entrenamiento | Error en validación | Diagnóstico | Qué hacer |
+| --- | --- | --- | --- |
+| Bajo | Alto | Sobreajuste | Más regularización o más datos |
+| Alto | Alto | Subajuste | Menos regularización o un modelo mayor |
+| Bajo | Bajo, parecido | Bien | Nada |
+
+## Lo esencial
+
+- La regularización limita la complejidad de un modelo para que generalice.
+- L2 penaliza los pesos grandes; L1 lleva muchos a cero.
+- Su fuerza es un hiperparámetro que se ajusta con validación.
+- El dropout apaga al azar neuronas durante el entrenamiento, y se desactiva al usar la red.
+- La parada temprana, el aumento de datos y conseguir más datos también regularizan.

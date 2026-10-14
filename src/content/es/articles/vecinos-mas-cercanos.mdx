@@ -1,0 +1,161 @@
+---
+title: "¿Qué es el algoritmo de los k vecinos más cercanos?"
+description: "Para clasificar un caso nuevo, se buscan los casos conocidos más parecidos y se mira qué son. Es el algoritmo de aprendizaje automático más intuitivo."
+level: basico
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - clasificacion-y-regresion
+updated: 2026-10-13
+sources:
+  - title: "scikit-learn: Nearest Neighbors (en inglés)"
+    url: https://scikit-learn.org/stable/modules/neighbors.html
+  - title: "Stanford CS231n: Image Classification, Nearest Neighbor (en inglés)"
+    url: https://cs231n.github.io/classification/
+  - title: "James, Witten, Hastie, Tibshirani y Taylor: An Introduction to Statistical Learning, libro libre (en inglés)"
+    url: https://www.statlearning.com/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El algoritmo de los **k vecinos más cercanos**, o kNN por sus siglas en inglés, clasifica un caso nuevo buscando los **k casos conocidos que más se le parecen** y mirando qué son. Si la mayoría de los vecinos son de una clase, el caso nuevo se asigna a esa clase.
+
+Es el algoritmo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) más fácil de entender, y una buena forma de ver ideas que aparecen en todos los demás.
+
+## La idea
+
+"Dime con quién andas y te diré quién eres."
+
+Para saber si un piso es caro o barato para su zona, se miran los pisos más parecidos: mismo barrio, superficie similar, misma planta. Si los parecidos son caros, este probablemente también.
+
+## Cómo funciona
+
+1. Se guardan todos los ejemplos de entrenamiento, con su clase.
+2. Para un caso nuevo, se calcula su **distancia** a cada ejemplo.
+3. Se toman los **k** más cercanos.
+4. **Clasificación**: gana la clase más frecuente entre ellos.
+5. **Regresión**: se da la media de sus valores.
+
+```js
+const ejemplos = [
+	{ x: 1, y: 1, clase: "A" },
+	{ x: 2, y: 1, clase: "A" },
+	{ x: 1, y: 2, clase: "A" },
+	{ x: 6, y: 6, clase: "B" },
+	{ x: 7, y: 6, clase: "B" },
+	{ x: 6, y: 7, clase: "B" },
+];
+
+const distancia = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+
+function clasificar(punto, k) {
+	const vecinos = ejemplos
+		.toSorted((a, b) => distancia(punto, a) - distancia(punto, b))
+		.slice(0, k);
+
+	const votos = {};
+	for (const vecino of vecinos) {
+		votos[vecino.clase] = (votos[vecino.clase] ?? 0) + 1;
+	}
+
+	return Object.entries(votos).toSorted((a, b) => b[1] - a[1])[0][0];
+}
+
+console.log(clasificar({ x: 2, y: 2 }, 3)); // "A"
+console.log(clasificar({ x: 5, y: 5 }, 3)); // "B"
+```
+
+No hay entrenamiento propiamente dicho: el modelo **son los datos**. Todo el trabajo ocurre al predecir. Por eso se dice que es un algoritmo **perezoso**.
+
+## Elegir k
+
+| k | Efecto |
+| --- | --- |
+| Muy pequeño, como 1 | Sigue cada ejemplo, incluidos los erróneos: [sobreajuste](/articulos/sobreajuste-y-subajuste/) |
+| Muy grande | Mira casi todos los datos y acaba votando la clase mayoritaria: subajuste |
+| Intermedio | Suaviza el ruido sin perder los detalles |
+
+Con dos clases se suele elegir un k impar, para que no haya empates. El valor adecuado se busca probando, con [validación cruzada](/articulos/validacion-cruzada/).
+
+Una mejora habitual es que los vecinos más cercanos voten con más peso que los lejanos.
+
+## La distancia lo es todo
+
+El algoritmo entero depende de qué significa "parecido". Y eso tiene trampas.
+
+### Las escalas
+
+Si una característica es la edad, en años, y otra el sueldo, en euros, la segunda domina la distancia por completo: una diferencia de 1000 euros pesa más que una de 30 años.
+
+```js
+const distancia = (p, q) => Math.hypot(p.edad - q.edad, p.sueldo - q.sueldo);
+
+const ana = { edad: 30, sueldo: 30000 };
+const mayor = { edad: 60, sueldo: 30500 };
+const parecida = { edad: 31, sueldo: 32000 };
+
+const masCercano = (persona, candidatos, medir) =>
+	Object.entries(candidatos).toSorted(
+		(a, b) => medir(persona, a[1]) - medir(persona, b[1]),
+	)[0][0];
+
+const candidatos = { mayor, parecida };
+console.log(masCercano(ana, candidatos, distancia)); // "mayor"
+
+const escalar = (p) => ({ edad: p.edad / 10, sueldo: p.sueldo / 10000 });
+const distanciaEscalada = (p, q) => distancia(escalar(p), escalar(q));
+console.log(masCercano(ana, candidatos, distanciaEscalada)); // "parecida"
+```
+
+Sin escalar, la persona de 60 años parece la más cercana a Ana, porque su sueldo coincide casi exactamente. Llevando las dos características a escalas comparables, la respuesta es la sensata. Es uno de los pasos de la [preparación de datos](/articulos/preparacion-de-datos/).
+
+### Características irrelevantes
+
+Cada característica cuenta lo mismo en la distancia. Si se incluyen datos que no tienen nada que ver con lo que se predice, añaden ruido y confunden la búsqueda.
+
+### La maldición de la dimensionalidad
+
+Con muchas características, ocurre algo poco intuitivo: todos los puntos quedan **más o menos igual de lejos** unos de otros. El vecino más cercano y el más lejano apenas se diferencian, y "cercano" deja de significar algo.
+
+Por eso kNN funciona mal con cientos de características, salvo que se reduzcan antes, como explica el artículo sobre [reducción de dimensionalidad](/articulos/reduccion-de-dimensionalidad/).
+
+<Quiz
+	client:visible
+	question="¿Qué ocurre si en kNN no se escalan las características?"
+	options={[
+		"Nada: el algoritmo lo corrige solo",
+		"Las de valores más grandes dominan la distancia aunque no sean las más importantes",
+		"El algoritmo no puede ejecutarse",
+	]}
+	answer={1}
+/>
+
+## Ventajas e inconvenientes
+
+**A favor:**
+
+- **Simple** de entender y de explicar: "se parece a estos casos".
+- **Sin entrenamiento.** Añadir datos es guardarlos.
+- **Fronteras de cualquier forma.** No supone que las clases se separen con una línea.
+
+**En contra:**
+
+- **Lento al predecir**: compara con todos los ejemplos. Con millones, hace falta una estructura de búsqueda especial.
+- **Ocupa memoria**: hay que guardar todo.
+- **Sensible** a la escala, a las características irrelevantes y a la dimensión.
+
+## La búsqueda de vecinos, en todas partes
+
+Aunque como clasificador se usa poco en problemas grandes, la idea de buscar los más parecidos está en el centro de muchas aplicaciones actuales:
+
+- **Búsqueda por significado.** Encontrar los textos más parecidos a una pregunta es buscar los vecinos más cercanos de su [embedding](/articulos/embeddings/). Las [bases de datos vectoriales](/articulos/bases-de-datos-vectoriales/) existen para hacerlo deprisa.
+- **Recomendaciones.** Usuarios con gustos parecidos a los tuyos.
+- **Detección de anomalías.** Un caso muy lejos de todos los demás es sospechoso.
+
+## Lo esencial
+
+- kNN clasifica un caso según la clase mayoritaria de sus k vecinos más cercanos.
+- No entrena: guarda los datos y hace el trabajo al predecir.
+- Un k pequeño sobreajusta; uno grande, subajusta.
+- La distancia lo decide todo: hay que escalar las características y quitar las irrelevantes.
+- La búsqueda de vecinos es la base de la búsqueda por significado y de las recomendaciones.

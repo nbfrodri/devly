@@ -1,0 +1,135 @@
+---
+title: "¿Qué es una red neuronal recurrente?"
+description: "Una red recurrente procesa secuencias paso a paso, llevando una memoria de lo anterior. Dominó el lenguaje antes de los transformers."
+level: avanzado
+layer: ia
+prerequisites:
+  - que-es-una-red-neuronal
+  - retropropagacion
+updated: 2026-10-13
+sources:
+  - title: "Hochreiter y Schmidhuber: Long Short-Term Memory (1997, en inglés)"
+    url: https://www.bioinf.jku.at/publications/older/2604.pdf
+  - title: "Christopher Olah: Understanding LSTM Networks (2015, en inglés)"
+    url: https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+  - title: "Goodfellow, Bengio y Courville: Deep Learning, cap. 10, Sequence Modeling (en inglés)"
+    url: https://www.deeplearningbook.org/contents/rnn.html
+  - title: "Bahdanau, Cho y Bengio: Neural Machine Translation by Jointly Learning to Align and Translate (2014, en inglés)"
+    url: https://arxiv.org/abs/1409.0473
+---
+
+import { Quiz } from "@/components/quiz";
+
+Una **red neuronal recurrente**, o RNN por sus siglas en inglés, es un tipo de [red neuronal](/articulos/que-es-una-red-neuronal/) diseñada para procesar **secuencias**: textos, sonido, series de datos en el tiempo. Lee los elementos uno a uno y mantiene un **estado oculto**, una especie de memoria que resume lo que ha visto hasta el momento.
+
+Durante años fueron la herramienta principal para el lenguaje, hasta que las desplazaron los [transformers](/articulos/que-es-un-transformer/).
+
+## Qué problema resuelven
+
+Una red neuronal corriente recibe una entrada de tamaño fijo y da una salida. Pero muchos datos son secuencias de longitud variable, en las que **el orden importa**:
+
+- "El perro muerde al hombre" no es "el hombre muerde al perro".
+- Para predecir la siguiente palabra hay que recordar las anteriores.
+- El valor de una acción mañana depende de su historia.
+
+Hace falta una red que tenga memoria.
+
+## La idea: un bucle
+
+Una red recurrente aplica la misma operación a cada elemento de la secuencia. En cada paso recibe dos cosas: el elemento actual y su **estado anterior**. Con ellas calcula un **estado nuevo**, que pasa al siguiente paso.
+
+```
+estado₁ = f(entrada₁, estado₀)
+estado₂ = f(entrada₂, estado₁)
+estado₃ = f(entrada₃, estado₂)
+```
+
+El estado final resume toda la secuencia. Los mismos pesos se usan en cada paso, así que la red sirve para secuencias de cualquier longitud.
+
+Es como leer un libro: no se recuerda cada palabra, pero se lleva una idea acumulada de lo que va pasando, que se actualiza con cada frase.
+
+## La memoria se desvanece
+
+Una versión muy simplificada, en la que el estado se reduce a la mitad en cada paso y se le suma la entrada nueva:
+
+```js
+let estado = 0;
+const historia = [];
+
+for (const entrada of [1, 0, 0, 0]) {
+	estado = 0.5 * estado + entrada;
+	historia.push(estado);
+}
+
+console.log(historia.join(" ")); // "1 0.5 0.25 0.125"
+console.log((0.5 ** 20).toExponential(2)); // "9.54e-7"
+```
+
+La entrada del primer paso se va diluyendo. Tras 20 pasos, su influencia es de menos de una millonésima.
+
+Es el gran problema de las redes recurrentes: el **desvanecimiento del gradiente**. Al entrenar con [retropropagación](/articulos/retropropagacion/), el error se propaga hacia atrás a través de todos los pasos, multiplicándose una y otra vez. Si los factores son menores que 1, la señal desaparece, y la red no puede aprender relaciones entre elementos lejanos.
+
+En "Los resultados que el equipo de investigación presentó el año pasado en el congreso **fueron**…", el verbo debe concordar con "resultados", muchas palabras atrás. Una red recurrente simple lo olvida.
+
+## LSTM: memoria con puertas
+
+En 1997, Sepp Hochreiter y Jürgen Schmidhuber propusieron la **LSTM**, *long short-term memory*, memoria a corto plazo larga.
+
+Añade una **celda de memoria** que atraviesa la secuencia casi sin cambios, y tres **puertas** que deciden qué entra y qué sale:
+
+| Puerta | Decide |
+| --- | --- |
+| De olvido | Qué parte de la memoria se borra |
+| De entrada | Qué información nueva se guarda |
+| De salida | Qué parte de la memoria se usa ahora |
+
+Cada puerta es una pequeña red que aprende cuándo abrirse.
+
+La clave es que la memoria se actualiza **sumando** y no multiplicando una y otra vez. Así la información, y el gradiente, pueden recorrer muchos pasos sin desvanecerse. Si la red aprende que algo es importante, lo conserva.
+
+Hay una variante más sencilla, la **GRU**, con dos puertas, que funciona de forma parecida.
+
+<Quiz
+	client:visible
+	question="¿Qué problema principal resolvieron las redes LSTM?"
+	options={[
+		"Que las redes recurrentes eran demasiado grandes",
+		"Que las redes recurrentes olvidaban la información de muchos pasos atrás",
+		"Que no podían procesar números",
+	]}
+	answer={1}
+/>
+
+## Para qué se usaron
+
+- **Traducción automática**: una red lee la frase de origen y resume su significado en un estado; otra genera la frase traducida a partir de él.
+- **Reconocimiento de voz.**
+- **Predicción de texto** en los teclados de los móviles.
+- **Series temporales**: demanda, consumo eléctrico, sensores.
+- **Generación de música** y de texto.
+
+## Por qué las sustituyeron los transformers
+
+En traducción, resumir una frase entera en un único estado era un cuello de botella. En 2014 se propuso que la red pudiera **atender** directamente a cualquier palabra de la frase de origen al generar cada palabra traducida. Es el **mecanismo de atención**.
+
+En 2017, el transformer llevó la idea al extremo: prescindió por completo de la recurrencia y se quedó solo con la atención. Ganaba en dos frentes:
+
+| | Red recurrente | Transformer |
+| --- | --- | --- |
+| Procesa la secuencia | Paso a paso, en orden | Toda a la vez |
+| Entrenamiento | Secuencial, lento | En paralelo, rápido en [GPU](/articulos/que-es-una-gpu/) |
+| Relación entre elementos lejanos | A través de muchos pasos | Directa |
+| Coste con secuencias largas | Crece con la longitud | Crece con el cuadrado de la longitud |
+| Memoria al generar | Un estado de tamaño fijo | Todo el contexto |
+
+El paralelismo fue decisivo: permitió entrenar con muchísimos más datos.
+
+Las redes recurrentes no tienen la desventaja del coste cuadrático, y generan con un estado de tamaño fijo, lo que las hace eficientes con secuencias muy largas. Por eso la investigación ha vuelto a explorar arquitecturas recurrentes modernas que intentan combinar las dos ventajas.
+
+## Lo esencial
+
+- Una red recurrente procesa secuencias elemento a elemento, con un estado que hace de memoria.
+- Usa los mismos pesos en cada paso, así que sirve para cualquier longitud.
+- Las redes simples olvidan lo lejano por el desvanecimiento del gradiente.
+- Las LSTM añaden una memoria controlada por puertas que conserva la información.
+- Los transformers las desplazaron porque se entrenan en paralelo y relacionan directamente elementos lejanos.

@@ -4,9 +4,14 @@ layer: ia
 steps:
   - que-es-el-aprendizaje-automatico
   - clasificacion-y-regresion
+  - preparacion-de-datos
+  - vecinos-mas-cercanos
   - arboles-de-decision
   - agrupamiento-y-k-medias
+  - reduccion-de-dimensionalidad
   - sobreajuste-y-subajuste
+  - validacion-cruzada
+  - regularizacion-y-dropout
   - como-se-evalua-un-modelo-de-clasificacion
   - que-es-una-red-neuronal
   - descenso-del-gradiente

@@ -1,0 +1,95 @@
+---
+title: "¿Qué es el test de Turing?"
+description: "En 1950, Alan Turing propuso cambiar la pregunta de si las máquinas pueden pensar por otra: ¿puede una máquina hacerse pasar por una persona en una conversación?"
+level: basico
+kind: curiosidad
+layer: ia
+prerequisites:
+  - maquina-de-turing
+  - modelos-de-lenguaje
+updated: 2026-10-13
+sources:
+  - title: "Alan Turing: Computing Machinery and Intelligence (1950, en inglés)"
+    url: https://redirect.cs.umbc.edu/courses/471/papers/turing.pdf
+  - title: "Computer History Museum: AI and Robotics timeline (en inglés)"
+    url: https://www.computerhistory.org/timeline/ai-robotics/
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **test de Turing** es una prueba propuesta por el matemático británico Alan Turing en 1950 para abordar una pregunta escurridiza: ¿pueden pensar las máquinas? En lugar de definir "pensar", Turing propuso un juego: si una persona que conversa por escrito no consigue distinguir si habla con otra persona o con una máquina, la máquina ha superado la prueba.
+
+## La pregunta que esquivó
+
+Turing abre su artículo, *Computing Machinery and Intelligence*, con la pregunta "¿pueden pensar las máquinas?". Y la descarta casi de inmediato: discutir sobre el significado de "máquina" y de "pensar" no lleva a ninguna parte.
+
+La sustituye por otra, que se puede comprobar.
+
+## El juego de la imitación
+
+Turing lo llamó así. Hay tres participantes:
+
+- Un **interrogador**, en una habitación aparte.
+- Una **persona**.
+- Una **máquina**.
+
+El interrogador se comunica con los otros dos solo por escrito, sin verlos ni oírlos, y puede preguntar lo que quiera. Su tarea es averiguar cuál es la máquina. La máquina intenta pasar por persona.
+
+La comunicación por escrito es deliberada: así no importan la voz ni el aspecto, solo la conversación.
+
+## La predicción
+
+Turing hizo una predicción concreta: en unos cincuenta años habría ordenadores capaces de jugar tan bien que un interrogador medio no tendría más de un 70 % de probabilidades de acertar tras cinco minutos de conversación.
+
+Era una apuesta modesta y cuantitativa, no una profecía de máquinas conscientes.
+
+## Las objeciones
+
+Buena parte del artículo responde a críticas que Turing anticipó, y muchas siguen sonando hoy:
+
+- **La objeción teológica**: pensar es propio del alma humana.
+- **"Cabeza en la arena"**: las consecuencias de que las máquinas piensen serían terribles, así que mejor creer que no pueden.
+- **Las limitaciones matemáticas**: hay preguntas que ninguna máquina puede responder, como muestra el problema de la parada relacionado con la [máquina de Turing](/articulos/maquina-de-turing/). Turing responde que tampoco está claro que las personas puedan.
+- **La conciencia**: una máquina no siente lo que hace. Turing señala que tampoco podemos comprobar que otras personas sientan; lo suponemos por cómo se comportan.
+- **La objeción de Lovelace**: una máquina solo hace lo que se le ordena, nunca algo nuevo. Turing replica que las máquinas le sorprendían a menudo.
+
+Al final propone una idea que resulta visionaria: en lugar de programar una mente adulta, construir una "máquina niño" y **enseñarle**. Es, en esencia, el [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/).
+
+<Quiz
+	client:visible
+	question="¿Qué propuso Turing para decidir si una máquina «piensa»?"
+	options={[
+		"Medir su velocidad de cálculo",
+		"Ver si un interrogador puede distinguirla de una persona en una conversación escrita",
+		"Comprobar si tiene conciencia",
+	]}
+	answer={1}
+/>
+
+## Engañar no es entender
+
+Pronto se vio que engañar a alguien puede ser más fácil de lo que parece.
+
+En 1966, el programa **ELIZA** imitaba a un psicoterapeuta devolviendo las frases del usuario en forma de pregunta: si alguien escribía "estoy triste", respondía algo como "¿por qué dices que estás triste?". No entendía nada, y aun así algunas personas le atribuían comprensión y le confiaban sus problemas. La tendencia a ver inteligencia donde solo hay patrones simples pasó a llamarse **efecto ELIZA**.
+
+Durante décadas, varios programas "superaron" versiones del test con trucos: fingir ser un niño que habla otro idioma, cambiar de tema, cometer errores a propósito.
+
+## Las críticas
+
+- **Mide la imitación, no la inteligencia.** Un sistema puede parecer humano sin entender nada, y uno muy inteligente puede delatarse por saber demasiado o responder demasiado rápido.
+- **La habitación china.** El filósofo John Searle planteó en 1980 un experimento mental: alguien encerrado en una habitación, que no sabe chino, sigue un manual de reglas para responder a mensajes en chino. Desde fuera parece que entiende. Searle concluía que manipular símbolos no es comprenderlos.
+- **Depende del interrogador.** Uno ingenuo se deja engañar; uno experto sabe dónde buscar.
+
+## Hoy
+
+Los [modelos de lenguaje](/articulos/modelos-de-lenguaje/) actuales mantienen conversaciones que en muchos casos no se distinguen de las de una persona. En ese sentido, la predicción de Turing se ha cumplido, con unos años de retraso.
+
+Y eso ha dejado claras dos cosas. Que conversar de forma convincente no resuelve la pregunta de fondo: estos sistemas pueden [inventar](/articulos/alucinaciones-de-los-modelos-de-lenguaje/) con total soltura, y se discute qué entienden realmente. Y que el test sirve ahora sobre todo como advertencia práctica: si una máquina puede pasar por persona, hay que saber cuándo se está hablando con una.
+
+## Lo esencial
+
+- Turing propuso en 1950 sustituir "¿pueden pensar las máquinas?" por una prueba observable.
+- En el juego de la imitación, un interrogador intenta distinguir por escrito a una persona de una máquina.
+- Predijo que hacia el año 2000 las máquinas engañarían a menudo en cinco minutos de conversación.
+- Programas simples como ELIZA mostraron que parecer humano no exige entender.
+- Los modelos de lenguaje actuales lo superan en la práctica, y la pregunta de fondo sigue abierta.

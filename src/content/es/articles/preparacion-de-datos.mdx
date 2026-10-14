@@ -1,0 +1,152 @@
+---
+title: "¿Cómo se preparan los datos para un modelo?"
+description: "Antes de entrenar hay que limpiar, transformar y codificar los datos. Suele ser la parte más larga del trabajo, y la que más influye en el resultado."
+level: intermedio
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - media-mediana-y-desviacion
+  - tipos-de-datos
+updated: 2026-10-13
+sources:
+  - title: "scikit-learn: Preprocessing data (en inglés)"
+    url: https://scikit-learn.org/stable/modules/preprocessing.html
+  - title: "scikit-learn: Cross-validation, evaluating estimator performance (en inglés)"
+    url: https://scikit-learn.org/stable/modules/cross_validation.html
+  - title: "James, Witten, Hastie, Tibshirani y Taylor: An Introduction to Statistical Learning, libro libre (en inglés)"
+    url: https://www.statlearning.com/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **preparación de datos** es el conjunto de tareas que convierten datos tal como se recogen en datos que un modelo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) puede usar: limpiar errores, rellenar lo que falta, convertir categorías en números, poner las magnitudes en escalas comparables y crear nuevas características.
+
+Se suele decir que ocupa la mayor parte del tiempo de un proyecto. Y que un modelo nunca es mejor que los datos con los que aprende.
+
+## Por qué hace falta
+
+Los datos reales son desordenados:
+
+- **Faltan valores**: formularios a medias, sensores que fallan.
+- **Hay errores**: una edad de 250 años, un precio negativo, la misma ciudad escrita de tres formas.
+- **Mezclan tipos**: números, textos, fechas, categorías.
+- **Tienen escalas muy distintas**: una edad de dos cifras junto a un sueldo de cinco.
+
+Y los modelos trabajan con números. Muchos, además, se ven afectados por la escala.
+
+## Limpiar
+
+- **Duplicados**: el mismo registro dos veces pesa doble.
+- **Valores imposibles**: se corrigen si se sabe cómo, o se tratan como desconocidos.
+- **Formatos inconsistentes**: unificar mayúsculas, fechas, unidades.
+- **Valores atípicos**: un dato muy alejado puede ser un error o un caso real extremo. No se borran sin pensar: a veces son justo lo que interesa, como en la detección de fraude.
+
+## Valores que faltan
+
+Muchos modelos no aceptan huecos. Opciones:
+
+- **Eliminar** las filas incompletas. Sencillo, y puede perder muchos datos, o sesgarlos si los que faltan no son al azar.
+- **Imputar**: rellenar con un valor razonable, como la mediana de la columna.
+
+```js
+function rellenar(valores) {
+	const conocidos = valores.filter((v) => v !== null).toSorted((a, b) => a - b);
+	const mediana = conocidos[Math.floor(conocidos.length / 2)];
+
+	return valores.map((v) => (v === null ? mediana : v));
+}
+
+console.log(rellenar([3, null, 5, 100]).join(" ")); // "3 5 5 100"
+```
+
+Se usa la [mediana](/articulos/media-mediana-y-desviacion/) y no la media porque no la arrastran los valores extremos: aquí la media sería 36, muy lejos de los valores típicos.
+
+A veces que falte un dato **es información**: quien no indica sus ingresos quizá tenga motivos. Se añade una columna que diga si el valor faltaba.
+
+## Categorías
+
+Una columna con valores como "rojo", "verde" o "azul" hay que convertirla en números. Asignar 1, 2 y 3 es un error: el modelo entendería que azul es el triple que rojo, y que verde está entre los dos.
+
+La solución habitual es la **codificación one-hot**: una columna por categoría, con un 1 en la que corresponde y 0 en las demás.
+
+```js
+function oneHot(valores, categorias) {
+	return valores.map((valor) => categorias.map((c) => (c === valor ? 1 : 0)));
+}
+
+const codificado = oneHot(["rojo", "verde", "rojo"], ["rojo", "verde", "azul"]);
+
+console.log(codificado.map((fila) => fila.join(",")).join(" ")); // "1,0,0 0,1,0 1,0,0"
+```
+
+Con muchas categorías, cientos de ciudades, se generan demasiadas columnas. Se agrupan las poco frecuentes, o se usan representaciones más compactas como los [embeddings](/articulos/embeddings/).
+
+Si las categorías tienen un orden natural, como "bajo, medio, alto", sí tiene sentido numerarlas.
+
+## Escalar
+
+Muchos modelos son sensibles a la escala: los que miden distancias, como los [vecinos más cercanos](/articulos/vecinos-mas-cercanos/) o el [agrupamiento](/articulos/agrupamiento-y-k-medias/), y los que se entrenan con [descenso del gradiente](/articulos/descenso-del-gradiente/), que avanza mal cuando unas características son miles de veces mayores que otras.
+
+La **estandarización** resta la media y divide por la [desviación típica](/articulos/media-mediana-y-desviacion/). Cada característica queda centrada en 0, con desviación 1:
+
+```js
+function estandarizar(valores) {
+	const media = valores.reduce((a, b) => a + b, 0) / valores.length;
+	const varianza =
+		valores.reduce((suma, v) => suma + (v - media) ** 2, 0) / valores.length;
+	const desviacion = Math.sqrt(varianza);
+
+	return valores.map((v) => (v - media) / desviacion);
+}
+
+console.log(estandarizar([10, 20, 30]).map((v) => v.toFixed(2)).join(" ")); // "-1.22 0.00 1.22"
+```
+
+La alternativa es la **normalización**, que lleva los valores al rango de 0 a 1.
+
+Los [árboles de decisión](/articulos/arboles-de-decision/) no necesitan escalar: solo comparan valores dentro de cada característica.
+
+<Quiz
+	client:visible
+	question="¿Por qué no conviene codificar las categorías rojo, verde y azul como 1, 2 y 3?"
+	options={[
+		"Porque ocupa demasiada memoria",
+		"Porque el modelo interpretaría un orden y unas distancias que no existen",
+		"Porque los modelos no aceptan números enteros",
+	]}
+	answer={1}
+/>
+
+## Crear características
+
+A veces la información útil no está en ninguna columna, sino en una combinación. Construirla es la **ingeniería de características**:
+
+- De una fecha: el día de la semana, si es festivo, la hora del día.
+- De dos columnas: el precio por metro cuadrado, a partir del precio y la superficie.
+- De un texto: su longitud, si contiene ciertas palabras.
+
+Una buena característica, pensada con conocimiento del problema, suele mejorar el resultado más que cambiar de modelo.
+
+Las redes neuronales profundas aprenden muchas características por sí mismas a partir de datos en bruto: imágenes, sonido, texto. En datos en tabla, la ingeniería de características sigue siendo decisiva.
+
+## La regla que no se puede romper
+
+Todo lo que se calcula a partir de los datos, la media para estandarizar, la mediana para rellenar, las categorías existentes, se calcula **solo con los datos de entrenamiento**, y después se aplica igual a los de prueba y a los datos reales.
+
+Si se calcula con todos los datos, información del conjunto de prueba se filtra al entrenamiento, y la evaluación sale mejor de lo que es. Es la **fuga de datos**, que se explica en [validación cruzada](/articulos/validacion-cruzada/).
+
+Por la misma razón, la preparación se guarda junto al modelo: los datos que lleguen en producción deben transformarse exactamente igual.
+
+## Mirar los datos
+
+Antes de nada, conviene explorarlos: cuántos hay, qué distribución tienen, qué falta, qué valores raros aparecen. Un [histograma](/articulos/distribucion-normal/) o unas pocas filas leídas a mano revelan problemas que ninguna métrica señalará después.
+
+Y preguntar de dónde vienen. Cómo se recogieron los datos determina qué [sesgos](/articulos/sesgos-en-los-algoritmos/) llevan.
+
+## Lo esencial
+
+- Preparar los datos es limpiar, rellenar, codificar y escalar antes de entrenar.
+- Los valores que faltan se eliminan o se imputan, y a veces el hecho de faltar es información.
+- Las categorías se codifican sin inventar un orden, por ejemplo con one-hot.
+- Escalar es necesario para los modelos que usan distancias o gradientes.
+- Todo lo que se aprende de los datos se calcula solo con los de entrenamiento.

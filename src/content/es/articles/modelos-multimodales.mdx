@@ -1,0 +1,119 @@
+---
+title: "¿Qué es un modelo multimodal?"
+description: "Un modelo multimodal trabaja con varios tipos de datos a la vez, como texto e imágenes, y puede relacionarlos entre sí."
+level: intermedio
+layer: ia
+prerequisites:
+  - modelos-de-lenguaje
+  - embeddings
+  - que-es-un-transformer
+updated: 2026-10-13
+sources:
+  - title: "Radford y otros: Learning Transferable Visual Models From Natural Language Supervision, CLIP (2021, en inglés)"
+    url: https://arxiv.org/abs/2103.00020
+  - title: "Dosovitskiy y otros: An Image is Worth 16x16 Words, Transformers for Image Recognition at Scale (2020, en inglés)"
+    url: https://arxiv.org/abs/2010.11929
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **modelo multimodal** es un modelo de inteligencia artificial que trabaja con varios **tipos de datos**, o modalidades, a la vez: texto, imágenes, sonido, vídeo. No solo los procesa por separado: los **relaciona**. Puede describir una foto, responder preguntas sobre un gráfico o generar una imagen a partir de una descripción.
+
+## Qué problema resuelve
+
+Las personas no perciben el mundo por un solo canal. Para entender un diagrama se mira el dibujo y se lee el texto. Un modelo que solo maneja texto no puede ver una captura de pantalla con un error, ni leer una factura escaneada, ni entender lo que muestra una gráfica.
+
+Antes, cada modalidad tenía su propio modelo: uno para imágenes, otro para texto, otro para voz. Combinarlos exigía unirlos con piezas intermedias, y la comprensión se perdía en las juntas.
+
+## La idea central: un espacio común
+
+Para relacionar una imagen con un texto, el modelo tiene que poder **compararlos**. La solución es representarlos a ambos como [embeddings](/articulos/embeddings/) en un **mismo espacio**: una foto de un perro y la frase "un perro corriendo en la playa" deben quedar cerca.
+
+Un ejemplo con vectores escritos a mano, para ver la mecánica:
+
+```js
+function coseno(a, b) {
+	const producto = a.reduce((s, x, i) => s + x * b[i], 0);
+	return producto / (Math.hypot(...a) * Math.hypot(...b));
+}
+
+const imagen = [0.9, 0.1, 0.2];
+
+const descripciones = {
+	"un perro en la playa": [0.8, 0.2, 0.1],
+	"un plato de pasta": [0.1, 0.9, 0.1],
+	"una ciudad de noche": [0.1, 0.1, 0.9],
+};
+
+const mejor = Object.entries(descripciones).toSorted(
+	(a, b) => coseno(imagen, b[1]) - coseno(imagen, a[1]),
+)[0][0];
+
+console.log(mejor); // "un perro en la playa"
+```
+
+En un sistema real, un codificador de imágenes y uno de texto producen esos vectores, y se entrenan para que coincidan.
+
+### Cómo se aprende ese espacio
+
+Un modelo de 2021, CLIP, lo hizo con cientos de millones de pares de imagen y texto sacados de internet: fotos con su pie o su texto alternativo.
+
+El entrenamiento es **contrastivo**: en cada lote, se acerca cada imagen a su texto y se aleja de los textos de las demás imágenes. Nadie etiqueta las imágenes a mano; la supervisión viene del texto que ya las acompaña.
+
+El resultado puede clasificar imágenes en categorías que nunca vio etiquetadas: basta con escribir las categorías como texto y ver cuál queda más cerca.
+
+## Imágenes como tokens
+
+Los grandes modelos actuales usan otra estrategia, que extiende a los [modelos de lenguaje](/articulos/modelos-de-lenguaje/).
+
+Una imagen se divide en pequeños trozos cuadrados, por ejemplo de 16 por 16 píxeles. Cada trozo se convierte en un vector, igual que se hace con una palabra. Para el [transformer](/articulos/que-es-un-transformer/), la imagen pasa a ser una secuencia de tokens más.
+
+Así, texto e imagen entran por la misma puerta, y el mecanismo de atención relaciona libremente cualquier parte de la imagen con cualquier palabra. Esa idea, aplicar transformers a trozos de imagen, se presentó en 2020.
+
+Con el sonido se hace algo parecido: se divide en fragmentos breves.
+
+<Quiz
+	client:visible
+	question="¿Qué permite a un modelo multimodal relacionar una imagen con un texto?"
+	options={[
+		"Que convierte la imagen en un archivo de texto",
+		"Que representa ambos como vectores en un espacio común, donde lo parecido queda cerca",
+		"Que usa dos modelos que no se comunican",
+	]}
+	answer={1}
+/>
+
+## Qué pueden hacer
+
+| Entrada | Salida | Ejemplo |
+| --- | --- | --- |
+| Imagen y texto | Texto | Describir una foto, leer un documento escaneado, interpretar un gráfico |
+| Texto | Imagen | Generar una ilustración, con [modelos de difusión](/articulos/modelos-de-difusion/) |
+| Sonido | Texto | Transcribir una conversación |
+| Texto | Sonido | Leer en voz alta |
+| Vídeo y texto | Texto | Resumir lo que ocurre en un vídeo |
+
+Aplicaciones concretas:
+
+- **Accesibilidad**: describir imágenes a personas ciegas, generar el texto alternativo que exige la [accesibilidad web](/articulos/accesibilidad-web/).
+- **Documentos**: extraer datos de facturas, formularios o tablas fotografiadas.
+- **Búsqueda**: encontrar fotos describiéndolas con palabras.
+- **Programación**: entender una captura de pantalla de una interfaz o de un error.
+- **Agentes** que manejan un ordenador mirando la pantalla, como los descritos en el artículo sobre [agentes](/articulos/agentes-de-ia/).
+
+## Limitaciones
+
+- **Ven menos de lo que parece.** Pueden fallar al contar objetos, leer texto pequeño, interpretar posiciones relativas o seguir detalles finos.
+- **Alucinan también con imágenes**: describen cosas que no están, como explica el artículo sobre [alucinaciones](/articulos/alucinaciones-de-los-modelos-de-lenguaje/).
+- **Coste.** Una imagen ocupa muchos tokens del [contexto](/articulos/ventana-de-contexto-y-tokens/).
+- **Seguridad.** Una imagen puede contener texto con instrucciones ocultas para manipular al modelo.
+- **[Sesgos](/articulos/sesgos-en-los-algoritmos/)** heredados de los pares de imagen y texto de internet.
+- **Privacidad.** Pueden identificar lugares o leer datos personales en una foto.
+
+## Lo esencial
+
+- Un modelo multimodal maneja y relaciona varios tipos de datos: texto, imagen, sonido.
+- La clave es representar las distintas modalidades en un espacio común de vectores.
+- Ese espacio se aprende con pares de imagen y texto, acercando cada imagen a su descripción.
+- Los grandes modelos actuales tratan los trozos de imagen como tokens de un transformer.
+- Ven peor de lo que aparentan en detalles, y también pueden inventar.

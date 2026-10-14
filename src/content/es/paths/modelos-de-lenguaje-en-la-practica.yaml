@@ -3,6 +3,7 @@ description: Cómo funcionan por dentro y cómo se construyen aplicaciones con e
 layer: ia
 steps:
   - modelos-de-lenguaje
+  - redes-neuronales-recurrentes
   - que-es-un-transformer
   - ventana-de-contexto-y-tokens
   - como-escribir-instrucciones-para-un-modelo
@@ -14,3 +15,4 @@ steps:
   - model-context-protocol
   - agentes-de-ia
   - modelos-de-difusion
+  - modelos-multimodales

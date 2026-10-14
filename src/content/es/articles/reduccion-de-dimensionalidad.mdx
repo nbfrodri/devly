@@ -1,0 +1,132 @@
+---
+title: "¿Qué es la reducción de dimensionalidad? El análisis de componentes principales"
+description: "Reducir la dimensionalidad es describir los datos con menos características conservando lo importante. El análisis de componentes principales es el método clásico."
+level: avanzado
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - media-mediana-y-desviacion
+  - correlacion-y-causalidad
+updated: 2026-10-13
+sources:
+  - title: "scikit-learn: Decomposing signals in components, PCA (en inglés)"
+    url: https://scikit-learn.org/stable/modules/decomposition.html
+  - title: "James, Witten, Hastie, Tibshirani y Taylor: An Introduction to Statistical Learning, libro libre (en inglés)"
+    url: https://www.statlearning.com/
+---
+
+import { Quiz } from "@/components/quiz";
+
+La **reducción de dimensionalidad** consiste en describir unos datos con **menos características** de las que tienen, perdiendo la menor información posible. El método clásico es el **análisis de componentes principales**, o PCA por sus siglas en inglés.
+
+Cada característica de un dato es una **dimensión**. Una casa descrita por superficie, habitaciones, baños, antigüedad y precio tiene cinco. Una imagen de 100 por 100 píxeles tiene diez mil.
+
+## Qué problema resuelve
+
+Muchas dimensiones dan problemas:
+
+- **No se pueden visualizar.** Se dibujan dos o tres; diez mil, no.
+- **Son costosas** de almacenar y procesar.
+- **Hay redundancia.** La superficie y el número de habitaciones están muy relacionados: dicen casi lo mismo dos veces.
+- **La maldición de la dimensionalidad.** Con muchas dimensiones, los puntos quedan todos lejos unos de otros, y los métodos basados en distancias, como los [vecinos más cercanos](/articulos/vecinos-mas-cercanos/), dejan de funcionar bien.
+
+La observación clave es que los datos reales casi nunca ocupan todas sus dimensiones. Suelen concentrarse cerca de una estructura más simple.
+
+## La idea de PCA
+
+Si unos puntos en dos dimensiones caen casi sobre una línea, basta un número para describir cada uno: su posición a lo largo de esa línea. Se pasa de dos dimensiones a una, perdiendo solo la pequeña desviación de cada punto respecto a la línea.
+
+PCA busca esas direcciones de forma sistemática:
+
+1. **La primera componente principal** es la dirección en la que los datos **varían más**.
+2. **La segunda** es la de mayor variación entre las perpendiculares a la primera.
+3. Y así sucesivamente.
+
+Cada componente es una combinación de las características originales. Se quedan las primeras, que recogen casi toda la variación, y se descartan las demás.
+
+## Un ejemplo
+
+Cinco puntos que caen exactamente sobre la recta y = 2x:
+
+```js
+function componentePrincipal(xs, ys) {
+	const media = (v) => v.reduce((a, b) => a + b, 0) / v.length;
+	const mx = media(xs);
+	const my = media(ys);
+	const n = xs.length - 1;
+
+	const a = xs.reduce((s, x) => s + (x - mx) ** 2, 0) / n;
+	const d = ys.reduce((s, y) => s + (y - my) ** 2, 0) / n;
+	const b = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0) / n;
+
+	const centro = (a + d) / 2;
+	const radio = Math.sqrt(((a - d) / 2) ** 2 + b ** 2);
+	const mayor = centro + radio;
+	const menor = centro - radio;
+
+	const longitud = Math.hypot(b, mayor - a);
+	const direccion = [b / longitud, (mayor - a) / longitud];
+
+	return { mayor, menor, explicada: mayor / (mayor + menor), direccion };
+}
+
+const exacta = componentePrincipal([1, 2, 3, 4, 5], [2, 4, 6, 8, 10]);
+
+console.log(exacta.direccion.map((v) => v.toFixed(3)).join(" ")); // "0.447 0.894"
+console.log(exacta.explicada.toFixed(2)); // "1.00"
+
+const conRuido = componentePrincipal([1, 2, 3, 4, 5], [2.1, 3.9, 6.2, 7.8, 10.1]);
+
+console.log(conRuido.explicada > 0.99); // true
+```
+
+La dirección encontrada, (0,447; 0,894), es la de la recta: por cada unidad en x, dos en y. Esa componente explica el 100 % de la variación. Con algo de ruido, sigue explicando más del 99 %: una sola dimensión basta para describir los cinco puntos.
+
+El cálculo se apoya en la **covarianza** entre las características, la medida de cómo varían juntas, emparentada con la [correlación](/articulos/correlacion-y-causalidad/). Con más dimensiones, se hace con álgebra de matrices, y las bibliotecas lo resuelven en una línea.
+
+## Cuántas componentes
+
+Se mira la **varianza explicada** por cada una, de mayor a menor. A menudo unas pocas recogen casi todo: con 10 componentes se puede conservar el 95 % de la variación de datos que tenían 100.
+
+Se eligen tantas como haga falta para llegar a un porcentaje razonable, o se busca el punto donde añadir más apenas aporta.
+
+## Para qué se usa
+
+- **Visualizar.** Proyectar datos de muchas dimensiones en dos para dibujarlos y ver si forman grupos.
+- **Comprimir.** Guardar menos números por dato.
+- **Acelerar** otros modelos, que trabajan con menos características.
+- **Quitar ruido.** Las últimas componentes suelen ser sobre todo ruido; al descartarlas, los datos quedan más limpios.
+- **Eliminar redundancia** entre características muy correlacionadas.
+
+<Quiz
+	client:visible
+	question="¿Qué representa la primera componente principal?"
+	options={[
+		"La característica original más importante",
+		"La dirección en la que los datos varían más",
+		"El valor medio de los datos",
+	]}
+	answer={1}
+/>
+
+## Precauciones
+
+- **Escalar antes.** PCA busca la máxima variación. Si una característica se mide en euros y otra en años, la primera domina solo por sus números grandes. Hay que [estandarizar](/articulos/preparacion-de-datos/).
+- **Las componentes cuestan de interpretar.** Son mezclas de todas las características. "0,4 × superficie + 0,3 × habitaciones − 0,2 × antigüedad" no tiene un nombre evidente.
+- **Más variación no es más utilidad.** PCA conserva lo que varía, sin saber qué se quiere predecir. A veces la información decisiva está en una dirección de poca variación, y se descarta.
+- **Solo ve relaciones lineales.** Si los datos forman una curva, PCA la aproxima con rectas.
+- **Se ajusta con los datos de entrenamiento** y se aplica igual a los demás, para evitar fugas, como explica el artículo sobre [validación cruzada](/articulos/validacion-cruzada/).
+
+## Otros métodos
+
+Para estructuras no lineales hay técnicas que respetan qué puntos están cerca de qué otros, y se usan sobre todo para visualizar: muestran grupos que PCA mezclaría. A cambio, las distancias del dibujo no siempre tienen un significado fiable.
+
+Y las redes neuronales aprenden sus propias representaciones reducidas. Un [embedding](/articulos/embeddings/) es eso: un texto o una imagen descritos con unos cientos de números que conservan su significado.
+
+## Lo esencial
+
+- Reducir la dimensionalidad es describir los datos con menos características.
+- Funciona porque los datos reales suelen concentrarse en una estructura más simple.
+- PCA busca las direcciones de mayor variación y se queda con las primeras.
+- Sirve para visualizar, comprimir, acelerar y quitar ruido.
+- Hay que escalar antes, y las componentes no siempre se pueden interpretar.

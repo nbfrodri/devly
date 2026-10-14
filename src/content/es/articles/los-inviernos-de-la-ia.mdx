@@ -1,0 +1,110 @@
+---
+title: "¿Qué fueron los inviernos de la inteligencia artificial?"
+description: "La historia de la IA alterna épocas de grandes promesas y épocas en que el dinero y el interés se congelaron. Se llaman inviernos."
+level: basico
+kind: curiosidad
+layer: ia
+prerequisites:
+  - que-es-el-aprendizaje-automatico
+  - que-es-una-red-neuronal
+updated: 2026-10-13
+sources:
+  - title: "McCarthy, Minsky, Rochester y Shannon: A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence (1955, en inglés)"
+    url: http://jmc.stanford.edu/articles/dartmouth/dartmouth.pdf
+  - title: "James Lighthill: Artificial Intelligence, A General Survey (1973, en inglés)"
+    url: https://www.chilton-computing.org.uk/inf/literature/reports/lighthill_report/contents.htm
+  - title: "Computer History Museum: AI and Robotics timeline (en inglés)"
+    url: https://www.computerhistory.org/timeline/ai-robotics/
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **invierno de la inteligencia artificial** es un periodo en el que la financiación y el interés por la IA se desploman, después de que las expectativas creadas no se cumplieran. La historia del campo ha seguido ese ciclo varias veces: entusiasmo, promesas, decepción, recortes, y años después, un nuevo despegue.
+
+Conocerla ayuda a leer con algo de perspectiva el entusiasmo de cada momento.
+
+## El nacimiento: Dartmouth, 1956
+
+En 1955, John McCarthy, Marvin Minsky, Nathaniel Rochester y Claude Shannon propusieron un taller de verano en el Dartmouth College. En esa propuesta aparece por primera vez la expresión **inteligencia artificial**.
+
+Su punto de partida era ambicioso: cualquier aspecto del aprendizaje o de la inteligencia podía, en principio, describirse con tanta precisión que una máquina lo simulara. Y confiaban en lograr avances significativos con un grupo de científicos trabajando juntos **un verano**.
+
+El taller se celebró en 1956 y se considera el nacimiento del campo.
+
+## La primera primavera
+
+Los primeros años fueron deslumbrantes:
+
+- Programas que demostraban teoremas de lógica.
+- Programas que jugaban a las damas y aprendían de sus partidas.
+- El **perceptrón** de Frank Rosenblatt, de 1958, una máquina que aprendía a reconocer patrones simples. Es el antepasado directo de las [redes neuronales](/articulos/que-es-una-red-neuronal/) actuales.
+
+Las predicciones fueron audaces: en una o dos décadas, las máquinas harían cualquier trabajo que hiciera una persona.
+
+## Por qué no llegó
+
+Los problemas de juguete no escalaban a los reales.
+
+- **La explosión combinatoria.** Buscar entre todas las posibilidades funciona con un problema pequeño. Con uno real, el número de combinaciones crece de forma exponencial, como explica el artículo sobre [complejidad algorítmica](/articulos/complejidad-algoritmica/).
+- **El sentido común.** Las tareas que a una persona le parecen triviales, entender una frase ambigua, reconocer un objeto, exigían una cantidad inmensa de conocimiento implícito que nadie sabía escribir.
+- **Poca potencia de cálculo**, y pocos datos.
+- **Los límites del perceptrón.** En 1969, Minsky y Seymour Papert demostraron en su libro *Perceptrons* que un perceptrón de una sola capa no podía aprender funciones simples como el o exclusivo. El libro enfrió durante años el interés por las redes neuronales.
+
+## El primer invierno
+
+En 1973, el gobierno británico encargó al matemático James Lighthill un informe sobre el estado de la IA. Su conclusión fue dura: los resultados no estaban a la altura de lo prometido, y los métodos fallaban ante la explosión combinatoria de los problemas reales.
+
+El informe llevó a recortar la financiación en el Reino Unido. En Estados Unidos, las agencias de defensa también redujeron su apoyo a la investigación sin aplicación directa. Durante buena parte de los años setenta, la IA quedó en segundo plano.
+
+## Los sistemas expertos
+
+En los años ochenta llegó una nueva ola, con un enfoque más modesto: los **sistemas expertos**. En lugar de una inteligencia general, se codificaba el conocimiento de especialistas humanos en miles de reglas del tipo "si se cumple esto, entonces aquello", muy en la línea de la [programación lógica](/articulos/programacion-logica/).
+
+Algunos funcionaron bien en dominios estrechos, como configurar pedidos de ordenadores o diagnosticar ciertas infecciones. Hubo una industria entera, con empresas, máquinas especializadas y grandes inversiones públicas, como el proyecto japonés de la quinta generación de ordenadores.
+
+<Quiz
+	client:visible
+	question="¿Qué suele provocar un invierno de la IA?"
+	options={[
+		"Que los ordenadores dejan de funcionar",
+		"Que las expectativas creadas no se cumplen y se retira la financiación",
+		"Que se prohíbe la investigación",
+	]}
+	answer={1}
+/>
+
+## El segundo invierno
+
+A finales de los ochenta, la ola se deshizo:
+
+- Los sistemas expertos eran **frágiles**: fuera de su dominio, o ante un caso no previsto, fallaban sin avisar.
+- **Mantenerlos era carísimo**: cada regla nueva podía chocar con las anteriores, y extraer el conocimiento de los expertos era lento.
+- Los ordenadores de propósito general alcanzaron a las máquinas especializadas, y ese mercado se hundió.
+
+La expresión "inteligencia artificial" se volvió casi un estigma. Muchos investigadores siguieron trabajando, pero llamando a lo suyo de otra forma: aprendizaje automático, estadística, minería de datos.
+
+## El deshielo
+
+Durante los años noventa y dos mil, el trabajo avanzó con menos ruido:
+
+- La [retropropagación](/articulos/retropropagacion/), popularizada en 1986, permitió entrenar redes de varias capas, lo que resolvía el límite del perceptrón.
+- Se impusieron los métodos estadísticos, que aprendían de datos en lugar de reglas escritas a mano.
+- En 1997, un ordenador venció al campeón del mundo de ajedrez, con búsqueda y mucha potencia de cálculo.
+
+Lo que faltaba llegó con internet y las [GPU](/articulos/que-es-una-gpu/): **datos masivos** y **cálculo barato**. En 2012, una [red convolucional](/articulos/redes-convolucionales/) arrasó en un concurso de reconocimiento de imágenes, y comenzó el auge actual, que desembocó en los [modelos de lenguaje](/articulos/modelos-de-lenguaje/).
+
+## Lo que enseña
+
+- **Las ideas tardan.** Las redes neuronales existían desde los años cincuenta. Funcionaron cuando hubo datos y cálculo suficientes.
+- **Lo fácil para una persona es difícil para una máquina, y al revés.** Jugar al ajedrez llegó antes que doblar la ropa.
+- **Las promesas desmedidas se pagan.** Cada invierno siguió a un periodo de expectativas que la técnica no podía cumplir a tiempo.
+
+Si el auge actual acabará en otro invierno es un debate abierto. Lo distinto esta vez es que la IA ya se usa a diario y produce valor comercial, algo que no ocurría en los ciclos anteriores.
+
+## Lo esencial
+
+- Un invierno de la IA es un periodo de desinterés y recortes tras expectativas incumplidas.
+- El campo nació en Dartmouth en 1956, con predicciones muy optimistas.
+- El primer invierno llegó en los años setenta, tras el informe Lighthill.
+- El segundo, a finales de los ochenta, con el declive de los sistemas expertos.
+- El auge actual llegó cuando se juntaron redes neuronales, datos masivos y cálculo barato.
