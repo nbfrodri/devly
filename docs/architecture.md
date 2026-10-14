@@ -9,7 +9,7 @@ devly is a static content site covering what a computing degree teaches (compute
 | Framework | Astro 7 | Static output, no server runtime |
 | Content | MDX and YAML content collections | Schemas in `src/content.config.ts` |
 | Interactivity | React 19 islands | Hydrated per component with `client:*` |
-| Search | Pagefind | Index built from `dist/` after `astro build` |
+| Search | Pagefind | Index built from `dist/` after `astro build`. `search.astro` has a top-bar variant (wide screens, results in a dropdown) and a home-hero variant (phones); the engine loads once per page |
 | Styling | One global stylesheet with CSS custom properties | Light and dark themes follow `prefers-color-scheme`; a header button overrides it through `data-theme` on the root element, stored in `localStorage` |
 | Icons | Tabler Icons, inlined as SVG at build time | `src/components/icon.astro` lists the ones in use; icons repeated on every card are `<symbol>`s in `icon-sprite.astro`, drawn with `<use>` |
 | Diagrams | Mermaid, rendered in the browser | `src/scripts/diagrams.ts` turns ```` ```mermaid ```` blocks into SVG with the theme tokens; loaded only on pages with a diagram |

@@ -1,55 +1,99 @@
 ---
 // The Pagefind bundle only exists after `pnpm build`, so search is empty in dev.
+
+type Props = {
+	/** "hero" is the large box on the home page (phones); "header" sits in the top bar (desktop). */
+	variant: "hero" | "header";
+};
+
+const { variant } = Astro.props;
+const id = `search-${variant}`;
 ---
 
-<div class="search">
-	<span id="search-label">Busca un concepto</span>
-	<div id="search" aria-labelledby="search-label">
+<div class:list={["search", `search-${variant}`]} data-search={id}>
+	<span id={`${id}-label`} class:list={{ "visually-hidden": variant === "header" }}>
+		Busca un concepto
+	</span>
+	<div id={id} class="search-box" aria-labelledby={`${id}-label`}>
 		<!-- Stands in for the search box until Pagefind is loaded. -->
 		<button class="search-placeholder" type="button" data-search-placeholder>
-			variable, DNS, proceso
+			{variant === "header" ? "Buscar un concepto" : "variable, DNS, proceso"}
 		</button>
 	</div>
 </div>
-<script is:inline>
-	// The search engine (script and styles) is fetched when the browser is idle,
-	// or at once if the visitor reaches for the box first.
+<script is:inline define:vars={{ id, variant }}>
+	// The search engine (script and styles) is fetched once per page, when the
+	// browser is idle or at once if the visitor reaches for a box first. Each box
+	// starts its own search UI the first time it is used.
 	(() => {
-		const box = document.getElementById("search");
+		const box = document.getElementById(id);
+		const wrapper = box.closest("[data-search]");
 		const placeholder = box.querySelector("[data-search-placeholder]");
 		let started = false;
 
-		function load(focusAfter) {
-			if (started) return;
-			started = true;
+		function loadEngine() {
+			if (window.devlySearchEngine) return window.devlySearchEngine;
+			window.devlySearchEngine = new Promise((resolve, reject) => {
+				const styles = document.createElement("link");
+				styles.rel = "stylesheet";
+				styles.href = "/pagefind/pagefind-ui.css";
+				document.head.append(styles);
 
-			const styles = document.createElement("link");
-			styles.rel = "stylesheet";
-			styles.href = "/pagefind/pagefind-ui.css";
-			document.head.append(styles);
-
-			const script = document.createElement("script");
-			script.src = "/pagefind/pagefind-ui.js";
-			script.onload = () => {
-				box.replaceChildren();
-				new window.PagefindUI({
-					element: "#search",
-					showSubResults: true,
-					showImages: false,
-					translations: { placeholder: "variable, DNS, proceso" },
-				});
-				if (focusAfter) box.querySelector("input")?.focus();
-			};
-			document.head.append(script);
+				const script = document.createElement("script");
+				script.src = "/pagefind/pagefind-ui.js";
+				script.onload = resolve;
+				script.onerror = reject;
+				document.head.append(script);
+			});
+			return window.devlySearchEngine;
 		}
 
-		placeholder.addEventListener("click", () => load(true));
-		placeholder.addEventListener("focus", () => load(true));
+		function start(focusAfter) {
+			if (started) return;
+			started = true;
+			loadEngine().then(() => {
+				box.replaceChildren();
+				new window.PagefindUI({
+					element: `#${id}`,
+					showSubResults: variant === "hero",
+					showImages: false,
+					translations: {
+						placeholder: variant === "header" ? "Buscar un concepto" : "variable, DNS, proceso",
+					},
+				});
+				if (focusAfter) box.querySelector("input")?.focus();
+			});
+		}
 
+		placeholder.addEventListener("click", () => start(true));
+		placeholder.addEventListener("focus", () => start(true));
+
+		// The box only starts by itself where it is visible.
+		const idle = () => {
+			if (wrapper.offsetParent !== null) start(false);
+			else loadEngine();
+		};
 		if ("requestIdleCallback" in window) {
-			window.requestIdleCallback(() => load(false), { timeout: 3000 });
+			window.requestIdleCallback(idle, { timeout: 3000 });
 		} else {
-			setTimeout(() => load(false), 1500);
+			setTimeout(idle, 1500);
+		}
+
+		// In the top bar, results float under the box: Escape or a click
+		// elsewhere closes them, and typing or focusing opens them again.
+		if (variant === "header") {
+			const close = () => wrapper.removeAttribute("data-open");
+			document.addEventListener("pointerdown", (event) => {
+				if (!wrapper.contains(event.target)) close();
+			});
+			wrapper.addEventListener("keydown", (event) => {
+				if (event.key === "Escape") {
+					close();
+					box.querySelector("input")?.blur();
+				}
+			});
+			wrapper.addEventListener("focusin", () => wrapper.setAttribute("data-open", ""));
+			wrapper.addEventListener("input", () => wrapper.setAttribute("data-open", ""));
 		}
 	})();
 </script>

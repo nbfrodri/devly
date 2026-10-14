@@ -494,6 +494,7 @@ a:hover {
 }
 
 .search {
+	position: relative;
 	max-width: 28.75rem;
 	display: flex;
 	flex-direction: column;
@@ -531,15 +532,15 @@ a:hover {
 
 /*
  * Pagefind renders its own clear button with a text label. It becomes a square
- * icon button showing the Tabler "x"; the id selector outranks Pagefind's own
+ * icon button showing the Tabler "x"; three classes outrank Pagefind's own
  * styles, which load later.
  */
 /* Declared here too, so the button is in place before Pagefind's stylesheet arrives. */
-#search .pagefind-ui__form {
+.search .search-box .pagefind-ui__form {
 	position: relative;
 }
 
-#search .pagefind-ui__search-clear {
+.search .search-box .pagefind-ui__search-clear {
 	position: absolute;
 	/* Centred on the input, whose height Pagefind derives from its scale. */
 	top: calc((64px * var(--pagefind-ui-scale) - 2.5rem) / 2);
@@ -557,7 +558,7 @@ a:hover {
 	cursor: pointer;
 }
 
-#search .pagefind-ui__search-clear::before {
+.search .search-box .pagefind-ui__search-clear::before {
 	content: "";
 	width: 1.375rem;
 	height: 1.375rem;
@@ -567,17 +568,77 @@ a:hover {
 		center / contain no-repeat;
 }
 
-#search .pagefind-ui__search-clear:hover {
+.search .search-box .pagefind-ui__search-clear:hover {
 	color: var(--ink);
 	background: var(--quiet);
 }
 
-#search mark {
+.search .search-box mark {
 	padding-inline: 0.125rem;
 	color: inherit;
 	font-weight: 600;
 	background: var(--quiet);
 	border-radius: 2px;
+}
+
+/*
+ * Search lives in the top bar on wide screens and in the home hero on phones,
+ * so each screen shows exactly one box.
+ */
+.search-header {
+	display: none;
+	width: 15rem;
+	margin-inline: 0.5rem;
+	--pagefind-ui-scale: 0.62;
+	--pagefind-ui-border-width: 1px;
+}
+
+.search-header .search-placeholder {
+	height: 39.7px;
+	padding-left: 2.25rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	border-width: 1px;
+	border-color: var(--rule);
+}
+
+.search-header .pagefind-ui__search-input {
+	border-color: var(--rule);
+}
+
+.search-header .search-box .pagefind-ui__search-clear {
+	top: calc((64px * var(--pagefind-ui-scale) - 2rem) / 2);
+	width: 2rem;
+	height: 2rem;
+}
+
+/* Results float below the box instead of pushing the page down. */
+.search-header .pagefind-ui__drawer {
+	position: absolute;
+	top: calc(100% + 0.5rem);
+	right: 0;
+	width: min(34rem, calc(100vw - 2rem));
+	max-height: min(70vh, 40rem);
+	overflow-y: auto;
+	padding: 0.25rem 1.25rem 1rem;
+	background: var(--surface);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	--pagefind-ui-scale: 0.85;
+}
+
+.search-header:not([data-open]) .pagefind-ui__drawer {
+	display: none;
+}
+
+@media (min-width: 64rem) {
+	.search-header {
+		display: flex;
+	}
+
+	.hero .search-hero {
+		display: none;
+	}
 }
 
 .section {

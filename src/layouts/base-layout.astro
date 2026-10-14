@@ -7,6 +7,7 @@ import bricolage from "@fontsource-variable/bricolage-grotesque/files/bricolage-
 import Icon from "@/components/icon.astro";
 import IconSprite from "@/components/icon-sprite.astro";
 import Logo from "@/components/logo.astro";
+import Search from "@/components/search.astro";
 import { LAYERS } from "@/lib/layers";
 
 type Props = {
@@ -78,6 +79,7 @@ const links = [
 							))
 						}
 					</nav>
+					<Search variant="header" />
 					<a
 						class="theme-toggle"
 						href="/progreso/"
