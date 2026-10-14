@@ -5,7 +5,7 @@ level: avanzado
 layer: aplicaciones
 prerequisites:
   - programacion-orientada-a-objetos
-updated: 2026-10-13
+updated: 2026-10-14
 sources:
   - title: "Martin Fowler: Domain Driven Design (en inglés)"
     url: https://martinfowler.com/bliki/DomainDrivenDesign.html
@@ -15,6 +15,8 @@ sources:
     url: https://martinfowler.com/bliki/UbiquitousLanguage.html
   - title: "Eric Evans: Domain-Driven Design Reference (en inglés)"
     url: https://www.domainlanguage.com/ddd/reference/
+  - title: "Eric Evans: Domain-Driven Design Reference, PDF (en inglés)"
+    url: https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -149,10 +151,65 @@ console.log(pedido.totalDeLineas); // 1
 
 Las reglas del negocio viven dentro del agregado. No hay forma de dejarlo en un estado inválido desde fuera.
 
+### Servicios de dominio
+
+A veces una operación importante del negocio no es responsabilidad natural de ninguna entidad ni objeto de valor. Transferir dinero entre dos cuentas es el ejemplo clásico: ¿es un método de la cuenta de origen, de la de destino? Forzarlo dentro de una de ellas deforma el modelo.
+
+Para esos casos, Evans propone un **servicio de dominio**: una operación independiente, declarada en el modelo, con un nombre del lenguaje ubicuo y un contrato claro de lo que garantiza.
+
+```js
+class Cuenta {
+	constructor(id, saldo) {
+		this.id = id;
+		this.saldo = saldo;
+	}
+
+	retirar(importe) {
+		if (importe > this.saldo) throw new Error("Saldo insuficiente");
+		this.saldo -= importe;
+	}
+
+	ingresar(importe) {
+		this.saldo += importe;
+	}
+}
+
+// Servicio de dominio: la regla de la transferencia no pertenece a una sola cuenta.
+function transferir(origen, destino, importe) {
+	if (origen.id === destino.id) throw new Error("Origen y destino son la misma cuenta");
+	origen.retirar(importe);
+	destino.ingresar(importe);
+}
+
+const ana = new Cuenta("ana", 100);
+const luis = new Cuenta("luis", 20);
+transferir(ana, luis, 30);
+
+console.log(ana.saldo, luis.saldo); // 70 50
+```
+
+Cada cuenta sigue protegiendo sus propias reglas, como no quedarse en negativo. El servicio solo contiene la regla que pertenece a la operación entera.
+
+Conviene no confundirlo con otros "servicios":
+
+| Tipo | Qué hace | Ejemplo |
+| --- | --- | --- |
+| Servicio de dominio | Una regla del negocio que no encaja en un solo objeto | Transferir entre cuentas, calcular un precio con descuentos combinados |
+| Servicio de aplicación | Coordina un caso de uso: carga los agregados, llama al dominio y guarda el resultado. No contiene reglas del negocio | "Atender la petición de transferencia": leer las cuentas del repositorio, llamar a `transferir`, guardar |
+| Servicio de infraestructura | Habla con el mundo técnico | Enviar un correo, llamar a una pasarela de pago |
+
+La referencia de Evans insiste en esa separación por capas: el código del modelo de dominio debe estar aislado de la interfaz, de la infraestructura e incluso de la lógica de aplicación que no es lógica de negocio. Es la misma idea que lleva al extremo la [arquitectura hexagonal](/articulos/arquitectura-hexagonal/).
+
+El error contrario también es frecuente: poner toda la lógica en servicios y dejar las entidades como simples contenedores de datos. Si una regla pertenece claramente a un objeto, va en ese objeto; el servicio es para lo que no tiene un sitio natural.
+
+### Fábricas
+
+Cuando crear un agregado completo y coherente es complicado, o exige conocer demasiado de su estructura interna, esa responsabilidad se lleva a una **fábrica**: un objeto o función que construye el agregado ya válido, de una vez. Quien lo usa no necesita saber cómo se monta por dentro. Es la idea de los patrones de creación que recoge [patrones de diseño](/articulos/patrones-de-diseno/).
+
 ### Repositorios y eventos
 
-- Un **repositorio** se encarga de guardar y recuperar agregados, y oculta los detalles de la base de datos.
-- Un **evento de dominio** registra algo relevante que ha ocurrido, como "pedido enviado". Otros contextos pueden reaccionar a él sin que el primero los conozca.
+- Un **repositorio** se encarga de guardar y recuperar agregados, y oculta los detalles de la base de datos. Da la impresión de ser una colección en memoria de todos los agregados de un tipo.
+- Un **evento de dominio** registra algo relevante que ha ocurrido, como "pedido enviado". Otros contextos pueden reaccionar a él sin que el primero los conozca, como en la [arquitectura orientada a eventos](/articulos/arquitectura-orientada-a-eventos/).
 
 <Quiz
 	client:visible
@@ -168,7 +225,7 @@ Las reglas del negocio viven dentro del agregado. No hay forma de dejarlo en un 
 ## Dos niveles
 
 - El **diseño estratégico** trata de lo grande: el lenguaje ubicuo, los contextos delimitados y cómo se relacionan. Es lo que más valor aporta.
-- El **diseño táctico** son las piezas: entidades, objetos de valor, agregados, repositorios.
+- El **diseño táctico** son las piezas: entidades, objetos de valor, agregados, servicios de dominio, fábricas, repositorios y eventos.
 
 Un error habitual es quedarse solo con lo táctico: llenar el código de repositorios y agregados sin haber hablado con los expertos del negocio ni delimitado los contextos. Eso es copiar la forma sin el fondo.
 
@@ -184,4 +241,5 @@ Compensa cuando la dificultad está en las reglas del negocio. Para una aplicaci
 - El lenguaje ubicuo es un vocabulario compartido que aparece también en el código.
 - Los contextos delimitados dan a cada término un único significado dentro de una frontera.
 - Entidades, objetos de valor y agregados sirven para expresar el modelo y proteger sus reglas.
+- Un servicio de dominio recoge una regla del negocio que no pertenece a ningún objeto concreto; no es lo mismo que un servicio de aplicación, que solo coordina.
 - Compensa en dominios complejos; en aplicaciones simples es demasiado.
