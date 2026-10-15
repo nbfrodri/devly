@@ -1,49 +1,39 @@
 ---
 title: "¿Qué es el firmware?"
-description: "El firmware es el software que viene grabado en un dispositivo y controla su funcionamiento más básico, por debajo del sistema operativo."
+description: "El firmware es software ligado al funcionamiento de un dispositivo. Puede iniciar la plataforma o controlar un componente mientras trabaja el sistema operativo."
 level: basico
 kind: definicion
 layer: hardware
 prerequisites:
-  - la-placa-base-y-los-buses
   - que-es-un-sistema-operativo
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "NIST: Glossary, firmware (en inglés)"
     url: https://csrc.nist.gov/glossary/term/firmware
+  - title: "Microsoft Learn: Plataforma de actualización de firmware UEFI de Windows"
+    url: https://learn.microsoft.com/es-es/windows-hardware/drivers/bringup/windows-uefi-firmware-update-platform
+  - title: "UEFI Forum: preguntas frecuentes (en inglés)"
+    url: https://uefi.org/faq
 ---
 
-import { Quiz } from "@/components/quiz";
+El **firmware** es software ligado al funcionamiento de un dispositivo: instrucciones y datos que le permiten iniciar o controlar sus operaciones. Se suele conservar en **memoria no volátil**, que mantiene información sin alimentación. Un ejemplo es la **memoria flash**, una tecnología de almacenamiento regrabable. «No volátil» no significa imborrable ni imposible de actualizar.
 
-El **firmware** es el software que viene grabado en un dispositivo, en una memoria permanente, y controla su funcionamiento más básico. Está a medio camino entre el hardware y el software: es código, pero va unido al aparato.
+## Dos lugares donde encontrarlo
 
-El nombre combina *firm*, firme, con *software*: un programa que no se cambia con frecuencia.
+El firmware de la **[placa base](/articulos/la-placa-base-y-los-buses/)** prepara partes del equipo y participa en su [arranque](/articulos/arranque-de-un-sistema-operativo/). En un PC puede implementar UEFI, las interfaces con las que se localiza y ejecuta el software de inicio.
 
-## Dónde está
+Un componente también puede tener firmware propio. El de una [unidad de almacenamiento SSD](/articulos/discos-duros-y-ssd/), por ejemplo, dirige operaciones de su controlador mientras el sistema operativo del ordenador sigue ejecutándose. No todo firmware se ejecuta solo antes del sistema ni dispone de acceso ilimitado a toda la máquina.
 
-Casi cualquier aparato electrónico lo tiene:
+En un dispositivo integrado, la imagen que se distribuye como firmware puede incluir la aplicación y un sistema operativo pequeño. La palabra describe su relación con el aparato; no obliga a que sea un único programa sin servicios internos.
 
-- La **placa base** de un ordenador, con el firmware que arranca el equipo, como explica [la placa base y los buses](/articulos/la-placa-base-y-los-buses/).
-- Los **discos y SSD**, cuyo controlador gestiona dónde se guarda cada dato, como cuenta [discos duros y SSD](/articulos/discos-duros-y-ssd/).
-- Los **routers**, las impresoras, las cámaras.
-- Los electrodomésticos y los dispositivos del [internet de las cosas](/articulos/internet-de-las-cosas/), donde a menudo es todo el software que hay, ejecutándose en un [microcontrolador](/articulos/microcontrolador-y-microprocesador/).
+## Actualizarlo cambia el comportamiento
 
-## Firmware y sistema operativo
+Una actualización puede corregir errores, ampliar compatibilidad o resolver vulnerabilidades. Debe corresponder al dispositivo y utilizar su procedimiento de actualización. Si falla, las posibilidades de recuperación dependen del diseño: algunos equipos conservan imágenes de reserva; otros necesitan un procedimiento específico.
 
-En un ordenador, el firmware arranca primero: comprueba el hardware, lo prepara y carga el [sistema operativo](/articulos/que-es-un-sistema-operativo/). A partir de ahí, el sistema toma el control.
-
-En un aparato sencillo no hay sistema operativo: el firmware lo hace todo.
-
-## Actualizaciones
-
-Antes se grababa una vez en fábrica y no se tocaba. Hoy se guarda en memoria flash y se puede **actualizar**, para corregir errores, añadir funciones o cerrar fallos de seguridad.
-
-Actualizar el firmware tiene un riesgo particular: si se interrumpe a medias, por ejemplo por un corte de luz, el aparato puede quedar inservible. Muchos dispositivos guardan una copia de reserva para evitarlo.
-
-## Seguridad
-
-El firmware se ejecuta antes que todo lo demás y con el máximo control. Un firmware comprometido es muy difícil de detectar y sobrevive a reinstalar el sistema operativo. Por eso los equipos comprueban, al arrancar, que el firmware y lo que carga están firmados por quien corresponde.
+La actualización del sistema operativo no implica que todos los firmwares cambien. Pueden tener versiones y mecanismos separados, aunque una herramienta los distribuya juntos.
 
 ## Con qué no confundirlo
 
-No es el **controlador**, o *driver*: este es un programa del sistema operativo para hablar con un dispositivo. El firmware vive dentro del propio dispositivo.
+Un **[controlador o driver](/articulos/que-es-un-driver/)** es software con el que el sistema operativo gestiona un dispositivo. Puede comunicarse con su firmware; no son necesariamente el mismo programa ni se ejecutan en el mismo procesador.
+
+El **arranque seguro** controla qué imágenes de arranque admite una configuración. No garantiza por sí solo que todo firmware del equipo sea correcto. Reinstalar aplicaciones tampoco sustituye necesariamente el código almacenado en un componente.

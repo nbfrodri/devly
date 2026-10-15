@@ -1,105 +1,119 @@
 ---
 title: "¿Qué pasa al encender un ordenador? El arranque del sistema operativo"
-description: "Del botón de encendido al escritorio pasan varias etapas: el firmware comprueba el hardware, un cargador elige el sistema y el núcleo pone en marcha todo lo demás."
-level: basico
+description: "El arranque transfiere el control desde el firmware hasta el núcleo y los servicios. Seguir esas etapas ayuda a localizar dónde se ha detenido."
+level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
+  - que-es-el-kernel
   - la-placa-base-y-los-buses
   - que-es-el-firmware
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Linux man-pages: boot(7) (en inglés)"
-    url: https://man7.org/linux/man-pages/man7/boot.7.html
-  - title: "Linux man-pages: bootup(7) (en inglés)"
-    url: https://man7.org/linux/man-pages/man7/bootup.7.html
-  - title: "GNU GRUB Manual (en inglés)"
-    url: https://www.gnu.org/software/grub/manual/grub/grub.html
+  - title: "UEFI Forum: preguntas frecuentes y relación con BIOS (en inglés)"
+    url: https://uefi.org/faq
+  - title: "Microsoft Learn: Arranque seguro"
+    url: https://learn.microsoft.com/es-es/windows-hardware/design/device-experiences/oem-secure-boot
+  - title: "systemd: manual bootup, fuente oficial (en inglés)"
+    url: https://github.com/systemd/systemd/blob/main/man/bootup.xml
+  - title: "systemd: manual systemd.unit, dependencias y orden (en inglés)"
+    url: https://github.com/systemd/systemd/blob/main/man/systemd.unit.xml
+  - title: "Linux Kernel: Ramfs, rootfs and initramfs (en inglés)"
+    url: https://docs.kernel.org/filesystems/ramfs-rootfs-initramfs.html
+  - title: "Linux Kernel: The EFI Boot Stub (en inglés)"
+    url: https://docs.kernel.org/admin-guide/efi-stub.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Cuando se pulsa el botón de encendido, el ordenador no sabe todavía que existe un [sistema operativo](/articulos/que-es-un-sistema-operativo/). Arrancar es una cadena de etapas, en la que cada programa carga al siguiente, más capaz: primero el firmware, después un cargador de arranque, después el núcleo y, al final, los servicios y la sesión del usuario.
+El **arranque** es el proceso que prepara el equipo y transfiere el control hasta poner en funcionamiento un sistema operativo. No empieza por abrir el escritorio: antes deben ejecutarse programas capaces de localizar y preparar los siguientes.
 
-Se le llama *bootstrapping*, de la expresión inglesa que habla de levantarse tirando de los cordones de las propias botas: un sistema que se pone en marcha a sí mismo.
+Seguiremos un PC con firmware UEFI y Linux, usando un cargador, un entorno inicial en memoria y systemd. Es un recorrido concreto, no una secuencia obligatoria para todo móvil, servidor o dispositivo.
 
-## 1. El firmware
+## 1. Ejecutar el firmware
 
-Al recibir corriente, el [procesador](/articulos/como-funciona-un-procesador/) empieza a ejecutar desde una dirección fija, donde está el [firmware](/articulos/que-es-el-firmware/) de la [placa base](/articulos/la-placa-base-y-los-buses/), grabado en una memoria permanente.
+Tras el encendido y la puesta en condiciones del hardware, el procesador comienza por el mecanismo de inicio definido por la plataforma. Ejecuta **[firmware](/articulos/que-es-el-firmware/)**, software ligado al equipo que puede inicializar memoria, buses y dispositivos necesarios para continuar.
 
-El firmware:
+El firmware puede hacer comprobaciones y mostrar diagnósticos. No prueba exhaustivamente cada componente ni necesita inicializar todas las funciones que usará después el sistema operativo.
 
-1. **Comprueba el hardware**: la memoria, el procesador, los dispositivos básicos. Si algo esencial falla, avisa con pitidos o luces.
-2. **Lo inicializa**: configura la memoria y los buses.
-3. **Busca desde dónde arrancar**, según un orden configurable: disco, memoria USB, red.
+**UEFI** define interfaces entre el firmware y el software de arranque. Incluye mecanismos para localizar y ejecutar programas de inicio. La **BIOS** tradicional de los PC seguía otra organización, asociada al código de arranque en sectores del disco. Una pantalla de configuración con ratón no define por sí sola la diferencia.
 
-### BIOS y UEFI
+## 2. Encontrar el siguiente programa
 
-Durante décadas este firmware fue la **BIOS**, muy limitada: leía el primer sector del disco, de 512 bytes, y ejecutaba lo que hubiera ahí.
+El firmware selecciona una opción de arranque configurada: por ejemplo, un programa situado en la **partición del sistema EFI**, una región del almacenamiento destinada a estos archivos. También existen arranques por red y mecanismos de recuperación.
 
-Hoy es **UEFI**, su sucesora, mucho más capaz:
+Un **cargador de arranque**, como GRUB o systemd-boot, prepara el núcleo y le entrega el control. Puede ofrecer varias entradas, por ejemplo una versión actual y otra anterior del núcleo. Ese menú no significa que todos los sistemas se estén ejecutando a la vez.
 
-| | BIOS | UEFI |
-| --- | --- | --- |
-| Qué carga | El primer sector del disco | Un programa desde una partición específica |
-| Tamaño de disco de arranque | Limitado | Muy grande |
-| Interfaz | Texto | Puede ser gráfica, con ratón |
-| Arranque seguro | No | Sí |
+No siempre hay un cargador separado: un núcleo Linux preparado con el **EFI boot stub**, código de entrada compatible con EFI, puede cargarse directamente por el firmware. Las etapas describen responsabilidades, no un número fijo de archivos.
 
-El **arranque seguro** comprueba que lo que se carga está firmado por alguien de confianza. Protege contra programas maliciosos que intentan instalarse antes que el sistema operativo, donde serían casi imposibles de detectar.
+### Qué comprueba el arranque seguro
 
-## 2. El cargador de arranque
+**Secure Boot**, o arranque seguro, aplica una política de confianza a las imágenes de arranque. Puede aceptar firmantes o imágenes autorizadas y rechazar otras revocadas. Una firma válida identifica una relación de confianza; no demuestra que el programa carezca de errores.
 
-Es un programa pequeño cuyo trabajo es encontrar el núcleo, cargarlo en memoria y pasarle el control. En Linux, el más común es GRUB.
+Su alcance depende de la configuración y de cómo continúe la cadena de verificación. No equivale a cifrar el disco, comprobar todos los documentos ni garantizar la integridad de cualquier firmware del equipo.
 
-Si hay varios sistemas instalados, el cargador muestra un menú para elegir. También puede pasar opciones al núcleo, por ejemplo para arrancar en un modo de recuperación.
+## 3. Preparar el núcleo y la raíz
 
-## 3. El núcleo
+El **[núcleo](/articulos/que-es-el-kernel/)** configura sus estructuras de memoria, ejecución y acceso a dispositivos. Para continuar necesita encontrar los archivos del sistema instalado.
 
-El núcleo toma el control y:
+Aquí puede intervenir **initramfs**: un conjunto inicial de archivos que se prepara en memoria y contiene programas y controladores suficientes para llegar al almacenamiento definitivo. Por ejemplo, puede solicitar la clave de un volumen cifrado antes de poder abrirlo.
 
-- Detecta y configura el hardware, cargando los controladores necesarios.
-- Pone en marcha la gestión de [memoria](/articulos/memoria-virtual/) y de [procesos](/articulos/que-es-un-proceso/).
-- Monta el sistema de archivos principal.
-- Ejecuta el **primer proceso** del sistema.
+**Montar** un [sistema de archivos](/articulos/sistema-de-archivos/) significa incorporarlo a una ubicación accesible del árbol de directorios. La **raíz**, `/`, es el punto desde el que se organiza ese árbol. No debe confundirse con el usuario administrador que también se llama root.
 
-Ese primer proceso tiene el identificador 1, y es el antepasado de todos los demás.
+En este recorrido, el núcleo inicia `/init` en ese entorno inicial como proceso con identificador **PID 1**. Ese programa prepara la raíz definitiva y entrega el control al sistema de inicio instalado. Sustituir el programa de PID 1 no exige crear otro proceso con otro número.
 
-## 4. El sistema de inicio
+## 4. Iniciar los servicios
 
-El proceso 1 es el **sistema de inicio**. En la mayoría de las distribuciones de Linux actuales es systemd. Arranca todos los [servicios](/articulos/servicios-y-demonios/) en el orden que exigen sus dependencias: la red, el registro de eventos, el servidor gráfico. Muchos, en paralelo.
+Usamos **systemd** como gestor del sistema. Organiza **unidades**, descripciones de [servicios](/articulos/servicios-y-demonios/), montajes y otras tareas, y activa lo necesario para el objetivo configurado. Hay otros sistemas de inicio; Linux no exige systemd.
 
-Las dependencias se resuelven con una [ordenación topológica](/articulos/ordenacion-topologica/): no se arranca el servidor web antes que la red.
+Supón que un servicio necesita datos guardados en un volumen. Hay dos relaciones diferentes:
 
-## 5. La sesión
+- Necesitar que se active el montaje.
+- Esperar a que su activación termine antes de iniciar el servicio.
 
-Por último aparece la pantalla de acceso. Tras iniciar sesión, se cargan el escritorio y los programas del usuario.
+En systemd, relaciones como `Requires` y `After` expresan aspectos distintos. Decir solo «después de» no solicita por sí mismo iniciar la otra unidad. Las tareas sin una dependencia de orden pueden avanzar en paralelo.
 
+No hay que arrancar cada servicio disponible. Un servidor sin escritorio puede llegar a su estado operativo sin abrir ninguna sesión gráfica.
+
+```mermaid
+flowchart TD
+	F["Firmware UEFI"] --> C["Cargador del ejemplo"]
+	C --> K["Núcleo e initramfs"]
+	K --> R["Preparar y montar raíz definitiva"]
+	R --> I["Gestor del sistema: PID 1"]
+	I --> S["Servicios seleccionados"]
+	I --> L["Acceso de usuario, si se configura"]
 ```
-Encendido → firmware → cargador → núcleo → proceso 1 → servicios → sesión
-```
-
-## Cuando falla
-
-Saber las etapas ayuda a diagnosticar:
-
-- **Pitidos y pantalla negra**: el firmware ha encontrado un problema de hardware.
-- **"No se encuentra un dispositivo de arranque"**: el firmware no encuentra el cargador.
-- **Error del cargador**: no encuentra el núcleo, o su configuración está mal.
-- **El núcleo se detiene con un error**: un controlador o el sistema de archivos principal.
-- **Arranca, pero falta algo**: un servicio no se ha iniciado. Sus registros lo explican.
 
 <Quiz
 	client:visible
-	question="¿Qué es lo primero que se ejecuta al encender un ordenador?"
-	options={["El núcleo del sistema operativo", "El firmware de la placa base", "El escritorio"]}
+	question="El núcleo ya funciona, pero el entorno inicial no puede abrir el volumen cifrado. ¿Dónde se ha detenido este recorrido?"
+	options={["Antes de ejecutar el firmware", "Al preparar el acceso a la raíz definitiva", "Después de abrir necesariamente el escritorio"]}
 	answer={1}
 />
 
+## Localizar una interrupción del arranque
+
+La última etapa confirmada acota la búsqueda; un síntoma no identifica una única causa:
+
+| Evidencia | Qué conviene comprobar |
+| --- | --- |
+| No aparece ninguna opción de arranque | Selección, presencia del dispositivo y configuración del firmware |
+| El cargador muestra un error | Entrada elegida, archivos y parámetros del núcleo |
+| Aparece el entorno inicial, pero no continúa | Controladores, dispositivo raíz, cifrado y mensajes de esa etapa |
+| Hay acceso por terminal, pero no escritorio | Servicios gráficos y sus registros, sin asumir que falló todo el núcleo |
+
+Una pantalla negra también puede proceder de la salida de vídeo. Los pitidos dependen del fabricante. El diagnóstico combina la etapa, los mensajes y la documentación del equipo.
+
+## Errores comunes
+
+- **Llamar arranque a cualquier apertura de un programa.** El sistema ya iniciado sigue otro recorrido: [del ejecutable al proceso](/articulos/del-ejecutable-al-proceso/).
+- **Confundir orden con requisito.** Iniciar A después de B y exigir B son relaciones diferentes.
+- **Suponer que la firma garantiza ausencia de fallos.** Autorizar una imagen y demostrar su comportamiento son comprobaciones distintas.
+
 ## Lo esencial
 
-- Arrancar es una cadena: firmware, cargador de arranque, núcleo, sistema de inicio y sesión.
-- El firmware, hoy UEFI, comprueba e inicializa el hardware y busca desde dónde arrancar.
-- El arranque seguro comprueba que lo que se carga está firmado por alguien de confianza.
-- El cargador carga el núcleo, que configura el hardware y lanza el primer proceso.
-- El sistema de inicio arranca los servicios respetando sus dependencias.
+- El arranque transfiere control entre componentes que preparan el siguiente paso.
+- Firmware, cargador y núcleo tienen responsabilidades distintas y variantes de integración.
+- El entorno inicial puede preparar el almacenamiento antes del sistema instalado.
+- Los servicios se activan según configuración y dependencias; el escritorio es opcional.
