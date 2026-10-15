@@ -17,6 +17,8 @@ devly is a static content site covering what a computing degree teaches (compute
 | Tooling | pnpm, TypeScript strict, Biome, Vitest, `astro check` | `pnpm check` runs all of them plus the build |
 | Hosting | Cloudflare Workers static assets | `wrangler.jsonc`; Cloudflare builds and deploys each push to `main`. Branch previews use `wrangler preview` and the empty `previews` block. Wrangler is pinned locally; no data bindings are configured. |
 
+The Vite `prerender` environment bundles Astro's `cookie` dependency. With pnpm's isolated dependency layout, leaving that import external makes the generated entry resolve it from the project or an ancestor instead of Astro's dependency tree, potentially loading an incompatible version.
+
 ## Content model
 
 - **Layer** (`src/lib/layers.ts`): seven fixed areas of computing, ordered from most abstract to closest to the machine. Layers are code, not content, because the home page and the visual system depend on their order and count.
