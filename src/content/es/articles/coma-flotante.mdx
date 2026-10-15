@@ -1,13 +1,13 @@
 ---
 title: "¿Qué es la coma flotante? Cómo se guardan los números con decimales"
-description: "La coma flotante representa números con decimales usando un signo, una mantisa y un exponente en binario. Es rápida y aproximada."
+description: "La coma flotante combina signo, cifras significativas y exponente. Permite un amplio rango con precisión finita; aquí se estudia el formato binario de doble precisión."
 level: intermedio
 layer: hardware
 prerequisites:
   - que-es-un-bit
   - complemento-a-dos
   - por-que-0-1-mas-0-2-no-da-0-3
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "David Goldberg: What Every Computer Scientist Should Know About Floating-Point Arithmetic (1991, en inglés)"
     url: https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
@@ -19,9 +19,9 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-La **coma flotante** es la forma habitual en que un ordenador representa números con decimales, y números muy grandes o muy pequeños. Guarda cada número en tres partes: un **signo**, unas **cifras significativas** y un **exponente** que indica dónde va la coma. Es la notación científica, en binario.
+La **coma flotante** es la forma habitual en que un ordenador representa números con decimales, y números muy grandes o muy pequeños. Guarda cada número en tres partes: un **signo**, unas **cifras significativas** y un **exponente** que indica dónde va la coma. En su variante binaria se parece a la notación científica en base dos.
 
-El formato que usan casi todos los lenguajes y procesadores está definido en el estándar **IEEE 754**.
+El estándar **IEEE 754** define formatos binarios y decimales y reglas de operación. Aquí se utiliza **binary64**, el formato binario de doble precisión de `number` en JavaScript.
 
 ## Qué problema resuelve
 
@@ -44,9 +44,9 @@ Un número en doble precisión, el tipo `number` de JavaScript, ocupa 64 bits.
 | --- | --- | --- |
 | Signo | 1 | 0 para positivo, 1 para negativo |
 | Exponente | 11 | Dónde va la coma |
-| Mantisa | 52 | Las cifras significativas |
+| Fracción | 52 | La parte fraccionaria del significando |
 
-El valor es: signo × 1,mantisa × 2 elevado al exponente.
+Para un valor **normal finito**, la fórmula es `(-1)^s × (1 + F / 2^52) × 2^(E - 1023)`: `s` es el bit de signo, `F` el entero formado por los 52 bits de fracción y `E` el entero de los 11 bits de exponente. El significando completo incluye el 1 inicial; a menudo se lo llama mantisa.
 
 Dos detalles:
 
@@ -66,18 +66,20 @@ console.log(parseInt(bits.slice(1, 12), 2) - 1023); // 2
 console.log(bits.slice(12, 16)); // "1010"
 ```
 
-El signo es 1, por ser negativo. El exponente, tras restar el desplazamiento, es 2. Y la mantisa empieza por 101: las cifras que siguen al 1 inicial.
+El signo es 1, por ser negativo. El exponente, tras restar el desplazamiento, es 2. La fracción empieza por 101: las cifras que siguen al 1 inicial. El significando es `1 + 1/2 + 0/4 + 1/8 = 1,625`; con signo negativo y exponente 2, resulta `−1,625 × 4 = −6,5`.
+
+La fórmula anterior usa exponentes almacenados de 1 a 2046. Con `E = 0`, el 1 implícito desaparece y el exponente efectivo es −1022: una fracción no nula representa un **subnormal**, que acerca los valores gradualmente a cero con menos precisión relativa. Fracción cero representa un cero con signo. `E = 2047` se reserva para infinitos y NaN.
 
 ## Precisión simple y doble
 
 | Tipo | Bits | Cifras decimales fiables | Uso |
 | --- | --- | --- | --- |
-| Simple | 32 | Unas 7 | Gráficos, [redes neuronales](/articulos/que-es-una-red-neuronal/), donde importan memoria y velocidad |
-| Doble | 64 | Unas 15 o 16 | El tipo por defecto en casi todos los lenguajes |
+| Simple, binary32 | 32 | Aproximadamente 6–7 | Gráficos, [redes neuronales](/articulos/que-es-una-red-neuronal/), donde importan memoria y velocidad |
+| Doble, binary64 | 64 | Aproximadamente 15–16 | `number` en JavaScript y `float` habitual de Python |
 
 ## Es una aproximación
 
-Con 64 bits hay una cantidad finita de valores, y entre dos números cualesquiera hay infinitos reales. La mayoría no se puede representar: se guarda el **más cercano** que sí.
+Con 64 bits hay una cantidad finita de valores, y entre dos números cualesquiera hay infinitos reales. La mayoría no se puede representar. Con el modo de redondeo usado aquí se elige el **más cercano**, resolviendo empates según la regla del formato; otros modos permiten redondear en direcciones distintas.
 
 Además, la base es 2. Igual que 1/3 no tiene representación exacta en decimal, 0,333…, muchos números sencillos en decimal no la tienen en binario. Uno de ellos es 0,1.
 
@@ -87,11 +89,11 @@ console.log(0.5 + 0.25); // 0.75
 console.log((0.1).toString(2).length > 50); // true
 ```
 
-0,5 y 0,25 son potencias de 2 y se guardan sin error. 0,1 en binario tiene infinitas cifras, y se corta. El artículo [¿por qué 0,1 + 0,2 no da 0,3?](/articulos/por-que-0-1-mas-0-2-no-da-0-3/) lo explica con más detalle.
+0,5 y 0,25 son potencias de 2 y se guardan sin error. 0,1 en binario tiene infinitas cifras y se redondea. El artículo [¿por qué 0,1 + 0,2 no da 0,3?](/articulos/por-que-0-1-mas-0-2-no-da-0-3/) lo explica con más detalle.
 
 ## Los huecos crecen
 
-Los valores representables no están repartidos por igual. Cerca de cero hay muchísimos. Cuanto mayor es el número, más separados quedan.
+Los valores representables no están repartidos por igual. En los valores normales, aumentar la magnitud lleva a intervalos con separaciones mayores. Los subnormales cercanos a cero tienen una separación fija, `2^-1074` en binary64.
 
 Es lógico: las cifras significativas son siempre las mismas, unas 16. En un número pequeño, se gastan en decimales. En uno enorme, no llegan ni a las unidades.
 
@@ -100,9 +102,9 @@ console.log(Number.MAX_SAFE_INTEGER); // 9007199254740991
 console.log(2 ** 53 === 2 ** 53 + 1); // true
 ```
 
-A partir de 2 elevado a 53, ya no se pueden representar todos los enteros. Sumar 1 no cambia nada: el resultado se redondea al mismo valor.
+A partir de 2 elevado a 53, ya no se pueden representar todos los enteros. En este ejemplo, sumar 1 no cambia nada: el resultado se redondea al mismo valor.
 
-Es un error clásico con identificadores grandes. Un identificador de 64 bits recibido en [JSON](/articulos/formatos-de-datos-json-csv-xml/) y leído como número pierde sus últimas cifras sin avisar. Se transmiten como texto, o se usa un tipo entero de precisión arbitraria.
+Es un error clásico con identificadores grandes. Un identificador de 64 bits recibido en [JSON](/articulos/formatos-de-datos-json-csv-xml/) y leído como `number` puede redondearse si no es representable. Transmitirlo como texto permite conservar sus cifras; después se puede convertir a `BigInt`. Convertir a `BigInt` un `number` que ya se redondeó no recupera el identificador original.
 
 ## Valores especiales
 
@@ -116,14 +118,14 @@ console.log(0 === -0); // true
 ```
 
 - **Infinito**, positivo y negativo: el resultado de desbordar el rango, o de dividir entre cero.
-- **NaN**, "no es un número": el resultado de operaciones sin sentido, como 0 entre 0. Se contagia: cualquier operación con un NaN da NaN. Y no es igual a nada, **ni a sí mismo**. Para detectarlo hay que usar una función específica.
+- **NaN**, "no es un número": el resultado de operaciones sin sentido, como 0 entre 0. Se propaga por muchas operaciones aritméticas, pero hay excepciones: en JavaScript, `NaN ** 0` da 1. Las comparaciones tampoco devuelven NaN. Y no es igual a nada, **ni a sí mismo**. Para detectarlo hay que usar una función específica.
 - **Cero negativo.** Existe, y se considera igual al positivo.
 
-Que una división entre cero no detenga el programa es deliberado: un cálculo largo puede continuar y revisarse al final.
+Esas salidas describen `number` en JavaScript. Otros tipos o lenguajes pueden lanzar una excepción al dividir entre cero; el formato de almacenamiento no define por sí solo toda la política del entorno.
 
 <Quiz
 	client:visible
-	question="¿Por qué no se pueden representar con exactitud la mayoría de los números decimales en coma flotante?"
+	question="¿Por qué un formato binario finito como binary64 necesita aproximar números como 0,1?"
 	options={[
 		"Porque los procesadores cometen errores al calcular",
 		"Porque hay un número finito de bits y la base es 2, así que se guarda el valor más cercano",
@@ -134,7 +136,7 @@ Que una división entre cero no detenga el programa es deliberado: un cálculo l
 
 ## Reglas prácticas
 
-### No comparar con igualdad
+### Comparar con el criterio adecuado
 
 ```js
 const suma = 0.1 + 0.2;
@@ -143,35 +145,45 @@ console.log(suma === 0.3); // false
 console.log(Math.abs(suma - 0.3) < Number.EPSILON); // true
 ```
 
-Se comprueba que la diferencia sea menor que una **tolerancia**. Cuál es la adecuada depende de la magnitud de los números y del problema.
+Aquí se acepta una diferencia menor que una **tolerancia**. `Number.EPSILON` es la separación por encima de 1 y basta para este caso; no es un margen universal. La tolerancia depende de magnitud, errores acumulados y objetivo. La igualdad exacta sigue siendo válida si interesa comparar los valores representados, o si las operaciones del caso son exactas.
 
-### El dinero no va en coma flotante
+### Exactitud decimal y reglas de negocio
 
-Los errores de redondeo se acumulan, y en contabilidad un céntimo importa. Las opciones:
+Cuando el cálculo requiere exactitud en unidades decimales, hay que elegir una representación y reglas de redondeo apropiadas. Dos opciones:
 
 - **Guardar en la unidad mínima**, como enteros: céntimos en lugar de euros.
-- **Usar un tipo decimal**, que muchos lenguajes y todas las bases de datos ofrecen, y que opera en base 10.
+- **Usar un tipo decimal**, disponible en muchos lenguajes y motores. Opera en base 10, pero su precisión y rango también pueden ser finitos; divisiones como 1/3 necesitan redondeo.
 
 ### El orden de las operaciones importa
 
 En coma flotante, (a + b) + c no siempre es igual a a + (b + c). Sumar un número enorme y uno diminuto hace que el pequeño se pierda.
 
-Al sumar muchos valores de tamaños dispares, es más preciso empezar por los pequeños.
+El orden puede cambiar el resultado incluso con entradas representables:
+
+```js
+const a = 1e16;
+const b = -1e16;
+const c = 1;
+console.log((a + b) + c); // 1
+console.log(a + (b + c)); // 0
+```
+
+La primera expresión cancela los valores grandes antes de añadir 1. En la segunda, ese 1 se pierde al sumarlo a `b`. Ordenar por magnitud puede ayudar en ciertos conjuntos, pero no garantiza el mejor resultado para cualquier mezcla de signos. Existen métodos de suma compensada para reducir el error.
 
 ### Restar números casi iguales
 
-Si dos números coinciden en casi todas sus cifras, al restarlos esas cifras se anulan y queda sobre todo el error de redondeo. Se llama **cancelación catastrófica**, y hay fórmulas que conviene reescribir para evitarla.
+Si dos aproximaciones coinciden en casi todas sus cifras, al restarlas puede quedar un resultado pequeño dominado por los errores que ya contenían. La resta de dos valores cercanos no es necesariamente inexacta por sí misma; el problema es la pérdida de precisión relativa respecto de los valores que se pretendían calcular. Se llama **cancelación catastrófica**, y hay fórmulas que conviene reescribir para evitarla.
 
 ### Mostrar no es calcular
 
-Para enseñar un resultado, se redondea al mostrarlo. No se redondea en cada paso intermedio, que acumularía más error.
+Para enseñar un resultado, se redondea al mostrarlo. Evita redondeos adicionales sin motivo en pasos intermedios; si el dominio exige redondear en un punto concreto, esa regla forma parte del cálculo.
 
 ## Por qué se usa pese a todo
 
 - **Es rápida.** Los procesadores tienen circuitos dedicados.
 - **Cubre un rango enorme** con un tamaño fijo.
-- **El error es pequeño y conocido.** Para medir, simular, dibujar o entrenar un modelo, quince cifras sobran. Ninguna medida física es tan precisa.
-- **Es un estándar.** El mismo cálculo da el mismo resultado en casi cualquier máquina.
+- **Permite controlar errores.** La precisión necesaria depende del problema, de su sensibilidad a perturbaciones y del algoritmo; quince cifras no bastan para cualquier cálculo.
+- **Tiene reglas definidas.** Reproducir resultados exige mantener formato, redondeo y orden de operaciones; optimizaciones y funciones matemáticas pueden introducir otras diferencias.
 
 Los problemas aparecen cuando se le pide lo que no ofrece: exactitud decimal, o enteros gigantes.
 
@@ -179,8 +191,8 @@ El [error de división del Pentium](/articulos/el-error-de-division-del-pentium/
 
 ## Lo esencial
 
-- La coma flotante guarda un signo, unas cifras significativas y un exponente, en binario.
-- Es una aproximación: se almacena el valor representable más cercano.
-- Tiene unas 15 cifras decimales fiables en doble precisión.
+- La coma flotante combina signo, significando y exponente; binary64 utiliza base dos.
+- Las entradas y resultados no representables necesitan redondeo según el modo usado.
+- Binary64 ofrece unas 15–16 cifras de precisión para valores normales; el error final depende del cálculo.
 - Los valores representables se separan al crecer: por encima de 2⁵³ no caben todos los enteros.
-- No se compara con igualdad ni se usa para dinero.
+- Define qué exactitud necesitas y cómo tratar tolerancias, redondeos y valores especiales.

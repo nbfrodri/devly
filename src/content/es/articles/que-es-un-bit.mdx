@@ -1,10 +1,12 @@
 ---
 title: ¿Qué es un bit?
-description: El bit es la unidad mínima de información, un valor que solo puede ser 0 o 1.
+description: "Un bit es un dígito binario: solo puede valer 0 o 1. Al combinar bits se representan números, texto y otros datos."
 level: basico
 layer: hardware
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
+  - title: "MIT 6.02: Why Digital? Communication Abstractions and Digital Signaling (en inglés)"
+    url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/resources/mit6_02f12_chap04/
   - title: "C. E. Shannon: A Mathematical Theory of Communication (1948, en inglés)"
     url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
   - title: "NIST: Prefixes for binary multiples (en inglés)"
@@ -17,15 +19,15 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **bit** es la unidad mínima de información: un valor que solo puede ser `0` o `1`. Todo lo que guarda o procesa un ordenador, sea un texto, una foto o un programa, está hecho de bits.
+Un **bit** es un dígito binario: un valor que solo puede ser `0` o `1`. Los ordenadores digitales representan sus datos, como textos, fotos y programas, mediante combinaciones de bits.
 
 La palabra viene de *binary digit*, dígito binario.
 
 ## Por qué solo dos valores
 
-Un ordenador está hecho de circuitos electrónicos. Lo más sencillo y fiable que puede hacer un circuito es distinguir entre dos estados: hay tensión eléctrica o no la hay. A uno se le llama `1` y al otro `0`.
+Un ordenador está hecho de circuitos electrónicos. Un circuito digital puede interpretar dos intervalos de tensión como estados lógicos: uno bajo y otro alto. Se asignan a `0` y `1`; el estado bajo no exige ausencia total de tensión, y los umbrales dependen del circuito.
 
-Podría haberse diseñado para distinguir diez niveles de tensión y trabajar con los dígitos del 0 al 9. Pero cuantos más niveles, más fácil es que una pequeña interferencia haga confundir uno con el vecino. Con dos niveles muy separados, el margen de error es enorme. Esa fiabilidad es la razón de que toda la informática se apoye en el sistema binario.
+Podría haberse diseñado para distinguir diez niveles de tensión y trabajar con los dígitos del 0 al 9. Pero cuantos más niveles, más fácil es que una pequeña interferencia haga confundir uno con el vecino. Separar los intervalos deja margen para pequeñas perturbaciones, aunque el ruido aún puede causar errores. La representación binaria facilita construir y combinar circuitos fiables. Un soporte físico también puede codificar varios bits por celda o símbolo distinguiendo más de dos niveles, como ocurre en algunas memorias flash y comunicaciones.
 
 ## Qué puede representar un bit
 
@@ -62,7 +64,7 @@ console.log(2 ** 16); // 65536
 
 ## El byte
 
-Un grupo de 8 bits se llama **byte**. Es la unidad con la que se miden los archivos y la memoria. Con un byte se pueden representar 256 valores distintos, del 0 al 255.
+Un grupo de 8 bits se llama **[byte](/articulos/que-es-un-byte/)**. Es la unidad con la que se miden los archivos y la memoria. Un byte tiene 256 patrones distintos. Interpretados como un entero sin signo representan del 0 al 255; otros formatos les dan otros significados.
 
 Los tamaños grandes se expresan con prefijos:
 
@@ -111,8 +113,8 @@ Para escribir valores binarios de forma más corta se usa el [sistema hexadecima
 
 Si los bits sirven para escribir números, cualquier cosa que pueda convertirse en números puede guardarse en bits.
 
-- **Texto**: a cada carácter se le asigna un número. La letra A mayúscula es el 65. El sistema completo se explica en [codificación de caracteres](/articulos/codificacion-de-caracteres/).
-- **Imágenes**: una imagen es una cuadrícula de puntos, y el color de cada punto son tres números: cuánto rojo, cuánto verde y cuánto azul.
+- **Texto**: una codificación convierte el texto en bytes. En ASCII y Unicode, la letra A mayúscula tiene el código 65. El sistema completo se explica en [codificación de caracteres](/articulos/codificacion-de-caracteres/).
+- **Imágenes**: un mapa de bits puede guardar una cuadrícula de colores. En una representación RGB, tres componentes indican rojo, verde y azul; existen también imágenes en grises, con paleta y vectoriales.
 - **Sonido**: se mide la onda miles de veces por segundo y se guarda cada medida como un número.
 
 ```js
@@ -121,6 +123,12 @@ console.log((65).toString(2)); // "1000001"
 ```
 
 Los mismos bits pueden ser el número 65 o la letra A. Lo que decide cuál es el [tipo de dato](/articulos/tipos-de-datos/) con el que el programa los interpreta.
+
+## Errores comunes
+
+- **Confundir el bit con su soporte.** El mismo 0 o 1 puede representarse con tensión, carga o estados magnéticos; el dato no es una tecnología concreta.
+- **Creer que un patrón lleva su significado incorporado.** `01000001` puede representar el entero 65 o parte de un texto; hace falta conocer el formato.
+- **Mezclar bits y bytes.** Ocho bits forman un byte; la B mayúscula se utiliza para bytes.
 
 ## Lo esencial
 

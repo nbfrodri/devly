@@ -6,7 +6,7 @@ layer: hardware
 prerequisites:
   - que-es-un-bit
   - sistema-hexadecimal
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Thomas Finley: Two's Complement, apuntes de la Universidad de Cornell (en inglés)"
     url: https://www.cs.cornell.edu/~tomf/notes/cps104/twoscomp.html
@@ -31,7 +31,7 @@ Lo primero que se ocurre es reservar un bit para el signo: 0 si es positivo, 1 s
 Tiene dos defectos:
 
 - **Hay dos ceros.** `00000000` y `10000000` serían +0 y −0: dos representaciones para el mismo número.
-- **La suma no funciona tal cual.** Sumar un positivo y un negativo exige un circuito distinto, que compare signos y decida si suma o resta.
+- **La suma no funciona tal cual.** Hay que comparar signos y magnitudes para decidir si sumar o restar estas últimas; no basta con sumar directamente los patrones completos.
 
 ## La idea del complemento a dos
 
@@ -48,11 +48,11 @@ El complemento a dos hace lo mismo en binario. Con 8 bits, el número que hay "j
 | 11111110 | −2 |
 | 10000000 | −128 |
 
-El primer bit sigue indicando el signo: 0 para positivos, 1 para negativos. Pero el resto no es la magnitud tal cual.
+El primer bit sigue indicando el signo: 0 para cero y positivos, 1 para negativos. Pero el resto no es la magnitud tal cual.
 
 ## Cómo se obtiene un negativo
 
-Para cambiar el signo de un número:
+Con una anchura fija, se obtiene el patrón del opuesto así, siempre que ese opuesto quepa en el rango:
 
 1. Se invierten todos los bits.
 2. Se suma 1.
@@ -66,6 +66,8 @@ Con el 5:
 | Sumar 1 | 11111011 |
 
 `11111011` es −5. El mismo procedimiento sirve para volver: invertir y sumar 1 da de nuevo `00000101`.
+
+En JavaScript, `~` aplicado a un `number` convierte antes su operando a entero de 32 bits con signo. El siguiente ejemplo usa enteros dentro de ese rango; la suma posterior vuelve a ser una operación normal con `number`:
 
 ```js
 function negar(numero) {
@@ -93,7 +95,7 @@ En la suma sale un acarreo por la izquierda que no cabe en los 8 bits y se desca
 
 Las consecuencias:
 
-- **Restar es sumar.** Para calcular `a − b`, se suma `a` con el negativo de `b`. El procesador no necesita un circuito para restar.
+- **Restar es sumar.** Para calcular `a − b`, se suma `a` con el negativo de `b`. El circuito sumador puede reutilizarse con la inversión y el acarreo adecuados; eso no significa que no exista lógica de control para elegir la operación.
 - **Hay un solo cero.**
 
 Por eso lo adoptó prácticamente toda la industria: simplifica las [puertas lógicas](/articulos/puertas-logicas/) necesarias.
@@ -132,7 +134,9 @@ numeros[0] = numeros[0] + 1;
 console.log(numeros[0]); // -128
 ```
 
-`Int8Array` guarda enteros de 8 bits con signo, así que reproduce el comportamiento exacto.
+`Int8Array` convierte el resultado al guardarlo en ocho bits con signo: la suma produjo 128 y la escritura conservó el patrón que se interpreta como −128. El formato por sí solo no fija la política de un lenguaje ante el desbordamiento: puede haber conversión modular, comprobación o un comportamiento no definido para determinadas operaciones. No debe extrapolarse este ejemplo a cualquier entero.
+
+Hay otro límite: el opuesto de −128 es +128, que no cabe en ocho bits con signo. Invertir `10000000` y sumar uno, conservando ocho bits, devuelve `10000000`; no se ha obtenido un +128 representable.
 
 El desbordamiento ha causado fallos reales, y es la raíz del [problema del año 2038](/articulos/el-efecto-2000-y-el-problema-de-2038/): un contador de segundos de 32 bits que, al pasar su máximo, salta a un valor negativo.
 
@@ -151,12 +155,18 @@ Confundir los dos es una fuente clásica de errores, sobre todo al comparar un v
 
 ## Y en JavaScript
 
-Los números normales de JavaScript no son enteros en complemento a dos, sino números de coma flotante. Por eso representan enteros de forma exacta solo hasta cierto límite, y a partir de ahí [pierden precisión](/articulos/por-que-0-1-mas-0-2-no-da-0-3/). Los operadores de bits, como `~`, sí trabajan con enteros de 32 bits en complemento a dos.
+Los números normales de JavaScript no son enteros en complemento a dos, sino números de coma flotante. Por eso representan enteros de forma exacta solo hasta cierto límite, y a partir de ahí [pierden precisión](/articulos/por-que-0-1-mas-0-2-no-da-0-3/). Los operadores de bits sobre `number`, como `~`, convierten a 32 bits; pueden truncar fracciones y perder bits altos. Su variante con `BigInt` tiene otras reglas y no está limitada a 32 bits.
+
+## Errores comunes
+
+- **Olvidar la anchura.** `11111111` significa −1 en ocho bits con signo, pero 255 sin signo. Para ampliar un valor en complemento a dos se repite el bit de signo a la izquierda: −1 en dieciséis bits son dieciséis unos.
+- **Negar el mínimo sin comprobar el rango.** Hay un valor negativo adicional cuyo opuesto positivo no cabe.
+- **Usar `~x + 1` como sustituto general de `-x` en JavaScript.** La conversión de `~` a 32 bits cambia fracciones y valores fuera del rango.
 
 ## Lo esencial
 
 - El complemento a dos representa los enteros negativos de modo que la suma funcione sin casos especiales.
-- Para cambiar el signo de un número se invierten sus bits y se suma 1.
+- Invertir los bits y sumar uno obtiene el opuesto dentro del rango; el mínimo negativo es un caso límite.
 - Hay un solo cero, y restar equivale a sumar el negativo.
 - Con `n` bits, el rango va de −2 elevado a `n − 1` hasta 2 elevado a `n − 1`, menos 1.
-- Al pasar del máximo, el valor da la vuelta al mínimo: es el desbordamiento.
+- Superar el rango es un desbordamiento; la política de la operación determina cómo se trata.
