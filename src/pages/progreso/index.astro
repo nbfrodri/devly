@@ -123,6 +123,10 @@ const sections = [
 		item.dataset.kind = data.kind;
 		item.removeAttribute("data-text");
 		item.querySelector("a")?.setAttribute("href", `/articulos/${data.id}/`);
+		for (const button of item.querySelectorAll<HTMLElement>("[data-progress-toggle]")) {
+			button.dataset.progressId = data.id;
+			button.dataset.progressTitle = data.title;
+		}
 		const set = (selector: string, text: string) => {
 			const element = item.querySelector(selector);
 			if (element) element.textContent = text;

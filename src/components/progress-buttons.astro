@@ -1,5 +1,6 @@
 ---
 import Icon from "@/components/icon.astro";
+import SaveButton from "@/components/save-button.astro";
 
 type Props = {
 	id: string;
@@ -29,18 +30,5 @@ const { id, scope } = Astro.props;
 			</button>
 		)
 	}
-	<button
-		class="progress-button progress-button-pending"
-		type="button"
-		aria-pressed="false"
-		data-progress-toggle="pendiente"
-		data-progress-scope={scope}
-		data-progress-id={id}
-		data-label-off="Guardar para después"
-		data-label-on="Pendiente"
-	>
-		<Icon name="bookmark" class="progress-icon-off" />
-		<Icon name="bookmark-filled" class="progress-icon-on" />
-		<span data-label>Guardar para después</span>
-	</button>
+	<SaveButton id={id} scope={scope} />
 </div>

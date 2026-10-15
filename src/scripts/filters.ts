@@ -117,6 +117,9 @@ function applyFilters() {
 form?.addEventListener("change", applyFilters);
 form?.addEventListener("input", applyFilters);
 form?.addEventListener("submit", (event) => event.preventDefault());
+document.addEventListener("devly:progress-change", () => {
+	if (form && new FormData(form).get("progress")) applyFilters();
+});
 // A reset restores the inputs after this event, so wait a tick to read them.
 form?.addEventListener("reset", () => window.setTimeout(applyFilters));
 

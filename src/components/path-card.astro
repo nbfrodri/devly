@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getEntries } from "astro:content";
+import SaveButton from "@/components/save-button.astro";
 import SpriteIcon from "@/components/sprite-icon.astro";
 import { describeLevelRange } from "@/lib/levels";
 
@@ -37,4 +38,5 @@ const count = steps.length;
 			<span data-progress-count></span>
 		</span>
 	</div>
+	<SaveButton id={path.id} scope="path" title={path.data.title} compact />
 </article>
