@@ -1,62 +1,64 @@
 ---
 title: "Diferencias entre microcontrolador y microprocesador"
-description: "Un microprocesador es solo el cerebro y necesita más componentes alrededor; un microcontrolador lo trae todo en un chip, a pequeña escala."
+description: "Un microcontrolador integra procesamiento, memoria y periféricos para controlar dispositivos; un microprocesador suele apoyarse más en componentes externos."
 level: basico
 kind: comparacion
 layer: hardware
 prerequisites:
   - como-funciona-un-procesador
   - memoria-ram-y-almacenamiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Arduino Docs: Getting Started with Arduino (en inglés)"
-    url: https://docs.arduino.cc/learn/starting-guide/getting-started-arduino/
-  - title: "Arduino Docs: Digital Pins (en inglés)"
-    url: https://docs.arduino.cc/learn/microcontrollers/digital-pins/
-  - title: "Nand2Tetris: curso libre para construir un ordenador desde las puertas lógicas (en inglés)"
-    url: https://www.nand2tetris.org/course
+  - title: "STMicroelectronics: Microcontrollers and Microprocessors (en inglés)"
+    url: https://www.st.com/en/microcontrollers-microprocessors.html
+  - title: "Raspberry Pi: Microcontroller chips (en inglés)"
+    url: https://www.raspberrypi.com/documentation/microcontrollers/microcontroller-chips.html
+  - title: "FreeRTOS: RTOS Fundamentals (en inglés)"
+    url: https://education.freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/01-RTOS-fundamentals
+  - title: "Arduino: UNO Rev3 (en inglés)"
+    url: https://docs.arduino.cc/hardware/uno-rev3/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **microprocesador** es un chip que contiene un [procesador](/articulos/como-funciona-un-procesador/) y nada más: para funcionar necesita memoria, almacenamiento y otros componentes externos. Un **microcontrolador** es un chip que incluye el procesador, la memoria y las conexiones con el exterior, todo junto y a pequeña escala.
+Un **microprocesador** integra una o varias unidades de [procesamiento](/articulos/como-funciona-un-procesador/) y suele trabajar con memoria y otros componentes externos. Un **microcontrolador** reúne procesamiento, memoria y periféricos para controlar un dispositivo. La diferencia está en la integración y el uso previsto: no en que uno contenga literalmente solo CPU ni en una frontera fija de potencia.
 
-El primero está en tu ordenador. El segundo, en tu microondas.
+Un ordenador personal suele usar un microprocesador; el control de un electrodoméstico puede resolverse con un microcontrolador. Ambos ejecutan instrucciones.
 
 ## Microprocesador
 
-Es el cerebro de un ordenador de propósito general: un portátil, un servidor, un teléfono.
+En un ordenador de propósito general, el microprocesador ejecuta aplicaciones con necesidades muy distintas.
 
-- **Es potente.** Varios núcleos, a velocidades de gigahercios.
+- **Puede ofrecer mucha capacidad de cálculo.** Los modelos de ordenadores personales suelen tener varios núcleos y frecuencias de gigahercios; no todos los microprocesadores son así.
 - **No funciona solo.** Necesita [memoria RAM](/articulos/memoria-ram-y-almacenamiento/), almacenamiento, y circuitos para comunicarse con pantalla, teclado y red.
-- **Ejecuta un sistema operativo**, que a su vez ejecuta muchos programas distintos.
-- **Consume bastante energía** y genera calor.
+- **Suele ejecutar un sistema operativo**, que organiza aplicaciones y recursos. No es un requisito para que el chip sea un microprocesador.
+- **Su consumo depende del diseño y de la carga.** Una máquina de altas prestaciones también necesita alimentación y refrigeración acordes.
 
 Está pensado para la flexibilidad: la misma máquina sirve para escribir, jugar o programar.
 
 ## Microcontrolador
 
-Es un ordenador completo en un solo chip, diseñado para una tarea concreta dentro de un aparato. Integra:
+Está pensado para controlar funciones dentro de un aparato. Normalmente integra:
 
 - Un procesador modesto.
 - Una pequeña memoria RAM.
-- Memoria flash para guardar el programa.
+- Memoria no volátil para guardar el programa en muchos modelos. Hay excepciones: el RP2040 usa flash externa.
 - **Periféricos**: patillas de entrada y salida, temporizadores, conversores para leer señales analógicas, interfaces de comunicación.
 
-Sus recursos son diminutos comparados con un ordenador: es habitual que tengan unos pocos kilobytes de RAM y velocidades de megahercios, miles de veces por debajo de un portátil.
+Los recursos varían mucho: algunos tienen kilobytes de RAM; otros, mucha más memoria y varios núcleos. Comparar solo la frecuencia no mide cuántas veces más rápido será un programa.
 
 A cambio:
 
-- **Es barato**: puede costar céntimos.
-- **Consume muy poco.** Muchos funcionan años con una pila.
+- **Puede reducir el coste** al integrar componentes que de otro modo ocuparían la placa.
+- **Puede gastar poca energía**, especialmente si duerme entre tareas. La autonomía depende también de sensores, radio y batería.
 - **Es pequeño** y necesita pocos componentes alrededor.
-- **Arranca al instante**, sin cargar un sistema operativo.
+- **Puede arrancar con un programa pequeño**, sin un sistema operativo general. El arranque sigue teniendo una duración y puede incluir comprobaciones.
 
 Están en casi todo: electrodomésticos, mandos a distancia, coches (que llevan decenas), juguetes, termostatos, relojes.
 
 ### El programa de un microcontrolador
 
-Lo habitual es que ejecute un único programa, grabado en su memoria flash, que empieza al recibir corriente y se repite sin fin. Ese programa se llama **firmware**.
+Lo habitual es que ejecute un único programa, grabado en su memoria flash, que empieza al recibir corriente y se repite sin fin. Ese programa se llama [**firmware**](/articulos/que-es-el-firmware/). Puede ser un bucle sencillo o incluir un pequeño sistema operativo que organice varias tareas.
 
 Su estructura típica es un bucle: leer los sensores, decidir y actuar.
 
@@ -76,27 +78,34 @@ console.log(decidir(23, 21)); // "apagar calefacción"
 console.log(decidir(21, 21)); // "no hacer nada"
 ```
 
-Esa es la lógica de un termostato. En el aparato real estaría escrita en un lenguaje como C, y se ejecutaría miles de veces por segundo dentro de un [bucle](/articulos/bucles/) infinito.
+La función es una simulación en JavaScript de la decisión de un termostato: no lee un sensor ni controla una salida real. Con objetivo 21, enciende por debajo de 20, apaga por encima de 22 y mantiene el estado anterior entre ambos límites, incluidos 20 y 22. Esa banda evita conmutar por pequeñas oscilaciones. El aparato debe conservar el estado y establecer uno inicial; la frecuencia de lectura se elige según el sistema, no tiene por qué ser de miles de veces por segundo.
 
 Se relaciona con el mundo físico a través de sus patillas: en unas lee una señal, como la de un sensor de temperatura; en otras escribe una, como la que activa un relé.
+
+## El mismo termostato con las dos opciones
+
+Con un microcontrolador, el programa lee el sensor, compara con el objetivo y ordena una salida. La decisión anterior necesita muy poca memoria. Los periodos de espera permiten dormir y ahorrar energía.
+
+Con un microprocesador y memoria externa se puede ejecutar esa misma decisión, además de una pantalla compleja, historial y otras aplicaciones. Se gana capacidad para esas funciones, a costa de una placa y un software normalmente más complejos. Si solo queremos medir y conmutar con pilas, esos recursos extra pueden no compensar. Si queremos una interfaz rica y muchas aplicaciones, pueden ser necesarios.
+
+En ambos casos hacen falta sensor, alimentación y un circuito adecuado para accionar la carga: la patilla del chip no alimenta por sí sola una calefacción.
 
 ## Comparación
 
 | | Microprocesador | Microcontrolador |
 | --- | --- | --- |
-| Contiene | Solo el procesador | Procesador, memoria y periféricos |
-| Necesita alrededor | Muchos componentes | Muy pocos |
-| Potencia | Alta | Baja |
-| Memoria | Gigabytes, externa | Kilobytes o megabytes, integrada |
-| Consumo | Alto | Muy bajo |
-| Coste | Alto | Muy bajo |
-| Software | Sistema operativo y muchos programas | Normalmente un solo programa |
+| Contiene | CPU y otros bloques según el diseño | CPU, memoria y periféricos de control |
+| Necesita alrededor | Memoria y circuitos externos según el sistema | Menos componentes para tareas sencillas |
+| Recursos | Orientados a cargas más amplias en muchos modelos | Ajustados al dispositivo; varían mucho |
+| Memoria | A menudo RAM externa | RAM integrada; programa interno o externo |
+| Consumo | Depende del chip y del sistema | Puede aprovechar modos de bajo consumo |
+| Software | Con o sin sistema operativo | Bucle de control o tareas con un sistema pequeño |
 | Uso | Propósito general | Una tarea concreta |
 | Ejemplos | Ordenadores, servidores | Electrodomésticos, sensores, juguetes |
 
 <Quiz
 	client:visible
-	question="¿Qué usarías para controlar un termostato que funciona con pilas?"
+	question="Para un termostato a pilas que solo mide y conmuta, ¿qué opción encaja con integrar pocos componentes y dormir entre medidas?"
 	options={["Un microprocesador", "Un microcontrolador", "Cualquiera de los dos por igual"]}
 	answer={1}
 />
@@ -105,24 +114,29 @@ Se relaciona con el mundo físico a través de sus patillas: en unas lee una se�
 
 Muchos microcontroladores trabajan con plazos estrictos. El sistema que despliega el airbag de un coche debe reaccionar en un tiempo máximo garantizado, siempre.
 
-A eso se le llama **tiempo real**: lo que importa no es ser rápido de media, sino no llegar tarde nunca. Un ordenador con un [sistema operativo](/articulos/que-es-un-sistema-operativo/) convencional, que reparte el procesador entre muchas tareas, no puede dar esa garantía. Un microcontrolador con un solo programa, sí.
+A eso se le llama **tiempo real**: importa cumplir un plazo, no solo ser rápido de media. En tiempo real estricto, incumplirlo es un fallo; otros usos toleran algún retraso con pérdida de calidad. Usar un microcontrolador no garantiza esos plazos: un bucle que espere indefinidamente a la red también llega tarde. Hay que acotar cálculos, esperas e interrupciones, y comprobar el peor caso. Los [sistemas operativos de tiempo real](/articulos/sistemas-operativos-de-tiempo-real/) ayudan a planificar tareas, pero tampoco hacen viable una carga que excede los recursos. El requisito pertenece al sistema completo, con o sin sistema operativo.
 
 ## La frontera se difumina
 
 La distinción es clara en los extremos y borrosa en el medio.
 
-Un **sistema en un chip** (SoC) integra en una sola pieza un procesador potente junto con memoria, gráficos y comunicaciones. Es lo que llevan los teléfonos. Se parece a un microcontrolador en que lo reúne todo, y a un microprocesador en potencia y en que ejecuta un sistema operativo completo.
+Un **sistema en un chip** (SoC) integra varios bloques de un sistema: CPU, controladores de memoria, gráficos o comunicaciones, según el modelo. Los teléfonos usan SoC y suelen necesitar RAM externa al chip. El término describe integración; no es una categoría situada necesariamente a medio camino entre microprocesador y microcontrolador.
 
 También hay microcontroladores modernos con capacidad suficiente para ejecutar sistemas operativos pequeños y conectarse por wifi.
 
 ## Para aprender
 
-Las placas de desarrollo como Arduino montan un microcontrolador con todo lo necesario para programarlo desde un ordenador por USB. Son la forma habitual de empezar con la electrónica programable y con el **internet de las cosas**: objetos cotidianos con un microcontrolador y conexión a la red.
+Las placas de desarrollo como Arduino montan un microcontrolador con todo lo necesario para programarlo desde un ordenador por USB. Son la forma habitual de empezar con la electrónica programable y con el [**internet de las cosas**](/articulos/internet-de-las-cosas/): objetos que intercambian datos mediante una red.
+
+## Confusiones frecuentes
+
+- **Clasificar el chip solo por su frecuencia.** La memoria, los periféricos y el trabajo requerido también deciden qué encaja.
+- **Confundir placa y chip.** Una placa de desarrollo añade alimentación, conectores y otros circuitos al microcontrolador.
+- **Suponer que integrar significa no necesitar nada externo.** Sensores, cargas, alimentación y a veces memoria siguen fuera del chip.
 
 ## Lo esencial
 
-- Un microprocesador es solo la unidad de proceso y necesita componentes externos; un microcontrolador lo integra todo.
-- El microprocesador prima la potencia y la flexibilidad; el microcontrolador, el bajo coste y el bajo consumo.
-- Un microcontrolador suele ejecutar un único programa, el firmware, en un bucle.
-- Es la opción cuando hacen falta respuestas en un plazo garantizado.
-- Los sistemas en un chip quedan a medio camino entre los dos.
+- Un microcontrolador integra recursos para controlar dispositivos; un microprocesador suele apoyarse más en componentes externos.
+- La elección depende de memoria, interfaces, energía y trabajo necesario, no solo de la frecuencia.
+- El firmware puede organizarse en un bucle o en varias tareas.
+- Un plazo garantizado exige analizar el sistema completo; no lo da el nombre del chip.

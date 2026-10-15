@@ -1,41 +1,39 @@
 ---
 title: "¿Cómo funciona un procesador?"
-description: El procesador ejecuta las instrucciones de los programas, una tras otra, miles de millones de veces por segundo.
+description: El procesador ejecuta instrucciones que transforman datos. Registros, memoria y control colaboran para seguir un programa.
 level: basico
 layer: hardware
 prerequisites:
   - que-es-un-bit
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
-  - title: "Burks, Goldstine y von Neumann: Preliminary Discussion of the Logical Design of an Electronic Computing Instrument (1946, en inglés)"
-    url: https://www.ias.edu/sites/default/files/library/Prelim_Disc_Logical_Design.pdf
   - title: "Nand2Tetris: curso libre para construir un ordenador desde las puertas lógicas (en inglés)"
-    url: https://www.nand2tetris.org/course
+    url: https://www.nand2tetris.org/project05
   - title: "Operating Systems: Three Easy Pieces, capítulo sobre procesos (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-El **procesador**, o **CPU** (*central processing unit*), es el componente que ejecuta las instrucciones de los programas. Todo lo que hace un ordenador se reduce a que el procesador ejecute una instrucción sencilla detrás de otra, a enorme velocidad.
+El **procesador**, o **CPU** (*central processing unit*, unidad central de procesamiento), es el componente que ejecuta las instrucciones de los programas. Podemos seguir un programa como una secuencia de instrucciones que leen, transforman y guardan datos. Es una primera abstracción: un procesador moderno puede solapar trabajo, y otros componentes también procesan datos o realizan transferencias.
 
 ## Qué es una instrucción
 
 Una instrucción es una orden muy simple: suma estos dos números, copia este valor a tal sitio, compara dos valores, salta a otra parte del programa. Cada modelo de procesador entiende un conjunto fijo de ellas.
 
-Las instrucciones están codificadas en [bits](/articulos/que-es-un-bit/). A esa forma, la única que el procesador entiende directamente, se la llama **código máquina**. Los programas escritos en lenguajes como JavaScript o Python se traducen a código máquina antes de ejecutarse o mientras se ejecutan, tarea de un [compilador o un intérprete](/articulos/compilador-e-interprete/).
+Las instrucciones están codificadas en [bits](/articulos/que-es-un-bit/). A esa forma, la única que el procesador entiende directamente, se la llama **código máquina**. Un [compilador](/articulos/compilador-e-interprete/) puede traducir un programa a código máquina. Un intérprete también puede ejecutar sus operaciones mediante su propio código máquina, sin traducir cada programa completo a instrucciones nativas. Algunas implementaciones combinan ambos mecanismos.
 
 Una sola línea de un lenguaje de programación puede convertirse en decenas de instrucciones.
 
 ## Programa almacenado
 
-Los primeros ordenadores se programaban recolocando cables. La idea que lo cambió fue guardar el programa en la misma memoria que los datos, como una secuencia de números. Así, cambiar de programa consiste en cargar otros números en la memoria.
+Un **programa almacenado** representa las instrucciones mediante números guardados en memoria. Cambiar de programa puede consistir en cargar otros números, sin rediseñar los circuitos.
 
-Este diseño, descrito en los años cuarenta y conocido como **arquitectura de von Neumann**, es el que siguen usando los ordenadores actuales.
+En el modelo de **von Neumann**, instrucciones y datos comparten memoria. Es una referencia útil, pero no una descripción exacta de todo procesador: hay diseños con memorias o caminos separados para instrucciones y datos.
 
 ## Las piezas
 
-- **Memoria**: la [memoria RAM](/articulos/memoria-ram-y-almacenamiento/) guarda las instrucciones y los datos. Cada posición tiene un número que la identifica, su **dirección**.
+- **Memoria**: en el ejemplo usaremos [memoria RAM](/articulos/memoria-ram-y-almacenamiento/) para las instrucciones y los datos. Cada posición tiene un número que la identifica, su **dirección**.
 - **Registros**: unas pocas casillas dentro del propio procesador, muy rápidas, donde se guardan los valores con los que se está trabajando en ese momento.
 - **Contador de programa**: un registro especial que contiene la dirección de la siguiente instrucción.
 - **Unidad aritmético-lógica**: los circuitos que hacen las sumas, las restas y las comparaciones, construidos con [puertas lógicas](/articulos/puertas-logicas/).
@@ -43,13 +41,24 @@ Este diseño, descrito en los años cuarenta y conocido como **arquitectura de v
 
 ## El ciclo de instrucción
 
-El procesador repite sin parar tres pasos:
+Para seguir el funcionamiento de un procesador sencillo podemos separar tres pasos:
 
 1. **Captar**: lee de la memoria la instrucción que indica el contador de programa.
 2. **Decodificar**: interpreta qué operación es y con qué datos.
 3. **Ejecutar**: realiza la operación y avanza el contador a la siguiente instrucción.
 
-Una suma de dos números guardados en memoria puede requerir cuatro vueltas de este ciclo: cargar el primer número en un registro, cargar el segundo en otro, sumarlos y guardar el resultado.
+### Seguir una suma
+
+Usaremos instrucciones inventadas para ver el estado, no código de una CPU real. La memoria contiene 7 en la dirección 100, 5 en la 101 y 0 en la 102. Los registros `R1` y `R2` empiezan en cero; el contador de programa, en 0.
+
+| Dirección de instrucción | Operación | Estado después de ejecutarla | Siguiente dirección |
+| --- | --- | --- | --- |
+| 0 | Cargar memoria 100 en R1 | R1 = 7 | 1 |
+| 1 | Cargar memoria 101 en R2 | R2 = 5 | 2 |
+| 2 | Sumar R2 a R1 | R1 = 12 | 3 |
+| 3 | Guardar R1 en memoria 102 | Memoria 102 = 12 | 4 |
+
+La suma ocurre en la unidad aritmético-lógica; el resultado pasa a un registro y después a memoria. El contador identifica instrucciones, mientras que 100, 101 y 102 identifican los datos del ejemplo. Hemos elegido instrucciones de una posición; en una arquitectura real su tamaño y sus efectos dependen del conjunto de instrucciones.
 
 ### Saltos
 
@@ -68,22 +77,28 @@ Normalmente el contador avanza a la instrucción siguiente. Una instrucción de 
 
 ## La velocidad
 
-Un **reloj** interno marca el ritmo: emite pulsos regulares y cada paso ocurre al compás de ellos. Su frecuencia se mide en hercios. Un procesador de 3 gigahercios (GHz) recibe tres mil millones de pulsos por segundo.
+En un procesador síncrono, un **reloj** marca el ritmo de los cambios de estado mediante pulsos regulares. Su frecuencia se mide en hercios. Un procesador de 3 gigahercios (GHz) recibe tres mil millones de pulsos por segundo.
 
-La frecuencia no lo es todo. Dos procesadores con el mismo reloj pueden rendir distinto, porque uno aprovecha mejor cada pulso.
+Un pulso no equivale a una instrucción terminada: una instrucción puede necesitar varios ciclos, y un diseño puede solapar instrucciones. La memoria también puede obligar a esperar. Por eso dos procesadores con el mismo reloj pueden rendir distinto.
 
 ## Núcleos
 
-Durante décadas, los procesadores mejoraron a un ritmo que describe la [ley de Moore](/articulos/que-es-la-ley-de-moore/).
+La [ley de Moore](/articulos/que-es-la-ley-de-moore/) describe una tendencia en el número de transistores; no garantiza que un programa se acelere al mismo ritmo.
 
-Un procesador actual contiene varios [**núcleos**](/articulos/procesadores-multinucleo/). Cada núcleo es una unidad de ejecución completa, con sus registros y su contador de programa, así que varios núcleos ejecutan instrucciones de verdad al mismo tiempo.
+Muchos procesadores actuales contienen varios [**núcleos**](/articulos/procesadores-multinucleo/). Cada núcleo es una unidad de ejecución completa, con sus registros y su contador de programa, así que varios núcleos ejecutan instrucciones de verdad al mismo tiempo.
 
 Tener más núcleos no acelera automáticamente un programa: solo ayuda si el trabajo puede repartirse en partes independientes. Del reparto del tiempo de procesador entre programas se encarga el [sistema operativo](/articulos/que-es-un-sistema-operativo/).
+
+## Errores comunes
+
+- **Contar gigahercios como instrucciones por segundo.** La duración, el solapamiento y las esperas cambian el trabajo útil de cada ciclo.
+- **Confundir registros con archivos.** Los registros guardan valores de trabajo; no conservan documentos al apagar.
+- **Suponer que una suma ya quedó guardada en disco.** En el ejemplo termina en memoria. Hacen falta operaciones adicionales para persistirla.
 
 ## Lo esencial
 
 - El procesador ejecuta instrucciones muy simples codificadas en bits.
-- Programa y datos se guardan en la misma memoria.
-- Repite continuamente el ciclo captar, decodificar y ejecutar.
+- El programa almacenado representa instrucciones en memoria; el diseño decide cómo se separan de los datos.
+- Captar, decodificar y ejecutar permite seguir el mecanismo básico; los diseños modernos pueden solapar trabajo.
 - Los saltos son lo que permite decisiones y repeticiones.
 - El reloj marca el ritmo y cada núcleo ejecuta su propio flujo de instrucciones.

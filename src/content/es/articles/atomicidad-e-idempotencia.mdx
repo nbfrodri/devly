@@ -1,35 +1,37 @@
 ---
 title: "Diferencias entre atomicidad e idempotencia"
-description: "Una operación atómica se hace entera o no se hace; una idempotente da el mismo resultado se ejecute una vez o varias. Protegen de fallos distintos."
+description: "Una operación atómica confirma todos sus cambios o ninguno; una idempotente conserva el mismo efecto al repetirla. Protegen de fallos distintos."
 level: intermedio
 kind: comparacion
 layer: aplicaciones
 prerequisites:
   - transacciones-y-acid
-  - que-es-rest
-updated: 2026-10-14
+  - que-es-http
+updated: 2026-10-15
 sources:
   - title: "RFC 9110: HTTP Semantics, métodos idempotentes"
-    url: https://www.rfc-editor.org/info/rfc9110/
+    url: https://www.rfc-editor.org/rfc/rfc9110.html
   - title: "PostgreSQL: Transactions (documentación oficial, en inglés)"
     url: https://www.postgresql.org/docs/current/tutorial-transactions.html
-  - title: "IETF: The Idempotency-Key HTTP Header Field, borrador (en inglés)"
-    url: https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/
+  - title: "Stripe: Idempotent requests (documentación oficial, en inglés)"
+    url: https://docs.stripe.com/api/idempotent_requests
+  - title: "AWS: Transactional outbox pattern (en inglés)"
+    url: https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una operación **atómica** se completa entera o no se hace en absoluto: nunca queda a medias. Una operación **idempotente** produce el mismo resultado se ejecute una vez o muchas. Las dos sirven para que un sistema se comporte bien cuando algo falla, pero protegen de fallos distintos.
+Una operación **atómica** se completa entera o no se hace en absoluto: nunca queda a medias. Una operación **idempotente** tiene el mismo efecto previsto sobre el estado al repetirla con los mismos datos; la respuesta puede cambiar. Las dos sirven para que un sistema se comporte bien cuando algo falla, pero protegen de fallos distintos.
 
 ## Atomicidad
 
-**Atómico** significa indivisible. Una operación atómica puede constar de varios pasos, pero desde fuera solo se ven dos estados: antes de todos ellos o después de todos ellos.
+**Atómico** significa indivisible dentro de un alcance definido. En una transacción de base de datos, sus cambios se confirman juntos o se deshacen juntos. Qué pueden observar otras transacciones mientras se ejecuta depende también del aislamiento; es otra propiedad.
 
-El ejemplo clásico es la transferencia bancaria: restar de una cuenta y sumar en otra. Si se hace de forma atómica, o se aplican los dos cambios o ninguno. No existe el momento en que el dinero ha salido y no ha llegado.
+El ejemplo clásico es la transferencia bancaria: restar de una cuenta y sumar en otra. Si se hace de forma atómica, o se aplican los dos cambios o ninguno. Una transacción abortada no deja confirmado solo el débito. Que otras operaciones puedan ver estados intermedios es una cuestión de aislamiento, y una transferencia entre sistemas independientes necesita coordinación adicional.
 
 Es la A de las [propiedades ACID](/articulos/transacciones-y-acid/) de las bases de datos, que la garantizan mediante transacciones.
 
-El término se usa también en [concurrencia](/articulos/condiciones-de-carrera-y-bloqueos/), con un matiz: una operación atómica es la que otras tareas no pueden observar ni interrumpir a medias.
+El término se usa también en [concurrencia](/articulos/condiciones-de-carrera-y-bloqueos/), con un matiz: una operación atómica se comporta como indivisible frente a las otras tareas que participan en ese modelo. No significa necesariamente que la CPU no pueda interrumpir su implementación.
 
 **Protege de:** quedarse a medio hacer.
 
@@ -73,7 +75,7 @@ En una red, cuando envías una petición y no llega respuesta, no puedes saber q
 2. Llegó, pero falló al procesarse.
 3. Llegó y se procesó, pero la respuesta se perdió.
 
-Desde el cliente las tres se ven igual. Lo razonable es reintentar. Si la operación es idempotente, reintentar es seguro en los tres casos. Si no lo es, en el tercer caso se ejecuta dos veces: dos pagos, dos pedidos.
+Desde el cliente las tres se ven igual. Un reintento puede recuperar la operación si el fallo era temporal. Debe tener límites y conservar la identidad de la operación; la idempotencia evita efectos adicionales por repetirla, pero no evita saturar el servicio ni autoriza cualquier petición. Si no lo es, en el tercer caso se ejecuta dos veces: dos pagos, dos pedidos.
 
 Por eso [HTTP](/articulos/que-es-http/) define qué métodos son idempotentes, como explica el artículo sobre [REST](/articulos/que-es-rest/):
 
@@ -82,13 +84,13 @@ Por eso [HTTP](/articulos/que-es-http/) define qué métodos son idempotentes, c
 | `GET` | Sí | Solo lee |
 | `PUT` | Sí | Sustituye el recurso por el mismo contenido |
 | `DELETE` | Sí | Borrar algo ya borrado lo deja igual |
-| `POST` | No | Cada envío puede crear un recurso nuevo |
+| `POST` | No por definición del método | Una API puede añadir deduplicación; no se debe presuponer |
 
 ### Hacer idempotente lo que no lo es
 
 Crear un pago no es idempotente por naturaleza. Se consigue que lo sea con una **clave de idempotencia**: el cliente genera un identificador único para la operación y lo envía con la petición. Si reintenta, envía el mismo.
 
-El servidor recuerda las claves que ya ha procesado. Si recibe una repetida, no vuelve a ejecutar la operación: devuelve el resultado de la primera vez.
+El servidor recuerda las claves que ya ha procesado. Dentro del plazo y del alcance de deduplicación definidos por la API, una repetida recupera el resultado anterior. Debe rechazarse reutilizar la misma clave para datos distintos; una nueva operación necesita una nueva clave.
 
 ```js
 const procesados = new Map();
@@ -96,7 +98,11 @@ let cobros = 0;
 
 function cobrar(clave, importe) {
 	if (procesados.has(clave)) {
-		return procesados.get(clave);
+		const anterior = procesados.get(clave);
+		if (anterior.importe !== importe) {
+			throw new Error("clave reutilizada con otro importe");
+		}
+		return anterior;
 	}
 
 	cobros = cobros + 1;
@@ -113,16 +119,16 @@ cobrar("pedido-123", 50);
 console.log(cobros); // 1
 ```
 
-Tres peticiones con la misma clave y un solo cobro.
+Tres llamadas con la misma clave y un solo incremento del contador. Es una simulación secuencial en memoria: no mueve dinero, no resiste reinicios y no coordina varios procesos. La implementación real debe conservar la deduplicación y resolver las peticiones concurrentes.
 
 ## Comparación
 
 | | Atomicidad | Idempotencia |
 | --- | --- | --- |
-| Garantiza | Todo o nada | El mismo resultado al repetir |
+| Garantiza | Todo o nada dentro de su alcance | El mismo efecto previsto al repetir |
 | Protege de | Operaciones a medias | Operaciones duplicadas |
 | Se refiere a | Los pasos dentro de una operación | Varias ejecuciones de la misma operación |
-| Se consigue con | Transacciones, cerrojos | Diseño de la operación, claves de idempotencia |
+| Se consigue con | Transacciones para todo-o-nada; primitivas atómicas en concurrencia | Diseño de la operación, deduplicación con alcance definido |
 | Ejemplo | Una transferencia entre cuentas | Reintentar un pago sin cobrar dos veces |
 
 <Quiz
@@ -141,13 +147,15 @@ Una operación puede tener una propiedad sin la otra:
 | **Atómica** | Fijar el estado de un pedido en "enviado" dentro de una transacción | Una transferencia dentro de una transacción |
 | **No atómica** | Actualizar dos servicios con valores fijos, sin transacción | Sumar puntos en dos servicios, sin transacción |
 
-Una transferencia hecha con una transacción es atómica, pero no idempotente: si se envía dos veces, se transfiere dos veces, cada una de forma impecable.
+Por ejemplo, A empieza con 100 y B con 0. Transferir 30 dentro de una transacción deja 70 y 30. Repetir otra transacción idéntica deja 40 y 60: cada transferencia fue completa, pero hubo dos. Si ambas peticiones llevan la misma identidad de operación y el sistema deduplica correctamente, el segundo intento conserva 70 y 30. Las propiedades resuelven fallos diferentes del mismo caso.
 
 ## Se necesitan las dos
 
 En un sistema real se complementan. El ejemplo de la clave de idempotencia tiene un punto débil: guardar la clave y hacer el cobro son dos pasos. Si el sistema falla entre ellos, la clave puede quedar anotada sin cobro, o el cobro hecho sin clave.
 
-La solución es que los dos pasos sean **atómicos**: se guardan en la misma transacción. La atomicidad garantiza que la operación no queda a medias, y la idempotencia, que repetirla no hace daño. Juntas permiten reintentar con tranquilidad.
+Si el efecto y la clave pertenecen a la misma base de datos, pueden confirmarse en una transacción que además impida reclamar la misma clave simultáneamente, por ejemplo mediante una restricción única. Un cerrojo por sí solo no deshace cambios tras un fallo.
+
+Si el cobro lo realiza un proveedor externo, la transacción local no puede deshacer automáticamente ese cobro. Se necesita coordinación: conservar una intención de envío, reutilizar una clave aceptada por el proveedor y reconciliar resultados inciertos. El patrón de bandeja de salida transaccional guarda la intención junto al cambio local para enviarla después; aún requiere tratar duplicados y fallos del destino.
 
 ## Confusiones frecuentes
 
@@ -162,4 +170,4 @@ Diseñar [reintentos](/articulos/reintentos-de-peticiones/) exige combinar idemp
 - Atómico: la operación se hace entera o no se hace.
 - Idempotente: repetir la operación no produce efectos adicionales.
 - La atomicidad protege de quedarse a medias; la idempotencia, de ejecutar dos veces.
-- Son independientes, y un sistema fiable ante fallos necesita las dos.
+- El alcance importa: una transacción local no cubre automáticamente servicios externos, y la deduplicación necesita persistencia y coordinación cuando hay reinicios o concurrencia.

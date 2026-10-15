@@ -69,7 +69,7 @@ Verificación de interfaz: `pnpm check` pasa (558 tests, cero errores y avisos d
 
 Aceptación: «bit» enlaza «byte» y se revisan sistemáticamente las menciones del catálogo, con una lista explícita de grupos pendientes hasta cerrar la auditoría.
 
-Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes y telecomunicaciones registradas en el backlog 8: 44 artículos distintos, incluidos los cinco nuevos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
+Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos registradas en el backlog 8: 52 artículos distintos, incluidos los cinco nuevos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
 
 ## 6. Fundamentos y redes para principiantes
 

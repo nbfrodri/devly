@@ -7,7 +7,7 @@ prerequisites:
   - internet-de-las-cosas
   - tcp-y-udp
   - colas-de-mensajes
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "OASIS: MQTT Version 5.0 (en inglés)"
     url: https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html
@@ -19,19 +19,15 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-**MQTT** es un protocolo de mensajería ligero basado en **publicación y suscripción**. Los dispositivos no se hablan entre sí: envían mensajes a un servidor intermedio, que los reparte a quienes se han interesado por ellos. Es el protocolo más usado en el [internet de las cosas](/articulos/internet-de-las-cosas/).
+**MQTT** es un [protocolo](/articulos/que-es-un-protocolo-de-red/) de mensajería ligero basado en **publicación y suscripción**. Los dispositivos no se hablan entre sí: envían mensajes a un [servidor](/articulos/que-es-un-servidor/) intermedio, que los reparte a quienes se han interesado por ellos. Se utiliza en el [internet de las cosas](/articulos/internet-de-las-cosas/).
 
 Nació en 1999, para vigilar oleoductos a través de enlaces por satélite, lentos y caros. Hoy es un estándar abierto de la organización OASIS.
 
 ## Qué problema resuelve
 
-Un sensor a pilas con una conexión intermitente no puede permitirse [HTTP](/articulos/que-es-http/):
+Un sensor publica una temperatura que interesa a un panel y a un servicio de alertas. Con envíos directos tendría que conocer esos destinos o apoyarse en otro servicio que los coordinase. MQTT incorpora ese reparto: cada cliente conoce al intermediario y acuerda nombres de temas.
 
-- Cada petición lleva cabeceras de texto que ocupan más que el dato.
-- El modelo es de pregunta y respuesta. Para saber si hay una orden nueva, el dispositivo tendría que preguntar una y otra vez.
-- Emisor y receptor deben conocerse.
-
-MQTT responde a las tres cosas: mensajes mínimos, una conexión abierta por la que llegan los avisos, y un intermediario que separa a quien envía de quien recibe.
+Mantiene un canal para enviar novedades, evitando consultas repetidas cuando hay suscripciones activas. Su formato compacto puede ser útil con recursos limitados, pero [HTTP](/articulos/que-es-http/) también puede usarse en sensores y reutilizar conexiones. El ahorro depende de la actividad, el transporte y la seguridad; mantener una radio despierta no es gratis.
 
 ## El modelo
 
@@ -41,9 +37,9 @@ MQTT responde a las tres cosas: mensajes mínimos, una conexión abierta por la 
 | Intermediario | El servidor que recibe y reparte los mensajes; en inglés, *broker* |
 | Tema | La etiqueta que clasifica un mensaje; en inglés, *topic* |
 
-Un cliente **publica** un mensaje en un tema. Otros clientes se **suscriben** a temas. El intermediario entrega cada mensaje a todos los suscritos a su tema.
+Un cliente **publica** un mensaje en un tema. Otros clientes se **suscriben** a temas. Con suscripciones ordinarias, el intermediario reparte copias a los clientes cuyas suscripciones coinciden, según los permisos y las reglas de entrega. MQTT 5 también permite suscripciones compartidas que reparten trabajo dentro de un grupo; aquí seguimos el caso ordinario.
 
-Quien publica no sabe quién recibe, ni cuántos son, ni si hay alguno. Es el modelo de publicación y suscripción del artículo sobre [colas de mensajes](/articulos/colas-de-mensajes/).
+Quien publica no necesita conocer a cada receptor ni cuántos hay; la publicación por sí sola no confirma que todos hayan procesado el dato. Es el modelo de publicación y suscripción del artículo sobre [colas de mensajes](/articulos/colas-de-mensajes/).
 
 Un mismo cliente puede publicar y suscribirse. Un termostato publica la temperatura y está suscrito a las órdenes.
 
@@ -56,14 +52,14 @@ casa/salon/temperatura
 casa/cocina/luz/estado
 ```
 
-No se crean de antemano: existen en cuanto alguien publica o se suscribe.
+El protocolo no exige crear previamente un recurso para cada tema; el servidor sí puede restringir qué nombres admite y quién puede usarlos. Mayúsculas y minúsculas distinguen temas.
 
 Al suscribirse se pueden usar dos **comodines**:
 
 - `+` sustituye a **un** nivel.
 - `#` sustituye a **todos los que quedan**, y solo puede ir al final.
 
-Este programa imita al intermediario:
+Este programa simula el filtrado y reparto en memoria para los temas domésticos del ejemplo. Supone nombres y filtros válidos, sin temas especiales que empiezan por `$`; no implementa una conexión MQTT ni valida toda la especificación:
 
 ```js
 function coincide(filtro, tema) {
@@ -84,6 +80,8 @@ function coincide(filtro, tema) {
 console.log(coincide("casa/+/temperatura", "casa/salon/temperatura")); // true
 console.log(coincide("casa/+/temperatura", "casa/salon/humedad")); // false
 console.log(coincide("casa/#", "casa/cocina/luz/estado")); // true
+console.log(coincide("casa/#", "casa")); // true
+console.log(coincide("casa/+", "casa")); // false
 
 const suscripciones = [];
 const recibidos = [];
@@ -113,75 +111,80 @@ El contenido del mensaje es libre: MQTT transporta bytes y no los interpreta. Su
 
 ## Calidad de servicio
 
-MQTT deja elegir, para cada mensaje, cuánta garantía de entrega se quiere. Se llama **QoS**.
+La **calidad de servicio**, abreviada **QoS**, regula la entrega entre dos participantes MQTT: publicador e intermediario, o intermediario y suscriptor. Son intercambios separados, que pueden usar niveles distintos. No es una transacción sobre los efectos físicos ni sobre la base de datos de la aplicación.
 
-| Nivel | Garantía | Coste | Uso |
-| --- | --- | --- | --- |
-| 0 | Como mucho una vez: puede perderse | Mínimo | Lecturas frecuentes; la siguiente corrige |
-| 1 | Al menos una vez: puede repetirse | Una confirmación | Lo habitual |
-| 2 | Exactamente una vez | Cuatro mensajes | Órdenes que no deben repetirse |
+| Nivel | Entrega en ese intercambio | Intercambio básico |
+| --- | --- | --- |
+| 0 | Como mucho una vez; sin recuperación MQTT de esa publicación | `PUBLISH` |
+| 1 | Al menos una vez; puede repetirse | `PUBLISH` y `PUBACK` |
+| 2 | Exactamente una vez dentro del mecanismo MQTT | `PUBLISH`, `PUBREC`, `PUBREL` y `PUBCOMP` |
 
-Con el nivel 1 pueden llegar duplicados, así que quien recibe debe tolerarlos, como se explica en [atomicidad e idempotencia](/articulos/atomicidad-e-idempotencia/). "Pon la luz al 50 %" se puede repetir sin problema; "sube la luz un 10 %" no.
+Estos mecanismos requieren conservar el estado necesario y poder completar o reanudar el intercambio. No hacen llegar mensajes a un equipo que nunca vuelve, ni anulan caducidades o rechazos.
+
+Supón que un sensor publica la lectura 42 con QoS 1. El intermediario la recibe, pero se pierde la confirmación. Si el sensor reanuda la sesión y reenvía lo pendiente, el intermediario puede recibir otra copia. Si después publica hacia un panel con QoS 0, ese segundo tramo no tiene recuperación MQTT. Recibir una confirmación del intermediario no prueba que el panel haya guardado la lectura.
+
+En QoS 2, emisor y receptor conservan el identificador y la fase del intercambio. `PUBREC` acusa la recepción; `PUBREL` y `PUBCOMP` completan el proceso y permiten liberar ese estado. Mientras corresponde al mismo intercambio pendiente, una repetición se reconoce y no se entrega como una publicación nueva. Ese estado adicional explica el coste frente a QoS 1.
+
+Con el nivel 1 pueden llegar duplicados, así que quien recibe debe tolerarlos, como se explica en [atomicidad e idempotencia](/articulos/atomicidad-e-idempotencia/). «Pon la luz al 50 %» conserva el mismo nivel al repetirse; «sube la luz un 10 %» vuelve a modificarlo. Incluso con QoS 2, publicar otra vez una orden como mensaje nuevo crea otro intercambio: el protocolo no deduce que ambos representan la misma operación de negocio.
 
 ## Tres mecanismos útiles
 
 ### Mensajes retenidos
 
-Si un mensaje se publica como **retenido**, el intermediario guarda el último de ese tema. Quien se suscriba después lo recibe de inmediato.
+Si un mensaje se publica como **retenido**, el intermediario guarda el último de ese tema. Una suscripción nueva puede recibir ese último valor, si sigue disponible y las opciones de suscripción lo permiten. No es una historia de todas las lecturas ni prueba que el sensor siga conectado; conviene incluir la hora de medida.
 
-Sin eso, un panel que se enciende tendría que esperar a la siguiente lectura de cada sensor, que puede tardar una hora.
+Sin retención ni otro mecanismo de consulta, un panel nuevo tendría que esperar a la siguiente lectura. Publicar un contenido vacío con la marca de retención elimina el valor retenido de ese tema; MQTT 5 también permite caducarlo.
 
 ### Última voluntad
 
 Al conectarse, un cliente puede dejar encargado un mensaje para que el intermediario lo publique **si él desaparece sin despedirse**: "sensor del salón desconectado".
 
-Así los demás se enteran de que un dispositivo se ha caído, se ha quedado sin batería o ha perdido la red.
+El aviso aparece cuando el servidor detecta la desconexión y se cumplen las condiciones y demoras configuradas. Indica pérdida de comunicación; no distingue por sí solo batería agotada, corte de red o fallo del programa.
 
 ### Sesiones persistentes
 
-Un dispositivo que duerme casi siempre se perdería lo publicado mientras tanto. Con una sesión persistente, el intermediario recuerda sus suscripciones y le guarda los mensajes de nivel 1 y 2 hasta que vuelve.
+Un dispositivo que duerme casi siempre se perdería lo publicado mientras tanto. Una sesión conservada recuerda suscripciones y mensajes QoS 1 y 2 pendientes. Hay que retomarla con la identidad y opciones adecuadas. En MQTT 5 intervienen el inicio limpio y el plazo de expiración de sesión; los mensajes también pueden caducar. No es almacenamiento ilimitado ni permite desconectar para siempre sin perder estado.
 
 <Quiz
 	client:visible
-	question="Un panel se conecta y necesita conocer de inmediato el último estado de cada sensor. ¿Qué mecanismo de MQTT lo permite?"
+	question="Un panel crea una suscripción y quiere recuperar la última lectura publicada, aunque el sensor esté dormido. ¿Qué mecanismo puede proporcionarla?"
 	options={["Los mensajes retenidos", "La calidad de servicio 0", "El comodín +"]}
 	answer={0}
 />
 
 ## Por qué es ligero
 
-- **Formato binario**, no texto. La cabecera fija ocupa dos bytes.
-- **Una conexión [TCP](/articulos/tcp-y-udp/) que se mantiene abierta.** Los mensajes llegan en cuanto se publican, sin preguntar.
-- **Latidos.** Si no hay nada que enviar, el cliente manda cada cierto tiempo un aviso mínimo. Si deja de llegar, el intermediario da la conexión por perdida.
-- **Clientes simples.** Una biblioteca cabe en un microcontrolador.
+- **Formato binario**, no texto. La cabecera fija ocupa de dos a cinco bytes; no incluye todo el tema, propiedades, contenido ni las cabeceras del transporte.
+- **Un transporte ordenado y bidireccional**, habitualmente [TCP](/articulos/tcp-y-udp/). Mientras la conexión está disponible, permite enviar publicaciones sin que el receptor pregunte por cada dato.
+- **Supervisión de actividad.** Si se configura un intervalo de mantenimiento de conexión, el cliente usa mensajes de control cuando no hay otro tráfico. Los plazos ayudan a detectar desconexiones; no diagnostican su causa.
+- **Implementaciones para dispositivos pequeños.** La memoria necesaria depende de biblioteca, mensajes, sesiones y seguridad.
 
 ## Seguridad
 
 El protocolo, por sí mismo, no cifra nada. Hay que añadirlo:
 
 - **TLS** para cifrar la conexión, igual que en [HTTPS](/articulos/https-y-tls/).
-- **Autenticación** de cada cliente, con usuario y contraseña o, mejor, con un certificado por dispositivo.
-- **Permisos por tema.** Cada dispositivo publica y se suscribe solo a lo suyo. Sin esto, cualquier cliente suscrito a `#` lo ve todo.
+- **Autenticación** de cada cliente, por ejemplo mediante credenciales o certificados por dispositivo, con una forma de provisionarlos, renovarlos y revocarlos.
+- **Permisos por tema.** Cada dispositivo publica y se suscribe solo a lo suyo. Sin permisos adecuados, un cliente podría leer o controlar temas ajenos. `#` abarca los temas ordinarios, pero no los especiales que empiezan por `$`.
 
-Un intermediario abierto a internet, sin autenticación, expone todos los datos y permite enviar órdenes a los dispositivos. Se encuentran miles así.
+Un intermediario accesible y sin controles puede exponer las publicaciones y permitir órdenes no autorizadas. TLS protege el enlace entre sus extremos, incluido el intermediario; no implica cifrado de extremo a extremo entre sensor y consumidor.
 
 ## Sus límites
 
-- **El intermediario es un punto único de fallo.** En sistemas serios se despliegan varios en grupo.
-- **No guarda historia.** Reparte mensajes; no es una base de datos. Si nadie está suscrito y el mensaje no es retenido, se pierde.
+- **Disponibilidad del intermediario.** Una única instancia puede interrumpir el reparto. La redundancia y la conservación de sesiones necesitan diseño adicional; no las aporta automáticamente el protocolo.
+- **No incorpora un historial consultable de todas las publicaciones.** Las sesiones y los valores retenidos conservan estado para sus fines; archivar y consultar lecturas exige otro componente o una extensión del servidor.
 - **No es de pregunta y respuesta.** Se puede simular, y la versión 5 lo facilita, pero no es su terreno.
 - **El contenido no tiene formato.** Los que publican y los que reciben tienen que acordarlo por su cuenta.
-- **Necesita TCP**, que para los dispositivos más limitados ya es mucho.
+- **Necesita un transporte con las propiedades adecuadas.** Mantenerlo, junto con la seguridad y la sesión, puede costar demasiado para ciertos dispositivos.
 
 ## Frente a otras opciones
 
 | | MQTT | HTTP | WebSocket |
 | --- | --- | --- | --- |
-| Modelo | Publicación y suscripción | Pregunta y respuesta | Canal en los dos sentidos |
-| Intermediario | Sí | No | No |
-| Tamaño de los mensajes | Mínimo | Grande | Pequeño |
-| Garantías de entrega | Tres niveles | Las de TCP | Las de TCP |
-| Encaja con | Dispositivos y telemetría | API y web | Aplicaciones en tiempo real |
+| Modelo principal | Publicaciones y suscripciones | Peticiones y respuestas | Canal bidireccional de mensajes |
+| Reparto por temas | Incorporado mediante intermediario | Lo diseña la aplicación | Lo diseña la aplicación |
+| Confirmar el efecto de una orden | Requiere acuerdo de aplicación además de QoS | La respuesta debe definir qué confirma | Requiere mensajes de aplicación |
+| Coste | Depende de sesión, QoS y transporte | Depende de versión, conexión y datos | Depende de mensajes y conexión |
 
 Se combinan a menudo: MQTT puede viajar sobre [WebSockets](/articulos/websockets/), y así un panel en un navegador se suscribe directamente a los temas.
 
@@ -189,6 +192,6 @@ Se combinan a menudo: MQTT puede viajar sobre [WebSockets](/articulos/websockets
 
 - MQTT es un protocolo ligero de publicación y suscripción, a través de un intermediario.
 - Los mensajes se clasifican en temas jerárquicos, con comodines para suscribirse a varios.
-- Ofrece tres niveles de garantía de entrega.
-- Los mensajes retenidos, la última voluntad y las sesiones persistentes cubren las desconexiones.
+- QoS regula cada intercambio MQTT, no garantiza por sí solo un efecto único en la aplicación.
+- Retención, última voluntad y sesiones ayudan a tratar desconexiones, con plazos y límites.
 - No cifra por sí mismo: necesita TLS, autenticación y permisos por tema.
