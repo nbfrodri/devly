@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución y entrega incremental.** Diecisiete de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
+**Estado: en ejecución y entrega incremental.** Dieciocho de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -31,7 +31,7 @@ Los nombres entre paréntesis son los archivos de `src/content/es/paths/` sin `.
 Resultado esperado: seguir el estado de un programa, explicar sus resultados y elegir una estructura o algoritmo por sus propiedades.
 
 - [x] Fundamentos de programación (`fundamentos-de-programacion`): valores, tipos, condiciones, iteraciones, funciones y alcance; seguir un ejemplo desde la entrada hasta el resultado y revisar el salto a objetos.
-- [ ] JavaScript a fondo (`javascript-a-fondo`): referencias, clausuras, iteradores, errores y asincronía; trazar qué se ejecuta y cuándo, sin confundir concurrencia con paralelismo.
+- [x] JavaScript a fondo (`javascript-a-fondo`): referencias, clausuras, iteradores, errores y asincronía; trazar qué se ejecuta y cuándo, sin confundir concurrencia con paralelismo.
 - [ ] Introducción a los algoritmos (`introduccion-a-los-algoritmos`): justificar complejidad con operaciones y tamaños concretos; comprobar precondiciones de búsqueda y ordenación.
 - [ ] Estructuras de datos (`estructuras-de-datos`): representar inserción, búsqueda y borrado; explicar costes y límites con el mismo problema cuando se comparen estructuras.
 - [ ] Técnicas de diseño de algoritmos (`tecnicas-de-diseno-de-algoritmos`): distinguir estrategia, implementación y condiciones de validez; desarrollar decisiones intermedias.
@@ -731,6 +731,8 @@ La relectura de los veintiocho pasos conserva los artículos congelados de Anál
 
 El contraste de entrada con `main` detecta contradicciones necesarias para esta ruta: Embeddings promete propiedades semánticas y de latencia, y Escalado exige ausencia de estado. Se comprobarán e incorporarán sus versiones ya revisadas y el prerrequisito Stateful/stateless. Las diferencias pendientes de árboles, grafos y hash no impiden seguir los usos de esta ruta y permanecen en el cierre de Estructuras.
 
+La relectura final de Replicación detecta que también promete convergencia sin condiciones. Se precisará que depende de cesar las nuevas escrituras y restablecer comunicación y aplicación de cambios, sin garantizar un plazo máximo; no cambia sus ejemplos y se repetirán las comprobaciones afectadas.
+
 ### Continuación de Estructuras de datos
 
 La relectura de los doce pasos conserva arrays y montículos ya publicados. Listas enlazadas necesita explicar que una referencia enlaza al mismo objeto y acotar la comparación de memoria al modelo de array contiguo, sin presentarlo como garantía de JavaScript. El resumen de pilas y colas debe distinguir costes según implementación y costes amortizados; «deben ser constantes» contradice su propio ejemplo con `shift`. Se harán únicamente esos ajustes identificados y los que requiera la revisión completa restante.
@@ -748,3 +750,5 @@ Se conservan 58 bloques JavaScript y nueve TypeScript idénticos a `35d4d06`, co
 Se inspeccionan las 34 capturas completas finales y dieciséis pies actuales de navegación. Los cinco diagramas pasan a una disposición vertical legible en móvil; sus nodos y relaciones visibles se conservan. Pasan quizzes afectados, 32 visitas sin JavaScript y el acceso a 84 bloques, tablas y diagramas. Tras la última precisión se repiten las dos capturas completas de compilación/transpilación y la suite, con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. El manifiesto final congela dieciocho archivos; quedan pendientes la combinación y publicación de la entrega.
 
 **Combinación final comprobada:** las suites de revisión y entrega aprueban 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados después de la última precisión. La ruta integrada pasa otras 32 visitas sin JavaScript en escritorio y móvil. Queda pendiente la publicación mediante PR y sus checks remotos.
+
+**Publicación:** la [PR #13](https://github.com/nbfrodri/devly/pull/13) se integra en `1c8ad54` tras superar CI y Cloudflare. Se marca JavaScript a fondo: dieciocho rutas publicadas y veintinueve pendientes.

@@ -62,7 +62,7 @@ Verificación de interfaz: `pnpm check` pasa (558 tests, cero errores y avisos d
 
 ## 5. Auditoría de enlaces entre artículos
 
-- [ ] Generar candidatos a partir de títulos, alias habituales y menciones en el cuerpo de los artículos, excluyendo código, fuentes y enlaces ya presentes. La detección es una ayuda editorial, no una sustitución automática de palabras.
+- [x] Generar candidatos a partir de títulos, alias habituales y menciones en el cuerpo de los artículos, excluyendo código, fuentes y enlaces ya presentes. La detección es una ayuda editorial, no una sustitución automática de palabras.
 - [ ] Revisar por rutas y enlazar la primera mención explicativa útil de conceptos existentes. Priorizar fundamentos y términos necesarios para entender el párrafo; evitar autoenlaces y repetir el mismo enlace en cada aparición.
 - [ ] Contrastar los prerrequisitos y enlaces «Para seguir» con el orden de lectura. Registrar los grupos revisados en el backlog 8 para no duplicar su revisión.
 - [ ] Ejecutar `src/lib/internal-links.test.ts` y visitar una muestra de enlaces entre rutas. La prueba de destinos válidos no demuestra por sí sola que todas las menciones necesarias estén enlazadas.
@@ -71,7 +71,7 @@ Aceptación: «bit» enlaza «byte» y se revisan sistemáticamente las mencione
 
 Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos, y en los dos grupos de hardware y almacenamiento registrados en el backlog 8: 64 artículos distintos, incluidos los cinco nuevos de fundamentos. A esos grupos se añade la revisión de los cuatro casos cotidianos, CDN, cifrado y caché de la tanda 10, con enlaces entrantes desde compresión y DNS. La ruta de piezas del ordenador queda revisada en sus catorce pasos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
 
-Se genera además un inventario inicial sobre los 544 artículos: 1344 pares candidatos de mención y destino, agrupados por rutas y con hash y línea del artículo de origen. Se excluyen metadatos, código, quizzes y enlaces presentes; no se modifica ningún artículo automáticamente. Este inventario ayuda a repartir la revisión editorial y requiere descartar ambigüedades y comprobar la utilidad de cada enlace. La existencia de candidatos no equivale a confirmar 1344 errores ni a cerrar la auditoría.
+Se genera además un inventario inicial sobre los 544 artículos de la rama de revisión: 1344 pares candidatos de mención y destino, agrupados por rutas y con hash y línea del artículo de origen. Se excluyen metadatos, código, quizzes y enlaces presentes; no se modifica ningún artículo automáticamente. La muestra de Fundamentos confirma por qué hace falta revisión: «clase» en la definición de tipo de dato no designa una clase de programación, y «pantalla» en `console.log` no requiere explicar el hardware de una pantalla. Se completa la generación; quedan las tres tareas de revisión, continuidad y comprobación global. Los candidatos no equivalen a 1344 errores confirmados.
 
 ## 6. Fundamentos y redes para principiantes
 
