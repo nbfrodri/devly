@@ -6,21 +6,25 @@ layer: hardware
 prerequisites:
   - como-funciona-un-procesador
   - memoria-ram-y-almacenamiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 20, System-level Communication (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c20/
   - title: "PCI-SIG: Specifications (en inglés)"
     url: https://pcisig.com/specifications
-  - title: "USB Implementers Forum: About (en inglés)"
-    url: https://www.usb.org/about
+  - title: "USB-IF: USB Type-C Language and Packaging Guidelines (en inglés)"
+    url: https://www.usb.org/sites/default/files/usb_type-c_language_product_and_packaging_guidelines_20230320.pdf
   - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, I/O Devices (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf
+  - title: "UEFI 2.11: Secure Boot and Driver Signing (en inglés)"
+    url: https://uefi.org/specs/UEFI/2.11/32_Secure_Boot_and_Driver_Signing.html
+  - title: "Intel: Server Board M50FCP2SBSTD Technical Product Specification (en inglés)"
+    url: https://cdrdv2-public.intel.com/710135/Intel_Server_Board_M50FCP2SBSTD_TPS_Rev1_5.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **placa base** es la placa de circuito principal de un ordenador. Sobre ella se montan o se conectan todos los demás componentes: el [procesador](/articulos/como-funciona-un-procesador/), la [memoria](/articulos/memoria-ram-y-almacenamiento/), el almacenamiento, la tarjeta gráfica y los periféricos. Los **buses** son las conexiones por las que circulan los datos entre ellos.
+La **placa base** es la placa de circuito principal de un ordenador. Sobre ella se montan o se conectan todos los demás componentes: el [procesador](/articulos/como-funciona-un-procesador/), la [memoria](/articulos/memoria-ram-y-almacenamiento/), el almacenamiento, la [tarjeta gráfica](/articulos/que-es-una-gpu/) y los periféricos. Los **buses** son las conexiones por las que circulan los datos entre ellos.
 
 ## Qué hay en una placa base
 
@@ -31,17 +35,17 @@ La **placa base** es la placa de circuito principal de un ordenador. Sobre ella 
 | Ranuras de expansión | Para tarjetas gráficas, de red o de almacenamiento |
 | Conectores de almacenamiento | Para [discos y SSD](/articulos/discos-duros-y-ssd/) |
 | Chipset | Gestiona la comunicación con los periféricos |
-| Firmware | El programa que arranca el equipo |
+| Memoria con firmware | Guarda el programa que inicializa y arranca el equipo |
 | Conectores traseros | USB, red, audio, vídeo |
 | Regulación de energía | Adapta la alimentación a lo que necesita cada componente |
 
-La placa base no calcula nada. Su papel es conectar, alimentar y coordinar.
+Estos elementos describen una placa de sobremesa típica: algunos equipos llevan CPU o memoria soldadas. La placa conecta, alimenta y coordina; sus controladores también procesan órdenes y gestionan transferencias.
 
-En un móvil o en muchos portátiles no hay piezas intercambiables: casi todo está integrado en un único chip, un **sistema en un chip**. La función es la misma, en mucho menos espacio.
+Un **sistema en un chip**, o SoC, integra funciones como CPU, gráficos y controladores. Aun así puede necesitar chips externos de memoria, almacenamiento o alimentación. Integración no significa que todo el ordenador sea un único chip ni que todos los portátiles carezcan de piezas ampliables.
 
 ## Qué es un bus
 
-Un **bus** es un canal de comunicación compartido, por el que varios componentes intercambian datos siguiendo unas reglas comunes.
+Un **bus** permite intercambiar datos siguiendo reglas comunes. En el modelo clásico varios componentes comparten el canal. También se usa el término al hablar de interconexiones modernas que organizan enlaces punto a punto, como PCI Express.
 
 Tradicionalmente se describe con tres partes:
 
@@ -61,41 +65,47 @@ console.log(megabytesPorSegundo(64, 3200)); // 25600
 console.log(megabytesPorSegundo(64, 3200) * 2); // 51200
 ```
 
-Un módulo de memoria con un bus de 64 bits a 3200 millones de transferencias por segundo mueve unos 25 600 megabytes por segundo. Con dos canales de memoria trabajando a la vez, el doble. Por eso conviene instalar los módulos por parejas.
+Un canal que transporta 64 bits de datos a 3200 millones de transferencias por segundo tiene un máximo teórico de 25 600 MB/s. Dos canales equivalentes pueden sumar 51 200 MB/s si trabajan simultáneamente. Son límites de transferencia, sin descontar esperas ni otras ineficiencias; no significan que cualquier programa duplique su velocidad. La distribución de módulos necesaria depende del controlador y de la placa.
 
 ## De paralelo a serie
 
-Los buses antiguos eran **paralelos**: muchos cables, cada uno con un bit, todos a la vez. Parece lo más rápido.
+Una conexión **paralela** envía varios bits por conductores distintos en cada transferencia. Muchas interfaces clásicas usan este diseño, que también sigue presente en conexiones de memoria actuales.
 
-Tiene un problema: a frecuencias altas, las señales de los distintos cables no llegan exactamente a la vez, y se interfieren entre sí. Hay que ir despacio para que lleguen alineadas.
+A frecuencias altas cuesta mantener las señales alineadas: los recorridos tienen retardos distintos y pueden interferirse. El diseño debe controlar esas diferencias.
 
-Las conexiones modernas son **en serie**: pocos pares de cables, cada uno enviando bits uno tras otro a velocidades altísimas. Para tener más capacidad, se usan varios canales independientes, llamados **carriles**.
+Otras conexiones son **en serie**: envían bits sucesivos por cada canal. Pueden aumentar su capacidad mediante varios **carriles**, cada uno con su propio flujo. USB, SATA y PCI Express usan transmisión serie, con distintas organizaciones.
 
-Es contraintuitivo, y es lo que ha permitido multiplicar la velocidad. USB, SATA y PCI Express son conexiones en serie.
+Serie y paralelo son decisiones de diseño; ninguna palabra determina por sí sola cuál de dos dispositivos es más rápido.
 
 ## PCI Express
 
-Es la conexión principal para los componentes rápidos: tarjetas gráficas, unidades de almacenamiento NVMe, tarjetas de red.
+Se usa para componentes como tarjetas gráficas, unidades de almacenamiento [NVMe](/articulos/ssd-sata-y-nvme/) y [tarjetas de red](/articulos/tarjeta-de-red/).
 
 - No es un bus compartido, sino **conexiones punto a punto**: cada dispositivo tiene su propio enlace.
-- Cada enlace tiene 1, 4, 8 o 16 carriles. Una tarjeta gráfica suele usar 16; una SSD, 4.
-- Cada generación duplica aproximadamente la velocidad por carril.
+- Son comunes los enlaces x1, x4, x8 y x16; también existen otras anchuras. El número expresa carriles, no velocidad en gigabytes por segundo.
+- La capacidad por carril depende de la generación y de su codificación. Una ranura físicamente larga puede tener menos carriles conectados.
 
-Lo que limita al equipo no es solo cuántas ranuras hay, sino cuántos carriles ofrece el procesador para repartir entre ellas.
+Importan los carriles de CPU y chipset, cómo los conecta la placa y cuáles se comparten. Instalar otra tarjeta puede cambiar los recursos disponibles para una ranura, según el diseño.
 
 ## El chipset
 
-El procesador tiene conexiones directas con lo más rápido: la memoria y algunas ranuras PCI Express. El resto, puertos USB, más unidades, red, audio, pasa por el **chipset**, un chip auxiliar conectado al procesador con su propio enlace.
+En muchos PC, el procesador conecta directamente con la memoria y algunos dispositivos PCIe. Un **chipset**, un conjunto de funciones auxiliares hoy frecuentemente integrado en un chip, conecta otros puertos y dispositivos. La distribución concreta cambia entre plataformas; algunas integran más funciones en el procesador.
 
-Todo lo que cuelga del chipset comparte ese enlace. Es un posible cuello de botella cuando varios dispositivos rápidos trabajan a la vez.
+El chipset se comunica con el procesador mediante un enlace. Los dispositivos que lo necesitan para sus transferencias comparten su capacidad. Es un posible cuello de botella cuando varios dispositivos rápidos trabajan a la vez.
+
+### Seguir una lectura de SSD
+
+Supón una SSD conectada al chipset. El sistema le envía una orden, la unidad prepara los datos y su controlador los transfiere a RAM por los enlaces disponibles, coordinado por el sistema operativo. La CPU puede trabajar con esos datos una vez completada la transferencia.
+
+Si dos dispositivos envían cada uno 3 GB/s por un enlace común cuya capacidad útil es 4 GB/s, no pueden mantener conjuntamente 6 GB/s a través de él. El reparto dependerá de su actividad y del arbitraje, las reglas que deciden quién transmite. Si solo envían pequeñas cantidades, ese máximo puede no afectar a la tarea. Son cifras didácticas, no las de una placa concreta.
 
 <Quiz
 	client:visible
-	question="¿Por qué las conexiones modernas son en serie y no en paralelo?"
+	question="Dos dispositivos quieren enviar juntos 6 GB/s por un enlace común de 4 GB/s útiles. ¿Qué ocurre?"
 	options={[
-		"Porque son más baratas aunque más lentas",
-		"Porque a altas frecuencias las señales de muchos cables paralelos se desalinean y se interfieren",
-		"Porque solo hay que transmitir un bit cada vez",
+		"El enlace pasa a transportar 6 GB/s automáticamente",
+		"No pueden sostener los 6 GB/s a través de ese enlace; deben compartir su capacidad",
+		"Los dos dispositivos dejan de funcionar necesariamente",
 	]}
 	answer={1}
 />
@@ -119,15 +129,15 @@ Cómo habla el procesador con cada dispositivo se explica en [interrupciones y e
 
 ## El firmware
 
-La placa base guarda en un chip de memoria permanente un programa que se ejecuta al encenderla, antes que el [sistema operativo](/articulos/que-es-un-sistema-operativo/).
+La placa guarda [firmware](/articulos/que-es-el-firmware/) en memoria no volátil: instrucciones que se ejecutan al encender, antes que el [sistema operativo](/articulos/que-es-un-sistema-operativo/).
 
-Tradicionalmente se llamaba **BIOS**. Hoy es **UEFI**, su sucesor, más capaz. Hace tres cosas:
+Los PC clásicos usaban **BIOS**. Muchos equipos actuales usan firmware que implementa **UEFI**, un estándar de interfaces de arranque. A grandes rasgos:
 
 1. Comprueba e inicializa el hardware: procesador, memoria, dispositivos.
 2. Busca un dispositivo desde el que arrancar.
 3. Carga el programa de arranque del sistema operativo y le cede el control.
 
-Incluye además el **arranque seguro**: solo permite cargar programas de arranque firmados por quien se considera de confianza. Protege contra programas maliciosos que se instalan antes que el propio sistema.
+El **arranque seguro**, o Secure Boot, cuando está soportado y activado, comprueba las imágenes de arranque frente a firmas o huellas autorizadas y revocadas. Reduce el riesgo de ejecutar código de arranque no autorizado; una firma aceptada no demuestra que el programa carezca de vulnerabilidades. Importan la configuración y las actualizaciones de las listas de confianza.
 
 El firmware es software, y tiene errores. Los fabricantes publican actualizaciones, a veces de seguridad.
 
@@ -135,17 +145,16 @@ El firmware es software, y tiene errores. Los fabricantes publican actualizacion
 
 La placa base decide qué se puede instalar y ampliar:
 
-- **El zócalo** fija qué procesadores admite.
+- **El procesador** debe ser compatible con zócalo, chipset, alimentación y versión de firmware; encajar físicamente no basta.
 - **El tipo de memoria**, que cambia entre generaciones, y cuánta como máximo.
 - **Las ranuras y los carriles** disponibles.
 - **Los puertos.**
 
-Un procesador rápido con una conexión lenta a la memoria rinde por debajo de lo que podría. En un ordenador, la velocidad del conjunto la marca el componente más lento por el que pasan los datos.
+El límite depende de la tarea. Una lectura masiva puede saturar un enlace; un cálculo que ya tiene sus datos puede depender del procesador. No existe una única pieza que marque la velocidad de todas las actividades del ordenador.
 
 ## Lo esencial
 
 - La placa base conecta y alimenta todos los componentes del ordenador.
-- Un bus es un canal compartido para intercambiar datos; su capacidad depende de su ancho y su velocidad.
-- Las conexiones modernas son en serie, con varios carriles para sumar capacidad.
-- PCI Express conecta lo rápido; el chipset gestiona el resto de periféricos.
-- El firmware, UEFI, inicializa el hardware y arranca el sistema operativo.
+- Las conexiones pueden ser compartidas o punto a punto, serie o paralelas.
+- Ancho, frecuencia, generación y enlaces comunes limitan distintas transferencias.
+- El firmware inicializa el equipo y prepara el arranque; la compatibilidad depende de toda la plataforma.

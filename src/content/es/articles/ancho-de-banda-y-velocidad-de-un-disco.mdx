@@ -1,13 +1,12 @@
 ---
 title: "Diferencias entre ancho de banda, IOPS y latencia de un disco"
 description: "La velocidad de un disco no es un único número. El ancho de banda mide megas por segundo; las IOPS, operaciones por segundo; la latencia, cuánto tarda cada una."
-level: basico
+level: intermedio
 kind: comparacion
 layer: hardware
 prerequisites:
   - discos-duros-y-ssd
-  - ancho-de-banda-latencia-y-rendimiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "fio documentation (en inglés)"
     url: https://fio.readthedocs.io/en/latest/fio_doc.html
@@ -17,46 +16,76 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-"Este disco va a 3000 MB/s" es solo una parte de la historia. La velocidad de un [disco](/articulos/discos-duros-y-ssd/) se describe con tres medidas distintas, y según lo que hagas importa una u otra. Es la misma distinción que hace [ancho de banda, latencia y rendimiento](/articulos/ancho-de-banda-latencia-y-rendimiento/) para las redes.
+El **ancho de banda** indica cuántos datos se transfieren por segundo; las **IOPS**, cuántas operaciones se completan por segundo; la **latencia**, cuánto tarda una operación. Describen aspectos distintos del rendimiento de un [disco o SSD](/articulos/discos-duros-y-ssd/): una cifra no sustituye a las otras.
 
-## Para comparar
+## La misma lectura, tres medidas
 
-| | Ancho de banda | IOPS | Latencia |
-| --- | --- | --- | --- |
-| Qué mide | Datos transferidos por segundo | Operaciones por segundo | Tiempo de cada operación |
-| Unidad | MB/s | Operaciones por segundo | Milisegundos o microsegundos |
-| Importa en | Copiar archivos grandes, vídeo | Bases de datos, muchos archivos pequeños | Respuesta de cada petición |
-| El número del anuncio | Suele ser este, con bloques grandes | A veces, con bloques pequeños | Casi nunca |
+Supón lecturas de 4 KiB, con una única petición pendiente y sin pausas entre ellas. Cada lectura tarda exactamente 1 ms desde que se envía hasta que termina. En un segundo se completan 1000 lecturas: **1000 IOPS**. Como cada una mueve 4 KiB, el caudal es **4000 KiB/s**, o **3,90625 MiB/s**. La latencia sigue siendo **1 ms**.
 
-## La relación entre ellas
+Son valores inventados para entender las unidades. KiB equivale a 1024 bytes y MiB a 1024 KiB; MB usa un millón de bytes, como explica [kilobytes y kibibytes](/articulos/kilobyte-1000-o-1024/).
 
-El ancho de banda depende de cuántas operaciones se hacen y de **cuánto ocupa cada una**, el **tamaño de bloque**:
+| Medida | Pregunta | Resultado del ejemplo |
+| --- | --- | --- |
+| Ancho de banda observado | ¿Cuántos datos llegan cada segundo? | 3,90625 MiB/s |
+| IOPS | ¿Cuántas lecturas terminan cada segundo? | 1000 |
+| Latencia | ¿Cuánto espero por una lectura? | 1 ms |
+
+## Cambiar el tamaño cambia el caudal
+
+Si todas las operaciones del intervalo tienen el mismo tamaño, el caudal es IOPS por bytes de cada operación:
 
 ```js
 const anchoDeBanda = (iops, kibPorOperacion) => (iops * kibPorOperacion) / 1024; // MiB/s
 
+console.log(anchoDeBanda(1000, 4)); // 3.90625
 console.log(anchoDeBanda(20000, 4)); // 78.125
 console.log(anchoDeBanda(1000, 1024)); // 1000
 ```
 
-Veinte mil operaciones de 4 KiB por segundo son solo 78 MiB/s, y mil operaciones de 1 MiB son 1000 MiB/s. El mismo disco da cifras de ancho de banda muy distintas según el tamaño de bloque. Por eso la herramienta de pruebas `fio` pide indicar siempre el tamaño de bloque y el tipo de acceso.
+Veinte mil operaciones pequeñas transfieren menos datos que mil operaciones grandes en estos ejemplos. No hemos demostrado que una unidad pueda alcanzar ambas cifras: cambiar el tamaño también puede cambiar las IOPS y la latencia que consigue.
 
-## Secuencial frente a aleatorio
+Para tamaños distintos, hay que sumar los bytes realmente transferidos durante el intervalo. Tampoco deben mezclarse IOPS de lectura con una cifra de escritura de otra prueba.
 
-- **Acceso secuencial**: leer un archivo grande de principio a fin. Bloques grandes, mucho ancho de banda.
-- **Acceso aleatorio**: leer trocitos dispersos, como hace una [base de datos](/articulos/que-es-una-base-de-datos/). Bloques pequeños, lo que cuenta son las IOPS y la latencia.
+## Cuántas peticiones hay a la vez
 
-En un **disco duro**, la diferencia es enorme: cada acceso aleatorio exige mover el cabezal y esperar a que gire el plato, como explica el libro OSTEP. En un **SSD** no hay piezas que mover, y por eso su ventaja es aún mayor en acceso aleatorio que en secuencial.
+La **profundidad de cola** indica cuántas operaciones pueden estar pendientes. En el primer ejemplo solo hay una: no enviamos la siguiente hasta terminar la anterior. Así, 1000 ms divididos entre 1 ms dan 1000 operaciones por segundo.
 
-## Qué mirar al elegir
+Ahora imagina que un dispositivo puede resolver cuatro lecturas independientes en paralelo, cada una todavía en 1 ms, y que mantenemos esas cuatro ocupadas. Se completarían 4000 por segundo sin reducir a un cuarto la espera individual. Es un modelo ideal; aumentar la cola de un dispositivo real puede aumentar la espera por recursos compartidos.
 
-- Para **vídeo y archivos grandes**: ancho de banda secuencial.
-- Para **sistema operativo, bases de datos y desarrollo**: IOPS en bloques pequeños y latencia.
-- Las cifras de los fabricantes suelen medirse en las condiciones más favorables; en uso real, sobre todo con el disco lleno o tras escribir mucho, pueden bajar.
+Por eso **IOPS no es siempre el inverso de la latencia**. Para relacionarlas hacen falta las condiciones de concurrencia y el intervalo de medida. Un programa que necesita el resultado de una lectura para decidir la siguiente no aprovecha automáticamente una cifra obtenida con cientos de peticiones pendientes.
+
+<Quiz
+	client:visible
+	question="Cuatro lecturas independientes terminan cada milisegundo y cada una tarda 1 ms. ¿Qué describe ese modelo?"
+	options={[
+		"1000 IOPS y 4 ms por lectura",
+		"4000 IOPS y 1 ms por lectura",
+		"4000 IOPS y 0,25 ms por lectura",
+	]}
+	answer={1}
+/>
+
+## Secuencial y aleatorio son otra dimensión
+
+**Secuencial** significa solicitar direcciones consecutivas; **aleatorio**, direcciones dispersas según un patrón. Puede haber lecturas secuenciales de bloques pequeños o aleatorias de bloques grandes. Leer un archivo en orden tampoco garantiza que sus bloques estén juntos físicamente.
+
+En un disco duro, los saltos pueden añadir búsqueda y rotación. En una SSD no existe esa mecánica, pero siguen influyendo sus canales, cachés y trabajo interno. El tipo de acceso ayuda a interpretar una medición; no permite deducir por sí solo una velocidad.
+
+## Qué medir según la tarea
+
+- **Transferir un vídeo grande:** interesa el caudal sostenido con el patrón real, no solo una ráfaga que cabe en caché.
+- **Consultar muchos registros:** interesan tamaño de lectura, IOPS y concurrencia que genera la aplicación.
+- **Responder a una petición interactiva:** importa cuánto tarda esa petición, incluidas las lentas. El [percentil 99](/articulos/que-es-un-percentil/) ayuda a ver una cola de latencias que la media puede ocultar.
+
+La herramienta `fio` permite describir tamaño, patrón, lectura/escritura y profundidad de cola. Hay que comprobar también qué concurrencia se alcanzó realmente, qué cachés intervienen y desde dónde se mide la latencia. «Terminado» para una escritura puede significar aceptación en una caché, no persistencia frente a un corte eléctrico.
+
+## Confusiones frecuentes
+
+Comparar MB/s y MiB/s como si fueran iguales cambia el resultado. Comparar máximos de pruebas distintas oculta la carga que los produjo. Y una latencia media baja no garantiza que ninguna petición se atasque: conviene mirar su distribución y el tiempo sostenido de la prueba.
 
 ## Lo esencial
 
-- El ancho de banda mide datos por segundo; las IOPS, operaciones por segundo; la latencia, el tiempo de cada una.
-- Ancho de banda = IOPS × tamaño de bloque.
-- El acceso secuencial depende del ancho de banda; el aleatorio, de las IOPS y la latencia.
-- La cifra del anuncio suele ser el mejor caso, con bloques grandes.
+- Caudal, operaciones y tiempo de espera responden preguntas diferentes.
+- Con tamaño fijo, caudal = IOPS × bytes por operación.
+- Concurrencia y latencia individual deben interpretarse juntas.
+- Una comparación útil conserva tamaño, patrón, cachés y condiciones de medida.

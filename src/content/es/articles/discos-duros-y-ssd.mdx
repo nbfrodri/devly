@@ -6,38 +6,33 @@ layer: hardware
 prerequisites:
   - memoria-ram-y-almacenamiento
   - que-es-un-bit
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Hard Disk Drives (en inglés)"
+  - title: "Arpaci-Dusseau: OSTEP, Hard Disk Drives (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf
-  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Flash-based SSDs (en inglés)"
+  - title: "Arpaci-Dusseau: OSTEP, Flash-based SSDs (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf
+  - title: "NVM Express: NVMe Overview (en inglés)"
+    url: https://nvmexpress.org/wp-content/uploads/NVMe_Overview.pdf
+  - title: "NIST SP 800-88 Rev. 2: Guidelines for Media Sanitization (en inglés)"
+    url: https://csrc.nist.gov/pubs/sp/800/88/r2/final
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **disco duro** y una **SSD** son los dos tipos principales de almacenamiento permanente: conservan los datos sin corriente. El disco duro los guarda de forma **magnética**, en platos que giran. La SSD, o unidad de estado sólido, los guarda como **carga eléctrica** en chips, sin ninguna pieza que se mueva.
+Un **disco duro** y una **SSD**, o unidad de estado sólido, conservan datos sin alimentación: son almacenamiento **no volátil**. El disco duro usa superficies magnéticas que giran; las SSD de este artículo usan memoria flash, sin piezas móviles. Persistir al apagar no significa durar para siempre.
 
-Esa diferencia física explica sus velocidades, sus puntos débiles y cómo deben tratarlos los programas.
+## El disco duro: colocar el cabezal
 
-## El disco duro
+Dentro hay **platos** recubiertos de material magnético y un **cabezal** que lee o cambia su magnetización. Los datos se codifican en patrones magnéticos, con información adicional para detectar y corregir errores; no basta con imaginar cada [bit](/articulos/que-es-un-bit/) de un archivo como un imán aislado.
 
-### Cómo está hecho
+La superficie se organiza en **pistas**, recorridos circulares, y **sectores**, unidades en las que se almacenan datos. Para leer un sector que no está en la memoria rápida de la unidad hay tres costes:
 
-Dentro de la carcasa hay uno o varios **platos** rígidos, recubiertos de un material magnético, que giran a velocidad constante: 5400 o 7200 vueltas por minuto son valores habituales.
+1. **Búsqueda:** desplazar el cabezal hasta la pista.
+2. **Espera de rotación:** esperar a que el sector pase bajo él.
+3. **Transferencia:** leer los datos que van pasando.
 
-Sobre cada cara, un **cabezal** de lectura y escritura flota a una distancia mínima de la superficie, montado en un brazo que lo mueve hacia el centro o hacia el borde.
-
-Cada [bit](/articulos/que-es-un-bit/) es una zona diminuta magnetizada en un sentido o en el otro. El cabezal lee detectando ese campo y escribe cambiándolo.
-
-La superficie se organiza en círculos concéntricos, las **pistas**, divididas en **sectores**.
-
-### Por qué es lento
-
-Para leer un dato hay que llevar el cabezal al sitio. Son dos esperas mecánicas:
-
-1. **Búsqueda.** Mover el brazo hasta la pista. Unos milisegundos.
-2. **Rotación.** Esperar a que el sector pase bajo el cabezal. De media, media vuelta.
+Para posiciones de llegada uniformemente repartidas, la espera de rotación media es media vuelta. En un disco hipotético de 7200 vueltas por minuto:
 
 ```js
 const milisegundosPorVuelta = (vueltasPorMinuto) => 60000 / vueltasPorMinuto;
@@ -46,127 +41,85 @@ console.log(milisegundosPorVuelta(7200).toFixed(1)); // "8.3"
 console.log((milisegundosPorVuelta(7200) / 2).toFixed(1)); // "4.2"
 ```
 
-A 7200 vueltas por minuto, solo la rotación supone unos 4 milisegundos de media. Con la búsqueda, cada acceso a un lugar distinto ronda los 10 milisegundos. Eso da unas cien operaciones por segundo.
+Si el acceso completo tarda de media 10 ms y esperamos a terminar uno antes de iniciar el siguiente, caben unas 100 operaciones por segundo. Es un ejemplo de [latencia e IOPS](/articulos/ancho-de-banda-y-velocidad-de-un-disco/), no una especificación de cualquier disco.
 
-Para un [procesador](/articulos/como-funciona-un-procesador/), que trabaja en nanosegundos, es una eternidad.
+### Por qué importa el orden
 
-### Secuencial y aleatorio
+Leer sectores consecutivos amortiza la colocación del cabezal. Saltar entre lugares alejados puede obligar a repetirla. Un archivo grande puede estar fragmentado, y una solicitud puede resolverse desde una [caché](/articulos/que-es-una-cache/): secuencial y aleatorio describen las direcciones solicitadas, no garantizan un movimiento físico en cada operación.
 
-Es la propiedad que define a un disco duro.
+Por eso un [sistema de archivos](/articulos/sistema-de-archivos/) intenta agrupar datos relacionados y un [índice de base de datos](/articulos/indices-de-bases-de-datos/) puede ahorrar lecturas. El coste depende del patrón y de la unidad.
 
-- **Acceso secuencial.** Leer datos contiguos. El cabezal está ya colocado y los datos pasan bajo él. Es rápido: más de cien megabytes por segundo.
-- **Acceso aleatorio.** Leer datos dispersos. Cada uno exige mover el brazo y esperar. Es cientos de veces más lento.
+## La SSD: carga, páginas y bloques
 
-Muchas decisiones de diseño de los [sistemas de archivos](/articulos/sistema-de-archivos/) y de las bases de datos vienen de aquí: agrupar lo que se lee junto, escribir añadiendo al final, y usar estructuras de [índice](/articulos/indices-de-bases-de-datos/) que minimicen los saltos.
+Una celda flash usa carga atrapada en una estructura aislada de un [transistor](/articulos/que-es-un-transistor/). Esa carga modifica cómo conduce. Al leerla, el circuito distingue intervalos que representan uno o más bits. La retención depende del desgaste, temperatura y tecnología; no hay un plazo universal.
 
-## La SSD
+No existe la espera mecánica del cabezal. Sin embargo, una lectura puede esperar a otras operaciones, requerir corrección de errores o coincidir con trabajo interno: **los accesos no cuestan todos lo mismo**.
 
-### Cómo guarda un bit
+La flash NAND se organiza en **páginas** y **bloques** de varias páginas. En el modelo básico se lee o programa una página, pero el borrado prepara un bloque entero. No se actualiza libremente una página como si fuera [RAM](/articulos/memoria-ram-y-almacenamiento/).
 
-Una SSD usa memoria **flash**. Cada celda es un [transistor](/articulos/que-es-un-transistor/) con una pieza adicional, aislada, capaz de **atrapar electrones**. Que haya carga atrapada o no representa el bit. Como está aislada, la carga permanece sin corriente durante años.
+### Actualizar un dato sin borrar todo alrededor
 
-No hay nada que mover. Llegar a cualquier dato cuesta lo mismo, esté donde esté: decenas de microsegundos. Las lecturas aleatorias son miles de veces más rápidas que en un disco duro.
+La **capa de traducción flash**, o FTL, mantiene un mapa entre las posiciones que ve el sistema y las páginas físicas. Supón que el bloque lógico 7 contiene «A» en la página física 20:
 
-### Sus rarezas
+1. El sistema pide sustituir «A» por «B».
+2. El controlador escribe «B» en una página libre ya borrada, por ejemplo la 81.
+3. Actualiza el mapa: el bloque 7 apunta a la página 81. La 20 queda inválida.
+4. Más adelante, para recuperar espacio, copia las páginas aún válidas del bloque que contiene la 20 y borra ese bloque entero.
 
-La memoria flash tiene tres limitaciones que no tiene un disco.
+Esta **recogida de basura** puede provocar más escrituras físicas que las solicitadas: **amplificación de escritura**. Si faltan páginas libres, parte del trabajo puede quedar en el camino de una escritura nueva y aumentar su latencia.
 
-**No se puede sobrescribir.** Para escribir en una celda que ya tiene datos, primero hay que **borrarla**.
-
-**Se lee y escribe por páginas, y se borra por bloques.** Una página son unos kilobytes. Un bloque contiene muchas páginas, y solo se puede borrar entero.
-
-| Operación | Unidad | Velocidad |
-| --- | --- | --- |
-| Leer | Página | Muy rápida |
-| Escribir | Página, en una que esté borrada | Rápida |
-| Borrar | Bloque entero | Lenta |
-
-**Se desgasta.** Cada borrado deteriora un poco la celda. Tras cierto número de ciclos, de miles a decenas de miles según el tipo, deja de retener la carga con fiabilidad.
-
-### La capa de traducción
-
-Una SSD que funcionara así directamente sería lenta y duraría poco. Por eso lleva dentro un pequeño ordenador, el **controlador**, que hace creer al sistema que es un disco normal. Su programa se llama **capa de traducción flash**.
-
-- **Escribe en otro sitio.** Para modificar un dato no borra nada: escribe la versión nueva en una página libre, y anota que la antigua ya no vale. Mantiene un mapa de dónde está realmente cada cosa.
-- **Recoge la basura.** En segundo plano, busca bloques con muchas páginas inválidas, copia las que siguen valiendo a otro sitio y borra el bloque entero.
-- **Nivela el desgaste.** Reparte las escrituras entre todas las celdas, para que ninguna se gaste antes que las demás.
-
-Una consecuencia: una escritura del sistema puede provocar varias escrituras físicas, por las copias de la recogida de basura. Se llama **amplificación de escritura**.
-
-### TRIM
-
-Cuando se borra un archivo, el sistema de archivos lo anota en sus tablas, y nada más. La SSD no se entera: cree que esas páginas siguen conteniendo datos útiles, y las sigue copiando.
-
-La orden **TRIM** permite al sistema operativo avisar a la unidad de qué zonas ya no se usan.
-
-Por la misma razón, una SSD rinde peor cuando está casi llena: al controlador le quedan pocas páginas libres con las que trabajar.
-
-### Más bits por celda
-
-Distinguiendo varios niveles de carga, una celda puede guardar más de un bit.
-
-| Tipo | Bits por celda | Capacidad y precio | Duración y velocidad |
-| --- | --- | --- | --- |
-| SLC | 1 | La más cara | Las mejores |
-| MLC | 2 | | |
-| TLC | 3 | | |
-| QLC | 4 | La más barata | Las peores |
-
-Con más niveles, las diferencias entre ellos son más pequeñas, y la celda tolera menos desgaste.
+Los ciclos de programación y borrado desgastan la flash. La **nivelación de desgaste** intenta repartirlos; no garantiza que todas las celdas envejezcan igual ni evita averías del controlador.
 
 <Quiz
 	client:visible
-	question="¿Por qué una SSD lee datos dispersos mucho más deprisa que un disco duro?"
+	question="Tras actualizar el bloque lógico 7, ¿por qué puede seguir existiendo su contenido antiguo?"
 	options={[
-		"Porque gira más rápido",
-		"Porque no tiene partes móviles: no hay que desplazar un cabezal ni esperar un giro",
-		"Porque guarda menos datos",
+		"Porque el sistema siempre conserva un historial recuperable",
+		"Porque la FTL puede escribir en otra página y dejar la antigua pendiente de borrado",
+		"Porque una SSD necesita que gire el plato",
 	]}
 	answer={1}
 />
 
-## Comparación
+### TRIM y espacio libre
 
-| | Disco duro | SSD |
+Borrar un archivo permite al sistema de archivos reutilizar sus bloques; no equivale a borrar físicamente cada celda. **TRIM**, y órdenes de descarte equivalentes, comunica a la unidad qué rangos ya no hacen falta. Así puede dejar de conservarlos al reorganizar la flash. No promete un borrado inmediato ni sustituye a un procedimiento de eliminación segura.
+
+Dejar margen libre puede facilitar esa reorganización. El rendimiento también depende del espacio reservado por el fabricante, la carga y el controlador: estar casi llena no determina por sí solo una velocidad concreta.
+
+### Más bits por celda
+
+| Denominación habitual | Bits por celda | Estados distinguibles |
 | --- | --- | --- |
-| Cómo guarda | Magnetismo en platos giratorios | Carga eléctrica en celdas |
-| Partes móviles | Sí | No |
-| Acceso aleatorio | Unos 10 milisegundos | Decenas de microsegundos |
-| Acceso secuencial | Bueno | Muy bueno |
-| Resistencia a golpes | Baja | Alta |
-| Ruido y consumo | Mayores | Menores |
-| Precio por gigabyte | Bajo | Mayor |
-| Desgaste | Mecánico | Por número de escrituras |
+| SLC | 1 | 2 |
+| MLC de dos bits | 2 | 4 |
+| TLC | 3 | 8 |
+| QLC | 4 | 16 |
 
-## La conexión importa
+Más bits requieren distinguir más intervalos. Eso aumenta densidad y complica lectura, programación y tolerancia al desgaste. La etiqueta no permite ordenar sin más la duración o velocidad de dos productos: también cuentan su diseño, capacidad y carga de trabajo.
 
-Las primeras SSD usaban la misma interfaz que los discos duros, **SATA**, pensada para un dispositivo lento que atiende una petición cada vez. Les quedaba corta.
+## La misma tarea en ambos
 
-**NVMe** es una interfaz diseñada para flash, conectada directamente al bus más rápido del equipo. Admite muchas operaciones a la vez, y multiplica la velocidad, como compara [SSD SATA y NVMe](/articulos/ssd-sata-y-nvme/).
+| Tarea | Disco duro | SSD flash |
+| --- | --- | --- |
+| Leer un bloque disperso | Puede requerir búsqueda y giro | No tiene esos costes mecánicos |
+| Leer muchos bloques seguidos | Amortiza el posicionamiento | Aprovecha canales y operaciones internas |
+| Actualizar un bloque | El controlador gestiona su escritura magnética | La FTL suele escribir una página nueva |
+| Mantener datos sin corriente | Magnetización persistente | Carga retenida, con límites de conservación |
 
-## Cuál usar
+Para una carga con muchas lecturas pequeñas dispersas, eliminar movimientos mecánicos resulta especialmente útil. Para una transferencia grande hay que considerar también capacidad sostenida y conexión. [SATA y NVMe](/articulos/ssd-sata-y-nvme/) explican esa parte: SATA admite peticiones en cola y NVMe sobre PCIe ofrece otra organización y capacidad de enlace, sin garantizar la velocidad de cada operación.
 
-- **SSD** para el sistema, los programas y los datos con los que se trabaja. Es la opción por defecto.
-- **Disco duro** para grandes volúmenes a los que se accede poco: copias de seguridad, archivos, vídeo. Su precio por gigabyte sigue siendo imbatible, y los centros de datos los usan por millones.
+## Fallos y eliminación de datos
 
-## Los dos fallan
+Ambos tipos pueden fallar con o sin aviso. Los datos importantes necesitan [copias de seguridad](/articulos/copias-de-seguridad/) verificadas; ninguna unidad debe tratarse como archivo eterno.
 
-Ninguno es eterno. Los discos duros sufren averías mecánicas, a veces con avisos previos. Las SSD pueden fallar de golpe, sin aviso.
+Sobrescribir **un archivo** tampoco garantiza eliminar todas sus copias: pueden existir instantáneas, sectores reasignados o páginas antiguas de la FTL. La **sanitización**, un proceso destinado a impedir recuperar los datos con un nivel de esfuerzo determinado, exige un procedimiento adecuado al dispositivo y comprobar su resultado.
 
-Y una SSD desconectada durante años puede ir perdiendo la carga de sus celdas: no es buen soporte para guardar algo en un cajón.
-
-La conclusión es la misma en los dos casos: lo que importa necesita [**copias de seguridad**](/articulos/copias-de-seguridad/), en más de un sitio.
-
-## Borrar de verdad
-
-En un disco duro, sobrescribir un archivo destruye su contenido. En una SSD no hay garantía: la capa de traducción escribe en otra parte, y el dato original puede seguir en una página marcada como inválida.
-
-Para proteger los datos de una unidad que se va a desechar, lo fiable es haberla tenido **cifrada** desde el principio, y destruir la clave.
+El **borrado criptográfico** inutiliza las claves necesarias para descifrar los datos. Solo sirve bajo condiciones: cifrado adecuado de todos los datos objetivo, claves bien protegidas y eliminación de todas las copias relevantes de esas claves. No borra copias que quedaron en claro o en otro soporte. La guía NIST SP 800-88 distingue esos requisitos; «estaba cifrado» no los demuestra.
 
 ## Lo esencial
 
-- Un disco duro guarda bits magnéticos en platos que giran, y debe mover un cabezal para leer.
-- Es rápido en acceso secuencial y muy lento en acceso aleatorio.
-- Una SSD guarda carga eléctrica en celdas flash, sin partes móviles.
-- La flash no se sobrescribe y se desgasta: un controlador lo gestiona escribiendo en otro sitio y repartiendo el uso.
-- Los dos fallan: lo importante necesita copias de seguridad.
+- El disco duro añade costes de posicionamiento y rotación; la SSD evita esos movimientos.
+- La flash programa páginas y borra bloques; la FTL administra su correspondencia y reutilización.
+- Rendimiento, retención y desgaste dependen del dispositivo y del uso.
+- Persistencia, copia de seguridad y eliminación segura resuelven problemas diferentes.
