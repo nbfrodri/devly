@@ -7,7 +7,7 @@ layer: datos
 prerequisites:
   - que-es-una-base-de-datos
   - almacen-de-datos-y-lago-de-datos
-updated: 2026-10-15
+updated: 2026-10-16
 sources:
   - title: "Microsoft: Procesamiento de transacciones en línea (OLTP)"
     url: https://learn.microsoft.com/es-es/azure/architecture/data-guide/relational-data/online-transaction-processing
@@ -56,7 +56,7 @@ GROUP BY region, mes
 ORDER BY region, mes;
 ```
 
-El resultado es `norte | 2026-10 | 2500`: se agregan las ventas de la misma tienda para responder una pregunta distinta de descontar una unidad. El código presupone fechas ISO `AAAA-MM-DD`; no está filtrando cinco años ni garantiza recorrer millones de filas. Con una historia extensa, el volumen y el coste pueden crecer mucho. La latencia requerida depende del informe y de si es interactivo.
+El resultado es `norte | 2026-10 | 2500`: se agregan las ventas de una misma región y un mismo mes para responder una pregunta distinta de descontar una unidad. El código presupone fechas ISO `AAAA-MM-DD`; no está filtrando cinco años ni garantiza recorrer millones de filas. Con una historia extensa, el volumen y el coste pueden crecer mucho. La latencia requerida depende del informe y de si es interactivo.
 
 ## Comparación
 

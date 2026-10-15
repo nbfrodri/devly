@@ -7,6 +7,7 @@ steps:
   - correlacion-y-causalidad
   - visualizacion-de-datos
   - series-temporales
+  - que-es-el-aprendizaje-automatico
   - preparacion-de-datos
   - valores-atipicos
   - normalizar-y-estandarizar
@@ -17,7 +18,9 @@ steps:
   - almacen-de-datos-y-lago-de-datos
   - oltp-y-olap
   - que-es-un-esquema-en-estrella
+  - formatos-de-datos-json-csv-xml
   - procesos-etl
   - una-base-de-datos-por-dentro
   - captura-de-cambios-cdc
+  - programacion-funcional
   - mapreduce-y-spark
