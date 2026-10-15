@@ -69,7 +69,7 @@ Verificación de interfaz: `pnpm check` pasa (558 tests, cero errores y avisos d
 
 Aceptación: «bit» enlaza «byte» y se revisan sistemáticamente las menciones del catálogo, con una lista explícita de grupos pendientes hasta cerrar la auditoría.
 
-Avance: revisadas las primeras menciones y los enlaces necesarios de los 32 artículos de la tanda de redes registrada en el backlog 8, incluidos los cinco nuevos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
+Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes y telecomunicaciones registradas en el backlog 8: 44 artículos distintos, incluidos los cinco nuevos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
 
 ## 6. Fundamentos y redes para principiantes
 
@@ -84,7 +84,7 @@ Leer primero las rutas `como-funciona-internet.yaml`, `redes-por-dentro.yaml` y 
 
 Aceptación: una persona sin experiencia puede seguir el recorrido desde dispositivo y petición hasta servidor, protocolo y red; no necesita conocer antes siglas que el texto no explica.
 
-Avance: los cinco artículos propuestos están redactados y comprobados, con fuentes abiertas, enlaces entrantes y pasos en las rutas existentes. Se han releído y revisado los 32 artículos de internet y redes, ejecutado sus ejemplos y comprobado los recorridos de 14 y 25 pasos en móvil y escritorio. Las casillas de publicación permanecen abiertas hasta integrar la rama. Falta revisar Telecomunicaciones y el encaje de las nuevas definiciones en desarrollo web. La tanda registra 563 pruebas correctas, 598 páginas y 538 artículos indexados; el detalle editorial y visual está en el backlog 8.
+Avance: los cinco artículos propuestos están redactados y comprobados, con fuentes abiertas, enlaces entrantes y pasos en las rutas existentes. Se han releído y revisado los 32 artículos de internet y redes, ejecutado sus ejemplos y comprobado los recorridos de 14 y 25 pasos en móvil y escritorio. Las casillas de publicación permanecen abiertas hasta integrar la rama. Telecomunicaciones también está revisada y comprobada: trece pasos, con diez artículos corregidos y cuatro conservados al incluir la curiosidad sobre el nombre Wi-Fi. Falta revisar el encaje de las nuevas definiciones en desarrollo web. La tanda registra 563 pruebas correctas, 598 páginas y 538 artículos indexados; el detalle editorial y visual está en el backlog 8.
 
 ## 7. Aplicaciones e incidentes cotidianos
 

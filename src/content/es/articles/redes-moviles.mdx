@@ -1,81 +1,102 @@
 ---
 title: "Redes móviles: de 2G a 5G"
-description: "La red móvil divide el territorio en celdas, cada una con su antena. Al moverte, la llamada pasa de una celda a otra sin cortarse. Cada generación ha multiplicado la velocidad."
+description: "Las redes móviles reparten cobertura y recursos entre celdas. El teléfono se comunica con estaciones base y la red intenta mantener su servicio mientras se desplaza."
 level: intermedio
 layer: redes
 prerequisites:
   - modulacion
   - como-funciona-el-wifi
   - tipos-de-redes
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Explain that Stuff: How do cellphones work? (en inglés)"
-    url: https://www.explainthatstuff.com/cellphones.html
-  - title: "3GPP: About 3GPP (en inglés)"
+  - title: "3GPP: origen y alcance del proyecto (en inglés)"
     url: https://www.3gpp.org/about-us
-  - title: "ITU-R: IMT-2020 (en inglés)"
+  - title: "3GPP/ETSI TS 38.300: arquitectura, radio y movilidad de 5G NR, versión 18.8.0 (en inglés)"
+    url: https://www.etsi.org/deliver/etsi_ts/138300_138399/138300/18.08.00_60/ts_138300v180800p.pdf
+  - title: "Tse y Viswanath: sistemas celulares, acceso múltiple e interferencias, capítulo 4 (en inglés)"
+    url: https://web.stanford.edu/~dntse/Chapters_PDF/Fundamentals_Wireless_Communication_chapter4.pdf
+  - title: "UIT: IMT-2020 y las interfaces de radio de 5G (en inglés)"
     url: https://www.itu.int/en/ITU-R/study-groups/rsg5/rwp5d/imt-2020/Pages/default.aspx
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un móvil es, en esencia, una **radio** que se comunica con la antena más cercana. Esa antena está conectada a la red del operador, que a su vez está unida a la red telefónica y a internet. La clave del sistema es dividir el territorio en **celdas**, y de ahí su nombre en inglés, *cellular*.
+Una **red móvil** conecta teléfonos y otros dispositivos mediante radio a estaciones base y a la infraestructura de un operador. Divide la cobertura en **celdas** para reutilizar recursos y atender usuarios que cambian de lugar.
 
-## Celdas
+Una antena no conecta por sí sola con cualquier servicio: detrás necesita transporte, control de acceso y equipos que conduzcan los datos hacia su destino.
 
-El territorio se reparte en zonas pequeñas, las **celdas**, cada una servida por sus antenas y su **estación base**, que coordina lo que ocurre dentro de ella. Se suelen dibujar como un mosaico de hexágonos invisibles.
+## Qué es una celda
+
+Una **estación base** contiene equipos que transmiten, reciben y coordinan el acceso radio. Puede atender varias celdas mediante distintas antenas, sectores o frecuencias. Los hexágonos de los dibujos son un modelo: edificios, relieve, potencia y antenas producen coberturas irregulares y solapadas.
+
+El teléfono no elige necesariamente la antena más cercana. Intervienen las medidas de señal, las frecuencias que admite, las prioridades de la red y el acceso permitido. Estar cerca de una antena de otro operador no garantiza poder usarla.
 
 ```mermaid
-flowchart LR
-	M["Móvil"] -- radio --> A["Antena de la celda"]
-	A --> E["Estación base"]
-	E --> R["Red del operador"]
-	R --> I["Internet y red telefónica"]
+flowchart TD
+    M["Teléfono"] -- radio --> E["Estación base"]
+    E --> T["Red de transporte del operador"]
+    T --> N["Núcleo: acceso, sesiones y encaminamiento"]
+    N --> I["Internet y servicios de voz"]
 ```
 
-¿Por qué celdas pequeñas en lugar de una gran antena? Porque el espectro de radio es limitado. Cada celda usa unas frecuencias distintas de las de sus vecinas, pero celdas lejanas pueden **reutilizar** las mismas. Cuantas más celdas, más conversaciones simultáneas caben.
+## Compartir y reutilizar recursos
+
+La radio dispone de una banda limitada. Las redes reparten recursos de tiempo, frecuencia y, con varias antenas, espacio. En **LTE**, tecnología de la familia 4G, y en 5G, la estación programa transmisiones de los usuarios según demanda, calidad y políticas; no entrega una frecuencia exclusiva permanente a cada persona.
+
+**Reutilizar frecuencias** permite atender otras zonas con el mismo espectro. Algunos sistemas separan las frecuencias de celdas vecinas; otros reutilizan la misma banda y deben gestionar la interferencia. Añadir estaciones puede aumentar capacidad, pero no elimina esa coordinación ni el coste de conectarlas al resto de la red.
+
+En un modelo deliberadamente simple, si cada celda sostiene 50 comunicaciones a la calidad requerida y pueden operar simultáneamente:
 
 ```js
-const canalesPorCelda = 50;
-
-const capacidad = (celdas) => celdas * canalesPorCelda;
-
-console.log(capacidad(1)); // 50
-console.log(capacidad(100)); // 5000
+const comunicacionesPorCelda = 50;
+const capacidadIdeal = (celdas) => celdas * comunicacionesPorCelda;
+console.log(capacidadIdeal(1)); // 50
+console.log(capacidadIdeal(100)); // 5000
 ```
 
-Por eso en las ciudades, donde hay más gente, las celdas son más pequeñas y las antenas están más juntas.
+La multiplicación presupone recursos y transporte suficientes, interferencias controladas y usuarios repartidos. No predice la capacidad de una red comercial. Si todos se concentran en una sola celda, las otras 99 no resuelven automáticamente su saturación.
 
-## El traspaso
+## Un mapa que sigue descargándose al caminar
 
-Si vas en coche hablando por teléfono, cruzas varias celdas. La red detecta que la señal de la siguiente antena es mejor y **traspasa** la llamada de una celda a otra sin cortarla. Ocurre igual con los datos: la conexión sigue mientras te mueves.
+Supón que Clara ya está registrada en la red y abre un mapa:
 
-## Las generaciones
+1. Su teléfono envía datos por la celda A cuando obtiene recursos de radio. La estación los conduce al **núcleo**, la parte de la red que gestiona, entre otras funciones, sesiones y acceso a otras redes.
+2. La respuesta del [servidor](/articulos/que-es-un-servidor/) vuelve por esa infraestructura hasta el teléfono. La velocidad depende también del transporte, la carga y el servidor.
+3. Al caminar, el teléfono mide otras celdas y comunica resultados. La red puede preparar un **traspaso** o *handover* hacia B, usando medidas y políticas; no basta con cruzar una frontera geométrica.
+4. Si B admite el traspaso y el teléfono completa el acceso, el tráfico continúa por ella. La red actualiza el recorrido de los datos y gestiona los pendientes según el procedimiento.
 
-| Generación | Lo que trajo |
+El objetivo es mantener la sesión con poca interrupción, no garantizar ausencia de cortes. Si no hay cobertura útil o falla el acceso a B, puede ser necesario restablecer la conexión. Una aplicación con datos almacenados puede ocultar una pausa que una llamada en directo haría perceptible.
+
+<Quiz
+	client:visible
+	question="Clara tiene buena señal, pero la descarga va lenta en un estadio. ¿Qué conclusión permite ese dato?"
+	options={["El servidor está necesariamente averiado", "La buena señal no descarta recursos de radio o transporte saturados", "El teléfono está conectado a la antena más lejana"]}
+	answer={1}
+/>
+
+## Qué cambió entre generaciones
+
+| Generación | Cambio característico |
 | --- | --- |
-| 1G | Llamadas analógicas |
-| 2G | Voz [digital](/articulos/senales-analogicas-y-digitales/) y mensajes de texto; el estándar GSM dominó el mundo |
-| 3G | Acceso a internet y datos más rápidos |
-| 4G | Banda ancha móvil: vídeo, aplicaciones, todo sobre IP |
-| 5G | Más velocidad, menos [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/) y muchos más dispositivos conectados |
+| 1G | Voz analógica |
+| 2G | Voz digital y mensajes; sus evoluciones también incorporaron datos por paquetes |
+| 3G | Mayor capacidad para servicios de datos y acceso móvil |
+| 4G | Acceso de banda ancha con red de paquetes IP; la voz puede ofrecerse sobre esa infraestructura |
+| 5G | Nuevas opciones de radio y núcleo para capacidad, latencia y tipos de dispositivos distintos |
 
-Cada generación ha usado [modulaciones](/articulos/modulacion/) más eficientes, más espectro y técnicas para que varias antenas transmitan a la vez.
+La generación describe una familia de capacidades, no una velocidad garantizada. Un despliegue 5G puede reutilizar partes de una red 4G; otro usa un núcleo 5G. El espectro, los equipos, la carga y la arquitectura condicionan las prestaciones. Una conexión 5G congestionada no tiene por qué superar una 4G con recursos disponibles.
 
-## Quién define los estándares
+**3GPP** desarrolla especificaciones del sistema; se creó en 1998 y su trabajo se amplió más allá de 3G. La **UIT**, Unión Internacional de Telecomunicaciones, define marcos y requisitos como IMT-2020 para 5G. La compatibilidad exige además bandas, funciones y acuerdos admitidos por equipos y operadores.
 
-Para que un móvil funcione en cualquier país hacen falta estándares comunes:
+## Errores comunes
 
-- **3GPP**, una asociación de organismos de normalización de todo el mundo, se creó en 1998 para desarrollar los estándares de 3G, y desde entonces define también los de 4G y 5G.
-- La **UIT**, la Unión Internacional de Telecomunicaciones, fija los requisitos que debe cumplir cada generación. Los de 5G se conocen como **IMT-2020**, y las especificaciones de las interfaces de radio que los cumplen se publicaron en 2021.
-
-## Del teléfono al ordenador de bolsillo
-
-Al principio, un móvil solo servía para hablar. Hoy la mayoría son pequeños ordenadores con un circuito de radio incorporado, y más del 90 % de la población mundial puede acceder a una red 4G. Las redes móviles son, para muchas personas, la única forma de conectarse a internet.
+- **Tomar las barras de cobertura como un test de internet.** Resumen condiciones de radio, no todos los tramos hasta el servicio.
+- **Suponer que más celdas multiplican siempre la capacidad.** Interferencia, recursos compartidos y distribución de usuarios también cuentan.
+- **Interpretar handover como promesa de continuidad perfecta.** El cambio puede fallar o introducir una pausa.
 
 ## Lo esencial
 
-- La red móvil divide el territorio en celdas, cada una con sus antenas y su estación base.
-- Celdas lejanas reutilizan frecuencias; más celdas significa más capacidad.
-- Al moverte, la conexión se traspasa de una celda a otra sin cortarse.
-- Cada generación, de 2G a 5G, ha ganado velocidad y capacidad; 3GPP y la UIT definen los estándares.
+- Las celdas permiten repartir cobertura y reutilizar recursos radio.
+- Estación base, transporte y núcleo cumplen funciones distintas.
+- Un traspaso intenta mantener el servicio al cambiar de celda; puede fallar.
+- La generación y la intensidad de señal no determinan por sí solas el rendimiento.

@@ -1,81 +1,110 @@
 ---
 title: "¿Cómo funciona la fibra óptica?"
-description: "La fibra óptica transmite datos como pulsos de luz por un hilo de vidrio más fino que un pelo. La luz rebota en sus paredes sin escapar y recorre grandes distancias con muy poca pérdida."
+description: "La fibra guía luz que representa datos. El transmisor, el receptor, las pérdidas y la dispersión determinan qué distancia y tasa de datos puede sostener un enlace."
 level: intermedio
 layer: redes
 prerequisites:
   - senales-analogicas-y-digitales
   - modulacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Explain that Stuff: How does fiber optics work? (en inglés)"
-    url: https://www.explainthatstuff.com/fiberoptics.html
-  - title: "The Nobel Prize in Physics 2009 (en inglés)"
+  - title: "Fiber Optic Association: Optical Fiber (en inglés)"
+    url: https://thefoa.org/tech/ref/basic/fiber.html
+  - title: "Fiber Optic Association: transmisores y receptores ópticos (en inglés)"
+    url: https://thefoa.org/tech/ref/appln/transceiver.html
+  - title: "Fiber Optic Association: enlaces de datos ópticos (en inglés)"
+    url: https://thefoa.org/tech/ref/appln/datalink.html
+  - title: "Fundación Nobel: Premio Nobel de Física de 2009 (en inglés)"
     url: https://www.nobelprize.org/prizes/physics/2009/summary/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **fibra óptica** transmite información en forma de **luz** a través de hilos de vidrio o plástico más finos que un cabello. Es la columna vertebral de internet: los cables que cruzan océanos y unen ciudades son de fibra, y cada vez más llega también hasta las casas.
+La **fibra óptica** es un hilo de vidrio o plástico que guía luz. Un transmisor modifica esa luz para representar información y un receptor la convierte de nuevo en una señal eléctrica.
 
-## La idea: luz atrapada en un tubo
-
-Un haz de luz que viaja por un tubo de vidrio debería escaparse por los lados. No lo hace gracias a la **reflexión interna total**: cuando la luz choca contra la pared del vidrio con un ángulo muy rasante, en lugar de salir, se refleja hacia dentro como si la pared fuera un espejo. Así avanza rebotando de lado a lado, aunque el cable se curve.
-
-```js
-const indiceVidrio = 1.5;
-const indiceAire = 1.0;
-
-const anguloCritico = (Math.asin(indiceAire / indiceVidrio) * 180) / Math.PI;
-console.log(anguloCritico.toFixed(1)); // "41.8"
-```
-
-El ángulo crítico entre vidrio y aire ronda los 42 grados, medido desde la perpendicular a la pared: por encima de ese ángulo, la luz se refleja entera. Depende del **índice de refracción** de cada material, que mide cuánto se frena la luz en él.
+Permite llevar grandes cantidades de datos entre edificios, ciudades o continentes sin las interferencias electromagnéticas que afectan a un conductor de cobre. También puede llegar hasta una vivienda. Su alcance no es infinito: depende del enlace completo.
 
 ## Núcleo y revestimiento
 
-Una fibra tiene dos capas de vidrio:
+La fibra tiene un **núcleo** rodeado por un **revestimiento** de menor **índice de refracción**, una medida de cómo se propaga la luz en un material. La diferencia permite guiarla; no es un tubo hueco ni necesita paredes metálicas.
 
-- El **núcleo**, en el centro, por donde viaja la luz.
-- El **revestimiento**, alrededor, de un vidrio con un índice de refracción más bajo. Es lo que provoca la reflexión total y mantiene la luz dentro del núcleo.
+En el modelo de rayos, la **reflexión interna total** ocurre cuando la luz llega desde el material de mayor índice a la frontera con el de menor índice con un ángulo suficientemente grande, medido desde la perpendicular. Para dos índices hipotéticos:
 
-Encima van capas de protección. Un cable puede llevar desde dos fibras hasta varios cientos.
+```js
+const indiceNucleo = 1.48;
+const indiceRevestimiento = 1.46;
+const anguloCritico = Math.asin(indiceRevestimiento / indiceNucleo) * 180 / Math.PI;
+console.log(anguloCritico.toFixed(1)); // "80.6"
+```
 
-## De bits a luz
+Por encima de ese ángulo, el modelo ideal refleja el rayo. No significa que cualquier luz introducida quede atrapada ni que la fibra real carezca de pérdidas. Los índices son ilustrativos, no una especificación universal.
 
-En un extremo, un láser o un LED convierte los bits en pulsos de luz: encendido y apagado, o variaciones más finas de la luz con técnicas de [modulación](/articulos/modulacion/). En el otro, un fotodetector convierte la luz de nuevo en señal eléctrica. Además, por una misma fibra pueden viajar a la vez varias longitudes de onda, varios "colores" de luz, cada uno con su propio canal de datos.
+Las fibras **multimodo** admiten varios patrones de propagación; las **monomodo**, un modo espacial en sus condiciones de uso. El modelo de rayos ayuda a empezar, pero una explicación completa de los modos requiere tratar la luz como onda. Encima del vidrio van recubrimientos protectores y la estructura del cable.
 
-## Por qué sustituyó al cobre
+## Seguir cuatro bits
 
-| | Cobre | Fibra |
+Imagina un enlace didáctico que envía `1010` variando la intensidad de la luz. Suponemos que el receptor conoce el ritmo de los símbolos:
+
+1. El transmisor recibe los bits como señal eléctrica.
+2. Un láser emite un nivel óptico alto para `1` y bajo para `0`, durante cuatro intervalos sucesivos. Es una forma sencilla de [modulación](/articulos/modulacion/).
+3. La luz atraviesa la fibra, los conectores y los empalmes. Puede llegar atenuada y con pulsos ensanchados.
+4. Un **fotodetector** convierte la luz en señal eléctrica. El receptor estima los niveles y reconstruye `1010` si todavía puede distinguirlos correctamente.
+
+```mermaid
+flowchart TD
+    A["Bits: 1010"] --> T["Transmisor eléctrico a óptico"]
+    T --> F["Fibra, conectores y empalmes"]
+    F --> R["Receptor óptico a eléctrico"]
+    R --> D["Decisión sobre los bits recibidos"]
+```
+
+Otros sistemas usan varios niveles o aprovechan también la fase. Además, **multiplexar por longitud de onda** permite enviar varios canales ópticos, como distintos colores, por una misma fibra. El receptor debe separar e interpretar esos canales; el cable por sí solo no fija la velocidad.
+
+## Qué limita el enlace
+
+La **atenuación** reduce la potencia recibida. La absorción y la desviación de luz por irregularidades microscópicas del material, los conectores y las curvaturas contribuyen a las pérdidas. El transmisor debe entregar potencia suficiente para llegar al rango admitido por el receptor, sin sobrecargarlo.
+
+La **dispersión temporal** ensancha los pulsos: distintas componentes pueden llegar con retardos diferentes. Si se solapan demasiado, cuesta decidir dónde termina un símbolo y empieza el siguiente. Añadir potencia no resuelve por sí solo ese problema.
+
+<Quiz
+	client:visible
+	question="Llega suficiente potencia, pero los pulsos se solapan y se confunden. ¿Qué hay que estudiar?"
+	options={["Solo la intensidad del láser", "La dispersión y la capacidad del receptor para distinguir símbolos", "El nombre del archivo transmitido"]}
+	answer={1}
+/>
+
+| Criterio | Cobre | Fibra |
 | --- | --- | --- |
-| Pérdida de señal | Alta: hay que amplificar a menudo | Baja: llega unas diez veces más lejos sin amplificar |
-| Interferencias | Le afectan las electromagnéticas y la diafonía entre cables | No le afectan |
-| [Ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/) | Limitado | Enorme |
-| Peso y grosor | Mayor | Menor |
-| Coste de instalación | Ya estaba instalado | Hay que tender cable nuevo |
+| Señal | Eléctrica | Óptica |
+| Interferencias electromagnéticas en el medio | Pueden afectar; influyen diseño y blindaje | No se acoplan a la señal óptica como en un conductor |
+| Alcance y tasa | Dependen del cable y los equipos | Dependen de fibra, pérdidas, dispersión y equipos |
+| Instalación | Puede aprovechar cableado compatible | Exige conectores, empalmes y radios de curvatura adecuados |
 
-## La velocidad de la luz no es infinita
+No hay un multiplicador universal de distancia entre ambos. En enlaces ópticos largos pueden utilizarse amplificadores o regeneradores, según el sistema.
 
-En el vidrio, la luz viaja más despacio que en el vacío: aproximadamente a la velocidad de la luz dividida por el índice de refracción.
+## La luz también tarda
+
+Con una aproximación de índice 1,5, la propagación cuesta unos cinco milisegundos por cada mil kilómetros:
 
 ```js
 const velocidadLuz = 299792; // km/s en el vacío
 const enFibra = velocidadLuz / 1.5;
-
-const milisegundosPorMilKm = (1000 / enFibra) * 1000;
-console.log(milisegundosPorMilKm.toFixed(1)); // "5.0"
+console.log(((1000 / enFibra) * 1000).toFixed(1)); // "5.0"
 ```
 
-Unos 5 milisegundos por cada mil kilómetros, solo de ida. Un cable de 6000 km entre Europa y América añade unos 30 ms antes de contar ningún equipo intermedio. Es una de las causas de la [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/) que ninguna mejora técnica puede eliminar.
+Un recorrido de 6000 km añade unos 30 ms de ida solo por propagación. Faltan el recorrido de vuelta, equipos, colas y otros tramos. Aumentar la tasa de datos no elimina esta parte de la [latencia](/articulos/ancho-de-banda-latencia-y-rendimiento/).
 
-## Un premio Nobel
+Charles K. Kao recibió la mitad del Nobel de Física de 2009 por sus avances en la transmisión de luz en fibras para comunicaciones ópticas.
 
-El físico Charles Kao recibió media parte del Premio Nobel de Física de 2009 por sus logros sobre la transmisión de luz en fibras para la comunicación óptica. Su trabajo mostró que, con vidrio lo bastante puro, la luz podía recorrer distancias enormes, y abrió el camino a las redes actuales.
+## Errores comunes
+
+- **Doblar mucho el cable porque la luz se refleja.** Una curva demasiado cerrada puede aumentar la pérdida o dañar la fibra.
+- **Combinar cualquier fibra y transceptor.** Deben ser compatibles el tipo de fibra, la longitud de onda, la modulación y el rango de potencia.
+- **Confundir mucha capacidad con retardo nulo.** Más bits por segundo no hacen instantáneo el recorrido.
 
 ## Lo esencial
 
-- La fibra óptica transmite datos como pulsos de luz por un hilo de vidrio.
-- La reflexión interna total, gracias a un revestimiento de índice más bajo, mantiene la luz en el núcleo.
-- Pierde mucha menos señal que el cobre y no sufre interferencias electromagnéticas.
-- La luz en el vidrio tarda unos 5 ms por cada mil kilómetros.
+- La fibra guía luz; los equipos convierten entre señales eléctricas y ópticas.
+- Núcleo y revestimiento permiten el guiado, pero siguen existiendo pérdidas.
+- Atenuación y dispersión limitan el enlace de formas distintas.
+- La propagación añade aproximadamente 5 ms por cada 1000 km de fibra.

@@ -44,7 +44,7 @@ El pico de nueve se reparte entre tres salidas. Una señal constante permanece i
 
 ## Una operación, dos puntos de vista
 
-En tiempo, el filtro combina valores vecinos. En frecuencia, tiene una **respuesta frecuencial** que indica qué amplitud y fase introduce en cada componente.
+En tiempo, el filtro combina valores vecinos. En [frecuencia](/articulos/transformada-de-fourier/), tiene una **respuesta frecuencial** que indica qué amplitud y fase introduce en cada componente.
 
 La media móvil suele describirse como suavizado o paso bajo porque conserva variaciones lentas y atenúa algunas rápidas. Pero su respuesta no es un corte perfecto: atenúa de manera desigual y puede dejar pasar componentes que querrías eliminar. No basta con nombrarla «paso bajo» para usarla como cualquier filtro antialiasing.
 
@@ -77,7 +77,7 @@ Ahora considera una señal alternante `1, -1, 1, -1…`. Una media de dos posici
 
 ### Observar la respuesta a un impulso
 
-La prueba con un **impulso**, una muestra uno rodeada de ceros, revela los coeficientes de un filtro FIR lineal e invariante en el tiempo. En la media de tres, aparecen tres contribuciones de un tercio, teniendo en cuenta cómo se representen el inicio y los bordes. Esa respuesta permite anticipar cómo se superpondrán las contribuciones de una señal más compleja.
+La prueba con un **impulso**, una muestra uno rodeada de ceros, revela los tres pesos de esta media: aparecen tres contribuciones de un tercio, teniendo en cuenta cómo se representen el inicio y los bordes. La media es **lineal**, por lo que se pueden sumar las respuestas de sus entradas por separado, e **invariante en el tiempo**: desplazar una entrada desplaza la misma respuesta. Esas propiedades permiten anticipar cómo se superponen las contribuciones de una señal más compleja.
 
 ## FIR e IIR
 

@@ -1,78 +1,101 @@
 ---
 title: "¿Cómo funciona el internet por satélite?"
-description: "El internet por satélite lleva la conexión donde no llega el cable. Los satélites lejanos añaden mucha latencia; las constelaciones en órbita baja la reducen."
+description: "Un enlace por satélite conecta terminales con redes terrestres. La órbita influye en la distancia, la cobertura y los cambios de satélite necesarios."
 level: intermedio
 layer: redes
 prerequisites:
   - ancho-de-banda-latencia-y-rendimiento
   - redes-moviles
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Explain that Stuff: How do satellites work? (en inglés)"
-    url: https://www.explainthatstuff.com/satellites.html
-  - title: "NASA: State of the Art of Small Spacecraft Technology, Communications (en inglés)"
+  - title: "NASA: Small Spacecraft Technology, comunicaciones (en inglés)"
     url: https://www.nasa.gov/smallsat-institute/sst-soa/soa-communications/
+  - title: "Agencia Espacial Europea: tipos de órbitas (en inglés)"
+    url: https://www.esa.int/Enabling_Support/Space_Transportation/Types_of_orbits
 ---
 
 import { Quiz } from "@/components/quiz";
 
-El **internet por satélite** conecta un hogar, un barco o un avión a internet a través de un satélite: una antena en tierra envía los datos al satélite, este los reenvía a una estación conectada a internet, y la respuesta hace el camino contrario. Es la forma de llegar a lugares donde no hay cable ni cobertura móvil.
+El **internet por satélite** utiliza uno o varios satélites para transportar datos entre un terminal y una red conectada a internet. Permite dar servicio donde resulta difícil desplegar cable o cobertura móvil, y también puede complementar otras conexiones.
+
+El terminal incluye una antena y equipos de comunicación. No se comunica directamente con todos los servidores del mundo: el sistema necesita conectarse con las redes que permiten alcanzarlos.
+
+## Seguir una petición
+
+En una arquitectura sencilla, con un satélite como repetidor:
+
+1. Un ordenador entrega una petición al terminal del usuario, quizá a través de un [router](/articulos/enrutamiento/) y wifi local.
+2. El terminal la transmite por radio al satélite.
+3. El satélite la retransmite a una **estación terrestre** o *gateway*, conectada a la red del operador.
+4. Los datos continúan por redes terrestres hasta el servidor. La respuesta recorre enlaces equivalentes en sentido inverso.
 
 ```mermaid
-flowchart LR
-	C["Antena del cliente"] <--> S["Satélite"]
-	S <--> E["Estación en tierra"]
-	E <--> I["Internet"]
+flowchart TD
+    C["Terminal del usuario"] <--> S["Satélite"]
+    S <--> E["Estación terrestre"]
+    E <--> I["Redes terrestres y servidor"]
 ```
 
-## Las órbitas
+Otros sistemas procesan o encaminan datos a bordo y pueden usar enlaces entre satélites. El dibujo explica un caso; no representa todas las constelaciones.
 
-Los satélites se agrupan por la altura de su órbita, que decide casi todo lo demás:
+## Qué cambia con la órbita
 
-| Órbita | Altura | Ventaja | Inconveniente |
-| --- | --- | --- | --- |
-| Geoestacionaria (GEO) | Unos 36 000 km | Parece quieto en el cielo: basta una antena fija; pocos satélites cubren mucho | Mucha latencia |
-| Media (MEO) | Intermedia | Compromiso entre cobertura y latencia | Se mueve en el cielo |
-| Baja (LEO) | Unos pocos cientos de kilómetros | Poca latencia | Se mueve rápido: hacen falta muchos satélites y antenas que los sigan |
+| Órbita | Altura aproximada | Consecuencia para comunicar |
+| --- | --- | --- |
+| Geoestacionaria, GEO | 35 786 km | Parece fija desde tierra; permite antenas orientadas a una posición, con recorrido largo |
+| Media, MEO | Entre la región baja y GEO | Compromisos de cobertura y recorrido; el satélite cambia de posición aparente |
+| Baja, LEO | Por debajo de unos 2000 km | Menos distancia, menor zona visible por satélite y cambios frecuentes de posición |
 
-A unos 36 000 km de altura, un satélite tarda exactamente un día en dar la vuelta a la Tierra, así que, sobre el ecuador, se queda siempre encima del mismo punto. Por eso los satélites de comunicaciones tradicionales se colocan en esa órbita **geoestacionaria**: las antenas no tienen que moverse.
+Una órbita geoestacionaria es circular, ecuatorial y sigue el sentido de rotación terrestre con el mismo periodo: un **día sideral**, unas 23 horas y 56 minutos. No basta con colocar cualquier órbita a esa altura para que el satélite parezca fijo.
 
-## El problema: la distancia
+## Calcular solo la propagación
 
-La señal viaja a la velocidad de la luz, pero 36 000 km es mucha distancia:
+En el esquema anterior, una petición hace dos tramos espaciales: terminal–satélite y satélite–estación. Su respuesta hace otros dos. Aproximemos cada tramo por la altura del satélite:
 
 ```js
 const velocidadLuz = 299792; // km/s
-const ms = (km) => (km / velocidadLuz) * 1000;
+const milisegundos = (km) => km / velocidadLuz * 1000;
 
-const geo = 36000;
-const idaYVueltaGeo = ms(geo * 4);
-console.log(Math.round(idaYVueltaGeo)); // 480
-
-const leo = 550;
-const idaYVueltaLeo = ms(leo * 4);
-console.log(idaYVueltaLeo.toFixed(1)); // "7.3"
+console.log(Math.round(milisegundos(36000 * 4))); // 480
+console.log(milisegundos(550 * 4).toFixed(1)); // "7.3"
 ```
 
-Una petición sube al satélite y baja a la estación; la respuesta, igual: cuatro tramos. Con un satélite geoestacionario son casi **medio segundo** solo de recorrido, antes de contar cualquier procesamiento. Se nota en una videollamada o un juego en línea, aunque el [ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/) sea alto.
+Son cotas geométricas simplificadas para cuatro tramos casi verticales, no RTT de una conexión real. Terminal y estación suelen estar separados: los trayectos inclinados son más largos. Faltan además transmisión, colas, procesamiento y recorrido terrestre, o enlaces adicionales entre satélites.
 
-Con un satélite en órbita baja, a unos cientos de kilómetros (550 en el ejemplo), el recorrido baja a unos pocos milisegundos y la latencia total se parece a la de una conexión de tierra.
+La comparación sí muestra la causa: a unos 36 000 km, esos cuatro tramos cuestan cerca de medio segundo antes de añadir lo demás; a 550 km, el componente calculado es mucho menor. La altura no permite prometer por sí sola un tiempo total concreto.
 
-## Constelaciones en órbita baja
+<Quiz
+	client:visible
+	question="El cálculo para 550 km da 7,3 ms. ¿Qué significa?"
+	options={["Toda conexión LEO responde en 7,3 ms", "Es la propagación de cuatro alturas idealizadas; faltan otros recorridos y retardos", "Es el tiempo que tarda el satélite en completar su órbita"]}
+	answer={1}
+/>
 
-El precio de la órbita baja es que un satélite pasa por encima en pocos minutos. Para dar cobertura continua hacen falta **constelaciones** de cientos o miles de satélites, y antenas en tierra que cambien de uno a otro, como el traspaso entre celdas de las [redes móviles](/articulos/redes-moviles/). Algunos sistemas enlazan además los satélites entre sí con láser, para llevar los datos por el espacio sin bajar a tierra en cada tramo.
+Más [capacidad](/articulos/ancho-de-banda-latencia-y-rendimiento/) permite transferir más datos por segundo, pero no elimina el tiempo de propagación. Una descarga grande y una conversación interactiva sufren sus límites de formas distintas.
 
-## Cuándo tiene sentido
+## Mantener la conexión mientras el satélite se mueve
 
-- **Zonas rurales y remotas**, donde no compensa tender cable.
-- **Barcos, aviones y lugares en movimiento**.
-- **Emergencias**, cuando la infraestructura de tierra ha caído.
+En LEO un satélite deja de estar visible desde un lugar tras un tiempo limitado. Una **constelación** coordina varios para cubrir zonas y horarios de servicio. El número necesario depende de altura, geometría, cobertura y capacidad buscadas; no existe una cantidad universal.
 
-Donde hay fibra, la fibra sigue siendo más rápida, más estable y más barata. Además, las grandes constelaciones plantean un problema nuevo: la cantidad de objetos en órbita y el riesgo de basura espacial.
+El terminal sigue la dirección apropiada mediante movimiento de antena o control electrónico, según su diseño. Cuando cambia de satélite, el sistema debe coordinar recursos y rutas. El propósito se parece al [traspaso móvil](/articulos/redes-moviles/), aunque los procedimientos difieren.
+
+Los enlaces entre satélites, por radio o láser según el sistema, permiten transportar datos antes de bajar a una estación adecuada. No hacen innecesaria toda conexión a redes terrestres.
+
+## Límites prácticos
+
+Edificios, árboles o terreno pueden bloquear la dirección de comunicación. La lluvia puede atenuar ciertos enlaces de radio; la importancia depende de frecuencia y margen del sistema. La capacidad se comparte y una zona puede saturarse aunque el terminal tenga buena visibilidad.
+
+En una emergencia también hacen falta energía, terminal operativo y una red de destino disponible. Para comparar con fibra o red móvil deben considerarse cobertura, latencia medida, capacidad, instalación y condiciones del servicio. Ningún medio gana en todo lugar y circunstancia.
+
+## Errores comunes
+
+- **Tomar la altura como distancia completa hasta internet.** Omite geometría, estaciones y redes terrestres.
+- **Confundir órbita baja con latencia nula.** Reduce un componente del retardo, no todos.
+- **Suponer cobertura continua por ver pasar un satélite.** Hace falta un sistema que mantenga los enlaces y recursos disponibles.
 
 ## Lo esencial
 
-- El internet por satélite sube los datos a un satélite y los baja a una estación conectada a internet.
-- Los geoestacionarios, a unos 36 000 km, parecen fijos pero añaden casi medio segundo de recorrido.
-- Los satélites en órbita baja reducen la latencia, a cambio de necesitar constelaciones enormes.
-- Tiene sentido donde no llega el cable; donde hay fibra, la fibra es mejor.
+- El satélite conecta terminales con otras redes mediante uno o varios enlaces.
+- GEO reduce cambios de posición aparente, a costa de un recorrido largo.
+- LEO reduce distancia y requiere coordinar satélites en movimiento.
+- La órbita no determina por sí sola latencia, capacidad ni disponibilidad.
