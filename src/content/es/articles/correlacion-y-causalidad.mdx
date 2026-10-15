@@ -7,12 +7,14 @@ layer: datos
 prerequisites:
   - media-mediana-y-desviacion
   - probabilidad-basica
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "OpenStax: Introducción a la estadística, cap. 12, Regresión lineal y correlación"
     url: https://openstax.org/books/introducci%C3%B3n-estad%C3%ADstica/pages/12-introduccion
   - title: "Tyler Vigen: Spurious Correlations (en inglés)"
     url: https://www.tylervigen.com/spurious-correlations
+  - title: "Microsoft Research: Patterns of Trustworthy Experimentation, Pre-Experiment Stage (en inglés)"
+    url: https://www.microsoft.com/en-us/research/articles/patterns-of-trustworthy-experimentation-pre-experiment-stage/
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -23,13 +25,13 @@ La frase que lo resume: **correlación no implica causalidad**.
 
 ## Correlación
 
-Se mide con el **coeficiente de correlación**, un número entre −1 y 1.
+Aquí usamos el **coeficiente de Pearson**, un número entre −1 y 1 que resume la asociación lineal. Existen otras medidas de asociación. La función presupone dos listas de igual longitud, con al menos dos parejas de números finitos y variación no nula en ambas:
 
 | Valor | Significado |
 | --- | --- |
 | Cerca de 1 | Cuando una sube, la otra sube |
 | Cerca de −1 | Cuando una sube, la otra baja |
-| Cerca de 0 | No hay relación lineal |
+| Cerca de 0 | Poca asociación lineal según esta medida |
 
 ```js
 function correlacion(x, y) {
@@ -58,47 +60,47 @@ console.log(correlacion([1, 2, 3, 4], [8, 6, 4, 2]).toFixed(2)); // "-1.00"
 console.log(correlacion([-2, -1, 0, 1, 2], [4, 1, 0, 1, 4]).toFixed(2)); // "0.00"
 ```
 
-En el primer caso, los meses con más ventas de helados tienen más ahogamientos. La correlación es perfecta.
+En el primer conjunto, inventado para mostrar el cálculo, los meses con más ventas de helados tienen más ahogamientos. La correlación lineal es perfecta, pero esos números no identifican una causa.
 
 El tercero enseña un límite: la segunda lista es el cuadrado de la primera. Están completamente relacionadas, y el coeficiente da 0, porque solo detecta relaciones **en línea recta**. Una correlación nula no significa que no haya relación.
 
 ## Por qué no basta
 
-¿Los helados provocan ahogamientos? No. Cuando hace calor, se venden más helados y más gente se baña.
+¿Permite la tabla concluir que los helados provocan ahogamientos? No. Una explicación alternativa plausible es que el calor aumente tanto la venta de helados como la cantidad de personas que se bañan.
 
 Cuando A y B están correlacionadas, hay varias explicaciones posibles, y solo una es "A causa B".
 
 ### Una tercera variable
 
-Algo causa las dos. Es el caso de los helados: el calor. Esa variable oculta se llama **factor de confusión**.
+Un factor puede influir en ambas variables. En el ejemplo, el calor es un candidato. Cuando una causa común distorsiona la relación que queremos interpretar, hablamos de **confusión**; no basta con que una tercera variable esté simplemente correlacionada.
 
-Otro ejemplo: los niños con pies más grandes leen mejor. No es que el pie ayude a leer. Los niños mayores tienen los pies más grandes y más años de escuela. La edad lo explica todo.
+Otro ejemplo hipotético: los niños con pies más grandes leen mejor. La edad puede explicar parte de la asociación, porque los niños mayores suelen tener pies más grandes y más años de escuela. Habría que comprobarlo; la asociación por sí sola no decide entre explicaciones.
 
 ### La causa va al revés
 
-B causa A. Las ciudades con más policías tienen más delitos. No porque la policía los cause: donde hay más delincuencia se destinan más agentes.
+B puede causar A. Si las ciudades con más delitos reciben más agentes, observar policía y delitos juntos no demuestra que la policía cause esos delitos. También podría influir el tamaño de la población.
 
 ### Casualidad
 
 Si se comparan suficientes series de datos, algunas coincidirán por puro azar. Hay colecciones enteras de ejemplos absurdos: series sin ninguna relación posible, cuyas gráficas suben y bajan casi a la vez durante años.
 
-Quien busca entre miles de variables acaba encontrando correlaciones. No significan nada.
+Buscar entre miles de variables aumenta las oportunidades de encontrar coincidencias accidentales. Una asociación descubierta así necesita validación y tener en cuenta cuántas comparaciones se hicieron.
 
 ### Los datos están filtrados
 
 La forma de reunir los datos crea la relación. Se llama **sesgo de selección**.
 
-El caso más conocido es de la Segunda Guerra Mundial. Se estudiaban los impactos en los aviones que regresaban, para reforzar las zonas más dañadas. El estadístico Abraham Wald señaló el error: esos eran los aviones que **habían vuelto**. Los impactos en esas zonas no los derribaban. Había que reforzar las zonas donde no había marcas, porque los aviones alcanzados ahí no regresaban.
+Si preguntas por una función solo a quienes siguen usando la aplicación, faltan quienes la abandonaron. La muestra puede mostrar satisfacción alta precisamente porque las personas descontentas ya no están. Para estudiar retención hay que incluir también esas salidas y definir el periodo observado.
 
 Estudiar solo a quienes sobreviven a un filtro, las empresas que triunfaron, los usuarios que siguen activos, lleva a conclusiones equivocadas.
 
 ### Y a veces, sí
 
-A causa B. Fumar causa cáncer de pulmón. Pero establecerlo llevó décadas y muchos tipos de pruebas, no una gráfica.
+A puede causar B. Por ejemplo, reducir pasos de un formulario puede aumentar su tasa de finalización. La asociación observada motiva esa hipótesis; hace falta un diseño que permita distinguir el efecto del cambio de las explicaciones alternativas.
 
 <Quiz
 	client:visible
-	question="Las ventas de helados y los ahogamientos aumentan a la vez. ¿Cuál es la explicación más razonable?"
+	question="Las ventas de helados y los ahogamientos aumentan a la vez. ¿Qué explicación alternativa impide atribuir causalidad solo con esa correlación?"
 	options={[
 		"Comer helado hace que la gente se ahogue",
 		"Un tercer factor, el calor, aumenta las dos cosas",
@@ -117,11 +119,20 @@ La herramienta más sólida es el **experimento controlado aleatorizado**:
 2. A uno se le aplica el cambio; al otro, no. Este es el **grupo de control**.
 3. Se comparan los resultados.
 
-La clave es el azar. Al repartir así, los dos grupos son parecidos en todo, edad, hábitos, lo que sea, incluido lo que nadie ha pensado en medir. Si después difieren, la única diferencia sistemática entre ellos es el cambio.
+El reparto aleatorio evita elegir el tratamiento según las características de cada participante y equilibra los grupos **en expectativa**. Una muestra concreta puede quedar desequilibrada por azar. La interpretación también exige medir del mismo modo y considerar abandonos, cumplimiento del tratamiento e influencia entre participantes.
 
-El experimento no **observa** quién usa algo: **decide** quién lo usa. Eso elimina las terceras variables y la causa invertida.
+El experimento no se limita a observar quién decide usar algo: asigna la exposición al cambio. Así separa la asignación de decisiones previas del usuario, aunque no elimina automáticamente todos los problemas del diseño o de los datos.
 
 En el desarrollo de productos se llama **[prueba A/B](/articulos/pruebas-a-b/)**: la mitad de los usuarios, elegidos al azar, ve la versión nueva, y se compara. Se combina con las [estrategias de despliegue](/articulos/estrategias-de-despliegue/) que exponen una versión a una parte de los usuarios.
+
+### El mismo formulario, dos preguntas
+
+| | Observación de uso | Asignación aleatoria |
+| --- | --- | --- |
+| Qué se compara | Quienes eligieron el formulario corto frente a quienes no | Quienes recibieron cada variante por sorteo |
+| Qué puede explicar la diferencia | La variante, preferencias previas y otros factores | El efecto de la asignación y la variación aleatoria, si el diseño y la medición son válidos |
+| Conclusión inmediata | Hay una asociación en los datos | Se puede estimar un efecto de la asignación con su incertidumbre |
+| Límite | Elegir la variante puede depender de la motivación del usuario | Una asignación correcta no corrige pérdidas de datos o interferencias posteriores |
 
 ### Cuando no se puede experimentar
 
@@ -137,11 +148,11 @@ Ninguno prueba nada por sí solo. Juntos pueden convencer.
 
 ## En el trabajo con datos
 
-- **"Los usuarios que usan esta función se quedan más."** Puede que la función retenga. O que los usuarios más comprometidos, que se habrían quedado igual, sean quienes la descubren. Obligar a todos a usarla no cambiaría nada. Solo un experimento lo aclara.
+- **"Los usuarios que usan esta función se quedan más."** Puede que la función retenga o que los más comprometidos sean quienes la descubren. La asociación no permite predecir qué pasaría al ofrecérsela a todos; un experimento bien diseñado ayuda a distinguirlo.
 - **"Desde el despliegue, las ventas han subido."** También empezó la campaña de Navidad.
 - **"Los equipos que hacen más pruebas tienen menos fallos."** Quizá los equipos más cuidadosos hacen las dos cosas.
 
-Con los modelos de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) pasa lo mismo, a escala. Un modelo aprende correlaciones, no causas. Si en los datos de entrenamiento las fotos de lobos tenían nieve de fondo, puede aprender a reconocer la nieve. Funciona con esos datos y falla en cuanto cambia el contexto.
+Un modelo predictivo de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) entrenado con datos observacionales puede aprovechar asociaciones sin identificar causas. Si las fotos de lobos del entrenamiento tienen nieve de fondo, podría usar ese indicio y fallar cuando cambie el contexto. La inferencia causal necesita información y supuestos adicionales.
 
 Por eso un modelo que **predice** bien no dice qué pasará si se **interviene**. Saber que quienes compran pañales compran cerveza no dice que regalar pañales aumente la venta de cerveza.
 
@@ -149,7 +160,7 @@ Por eso un modelo que **predice** bien no dice qué pasará si se **interviene**
 
 No hay que despreciarla.
 
-- **Para predecir, basta.** Si el aumento de consultas sobre síntomas anticipa un brote de gripe, sirve para prepararse, aunque las consultas no causen la gripe.
+- **Puede ayudar a predecir.** Una asociación estable y validada en datos nuevos puede ser útil aunque no sea causal. Si cambia la población o el proceso, puede dejar de funcionar.
 - **Es una pista.** Señala dónde merece la pena investigar.
 
 El error no es usar correlaciones. Es **actuar como si fueran causas**: cambiar una cosa esperando que la otra la siga.
@@ -168,6 +179,6 @@ La [paradoja de Simpson](/articulos/paradoja-de-simpson/) muestra cómo cambiar 
 
 - Correlación es que dos variables cambian juntas; causalidad, que una produce el cambio de la otra.
 - Una correlación puede deberse a un tercer factor, a la causa inversa, al azar o a cómo se eligieron los datos.
-- El coeficiente de correlación solo mide relaciones lineales.
+- El coeficiente de Pearson resume asociación lineal; una relación no lineal puede dar cero.
 - La forma más fiable de establecer una causa es un experimento con reparto al azar.
-- La correlación sirve para predecir, y no para saber qué pasará si se cambia algo.
+- Una correlación puede ayudar a predecir, pero por sí sola no identifica qué ocurrirá al intervenir.

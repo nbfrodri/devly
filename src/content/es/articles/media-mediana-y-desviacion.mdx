@@ -5,7 +5,7 @@ level: basico
 layer: datos
 prerequisites:
   - arrays
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "NIST/SEMATECH e-Handbook of Statistical Methods: Measures of Location (en inglés)"
     url: https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm
@@ -25,7 +25,7 @@ Todo resumen pierde información. Por eso conviene saber qué cuenta cada medida
 
 ## La media
 
-La **media aritmética** es la suma de todos los valores dividida entre cuántos hay. Es lo que se entiende normalmente por "promedio".
+La **media aritmética** es la suma de todos los valores dividida entre cuántos hay. Es lo que se entiende normalmente por "promedio". Las funciones del artículo presuponen listas no vacías de números finitos:
 
 ```js
 function media(valores) {
@@ -45,7 +45,7 @@ Se puede ver como un reparto a partes iguales: si esos ocho valores fueran diner
 
 ## La mediana
 
-La **mediana** es el valor que queda en el centro cuando los datos se ordenan. La mitad de los valores está por debajo y la otra mitad por encima.
+La **mediana** es un valor central de los datos ordenados: al menos la mitad son menores o iguales a ella y al menos la mitad, mayores o iguales. Los empates impiden afirmar que la mitad esté estrictamente por debajo.
 
 Si el número de datos es par, no hay un único valor central: se toma la media de los dos del medio.
 
@@ -81,7 +81,7 @@ console.log(sueldos[2]); // 1700
 
 La media es 5320, una cifra que no gana nadie: cuatro personas están muy por debajo y una muy por encima. La mediana, 1700, describe mucho mejor el sueldo habitual.
 
-Cuando los datos son muy desiguales, como ocurre con sueldos o precios de vivienda, la mediana suele ser el resumen más honesto. Si alguien te da solo la media, pregúntate qué forma tienen los datos.
+Cuando se busca un valor típico entre datos muy desiguales, como sueldos o precios de vivienda, la mediana suele ser útil. Para calcular el gasto salarial total, la media multiplicada por el número de personas responde mejor a la pregunta. Elegir una medida exige saber qué quieres resumir y qué forma tienen los datos.
 
 <Quiz
 	client:visible
@@ -92,7 +92,7 @@ Cuando los datos son muy desiguales, como ocurre con sueldos o precios de vivien
 
 ## La moda
 
-La **moda** es el valor que más se repite. En `[2, 4, 4, 4, 5, 5, 7, 9]` es el 4. Es la única de las tres que sirve para datos que no son números, como el color de coche más vendido.
+La **moda** es el valor que más se repite. En `[2, 4, 4, 4, 5, 5, 7, 9]` es el 4. Puede haber varios valores empatados. Sirve para categorías sin orden, como colores; la mediana necesita un orden y la media, una escala numérica apropiada.
 
 ## El centro no lo dice todo
 
@@ -105,7 +105,7 @@ En el primero todos los valores coinciden con la media. En el segundo, ninguno s
 
 ## La desviación típica
 
-La **desviación típica** indica cuánto se alejan los datos de la media, en promedio. Se calcula en cuatro pasos:
+La **desviación típica** mide dispersión mediante la raíz del promedio de las distancias **al cuadrado** respecto a la media. No es el promedio de las distancias absolutas. Para describir este conjunto se calcula en cuatro pasos:
 
 1. Calcula la media.
 2. Resta la media a cada valor y eleva el resultado al cuadrado.
@@ -135,9 +135,17 @@ Una desviación de 0 significa que todos los valores son iguales. Cuanto mayor e
 
 ### Población y muestra
 
-La fórmula anterior divide entre el número de datos y es la correcta cuando tienes **todos** los datos que te interesan, la población completa.
+La fórmula anterior divide entre el número de datos, `n`, y describe la dispersión de ese conjunto, sea toda una población o los datos observados de una muestra.
 
-Si solo tienes una **muestra**, una parte con la que quieres estimar el total, se divide entre el número de datos menos uno. Con ese ajuste se compensa que una muestra tiende a parecer menos dispersa que la población de la que sale. Muchas herramientas ofrecen las dos variantes con nombres parecidos, así que conviene comprobar cuál se está usando.
+Si usas una muestra independiente de una misma población con varianza finita para **estimar su varianza**, dividir la suma de cuadrados entre `n - 1` corrige el sesgo introducido al estimar antes la media con esa muestra. Hace falta `n > 1`. La raíz de esa varianza es la desviación muestral habitual, pero esa raíz no es, por ello, un estimador exactamente insesgado de la desviación poblacional.
+
+En los ocho valores del primer ejemplo, la suma de cuadrados es 32. Describir el conjunto da varianza `32 / 8 = 4` y desviación `2`; la corrección muestral da varianza `32 / 7 ≈ 4,571` y desviación `≈ 2,138`. Muchas herramientas ofrecen ambas variantes: comprueba qué denominador usan.
+
+## Errores comunes
+
+- **Calcular la mediana sin ordenar.** La posición central del orden de llegada no representa el centro por valor.
+- **Usar una lista vacía.** No hay media ni mediana definidas para ella; estas funciones no implementan validación de entradas.
+- **Interpretar la desviación como porcentaje.** Tiene las mismas unidades que los datos; la varianza las tiene al cuadrado.
 
 ## Cuando no hay fórmula
 

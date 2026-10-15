@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución y entrega incremental.** Doce de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
+**Estado: en ejecución y entrega incremental.** Trece de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -74,7 +74,7 @@ Resultado esperado: reconstruir un intercambio de datos y explicar dónde interv
 
 Resultado esperado: seguir una petición y una interacción de usuario, entender cada pieza y justificar las decisiones de interfaz y API.
 
-- [ ] Fundamentos de desarrollo web (`fundamentos-de-desarrollo-web`): relación entre HTML, CSS, cliente, servidor y HTTP con un ejemplo pequeño completo.
+- [x] Fundamentos de desarrollo web (`fundamentos-de-desarrollo-web`): relación entre HTML, CSS, cliente, servidor y HTTP con un ejemplo pequeño completo.
 - [ ] Cómo funciona una aplicación web (`como-funciona-una-aplicacion-web`): recorrer petición, datos, transacción y caché; evitar saltos entre protocolos y decisiones de estado.
 - [ ] Desarrollo front-end (`desarrollo-front-end`): conectar DOM, renderizado, eventos, estado e hidratación; explicar causas observables de accesibilidad y rendimiento.
 - [ ] Desarrollo back-end (`desarrollo-back-end`): comprobar conocimientos previos para contratos, evolución y migraciones; desarrollar petición, validación, persistencia y respuesta.
@@ -650,3 +650,17 @@ Se desarrollarán ejemplos aislados de colaboración con remoto local y dos clon
 La relectura de Análisis de datos encuentra dos prerrequisitos que no cubren las rutas declaradas de entrada: aprendizaje automático antes de preparación y clasificación, y programación funcional antes de MapReduce. Se incorporarán como pasos en esos puntos, tras revisar sus artículos; la ruta pasará de diecinueve a veintiún pasos. La versión revisada de aprendizaje automático aún difiere de la publicada, por lo que debe incluirse y comprobarse en la misma entrega. Los tres pasos estadísticos compartidos conservan un único responsable de revisión.
 
 En Fundamentos de programación, la relectura detecta una frase de `arrays` que atribuye recibir una función a todos los métodos enumerados, incluidos `includes` e `indexOf`, que reciben valores. Se acotará a los métodos de transformación y selección que corresponden, sin cambiar los ejemplos ni los prerrequisitos. Para entregar Estadística con sus conocimientos previos coherentes se comprobará también la versión revisada de montículos: la publicada aún contiene un dibujo de texto y una garantía excesiva de memoria auxiliar.
+
+### Publicación de fundamentos web
+
+La [PR #8](https://github.com/nbfrodri/devly/pull/8) integra los ejemplos completos de HTML, CSS y Git y el recorrido de nueve pasos en `952a084`, tras superar CI y Cloudflare. Los checks de `main` y la comprobación en producción de los nueve pasos, con navegación de artículo sin JavaScript, también pasan. Se marca la ruta: trece publicadas y treinta y cuatro pendientes.
+
+### Cierre editorial de Estadística y simulación
+
+Se releen los once artículos en orden y el prerrequisito de montículos. Se conservan las correcciones de la tanda 3: los once textos, fuentes, quizzes y 23 bloques JavaScript coinciden íntegros, normalizando saltos de línea, con `d40b417`; sus ejecuciones y contrastes previos siguen siendo válidos. La entrada exige Fundamentos de programación y repasar montículos antes de la simulación de eventos. El generador aparece antes de los intervalos, y contraste y causalidad antes de A/B.
+
+Se inspeccionan completas las 22 capturas de los artículos en escritorio y móvil, además de seis capturas actuales de navegación. Las 22 visitas actuales sin JavaScript verifican anterior, siguiente y fin de ruta; los 44 destinos internos existen. En móvil se revisan 36 bloques y tablas: los 25 que requieren desplazamiento permiten acceder a todo el contenido, sin desbordamiento de página.
+
+La entrega incluye la versión corregida de montículos, idéntica a `35d4d06`, porque aún no estaba publicada: sustituye el dibujo de texto por Mermaid, desarrolla la extracción y distingue la memoria del ejemplo de la variante in situ. Se relee, se inspeccionan sus dos capturas completas y se conserva la ejecución del ejemplo, cuya salida es `1 2 3 5 8 9`. No se incorporan otros artículos de estructuras por este motivo.
+
+Sobre la combinación exacta de entrega con lo publicado, `pnpm check` pasa: 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. El recorrido integrado de once pasos pasa otras 22 visitas sin JavaScript a 1280 y 390 píxeles. Los trece archivos quedan congelados en un manifiesto de hashes. No quedan bloqueos editoriales de esta ruta; su casilla permanece abierta hasta el merge. Estas comprobaciones no cierran las otras rutas ni la auditoría general de enlaces.

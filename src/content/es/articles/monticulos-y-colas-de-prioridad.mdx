@@ -7,7 +7,7 @@ prerequisites:
   - pilas-y-colas
   - arboles-binarios-de-busqueda
   - arrays
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Sedgewick y Wayne: Algorithms, 2.4 Priority Queues (en inglés)"
     url: https://algs4.cs.princeton.edu/24pq/
@@ -48,12 +48,13 @@ Es un árbol binario que cumple dos condiciones.
 
 Ese es un **montículo de mínimos**: el menor está siempre en la raíz. En uno de máximos, cada nodo es mayor o igual que sus hijos.
 
-```
-        1
-      /   \
-     3     2
-    / \   /
-   5   9 8
+```mermaid
+flowchart TD
+  A[1] --> B[3]
+  A --> C[2]
+  B --> D[5]
+  B --> E[9]
+  C --> F[8]
 ```
 
 No está ordenado del todo. El 3 y el 2 son hermanos y no guardan relación entre sí. Solo se garantiza el orden entre un nodo y sus descendientes.
@@ -65,7 +66,7 @@ Esa es la diferencia con un [árbol binario de búsqueda](/articulos/arboles-bin
 Como el árbol es completo, no tiene huecos, y se puede guardar en un [array](/articulos/arrays/) leyéndolo por niveles:
 
 ```
-índice:  0  1  2  3  4  5
+indice:  0  1  2  3  4  5
 valor:   1  3  2  5  9  8
 ```
 
@@ -167,13 +168,15 @@ while (monticulo.tamano > 0) {
 console.log(salida.join(" ")); // "1 2 3 5 8 9"
 ```
 
-Los números salen de menor a mayor, sea cual sea el orden de entrada.
+Los números salen de menor a mayor, sea cual sea el orden de entrada. Para seguir una extracción sobre `[1, 3, 2, 5, 9, 8]`: se guarda el 1, se mueve el 8 a la raíz y queda `[8, 3, 2, 5, 9]`. Se compara con 3 y 2; se intercambia con 2 y queda `[2, 3, 8, 5, 9]`. No se elige cualquier hijo: subir el 3 dejaría un 2 menor que la raíz.
+
+Extraer de un montículo vacío devuelve `undefined` en esta implementación. Dos elementos con igual prioridad tampoco conservan necesariamente el orden de llegada; si ese orden importa, añade un contador de llegada como segundo criterio.
 
 ## Ordenar con un montículo
 
 El ejemplo acaba de ordenar una lista: meterlo todo y sacarlo. Eso es el algoritmo **heapsort**.
 
-Cuesta O(n log n) **siempre**, sin el caso malo de [quicksort](/articulos/quicksort/), y puede hacerse sin memoria adicional. En la práctica suele ser algo más lento, porque salta por el array en lugar de recorrerlo de forma consecutiva.
+La ordenación tiene coste O(n log n) en el peor caso, sin la degradación cuadrática de [quicksort](/articulos/quicksort/). Una variante reorganiza el mismo array con O(1) de memoria auxiliar; el ejemplo mostrado sí crea el montículo y el array de salida, con O(n) de memoria. En la práctica suele ser algo más lento, porque salta por el array en lugar de recorrerlo de forma consecutiva.
 
 Un detalle: construir un montículo a partir de n elementos ya existentes se puede hacer en O(n), más rápido que insertarlos uno a uno.
 

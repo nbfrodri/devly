@@ -80,7 +80,7 @@ Leer primero las rutas `como-funciona-internet.yaml`, `redes-por-dentro.yaml` y 
 - [x] Redes entre pares: qué aporta cada participante, descubrimiento y límites; comparar un mismo intercambio con cliente-servidor sin confundir descentralización con ausencia de coordinación. Propuesta nueva: `src/content/es/articles/redes-peer-to-peer.mdx`.
 - [x] BitTorrent: seguir una descarga por piezas y su verificación, explicar torrent, magnet, tracker y DHT cuando entren en el recorrido. Usar un ejemplo de distribución autorizada. Propuesta nueva: `src/content/es/articles/como-funciona-bittorrent.mdx`.
 - [x] Topologías de red: distinguir disposición física y lógica; estrella, malla, anillo y bus con diagramas y un fallo concreto que permita comparar sus consecuencias. Propuesta nueva: `src/content/es/articles/topologias-de-red.mdx`.
-- [ ] Revisar los artículos introductorios y enlazar estas explicaciones desde sus primeras menciones. Ordenar los pasos básicos antes de enrutamiento y telecomunicaciones avanzadas.
+- [x] Revisar los artículos introductorios y enlazar estas explicaciones desde sus primeras menciones. Ordenar los pasos básicos antes de enrutamiento y telecomunicaciones avanzadas.
 
 Aceptación: una persona sin experiencia puede seguir el recorrido desde dispositivo y petición hasta servidor, protocolo y red; no necesita conocer antes siglas que el texto no explica.
 
@@ -139,3 +139,5 @@ La siguiente entrega incorpora las once rutas verificadas y sus artículos relac
 
 
 **Publicación del 16 de octubre de 2026:** interfaz integrada mediante la [PR #3](https://github.com/nbfrodri/devly/pull/3); los once artículos nuevos, sus enlaces entrantes y las rutas revisadas mediante la [PR #4](https://github.com/nbfrodri/devly/pull/4). Se marcan las tareas publicadas de redes, casos cotidianos y cuántica. Continúan abiertos el encaje de los fundamentos en desarrollo web y la auditoría sistemática de enlaces de todo el catálogo.
+
+**Cierre del encaje en desarrollo web:** la [PR #8](https://github.com/nbfrodri/devly/pull/8), integrada en `952a084`, completa HTML, CSS y Git y ordena servidor, cliente-servidor y protocolo antes de IP, DNS y HTTP. Pasan los ejemplos, la revisión visual, los nueve pasos en escritorio y móvil, CI y Cloudflare; también se comprueba el recorrido publicado sin JavaScript. Se marca la última tarea de fundamentos para principiantes. La auditoría sistemática de enlaces del catálogo conserva sus cuatro tareas abiertas.
