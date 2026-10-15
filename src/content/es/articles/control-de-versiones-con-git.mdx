@@ -1,136 +1,193 @@
 ---
 title: "¿Qué es el control de versiones con Git?"
-description: Git guarda el historial de cambios de un proyecto y permite que varias personas trabajen en él sin pisarse.
+description: Git registra versiones de los archivos que eliges, permite comparar cambios y reúne el trabajo de distintas ramas.
 level: basico
 layer: aplicaciones
-updated: 2026-10-13
+updated: 2026-10-16
 sources:
-  - title: "Pro Git, libro oficial de Git"
-    url: https://git-scm.com/book/es/v2
-  - title: "Git: gittutorial (documentación oficial, en inglés)"
+  - title: "Pro Git: Guardando cambios en el repositorio"
+    url: https://git-scm.com/book/es/v2/Fundamentos-de-Git-Guardando-cambios-en-el-Repositorio
+  - title: "Git: tutorial introductorio (en inglés)"
     url: https://git-scm.com/docs/gittutorial
+  - title: "Git: git-init, crear un repositorio (en inglés)"
+    url: https://git-scm.com/docs/git-init
+  - title: "Git: git-config, configuración local (en inglés)"
+    url: https://git-scm.com/docs/git-config
+  - title: "Git: git-merge, fusión de ramas (en inglés)"
+    url: https://git-scm.com/docs/git-merge
+  - title: "Git: git-clone, copias completas y limitadas (en inglés)"
+    url: https://git-scm.com/docs/git-clone
+  - title: "Git: gitignore, archivos excluidos (en inglés)"
+    url: https://git-scm.com/docs/gitignore
 ---
 
 import { Quiz } from "@/components/quiz";
 
-El **control de versiones** es la práctica de registrar los cambios que se hacen en un conjunto de archivos a lo largo del tiempo. **Git** es la herramienta más usada para ello.
+El **control de versiones** registra estados de unos archivos para compararlos, recuperar versiones anteriores y combinar trabajo. **Git** es un programa que lo hace: tú eliges qué contenido guardar en cada versión.
 
 ## Qué problema resuelve
 
-Sin control de versiones, lo habitual es acabar con carpetas llamadas `proyecto-final`, `proyecto-final-2` y `proyecto-final-ahora-si`. Nadie sabe qué cambió entre una y otra, ni cuál funcionaba.
+Las carpetas `proyecto-final` y `proyecto-final-2` no explican qué cambió ni por qué. Git conserva versiones identificables, con autor, fecha y mensaje. Permite consultar una versión anterior sin depender de recordar qué archivo copiaste.
 
-Trabajar con otras personas lo empeora: dos editan el mismo archivo y quien guarda el último borra el trabajo del otro.
-
-Un sistema de control de versiones responde a esto:
-
-- **Qué cambió, cuándo y quién lo hizo.** Cada cambio queda registrado con su autor y su explicación.
-- **Volver atrás.** Se puede recuperar el estado del proyecto en cualquier momento anterior.
-- **Trabajar en paralelo.** Varias personas pueden avanzar a la vez y unir después su trabajo.
+También permite trabajar en paralelo. Cada persona registra su trabajo y después lo combina con el de las demás. Git ayuda a reunir cambios, pero las personas siguen comprobando que el resultado tenga sentido.
 
 ## Repositorio y confirmaciones
 
-Un **repositorio** es una carpeta de proyecto cuya historia gestiona Git. Se crea con `git init`.
+Un **repositorio** guarda la historia y la información con la que Git la gestiona. En un proyecto local habitual, esa información vive en la carpeta oculta `.git`, junto a los archivos que editas.
 
-La unidad de esa historia es la **confirmación**, o *commit*: una instantánea de todos los archivos del proyecto en un momento dado, con un mensaje que explica el cambio. Cada confirmación recuerda cuál es la anterior, y así se forma una cadena.
+Una **confirmación**, o *commit*, registra una instantánea del contenido preparado, además de autor, fecha y mensaje. No recoge automáticamente todos los archivos del disco. Los archivos que no cambian respecto de la versión anterior siguen formando parte de la instantánea.
 
-Cada confirmación tiene un identificador único, una larga secuencia de letras y cifras calculada a partir de su contenido con una [función hash](/articulos/funciones-hash/). Cómo se guarda todo eso lo explica [Git por dentro](/articulos/git-por-dentro/).
+Cada commit tiene un identificador calculado a partir de sus datos mediante una [función hash](/articulos/funciones-hash/). También enlaza a sus **padres**, los commits anteriores de los que procede: el inicial no tiene ninguno, uno habitual tiene uno y uno de fusión puede tener varios. La historia puede ramificarse; no es siempre una cadena. Los detalles se explican en [Git por dentro](/articulos/git-por-dentro/).
 
-## Las tres zonas
+## Tres lugares que no hay que confundir
 
-En Git un cambio no se registra directamente. Pasa por tres zonas:
-
-| Zona | Qué contiene |
+| Lugar | Qué contiene |
 | --- | --- |
-| Directorio de trabajo | Los archivos tal como los estás editando |
-| Área de preparación | Los cambios que has elegido para la próxima confirmación |
-| Repositorio | Las confirmaciones ya registradas |
+| **Directorio de trabajo** | Los archivos tal como están ahora en tu carpeta |
+| **Área de preparación**, o *staging area* | La versión que estás construyendo para el próximo commit; Git la llama también **índice** |
+| Repositorio | Las versiones ya confirmadas y su historia |
 
-El área de preparación, o *staging area*, existe para que decidas qué entra en cada confirmación. Si has arreglado un error y, de paso, cambiado un texto, puedes registrar las dos cosas por separado, cada una con su explicación.
+**Preparar** contenido significa seleccionarlo para la próxima confirmación. `git add` copia al índice el contenido que tiene el archivo en ese momento. Si lo editas después, lo preparado no se actualiza solo.
 
-El ciclo básico:
+Así puedes separar tareas: preparar el arreglo de un error, confirmarlo y registrar después otro cambio con su propia explicación.
 
-```bash
-git init
-git add index.html
-git commit -m "Añade la página de inicio"
-git status
-git log --oneline
-```
+## Un recorrido desde una carpeta vacía
 
-- `git add` lleva los cambios de un archivo al área de preparación.
-- `git commit` crea una confirmación con lo preparado.
-- `git status` muestra qué archivos han cambiado y qué está preparado.
-- `git log` muestra el historial.
+Necesitas Git instalado: `git --version` muestra su versión. Usa una [**terminal**](/articulos/terminal-y-shell/), una ventana para introducir órdenes, y un editor de texto. Los comandos siguientes funcionan en PowerShell y Bash con Git 2.28 o posterior.
 
-## Ramas
+### 1. Crear el proyecto de práctica
 
-Una **rama** es una línea de trabajo independiente. Permite desarrollar algo nuevo sin tocar la versión que ya funciona.
-
-La rama principal suele llamarse `main`. Para una tarea nueva se crea otra rama a partir de ella, se trabaja ahí y, cuando está lista, se une de vuelta.
+Abre la terminal en una carpeta de prácticas, fuera de otros proyectos, donde todavía no exista `practica-git`. Ejecuta las líneas en orden:
 
 ```bash
-git switch -c mejora-formulario
-git add formulario.html
-git commit -m "Valida el correo en el formulario"
-git switch main
-git merge mejora-formulario
+mkdir practica-git
+cd practica-git
+git init -b main
+git config --local user.name "Persona de prueba"
+git config --local user.email "practica@example.com"
 ```
 
-- `git switch -c` crea una rama y se sitúa en ella.
-- `git switch main` vuelve a la rama principal.
-- `git merge` incorpora a la rama actual los cambios de otra. Esa unión se llama **fusión**.
+`mkdir` crea la carpeta y `cd` entra en ella. `git init` crea el repositorio; `-b main` fija el nombre de la rama inicial. Las dos órdenes `config` ponen una identidad ficticia para esta práctica. `--local` limita el cambio a este repositorio: no modifica tu configuración global ni crea una cuenta en internet.
 
-En Git una rama es muy ligera: es solo un nombre que apunta a una confirmación. Crear una es instantáneo, y por eso se crean con frecuencia, una por tarea.
+### 2. Preparar una versión y seguir editando
+
+Con el editor, crea `notas.txt` dentro de `practica-git`, como texto UTF-8 con esta línea:
+
+```text
+Comprar pan.
+```
+
+```bash
+git status --short
+git add notas.txt
+git status --short
+```
+
+La primera consulta muestra `?? notas.txt`: el archivo está **sin seguimiento**, todavía no elegido para el historial. La segunda muestra `A  notas.txt`: su incorporación está preparada.
+
+Ahora sustituye la línea en el editor por `Comprar pan y leche.` y guarda. No repitas todavía `git add`:
+
+```bash
+git status --short
+git diff --cached
+git diff
+```
+
+El estado es `AM notas.txt`. La primera columna describe lo preparado: `A`, archivo añadido. La segunda describe el cambio posterior en la carpeta: `M`, modificado.
+
+`git diff --cached` muestra lo preparado frente a la última confirmación; como aún no hay ninguna, muestra la incorporación de `Comprar pan.`. `git diff` compara el archivo actual con lo preparado: verás que la línea sin leche se sustituye por la línea con leche.
+
+### 3. Confirmar y comprobar qué se guardó
+
+```bash
+git commit -m "Crea la lista de compra"
+git show HEAD:notas.txt
+git status --short
+```
+
+`-m` introduce el mensaje del commit. **HEAD** identifica aquí la confirmación actual. `git show HEAD:notas.txt` imprime su versión del archivo: `Comprar pan.`. En tu editor sigue apareciendo `Comprar pan y leche.`: confirmar lo preparado no borra esa edición posterior.
+
+El estado muestra ` M notas.txt`, con la primera columna vacía. La modificación existe en tu carpeta, pero aún no está preparada para otro commit.
 
 <Quiz
 	client:visible
-	question="¿Qué hace git add?"
+	question="Preparaste un archivo, lo editaste después y confirmaste sin repetir git add. ¿Qué versión quedó en el commit?"
 	options={[
-		"Crea una confirmación",
-		"Lleva cambios al área de preparación",
-		"Envía los cambios a un servidor",
+		"La que tenía al ejecutar git add",
+		"La última guardada en el editor",
+		"Las dos versiones como archivos separados",
 	]}
-	answer={1}
+	answer={0}
 />
 
-## Conflictos
+Ahora registra también la leche:
 
-Si dos ramas cambian partes distintas del proyecto, Git las fusiona solo. Si las dos cambian **las mismas líneas** de un archivo, no puede saber con cuál quedarse. Eso es un **conflicto**.
+```bash
+git add notas.txt
+git commit -m "Incluye leche en la compra"
+git status --short
+git log --oneline
+```
 
-Git detiene la fusión y marca en el archivo las dos versiones. Te toca editarlo, dejar el resultado correcto y confirmar. Un conflicto no significa que algo se haya roto: es Git negándose a elegir por ti.
+El estado abreviado no imprime nada: no quedan cambios pendientes. El historial muestra dos commits, el más reciente primero, con sus identificadores abreviados y mensajes. Los identificadores concretos variarán en tu práctica.
 
-## Repositorios remotos
+## Trabajar en otra rama
 
-Todo lo anterior ocurre en tu ordenador. Para colaborar se usa un **repositorio remoto**: una copia alojada en un servidor, a menudo en servicios como GitHub o GitLab.
+Una **rama** es un nombre que apunta a un commit y avanza cuando confirmas trabajo en ella. Permite desarrollar una tarea sin mover la rama principal. Sigue en la misma carpeta:
 
-| Orden | Qué hace |
+```bash
+git switch -c mejora-lista
+```
+
+`switch -c` crea la rama y te sitúa en ella. Edita `notas.txt` para que contenga estas dos líneas:
+
+```text
+Comprar pan y leche.
+Llevar bolsa.
+```
+
+```bash
+git add notas.txt
+git commit -m "Recuerda llevar una bolsa"
+git switch main
+git show HEAD:notas.txt
+git merge --ff-only mejora-lista
+git show HEAD:notas.txt
+```
+
+Al volver a `main`, el archivo vuelve a contener solo la compra: el recordatorio está confirmado en la otra rama. La **fusión**, o *merge*, incorpora su trabajo a la rama actual.
+
+Aquí `main` no avanzó por separado. `--ff-only` permite un **avance rápido**, o *fast-forward*: mueve `main` hasta el commit del recordatorio, sin crear otro commit. La última consulta muestra las dos líneas. Si las ramas hubieran avanzado por separado, esa opción se detendría.
+
+Cuando ambas ramas tienen trabajo nuevo, una fusión puede crear un commit con dos padres. Si Git no sabe reconciliar los cambios, aparece un **conflicto**: por ejemplo, dos ediciones incompatibles de una línea o borrar un archivo que la otra rama modifica. Hay que decidir el resultado, prepararlo y completar la fusión. Los conflictos de texto suelen mostrar ambas versiones en el archivo.
+
+Una fusión sin conflictos tampoco demuestra que el programa funcione: dos cambios aceptados pueden contradecirse. Revisa el resultado y ejecuta sus comprobaciones. Las estrategias se comparan en [merge y rebase](/articulos/merge-y-rebase/).
+
+## Compartir el trabajo
+
+Todo el recorrido anterior funciona sin internet. Un **repositorio remoto** es otro repositorio con el que intercambias historia, normalmente alojado en un [servidor](/articulos/que-es-un-servidor/).
+
+| Orden | Para qué sirve |
 | --- | --- |
-| `git clone` | Descarga una copia completa de un repositorio remoto |
-| `git push` | Envía tus confirmaciones al remoto |
-| `git pull` | Trae las confirmaciones nuevas del remoto y las incorpora |
+| `git clone` | Crear una copia local a partir de otro repositorio |
+| `git fetch` | Traer historia y referencias del remoto sin integrarlas en tu rama actual |
+| `git pull` | Traer cambios e intentar integrarlos según la configuración y las opciones elegidas |
+| `git push` | Enviar commits y actualizar ramas u otras referencias en el remoto, si este lo permite |
 
-Git es **distribuido**: cada copia contiene el historial completo, no solo la última versión. Puedes consultar la historia y confirmar cambios sin conexión, y sincronizar más tarde.
+Git es **distribuido**: puedes confirmar y consultar historia localmente. Un clon normal trae la historia disponible de las ramas del origen; también existen clones con historia recortada o con contenidos que se descargan después. No todas las copias contienen todo.
 
-Git y GitHub no son lo mismo. Git es la herramienta; GitHub es un servicio que aloja repositorios de Git y añade funciones para colaborar.
+[GitHub](/articulos/git-y-github/) aloja repositorios y añade revisión y automatización. Git es el programa de control de versiones. Las [comprobaciones automáticas](/articulos/integracion-y-despliegue-continuos/) pueden verificar las propuestas antes de integrarlas.
 
-## Automatizar las comprobaciones
+## Errores comunes
 
-Cuando el código está en un repositorio remoto, cada cambio puede comprobarse y publicarse de forma automática. Es la base de la [integración y el despliegue continuos](/articulos/integracion-y-despliegue-continuos/).
-
-## Buenas prácticas
-
-- **Confirmaciones pequeñas y con un solo propósito.** Son más fáciles de entender y de deshacer.
-- **Mensajes que digan qué cambia y por qué.** "Arreglos" no ayuda a quien lea el historial dentro de un año.
-- **No registrar contraseñas ni claves.** Lo que entra en el historial es difícil de borrar del todo. Los archivos que no deben registrarse se listan en un archivo llamado `.gitignore`.
-
-## Para comparar
-
-- La herramienta y la plataforma: [Git y GitHub](/articulos/git-y-github/).
-- Dos formas de juntar ramas: [merge y rebase](/articulos/merge-y-rebase/).
+- **Creer que guardar en el editor crea un commit.** Guardar cambia el directorio de trabajo; preparar y confirmar son pasos distintos.
+- **Preparar sin revisar.** Consulta `git status` y `git diff --cached`; registra cambios con un propósito y un mensaje que lo explique.
+- **Usar `.gitignore` para borrar el pasado.** Ese archivo enumera patrones de archivos que Git debe ignorar cuando aún no están bajo seguimiento. No deja de seguir archivos ya registrados ni elimina secretos de commits anteriores. Si expones una clave, hay que revocarla o sustituirla; añadir su archivo a `.gitignore` no basta.
+- **Confundir un remoto con una copia de todo el ordenador.** `push` no envía ediciones sin confirmar ni archivos sin seguimiento. Git no sustituye una estrategia de copias de seguridad.
 
 ## Lo esencial
 
-- Git registra la historia de un proyecto como una cadena de confirmaciones.
-- Los cambios pasan del directorio de trabajo al área de preparación y de ahí al repositorio.
-- Las ramas permiten trabajar en paralelo; la fusión une el trabajo.
-- Un repositorio remoto permite colaborar, y cada copia contiene el historial completo.
+- Git registra versiones elegidas, no cada pulsación del editor.
+- `git add` prepara el contenido actual; `git commit` registra lo preparado.
+- Las ramas permiten separar trabajo; reunirlo exige comprobar el resultado.
+- Un remoto permite compartir historia, pero no guarda automáticamente todo tu trabajo local.
