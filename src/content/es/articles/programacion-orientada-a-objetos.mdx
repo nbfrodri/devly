@@ -6,7 +6,8 @@ layer: programacion
 prerequisites:
   - funciones
   - arrays
-updated: 2026-10-13
+  - que-es-un-objeto
+updated: 2026-10-15
 sources:
   - title: "MDN: Clases"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Classes
@@ -22,13 +23,13 @@ La **programación orientada a objetos** (POO) es una forma de organizar un prog
 
 ## Qué problema resuelve
 
-En un programa pequeño, los datos van en variables y las operaciones en [funciones](/articulos/funciones/) sueltas. Cuando el programa crece, eso se complica: cualquier función puede modificar cualquier dato, y resulta difícil saber quién cambió qué.
+En un programa pequeño puedes separar los datos de las [funciones](/articulos/funciones/) que los utilizan. Cuando varias funciones comparten datos mutables, puede resultar difícil saber quién cambió qué. No ocurre por usar funciones en sí: depende de qué datos compartes y de cómo limitas el acceso.
 
 La POO propone juntar cada dato con las operaciones que tienen permiso para tocarlo. Una cuenta bancaria deja de ser un número suelto que cualquiera puede alterar y pasa a ser un objeto que solo cambia mediante sus propias operaciones, como ingresar y retirar.
 
 ## Clases y objetos
 
-Una **clase** es una plantilla: describe qué datos tiene un tipo de objeto y qué puede hacer. Un **objeto** es un ejemplar concreto creado a partir de esa plantilla. También se le llama **instancia**.
+Una **clase** es una plantilla: describe qué datos tendrá un tipo de objeto y qué podrá hacer. Un objeto creado a partir de ella se llama **instancia**. JavaScript también permite crear objetos directamente, sin declarar una clase; aquí usamos clases para reunir un comportamiento común.
 
 La clase es el plano de una casa; los objetos son las casas construidas con él.
 
@@ -90,7 +91,7 @@ cuenta.ingresar(-500);
 console.log(cuenta.saldo); // 50
 ```
 
-Nadie puede poner el saldo en negativo saltándose la comprobación, porque el único camino para cambiarlo es `ingresar`.
+`get saldo()` permite leer `cuenta.saldo` ejecutando una función que devuelve el campo privado. Con las cantidades numéricas finitas del ejemplo, los ingresos negativos se ignoran y los positivos aumentan el saldo. El ejemplo enseña acceso privado, no una cuenta bancaria completa: un programa real también debe validar el tipo y el rango de la cantidad y representar el dinero con una precisión adecuada.
 
 ### Abstracción
 
@@ -172,6 +173,12 @@ La herencia une dos clases con fuerza: un cambio en la original afecta a todas l
 Los criterios para usar bien estas herramientas están recogidos en los [principios SOLID](/articulos/principios-solid/).
 
 La POO es una forma de organizar el código, no la única. Otros enfoques, como la [programación funcional](/articulos/programacion-funcional/), resuelven los mismos problemas de otra manera, y muchos lenguajes permiten mezclarlos.
+
+## Errores comunes
+
+- **Confundir agrupar con proteger.** En el primer ejemplo, `saldo` es público y puede asignarse directamente. La regla solo queda controlada cuando se limita el acceso, como en el ejemplo con `#saldo`.
+- **Confundir clase con instancia.** Dos cuentas comparten métodos, pero el saldo de Ana y el de Luis pertenecen a objetos distintos.
+- **Heredar solo para ahorrar unas líneas.** Si una subclase no puede cumplir lo que promete la clase original, la reutilización crea comportamientos sorprendentes; conviene estudiar la composición.
 
 ## Términos relacionados
 

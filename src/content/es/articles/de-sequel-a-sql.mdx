@@ -24,12 +24,6 @@ En su historia oral para el Computer History Museum, Chamberlin recuerda que SEQ
 
 El testimonio también atribuye el trabajo conjuntamente a Chamberlin y Boyce. Contar la evolución solo como una sucesión de siglas puede ocultar tanto esa colaboración como la investigación de System R que convirtió las consultas en un sistema ejecutable.
 
-## Pedir un resultado
-
-En [SQL](/articulos/que-es-sql/), una consulta que selecciona nombres de clientes de una ciudad expresa el conjunto que interesa. No especifica si el motor debe leer toda la tabla, consultar un índice o combinar accesos.
-
-Esa separación permite que el motor mejore el plan sin cambiar la intención de la sentencia. Puedes añadir un índice y conservar el mismo SQL; el [plan de ejecución](/articulos/planes-de-ejecucion-sql/) puede cambiar.
-
 ## De la idea relacional a una consulta ejecutable
 
 El contexto era hacer utilizables las ideas de Codd en sistemas reales como System R. Una descripción lógica de los datos necesitaba un lenguaje con el que pedir selecciones, combinaciones y resúmenes. Las palabras cercanas al inglés facilitaban leer esas operaciones, aunque seguía haciendo falta aprender su significado formal.
@@ -46,7 +40,7 @@ CREATE INDEX idx_clientes_sql_ciudad ON clientes_sql(ciudad);
 SELECT nombre FROM clientes_sql WHERE ciudad = 'Lima';
 ```
 
-Las dos consultas devuelven Ana. Entre ambas se ha añadido una estructura física que el motor podría utilizar, pero no se ha reescrito la pregunta. Con tan pocas filas, incluso puede preferir no usarla. La separación declarativa permite esa elección.
+Las dos consultas devuelven Ana. Entre ambas se ha añadido una estructura física que el motor podría utilizar, pero no se ha reescrito la pregunta en [SQL](/articulos/que-es-sql/). Con tan pocas filas, incluso puede preferir no usarla. La separación declarativa permite conservar la consulta y cambiar el [plan de ejecución](/articulos/planes-de-ejecucion-sql/).
 
 El cambio de SEQUEL a SQL no debe ocultar otra diferencia: el modelo relacional proporciona una base conceptual; el lenguaje concreto incorpora decisiones de sintaxis y comportamiento. Saber de dónde salen las siglas ayuda a recordar su intención, pero entender una consulta exige conocer cómo trata duplicados, ausencias y agrupaciones.
 

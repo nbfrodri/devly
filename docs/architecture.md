@@ -15,7 +15,7 @@ devly is a static content site covering what a computing degree teaches (compute
 | Diagrams | Mermaid, rendered in the browser | `src/scripts/diagrams.ts` turns ```` ```mermaid ```` blocks into SVG with the theme tokens; loaded only on pages with a diagram |
 | Fonts | Fontsource packages, self-hosted | Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono |
 | Tooling | pnpm, TypeScript strict, Biome, Vitest, `astro check` | `pnpm check` runs all of them plus the build |
-| Hosting | Cloudflare Workers static assets | `wrangler.jsonc`; Cloudflare builds and deploys each push to `main` |
+| Hosting | Cloudflare Workers static assets | `wrangler.jsonc`; Cloudflare builds and deploys each push to `main`. Branch previews use `wrangler preview` and the empty `previews` block. Wrangler is pinned locally; no data bindings are configured. |
 
 ## Content model
 

@@ -9,7 +9,7 @@ prerequisites:
 updated: 2026-10-15
 sources:
   - title: "RFC 5681: TCP Congestion Control (en inglés)"
-    url: https://www.rfc-editor.org/rfc/rfc5681.html
+    url: https://datatracker.ietf.org/doc/html/rfc5681
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -65,6 +65,8 @@ Una pérdida tampoco demuestra por sí sola que la causa física sea congestión
 ## Un ejemplo de límites
 
 Supón que el receptor admite 64 kilobytes, pero el emisor tiene una ventana de congestión de 16. El margen del receptor no autoriza mantener 64 pendientes. Si más adelante la congestión permite 128 pero el receptor sigue anunciando 64, ahora el límite relevante es el receptor.
+
+También debes descontar lo que ya está en vuelo. En un modelo simplificado con `rwnd = 64 KiB`, `cwnd = 16 KiB` y `12 KiB` enviados sin confirmar, quedan `min(64, 16) - 12 = 4 KiB` de margen para datos nuevos. Una confirmación libera parte de lo pendiente; no autoriza a ignorar la ventana.
 
 Aumentar búferes sin medir puede crear colas más largas en vez de resolver el cuello de botella. Observa rendimiento, pérdidas y latencia bajo carga, no solo el máximo de una transferencia aislada.
 

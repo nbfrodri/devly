@@ -54,13 +54,15 @@ Por eso los controladores utilizan funciones de mapeo y desmapeo del sistema. Un
 
 ## Coherencia y propiedad del búfer
 
+### Qué significa coherente
+
 CPU y dispositivo pueden observar datos a través de rutas distintas. En algunas plataformas, la coherencia se gestiona por hardware; en otras hacen falta operaciones explícitas mediante las interfaces del sistema.
 
 Incluso una región coherente puede necesitar barreras para que la publicación de descriptores y señales ocurra en el orden correcto. «Coherente» no significa «sin reglas de sincronización».
 
 La documentación de Linux distingue, entre otros usos, mapeos coherentes y mapeos de transferencia que requieren un ciclo de preparación y sincronización. El tipo adecuado depende de la duración, la dirección y la forma de compartir los datos.
 
-## El descriptor también debe estar listo
+### El descriptor también debe estar listo
 
 Una tarjeta de red puede recibir una lista de descriptores. Cada uno identifica un búfer, su tamaño y un estado de propiedad. La CPU prepara dirección y longitud y, al final, publica que el dispositivo puede utilizarlo. Si publica primero ese permiso, el dispositivo podría leer un descriptor todavía incompleto.
 
@@ -71,6 +73,20 @@ Por eso hay que distinguir visibilidad de datos y orden de publicación. Una pla
 Al terminar una recepción ocurre el recorrido inverso: comprobar la finalización, realizar la sincronización que corresponda y solo después interpretar los datos. Devolver el búfer a la tarjeta antes de que el programa acabe de leerlo permite que la siguiente recepción sobrescriba el contenido en uso.
 
 Estos pasos explican por qué DMA reduce las copias de CPU sin eliminar la coordinación. La unidad transferida puede ser grande, pero su propiedad cambia en momentos concretos que el controlador debe respetar.
+
+### Seguir un búfer concreto
+
+Imagina una recepción de 1024 bytes en un búfer de 2048. La capacidad reservada y la longitud recibida son datos diferentes:
+
+| Momento | Quién puede utilizar los datos | Qué debe comprobarse |
+| --- | --- | --- |
+| Preparación | CPU | Búfer y mapeo válidos; descriptor completo |
+| Recepción | Dispositivo | La CPU no reutiliza la región durante la transferencia |
+| Finalización | Transición hacia CPU | Estado de finalización y sincronización exigida por la API |
+| Lectura | CPU | Procesar los 1024 bytes recibidos, no asumir que los 2048 son datos nuevos |
+| Reutilización | Transición hacia dispositivo | La CPU ha terminado y prepara de nuevo el búfer según el contrato |
+
+El ejemplo no fija una API de tarjeta concreta: muestra qué información necesita el controlador. Una interrupción de finalización no autoriza a leer más datos de los realmente recibidos ni a ignorar la sincronización.
 
 ## DMA e interrupciones no son alternativas
 

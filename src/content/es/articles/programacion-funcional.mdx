@@ -1,12 +1,12 @@
 ---
 title: "¿Qué es la programación funcional?"
-description: "La programación funcional construye programas combinando funciones que no modifican nada fuera de sí mismas."
+description: "La programación funcional combina funciones y favorece cálculos puros, separando los efectos como guardar datos o mostrarlos."
 level: intermedio
 layer: programacion
 prerequisites:
   - funciones
   - arrays
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "John Hughes: Why Functional Programming Matters (1990, en inglés)"
     url: https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf
@@ -18,7 +18,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-La **programación funcional** es una forma de escribir programas en la que el trabajo se hace combinando [funciones](/articulos/funciones/) que reciben datos y devuelven resultados, sin modificar nada fuera de ellas.
+La **programación funcional** organiza el trabajo combinando [funciones](/articulos/funciones/) y favorece los cálculos puros: resultados que dependen de sus entradas sin modificar datos compartidos. Los efectos necesarios, como guardar datos o mostrarlos, se expresan y coordinan por separado.
 
 Es un **paradigma**: un estilo de organizar el código, igual que lo es la [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/). Hay lenguajes construidos alrededor de él, como Haskell, pero sus ideas se aplican en casi cualquiera, también en JavaScript.
 
@@ -189,4 +189,4 @@ La programación funcional es un estilo declarativo; la diferencia se explica en
 - La programación funcional construye programas combinando funciones.
 - Una función pura depende solo de sus argumentos y no modifica nada externo.
 - Los datos no se cambian: se crean versiones nuevas.
-- `map`, `filter` y `reduce` describen transformaciones sin bucles ni variables que cambian.
+- `map`, `filter` y `reduce` expresan transformaciones sin escribir el recorrido a mano; no hacen puro cualquier código que reciban.

@@ -37,6 +37,8 @@ Hemos limitado los números para centrarnos en la estructura. La gramática acep
 
 ## Una derivación
 
+### Sustituir hasta obtener terminales
+
 Una **derivación** aplica producciones hasta que solo quedan terminales. Para construir `(2+3)`:
 
 1. Partes de `Expresion`.
@@ -45,6 +47,8 @@ Una **derivación** aplica producciones hasta que solo quedan terminales. Para c
 4. Eliges `2` para el primer `Numero` y `3` para el segundo.
 
 Puedes repetir la regla dentro de los paréntesis para generar `(2+(1+3))`. La recursión de las producciones permite expresar anidamiento sin enumerar su profundidad.
+
+### Ver la estructura como un árbol
 
 ```mermaid
 graph TD
@@ -94,7 +98,16 @@ F -> Numero | ( E )
 
 `E` representa una expresión completa, `T` un término multiplicativo y `F` un factor. Para construir `2+3*2`, la suma separa una expresión izquierda y un término derecho. Dentro de ese término puede aparecer la multiplicación. No se puede generar con esas reglas un árbol donde la suma de `2+3` sea un factor de la multiplicación sin escribir paréntesis.
 
-Los paréntesis permiten volver desde un factor a una expresión completa: `(2+3)*2` sí tiene la agrupación alternativa. La precedencia deja así de depender de una explicación externa y pasa a estar representada por las categorías de la gramática.
+Los paréntesis permiten volver desde un factor a una expresión completa: `(2+3)*2` sí tiene la agrupación alternativa.
+
+| Cadena | Operación exterior | Cálculo que exige la estructura |
+| --- | --- | --- |
+| `2+3*2` | Suma | Primero `3*2 = 6`, después `2+6 = 8` |
+| `(2+3)*2` | Multiplicación | Primero `2+3 = 5`, después `5*2 = 10` |
+
+La precedencia deja así de depender de una explicación externa y pasa a estar representada por las categorías de la gramática.
+
+### Adaptar la gramática al analizador
 
 Estas reglas usan recursión por la izquierda. Son una descripción válida del lenguaje, pero un analizador descendente sencillo no puede aplicarlas ingenuamente sin entrar en recursión infinita. Transformar una gramática para un algoritmo concreto no debería cambiar las cadenas que admite ni el significado de sus agrupaciones. Esa separación entre especificación y procedimiento de análisis es parte del trabajo de construir un lenguaje.
 

@@ -6,6 +6,9 @@ layer: programacion
 prerequisites:
   - condicionales
   - bucles
+  - funciones
+  - que-es-un-objeto
+  - complejidad-algoritmica
 updated: 2026-10-15
 sources:
   - title: "Boaz Barak: Automata and Regular Expressions (en inglés)"
@@ -87,7 +90,16 @@ La implementación rechaza los símbolos ajenos al alfabeto. Para una entrada de
 
 Supón que ahora exiges dos cosas: una cantidad par de unos y que la cadena termine en cero. La paridad ya no basta, porque `11` y `110` tienen la misma paridad y solo una termina en cero. El estado debe recordar ambas propiedades.
 
-Puedes formar estados compuestos: par con último símbolo cero, par sin último cero, impar con último cero e impar sin último cero. Al leer cero conservas la paridad y marcas el final como cero; al leer uno inviertes la paridad y marcas que el final no es cero. El estado inicial tiene paridad par, pero todavía no termina en cero: así la cadena vacía queda rechazada por la nueva condición.
+Puedes formar cuatro estados compuestos. Cada uno conserva la paridad y si el último símbolo fue cero:
+
+| Estado actual | Al leer `0` | Al leer `1` | ¿Acepta al terminar? |
+| --- | --- | --- | --- |
+| Par, sin último cero | Par, último cero | Impar, sin último cero | No |
+| Par, último cero | Par, último cero | Impar, sin último cero | Sí |
+| Impar, sin último cero | Impar, último cero | Par, sin último cero | No |
+| Impar, último cero | Impar, último cero | Par, sin último cero | No |
+
+El estado inicial es «par, sin último cero»: cero unos es una cantidad par, pero todavía no se ha leído un cero final. Así la cadena vacía queda rechazada por la nueva condición.
 
 Aceptas únicamente en el estado «par y último cero». Por ejemplo, `110` llega a él, mientras `10` acaba en «impar y último cero». No guardas la cadena entera ni el número exacto de unos: conservas la información que puede cambiar decisiones futuras.
 

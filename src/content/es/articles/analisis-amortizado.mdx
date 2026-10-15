@@ -91,9 +91,19 @@ En una [tabla hash](/articulos/tablas-hash/) pueden aparecer ambas ideas: coste 
 
 El **método contable** cobra un pequeño extra en cada inserción barata y lo guarda como crédito para pagar futuras copias. El **método del potencial** asigna a cada estado una cantidad de trabajo acumulado; relaciona el coste real con el cambio de esa cantidad. Son otras formas de justificar la misma cota, no optimizaciones nuevas de la estructura.
 
-## Pagar una ampliación con crédito
+### Pagar una ampliación con crédito
 
-El método contable puede verse en una fase completa del array. Justo después de ampliar de capacidad `k` a `2k`, quedan aproximadamente `k` inserciones antes de la siguiente ampliación. Si cada una reserva dos unidades además de pagar su escritura, se acumulan unas `2k` unidades: suficientes para copiar los `2k` elementos al crecer otra vez. Los primeros pasos se tratan como un coste inicial constante.
+Puedes cobrar tres unidades por inserción: una paga la escritura y dos quedan como crédito. Con capacidad inicial uno, las primeras inserciones dejan este saldo:
+
+| Inserción | Crédito anterior | Cobro | Coste real | Crédito restante |
+| --- | --- | --- | --- | --- |
+| 1 | 0 | 3 | 1 | 2 |
+| 2 | 2 | 3 | 2 | 3 |
+| 3 | 3 | 3 | 3 | 3 |
+| 4 | 3 | 3 | 1 | 5 |
+| 5 | 5 | 3 | 5 | 3 |
+
+Tras `n` inserciones, el crédito es `3n` menos el coste real acumulado. Como ya demostramos que ese coste es menor que `3n`, el saldo no se vuelve negativo. Las operaciones baratas financian las ampliaciones sin suponer que todas cuestan lo mismo.
 
 El crédito no es dinero que la implementación almacene. Es una herramienta de demostración: asignas costes a las operaciones y compruebas que nunca estás pagando una copia futura con trabajo que todavía no has cobrado. Una prueba completa cuida el estado inicial y los extremos de cada fase.
 
@@ -103,7 +113,7 @@ Si amplías solo una posición, desaparece esa fase larga de inserciones baratas
 
 ## Límites prácticos
 
-Crecer de uno en uno obliga a copiar 1 + 2 + 3… elementos y lleva a un coste total cuadrático. Duplicar evita ese patrón, a cambio de reservar espacio libre. Si además reduces capacidad al borrar, necesitas umbrales separados para no alternar ampliaciones y reducciones continuamente.
+Duplicar reserva espacio libre a cambio de reducir copias. Si además reduces capacidad al borrar, necesitas umbrales separados para no alternar ampliaciones y reducciones continuamente.
 
 En un sistema con plazos estrictos, una pausa ocasional larga puede seguir siendo inaceptable. O(1) amortizado no garantiza una latencia máxima constante.
 

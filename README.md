@@ -94,11 +94,13 @@ docs/                    Arquitectura, guía y plan de contenido
 
 - [Arquitectura](docs/architecture.md): decisiones técnicas, modelo de contenido y sistema de diseño.
 - [Guía de contenido](docs/content-guide.md): alcance, tipos de artículo, estructura, fuentes y estilo.
-- [Plan de contenido 7](docs/plans/content-backlog-7.md): huecos del temario y próximos artículos.
+- [Plan de contenido 8](docs/plans/content-backlog-8.md): revisión editorial de las rutas y ampliaciones justificadas.
 
 ## Despliegue
 
 Cloudflare construye y publica cada push a `main` con `pnpm build` y `npx wrangler deploy`. [`wrangler.jsonc`](wrangler.jsonc) indica que solo se sirven los archivos estáticos de `dist/`.
+
+Las ramas usan `npx wrangler preview`; el bloque `previews: {}` habilita estas vistas previas con los mismos archivos estáticos, sin recursos de datos. Sus URL son públicas salvo que se configure control de acceso. Wrangler está fijado como dependencia de desarrollo para que Cloudflare y la validación local utilicen la misma versión. Para comprobar el empaquetado sin publicar: `pnpm exec wrangler deploy --dry-run` después de `pnpm build`.
 
 ## Licencia
 

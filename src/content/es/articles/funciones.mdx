@@ -1,11 +1,12 @@
 ---
 title: ¿Qué es una función?
-description: Una función es un bloque de código con nombre que puedes ejecutar cuando lo necesites.
+description: Una función agrupa instrucciones que puedes llamar con unos datos y de las que puedes obtener un resultado.
 level: basico
 layer: programacion
 prerequisites:
   - que-es-una-variable
-updated: 2026-10-14
+  - tipos-de-datos
+updated: 2026-10-15
 sources:
   - title: "MDN: Funciones"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
@@ -17,7 +18,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Una **función** es un bloque de código con nombre que puedes ejecutar cuando lo necesites. Escribes las instrucciones una vez y después las usas tantas veces como quieras.
+Una **función** agrupa instrucciones que puedes ejecutar mediante una llamada. Puede recibir datos y devolver un resultado. Escribes las instrucciones una vez y después las usas tantas veces como quieras; puedes darle un nombre, aunque también existen funciones sin nombre propio.
 
 ## Por qué existen
 
@@ -107,7 +108,7 @@ console.log(resultado); // undefined
 
 ## Lo que pasa dentro se queda dentro
 
-Las variables declaradas dentro de una función solo existen ahí. Desde fuera no se pueden leer.
+Los nombres de las variables declaradas dentro de una función solo son accesibles en su ámbito. Desde fuera no puedes usarlos directamente; la función sí puede devolver sus valores.
 
 ```js
 function calcular() {
@@ -129,7 +130,7 @@ Una función puede llamarse a sí misma para resolver un problema por partes. Es
 
 ## Otra forma de escribirlas
 
-Verás a menudo las **funciones flecha**. Hacen lo mismo con menos texto:
+Verás a menudo las **funciones flecha**, útiles para expresar operaciones breves:
 
 ```js
 const sumar = (a, b) => a + b;
@@ -137,7 +138,7 @@ const sumar = (a, b) => a + b;
 console.log(sumar(2, 3)); // 5
 ```
 
-Cuando el cuerpo es una sola expresión, no hacen falta ni las llaves ni `return`: el resultado de la expresión es lo que se devuelve.
+Cuando el cuerpo es una sola expresión, no hacen falta ni las llaves ni `return`: el resultado de la expresión es lo que se devuelve. No son intercambiables con cualquier función: por ejemplo, no tienen su propio `this`, el valor que se usa al trabajar con [objetos](/articulos/que-es-un-objeto/), ni pueden utilizarse como constructoras con `new`.
 
 ## Errores comunes
 

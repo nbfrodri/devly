@@ -7,7 +7,7 @@ layer: ia
 prerequisites:
   - arrays
   - que-es-una-red-neuronal
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PyTorch: Tensors, tutorial oficial (en inglés)"
     url: https://docs.pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html
@@ -31,6 +31,11 @@ Tampoco cualquier tensor representa datos de entrada: los parámetros y activaci
 
 ## Reorganizar no es transponer
 
-Una matriz con filas `[1, 2, 3]` y `[4, 5, 6]` tiene forma `(2, 3)`. Reorganizar su secuencia de elementos a `(3, 2)` puede producir filas `[1, 2]`, `[3, 4]`, `[5, 6]`. Transponer los ejes produce en cambio `[1, 4]`, `[2, 5]`, `[3, 6]`.
+Partimos de una matriz con filas `[1, 2, 3]` y `[4, 5, 6]`, de forma `(2, 3)`:
+
+| Operación | Primera fila | Segunda fila | Tercera fila |
+| --- | --- | --- | --- |
+| Reorganizar la secuencia a `(3, 2)` | `[1, 2]` | `[3, 4]` | `[5, 6]` |
+| Transponer los ejes | `[1, 4]` | `[2, 5]` | `[3, 6]` |
 
 Ambas salidas tienen seis elementos y forma `(3, 2)`, pero sus posiciones representan relaciones diferentes. Comprobar solo el número de elementos o las dimensiones finales no detecta haber confundido esas operaciones. El significado de cada eje forma parte del contrato de entrada.

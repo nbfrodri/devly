@@ -2,6 +2,7 @@
 	// Static site: Cloudflare only serves the files Astro writes to dist/.
 	"name": "devly",
 	"compatibility_date": "2026-10-01",
+	"previews": {},
 	"assets": {
 		"directory": "./dist",
 		"not_found_handling": "404-page"

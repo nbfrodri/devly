@@ -27,7 +27,9 @@ El **objetivo de nivel de servicio**, o SLO, fija cuánto de ese indicador se pr
 
 Imagina un SLO del 99,9 % de peticiones satisfactorias durante un mes y un millón de peticiones consideradas. El incumplimiento permitido es el 0,1 %: mil peticiones.
 
-Si ya han fallado seiscientas, quedan cuatrocientas de presupuesto para esa ventana. No significa que debas provocar esas cuatrocientas ni que cada fallo resulte aceptable para cada usuario. Significa que el indicador agregado todavía está dentro del objetivo acordado.
+Con ese millón como denominador fijo, seiscientos fallos consumen el 60 % del presupuesto y dejan cuatrocientos de margen. No significa que debas provocarlos ni que cada fallo resulte aceptable para cada usuario.
+
+Si el mes sigue en curso, su número final de peticiones todavía no se conoce: el margen observado cambia al llegar más tráfico. En una ventana móvil también salen eventos antiguos del cómputo. La resta siguiente ilustra una población fija, no una cantidad de fallos futuros garantizada.
 
 ```js
 const peticiones = 1_000_000;

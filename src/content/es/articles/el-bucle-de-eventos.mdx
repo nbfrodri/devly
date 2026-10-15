@@ -1,12 +1,12 @@
 ---
 title: "¿Qué es el bucle de eventos de JavaScript?"
-description: "JavaScript ejecuta tu código en un solo hilo, sin bloquearse nunca. El bucle de eventos va sacando tareas de una cola, y las microtareas de las promesas pasan siempre delante."
+description: "El bucle de eventos coordina tareas y microtareas. Permite atender otras tareas durante una espera asíncrona, pero un cálculo largo puede bloquearlo."
 level: avanzado
 layer: programacion
 prerequisites:
   - promesas-y-async-await
   - que-es-un-callback
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: JavaScript execution model (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model
@@ -16,7 +16,11 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-JavaScript ejecuta el código de tu programa en **un solo hilo**: hace una cosa cada vez. Y aun así, una página puede pedir datos a un servidor, animar un botón y responder a clics a la vez. Lo consigue el **bucle de eventos**: un mecanismo que va sacando **trabajos** de una cola y ejecutándolos uno tras otro, sin quedarse nunca esperando.
+El **bucle de eventos** coordina cuándo se ejecutan las tareas pendientes de un entorno JavaScript. En el hilo principal de una página, el código se ejecuta de una tarea en una tarea; una espera asíncrona permite atender otras, pero un cálculo largo puede impedir que avancen.
+
+## Qué problema resuelve
+
+Una página necesita responder a clics mientras espera datos de la red. No puede ejecutar un bucle que pregunte sin parar si han llegado: ocuparía el hilo que necesita para reaccionar. El entorno gestiona la espera y programa la continuación cuando corresponde. Los Web Workers tienen otros hilos; aquí seguimos lo que ocurre en uno de ellos.
 
 ## El modelo
 
@@ -30,11 +34,11 @@ flowchart LR
 	W["Navegador o Node.js<br>red, temporizadores, disco"] -- "al terminar" --> T
 ```
 
-Las esperas, la red, los temporizadores o el disco, no ocurren en el hilo de JavaScript: las gestiona el entorno, el navegador o Node.js. Cuando terminan, encolan su callback.
+El diagrama simplifica la coordinación: las operaciones asíncronas delegan la espera al entorno. Las continuaciones de promesas se procesan como microtareas; no todo callback de red pertenece directamente a una misma cola de tareas. El navegador puede tener varias fuentes de tareas y oportunidades de renderizado.
 
 ## Dos reglas
 
-**Cada trabajo se ejecuta hasta el final.** Mientras un trabajo se ejecuta, nada lo interrumpe. Eso simplifica mucho razonar sobre el código: no hay [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) entre dos callbacks. Pero tiene un precio: un trabajo largo **bloquea** todo, y la página deja de responder.
+**Cada trabajo se ejecuta hasta el final.** Otro callback de ese hilo no se intercala dentro de su ejecución síncrona. Esto no elimina las [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/): dos operaciones repartidas entre varios callbacks pueden terminar en distinto orden. Además, un trabajo largo bloquea la atención de otras tareas del hilo.
 
 **Las microtareas van primero.** El navegador distingue dos colas: **tareas** (temporizadores, eventos, respuestas de red) y **microtareas** (sobre todo, las continuaciones de las [promesas](/articulos/promesas-y-async-await/)). Según MDN, la cola de microtareas tiene más prioridad y se vacía entera antes de sacar la siguiente tarea.
 
@@ -52,9 +56,9 @@ orden.push("síncrono 2");
 
 Aunque el temporizador tiene 0 milisegundos, se ejecuta el último: primero termina el código síncrono, después se vacían las microtareas y solo entonces se saca la tarea del temporizador. Un `setTimeout(fn, 0)` no significa "ahora", sino "en cuanto se pueda".
 
-## Por qué nunca se bloquea
+## Esperar sin ocupar el hilo
 
-MDN subraya la otra gran garantía del modelo: la ejecución de JavaScript **nunca se bloquea** esperando. Mientras una consulta a la base de datos o un `fetch` están en curso, el hilo atiende otros trabajos, como la escritura del usuario. Cuando llega la respuesta, su callback se pone a la cola.
+Mientras un `fetch` está en curso, el hilo puede atender otros trabajos. La espera se ha delegado al entorno; no hay una instrucción de JavaScript consumiendo continuamente ese tiempo. Esto depende de utilizar una interfaz asíncrona: una API síncrona que espere o un cálculo prolongado sí pueden bloquear el hilo.
 
 `await` encaja en este modelo: no detiene el hilo, sino que **pausa la función** y deja que el bucle siga con otros trabajos. La función continúa como una microtarea cuando la promesa se resuelve.
 
@@ -62,14 +66,22 @@ MDN subraya la otra gran garantía del modelo: la ejecución de JavaScript **nun
 
 Un cálculo largo dentro de un trabajo bloquea el bucle:
 
-```javascript
-boton.addEventListener("click", () => {
-	// Durante este bucle, la página no responde ni se repinta.
-	for (let i = 0; i < 5e9; i++) {}
-});
-```
+Por ejemplo, si un manejador de clic realiza un cálculo síncrono que tarda dos segundos, ningún otro callback del hilo principal podrá ejecutarse durante esos dos segundos. Declararlo `async` no traslada el cálculo a otro hilo.
 
-Las soluciones: dividir el trabajo en trozos que se encolan por separado, o sacarlo del hilo principal a un **Web Worker**, que tiene su propio hilo y su propio bucle. El navegador avisa con un mensaje de "este script tarda demasiado" cuando un trabajo se alarga.
+Puedes dividirlo en tareas pequeñas o llevarlo a un **Web Worker**, que tiene su propio hilo. Encadenar microtareas sin límite no soluciona el problema: las nuevas microtareas también deben procesarse antes de pasar a la siguiente tarea y pueden impedir atender eventos o repintar.
+
+<Quiz
+	client:visible
+	question="Una microtarea añade otra microtarea, y esto se repite sin terminar. ¿Qué puede ocurrir?"
+	options={["El navegador alterna obligatoriamente una microtarea y un clic", "Las tareas y el repintado pueden quedarse esperando", "Cada microtarea crea otro hilo"]}
+	answer={1}
+/>
+
+## Errores comunes
+
+- **Interpretar cero milisegundos como ejecución inmediata.** El temporizador debe esperar a que termine el trabajo actual y se procesen las microtareas correspondientes.
+- **Creer que un solo hilo evita todo problema de orden.** Una respuesta antigua puede llegar después de una nueva y sobrescribirla si no se controla qué resultado sigue siendo pertinente.
+- **Confundir una función asíncrona con cálculo en paralelo.** El trabajo síncrono que hace antes de ceder el control sigue ocupando el hilo.
 
 ## En Node.js
 
@@ -77,7 +89,7 @@ Las soluciones: dividir el trabajo en trozos que se encolan por separado, o saca
 
 ## Lo esencial
 
-- JavaScript ejecuta el código en un solo hilo y saca trabajos de una cola, uno tras otro.
+- En cada hilo, los trabajos de JavaScript se ejecutan uno tras otro.
 - Cada trabajo se ejecuta hasta el final; uno largo bloquea la página.
 - Las microtareas, como las continuaciones de promesas, se vacían antes de la siguiente tarea.
-- Las esperas ocurren fuera del hilo, así que JavaScript nunca se bloquea esperando.
+- Las interfaces asíncronas permiten ceder el hilo durante la espera; no impiden bloquearlo con otro trabajo.

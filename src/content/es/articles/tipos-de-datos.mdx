@@ -5,7 +5,7 @@ level: basico
 layer: programacion
 prerequisites:
   - que-es-una-variable
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Tipos de datos y estructuras en JavaScript"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Data_structures
@@ -76,7 +76,7 @@ console.log("Hola, " + nombre); // "Hola, Ana"
 console.log(nombre.length); // 3
 ```
 
-`.length` devuelve cuántos caracteres tiene el texto.
+`.length` cuenta unidades de código UTF-16, la representación que usa JavaScript para los textos. Para `"Ana"` coincide con las tres letras, pero algunos símbolos, como `"😀"`, ocupan dos unidades. Por eso no siempre coincide con el número de caracteres que ves; la diferencia se desarrolla en [codificación de caracteres](/articulos/codificacion-de-caracteres/).
 
 Hay una forma más cómoda de mezclar texto y variables: las comillas invertidas. Dentro de ellas, lo que pongas entre `${` y `}` se sustituye por su valor.
 
@@ -109,7 +109,7 @@ console.log("2" + "2"); // "22"
 console.log("2" + 2); // "22"
 ```
 
-En la tercera línea JavaScript encuentra un texto y un número, convierte el número en texto y los une. Esta conversión automática es la causa de muchos errores, sobre todo porque lo que escribe una persona en un formulario llega siempre como texto.
+En la tercera línea JavaScript encuentra un texto y un número, convierte el número en texto y los une. Esta conversión automática puede producir errores: por ejemplo, la propiedad `value` de un campo de formulario devuelve texto, incluso si el campo permite introducir números.
 
 Para evitar sorpresas, convierte tú el valor:
 

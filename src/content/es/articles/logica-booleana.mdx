@@ -5,7 +5,7 @@ level: basico
 layer: programacion
 prerequisites:
   - condicionales
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "Stanford Encyclopedia of Philosophy: Propositional Logic (en inglés)"
     url: https://plato.stanford.edu/entries/logic-propositional/
@@ -89,7 +89,7 @@ console.log(true || false && false); // true
 console.log((true || false) && false); // false
 ```
 
-En la primera línea se resuelve antes `false && false`. Cuando una condición mezcla operadores, los paréntesis evitan tener que recordar la regla y hacen el código más fácil de leer.
+La primera expresión se agrupa como `true || (false && false)`. Esa agrupación no significa que todo se ejecute: al encontrar `true` a la izquierda de `||`, JavaScript ya conoce el resultado y no evalúa la derecha, como veremos en el cortocircuito. En la segunda línea, `(true || false)` da `true`, y después `true && false` da `false`. Los paréntesis hacen explícita la agrupación.
 
 <Quiz
 	client:visible
