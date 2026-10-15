@@ -1,12 +1,12 @@
 ---
 title: "¿Cómo genera un ordenador números aleatorios?"
-description: "Un ordenador sigue instrucciones exactas, así que el azar lo imita con fórmulas. La diferencia entre números pseudoaleatorios y aleatorios de verdad importa en seguridad."
+description: "Un generador pseudoaleatorio produce una secuencia a partir de un estado. Para seguridad, importa que el diseño y la entropía hagan impracticable predecirla."
 level: intermedio
 layer: programacion
 prerequisites:
   - probabilidad-basica
   - funciones
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "NumPy: Random Number Compatibility Policy (en inglés)"
     url: https://numpy.org/doc/stable/reference/random/compatibility.html
@@ -22,9 +22,9 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un ordenador es una máquina **determinista**: con las mismas instrucciones y los mismos datos, hace siempre lo mismo. Por eso no puede producir azar por sí solo. Lo que genera son números **pseudoaleatorios**: una secuencia calculada con una fórmula, que parece aleatoria sin serlo. Para obtener números **aleatorios de verdad** tiene que tomar la imprevisibilidad del mundo físico.
+Un algoritmo **determinista** produce la misma secuencia si parte del mismo estado y recibe las mismas entradas. Un generador **pseudoaleatorio** utiliza esa propiedad para calcular números con determinadas características estadísticas. La imprevisibilidad necesaria para seguridad se introduce mediante fuentes físicas de entropía, que pueden estar dentro del propio ordenador, y un generador diseñado para ese uso.
 
-La diferencia es irrelevante para un videojuego y decisiva para la seguridad.
+En una simulación interesa poder repetir la secuencia. Si anticiparla permite hacer trampas o acceder a una cuenta, importa además que sea impracticable predecirla.
 
 ## Para qué hacen falta
 
@@ -37,9 +37,9 @@ La diferencia es irrelevante para un videojuego y decisiva para la seguridad.
 
 ## Generadores pseudoaleatorios
 
-Un generador pseudoaleatorio parte de un número inicial, la **semilla**, y aplica una fórmula para obtener el siguiente. A ese le aplica la misma fórmula, y así sucesivamente.
+Una **semilla** inicializa el estado de un generador pseudoaleatorio. Cada llamada actualiza ese estado y produce una salida; en los generadores más sencillos, estado y salida pueden coincidir, pero no es una regla general.
 
-Uno de los más antiguos y simples multiplica, suma y toma el resto de una división:
+Uno de los esquemas más simples multiplica, suma y toma el resto de una división. Este ejemplo didáctico admite semillas enteras entre 0 y 65536:
 
 ```js
 function crearGenerador(semilla) {
@@ -96,7 +96,7 @@ Con algunos generadores, basta observar unos cuantos números de salida para ded
 
 Si esos números se usan para algo que debe ser secreto, el sistema está roto. La documentación de `Math.random`, la función de JavaScript, lo advierte: no proporciona números seguros desde el punto de vista criptográfico y no debe usarse para nada relacionado con la seguridad.
 
-Un token de recuperación de contraseña generado con `Math.random` se puede adivinar.
+`Math.random` no ofrece la garantía de imprevisibilidad necesaria para un token de recuperación de contraseña. Una distribución aparentemente uniforme no lo convierte en un generador criptográfico.
 
 ## Azar de verdad: la entropía
 
@@ -108,15 +108,15 @@ La imprevisibilidad real viene de fuera del programa. El [sistema operativo](/ar
 
 Hay servicios que usan fuentes más llamativas, como el ruido atmosférico.
 
-Esas fuentes son lentas y no perfectamente uniformes. Por eso no se usan directamente.
+La velocidad y la calidad de esas fuentes varían; algunas observaciones pueden ser previsibles para un atacante. El sistema debe estimar, combinar y acondicionar su entropía. La hora actual o un paquete de red aislado no son por sí solos una semilla secreta fiable.
 
 ## Generadores criptográficamente seguros
 
 Combinan los dos mundos. El sistema operativo reúne entropía y con ella alimenta, como semilla, un generador especial: un **generador pseudoaleatorio criptográficamente seguro**.
 
-Sigue siendo una fórmula, pero diseñada para que, aunque alguien vea millones de números de salida, no pueda deducir ni los anteriores ni los siguientes. Suele construirse con [funciones hash](/articulos/funciones-hash/) o [cifrados](/articulos/cifrado-simetrico-y-asimetrico/).
+Sigue siendo determinista entre aportaciones de entropía, pero su diseño busca que resulte computacionalmente impracticable predecir nuevas salidas sin conocer el estado secreto. Se necesita suficiente entropía y una implementación correcta; proteger salidas anteriores tras una filtración del estado requiere propiedades adicionales. Puede construirse con [funciones hash](/articulos/funciones-hash/) o [cifrados](/articulos/cifrado-simetrico-y-asimetrico/).
 
-En JavaScript se accede con `crypto`:
+En JavaScript se accede mediante `crypto`. Este ejemplo funciona en Node.js 22 y en navegadores con Web Crypto; en el navegador, `randomUUID()` requiere un contexto seguro, como HTTPS o localhost:
 
 ```js
 const bytes = crypto.getRandomValues(new Uint8Array(4));
@@ -129,9 +129,9 @@ console.log(identificador.length); // 36
 | | Pseudoaleatorio común | Criptográficamente seguro |
 | --- | --- | --- |
 | Ejemplo | `Math.random()` | `crypto.getRandomValues()` |
-| Velocidad | Muy alta | Algo menor |
-| Predecible | Sí, observando la salida | No |
-| Reproducible con semilla | Sí | No |
+| Velocidad | Depende del algoritmo y de la implementación | También depende del algoritmo, del hardware y de la API |
+| Garantía de imprevisibilidad | No ofrece una garantía criptográfica | Busca impedir predicciones factibles si se cumplen sus condiciones |
+| Reproducibilidad | Depende del estado y del control que exponga la API; `Math.random()` no permite fijar semilla | El algoritmo también es determinista; Web Crypto no expone una semilla controlable |
 | Uso | Juegos, simulaciones, pruebas | Claves, tokens, contraseñas |
 
 La regla es simple: **si un atacante ganaría algo adivinando el número, se usa el seguro**.
@@ -181,7 +181,7 @@ console.log(barajada.length); // 5
 console.log(barajada.toSorted().join(" ")); // "1 2 3 4 5"
 ```
 
-El resultado cambia en cada ejecución, pero siempre contiene los mismos cinco elementos.
+El orden puede cambiar en cada ejecución, pero conserva los mismos cinco elementos. Para un reparto uniforme, cada elección debe ser uniforme e independiente en el rango correspondiente; si el azar está sesgado, el algoritmo no lo corrige.
 
 ### Compartir semilla
 
@@ -189,14 +189,14 @@ Dos servidores que arrancan con la misma semilla generan los mismos identificado
 
 ## ¿Es azar si pasa las pruebas?
 
-No se puede demostrar que una secuencia sea aleatoria. Lo que hay son baterías de pruebas estadísticas que buscan patrones: si cada valor sale con la frecuencia esperada, si hay rachas demasiado largas, si un número ayuda a predecir el siguiente.
+Una batería finita de pruebas estadísticas no demuestra que el proceso generador sea impredecible. Busca patrones como frecuencias anómalas, rachas demasiado largas o dependencias entre valores.
 
-Pasarlas dice que un generador se **comporta** como el azar, que es lo que necesita una simulación. No dice que sea impredecible, que es lo que necesita la seguridad. Son dos exigencias distintas.
+Pasarlas indica que no se detectaron los defectos que esas pruebas buscaban. No garantiza que el generador sirva para cualquier simulación ni prueba seguridad criptográfica. Hay que evaluar propiedades adecuadas al uso.
 
 ## Lo esencial
 
-- Un ordenador es determinista: el azar lo imita con una fórmula y una semilla.
-- La misma semilla da la misma secuencia, lo que es útil para depurar y probar.
-- Un generador común es predecible y no sirve para la seguridad.
+- Un generador pseudoaleatorio calcula una secuencia mediante un estado y un algoritmo.
+- Repetirla exige conservar la inicialización, la implementación y el orden de las llamadas.
+- Un generador común no ofrece la garantía criptográfica necesaria para secretos.
 - El azar real se obtiene de fenómenos físicos, la entropía, que recoge el sistema operativo.
 - Para claves y tokens se usa siempre un generador criptográficamente seguro.

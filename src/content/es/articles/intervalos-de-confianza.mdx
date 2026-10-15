@@ -1,12 +1,13 @@
 ---
 title: "¿Qué es un intervalo de confianza?"
-description: "Un intervalo de confianza da un rango de valores probables para algo que no se puede medir entero, como la media de una población, a partir de una muestra."
+description: "Un intervalo de confianza estima un parámetro mediante un procedimiento con una cobertura determinada bajo sus supuestos. El 95 % describe el método, no la probabilidad de un intervalo ya calculado."
 level: intermedio
 layer: datos
 prerequisites:
   - distribucion-normal
   - media-mediana-y-desviacion
-updated: 2026-10-14
+  - numeros-aleatorios-y-pseudoaleatorios
+updated: 2026-10-15
 sources:
   - title: "NIST/SEMATECH e-Handbook: Confidence intervals (en inglés)"
     url: https://www.itl.nist.gov/div898/handbook/prc/section1/prc14.htm
@@ -18,13 +19,13 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Casi nunca se puede medir una población entera: todos los usuarios, todas las piezas fabricadas, todos los tiempos de respuesta. Se toma una **muestra** y se calcula, por ejemplo, su media. Pero otra muestra daría otra media. Un **intervalo de confianza** expresa esa incertidumbre: en lugar de un número, da un **rango de valores** que probablemente contiene el valor real.
+Un **intervalo de confianza** es un rango calculado a partir de una muestra mediante un procedimiento diseñado para cubrir el parámetro buscado en una proporción determinada de muestras repetidas. Esa cobertura depende de que se cumplan sus supuestos. Sirve cuando no podemos medir una población entera y queremos expresar la incertidumbre de una estimación, como su media.
 
 "El tiempo medio de carga es de 50 ms" dice menos que "está entre 48,6 y 51,4 ms, con un 95 % de confianza".
 
 ## Cómo se calcula
 
-Para la media, la idea es: media de la muestra, más y menos un **margen de error**. El margen crece con la dispersión de los datos y decrece con el tamaño de la muestra:
+Para la media, un procedimiento habitual usa la media de la muestra más y menos un **margen de error**. En este ejemplo suponemos diez observaciones independientes de una población normal cuya desviación desconocemos. El margen crece con la dispersión estimada y decrece con el tamaño de la muestra:
 
 ```js
 const muestra = [52, 48, 50, 51, 49, 53, 47, 50, 52, 48];
@@ -43,16 +44,17 @@ console.log(`${(media - margen).toFixed(2)} a ${(media + margen).toFixed(2)}`); 
 ```
 
 - La **desviación típica** mide cuánto varían los datos, como explica [media, mediana y desviación](/articulos/media-mediana-y-desviacion/).
-- El **error estándar** mide cuánto variaría la media de una muestra a otra: la desviación dividida por la raíz del tamaño.
-- El factor multiplicador sale de la [distribución normal](/articulos/distribucion-normal/), unos 1,96 para el 95 %, o de la **t de Student** cuando la muestra es pequeña, como aquí.
+- El **error estándar** describe cuánto varía la media entre muestras. Aquí lo estimamos dividiendo la desviación muestral entre `√n`: `2 / √10 ≈ 0,632` ms.
+- Como estimamos la desviación poblacional a partir de los datos, usamos la **t de Student** con `n - 1 = 9` grados de libertad. El factor 2,262 da un margen de unos 1,43 ms. No se elige Student solo por tener pocos datos: también depende de qué desviación conocemos y del modelo.
+- Con observaciones normales y desviación poblacional conocida, se usa el factor normal 1,96. Con muestras grandes puede haber aproximaciones justificadas por el límite central; diez observaciones muy asimétricas no quedan justificadas por ese teorema.
 
-Para reducir el margen a la mitad hace falta **cuatro veces** más muestra, por esa raíz cuadrada.
+Manteniendo dispersión y factor crítico, reducir el margen a la mitad requiere **cuatro veces** más muestra por la raíz cuadrada. Con Student es una aproximación: su factor también cambia al aumentar los grados de libertad.
 
 ## Qué significa el 95 %
 
 Es la parte que más se malinterpreta. El manual de estadística del NIST lo explica así: si se tomaran muchas muestras de la misma población y se calculara un intervalo con cada una, aproximadamente el 95 % de esos intervalos contendrían el valor real.
 
-Se puede comprobar simulándolo: 1000 muestras de una población cuya media real es 100.
+Podemos ilustrar la cobertura con 1000 muestras de 30 observaciones normales, de media 100 y desviación **conocida** 15. Por eso esta simulación usa 1,96, a diferencia del ejemplo anterior. El generador con semilla fija permite repetir el experimento; la transformación `normal` produce observaciones de una normal estándar a partir de pares uniformes:
 
 ```js
 function generador(semilla) {
@@ -87,12 +89,19 @@ Lo que **no** significa: que haya un 95 % de probabilidad de que el valor real e
 ## Errores habituales
 
 - **Dar solo la media**, sin intervalo, como si fuera exacta.
-- **Muestras sesgadas**: el intervalo mide el error del azar, no el de una muestra mal elegida. Si solo se mide a los usuarios más activos, el intervalo será estrecho y estará equivocado.
+- **Muestras sesgadas**: el intervalo no corrige una selección inadecuada. Si solo se mide a los usuarios más activos, puede quedar estrecho alrededor de una estimación que no representa al conjunto.
 - **Comparar intervalos a ojo**: que dos intervalos se solapen no significa necesariamente que no haya diferencia. Para eso está el [contraste de hipótesis](/articulos/contraste-de-hipotesis-y-valor-p/).
+
+<Quiz
+	client:visible
+	question="Un método tiene cobertura del 95 % y se cumplen sus supuestos. ¿Qué describe ese porcentaje?"
+	options={["El porcentaje de observaciones dentro de cada intervalo", "La proporción de intervalos que cubrirían el parámetro al repetir el muestreo", "La probabilidad de que la media poblacional cambie"]}
+	answer={1}
+/>
 
 ## Lo esencial
 
-- Un intervalo de confianza da un rango probable para un valor que se estima a partir de una muestra.
-- Se calcula como la estimación más y menos un margen que depende de la dispersión y del tamaño de la muestra.
-- El 95 % significa que el 95 % de los intervalos calculados así contendrían el valor real.
+- Un intervalo de confianza expresa incertidumbre mediante un procedimiento de cobertura definido.
+- El intervalo para la media usado aquí suma y resta un margen que depende de la dispersión y del tamaño de la muestra.
+- El 95 % es la cobertura del procedimiento bajo sus supuestos; una serie finita de intervalos no tiene por qué acertar exactamente ese porcentaje.
 - No corrige una muestra sesgada: solo mide el error debido al azar.

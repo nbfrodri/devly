@@ -5,7 +5,7 @@ level: basico
 layer: datos
 prerequisites:
   - logica-booleana
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "OpenStax: Introducción a la estadística, cap. 3, Temas de probabilidad"
     url: https://openstax.org/books/introducci%C3%B3n-estad%C3%ADstica/pages/3-introduccion
@@ -17,7 +17,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-La **probabilidad** es un número entre 0 y 1 que mide lo esperable que es un resultado. Un 0 significa imposible; un 1, seguro. Unas pocas reglas permiten calcular la probabilidad de combinaciones de sucesos, y sirven sobre todo para corregir a la intuición, que en este terreno falla mucho.
+La **probabilidad** es un número entre 0 y 1 que un modelo asigna a un suceso para expresar su incertidumbre. En los dados y monedas de este artículo, con un número finito de resultados de probabilidad positiva, 0 significa imposible y 1, seguro. Unas pocas reglas permiten combinar sucesos y comprobar intuiciones.
 
 Es la base de la estadística, del [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) y de cualquier decisión con incertidumbre.
 
@@ -35,7 +35,7 @@ Cuando todos los resultados son igual de probables, la probabilidad de un suceso
 
 Que salga par: 3 de 6, es decir, 0,5.
 
-Con dos dados hay 36 combinaciones. Enumerarlas es la forma más segura de no equivocarse:
+Suponemos dados equilibrados y lanzamientos independientes. Con dos dados hay 36 parejas ordenadas igual de probables: un 1 en el primero y un 2 en el segundo es distinto de obtenerlos al revés. Enumerarlas evita confundir parejas con sumas:
 
 ```js
 const resultados = [];
@@ -60,7 +60,7 @@ Sumar 7 es seis veces más probable que sumar 12: hay seis formas de conseguirlo
 
 Hay dos lecturas, y las dos se usan.
 
-- **Como frecuencia.** Si se repite el experimento muchas veces, la proporción de veces que ocurre el suceso se acerca a su probabilidad. Es lo que aprovecha el [método de Monte Carlo](/articulos/metodo-de-monte-carlo/).
+- **Como frecuencia.** En repeticiones independientes con la misma probabilidad, la proporción tiende a acercarse a ella al aumentar la muestra. No tiene por qué mejorar en cada repetición. Es lo que aprovecha el [método de Monte Carlo](/articulos/metodo-de-monte-carlo/).
 - **Como grado de confianza.** "Un 70 % de probabilidad de lluvia mañana" no habla de repetir mañana muchas veces. Expresa cuánto se cree en algo con la información disponible.
 
 ## Reglas básicas
@@ -79,17 +79,17 @@ Si pueden darse a la vez, hay que restar lo que se ha contado dos veces. Sacar p
 
 ### Uno y otro
 
-Dos sucesos son **independientes** si que ocurra uno no cambia la probabilidad del otro. Dos lanzamientos de una moneda lo son.
+Dos sucesos son **independientes** si que ocurra uno no cambia la probabilidad del otro. Modelamos así los lanzamientos de una moneda cuando el procedimiento no hace depender uno del anterior.
 
 Para sucesos independientes, la probabilidad de que ocurran ambos es el **producto**. Dos seises seguidos: 1/6 × 1/6 = 1/36.
 
-De aquí sale una conclusión con mucha aplicación: encadenar pasos reduce deprisa la probabilidad de que todo salga bien. Si cada uno de diez componentes funciona el 99 % del tiempo, y todos son necesarios, el conjunto funciona 0,99 elevado a 10: algo más del 90 %.
+De aquí sale una aplicación: si diez componentes son necesarios y sus estados de disponibilidad son independientes, con probabilidad 0,99 para cada uno el conjunto tiene probabilidad `0,99¹⁰ ≈ 0,904`. No se puede aplicar ese producto si comparten una causa de fallo, como la misma fuente de alimentación.
 
 ## La falacia del jugador
 
 Tras cinco caras seguidas, ¿es más probable que salga cruz?
 
-No. La moneda no tiene memoria. Cada lanzamiento es independiente, y la probabilidad sigue siendo 0,5.
+En el modelo de una moneda equilibrada con lanzamientos independientes, no: la probabilidad sigue siendo 0,5. Si no se sabe si la moneda está equilibrada, los resultados sí pueden aportar información sobre ella.
 
 Creer que la cruz "ya toca" es un error tan extendido que tiene nombre. La frecuencia se acerca a la mitad a la larga, no porque la moneda compense, sino porque las rachas se diluyen entre muchos lanzamientos.
 
@@ -97,7 +97,7 @@ Creer que la cruz "ya toca" es un error tan extendido que tiene nombre. La frecu
 
 Es la probabilidad de un suceso **sabiendo que ha ocurrido otro**. Se escribe P(A | B), "probabilidad de A dado B".
 
-Saber algo reduce los casos posibles.
+En un espacio finito, condicionamos restringiendo la atención a los resultados compatibles con B y reajustando sus probabilidades. La fórmula `P(A | B) = P(A y B) / P(B)` exige `P(B) > 0`.
 
 ```js
 const resultados = [];
@@ -123,7 +123,7 @@ Dicho de otro modo: dos sucesos son independientes cuando saber uno **no** cambi
 
 P(A | B) y P(B | A) son cosas distintas, y confundirlas es uno de los errores más graves y frecuentes.
 
-Una prueba médica detecta el 99 % de los casos de una enfermedad, y da un falso positivo en el 5 % de las personas sanas. La enfermedad afecta al 1 % de la población. Alguien da positivo. ¿Qué probabilidad hay de que esté enfermo?
+En un ejemplo hipotético, una prueba detecta el 99 % de los casos de una enfermedad y da un falso positivo en el 5 % de las personas sin ella. La enfermedad afecta al 1 % de la población muestreada. Si una persona elegida al azar de esa población da positivo, ¿qué probabilidad de enfermedad asigna este modelo?
 
 La respuesta intuitiva ronda el 95 %. Se cuenta con 10 000 personas:
 
@@ -146,21 +146,22 @@ Un 17 %. De cada seis positivos, cinco son de personas sanas.
 
 La razón es que hay muchísimos más sanos que enfermos, y el 5 % de un grupo enorme supera al 99 % de uno pequeño. Ignorar cuánta gente hay en cada grupo se llama **olvido de la tasa base**.
 
-La relación entre las dos probabilidades condicionadas la da el **[teorema de Bayes](/articulos/teorema-de-bayes/)**. Es el mismo problema que hay detrás de la [precisión de un clasificador](/articulos/como-se-evalua-un-modelo-de-clasificacion/): un filtro que busca algo muy infrecuente produce sobre todo falsas alarmas.
+La relación entre las dos probabilidades condicionadas la da el **[teorema de Bayes](/articulos/teorema-de-bayes/)**. Es el mismo problema que hay detrás de la [precisión de un clasificador](/articulos/como-se-evalua-un-modelo-de-clasificacion/): al buscar algo infrecuente, una tasa de falsos positivos pequeña puede bastar para que dominen las falsas alarmas.
 
 <Quiz
 	client:visible
-	question="Una moneda equilibrada ha salido cara cinco veces seguidas. ¿Qué probabilidad hay de que la sexta sea cara?"
+	question="Una moneda equilibrada se lanza de forma independiente y sale cara cinco veces seguidas. ¿Qué probabilidad hay de que la sexta sea cara?"
 	options={["Menos de 0,5, porque ya toca cruz", "0,5", "Más de 0,5, porque está en racha"]}
 	answer={1}
 />
 
 ## La intuición engaña
 
-¿Cuántas personas hacen falta en una sala para que sea más probable que improbable que dos cumplan años el mismo día?
+¿Cuántas personas hacen falta en una sala para que sea más probable que improbable que al menos dos cumplan años el mismo día? El modelo supone 365 fechas equiprobables e independientes y omite años bisiestos. La función recibe un número entero no negativo de personas:
 
 ```js
 function coincidencia(personas) {
+	if (personas > 365) return 1;
 	let todasDistintas = 1;
 
 	for (let i = 0; i < personas; i++) {
@@ -182,10 +183,10 @@ No es una curiosidad: el mismo cálculo dice cuándo esperar una colisión en un
 
 ## En informática
 
-- **Estructuras de datos.** Las [tablas hash](/articulos/tablas-hash/) funcionan porque las colisiones son improbables.
+- **Estructuras de datos.** Las [tablas hash](/articulos/tablas-hash/) gestionan colisiones; una distribución adecuada y una carga controlada ayudan a mantener pequeños los grupos que hay que recorrer.
 - **Fiabilidad.** Cuántas copias hacen falta para que perder todas a la vez sea casi imposible.
-- **Aprendizaje automático.** Un modelo devuelve probabilidades, no certezas.
-- **Pruebas A/B.** Decidir si una diferencia es real o fruto del azar.
+- **Aprendizaje automático.** Algunos modelos estiman probabilidades; hay que comprobar qué significan y cómo se ajustan a los resultados observados.
+- **Pruebas A/B.** Cuantificar la incertidumbre de una diferencia bajo el modelo del experimento.
 - **Seguridad.** Cuánto se tarda en adivinar una clave.
 
 ## Lo esencial
@@ -194,4 +195,4 @@ No es una curiosidad: el mismo cálculo dice cuándo esperar una colisión en un
 - La de que algo no ocurra es 1 menos la de que ocurra.
 - Para sucesos excluyentes se suma; para independientes que deben darse ambos, se multiplica.
 - La probabilidad condicionada cambia con lo que se sabe, y no se puede dar la vuelta sin más.
-- El azar no tiene memoria, y la intuición sobre él suele fallar.
+- Un resultado anterior no cambia la probabilidad del siguiente cuando las repeticiones son independientes; no todo proceso aleatorio cumple esa condición.

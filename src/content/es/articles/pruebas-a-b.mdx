@@ -6,12 +6,16 @@ layer: datos
 prerequisites:
   - correlacion-y-causalidad
   - contraste-de-hipotesis-y-valor-p
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Optimizely: What is A/B testing? (en inglés)"
     url: https://www.optimizely.com/optimization-glossary/ab-testing/
   - title: "American Statistical Association: Statement on p-values (en inglés)"
     url: https://www.amstat.org/asa/files/pdfs/p-valuestatement.pdf
+  - title: "Microsoft Research: Patterns of Trustworthy Experimentation, Pre-Experiment Stage (en inglés)"
+    url: https://www.microsoft.com/en-us/research/articles/patterns-of-trustworthy-experimentation-pre-experiment-stage/
+  - title: "Microsoft Research: Pitfalls of Long-Term Online Controlled Experiments (en inglés)"
+    url: https://www.microsoft.com/en-us/research/publication/pitfalls-of-long-term-online-controlled-experiments/
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -22,17 +26,19 @@ Una **prueba A/B** compara dos versiones de algo, una página, un botón, un cor
 
 Comparar "las ventas de este mes con el botón nuevo" con "las del mes pasado" no sirve: entre medias han cambiado muchas cosas, la temporada, las campañas, la competencia. Es el problema de confundir [correlación con causalidad](/articulos/correlacion-y-causalidad/).
 
-Si en cambio cada usuario se asigna al azar a A o a B, **en el mismo periodo**, los dos grupos son iguales en todo lo demás. Cualquier diferencia que aparezca se debe al cambio o al azar. Es un **experimento controlado**, la herramienta más fiable para establecer una causa.
+Asignar cada usuario al azar a A o B **en el mismo periodo** equilibra sus características en expectativa, aunque una muestra concreta pueda quedar desequilibrada. Un **experimento controlado** permite estimar el efecto de la asignación si la implementación, la medición y el tratamiento de los datos respetan el diseño; el sorteo no corrige por sí solo abandonos o errores de registro.
 
 ## Cómo se hace
 
 1. **Una hipótesis y una métrica**: "un botón más visible aumentará la tasa de compra".
-2. **Calcular la muestra necesaria** antes de empezar, según el efecto mínimo que interese detectar.
-3. **Repartir al azar** y de forma estable: un mismo usuario debe ver siempre la misma versión.
-4. **Esperar** a tener la muestra planificada.
+2. **Calcular la muestra necesaria** según el efecto mínimo que interese detectar, la tasa de partida, la potencia y el nivel de error elegidos.
+3. **Elegir la unidad y repartir al azar** de forma estable. En este ejemplo es el usuario: sus visitas repetidas no cuentan como usuarios independientes. Si varios usuarios se influyen, puede hacer falta asignar grupos completos.
+4. **Fijar la duración y regla de parada** antes de empezar, cubriendo el periodo relevante y la muestra planificada. Un diseño secuencial válido permite otras reglas, pero requiere un análisis compatible.
 5. **Analizar** con un [contraste de hipótesis](/articulos/contraste-de-hipotesis-y-valor-p/).
 
 ## El análisis
+
+Suponemos dos grupos independientes de 4000 usuarios, una única observación de compra sí/no por usuario y un análisis al final del experimento. Bajo la hipótesis de igual tasa, estimamos una tasa conjunta y calculamos una aproximación normal para la diferencia. `cdfNormal(z)` aproxima la probabilidad de que una normal estándar sea menor o igual a `z`; el polinomio implementa esa aproximación numérica.
 
 ```js
 function cdfNormal(z) {
@@ -45,13 +51,13 @@ function cdfNormal(z) {
 	return 0.5 * (1 + (z >= 0 ? y : -y));
 }
 
-const a = { visitas: 4000, compras: 200 };
-const b = { visitas: 4000, compras: 260 };
+const a = { usuarios: 4000, compras: 200 };
+const b = { usuarios: 4000, compras: 260 };
 
-const tasaA = a.compras / a.visitas;
-const tasaB = b.compras / b.visitas;
-const conjunta = (a.compras + b.compras) / (a.visitas + b.visitas);
-const error = Math.sqrt(conjunta * (1 - conjunta) * (1 / a.visitas + 1 / b.visitas));
+const tasaA = a.compras / a.usuarios;
+const tasaB = b.compras / b.usuarios;
+const conjunta = (a.compras + b.compras) / (a.usuarios + b.usuarios);
+const error = Math.sqrt(conjunta * (1 - conjunta) * (1 / a.usuarios + 1 / b.usuarios));
 const z = (tasaB - tasaA) / error;
 const valorP = 2 * (1 - cdfNormal(Math.abs(z)));
 
@@ -59,24 +65,33 @@ console.log(tasaA, tasaB); // 0.05 0.065
 console.log(`z = ${z.toFixed(2)}, p = ${valorP.toFixed(4)}`); // "z = 2.88, p = 0.0040"
 ```
 
-La versión B convierte un 6,5 % frente al 5 % de A. Si no hubiera diferencia real, una diferencia así de grande saldría por azar un 0,4 % de las veces. Es una prueba sólida a favor de B.
+La versión B convierte un 6,5 % frente al 5 % de A: **1,5 puntos porcentuales** de diferencia y un **30 % relativo** respecto al 5 %. La tasa conjunta es `460 / 8000 = 0,0575`; el error bajo la nula es aproximadamente `0,00521`, de donde sale `z ≈ 2,88`. Hay suficientes compras y no compras en ambos grupos para que esta aproximación sea razonable.
+
+Bajo la hipótesis de tasas iguales y los supuestos del análisis, una desviación al menos tan extrema en cualquiera de los dos sentidos tiene una probabilidad aproximada de 0,004. Esto es evidencia contra esa hipótesis; no significa que B tenga una probabilidad del 99,6 % de ser mejor. La decisión debe considerar también la incertidumbre del efecto, las métricas de control y el coste del cambio.
+
+<Quiz
+	client:visible
+	question="Cada usuario tiene asignada una variante y puede visitar veinte veces. ¿Por qué no debes tratar esas visitas como veinte usuarios independientes?"
+	options={["Porque las visitas del mismo usuario pueden estar relacionadas", "Porque una prueba A/B solo admite una visita diaria", "Porque así el valor p siempre sería mayor"]}
+	answer={0}
+/>
 
 ## Los errores que la estropean
 
-- **Mirar cada día y parar cuando sale bien.** Con muchas miradas, alguna saldrá "significativa" por azar. Es la trampa de buscar hasta encontrar que describe el [contraste de hipótesis](/articulos/contraste-de-hipotesis-y-valor-p/). Se fija la duración antes y se respeta.
-- **Muestras pequeñas.** Detectan solo efectos enormes; los cambios reales suelen ser pequeños.
-- **Demasiadas métricas a la vez.** Alguna mejorará por casualidad.
+- **Aplicar un contraste de muestra fija y parar en una mirada favorable.** Multiplica las oportunidades de rechazar por azar y altera el error previsto. Se respeta el plan o se usa desde el principio un método secuencial válido.
+- **Muestras con poca potencia para el efecto buscado.** Pueden no detectar una mejora relevante; un resultado no significativo no demuestra que no exista.
+- **Elegir después la métrica que mejor salió.** Buscar entre muchas aumenta el riesgo de una mejora accidental; se distinguen las métricas planificadas de la exploración y se tratan las comparaciones múltiples.
 - **Olvidar las métricas de control.** Un cambio puede subir las compras y disparar las devoluciones o las quejas.
 - **Ignorar el efecto novedad.** Lo nuevo atrae al principio y luego se normaliza.
 - **Ignorar el tamaño del efecto.** Una mejora "significativa" del 0,01 % puede no compensar el coste del cambio.
 
 ## Más allá de A y B
 
-Se pueden probar varias versiones a la vez (A/B/n) o combinaciones de cambios. Y hay un enfoque alternativo, **bayesiano**, que en lugar de un valor p da directamente la probabilidad de que B sea mejor que A, usando el [teorema de Bayes](/articulos/teorema-de-bayes/).
+Se pueden probar varias versiones a la vez (A/B/n) o combinaciones de cambios, teniendo en cuenta las comparaciones adicionales. Un enfoque **bayesiano** puede calcular una probabilidad posterior de que B supere a A mediante el [teorema de Bayes](/articulos/teorema-de-bayes/). Esa probabilidad depende de la previa, el modelo y los datos; no elimina los problemas del diseño experimental.
 
 ## Lo esencial
 
 - Una prueba A/B muestra dos versiones a usuarios repartidos al azar y compara una métrica.
-- El reparto al azar hace que la diferencia observada se deba al cambio o al azar, no a otros factores.
+- El reparto al azar ayuda a identificar el efecto de la asignación; medición, pérdidas e interferencias también importan.
 - Se planifica la muestra antes y se analiza con un contraste de hipótesis.
-- Parar en cuanto sale bien, o medir demasiadas cosas, produce falsos positivos.
+- Parar en una mirada favorable o seleccionar entre muchas métricas sin ajustar el análisis puede aumentar los falsos positivos.
