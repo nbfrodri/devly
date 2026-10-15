@@ -1,5 +1,5 @@
 title: Arquitectura de computadores
-description: De las puertas lógicas al procesador completo y su conexión con el resto del equipo.
+description: De puertas y registros a ejecución, memoria y dispositivos, con una ampliación cuántica. Parte de bits, complemento a dos y programación básica; los apartados de sistemas requieren procesos e hilos.
 layer: hardware
 steps:
   - puertas-logicas

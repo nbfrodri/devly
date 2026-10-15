@@ -24,13 +24,13 @@ Un programa que hace una sola cosa cada vez se queda parado cuando esa cosa tard
 Hay dos motivos para querer concurrencia:
 
 - **No bloquearse.** Mientras una tarea espera al disco o a la red, otras pueden avanzar.
-- **Aprovechar varios núcleos.** Un [procesador](/articulos/como-funciona-un-procesador/) actual tiene varios, y un programa con un solo flujo de ejecución usa uno solo.
+- **Aprovechar varios núcleos.** Si el [procesador](/articulos/como-funciona-un-procesador/) tiene varios núcleos, distintos hilos pueden usarlos a la vez. Un único hilo no se ejecuta a la vez en dos núcleos, aunque pueda cambiar de uno a otro.
 
 ## Concurrencia no es paralelismo
 
 Se usan como sinónimos y no lo son.
 
-- **Concurrencia**: varias tareas están en curso y avanzan intercalándose. Puede haber un solo núcleo, que salta de una a otra.
+- **Concurrencia**: varias tareas están en curso durante un mismo periodo; pueden avanzar intercaladas o en paralelo. Puede haber un solo núcleo, que salta de una a otra.
 - **Paralelismo**: varias tareas se ejecutan literalmente en el mismo instante, por ejemplo en núcleos distintos.
 
 Un cocinero que prepara tres platos, atendiendo cada uno mientras los otros se hacen, trabaja de forma concurrente. Tres cocineros, cada uno con su plato, trabajan en paralelo.
@@ -73,19 +73,19 @@ Lo que distingue a los hilos de los procesos es lo que comparten:
 | Crearlos y cambiar entre ellos | Suele implicar más recursos y aislamiento | Compartir el espacio de direcciones puede reducir el coste |
 | Si uno falla | El aislamiento limita la propagación directa | Un fallo fatal puede terminar todo el proceso |
 
-Cada hilo tiene su propia [pila](/articulos/pilas-y-colas/) y su propio punto de ejecución. Comparten el espacio de memoria, pero eso no significa que todas las variables sean comunes: una variable local de cada llamada ocupa su propia ubicación. El lenguaje también puede ofrecer almacenamiento específico de cada hilo.
+Cada hilo tiene su propia [pila de llamadas](/articulos/pila-y-monticulo-de-memoria/) y su propio punto de ejecución. Comparten el espacio de memoria, pero eso no significa que todas las variables sean comunes: una variable local de cada llamada ocupa su propia ubicación. El lenguaje también puede ofrecer almacenamiento específico de cada hilo.
 
 Compartir memoria permite intercambiar datos sin copiarlos entre procesos. Aun así, la visibilidad y el orden de los accesos necesitan coordinación; compartir una dirección no garantiza leer el valor esperado.
 
 ## Quién decide el orden
 
-El planificador del [sistema operativo](/articulos/que-es-un-sistema-operativo/) reparte el tiempo de procesador entre los hilos. Puede interrumpir a uno en cualquier momento, incluso a mitad de una operación, para dar paso a otro.
+Para los hilos que gestiona el [sistema operativo](/articulos/que-es-un-sistema-operativo/), el planificador reparte el tiempo de procesador. Puede suspender uno y ejecutar otro en un punto donde el hardware permita guardar y recuperar su estado. Una operación del lenguaje, como incrementar una variable, puede requerir varias instrucciones: el cambio puede ocurrir entre ellas. No conviene tratar esa operación completa como indivisible.
 
-El programa no controla en qué orden se intercalan. Dos ejecuciones del mismo programa pueden mezclar los pasos de forma distinta. A esto se le llama **no determinismo**, y es lo que hace difícil la programación concurrente: un error puede aparecer una vez de cada mil.
+Sin sincronización que imponga un orden, el programa no puede confiar en una intercalación concreta. Dos ejecuciones del mismo programa pueden mezclar los pasos de forma distinta. A esto se le llama **no determinismo**, y es lo que hace difícil la programación concurrente: un error puede aparecer una vez de cada mil.
 
 ## El riesgo de compartir
 
-Si dos hilos modifican el mismo dato sin coordinarse, el resultado depende de cómo se intercalen. Es una **condición de carrera**, y produce fallos intermitentes muy difíciles de reproducir.
+Si el resultado correcto requiere un orden entre tareas y el programa no lo asegura, aparece una **condición de carrera**. Por ejemplo, dos hilos pueden leer un contador con valor 5, calcular 6 cada uno y escribir ambos 6: se pierde un incremento. En ciertos lenguajes, acceder sin la sincronización exigida también deja el comportamiento fuera de las garantías del lenguaje; no siempre basta con imaginar intercalaciones.
 
 La forma de evitarlo y los problemas que trae consigo, como los bloqueos mutuos, se explican en [condiciones de carrera y bloqueos](/articulos/condiciones-de-carrera-y-bloqueos/).
 
@@ -123,11 +123,11 @@ await Promise.all([tarea("A", 30, registro), tarea("B", 10, registro)]);
 console.log(registro.join(", ")); // "empieza A, empieza B, termina B, termina A"
 ```
 
-Las dos tareas empiezan una tras otra y B termina antes, aunque se lanzó después. Mientras A espera, el único hilo atiende a B. `await` marca los puntos en los que una tarea cede el paso.
+En esta ejecución, las dos tareas empiezan una tras otra y B termina antes, aunque se lanzó después. Mientras A espera, el único hilo puede atender la continuación de B. `await` suspende la función, no todo el hilo. Los temporizadores indican demoras mínimas solicitadas; no garantizan terminar exactamente a los 10 o 30 milisegundos.
 
-Este modelo se llama **asíncrono**, y en JavaScript se escribe con [promesas y async/await](/articulos/promesas-y-async-await/). Encaja muy bien cuando la mayor parte del tiempo se va en esperar: a la red, al disco, a una base de datos. Con él, un solo hilo atiende a miles de clientes.
+Este modelo se llama **asíncrono**, y en JavaScript se escribe con [promesas y async/await](/articulos/promesas-y-async-await/). Encaja muy bien cuando la mayor parte del tiempo se va en esperar: a la red, al disco, a una base de datos. Puede atender muchas operaciones pendientes sin reservar un hilo de aplicación bloqueado para cada una; la capacidad real depende del trabajo y de los recursos.
 
-No sirve para acelerar cálculos. Si una tarea ocupa el procesador sin pausas, bloquea a todas las demás, porque solo hay un hilo.
+Ese mecanismo no añade capacidad de cálculo. Si una tarea ocupa el hilo sin ceder, retrasa las demás tareas de ese mismo bucle de eventos. Para ejecutar cálculo en paralelo hace falta otro recurso, como un worker o un proceso separado.
 
 ## Cuál elegir
 
@@ -136,11 +136,7 @@ No sirve para acelerar cálculos. Si una tarea ocupa el procesador sin pausas, b
 | Esperar: red, disco, base de datos | Modelo asíncrono |
 | Calcular: procesar imágenes, comprimir, simular | Varios hilos o procesos, en paralelo |
 
-## Un límite que conviene conocer
-
-Añadir [núcleos](/articulos/procesadores-multinucleo/) no acelera un programa sin fin. Solo se beneficia la parte del trabajo que se puede repartir. Si la décima parte de un programa tiene que ejecutarse en orden, por muchos núcleos que añadas nunca irá más de diez veces más rápido. Esta observación se conoce como **ley de Amdahl**.
-
-Un [semáforo](/articulos/semaforos-en-concurrencia/) coordina tareas mediante permisos y permite distinguir exclusión mutua de límites de capacidad.
+Para coordinar acceso a recursos, un [semáforo](/articulos/semaforos-en-concurrencia/) administra permisos. Para estimar la aceleración al añadir [núcleos](/articulos/procesadores-multinucleo/), la ley de Amdahl separa trabajo secuencial y repartible bajo condiciones explícitas. Son preguntas distintas.
 
 ## Errores comunes
 

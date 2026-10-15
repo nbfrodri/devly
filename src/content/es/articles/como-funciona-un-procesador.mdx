@@ -36,7 +36,7 @@ En el modelo de **von Neumann**, instrucciones y datos comparten memoria. Es una
 - **Memoria**: en el ejemplo usaremos [memoria RAM](/articulos/memoria-ram-y-almacenamiento/) para las instrucciones y los datos. Cada posición tiene un número que la identifica, su **dirección**.
 - **Registros**: unas pocas casillas dentro del propio procesador, muy rápidas, donde se guardan los valores con los que se está trabajando en ese momento.
 - **Contador de programa**: un registro especial que contiene la dirección de la siguiente instrucción.
-- **Unidad aritmético-lógica**: los circuitos que hacen las sumas, las restas y las comparaciones, construidos con [puertas lógicas](/articulos/puertas-logicas/).
+- **[Unidad aritmético-lógica](/articulos/la-alu-y-la-aritmetica-binaria/)**: los circuitos que hacen las sumas, las restas y las comparaciones, construidos con [puertas lógicas](/articulos/puertas-logicas/).
 - **Unidad de control**: la que interpreta cada instrucción y dirige a las demás piezas.
 
 ## El ciclo de instrucción
@@ -97,8 +97,7 @@ Tener más núcleos no acelera automáticamente un programa: solo ayuda si el tr
 
 ## Lo esencial
 
-- El procesador ejecuta instrucciones muy simples codificadas en bits.
+- El procesador ejecuta instrucciones codificadas en bits; los saltos permiten decisiones y repeticiones.
 - El programa almacenado representa instrucciones en memoria; el diseño decide cómo se separan de los datos.
 - Captar, decodificar y ejecutar permite seguir el mecanismo básico; los diseños modernos pueden solapar trabajo.
-- Los saltos son lo que permite decisiones y repeticiones.
 - El reloj marca el ritmo y cada núcleo ejecuta su propio flujo de instrucciones.

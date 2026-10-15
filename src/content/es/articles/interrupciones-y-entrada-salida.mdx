@@ -16,145 +16,101 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un ordenador no es solo procesador y memoria: tiene [teclado](/articulos/perifericos-de-entrada/), [pantalla](/articulos/como-funciona-una-pantalla/), discos, [tarjeta de red](/articulos/tarjeta-de-red/). La **entrada y salida**, o E/S, es la comunicación entre el procesador y esos dispositivos. Su mecanismo central son las **interrupciones**: señales con las que un dispositivo avisa al procesador de que ha ocurrido algo.
+La **entrada y salida**, E/S, permite que el [procesador](/articulos/como-funciona-un-procesador/) intercambie datos con dispositivos como un [teclado](/articulos/perifericos-de-entrada/), un disco o una [tarjeta de red](/articulos/tarjeta-de-red/). Una **interrupción externa** es un aviso que solicita atención del procesador sin exigir que el programa pregunte continuamente si ocurrió algo.
 
-## Qué problema resuelve
+Transferir datos y avisar de que una operación terminó son responsabilidades diferentes. Una interrupción puede notificar una transferencia, pero no transporta por sí misma todo el contenido recibido.
 
-Los dispositivos son lentísimos comparados con el [procesador](/articulos/como-funciona-un-procesador/). Un disco tarda milisegundos; una tecla se pulsa cuando el usuario quiere. En ese tiempo, el procesador podría ejecutar millones de instrucciones.
+## La interfaz del dispositivo
 
-La pregunta es cómo se entera el procesador de que el dispositivo ha terminado, o de que ha llegado algo.
+Un controlador de hardware puede exponer registros para que el software consulte y cambie su estado:
 
-## Cómo se habla con un dispositivo
-
-Cada dispositivo tiene un **controlador**: un circuito propio con unos pocos **registros**.
-
-| Registro | Para qué |
+| Registro | Ejemplo de información |
 | --- | --- |
-| Estado | Si está ocupado, si ha terminado, si hubo error |
-| Órdenes | Qué debe hacer |
-| Datos | Lo que se envía o se recibe |
+| Estado | Operación pendiente, completada o con error |
+| Órdenes | Iniciar una lectura |
+| Datos o descriptores | Datos transferidos o ubicación y tamaño del búfer |
 
-Con frecuencia, esos registros aparecen como si fueran posiciones de memoria: el procesador los lee y escribe con las mismas instrucciones que usa para la memoria. Se llama **E/S mapeada en memoria**.
+En **E/S mapeada en memoria**, esos registros ocupan direcciones del espacio físico y se accede mediante instrucciones de lectura o escritura. No se comportan necesariamente como RAM ordinaria: leer puede retirar un dato o escribir puede iniciar una operación. El software debe seguir el contrato del dispositivo.
 
-## Primera opción: preguntar sin parar
+El **controlador de software**, o *driver*, conoce ese contrato. No es lo mismo que el circuito controlador: uno es software y el otro hardware. El driver ofrece operaciones al sistema operativo y prepara los accesos y recursos necesarios.
 
-El procesador consulta el registro de estado una y otra vez, hasta que el dispositivo dice que ha terminado. Se llama **sondeo**, en inglés *polling*.
+## Seguir una operación mediante sondeo
+
+Supongamos que se ordena una lectura y el dispositivo pasa a «completado» en el instante 50 de un modelo discreto. Si consultamos cada unidad de tiempo desde cero:
 
 ```js
 const listoEnElInstante = 50;
 let consultas = 0;
 
 for (let instante = 0; ; instante++) {
-	consultas = consultas + 1;
+	consultas++;
 	if (instante >= listoEnElInstante) break;
 }
 
 console.log(consultas); // 51
 ```
 
-Cincuenta y una consultas para enterarse de una sola cosa. Durante todo ese tiempo, el procesador no ha hecho nada útil.
+Hay cincuenta consultas sin finalización y una que la detecta. Los instantes son unidades del ejemplo; el código no mide un dispositivo ni simula instrucciones de CPU. Consultar repetidamente se llama **sondeo**, o *polling*.
 
-Es como mirar el móvil cada segundo esperando un mensaje.
+Si el software espera activamente, consume CPU durante la espera. También puede consultar periódicamente y hacer otro trabajo entre consultas, aumentando potencialmente el tiempo hasta detectar el evento.
 
-## Segunda opción: que avise
+## Seguir la misma operación con un aviso
 
-Con interrupciones, el procesador da la orden y se dedica a otra cosa. Cuando el dispositivo termina, activa una señal especial que llega al procesador.
+Con interrupciones habilitadas y configuradas, el driver puede iniciar la lectura y dejar que el procesador ejecute otra tarea. Cuando el dispositivo termina, solicita atención mediante el mecanismo de interrupciones de la plataforma.
 
-Al recibirla, el procesador:
+Un recorrido típico es:
 
-1. Termina la instrucción en curso.
-2. Guarda su estado: por dónde iba y el contenido de algunos registros.
-3. Salta a una función del sistema operativo preparada para ese tipo de aviso: el **manejador de interrupción**.
-4. El manejador atiende al dispositivo: recoge los datos, anota que ha terminado.
-5. El procesador recupera su estado y sigue donde estaba.
+1. El controlador de interrupciones entrega una petición atendible al núcleo correspondiente.
+2. El procesador conserva el estado de retorno necesario en un punto definido por la arquitectura; el software guarda los registros adicionales que requiera.
+3. Se ejecuta un **manejador de interrupción**, que identifica y atiende el motivo del aviso.
+4. El manejador registra el resultado y reconoce o despeja el evento según el dispositivo; puede dejar trabajo para después.
+5. El sistema restaura un contexto de ejecución. Puede retomar la tarea anterior o decidir ejecutar otra.
 
-El programa interrumpido no se entera de nada.
+La atención no es instantánea: prioridades, enmascaramiento temporal y carga del sistema pueden retrasarla. Tampoco hay una regla universal de «terminar toda la instrucción actual»: lo exigible es conservar un estado de retorno válido para esa arquitectura.
 
-Es como poner el móvil con sonido: no hay que mirarlo, suena cuando llega algo.
+Aunque la aplicación no atienda directamente el aviso, puede observar su coste temporal o el resultado de la operación. Entrar y salir del manejador también consume recursos.
 
-Cada tipo de interrupción tiene un número, y una tabla indica qué manejador corresponde a cada uno.
-
-### Cuándo conviene cada una
-
-| | Sondeo | Interrupciones |
-| --- | --- | --- |
-| Uso del procesador mientras espera | Lo desperdicia | Lo deja libre |
-| Coste de cada aviso | Muy bajo | Guardar y restaurar el estado |
-| Conviene cuando | El dispositivo responde enseguida | La espera es larga o impredecible |
-
-Con dispositivos muy rápidos que generan millones de eventos, como una tarjeta de red a gran velocidad, las interrupciones constantes saturan al procesador. Los sistemas combinan las dos: usan interrupciones mientras el tráfico es bajo y pasan a sondeo cuando sube.
-
-## [DMA](/articulos/acceso-directo-a-memoria-dma/): mover datos sin el procesador
-
-Copiar los datos de un disco a la memoria byte a byte, a través del procesador, lo tendría ocupado en una tarea mecánica.
-
-Con **acceso directo a memoria**, o DMA, el procesador solo indica qué copiar, desde dónde y adónde. Un circuito especializado hace la transferencia directamente entre el dispositivo y la memoria, y lanza una interrupción al terminar.
-
-Es como encargar una mudanza en lugar de cargar las cajas uno mismo.
-
-<Quiz
-	client:visible
-	question="¿Qué ventaja tienen las interrupciones frente al sondeo?"
-	options={[
-		"Hacen que los dispositivos sean más rápidos",
-		"El procesador no malgasta tiempo preguntando y puede hacer otra cosa mientras espera",
-		"Eliminan la necesidad de un sistema operativo",
-	]}
-	answer={1}
-/>
-
-## Otros usos de las interrupciones
-
-El mecanismo sirve para más que los dispositivos.
-
-- **El temporizador.** Un reloj interrumpe al procesador muchas veces por segundo. En cada interrupción, el [planificador](/articulos/planificador-de-procesos/) decide si cambia de proceso. Así un programa no puede quedarse con el procesador para siempre.
-- **Excepciones.** Dividir entre cero o acceder a memoria prohibida provocan una interrupción interna. El sistema operativo decide qué hacer, y a menudo termina el programa.
-- **Llamadas al sistema.** Un programa que necesita un servicio del sistema operativo, abrir un archivo o enviar datos, ejecuta una instrucción especial que funciona como una interrupción y cambia a modo privilegiado. Es la frontera de seguridad entre los programas y el núcleo.
-- **Fallos de página.** Cuando un programa accede a memoria que no está cargada, la [memoria virtual](/articulos/memoria-virtual/) se apoya en esta interrupción para traerla.
-
-## Los controladores de dispositivos
-
-Cada dispositivo tiene sus registros, sus órdenes y sus rarezas. El sistema operativo no puede conocerlos todos.
-
-Por eso existen los **controladores**, en inglés *drivers*: módulos de software que saben hablar con un dispositivo concreto y ofrecen al resto del sistema una interfaz común. Para el sistema, todos los discos se leen igual, sea cual sea su fabricante.
-
-Son una parte enorme del código de un sistema operativo, y una de las fuentes más habituales de fallos: se ejecutan con todos los privilegios.
-
-## Hasta el software
-
-Este modelo, pedir algo y que te avisen al terminar, se repite en niveles superiores. El bucle de eventos de [Node.js](/articulos/que-es-nodejs/) y las [promesas](/articulos/promesas-y-async-await/) de JavaScript aplican la misma idea: iniciar una operación lenta, seguir con otra cosa y reaccionar cuando termina. Debajo, el sistema operativo hace exactamente eso con interrupciones.
-
-## Interrupciones frente a sondeo
-
-En el **sondeo**, el software consulta repetidamente si el dispositivo tiene trabajo terminado. Con **interrupciones**, el dispositivo activa un aviso que provoca la atención del sistema. Para la misma recepción de un paquete, cambia quién inicia la comprobación y cuándo.
+## Cuándo conviene cada mecanismo
 
 | Criterio | Sondeo | Interrupciones |
 | --- | --- | --- |
-| Inicia la comprobación | El procesador consulta | El dispositivo notifica |
-| Con pocos eventos | Puede gastar consultas sin trabajo | Permite dedicar recursos a otra cosa |
-| Con muchos eventos | Puede amortizar comprobaciones por grupos | Atender cada aviso puede resultar costoso |
-| Latencia | Depende del ritmo y estrategia de consulta | Depende de entrega y atención del aviso |
+| Inicia la comprobación | El software consulta estado | Un evento solicita atención |
+| Con pocos eventos | Puede hacer muchas consultas vacías | Permite dedicar tiempo a otras tareas |
+| Con muchos eventos | Puede procesar grupos de completados | Un aviso por evento puede ser costoso |
+| Latencia | Depende del ritmo de consulta | Depende de entrega y atención |
 
-Si consultas una vez por segundo, un evento recién llegado puede esperar casi ese segundo. Consultar sin pausa reduce esa espera a cambio de ocupar CPU. Las interrupciones evitan muchas consultas vacías, pero tienen costes de entrada y atención.
+Si consultas una vez por segundo, un evento recién llegado puede esperar casi un segundo. Consultar sin pausa reduce esa espera a costa de ocupar CPU. Una espera activa puede tener sentido en un contexto dedicado con requisitos de latencia muy cortos.
 
-Por eso existen estrategias híbridas: utilizar avisos para detectar actividad y procesar después varios eventos mediante sondeo. Elegir depende de frecuencia, latencia y recursos, no de que una técnica sea siempre superior.
+Un diseño **híbrido** recibe un aviso de actividad y después sondea una cola para procesar varios elementos. Al agotarse el trabajo, vuelve a depender de avisos. Debe coordinar el último sondeo con la reactivación de interrupciones para no perder un evento en esa transición.
 
-Este sondeo consulta estado de dispositivos. No es la misma capa que el polling de una API HTTP, aunque comparta la idea de preguntar periódicamente. Y [DMA](/articulos/acceso-directo-a-memoria-dma/) resuelve mover datos, no decidir cuál de estas formas avisa de su finalización.
+<Quiz
+	client:visible
+	question="Un dispositivo genera pocos eventos y tarda en responder. ¿Qué ventaja puede ofrecer avisar mediante interrupciones?"
+	options={["Acelerar físicamente el dispositivo", "Permitir otro trabajo sin consultas continuas de estado", "Eliminar todo coste de atención"]}
+	answer={1}
+/>
 
-### Comparar poca y mucha actividad
+## DMA: transferir es otra tarea
 
-Con un evento por segundo, consultar un millón de veces en ese segundo produce casi todas las consultas vacías. Una interrupción permite dedicar ese tiempo a otras tareas y atender el evento cuando llega el aviso. En cambio, con una secuencia intensa de eventos, entrar y salir de un manejador para cada uno puede consumir una parte significativa del procesador.
+El **[acceso directo a memoria, DMA](/articulos/acceso-directo-a-memoria-dma/)** permite mover datos entre dispositivo y memoria sin que la CPU copie cada unidad mediante instrucciones. El driver prepara búferes, direcciones y descriptores válidos, y coordina cuándo pueden utilizarse los datos.
 
-### Combinar aviso y sondeo
+La finalización puede notificarse con una interrupción o descubrirse mediante sondeo. DMA no impone una de esas opciones y no elimina la necesidad de comprobar errores, longitudes y sincronización.
 
-Un diseño híbrido puede recibir una interrupción que indica actividad y después sondear una cola de completados para procesar varios elementos. Al agotarse el trabajo, vuelve a depender de avisos. Es una manera de adaptar el coste al patrón de carga, siempre que se coordinen correctamente el último sondeo y la reactivación de avisos para no perder un evento.
+## Interrupciones, excepciones y llamadas al sistema
 
-La decisión debe medir latencia y CPU juntas. Una espera activa puede ser razonable en un contexto dedicado con un plazo muy corto y resultar un desperdicio en otro donde casi nunca llega trabajo.
+Estos mecanismos pueden compartir parte de la infraestructura, pero su origen importa:
+
+- Una **interrupción externa**, como la de un temporizador, llega de forma asíncrona respecto de las instrucciones del programa. Puede permitir que el [planificador](/articulos/planificador-de-procesos/) vuelva a evaluar qué tarea ejecutar.
+- Una **excepción** está relacionada con la ejecución de una instrucción: por ejemplo, un acceso que provoca un [fallo de página](/articulos/memoria-virtual/). El sistema examina su causa; no siempre necesita leer del disco ni terminar el proceso.
+- Una **[llamada al sistema](/articulos/llamadas-al-sistema/)** solicita deliberadamente un servicio del núcleo mediante el mecanismo definido por la plataforma. No tiene por qué utilizar la misma instrucción ni la misma entrada que una interrupción externa.
+
+El modelo concreto de privilegios y drivers depende del sistema; no todos los controladores de software se ejecutan obligatoriamente dentro del núcleo.
+
+Las [promesas](/articulos/promesas-y-async-await/) y el bucle de eventos de JavaScript trabajan en otro nivel. Una finalización de E/S puede acabar despertando trabajo de aplicación, pero una promesa también puede resolverse sin E/S física. No existe una interrupción de dispositivo por cada promesa.
 
 ## Lo esencial
 
-- El procesador se comunica con los dispositivos leyendo y escribiendo los registros de sus controladores.
-- El sondeo consume CPU para comprobar estado; su utilidad depende de la carga y la latencia requerida.
-- Con interrupciones, el dispositivo avisa y el procesador atiende y vuelve a lo que hacía.
-- DMA evita que la CPU copie cada unidad, pero requiere preparación y coordinación.
-- El temporizador, las excepciones y las llamadas al sistema usan el mismo mecanismo.
+- El driver utiliza la interfaz del controlador de hardware para ordenar y consultar operaciones.
+- Sondeo e interrupciones permiten descubrir eventos con costes y latencias distintos.
+- DMA mueve datos; la notificación de finalización es una decisión separada.
+- Interrupciones externas, excepciones y llamadas al sistema tienen orígenes y contratos diferentes.

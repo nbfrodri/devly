@@ -5,11 +5,14 @@ level: basico
 layer: hardware
 prerequisites:
   - que-es-un-bit
-  - logica-booleana
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Claude E. Shannon: A Symbolic Analysis of Relay and Switching Circuits (1937, en inglés)"
     url: https://dspace.mit.edu/handle/1721.1/11173
+  - title: "Computation Structures: representación digital y retardos (en inglés)"
+    url: https://computationstructures.org/notes/digitalabstraction/notes.html
+  - title: "Computation Structures: lógica combinacional (en inglés)"
+    url: https://computationstructures.org/notes/combinational_logic/notes.html
   - title: "Nand2Tetris: curso libre para construir un ordenador desde las puertas lógicas (en inglés)"
     url: https://www.nand2tetris.org/course
 ---
@@ -20,17 +23,17 @@ Una **puerta lógica** es un circuito electrónico muy pequeño que recibe uno o
 
 ## Qué problema resuelven
 
-Un ordenador tiene que sumar, comparar y tomar decisiones, y solo dispone de electricidad: tensión o ausencia de tensión.
+Un circuito electrónico debe representar los bits mediante magnitudes físicas. Habitualmente utiliza intervalos de tensión: uno bajo representa 0 y uno alto, 1. Bajo no significa necesariamente cero voltios, y el intervalo entre ambos no tiene por qué representar un bit válido. Los límites los fija la tecnología del circuito.
 
-Hace falta un puente entre la lógica y la física. Lo descubrió Claude Shannon en 1937: las operaciones de la [lógica booleana](/articulos/logica-booleana/), con sus valores verdadero y falso, pueden realizarse con circuitos de interruptores. Un circuito cerrado es un 1; uno abierto, un 0.
+Hace falta un puente entre la lógica y la física. En su tesis de 1937, Claude Shannon mostró cómo analizar circuitos de relés e interruptores mediante [lógica booleana](/articulos/logica-booleana/). Esta lógica combina dos valores, verdadero y falso, que aquí representamos con 1 y 0. Que un interruptor esté abierto o cerrado no determina por sí solo el bit de salida: importa cómo esté conectado.
 
 A partir de ahí, diseñar un circuito que calcule se convirtió en un problema de lógica.
 
 ## De qué están hechas
 
-Una puerta se construye con [**transistores**](/articulos/que-es-un-transistor/). Un transistor funciona como un interruptor que no se acciona con el dedo, sino con electricidad: según la tensión que recibe en una de sus patas, deja pasar o no la corriente entre las otras dos.
+Una puerta se construye con [**transistores**](/articulos/que-es-un-transistor/). En diseños habituales, los transistores actúan como interruptores controlados por tensiones. Sus conexiones dirigen la salida hacia un nivel bajo o alto; este modelo simplifica su comportamiento físico.
 
-Combinando unos pocos transistores se obtiene una puerta. Un procesador actual contiene miles de millones.
+Combinando unos pocos transistores se obtiene una puerta. Un procesador complejo puede contener miles de millones de transistores.
 
 ## Las puertas básicas
 
@@ -78,7 +81,7 @@ console.log(1 ^ 1); // 0
 console.log(1 ^ 0); // 1
 ```
 
-`&` es AND, `|` es OR y `^` es XOR.
+`&` es AND, `|` es OR y `^` es XOR. En estos ejemplos las entradas son únicamente 0 y 1; no estamos simulando tensiones ni retardos eléctricos.
 
 ## Una sola puerta basta
 
@@ -97,7 +100,7 @@ console.log(or(0, 0)); // 0
 console.log(or(0, 1)); // 1
 ```
 
-Aquí NOT, AND y OR están hechas solo con NAND. Tiene una consecuencia práctica: en una fábrica de chips es más sencillo producir muy bien un único tipo de puerta y repetirlo.
+Aquí NOT, AND y OR están hechas solo con NAND, para entradas de un bit. Por ejemplo, con A = 0 y B = 1, las negaciones internas de OR dan 1 y 0; su NAND final da 1. La universalidad permite construir cualquier función booleana combinacional mediante suficientes NAND. No obliga a fabricar un chip usando exclusivamente esa puerta: se eligen combinaciones por área, consumo y tiempo de propagación.
 
 ## De las puertas a la aritmética
 
@@ -124,9 +127,9 @@ console.log(semisumador(1, 1).acarreo); // 1
 console.log(semisumador(1, 0).suma); // 1
 ```
 
-Añadiendo otra entrada para el acarreo que viene de la posición anterior se obtiene un **sumador completo**, pieza básica de la [ALU](/articulos/la-alu-y-la-aritmetica-binaria/). Encadenando 64 de ellos, un circuito que suma números de 64 bits.
+Añadiendo otra entrada para el acarreo que viene de la posición anterior se obtiene un **sumador completo**, pieza básica de la [ALU](/articulos/la-alu-y-la-aritmetica-binaria/). Encadenando 64 de ellos se obtiene un diseño posible para sumar números de 64 bits; existen otras organizaciones que reducen la espera del acarreo.
 
-Así se construye todo. La unidad que hace las operaciones dentro de un [procesador](/articulos/como-funciona-un-procesador/) es una gran combinación de puertas.
+La unidad que hace las operaciones enteras dentro de un [procesador](/articulos/como-funciona-un-procesador/) combina circuitos como estos.
 
 <Quiz
 	client:visible
@@ -137,11 +140,11 @@ Así se construye todo. La unidad que hace las operaciones dentro de un [procesa
 
 ## Circuitos que recuerdan
 
-Los circuitos anteriores dan una salida que depende solo de las entradas de ese instante. Se llaman **combinacionales**.
+Los circuitos anteriores dan una salida que depende de las entradas, sin recordar datos anteriores. Se llaman **combinacionales**. La respuesta física no es instantánea: tras cambiar una entrada hay que dejar pasar el tiempo de propagación antes de exigir una salida válida.
 
-Si la salida de una puerta se conecta de vuelta a una entrada, el circuito puede mantener un valor aunque las entradas cambien. Ese circuito, llamado **biestable**, guarda un bit. Es la base de los registros del procesador y de la memoria.
+Una realimentación diseñada para tener dos estados estables puede guardar un bit. Ese circuito se llama **biestable**: conserva su estado mientras siga alimentado y no se active una entrada que lo cambie. Conectar cualquier salida consigo misma no basta; también se pueden crear oscilaciones o estados no válidos.
 
-Los circuitos con memoria se llaman [**secuenciales**](/articulos/circuitos-secuenciales-y-biestables/), y necesitan una señal de reloj que marque cuándo deben actualizar lo que guardan.
+Los circuitos con memoria se llaman [**secuenciales**](/articulos/circuitos-secuenciales-y-biestables/). Muchos emplean una señal de reloj para coordinar las actualizaciones, pero también existen diseños sin un reloj común.
 
 ## La escalera completa
 
@@ -158,7 +161,6 @@ Cada nivel usa el de abajo sin preocuparse de cómo está hecho. Es la misma ide
 ## Lo esencial
 
 - Una puerta lógica combina bits según una operación de la lógica booleana.
-- Se construye con transistores, que actúan como interruptores.
 - Las básicas son NOT, AND, OR y XOR; con NAND se pueden construir todas.
 - Sumar dos bits requiere una XOR para la suma y una AND para el acarreo.
 - Realimentando puertas se obtienen circuitos capaces de guardar un bit.

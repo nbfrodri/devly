@@ -1,6 +1,6 @@
 ---
 title: "¿Qué es la memoria caché del procesador?"
-description: "La caché es una memoria pequeña y muy rápida, dentro del procesador, que guarda los datos usados hace poco para no ir a buscarlos a la RAM."
+description: "La caché del procesador conserva copias de datos e instrucciones para reducir esperas. Su eficacia depende de los accesos y de cómo se colocan las líneas."
 level: intermedio
 layer: hardware
 prerequisites:
@@ -17,54 +17,53 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-La **memoria caché del procesador** es una memoria pequeña y rapidísima, situada dentro del propio [procesador](/articulos/como-funciona-un-procesador/), que guarda copias de los datos e instrucciones que se han usado hace poco. Así, la mayoría de las veces el procesador encuentra lo que necesita sin esperar a la [memoria RAM](/articulos/memoria-ram-y-almacenamiento/), que es mucho más lenta.
+La **memoria caché del procesador** conserva copias de datos e instrucciones cerca de las unidades que los usan. En muchos [procesadores](/articulos/como-funciona-un-procesador/) está integrada en el mismo chip. Encontrar una copia válida permite evitar el acceso a un nivel más lento, como la [memoria RAM](/articulos/memoria-ram-y-almacenamiento/). Cuánto ayuda depende del programa y del equipo.
 
-Es una [caché](/articulos/que-es-una-cache/) en el sentido general, aplicada al nivel más bajo.
+Es el mismo principio de una [caché](/articulos/que-es-una-cache/): conservar una copia para reducir el coste de obtenerla de nuevo. Aquí el hardware gestiona bloques de memoria.
 
 ## Qué problema resuelve
 
-Un procesador ejecuta varias instrucciones por nanosegundo. Leer un dato de la RAM lleva del orden de cien nanosegundos.
+El procesador puede necesitar datos más deprisa de lo que la RAM puede entregarlos. Si una instrucción depende de una lectura que aún no ha llegado, tiene que esperar; ejecutar otras instrucciones independientes puede ocultar parte de ese retraso, pero no lo elimina.
 
-Si cada acceso a memoria costara eso, el procesador pasaría casi todo el tiempo esperando. Se suele comparar así: si usar un dato que ya tiene a mano le lleva un segundo, ir a buscarlo a la RAM le lleva varios minutos.
+Como ejemplo de escala, una CPU de 2 GHz tiene ciclos de 0,5 nanosegundos. Una lectura que tardara 100 nanosegundos ocuparía 200 de esos ciclos. Son valores ilustrativos, no una medición de cualquier equipo ni una afirmación de que toda la CPU permanezca parada.
 
-¿Por qué no hacer toda la memoria igual de rápida? Porque la memoria rápida es cara, ocupa mucho y consume más. No se puede tener a la vez mucha, rápida y barata.
+¿Por qué no hacer toda la memoria igual de rápida? La RAM estática, o SRAM, usada en muchas cachés necesita más área por bit que la RAM dinámica, o DRAM, de la memoria principal. Capacidad, latencia, energía y coste condicionan el diseño.
 
 ## La jerarquía de memoria
 
-La solución es combinar varios tipos: poca memoria muy rápida cerca del procesador, y cada vez más cantidad, más lenta y más barata, a medida que uno se aleja.
+Una organización habitual combina varios niveles. Los nombres describen su papel; no fijan una capacidad ni una latencia universal.
 
-| Nivel | Tamaño típico | Tiempo de acceso aproximado |
-| --- | --- | --- |
-| Registros | Unas decenas de valores | Inmediato |
-| Caché L1 | Decenas de kilobytes | 1 nanosegundo |
-| Caché L2 | Cientos de kilobytes a megabytes | Unos pocos nanosegundos |
-| Caché L3 | Decenas de megabytes | Decenas de nanosegundos |
-| RAM | Gigabytes | Unos 100 nanosegundos |
-| SSD | Cientos de gigabytes | Decenas de microsegundos |
+| Nivel | Papel en esa organización |
+| --- | --- |
+| Registros | Operandos y resultados que usan las instrucciones; acceder a ellos tampoco es instantáneo |
+| Caché L1 | Primer nivel de caché, pequeño y de baja latencia |
+| Caché L2 | Más capacidad que L1, normalmente con mayor latencia |
+| Caché L3, si existe | Otro nivel de mayor capacidad, a menudo compartido |
+| RAM | Memoria principal, con más capacidad y una latencia de acceso normalmente mayor |
 
-Las cifras cambian de un equipo a otro; lo que importa es la proporción entre niveles.
+El almacenamiento persistente tiene otra función: conserva archivos. No es simplemente una L4 a la que cualquier fallo de caché llegue de forma automática.
 
 En muchos procesadores, cada núcleo tiene sus propias cachés L1 y L2, y varios núcleos comparten una L3. La distribución exacta depende de la arquitectura.
 
 ## Por qué funciona: la localidad
 
-Una caché de unos kilobytes delante de gigabytes de RAM parece inútil. Funciona porque los programas no acceden a la memoria al azar. Siguen dos patrones.
+Una caché de unos kilobytes delante de gigabytes de RAM parece inútil. Puede ayudar mucho cuando los accesos presentan uno de estos patrones:
 
-- **Localidad temporal.** Lo que se ha usado hace poco, se volverá a usar pronto. La variable de un [bucle](/articulos/bucles/) se lee en cada vuelta.
+- **Localidad temporal.** Volver a usar pronto lo que se ha usado hace poco. La variable de un [bucle](/articulos/bucles/) se lee en cada vuelta.
 - **Localidad espacial.** Si se usa un dato, es probable que enseguida se usen los que están a su lado. Recorrer un [array](/articulos/arrays/) es acceder a posiciones consecutivas.
 
-La caché aprovecha las dos: conserva lo reciente, y cuando trae un dato de la RAM, trae también a sus vecinos.
+Conservar una línea puede aprovechar la repetición de accesos; traerla completa puede aprovechar accesos a sus vecinos. Un recorrido con poca reutilización puede beneficiarse poco, y un conjunto de datos demasiado grande no cabe entero.
 
 ## Cómo trabaja
 
-La memoria se maneja en bloques llamados **líneas de caché**, normalmente de 64 bytes.
+La caché organiza las copias en bloques llamados **líneas de caché**. Un tamaño de 64 [bytes](/articulos/que-es-un-byte/) es habitual en CPU de propósito general, pero depende de la arquitectura.
 
 Cuando el procesador necesita un dato:
 
-- **Acierto.** Está en la caché. Se obtiene en un nanosegundo.
-- **Fallo.** No está en ese nivel. Se busca en los niveles siguientes; solo se llega a RAM si es necesario. Se instala la línea en la caché y, si no hay sitio, se desaloja otra línea.
+- **Acierto.** La línea válida está en ese nivel. Se obtiene con la latencia de ese nivel, que también depende de cómo se atienda el acceso.
+- **Fallo.** La línea no está disponible en ese nivel. En una lectura normal de memoria cacheable se busca en otros niveles y, si es necesario, en RAM. Al instalarla puede hacer falta desalojar otra; una línea modificada puede requerir escribir sus datos antes de reutilizar su espacio.
 
-Este programa simula una caché mínima y mide qué proporción de accesos son aciertos:
+Este programa simula lecturas en una caché de **colocación directa**: cada bloque solo puede ocupar una posición, calculada con el resto de la división. Tiene ocho líneas de cuatro bytes y empieza vacía. El modelo admite una lista no vacía de direcciones enteras no negativas y cantidades de líneas y bytes por línea enteras positivas:
 
 ```js
 function tasaDeAciertos(direcciones, lineas = 8, tamanoDeLinea = 4) {
@@ -96,9 +95,22 @@ Con accesos consecutivos, el primero de cada línea falla y los tres siguientes 
 
 Son 64 accesos en ambos casos, pero a regiones distintas: el primero usa las direcciones 0 a 63; el segundo, 0, 32, 64 y así hasta 2016. En esta simulación, todos los saltos compiten por la posición 0 de la caché, porque el número de bloque es múltiplo de ocho. El ejemplo muestra tanto localidad espacial como conflictos de colocación; no mide tiempos de un procesador real.
 
+### Seguir un desalojo
+
+Con esa misma configuración, las direcciones 0, 1, 32 y 0 producen esta secuencia:
+
+| Dirección | Bloque: dirección dividida entre 4, sin decimales | Posición: bloque módulo 8 | Resultado |
+| --- | --- | --- | --- |
+| 0 | 0 | 0 | Fallo: se instala el bloque 0 |
+| 1 | 0 | 0 | Acierto: sigue el bloque 0 |
+| 32 | 8 | 0 | Fallo: el bloque 8 sustituye al 0 |
+| 0 | 0 | 0 | Fallo: el bloque 0 ya no estaba |
+
+Solo hay un acierto de cuatro, aunque las otras siete posiciones están libres. No basta con tener capacidad total: también importa dónde puede colocarse cada bloque. Una caché asociativa permite varias posiciones posibles y reduce algunos conflictos; no elimina todos los [fallos de caché](/articulos/fallos-de-cache/).
+
 ## Lo que implica al programar
 
-La caché es invisible, y aun así decide el rendimiento del código que maneja muchos datos.
+El programa normalmente no pide cada carga en caché de forma explícita, pero su patrón de acceso puede influir mucho en el rendimiento.
 
 ### El orden de recorrido
 
@@ -114,11 +126,11 @@ Por eso un array suele ser más rápido de recorrer aunque, sobre el papel, las 
 
 ### Tamaño de los datos
 
-Cuanto más compactos, más caben en una línea, y menos fallos hay. Guardar juntos los campos que se usan juntos ayuda.
+Guardar juntos los campos que se usan juntos puede aprovechar mejor cada línea. Compactar datos no garantiza una mejora: hay que considerar el coste de decodificarlos, la alineación y las escrituras de otros hilos.
 
 ### Varios hilos
 
-Si dos [hilos](/articulos/hilos-y-concurrencia/), en núcleos distintos, modifican variables diferentes que están en la **misma línea de caché**, cada escritura invalida la copia del otro núcleo. Los dos se estorban sin compartir ningún dato. Se llama **falsa compartición**, y es un problema de rendimiento difícil de detectar.
+Si dos [hilos](/articulos/hilos-y-concurrencia/), en núcleos distintos, modifican variables diferentes de la **misma línea**, pueden obligar a transferir repetidamente el permiso para escribirla. En un protocolo basado en invalidaciones, obtener ese permiso invalida otras copias cuando las hay; varias escrituras seguidas del mismo propietario no necesitan repetir todo el intercambio. Es **falsa compartición**: se comparte la línea aunque las variables sean distintas.
 
 <Quiz
 	client:visible
@@ -133,30 +145,25 @@ Si dos [hilos](/articulos/hilos-y-concurrencia/), en núcleos distintos, modific
 
 ## Lo que el procesador hace por su cuenta
 
-- **Precarga.** Si detecta un patrón de acceso regular, trae las líneas siguientes antes de que se pidan. Es otra razón de que el acceso secuencial sea tan rápido.
-- **Desalojo.** Cuando la caché se llena, descarta aproximadamente lo que lleva más tiempo sin usarse.
-- **Coherencia.** Con varios núcleos, cada uno con su caché, un protocolo mantiene las copias de un mismo dato de acuerdo.
+- **Precarga.** Algunos mecanismos intentan anticipar accesos y traer líneas antes de necesitarlas. Acertar puede reducir esperas; equivocarse consume ancho de banda y espacio.
+- **Desalojo.** La colocación limita qué línea puede sustituirse. Cuando hay varias candidatas, la política puede aproximar el uso reciente o seguir otros criterios; no todas aplican LRU, la elección de la línea que lleva más tiempo sin usarse.
+- **Coherencia.** La [coherencia de caché](/articulos/coherencia-de-cache/) coordina copias y permisos entre núcleos. No sustituye la sincronización entre hilos ni fija por sí sola el orden de accesos a direcciones distintas.
 
 ## No optimizar a ciegas
 
-Para la mayoría del código, nada de esto importa. Pesa en lo que procesa grandes volúmenes de datos en bucles muy ejecutados: cálculo numérico, videojuegos, bases de datos, compresión.
+Antes de reorganizar datos, comprueba qué limita la ejecución. Mejorar localidad no resolverá una espera de red ni un algoritmo que hace demasiado trabajo. Los bucles de cálculo numérico, videojuegos, bases de datos o compresión son ejemplos donde merece la pena investigar los accesos a memoria.
 
-Y antes de reorganizar los datos hay que **medir**. Existen herramientas que cuentan los [fallos de caché](/articulos/fallos-de-cache/) de un programa.
+Hay herramientas que cuentan fallos y otros eventos del procesador. Conviene relacionarlos con el tiempo de la tarea que quieres mejorar: menos fallos no garantiza por sí solo menor duración.
 
-## Un asunto de seguridad
+## Errores comunes
 
-Que un acceso tarde más o menos según esté o no en la caché es una diferencia que se puede medir. Un programa puede así deducir a qué datos accedió otro.
-
-En 2018 se dieron a conocer dos vulnerabilidades, Spectre y Meltdown, que combinaban esa medición con la ejecución anticipada de instrucciones para leer memoria ajena. Afectaban a casi todos los procesadores, y corregirlas costó rendimiento.
-
-Cuando una petición no encuentra el dato en un nivel, ocurre un [fallo de caché](/articulos/fallos-de-cache/). Puede resolverse en otro nivel sin llegar necesariamente a RAM.
-
-La [coherencia de caché](/articulos/coherencia-de-cache/) coordina copias y permisos entre núcleos, con un contrato distinto de la consistencia de memoria.
+- **Pensar que un fallo significa que toda la caché está llena.** La traza tiene siete posiciones libres y aun así desaloja el bloque 0: ambos bloques compiten por una posición.
+- **Suponer que cada elemento de un array dinámico está junto al anterior en memoria.** El lenguaje puede guardar referencias y objetos separados; hay que conocer la representación.
+- **Cambiar la disposición sin medir.** Una mejora de localidad puede añadir trabajo o perjudicar a otro hilo. Comprueba el resultado con la misma carga.
 
 ## Lo esencial
 
-- La caché del procesador guarda datos recientes para no esperar a la RAM.
-- Hay varios niveles: cuanto más cerca del procesador, más rápidos y más pequeños.
-- Funciona porque los programas repiten accesos y usan datos contiguos.
-- La memoria se trae en líneas: al pedir un dato llegan también sus vecinos.
-- Recorrer los datos en orden, y tenerlos juntos, puede multiplicar la velocidad.
+- Una copia válida en caché puede evitar un acceso a un nivel más lento; un acierto tampoco es instantáneo.
+- La localidad temporal reutiliza datos; la espacial aprovecha vecinos dentro de una línea.
+- Capacidad, colocación y política de reemplazo condicionan qué líneas siguen disponibles.
+- Organización de datos y coordinación entre núcleos afectan al resultado; hay que medir antes de optimizar.
