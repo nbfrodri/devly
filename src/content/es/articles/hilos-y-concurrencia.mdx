@@ -1,6 +1,6 @@
 ---
 title: "¿Qué son los hilos y la concurrencia?"
-description: "La concurrencia es que un programa gestione varias tareas a la vez. Los hilos son la forma más directa de conseguirlo."
+description: "La concurrencia organiza varias tareas en curso. Los hilos comparten la memoria de un proceso y permiten solapar esperas o repartir trabajo entre núcleos."
 level: intermedio
 layer: sistemas
 prerequisites:
@@ -15,7 +15,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-La **concurrencia** es la capacidad de un programa para tener varias tareas en marcha durante el mismo periodo de tiempo. Un **hilo** es un flujo de ejecución dentro de un [proceso](/articulos/que-es-un-proceso/): la herramienta más directa para que un programa haga varias cosas a la vez.
+La **concurrencia** es la capacidad de un programa para tener varias tareas en marcha durante el mismo periodo de tiempo. Un **hilo** es un flujo de ejecución dentro de un [proceso](/articulos/que-es-un-proceso/). Usar varios hilos es una forma de organizar trabajo concurrente.
 
 ## Qué problema resuelve
 
@@ -31,7 +31,7 @@ Hay dos motivos para querer concurrencia:
 Se usan como sinónimos y no lo son.
 
 - **Concurrencia**: varias tareas están en curso y avanzan intercalándose. Puede haber un solo núcleo, que salta de una a otra.
-- **Paralelismo**: varias tareas se ejecutan literalmente en el mismo instante, en núcleos distintos.
+- **Paralelismo**: varias tareas se ejecutan literalmente en el mismo instante, por ejemplo en núcleos distintos.
 
 Un cocinero que prepara tres platos, atendiendo cada uno mientras los otros se hacen, trabaja de forma concurrente. Tres cocineros, cada uno con su plato, trabajan en paralelo.
 
@@ -68,14 +68,14 @@ Lo que distingue a los hilos de los procesos es lo que comparten:
 
 | | Procesos distintos | Hilos del mismo proceso |
 | --- | --- | --- |
-| Memoria | Separada | Compartida |
-| Pila de llamadas | Una cada uno | Una cada uno |
-| Crearlos y cambiar entre ellos | Más costoso | Más barato |
-| Si uno falla | Los demás siguen | Puede caer todo el proceso |
+| Memoria | Espacios de direcciones separados; pueden compartir regiones explícitamente | Comparten el espacio de direcciones |
+| Pila de llamadas | Una por cada hilo que contiene el proceso | Cada hilo tiene la suya |
+| Crearlos y cambiar entre ellos | Suele implicar más recursos y aislamiento | Compartir el espacio de direcciones puede reducir el coste |
+| Si uno falla | El aislamiento limita la propagación directa | Un fallo fatal puede terminar todo el proceso |
 
-Cada hilo tiene su propia [pila](/articulos/pilas-y-colas/) y su propio punto de ejecución, pero todos ven las mismas variables y los mismos datos.
+Cada hilo tiene su propia [pila](/articulos/pilas-y-colas/) y su propio punto de ejecución. Comparten el espacio de memoria, pero eso no significa que todas las variables sean comunes: una variable local de cada llamada ocupa su propia ubicación. El lenguaje también puede ofrecer almacenamiento específico de cada hilo.
 
-Compartir memoria es su gran ventaja: pasarse información es inmediato. Y es también su gran peligro, como se verá.
+Compartir memoria permite intercambiar datos sin copiarlos entre procesos. Aun así, la visibilidad y el orden de los accesos necesitan coordinación; compartir una dirección no garantiza leer el valor esperado.
 
 ## Quién decide el orden
 
@@ -102,7 +102,7 @@ La forma de evitarlo y los problemas que trae consigo, como los bloqueos mutuos,
 
 ## Otra forma: un solo hilo que no espera
 
-No toda la concurrencia usa varios hilos. JavaScript ejecuta el código de una página en un solo hilo y aun así atiende clics, descargas y temporizadores a la vez.
+No toda la concurrencia usa varios hilos. El hilo principal de una página puede atender clics, descargas y temporizadores sin ejecutar dos callbacks simultáneamente. El navegador puede usar otros hilos internamente, y JavaScript dispone también de workers para trabajo separado.
 
 El truco es no quedarse esperando. Cuando una operación va a tardar, como una petición de red, el programa la inicia, deja anotado qué hacer cuando termine y sigue con otra cosa. Un mecanismo llamado **bucle de eventos** va despachando las tareas pendientes a medida que están listas.
 
@@ -142,9 +142,15 @@ Añadir [núcleos](/articulos/procesadores-multinucleo/) no acelera un programa 
 
 Un [semáforo](/articulos/semaforos-en-concurrencia/) coordina tareas mediante permisos y permite distinguir exclusión mutua de límites de capacidad.
 
+## Errores comunes
+
+- **Crear más hilos y esperar una mejora proporcional.** Los núcleos, la parte secuencial y la coordinación limitan el paralelismo útil.
+- **Suponer que compartir memoria ordena los accesos.** Dos hilos pueden leer un mismo valor antiguo y sobrescribir el resultado del otro. Hace falta un mecanismo de sincronización adecuado.
+- **Marcar una función como `async` para apartar un cálculo pesado.** Esa palabra no crea un hilo: el código síncrono sigue ocupando el hilo donde se ejecuta.
+
 ## Lo esencial
 
 - La concurrencia es tener varias tareas en curso; el paralelismo, ejecutarlas en el mismo instante.
 - Un hilo es un flujo de ejecución dentro de un proceso; los hilos comparten memoria.
-- El orden en que se intercalan no lo controla el programa.
+- El planificador decide la intercalación; la sincronización permite imponer las relaciones de orden necesarias.
 - El modelo asíncrono consigue concurrencia con un solo hilo, y es adecuado cuando el trabajo consiste en esperar.

@@ -187,3 +187,13 @@ Se conservan provisionalmente los demás artículos nuevos del plan 7: su lectur
 `pnpm check` ha pasado tras las correcciones de esta tanda: 558 tests, sin errores de Astro y 593 páginas generadas. También se ejecutó la simulación de JIT y se comprobó su salida. Persisten los avisos de build sobre el lenguaje `svg` en Shiki y el tamaño de un fragmento JavaScript. La revisión visual sigue pendiente: la sesión de control de navegador no ofrece superficies disponibles. No se considera sustituida por el build.
 
 **Integración y alcance pendiente:** cambios en la rama `docs/content-plan-8`, todavía sin integrar en `main`. Ninguna ruta cerrada. Continúan pendientes las ampliaciones anteriores del plan 7, el resto de rutas y el cruce final con todo el catálogo. La guía sigue siendo el contrato vigente; no se modifica para acomodar los artículos. El backlog inicial conserva su estado histórico; este registro documenta la revisión actual de DMA y los demás artículos.
+
+Hito guardado en `12b6fd5` (`docs: improve foundations and review plan 7 content`).
+
+### Tanda 2 · Ampliaciones anteriores del plan 7 (en curso)
+
+- `hilos-y-concurrencia`: leído completo y contrastado con OSTEP y MDN. Corregida la tabla de procesos e hilos: pila por hilo, espacio de direcciones compartido y posibilidad de memoria compartida entre procesos. Matizadas las variables locales, la sincronización y el hilo principal del navegador. Añadidos errores comunes con causas. Se conserva el caso numérico de uno y dos núcleos y su comparación, que ya permiten seguir la diferencia entre concurrencia y paralelismo.
+- `estrategias-de-despliegue`: leído completo y abiertas sus cuatro fuentes. Detectadas garantías excesivas sobre reversión inmediata, ausencia de cortes y reversibilidad después de eliminar columnas. También faltan confusiones frecuentes y acotar el reparto por identificadores. Corrección preparada pero no aplicada: el hook PreToolUse bloqueó el script de edición y solicitó confirmación para el heredoc ejecutable. Pendiente de respuesta del usuario; no se ha eludido el hook.
+- `pruebas-de-software`: leído completo. Pendiente corregir la afirmación de que TDD garantiza que nada queda sin probar, contextualizar la pirámide y su pregunta, y reunir las explicaciones de dobles de prueba y aserciones para evitar secciones desconectadas y repetidas. La comparación del mismo inventario con stub, fake y mock aporta un caso útil que debe conservarse.
+
+Verificado el ejemplo asíncrono de `hilos-y-concurrencia` y su salida; `pnpm check` vuelve a pasar con 558 tests y sin errores de Astro. Pendientes la revisión visual, las correcciones señaladas y el resto de ampliaciones. Ninguna casilla de ruta cambia de estado.
