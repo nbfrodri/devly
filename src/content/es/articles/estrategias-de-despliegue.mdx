@@ -1,6 +1,6 @@
 ---
 title: "Estrategias de despliegue: blue-green, canary y actualización progresiva"
-description: "Formas de publicar una versión nueva sin cortar el servicio y con la posibilidad de volver atrás si algo falla."
+description: "Cómo sustituyen versiones blue-green, canary y la actualización progresiva, qué exposición permiten controlar y qué límites tiene volver atrás."
 level: intermedio
 kind: comparacion
 layer: aplicaciones
@@ -21,7 +21,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Una **estrategia de despliegue** es la forma en que se sustituye la versión de una aplicación que está en producción por una nueva. Las tres más usadas son la **actualización progresiva**, el despliegue **blue-green** y el despliegue **canary**. Todas buscan lo mismo: publicar sin cortar el servicio y poder volver atrás deprisa.
+Una **estrategia de despliegue** es la forma en que se sustituye la versión de una aplicación en producción. La **actualización progresiva** reemplaza copias por etapas; **blue-green** cambia el tráfico entre dos entornos; **canary** expone primero la versión a un grupo limitado. Buscan mantener el servicio y controlar el riesgo, pero ninguna garantiza por sí sola una reversión segura.
 
 ## Qué problema resuelven
 
@@ -30,7 +30,7 @@ La forma más simple de actualizar es parar la versión antigua y arrancar la nu
 - **Hay un corte.** Entre una cosa y otra, el servicio no responde.
 - **Si la nueva falla, fallan todos los usuarios**, y volver a la anterior significa repetir el proceso al revés, con otro corte.
 
-Por eso los despliegues se hacían de madrugada y pocas veces. Las estrategias siguientes permiten hacerlos a cualquier hora y varias veces al día, que es lo que pide el [despliegue continuo](/articulos/integracion-y-despliegue-continuos/).
+Reducir el impacto de cada actualización facilita publicar cambios pequeños con frecuencia, como propone el [despliegue continuo](/articulos/integracion-y-despliegue-continuos/). La frecuencia adecuada depende del servicio y de sus comprobaciones.
 
 Todas se apoyan en tener varias copias de la aplicación tras un [balanceador de carga](/articulos/balanceador-de-carga/), que decide a cuáles envía el tráfico.
 
@@ -43,7 +43,7 @@ En inglés, *rolling update*. Las copias se sustituyen de una en una, o por grup
 3. Se retira una copia antigua.
 4. Se repite hasta que no queda ninguna.
 
-- **A favor:** sin cortes y sin necesitar apenas máquinas de más. Es la estrategia por defecto de [Kubernetes](/articulos/que-es-kubernetes/).
+- **A favor:** permite mantener el servicio con capacidad adicional limitada si las copias sanas pueden atender la carga. Es la estrategia por defecto de los Deployments de [Kubernetes](/articulos/que-es-kubernetes/).
 - **En contra:** durante el proceso conviven las dos versiones. Y volver atrás es otra actualización progresiva, que lleva su tiempo.
 
 ## Blue-green
@@ -55,9 +55,9 @@ Se mantienen **dos entornos completos e idénticos**. Uno, llamado azul, atiende
 3. Se cambia el balanceador para que todo el tráfico vaya al verde.
 4. El azul queda intacto, con la versión anterior.
 
-Si algo va mal, se devuelve el tráfico al azul. La vuelta atrás es **inmediata**: un cambio en el balanceador.
+Si algo va mal, se puede devolver el tráfico al azul sin reinstalar la versión anterior. Aun así, hay que considerar conexiones abiertas, propagación del cambio y compatibilidad de los datos.
 
-- **A favor:** vuelta atrás instantánea, y la versión nueva se prueba en un entorno idéntico al real antes de recibir a nadie.
+- **A favor:** facilita devolver el tráfico al entorno anterior y probar la nueva versión antes de exponerla.
 - **En contra:** exige el doble de infraestructura, al menos durante el cambio. Y todos los usuarios pasan a la vez: si hay un fallo que las pruebas no vieron, lo sufren todos hasta que se revierte.
 
 ## Canary
@@ -85,41 +85,55 @@ console.log(version(3, 5)); // "nueva"
 console.log(version(42, 5)); // "estable"
 ```
 
-El reparto se calcula a partir del identificador del usuario, y no al azar en cada petición. Así una misma persona ve siempre la misma versión, en lugar de alternar entre las dos.
+El reparto se calcula a partir del identificador del usuario, y no al azar en cada petición. Con un porcentaje fijo, una misma persona conserva su grupo. Al aumentar el porcentaje, algunas pasan a la versión nueva. El 5 % exacto se cumple aquí porque los identificadores distribuyen uniformemente los restos de 0 a 99; una población real puede necesitar otro criterio de asignación.
 
-- **A favor:** un fallo afecta a pocos, y se prueba con tráfico real, que es la única prueba completa.
+- **A favor:** limita la exposición inicial y aporta observaciones de tráfico real. No cubre automáticamente todos los casos ni evita daños en datos compartidos.
 - **En contra:** es la más compleja. Exige enrutar por porcentajes y buenas métricas. Sin ellas, es una actualización lenta y nada más.
 
 ## Comparación
+
+### El mismo carrito con tres estrategias
+
+Imagina una tienda con cuatro copias de su aplicación y una versión nueva del carrito. Ambas versiones pueden leer los datos existentes. Estos son tres recorridos posibles:
+
+| Estrategia | Primer paso con tráfico real | Si el carrito calcula mal un descuento |
+| --- | --- | --- |
+| Progresiva | Añadir una copia nueva y retirar una antigua cuando la nueva esté preparada | Detener la sustitución y recuperar copias antiguas; parte del tráfico ya alcanzó la nueva |
+| Blue-green | Preparar cuatro copias nuevas en el segundo entorno y cambiar el tráfico hacia él | Devolver tráfico al entorno anterior, si sigue siendo compatible |
+| Canary | Mantener las copias antiguas y enviar un 5 % de usuarios a una copia nueva | Retirar ese grupo de la versión nueva y revisar las compras afectadas |
+
+Una de cinco copias no equivale necesariamente al 5 % de usuarios: el reparto del canary debe configurarse y medirse. En los tres casos, recuperar la versión anterior evita nuevas compras defectuosas, pero no corrige automáticamente las ya guardadas. Por eso importa comprobar el resultado del carrito además de que el servidor responda.
+
+### Criterios para decidir
 
 | | Progresiva | Blue-green | Canary |
 | --- | --- | --- | --- |
 | Cómo cambia | Copia a copia | Todo de golpe | Por porcentajes |
 | Infraestructura extra | Poca | El doble | Poca |
-| Vuelta atrás | Lenta | Inmediata | Rápida |
-| Usuarios expuestos a un fallo | Van creciendo | Todos | Pocos |
+| Vuelta atrás del tráfico | Requiere sustituir copias | Cambio hacia el entorno anterior | Retirar tráfico de la versión nueva |
+| Exposición inicial | Crece con las copias nuevas | Todo el tráfico que se cambia | Grupo limitado |
 | Complejidad | Baja | Media | Alta |
 
 <Quiz
 	client:visible
-	question="¿Qué estrategia expone una versión nueva solo a una pequeña parte de los usuarios al principio?"
-	options={["Blue-green", "Canary", "Parar y arrancar"]}
+	question="Un canary guardó compras con un descuento incorrecto. ¿Qué garantiza retirar su tráfico?"
+	options={["Que las compras guardadas recuperan su importe anterior", "Que deja de recibir tráfico nuevo; las compras afectadas necesitan revisión", "Que el esquema vuelve automáticamente a su versión anterior"]}
 	answer={1}
 />
 
 ## El obstáculo común: la base de datos
 
-El código se puede tener en dos versiones a la vez. La [base de datos](/articulos/que-es-una-base-de-datos/) es una sola.
+El código se puede tener en dos versiones a la vez. A menudo ambas comparten una [base de datos](/articulos/que-es-una-base-de-datos/), cuyo estado también cambia.
 
 Si la versión nueva renombra una columna, la antigua, que sigue en marcha durante el despliegue o a la que quizá haya que volver, deja de funcionar.
 
 La solución es que cada cambio del esquema sea compatible con las dos versiones, y hacerlo en pasos:
 
-1. **Ampliar.** Se añade la columna nueva, sin tocar la antigua. Nada se rompe.
-2. **Migrar.** Se despliega código que escribe en las dos y lee de la nueva. Se copian los datos existentes.
+1. **Ampliar.** Se añade una columna compatible con el código antiguo. Hay que comprobar valores por defecto, restricciones y el coste de modificar la tabla.
+2. **Migrar.** Se mantiene la escritura compatible y se copian los datos existentes. Antes de cambiar las lecturas a la columna nueva, se comprueba que esté completa y actualizada.
 3. **Contraer.** Cuando ninguna versión usa la columna antigua, se elimina.
 
-Son tres despliegues en lugar de uno, y en cualquiera se puede volver atrás.
+Son etapas que pueden requerir varios despliegues. La contracción elimina compatibilidad: después de borrar la columna antigua no puedes restaurar sin más una versión que todavía la necesita. La reversión debe planearse antes de cada etapa.
 
 Por lo mismo, las [API](/articulos/que-es-una-api/) deben ser compatibles hacia atrás, y las operaciones, [idempotentes](/articulos/atomicidad-e-idempotencia/): durante el cambio, una petición puede repetirse contra otra versión.
 
@@ -166,26 +180,31 @@ Un despliegue canary limita qué instancias reciben la versión; un lanzamiento 
 
 Su coste es que cada interruptor añade una rama al código. Los que ya no se usan se eliminan; si no, se acumulan y nadie sabe qué combinaciones están probadas.
 
-## Requisitos de todas
+## Condiciones que hay que preparar
 
 - **Comprobaciones de salud**, para saber si una copia nueva funciona antes de enviarle tráfico.
 - **Despliegues automatizados.** A mano no son fiables.
 - **Observabilidad.** Sin métricas no se sabe si la versión nueva es peor.
-- **Servidores sin estado.** Las sesiones guardadas en una copia se pierden cuando se sustituye.
+- **Tratamiento del estado.** Las sesiones y los trabajos en curso deben sobrevivir al reemplazo o terminar de forma controlada. Sacar las sesiones de las copias es una opción; los servicios con estado necesitan una estrategia específica.
 
 ## Cómo elegir
 
 - **Progresiva** como punto de partida: sencilla y suficiente para la mayoría.
-- **Blue-green** cuando hace falta volver atrás al instante y se puede pagar el doble de infraestructura.
+- **Blue-green** cuando interesa conservar el entorno anterior listo para recuperar tráfico y se puede asumir la capacidad adicional.
 - **Canary** cuando hay mucho tráfico, un fallo sale caro y se dispone de buenas métricas.
 - **Interruptores** además de cualquiera, para separar el despliegue del lanzamiento.
 
 Las [migraciones de base de datos](/articulos/migraciones-de-bases-de-datos/) coordinan esquema, datos y versiones del código mediante etapas compatibles.
 
+## Confusiones frecuentes
+
+- **Confundir salud con corrección.** Una copia puede responder y calcular mal un precio. Las señales deben cubrir el comportamiento que cambia.
+- **Confundir retirar tráfico con deshacer efectos.** Una compra o una escritura ya realizada sigue existiendo después de la reversión.
+- **Tratar la contracción del esquema como reversible por defecto.** El código anterior puede depender de datos que ya no están disponibles.
+
 ## Lo esencial
 
-- Una estrategia de despliegue define cómo se sustituye una versión por otra sin cortes.
-- La progresiva cambia las copias de una en una.
-- Blue-green tiene dos entornos y cambia todo el tráfico de golpe, con vuelta atrás inmediata.
-- Canary expone la versión nueva a pocos usuarios y la amplía según las métricas.
-- Los cambios en la base de datos deben ser compatibles con las dos versiones.
+- La actualización progresiva sustituye copias por etapas; mantener capacidad y compatibilidad permite conservar el servicio.
+- Blue-green conserva dos entornos y facilita cambiar el tráfico, pero no deshace los datos modificados.
+- Canary limita la exposición inicial y la amplía según observaciones representativas.
+- La reversión depende también del esquema, los efectos ya producidos y el estado compartido.
