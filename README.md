@@ -48,7 +48,7 @@ El contenido se ordena de tres maneras:
 | Interactividad | Islas de React (las preguntas de comprobación) |
 | Búsqueda | [Pagefind](https://pagefind.app), indexada tras el build |
 | Estilos | Una hoja CSS con tokens y tema claro y oscuro |
-| Calidad | TypeScript estricto, Biome, Vitest y `astro check` en cada push |
+| Calidad | TypeScript estricto, Biome, Vitest y `astro check` en cada PR y push a `main` |
 | Alojamiento | Cloudflare Workers, como sitio estático |
 
 No hay base de datos ni panel de administración: publicar un artículo es añadir un archivo.
@@ -75,6 +75,10 @@ La búsqueda solo funciona sobre el sitio construido: usa `pnpm build` y `pnpm p
 4. Ejecuta `pnpm check`. Lo que llega a `main` se publica.
 
 El build falla si un artículo no cita fuentes, si una ruta apunta a un artículo que no existe o si un enlace interno está roto.
+
+`main` está protegida: los cambios se integran mediante PR con la comprobación `check` de GitHub Actions correcta, la rama actualizada y las conversaciones resueltas. La protección se aplica también a administradores y bloquea los pushes forzados y el borrado de la rama. Al ser un proyecto individual, no se exige aprobación de otro revisor.
+
+Al fusionar una PR, GitHub elimina automáticamente su rama remota. Esto ocurre tras el merge, cuyo CI previo es obligatorio; no espera al CI o despliegue posterior de `main` ni elimina las ramas locales.
 
 ## Estructura
 
