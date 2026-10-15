@@ -1,136 +1,121 @@
 ---
 title: "¿Qué es HTML?"
-description: HTML es el lenguaje que describe la estructura y el significado del contenido de una página web.
+description: "HTML describe la estructura y el significado de una página: sus encabezados, párrafos, enlaces y controles."
 level: basico
 layer: aplicaciones
-updated: 2026-10-13
+updated: 2026-10-16
 sources:
   - title: "MDN: Sintaxis básica de HTML"
     url: https://developer.mozilla.org/es/docs/Learn_web_development/Core/Structuring_content/Basic_HTML_syntax
-  - title: "WHATWG: HTML Standard, introducción (en inglés)"
+  - title: "WHATWG: Introducción al estándar HTML (en inglés)"
     url: https://html.spec.whatwg.org/multipage/introduction.html
+  - title: "WHATWG: Secciones y encabezados de HTML (en inglés)"
+    url: https://html.spec.whatwg.org/multipage/sections.html
+  - title: "WHATWG: Análisis y recuperación de errores de HTML (en inglés)"
+    url: https://html.spec.whatwg.org/multipage/parsing.html
+  - title: "MDN: El elemento details"
+    url: https://developer.mozilla.org/es/docs/Web/HTML/Reference/Elements/details
+  - title: "W3C WAI: Imágenes decorativas (en inglés)"
+    url: https://www.w3.org/WAI/tutorials/images/decorative/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**HTML** (*HyperText Markup Language*) es el lenguaje con el que se escribe el contenido de una página web. Indica qué es cada parte: esto es un título, esto un párrafo, esto un enlace.
+**HTML** (*HyperText Markup Language*, lenguaje de marcado de hipertexto) describe el contenido y la estructura de una página web. Indica qué fragmentos son encabezados, párrafos, enlaces o controles que el navegador, el programa con el que visitas páginas, debe interpretar.
 
-## No es un lenguaje de programación
+## Qué problema resuelve
 
-HTML no tiene [variables](/articulos/que-es-una-variable/), ni [condiciones](/articulos/condicionales/), ni [bucles](/articulos/bucles/). No da órdenes: describe. Es un **lenguaje de marcado**, es decir, un sistema para etiquetar un texto y decir qué papel cumple cada fragmento.
+Un texto plano puede decir «Biblioteca, horario, de 9 a 18», pero no señala qué parte es el título, qué horario pertenece a qué sección ni dónde hay un enlace. Un **lenguaje de marcado** añade esas indicaciones mediante etiquetas. El **hipertexto** conecta documentos o partes de un documento mediante enlaces.
 
-En una página web trabajan tres lenguajes con tareas separadas:
+HTML no es un lenguaje de programación de propósito general: no se usa para escribir algoritmos con bucles como JavaScript. Eso no significa que una página HTML sea inmóvil. Los enlaces navegan, los formularios envían datos y algunos controles se abren o cierran sin que escribas JavaScript.
 
-| Lenguaje | Se ocupa de |
-| --- | --- |
-| HTML | El contenido y su estructura |
-| [CSS](/articulos/que-es-css/) | El aspecto |
-| JavaScript | El comportamiento, a través del [DOM](/articulos/el-dom/) |
+[CSS](/articulos/que-es-css/) define la presentación; JavaScript permite programar comportamiento adicional y modificar la representación de la página en memoria, el [DOM](/articulos/el-dom/).
 
-## Elementos y etiquetas
+## Elementos, etiquetas y atributos
 
-La pieza básica es el **elemento**. Casi todos tienen tres partes: una etiqueta de apertura, un contenido y una etiqueta de cierre.
+Un **elemento** es una pieza del documento. Este párrafo contiene otro elemento que marca información importante:
 
 ```html
-<p>Esto es un párrafo.</p>
+<p>Hoy cerramos a las <strong>18:00</strong>.</p>
 ```
 
-- `<p>` es la etiqueta de apertura.
-- `</p>` es la de cierre, igual pero con una barra.
-- Lo que hay en medio es el contenido.
+`<p>` es una **etiqueta de apertura** y `</p>`, una **etiqueta de cierre**. El elemento incluye esas etiquetas y su contenido. **Anidar** consiste en colocar un elemento dentro de otro: aquí `strong` se abre después de `p` y se cierra antes.
 
-Los elementos se pueden meter unos dentro de otros. Eso se llama **anidar**, y deben cerrarse en orden inverso al que se abrieron:
+Los **atributos** añaden información dentro de la etiqueta de apertura. En `<a href="#horario">Ver horario</a>`, `href` indica el destino. `#horario` apunta a un elemento del mismo documento cuyo atributo `id` vale `horario`. Ese identificador debe ser único en la página.
 
-```html
-<p>Esto es <strong>muy importante</strong>.</p>
-```
+Muchos atributos usan nombre y valor; escribir el valor entre comillas evita ambigüedades. Los **atributos booleanos** expresan una condición por su presencia: `<button disabled>Reservar</button>` crea un botón desactivado. Para activarlo se retira `disabled`; escribir `disabled="false"` no lo activa.
 
-Algunos elementos no tienen contenido y, por tanto, tampoco etiqueta de cierre. Es el caso de las imágenes y de los saltos de línea.
+Algunos tipos, como `img`, `br` y `meta`, son **elementos vacíos**, o *void*: no admiten contenido hijo ni etiqueta de cierre. Es una regla de esos tipos, no una consecuencia de dejarlos sin texto. Un párrafo vacío sigue pudiendo escribirse `<p></p>`.
 
-## Atributos
+## Una página completa
 
-Un **atributo** añade información a un elemento. Se escribe dentro de la etiqueta de apertura, con un nombre y un valor entre comillas:
-
-```html
-<a href="https://ejemplo.com">Visitar ejemplo</a>
-<img src="gato.jpg" alt="Un gato gris durmiendo en un sofá">
-```
-
-- En el enlace, `href` indica la dirección a la que lleva.
-- En la imagen, `src` dice qué archivo mostrar y `alt` la describe con palabras.
-
-El texto de `alt` lo leen en voz alta los lectores de pantalla que usan las personas ciegas, y se muestra si la imagen no carga. Una imagen con información debe llevarlo siempre.
-
-## La estructura de un documento
-
-Toda página sigue el mismo esqueleto:
+Copia este documento en un archivo de texto llamado `index.html`, guárdalo con [codificación UTF-8](/articulos/codificacion-de-caracteres/) y ábrelo en el navegador. No necesita instalar un servidor ni descargar imágenes.
 
 ```html
 <!doctype html>
 <html lang="es">
 	<head>
 		<meta charset="utf-8">
-		<title>Mi primera página</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Biblioteca del barrio</title>
 	</head>
 	<body>
-		<h1>Hola</h1>
-		<p>Esta es mi primera página.</p>
+		<main>
+			<h1>Biblioteca del barrio</h1>
+			<p><a href="#horario">Ver horario</a></p>
+			<section id="horario">
+				<h2>Horario</h2>
+				<p>De lunes a viernes, de 9:00 a 18:00.</p>
+				<p><strong>El sábado cerramos.</strong></p>
+			</section>
+			<details>
+				<summary>Cómo llegar</summary>
+				<p>La entrada está en la calle del Parque, 12.</p>
+			</details>
+		</main>
 	</body>
 </html>
 ```
 
-- `<!doctype html>` avisa al navegador de que es un documento HTML actual.
-- `<html>` envuelve todo. Su atributo `lang` indica el idioma del contenido.
-- `<head>` contiene información sobre la página que no se muestra en ella: el título de la pestaña, la [codificación de caracteres](/articulos/codificacion-de-caracteres/).
-- `<body>` contiene lo que se ve.
+Sigue el resultado paso a paso:
 
-## Elementos habituales
+1. `<!doctype html>` hace que el navegador use el modo estándar de presentación. `html` envuelve el documento y `lang="es"` declara su idioma.
+2. `head` reúne información sobre la página. `charset` indica cómo interpretar los caracteres; `viewport` ajusta el área de presentación al dispositivo móvil. `title` da nombre a la pestaña.
+3. `body` contiene el contenido de la página. `main` identifica su parte principal, `h1` el encabezado principal y `h2` una sección subordinada. No cambies el nivel de encabezado para cambiar su tamaño.
+4. Al activar «Ver horario», el navegador señala el destino `#horario` y se desplaza si hace falta. Como esta página es corta, puede caber entera: el destino cambia igualmente.
+5. Al activar «Cómo llegar», `details` muestra el párrafo que estaba plegado. `summary` es el control que lo abre y cierra, también con teclado.
 
-| Elemento | Para qué sirve |
-| --- | --- |
-| `<h1>` a `<h6>` | Títulos, del más importante al menos |
-| `<p>` | Párrafo |
-| `<a>` | Enlace |
-| `<img>` | Imagen |
-| `<ul>` y `<ol>` | Lista sin orden y lista numerada |
-| `<li>` | Cada elemento de una lista |
-| `<button>` | Botón |
-| `<form>` e `<input>` | Formulario y campo para escribir |
+La distinción entre `head` y `body` no equivale a «invisible» y «visible»: el título aparece en la pestaña y el párrafo de `details` está en `body` aunque inicialmente no se vea.
 
 <Quiz
 	client:visible
-	question="¿Qué parte de un documento HTML contiene lo que se ve en la página?"
-	options={["head", "body", "doctype"]}
+	question="¿Qué hace funcionar el enlace Ver horario del ejemplo?"
+	options={[
+		"Que el texto del enlace y el encabezado sean idénticos",
+		"Que href apunte a #horario y exista un elemento con id horario",
+		"Que el navegador encuentre siempre un elemento h2",
+	]}
 	answer={1}
 />
 
-## HTML semántico
+## Elegir el elemento por su significado
 
-Muchos elementos existen para decir qué **significa** un contenido, no cómo debe verse:
+El **HTML semántico** expresa qué papel cumple cada parte. `nav` agrupa navegación importante; `ul` y `li` representan una lista y sus elementos; `button` representa una acción. Un texto grande no se convierte por ello en encabezado, ni un texto azul en enlace.
 
-| Elemento | Significado |
-| --- | --- |
-| `<header>` | Cabecera de la página o de una sección |
-| `<nav>` | Menú de navegación |
-| `<main>` | Contenido principal |
-| `<article>` | Contenido que se entiende por sí solo |
-| `<footer>` | Pie |
+La estructura ayuda a la [accesibilidad](/articulos/accesibilidad-web/): por ejemplo, un lector de pantalla, que comunica el contenido mediante voz o braille, puede recorrer encabezados y regiones. Usar elementos adecuados también facilita entender y mantener el código.
 
-Se podría construir toda la página con elementos genéricos y darles el aspecto deseado con CSS. Se vería igual, pero habría perdido el significado. Elegir el elemento correcto importa por tres razones:
+Para una imagen, `img` usa `src` para indicar el archivo y `alt` para ofrecer una alternativa textual según su función. Si comunica información, la alternativa debe transmitirla. Si solo adorna o repite información ya disponible, `alt=""` evita anunciar contenido redundante. Omitir `alt` no equivale a dejarlo vacío.
 
-- **[Accesibilidad](/articulos/accesibilidad-web/)**: los lectores de pantalla usan esa estructura para anunciar las partes de la página y permitir saltar de una a otra.
-- **Buscadores**: entienden mejor de qué trata el contenido.
-- **Mantenimiento**: el código se lee mejor.
+## Errores comunes
 
-La regla es elegir el elemento por lo que el contenido es. Un título es un `<h1>` aunque quieras verlo pequeño; el tamaño se cambia con CSS.
-
-## El navegador perdona los errores
-
-Si olvidas cerrar una etiqueta, el navegador no muestra un error: intenta adivinar qué querías y dibuja la página igualmente. Parece una ventaja, pero hace que los fallos pasen desapercibidos y aparezcan como comportamientos raros. Un validador de HTML los detecta.
+- **Guardar como `index.html.txt`.** El nombre debe acabar en `.html` para que se abra como documento web.
+- **Confundir que se vea con que esté bien escrito.** El navegador aplica reglas de recuperación al HTML incorrecto; no adivina tu intención. Puede construir una estructura distinta de la esperada. Un validador comprueba el marcado.
+- **Anidar elementos sin respetar su contenido permitido.** Cerrar en orden no basta: un párrafo no puede contener una sección. El navegador puede cerrar el párrafo antes de lo previsto.
+- **Usar solo la apariencia para representar significado.** Un encabezado o un botón necesitan el elemento correspondiente, no únicamente un tamaño o color.
 
 ## Lo esencial
 
-- HTML describe la estructura y el significado del contenido; no es un lenguaje de programación.
-- Un elemento se forma con etiquetas de apertura y cierre, y puede llevar atributos.
-- Todo documento tiene un `head` con información sobre la página y un `body` con lo visible.
-- El elemento se elige por el significado del contenido, no por su aspecto.
+- HTML marca la estructura y el significado; incluye comportamientos propios como enlaces y controles desplegables.
+- Los elementos se combinan respetando sus reglas; los atributos aportan información adicional.
+- El documento distingue información de la página y contenido, con encabezados que reflejan su organización.
+- Una página local ya puede funcionar. Para ofrecerla a otros navegadores interviene un [servidor web](/articulos/que-es-un-servidor/).
