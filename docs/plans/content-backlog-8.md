@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución y entrega incremental.** Quince de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
+**Estado: en ejecución y entrega incremental.** Dieciséis de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -87,7 +87,7 @@ Resultado esperado: seguir una petición y una interacción de usuario, entender
 Resultado esperado: pasar de un requisito a un cambio comprobado y explicar cómo se opera y recupera el sistema cuando falla.
 
 - [ ] Ingeniería del software (`ingenieria-del-software`): conectar requisito, condición de aceptación, diseño y prueba; revisar prerrequisitos de eventos y CQRS.
-- [ ] Git en equipo (`git-en-equipo`): reconstruir estados e historia de cambios; explicar conflictos, revisión y consecuencias de merge y rebase.
+- [x] Git en equipo (`git-en-equipo`): reconstruir estados e historia de cambios; explicar conflictos, revisión y consecuencias de merge y rebase.
 - [ ] Cómo se entrega el software (`como-se-entrega-el-software`): distinguir pruebas, integración, despliegue y lanzamiento; revisar el orden de empaquetado, configuración y operación.
 - [ ] La nube por dentro (`computacion-en-la-nube`): decisiones de capacidad y almacenamiento con límites explícitos; relacionar observabilidad y presupuestos de error.
 - [ ] Sistemas distribuidos (`sistemas-distribuidos`): seguir fallos parciales, duplicados y sobrecarga; explicar límites de reintentos, contrapresión, consistencia y consenso.
@@ -653,6 +653,8 @@ Quedan congelados cuatro MDX y la descripción de la ruta. La introducción publ
 
 **Combinación de entrega:** pasan las suites completas tanto de la rama editorial como de la entrega independiente, con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Sus cinco pasos pasan diez visitas actuales sin JavaScript en escritorio y móvil. Se conservan intactos los archivos locales ajenos al alcance.
 
+**Publicación:** la [PR #11](https://github.com/nbfrodri/devly/pull/11) se integra en `87e7cc9` tras superar CI y Cloudflare. Se marca Git en equipo: dieciséis rutas publicadas y treinta y una pendientes.
+
 ### Continuación de los cierres de datos y programación
 
 La relectura de Análisis de datos encuentra dos prerrequisitos que no cubren las rutas declaradas de entrada: aprendizaje automático antes de preparación y clasificación, y programación funcional antes de MapReduce. Se incorporarán como pasos en esos puntos, tras revisar sus artículos; la ruta pasará de diecinueve a veintiún pasos. La versión revisada de aprendizaje automático aún difiere de la publicada, por lo que debe incluirse y comprobarse en la misma entrega. Los tres pasos estadísticos compartidos conservan un único responsable de revisión.
@@ -704,3 +706,17 @@ La inspección visual actual detecta cinco diagramas con etiquetas demasiado red
 Se conserva la entrada explícita «Después de Fundamentos de programación» y sus seis pasos; no se duplica la ruta básica ya publicada. Arrays y funciones se reutilizan en sus versiones congeladas. La relectura señala cinco artículos que requieren ajustes concretos antes del cierre.
 
 Complejidad necesita distinguir cotas y cuentas exactas, declarar funciones y acotar afirmaciones sobre hardware y métodos; su fuente de Python no basta para justificar costes de JavaScript. Búsqueda binaria necesita precisar orden, comparación y acceso por índice, separar iteraciones y comparaciones y tratar ausencia, vacío y duplicados sin equiparar cualquier índice de base de datos con ese algoritmo. Recursividad necesita nivel y prerrequisitos coherentes, estados de llamadas y límites de rendimiento sin tiempos universales. Ordenación requiere recorridos de inserción y mezcla y distinguir memoria, estabilidad y coste bajo un modelo. Quicksort debe separar propiedades de su implementación y de otras variantes, explicar estados de partición y condiciones del promedio. Se corregirán estos puntos sin extender la tanda a estructuras o grafos.
+
+### Cierre editorial de Análisis de datos
+
+Se releen los veintidós pasos finales, con aprendizaje automático, formatos y programación funcional situados antes de necesitarlos. Dieciocho de los diecinueve MDX entregables conservan exactamente la revisión `057c5ed`; OLTP/OLAP solo cambia la palabra que identifica la agrupación y su fecha. Los tres artículos estadísticos se reutilizan desde su entrega ya publicada. Las bases de entrada se contrastan con `main`: la única ausencia necesaria era Formatos, incorporada como paso; no se arrastra la revisión pendiente de Bases de datos.
+
+Se conserva la ejecución previa de dieciséis bloques JavaScript por igualdad de código. Se ejecutan diez bloques adicionales de las tres bases incorporadas y precisión/exactitud relacionado, tres bloques SQL en SQLite y el mismo caso de JSON/CSV/XML, incluidos campos CSV con comas, comillas y saltos de línea. Se abren catorce fuentes de los artículos añadidos o corregidos y se reutilizan las comprobaciones previas de los textos intactos.
+
+La cobertura visual final comprende veinte artículos y cuarenta capturas completas, además de las zonas de capturas históricas que ocultaba la cabecera fija. Pasan 44 visitas sin JavaScript, quizzes y 110 comprobaciones de acceso a código, tablas y diagramas; todos los contenedores anchos permiten llegar a sus extremos. La suite posterior al último ajuste aprueba 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. No se afirma ejecución de clústeres Spark, PostgreSQL nativo ni conectores CDC; los ejemplos delimitan su alcance didáctico.
+
+La comprobación del enlace a Precisión/exactitud encuentra otra contradicción publicada: afirma que ser más estricto mejora la precisión, mientras Evaluación muestra correctamente que subir el umbral puede reducirla. Se incorpora también su versión revisada, ya releída, con ejemplo ejecutado y ambas capturas inspeccionadas; aclara además el caso de denominador cero. No se modifica ese texto congelado.
+
+El manifiesto se amplía a veintiún archivos propios de esta entrega. Falta comprobar la combinación sobre `main`, publicar la PR y registrar el merge para marcar la ruta; las revisiones de otras rutas continúan abiertas.
+
+**Combinación comprobada:** pasan las suites completas de revisión y entrega con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Los veintidós pasos de la entrega pasan 44 visitas sin JavaScript a 1280 y 390 píxeles con las versiones estadísticas ya publicadas. No quedan bloqueos editoriales o de integración de esta tanda; resta superar los checks remotos y publicarla.

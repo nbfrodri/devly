@@ -6,17 +6,19 @@ layer: datos
 prerequisites:
   - media-mediana-y-desviacion
   - visualizacion-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Hyndman y Athanasopoulos: Forecasting, Principles and Practice, 3.ª edición, libro libre (en inglés)"
     url: https://otexts.com/fpp3/
+  - title: "Hyndman y Athanasopoulos: The forecaster’s toolbox (en inglés)"
+    url: https://otexts.com/fpp3/toolbox.html
   - title: "NIST/SEMATECH e-Handbook: Introduction to Time Series Analysis (en inglés)"
     url: https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc4.htm
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **serie temporal** es una secuencia de medidas tomadas en momentos sucesivos: las ventas de cada día, la temperatura de cada hora, las visitas de una web por minuto. Lo que la distingue de otros datos es que **el orden importa**: cada valor depende en parte de los anteriores.
+Una **serie temporal** es una secuencia de medidas tomadas en momentos sucesivos: las ventas de cada día, la temperatura de cada hora, las visitas de una web por minuto. Lo que la distingue de otros datos es que **el orden importa**: las relaciones con momentos anteriores pueden aportar información. La dependencia no es obligatoria: una secuencia de ruido independiente también es una serie temporal.
 
 ## Sus componentes
 
@@ -27,13 +29,13 @@ Al mirar una serie se suelen distinguir:
 | Tendencia | La dirección a largo plazo | Las ventas crecen año a año |
 | Estacionalidad | Un patrón que se repite con periodo fijo | Más ventas cada diciembre |
 | Ciclos | Subidas y bajadas sin periodo fijo | Crisis económicas |
-| Ruido | La variación aleatoria que queda | Un día suelto raro |
+| Resto | Lo que no explica la descomposición elegida | Variación no modelada, errores o ruido |
 
-Separarlos ayuda a entender qué está pasando: ¿ha subido el consumo porque crece, o porque es invierno?
+No toda serie contiene todos esos componentes, y el resto no es necesariamente ruido independiente. Separarlos cuando corresponde ayuda a estudiar qué está pasando: ¿ha subido el consumo porque crece, o porque es invierno?
 
 ## Suavizar
 
-Una técnica básica para ver la tendencia es la **media móvil**: sustituir cada punto por la media de los últimos valores.
+Una técnica básica para suavizar variaciones es la **media móvil**. Aquí se usa una ventana hacia atrás: el valor del día actual se sustituye por la media de ese día y los dos anteriores. Suponemos observaciones diarias completas, números finitos y una ventana entera entre 1 y la longitud de la serie.
 
 ```js
 const datos = [10, 12, 11, 15, 14, 18, 17];
@@ -47,7 +49,7 @@ function mediaMovil(serie, ventana) {
 console.log(mediaMovil(datos, 3).map((v) => v.toFixed(1)).join(" ")); // "11.0 12.7 13.3 15.7 16.3"
 ```
 
-Los datos suben y bajan; la media móvil deja ver que la tendencia es creciente. En SQL se calcula con [funciones de ventana](/articulos/funciones-de-ventana-en-sql/).
+El primer resultado, 11, corresponde al tercer día: `(10 + 12 + 11) / 3`. El siguiente usa los días segundo a cuarto: `(12 + 11 + 15) / 3`, aproximadamente 12,7. La ventana avanza descartando el más antiguo e incorporando el siguiente. El suavizado muestra el crecimiento de este ejemplo, pero retrasa los cambios bruscos; no demuestra por sí solo una tendencia persistente. En SQL se calcula con [funciones de ventana](/articulos/funciones-de-ventana-en-sql/).
 
 ## Predecir
 
@@ -59,17 +61,43 @@ El uso más común es **pronosticar**: cuánto se venderá el mes que viene, cu�
 - **Modelos que capturan la relación entre cada valor y los anteriores.**
 - **Aprendizaje automático**, incluidas las [redes recurrentes](/articulos/redes-neuronales-recurrentes/).
 
-Un pronóstico debe ir acompañado de su **incertidumbre**: un intervalo, no solo un número.
+Un pronóstico útil debe comunicar su **incertidumbre**, por ejemplo mediante un intervalo de predicción con sus supuestos. Ese intervalo estima valores futuros, mientras un intervalo de confianza para la media responde otra pregunta.
+
+### Comprobar una predicción sin mirar el futuro
+
+Reservamos los días sexto y séptimo. El método ingenuo usa el último dato disponible y pronostica un día cada vez:
+
+```js
+const serie = [10, 12, 11, 15, 14, 18, 17];
+const predicciones = [serie[4], serie[5]];
+const reales = serie.slice(5);
+const errores = reales.map((valor, i) => valor - predicciones[i]);
+console.log(predicciones.join(" ")); // "14 18"
+console.log(errores.join(" ")); // "4 -1"
+console.log(errores.reduce((suma, error) => suma + Math.abs(error), 0) / errores.length); // 2.5
+```
+
+Para el día sexto se predice 14 y se observa 18. Una vez conocido ese 18, se usa para pronosticar el séptimo, que resulta ser 17. Es una evaluación con origen que avanza: el error absoluto medio es 2,5. Si hubiera que predecir ambos días desde el quinto, el método ingenuo daría 14 para los dos; sería otro horizonte y otra evaluación. Dos errores no bastan para estimar un rendimiento estable, pero permiten verificar el procedimiento.
+
+<Quiz
+	client:visible
+	question="Pronosticas el día sexto al terminar el quinto. ¿Qué dato puedes usar?"
+	options={["El valor observado del día quinto", "La media que incluye el día sexto", "El resultado del día séptimo"]}
+	answer={0}
+/>
+
 
 ## Trampas
 
-- **Validar respetando el tiempo**: se entrena con el pasado y se prueba con lo posterior, nunca al azar, como advierte [validación cruzada](/articulos/validacion-cruzada/).
+- **Validar respetando el tiempo**: se entrena con el pasado y se prueba con lo posterior, sin mezclar observaciones futuras en el entrenamiento del pronóstico que se evalúa, como advierte [validación cruzada](/articulos/validacion-cruzada/).
 - **Correlaciones espurias**: dos series que crecen con el tiempo parecen relacionadas aunque no lo estén, como explica [correlación y causalidad](/articulos/correlacion-y-causalidad/).
 - **Cambios de régimen**: un suceso nuevo puede invalidar todo lo aprendido del pasado.
+
+Una ventana centrada usa datos posteriores al punto suavizado: sirve para describir una serie ya observada, pero produciría fuga de información si se usara como entrada disponible en tiempo real. También hay que distinguir tres filas de tres días cuando faltan fechas; rellenar huecos requiere decidir si representan ausencia, cero o falta de medición.
 
 ## Lo esencial
 
 - Una serie temporal es una secuencia de medidas ordenadas en el tiempo.
-- Se descompone en tendencia, estacionalidad, ciclos y ruido.
+- Puede analizarse mediante tendencia, estacionalidad, ciclos y un resto, según el caso.
 - La media móvil suaviza la serie y deja ver la tendencia.
 - Para predecir, hay métodos que van del valor anterior a modelos complejos, siempre con su incertidumbre.

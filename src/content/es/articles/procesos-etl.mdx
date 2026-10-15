@@ -40,7 +40,7 @@ Leer los datos de cada fuente: bases de datos, [API](/articulos/que-es-una-api/)
 Dos formas:
 
 - **Completa**: copiar todo cada vez. Simple, y lenta con volúmenes grandes.
-- **Incremental**: copiar solo lo nuevo o modificado desde la última vez. Exige saber qué ha cambiado, por ejemplo con una fecha de modificación.
+- **Incremental**: copiar solo lo nuevo o modificado desde la última vez. Exige saber qué ha cambiado, por ejemplo con una fecha de modificación y un desempate estable. Ese método debe tratar también borrados y cambios concurrentes: una fila eliminada ya no aparece al consultar su fecha.
 
 La extracción debe molestar lo menos posible a los sistemas de origen, que están atendiendo a usuarios.
 
@@ -56,9 +56,11 @@ La fase con más trabajo:
 
 ### Cargar
 
-Escribir el resultado en el destino, sustituyendo o añadiendo a lo que ya había.
+Escribir el resultado en el destino, sustituyendo o añadiendo a lo que ya había. Hay que definir claves, duplicados y qué ocurre si solo se escribe una parte.
 
 ## Un ejemplo pequeño
+
+Este ejemplo usa un CSV deliberadamente restringido: sin comas ni saltos de línea dentro de campos, fechas ya válidas e importes decimales válidos o vacíos. Para CSV general hace falta un lector que interprete las comillas y escapes. La agregación queda en memoria; guardarla en una tabla o archivo sería la carga persistente.
 
 ```js
 const csv = [
@@ -81,7 +83,7 @@ const limpias = filas
 		importe: Number(importe),
 	}));
 
-const porCiudad = {};
+const porCiudad = Object.create(null);
 for (const fila of limpias) {
 	porCiudad[fila.ciudad] = (porCiudad[fila.ciudad] ?? 0) + fila.importe;
 }
@@ -119,7 +121,7 @@ No debes convertir esa elección en una regla absoluta sobre conservar originale
 
 ### Seguir un registro de venta
 
-Supón que las ventas llegan como `ciudad = "lima"`, importe `1000` y unidad `centimos`. En ETL, un proceso intermedio puede convertir la ciudad a `Lima` y el importe a diez euros antes de cargar el resultado. En ELT, la tabla inicial conserva los campos recibidos y una transformación dentro del destino construye una tabla analítica con ese mismo resultado.
+Supón que las ventas llegan como `ciudad = "lima"`, importe `1000` y unidad `centimos`. Si el contrato de esa fuente fija la moneda en euros, en ETL un proceso intermedio puede convertir la ciudad a `Lima` y el importe a diez euros antes de cargar el resultado. En ELT, la tabla inicial conserva los campos recibidos y una transformación dentro del destino construye una tabla analítica con ese mismo resultado.
 
 Si descubres que otra fuente ya enviaba euros, necesitas revisar la regla en ambos enfoques. En ETL podrás recalcular si conservaste la entrada; en ELT, si no la eliminaste y registraste su procedencia. El lugar de transformación cambia dónde se consumen recursos y qué datos entran al destino, pero no elimina la necesidad de distinguir unidades y fuentes.
 
@@ -152,10 +154,16 @@ Una cifra equivocada en un informe que nadie detecta durante meses es peor que u
 
 La [captura de cambios, CDC](/articulos/captura-de-cambios-cdc/) permite alimentar destinos con inserciones, modificaciones y borrados sin copiar toda la fuente cada vez.
 
+## Errores comunes
+
+- **Tratar `split(",")` como un lector CSV general.** Una coma dentro de un campo entrecomillado divide mal las columnas; el ejemplo evita ese caso de forma explícita.
+- **Confundir ausencia con cero.** `Number("")` devuelve cero, por lo que el ejemplo detecta antes los importes vacíos.
+- **Reintentar una carga que siempre añade filas.** Si la primera ejecución escribió parte del lote, repetirlo puede duplicar ventas; se necesitan claves o sustitución controlada.
+
 ## Lo esencial
 
 - ETL extrae datos de sus fuentes, los transforma y los carga en un sistema de análisis.
 - La transformación limpia, unifica, combina y agrega.
-- En ELT, los datos se cargan en bruto y se transforman dentro del destino, lo que permite corregir y repetir.
+- En ELT, los datos se cargan antes de transformarlos; pueden reprocesarse mientras se conserven las entradas necesarias.
 - Se ejecuta por lotes o en continuo.
 - Debe ser idempotente, respetar las dependencias y estar vigilado.

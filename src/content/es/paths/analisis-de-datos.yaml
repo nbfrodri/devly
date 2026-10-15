@@ -1,22 +1,26 @@
 title: Análisis de datos
-description: "Del dato en bruto al gráfico que se entiende, pasando por reunir, limpiar y analizar."
+description: "De explorar y preparar datos a evaluar modelos y alimentar un sistema analítico. Parte de Estadística y simulación, Fundamentos de programación y Bases de datos; CDC también requiere las bases de mensajería."
 layer: datos
 steps:
   - media-mediana-y-desviacion
   - distribucion-normal
   - correlacion-y-causalidad
   - visualizacion-de-datos
+  - series-temporales
+  - que-es-el-aprendizaje-automatico
   - preparacion-de-datos
   - valores-atipicos
+  - normalizar-y-estandarizar
   - clasificacion-y-regresion
   - regresion-lineal
   - como-se-evalua-un-modelo-de-clasificacion
   - regresion-logistica
+  - almacen-de-datos-y-lago-de-datos
+  - oltp-y-olap
+  - que-es-un-esquema-en-estrella
+  - formatos-de-datos-json-csv-xml
   - procesos-etl
   - una-base-de-datos-por-dentro
   - captura-de-cambios-cdc
-  - almacen-de-datos-y-lago-de-datos
-  - series-temporales
-  - que-es-un-esquema-en-estrella
+  - programacion-funcional
   - mapreduce-y-spark
-  - normalizar-y-estandarizar

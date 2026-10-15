@@ -5,8 +5,10 @@ level: intermedio
 layer: ia
 prerequisites:
   - clasificacion-y-regresion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "scikit-learn: Metrics and scoring (en inglés)"
+    url: https://scikit-learn.org/stable/modules/model_evaluation.html
   - title: "Google: Exactitud, recuperación, precisión y métricas relacionadas (Machine Learning Crash Course)"
     url: https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall?hl=es-419
   - title: "Google: Clasificación (Machine Learning Crash Course)"
@@ -25,7 +27,7 @@ Imagina un modelo para detectar una enfermedad que tiene una de cada cien person
 
 Tiene un 99 % de exactitud y no detecta a un solo enfermo. Es inútil para lo único que debía hacer, como detalla [exactitud y precisión](/articulos/precision-y-exactitud-de-un-modelo/).
 
-Ocurre siempre que las clases están **desequilibradas**: una es mucho más frecuente que la otra. Y es lo habitual en los problemas interesantes: fraudes, enfermedades, averías.
+El problema es especialmente importante con clases **desequilibradas**, cuando una es mucho más frecuente que la otra. El desequilibrio no vuelve inútil cualquier modelo; vuelve insuficiente interpretar solo su exactitud.
 
 ## La matriz de confusión
 
@@ -82,18 +84,20 @@ console.log(precision); // 0.8
 console.log(exhaustividad.toFixed(2)); // "0.67"
 ```
 
-La exactitud es del 94 %, y suena muy bien. Pero la exhaustividad es del 67 %: el modelo deja sin detectar a uno de cada tres enfermos. La exactitud escondía eso.
+La exactitud es del 94 %, y suena muy bien. Pero la exhaustividad es del 67 %: el modelo deja sin detectar a uno de cada tres enfermos. La exactitud sola no muestra esa diferencia. Son datos ficticios para entender las métricas, no una evaluación clínica. Si no hay positivos predichos, la precisión tiene denominador cero; si no hay positivos reales, ocurre lo mismo con la exhaustividad. Debe indicarse la convención usada por la herramienta en esos casos.
 
 ## El equilibrio entre las dos
 
-Mejorar una suele empeorar la otra. El mando es el **umbral** de decisión:
+Al cambiar el **umbral** se modifica qué casos se marcan. Para un conjunto fijo de puntuaciones y etiquetas:
 
 | Umbral | Precisión | Exhaustividad |
 | --- | --- | --- |
-| Más alto: el modelo exige más para marcar | Sube | Baja |
-| Más bajo: el modelo marca con más facilidad | Baja | Sube |
+| Más alto: el modelo exige más para marcar | Puede subir o bajar | No aumenta |
+| Más bajo: el modelo marca con más facilidad | Puede subir o bajar | No disminuye |
 
-Los dos extremos lo ilustran. Un modelo que marca a todo el mundo como enfermo tiene exhaustividad perfecta y una precisión pésima. Uno que solo marca el caso más evidente tiene precisión perfecta y apenas encuentra a nadie.
+Marcar todos los casos da exhaustividad 1 si hay positivos reales; la precisión coincide con su proporción en la muestra. Marcar solo el de mayor puntuación no garantiza que sea correcto.
+
+Por ejemplo, tres casos tienen puntuaciones `0,9`, `0,8` y `0,7`, y etiquetas reales negativo, positivo y positivo. Con umbral 0,7, la precisión es `2/3` y la exhaustividad 1. Con 0,85 solo queda marcado el negativo: ambas métricas valen cero. El umbral subió y la precisión empeoró porque la puntuación mayor estaba equivocada.
 
 ### Cuál priorizar
 
@@ -105,7 +109,7 @@ Depende de qué error es peor en cada problema:
 | Filtro de correo no deseado | Perder un correo importante | Precisión |
 | Detección de fraude | Depende del coste de cada uno | Un equilibrio |
 
-En el cribado médico, una falsa alarma se resuelve con otra prueba; un caso sin detectar puede ser fatal. En el correo, dejar pasar publicidad es una molestia; perder un mensaje importante es un problema.
+En un cribado, las falsas alarmas pueden requerir pruebas adicionales, con costes y consecuencias propios; omitir un caso relevante también tiene consecuencias. El balance depende del contexto y no se deduce de una fórmula. En el correo, dejar pasar publicidad es una molestia; perder un mensaje importante es un problema.
 
 No es una decisión técnica. Es una decisión sobre consecuencias, que corresponde a quien conoce el problema.
 
@@ -122,7 +126,7 @@ const f1 = (2 * precision * exhaustividad) / (precision + exhaustividad);
 console.log(f1.toFixed(2)); // "0.73"
 ```
 
-No es una media normal: castiga el desequilibrio. Un modelo con precisión 1 y exhaustividad 0 obtiene un F1 de 0, no de 0,5. Para sacar buena nota hay que ir bien en las dos.
+Es la **media armónica** de precisión y exhaustividad. Si la precisión es 1 y la exhaustividad 0,1, F1 es aproximadamente 0,182, lejos de la media aritmética 0,55. Con positivos reales, precisión 1 y exhaustividad 0 no es una combinación realizable con ambas definidas: sin verdaderos positivos no se obtiene precisión 1. F1 tampoco cuenta los verdaderos negativos ni representa por sí solo los costes del problema.
 
 <Quiz
 	client:visible
@@ -135,21 +139,27 @@ No es una media normal: castiga el desequilibrio. Un modelo con precisión 1 y e
 
 Las medidas anteriores dependen del umbral elegido. Para valorar un modelo en conjunto se observa cómo se comporta con todos los umbrales posibles.
 
-La herramienta habitual es la **curva ROC**, y el área que queda bajo ella, el **AUC**, se usa como resumen: 1 es un modelo perfecto y 0,5 equivale a decidir al azar.
+La **curva ROC** representa exhaustividad frente a tasa de falsos positivos al recorrer umbrales. Su área, **ROC AUC**, resume la ordenación: con ambas clases presentes, 1 significa que todos los positivos de esa evaluación puntúan por encima de los negativos; 0,5 es el nivel esperado de puntuaciones independientes de la clase. No demuestra calibración, un umbral útil ni rendimiento futuro. Con positivos escasos, conviene examinar también la curva precisión–exhaustividad y los recuentos reales de errores.
 
 ## Buenas prácticas
 
 - **Mira primero cuántos casos hay de cada clase.** Si hay desequilibrio, desconfía de la exactitud.
-- **Compara con una referencia trivial**, como predecir siempre la clase más frecuente. Si tu modelo no la supera, no ha aprendido nada.
-- **Evalúa con datos que el modelo no ha visto**, para no medir un [sobreajuste](/articulos/sobreajuste-y-subajuste/).
+- **Compara con una referencia trivial**, como predecir siempre la clase más frecuente. Compáralos con la métrica adecuada: un detector puede mejorar la detección de positivos y perder exactitud frente a esa referencia.
+- **Elige umbrales con validación y reserva datos para la evaluación final**, para no medir un [sobreajuste](/articulos/sobreajuste-y-subajuste/).
 - **Mira la matriz entera**, no un solo número.
 - **Elige la medida según el coste real de cada error.**
 - **Comprueba el resultado por grupos.** Un modelo puede ir bien de media y mal para un grupo concreto de personas.
+
+## Errores comunes
+
+- **Comparar precisiones con prevalencias distintas sin contexto.** La proporción de positivos reales afecta a cuántas falsas alarmas hay entre los casos marcados.
+- **Elegir el umbral que mejor sale en la prueba final.** Esa prueba pasa a formar parte de la selección y deja de ser una evaluación independiente.
+- **Interpretar AUC como porcentaje de predicciones correctas.** Resume ordenaciones a través de umbrales, no los aciertos de una decisión concreta.
 
 ## Lo esencial
 
 - La exactitud engaña cuando una clase es mucho más frecuente que otra.
 - La matriz de confusión separa los aciertos y los dos tipos de error.
 - La precisión mide lo fiables que son los positivos; la exhaustividad, cuántos positivos se encuentran.
-- Mover el umbral cambia una a costa de la otra.
+- Mover el umbral cambia los casos seleccionados; la exhaustividad es monótona, pero la precisión no está garantizada.
 - Qué medida importa depende de qué error tiene peores consecuencias.
