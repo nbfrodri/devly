@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución y entrega incremental.** Catorce de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
+**Estado: en ejecución y entrega incremental.** Quince de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -30,7 +30,7 @@ Los nombres entre paréntesis son los archivos de `src/content/es/paths/` sin `.
 
 Resultado esperado: seguir el estado de un programa, explicar sus resultados y elegir una estructura o algoritmo por sus propiedades.
 
-- [ ] Fundamentos de programación (`fundamentos-de-programacion`): valores, tipos, condiciones, iteraciones, funciones y alcance; seguir un ejemplo desde la entrada hasta el resultado y revisar el salto a objetos.
+- [x] Fundamentos de programación (`fundamentos-de-programacion`): valores, tipos, condiciones, iteraciones, funciones y alcance; seguir un ejemplo desde la entrada hasta el resultado y revisar el salto a objetos.
 - [ ] JavaScript a fondo (`javascript-a-fondo`): referencias, clausuras, iteradores, errores y asincronía; trazar qué se ejecuta y cuándo, sin confundir concurrencia con paralelismo.
 - [ ] Introducción a los algoritmos (`introduccion-a-los-algoritmos`): justificar complejidad con operaciones y tamaños concretos; comprobar precondiciones de búsqueda y ordenación.
 - [ ] Estructuras de datos (`estructuras-de-datos`): representar inserción, búsqueda y borrado; explicar costes y límites con el mismo problema cuando se comparen estructuras.
@@ -645,11 +645,21 @@ Antes de editar se releen los cinco pasos y sus prerrequisitos. Git/GitHub gener
 
 Se desarrollarán ejemplos aislados de colaboración con remoto local y dos clones, comparación de merge y rebase desde un mismo estado e inspección de objetos con comandos Git. La explicación mínima de identificadores de contenido permitirá revisar el prerrequisito de hashes sin ocultar conocimientos necesarios; la introducción de Git permanece como base. Si la revisión de código usa programación, se declarará ese punto de entrada. Esta tanda no modifica los tres artículos ya comprobados de fundamentos web.
 
+**Resultado editorial:** los cuatro artículos se reescriben y releen completos. Git/GitHub distingue repositorio y plataforma con un remoto local y dos clones. Merge y rebase comparan la misma divergencia, archivos finales y padres; se provoca y resuelve un conflicto. Revisión de código sigue un requisito de envío gratuito desde 50 euros, su fallo a 49,99 y la corrección comprobada, con JSON explicado antes de usarlo. Git por dentro inspecciona objetos reales y distingue contenido, nombres, historia, representación física y límites de recuperación. Pasa a intermedio y explica la noción mínima de hash; conserva Git introductorio como prerrequisito.
+
+Se abren y contrastan las fuentes oficiales citadas. Pasan 34 bloques de comandos, diecisiete en PowerShell y diecisiete en Git Bash, con identidades locales ficticias y configuración global intacta. Se comprueba también el caso JSON antes y después. Se inspeccionan ocho páginas completas y los ocho renders de sus cuatro diagramas; dos etiquetas se compactan para mejorar la legibilidad móvil, conservando exactamente los comandos ejecutados. Pasan quizzes, acceso al código ancho y diez visitas de navegación sin JavaScript. La suite final aprueba 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados.
+
+Quedan congelados cuatro MDX y la descripción de la ruta. La introducción publicada no cambia. No se ejecutan operaciones externas de GitHub ni se afirma haber probado Git nativo de Linux/macOS, todos los formatos de objetos o todos los casos de recuperación; las órdenes de aborto y continuación de rebase se contrastan documentalmente. La publicación de la tanda sigue pendiente de comprobar su combinación con `main` y superar los checks de la PR.
+
+**Combinación de entrega:** pasan las suites completas tanto de la rama editorial como de la entrega independiente, con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Sus cinco pasos pasan diez visitas actuales sin JavaScript en escritorio y móvil. Se conservan intactos los archivos locales ajenos al alcance.
+
 ### Continuación de los cierres de datos y programación
 
 La relectura de Análisis de datos encuentra dos prerrequisitos que no cubren las rutas declaradas de entrada: aprendizaje automático antes de preparación y clasificación, y programación funcional antes de MapReduce. Se incorporarán como pasos en esos puntos, tras revisar sus artículos; la ruta pasará de diecinueve a veintiún pasos. La versión revisada de aprendizaje automático aún difiere de la publicada, por lo que debe incluirse y comprobarse en la misma entrega. Los tres pasos estadísticos compartidos conservan un único responsable de revisión.
 
 Al contrastar la entrada con `main`, Bases de datos aún no incluye Formatos de datos, requerido por ETL. Se añade ese paso antes de ETL: Análisis tendrá veintidós pasos. La versión publicada de Formatos confunde línea y registro CSV, niega esquemas de validación y compara datos diferentes entre formatos; se comprobará e incluirá su corrección existente, con campos multilínea, CSVW y el mismo caso. No se incorpora por ello el resto de la revisión pendiente de Bases de datos.
+
+La comprobación SQL detecta además que OLTP/OLAP describe agrupación por tienda mientras su consulta agrupa por región y mes. Se corregirá esa palabra a «región» y se volverán a comprobar consulta, capturas y suite antes de congelar la tanda.
 
 En Fundamentos de programación, la relectura detecta una frase de `arrays` que atribuye recibir una función a todos los métodos enumerados, incluidos `includes` e `indexOf`, que reciben valores. Se acotará a los métodos de transformación y selección que corresponden, sin cambiar los ejemplos ni los prerrequisitos. Para entregar Estadística con sus conocimientos previos coherentes se comprobará también la versión revisada de montículos: la publicada aún contiene un dibujo de texto y una garantía excesiva de memoria auxiliar.
 
@@ -679,8 +689,18 @@ El manifiesto congela los once artículos y la ruta. Frente a `main`, solo funci
 
 **Combinación de entrega comprobada:** pasan las suites completas de la rama de revisión y de la entrega independiente, ambas con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Sus once pasos pasan 22 visitas actuales sin JavaScript a 1280 y 390 píxeles. Queda pendiente únicamente integrar esta tanda para registrar su publicación.
 
+**Publicación:** la [PR #10](https://github.com/nbfrodri/devly/pull/10) se integra en `7202466` tras superar CI y Cloudflare. Se marca Fundamentos de programación: quince rutas publicadas y treinta y dos pendientes.
+
 ### Continuación de JavaScript a fondo
 
 La relectura de sus doce pasos detecta que la entrada desde Fundamentos no cubre los conocimientos de compilación, máquinas virtuales y tipado que requieren JIT y TypeScript. Se incorporan, antes de necesitarlos, compilador/intérprete, compilación/transpilación, máquina virtual de lenguaje y tipado estático/dinámico: dieciséis pasos. Callback queda como prerrequisito enlazado y explicado en clausuras, sin duplicar un paso.
 
 La comparación con `main` encuentra versiones anteriores de callback, compilación/transpilación, máquina virtual y tipado. Máquina virtual promete portabilidad sin condiciones y tipado exagera sus garantías; se ampliará la entrega a sus versiones ya revisadas, comprobando de nuevo su continuidad y evidencia visual. Compilador/intérprete y sus bases de procesador y bit ya coinciden con lo publicado. No se modifica ningún archivo congelado de las entregas anteriores.
+
+La inspección visual actual detecta cinco diagramas con etiquetas demasiado reducidas en móvil: JIT, bucle de eventos, máquina virtual y los dos flujos de compilación/transpilación. Se ajustará únicamente su disposición en los cuatro artículos afectados y se repetirán capturas y suite; el resto de los cuerpos inspeccionados no requiere cambios por presentación.
+
+### Continuación de Introducción a los algoritmos
+
+Se conserva la entrada explícita «Después de Fundamentos de programación» y sus seis pasos; no se duplica la ruta básica ya publicada. Arrays y funciones se reutilizan en sus versiones congeladas. La relectura señala cinco artículos que requieren ajustes concretos antes del cierre.
+
+Complejidad necesita distinguir cotas y cuentas exactas, declarar funciones y acotar afirmaciones sobre hardware y métodos; su fuente de Python no basta para justificar costes de JavaScript. Búsqueda binaria necesita precisar orden, comparación y acceso por índice, separar iteraciones y comparaciones y tratar ausencia, vacío y duplicados sin equiparar cualquier índice de base de datos con ese algoritmo. Recursividad necesita nivel y prerrequisitos coherentes, estados de llamadas y límites de rendimiento sin tiempos universales. Ordenación requiere recorridos de inserción y mezcla y distinguir memoria, estabilidad y coste bajo un modelo. Quicksort debe separar propiedades de su implementación y de otras variantes, explicar estados de partición y condiciones del promedio. Se corregirán estos puntos sin extender la tanda a estructuras o grafos.
