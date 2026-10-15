@@ -1198,6 +1198,7 @@ a:hover {
 
 .article-card-item {
 	position: relative;
+	border-radius: var(--radius);
 }
 
 .article-card {
@@ -1213,12 +1214,14 @@ a:hover {
 	border-radius: var(--radius);
 }
 
-.article-card:hover {
+.article-card-item:hover .article-card,
+.article-card-item:has(:focus-visible) .article-card {
 	color: var(--ink);
 	border-color: var(--accent-solid);
 }
 
-.article-card:hover .article-card-title {
+.article-card-item:hover .article-card-title,
+.article-card-item:has(:focus-visible) .article-card-title {
 	color: var(--accent);
 }
 
@@ -2220,26 +2223,31 @@ html:not(.progress-ready) .filter-progress {
 	}
 
 	.path-grid .path-card,
-	.article-card {
+	.article-card-item {
 		transition:
 			transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
 			box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
 			border-color 120ms ease;
 	}
 
-	.path-grid .path-card:hover {
+	.article-card {
+		transition: border-color 120ms ease;
+	}
+
+	.path-grid .path-card:hover,
+	.path-grid .path-card:has(:focus-visible) {
 		transform: translate(-2px, -2px);
 		box-shadow: 4px 4px 0 var(--ink);
 	}
 
-	.article-card:hover,
-	.article-card:focus-visible {
+	.article-card-item:hover,
+	.article-card-item:has(:focus-visible) {
 		transform: translate(-2px, -2px);
 		box-shadow: 3px 3px 0 var(--accent-solid);
 	}
 
 	.path-grid .path-card:active,
-	.article-card:active {
+	.article-card-item:active {
 		transform: none;
 		box-shadow: none;
 	}

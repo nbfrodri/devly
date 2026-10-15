@@ -54,7 +54,7 @@ The visual direction is "layers of abstraction". Its rules:
 
 - Layer colour encodes depth: `--layer-1` to `--layer-7` are one cobalt hue ordered by lightness. Do not reorder them or introduce other hues for layers.
 - One accent (cobalt), one corner radius (`--radius`), no shadows.
-- Motion answers an entrance, an action or a navigation and never loops: the layer stack builds once, article rows and path cards rise in as they enter the viewport (GSAP with ScrollTrigger, `src/scripts/reveal.ts`), pages cross-fade, and controls respond to hover and press. All of it is skipped under `prefers-reduced-motion`, and content stays visible if the script does not load.
+- Motion answers an entrance, an action or a navigation and never loops: the layer stack builds once, article rows and path cards rise in as they enter the viewport (GSAP with ScrollTrigger, `src/scripts/reveal.ts`), pages cross-fade, and controls respond to hover and press. Cards animate as a whole, including their save buttons, during entrance, hover, keyboard focus and press. All of it is skipped under `prefers-reduced-motion`, and content stays visible if the script does not load.
 - Every colour is a token with a light and a dark value. Add tokens rather than literal colours. Dark values are declared twice in `global.css` (system preference and explicit choice); change both.
 
 The design source is a Claude Design canvas kept outside the repository; `src/styles/global.css` is the source of truth for implemented values.
