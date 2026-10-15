@@ -75,11 +75,11 @@ Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas 
 
 Leer primero las rutas `como-funciona-internet.yaml`, `redes-por-dentro.yaml` y `telecomunicaciones.yaml`, junto con los artículos introductorios que usan. Identificar palabras que dan por supuestos conocimientos de informática. Reforzar las explicaciones existentes cuando el concepto ya tenga artículo; crear los siguientes solo para cubrir huecos concretos.
 
-- [ ] Qué es un servidor: distinguir el programa que presta un servicio, la máquina que lo ejecuta y el papel de cliente mediante una petición cotidiana. Propuesta nueva: `src/content/es/articles/que-es-un-servidor.mdx`, si `cliente-servidor` no cubre la definición autónoma.
-- [ ] Qué es un protocolo de red: reglas compartidas, mensajes, orden y significado, con un intercambio concreto. Propuesta nueva: `src/content/es/articles/que-es-un-protocolo-de-red.mdx`.
-- [ ] Redes entre pares: qué aporta cada participante, descubrimiento y límites; comparar un mismo intercambio con cliente-servidor sin confundir descentralización con ausencia de coordinación. Propuesta nueva: `src/content/es/articles/redes-peer-to-peer.mdx`.
-- [ ] BitTorrent: seguir una descarga por piezas y su verificación, explicar torrent, magnet, tracker y DHT cuando entren en el recorrido. Usar un ejemplo de distribución autorizada. Propuesta nueva: `src/content/es/articles/como-funciona-bittorrent.mdx`.
-- [ ] Topologías de red: distinguir disposición física y lógica; estrella, malla, anillo y bus con diagramas y un fallo concreto que permita comparar sus consecuencias. Propuesta nueva: `src/content/es/articles/topologias-de-red.mdx`.
+- [x] Qué es un servidor: distinguir el programa que presta un servicio, la máquina que lo ejecuta y el papel de cliente mediante una petición cotidiana. Propuesta nueva: `src/content/es/articles/que-es-un-servidor.mdx`, si `cliente-servidor` no cubre la definición autónoma.
+- [x] Qué es un protocolo de red: reglas compartidas, mensajes, orden y significado, con un intercambio concreto. Propuesta nueva: `src/content/es/articles/que-es-un-protocolo-de-red.mdx`.
+- [x] Redes entre pares: qué aporta cada participante, descubrimiento y límites; comparar un mismo intercambio con cliente-servidor sin confundir descentralización con ausencia de coordinación. Propuesta nueva: `src/content/es/articles/redes-peer-to-peer.mdx`.
+- [x] BitTorrent: seguir una descarga por piezas y su verificación, explicar torrent, magnet, tracker y DHT cuando entren en el recorrido. Usar un ejemplo de distribución autorizada. Propuesta nueva: `src/content/es/articles/como-funciona-bittorrent.mdx`.
+- [x] Topologías de red: distinguir disposición física y lógica; estrella, malla, anillo y bus con diagramas y un fallo concreto que permita comparar sus consecuencias. Propuesta nueva: `src/content/es/articles/topologias-de-red.mdx`.
 - [ ] Revisar los artículos introductorios y enlazar estas explicaciones desde sus primeras menciones. Ordenar los pasos básicos antes de enrutamiento y telecomunicaciones avanzadas.
 
 Aceptación: una persona sin experiencia puede seguir el recorrido desde dispositivo y petición hasta servidor, protocolo y red; no necesita conocer antes siglas que el texto no explica.
@@ -90,11 +90,11 @@ Avance: los cinco artículos propuestos están redactados y comprobados, con fue
 
 Investigar fuentes oficiales antes de fijar el alcance. Separar mecanismos documentados de detalles internos no publicados y acotar las afirmaciones a la fecha de la fuente. No presentar diagramas didácticos como la arquitectura privada exacta de una empresa.
 
-- [ ] Spotify: explicar cómo llega el audio y por qué puede empezar antes de descargar la canción completa; conectar representación del sonido, compresión, búfer y distribución. Propuesta nueva: `src/content/es/articles/como-funciona-spotify.mdx`.
-- [ ] WhatsApp: seguir un mensaje entre dos personas, con cifrado de extremo a extremo, entrega y límites claramente separados. Propuesta nueva: `src/content/es/articles/como-funciona-whatsapp.mdx`.
-- [ ] Cloudflare: seguir una petición y explicar el papel de DNS, proxy y caché mediante un caso concreto, sin intentar catalogar todos sus productos. Propuesta nueva: `src/content/es/articles/que-hace-cloudflare.mdx`.
-- [ ] Explicar la caída de Facebook, WhatsApp e Instagram del 4 de octubre de 2021: desencadenante, propagación por red y DNS, recuperación y efectos cotidianos documentados. Caso elegido tras contrastar el informe de sus ingenieros y las observaciones externas de Cloudflare. Artículo: `src/content/es/articles/la-caida-de-facebook-de-2021.mdx`.
-- [ ] Integrar los casos en rutas existentes de internet, aplicaciones web o historia cuando encajen; añadir enlaces desde los conceptos que ilustran.
+- [x] Spotify: explicar cómo llega el audio y por qué puede empezar antes de descargar la canción completa; conectar representación del sonido, compresión, búfer y distribución. Propuesta nueva: `src/content/es/articles/como-funciona-spotify.mdx`.
+- [x] WhatsApp: seguir un mensaje entre dos personas, con cifrado de extremo a extremo, entrega y límites claramente separados. Propuesta nueva: `src/content/es/articles/como-funciona-whatsapp.mdx`.
+- [x] Cloudflare: seguir una petición y explicar el papel de DNS, proxy y caché mediante un caso concreto, sin intentar catalogar todos sus productos. Propuesta nueva: `src/content/es/articles/que-hace-cloudflare.mdx`.
+- [x] Explicar la caída de Facebook, WhatsApp e Instagram del 4 de octubre de 2021: desencadenante, propagación por red y DNS, recuperación y efectos cotidianos documentados. Caso elegido tras contrastar el informe de sus ingenieros y las observaciones externas de Cloudflare. Artículo: `src/content/es/articles/la-caida-de-facebook-de-2021.mdx`.
+- [x] Integrar los casos en rutas existentes de internet, aplicaciones web o historia cuando encajen; añadir enlaces desde los conceptos que ilustran.
 
 Aceptación: el lector puede relacionar una acción familiar con sus mecanismos y explicar por qué un fallo concreto afectó a un servicio. Las conclusiones se apoyan en fuentes abiertas y citadas.
 
@@ -104,9 +104,9 @@ La tanda 10 del backlog 8 registra el alcance y los hallazgos previos. Los cuatr
 
 ## 8. Computación cuántica, según los huecos encontrados
 
-- [ ] Leer `src/content/es/articles/que-es-un-cubit.mdx` y sus referencias desde otros artículos. Comprobar si diferencia estado, medición, probabilidad y bit clásico sin prometer leer todos los resultados simultáneamente.
-- [ ] Añadir artículos separados sobre medición, entrelazamiento o puertas cuánticas solo cuando permitan explicar con claridad un mecanismo que el artículo introductorio no debe absorber. Registrar aquí los títulos y rutas definitivos antes de escribirlos.
-- [ ] Enlazar los nuevos artículos desde el de cúbit y comprobar sus prerrequisitos matemáticos. Explicar también límites y errores comunes; no convertir ventajas de algoritmos concretos en una aceleración universal.
+- [x] Leer `src/content/es/articles/que-es-un-cubit.mdx` y sus referencias desde otros artículos. Comprobar si diferencia estado, medición, probabilidad y bit clásico sin prometer leer todos los resultados simultáneamente.
+- [x] Añadir artículos separados sobre medición, entrelazamiento o puertas cuánticas solo cuando permitan explicar con claridad un mecanismo que el artículo introductorio no debe absorber. Registrar aquí los títulos y rutas definitivos antes de escribirlos.
+- [x] Enlazar los nuevos artículos desde el de cúbit y comprobar sus prerrequisitos matemáticos. Explicar también límites y errores comunes; no convertir ventajas de algoritmos concretos en una aceleración universal.
 
 Aceptación: la ampliación responde a huecos identificados, con ejemplos comprensibles y fuentes primarias, no a una cuota de artículos.
 
@@ -136,3 +136,6 @@ El usuario solicita integrar por tandas lo ya terminado, sin esperar a cerrar to
 **Comprobación de esta entrega:** sobre la base de `main`, `pnpm check` pasa con 558 pruebas, cero errores y avisos de Astro, 593 páginas y 533 artículos indexados. Chromium repite escritura sin desplazamiento, carga diferida, foco, paginación, estados, guardado, recarga, sincronización entre pestañas, filtros, ordenación, rutas completas y ausencia de almacenamiento. Se inspeccionan cuatro capturas en móvil/escritorio y temas claro/oscuro. Los doce pasos de representación actualmente publicados pasan veinticuatro visitas de navegación sin JavaScript; esto comprueba la interfaz y no cierra la revisión editorial de esa ruta. Permanecen los avisos conocidos de Shiki para `svg` y de tamaño de un fragmento JavaScript.
 
 La siguiente entrega incorpora las once rutas verificadas y sus artículos relacionados, incluidos los once artículos nuevos. La auditoría general de enlaces y el encaje en fundamentos de desarrollo web continúan abiertos.
+
+
+**Publicación del 16 de octubre de 2026:** interfaz integrada mediante la [PR #3](https://github.com/nbfrodri/devly/pull/3); los once artículos nuevos, sus enlaces entrantes y las rutas revisadas mediante la [PR #4](https://github.com/nbfrodri/devly/pull/4). Se marcan las tareas publicadas de redes, casos cotidianos y cuántica. Continúan abiertos el encaje de los fundamentos en desarrollo web y la auditoría sistemática de enlaces de todo el catálogo.
