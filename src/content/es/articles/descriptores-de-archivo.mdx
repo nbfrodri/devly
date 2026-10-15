@@ -11,6 +11,8 @@ updated: 2026-10-15
 sources:
   - title: "Linux man-pages: open(2) (en inglés)"
     url: https://man7.org/linux/man-pages/man2/open.2.html
+  - title: "Linux man-pages: dup(2) (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/dup.2.html
 ---
 
 Un **descriptor de archivo** es un entero no negativo con el que un proceso identifica un recurso abierto. En sistemas de tipo Unix, las llamadas para leer, escribir o cerrar utilizan ese número en lugar de repetir una ruta en cada operación.
@@ -19,11 +21,11 @@ Un **descriptor de archivo** es un entero no negativo con el que un proceso iden
 
 Si un proceso abre un archivo, el sistema crea o referencia el estado de esa apertura y devuelve un descriptor, por ejemplo 3. Ese número indexa una tabla del proceso. Otro proceso puede tener también un descriptor 3 y estar utilizando un archivo completamente distinto.
 
-Los números 0, 1 y 2 se utilizan convencionalmente para entrada estándar, salida estándar y error estándar. Pueden estar conectados a un terminal, a un archivo o a una tubería, según cómo se haya iniciado el programa.
+Los números 0, 1 y 2 se utilizan convencionalmente para entrada estándar, salida estándar y error estándar. Pueden estar conectados a una [terminal](/articulos/terminal-y-shell/), a un archivo o a una tubería, según cómo se haya iniciado el programa.
 
 ## No representa solo archivos de disco
 
-También se utilizan descriptores para sockets y tuberías. Esto permite que distintas operaciones de entrada y salida compartan una interfaz parecida, aunque cada recurso tenga comportamientos y capacidades propios.
+También se utilizan descriptores para [sockets](/articulos/que-es-un-socket/) y [tuberías](/articulos/senales-y-comunicacion-entre-procesos/). Esto permite que distintas operaciones de entrada y salida compartan una interfaz parecida, aunque cada recurso tenga comportamientos y capacidades propios.
 
 Al cerrar un descriptor, su número puede reutilizarse. Guardarlo y utilizarlo después del cierre puede acabar operando sobre otro recurso abierto más tarde. Además, olvidar cierres consume recursos: existe un límite de descriptores abiertos por proceso.
 
@@ -31,4 +33,6 @@ No lo confundas con un [inodo](/articulos/sistema-de-archivos/), que identifica 
 
 ## Una apertura compartida o dos independientes
 
-Dos aperturas del mismo archivo pueden mantener posiciones de lectura independientes: avanzar en una no tiene por qué avanzar en la otra. Duplicar un descriptor, en cambio, puede hacer que ambos remitan a la misma descripción de archivo abierto y compartan su posición. Así se distinguen tres piezas: el número del proceso, el estado de la apertura y el archivo almacenado. Confundirlas dificulta explicar tanto las redirecciones como los efectos de compartir una apertura.
+Dos llamadas independientes a `open` sobre el mismo archivo mantienen posiciones de lectura separadas. Duplicar un descriptor con `dup`, en cambio, hace que ambos remitan a la misma **descripción de archivo abierto** y compartan su posición.
+
+Imagina un archivo con `ABC`: abres dos veces y lees un byte por cada apertura; obtienes A y A. Si duplicas el primer descriptor después de esa lectura, leer por el duplicado obtiene B y avanza también la posición que utiliza el primero. Son tres piezas distintas: el número del proceso, el estado de la apertura y el archivo almacenado. Confundirlas dificulta explicar las redirecciones y las aperturas compartidas.

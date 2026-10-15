@@ -1,151 +1,121 @@
 ---
 title: "¿Qué es una distribución de Linux y en qué se diferencian?"
-description: "Una distribución reúne el núcleo de Linux con el resto del software en un sistema instalable. Se distinguen por su gestor de paquetes, su ritmo de actualización y su público."
+description: "Una distribución integra y mantiene Linux con otros componentes. Sus decisiones sobre paquetes, actualizaciones y soporte afectan a cómo se instala y conserva una aplicación."
 level: basico
 layer: sistemas
 prerequisites:
   - que-es-linux
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Debian: Acerca de Debian"
     url: https://www.debian.org/intro/about.es.html
   - title: "Debian: Versiones de Debian"
     url: https://www.debian.org/releases/index.es.html
-  - title: "ArchWiki: Arch Linux"
-    url: https://wiki.archlinux.org/title/Arch_Linux_(Espa%C3%B1ol)
-  - title: "Fedora: Fedora Project documentation (en inglés)"
-    url: https://docs.fedoraproject.org/en-US/project/
   - title: "Ubuntu: Release cycle (en inglés)"
     url: https://ubuntu.com/about/release-cycle
+  - title: "Fedora Project: Preguntas frecuentes (en inglés)"
+    url: https://fedoraproject.org/wiki/FAQ
+  - title: "Arch Linux: About (en inglés)"
+    url: https://archlinux.org/about/
+  - title: "Flatpak: Basic concepts (en inglés)"
+    url: https://docs.flatpak.org/en/latest/basic-concepts.html
+  - title: "Flatpak: Sandbox permissions (en inglés)"
+    url: https://docs.flatpak.org/en/latest/sandbox-permissions.html
+  - title: "AppImage: Concepts (en inglés)"
+    url: https://docs.appimage.org/introduction/concepts.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **distribución de Linux**, o *distro*, es un sistema operativo completo y listo para instalar, formado por el núcleo de [Linux](/articulos/que-es-linux/) y una selección de software alrededor: utilidades, gestor de paquetes, servicios y, a menudo, un escritorio. Debian, Ubuntu, Fedora y Arch son distribuciones.
+Una **distribución de Linux**, o *distro*, integra el núcleo [Linux](/articulos/que-es-linux/) con bibliotecas, herramientas y aplicaciones, y establece cómo instalar y mantener ese conjunto. No es solo una apariencia de escritorio: también decide qué versiones se ofrecen, cómo se actualizan y durante cuánto tiempo se mantienen.
 
-Existen cientos porque casi todas las piezas son libres e intercambiables, y cada proyecto las elige y las configura según sus prioridades.
+Dos distribuciones utilizan la misma familia de núcleo, pero pueden incorporar versiones, parches y configuraciones diferentes. Tampoco todas se entregan como un instalador gráfico: hay imágenes para servidores y sistemas mínimos con otros métodos de despliegue.
 
-## Por qué existen
+## Qué trabajo hace la distribución
 
-El núcleo solo no se puede usar. Montar un sistema a partir de sus componentes exige descargar el código de cientos de programas, compilarlos, configurarlos y lograr que funcionen juntos.
+Imagina que quieres ejecutar una aplicación que genera informes. Necesita un intérprete para ejecutar su código y una biblioteca para producir documentos. Esa biblioteca depende a su vez de otras funciones del sistema.
 
-Una distribución hace ese trabajo: selecciona, compila, prueba, empaqueta y mantiene actualizado el conjunto. Es lo que diferencia un montón de piezas de un sistema que se instala en media hora.
+Podrías reunir y mantener cada pieza por separado. Una distribución selecciona componentes, prepara paquetes, resuelve combinaciones compatibles y publica actualizaciones. También ofrece configuración inicial y documentación. Esa integración reduce trabajo, pero no elimina la necesidad de probar tu aplicación ni garantiza un tiempo fijo de instalación.
 
-## Qué las distingue
+## Paquetes y repositorios
 
-Todas comparten núcleo. Se diferencian en unas pocas decisiones.
+Un **paquete** contiene software preparado para instalarse y metadatos sobre versión, dependencias y otros requisitos. Una **dependencia** es otro componente necesario. Un **[gestor de paquetes](/articulos/gestores-de-paquetes/)** utiliza esa información para planificar instalaciones y actualizaciones.
 
-### El gestor de paquetes
+Un **repositorio** es una fuente de paquetes y sus índices. Para nuestro generador de informes, el recorrido habitual es:
 
-Un **paquete** es un programa preparado para instalarse, con la lista de lo que necesita. El **gestor de paquetes** lo descarga de un **repositorio**, un almacén mantenido por la distribución, junto con sus dependencias, y lo mantiene al día.
+1. Consultar qué versión del intérprete ofrece el repositorio configurado.
+2. Resolver qué bibliotecas necesita y cuáles ya están instaladas.
+3. Verificar los metadatos y paquetes mediante los mecanismos de confianza del sistema.
+4. Instalar el conjunto o informar de que sus requisitos no pueden satisfacerse.
 
-```bash
-sudo apt install git        # Debian, Ubuntu
-sudo dnf install git        # Fedora
-sudo pacman -S git          # Arch
-```
+Las firmas ayudan a comprobar procedencia e integridad respecto a claves confiables. No demuestran que el programa carezca de errores o que todos sus comportamientos se hayan auditado. Añadir un repositorio externo modifica en quién confías y quién suministra actualizaciones.
 
-Tres órdenes distintas para lo mismo. El gestor y el formato de paquete son lo que más separa a una familia de otra.
+El nombre de una aplicación tampoco asegura el mismo paquete en dos distribuciones. Pueden cambiar versiones, opciones de compilación, rutas y componentes separados.
 
-Instalar desde los repositorios de la distribución es, además, una medida de [seguridad](/articulos/que-es-la-ciberseguridad/): los paquetes están firmados y revisados, a diferencia de un instalador bajado de una web cualquiera.
+## Dos ritmos de actualización
 
-### El ritmo de publicación
+Una **versión fija** mantiene una base identificable y publica actualizaciones según su política. Puede conservar versiones principales mientras incorpora correcciones, o actualizar determinados componentes con reglas especiales.
 
-| Modelo | Cómo funciona | A favor | En contra |
-| --- | --- | --- | --- |
-| Versiones fijas | Una versión cada cierto tiempo; entre medias, solo correcciones | Estable y previsible | El software envejece |
-| Publicación continua | Actualizaciones constantes, sin versiones | Siempre lo más reciente | Más riesgo de que algo cambie o falle |
+Una **publicación continua**, o *rolling release*, actualiza el conjunto de manera progresiva. Los paquetes sí tienen versiones; lo que cambia es que no necesitas esperar necesariamente al siguiente lanzamiento completo de la distribución. «Continua» tampoco significa que incluya inmediatamente cualquier versión recién publicada.
 
-En inglés, la publicación continua se llama *rolling release*.
+Para comparar, supongamos una biblioteca hipotética: nuestra aplicación usa la versión 2.4 y una versión 3 cambia una función que necesita.
 
-Muchas distribuciones de versiones fijas ofrecen además versiones **de soporte prolongado**, LTS, que reciben correcciones de seguridad durante años. Son lo habitual en servidores.
+| Decisión del ejemplo | Base fija que conserva 2.4 | Base continua que incorpora 3 |
+| --- | --- | --- |
+| Corregir un fallo de seguridad | Puede adaptar la corrección a 2.4 | Puede incluirla al avanzar de versión |
+| Mantener la función antigua | Puede conservarla durante ese periodo | Hay que comprobar si cambió y adaptar la aplicación |
+| Acceder a funciones nuevas de 3 | Requiere otra vía admitida o una actualización mayor | Están disponibles cuando se publique ese paquete |
+| Trabajo del administrador | Probar correcciones y planificar la migración de base | Probar cambios de paquetes y atender avisos de actualización |
 
-### El resto
-
-- **El escritorio** que traen por defecto, o ninguno.
-- **Quién está detrás**: una comunidad de voluntarios o una empresa.
-- **Su postura sobre el software no libre**, como ciertos controladores.
-- **Cuánto deciden por ti**: desde un sistema listo para usar hasta uno que montas pieza a pieza.
-
-## Las familias principales
-
-La mayoría de las distribuciones derivan de unas pocas.
-
-### Debian
-
-Una de las más antiguas, de 1993, y mantenida íntegramente por voluntarios. Prioriza la estabilidad y el software libre. Usa paquetes `.deb` y el gestor `apt`.
-
-Mantiene tres ramas: **estable**, la que se publica, muy probada y con software algo antiguo; **en pruebas**, donde se prepara la siguiente; e **inestable**, donde entra lo nuevo.
-
-De Debian deriva **Ubuntu**, de la empresa Canonical, que la hizo más accesible y se convirtió en una de las más usadas, tanto en escritorio como en servidores y en la nube. Publica una versión cada seis meses y una de soporte prolongado cada dos años. De Ubuntu derivan a su vez otras, como **Linux Mint**.
-
-### Red Hat
-
-**Fedora** es la distribución comunitaria, patrocinada por Red Hat. Incorpora pronto las novedades, con una versión nueva cada seis meses aproximadamente.
-
-**Red Hat Enterprise Linux**, RHEL, es el producto comercial, con soporte de pago durante muchos años, muy presente en grandes empresas. **Rocky Linux** y **AlmaLinux** son alternativas gratuitas compatibles con él.
-
-Usan paquetes `.rpm` y el gestor `dnf`.
-
-### Arch
-
-**Arch Linux** es de publicación continua y sigue un principio de simplicidad: instala un sistema mínimo, y el usuario añade y configura lo que quiere. Exige más, y a cambio se entiende lo que hay instalado. Su documentación, la ArchWiki, es una referencia útil con cualquier distribución.
-
-Usa el gestor `pacman`. Hay derivadas que la entregan ya configurada.
-
-### Otras
-
-- **openSUSE**, con una variante de versiones fijas y otra continua.
-- **Alpine**, diminuta. Muy usada como base de imágenes de [contenedores](/articulos/que-es-docker/), porque ocupa unos pocos megabytes.
-- **NixOS**, en la que todo el sistema se describe en un archivo de configuración, de forma declarativa, como en la [infraestructura como código](/articulos/infraestructura-como-codigo/).
-
-| | Debian | Ubuntu | Fedora | Arch |
-| --- | --- | --- | --- | --- |
-| Gestor | apt | apt | dnf | pacman |
-| Modelo | Versiones fijas | Versiones fijas, con LTS | Versiones fijas, frecuentes | Continuo |
-| Detrás | Comunidad | Canonical | Comunidad, con Red Hat | Comunidad |
-| Prioridad | Estabilidad | Facilidad | Novedades | Simplicidad y control |
+Son decisiones posibles, no obligaciones de todos los proyectos. **Una versión aparentemente antigua puede contener correcciones nuevas**. Para conocer su estado hay que consultar el paquete y los avisos de la distribución, no solo el número del proyecto original.
 
 <Quiz
 	client:visible
-	question="¿Qué comparten todas las distribuciones de Linux?"
-	options={[
-		"El gestor de paquetes",
-		"El núcleo",
-		"El escritorio",
-	]}
+	question="La distribución conserva el número principal de una biblioteca, pero adapta una corrección de seguridad. ¿Qué puede concluirse solo por ese número?"
+	options={["Que sigue necesariamente vulnerable", "Que hay que consultar la revisión y sus avisos; el número principal no basta", "Que ya es compatible con cualquier aplicación futura"]}
 	answer={1}
 />
 
-## El escritorio no es la distribución
+## Ejemplos de proyectos
 
-Algo que confunde al llegar: el aspecto del sistema no lo decide la distribución, sino el **entorno de escritorio**, que es un componente más.
+| Distribución | Herramientas habituales de paquetes | Modelo y decisiones relevantes |
+| --- | --- | --- |
+| Debian GNU/Linux | APT y paquetes `.deb` | Rama estable publicada; testing prepara la siguiente y unstable recibe desarrollo |
+| Ubuntu | APT y paquetes `.deb` | Versiones periódicas y ediciones LTS, de soporte prolongado |
+| Fedora | DNF y paquetes `.rpm` | Lanzamientos periódicos, aproximadamente semestrales |
+| Arch Linux | pacman | Publicación continua y una base que el usuario configura |
 
-GNOME y KDE Plasma son los más extendidos. Hay otros más ligeros, y gestores de ventanas mínimos que solo colocan las ventanas en pantalla.
+Ubuntu parte de Debian y mantiene sus propias decisiones y calendarios. Fedora y Arch también seleccionan y prueban sus componentes; las etiquetas de una tabla no permiten ordenar automáticamente su calidad o seguridad.
 
-La misma distribución puede tener un aspecto completamente distinto según el escritorio, y el mismo escritorio se ve casi igual en distribuciones diferentes.
+**Soporte prolongado**, o **LTS**, indica una política de mantenimiento extendida. Su alcance depende de versión, paquetes cubiertos y, en algunos casos, suscripciones adicionales. Antes de depender de una instalación hay que comprobar sus fechas y cobertura vigentes.
 
-## Paquetes universales
+## El escritorio es una parte
 
-Que cada familia tenga su formato obliga a quien publica un programa a empaquetarlo varias veces. Para evitarlo han surgido formatos que funcionan en cualquier distribución, como Flatpak, Snap y AppImage. Incluyen con el programa lo que necesita y lo ejecutan con cierto aislamiento.
+Un **entorno de escritorio** organiza ventanas, paneles y herramientas visuales. GNOME y KDE Plasma son ejemplos que pueden estar disponibles en varias distribuciones. Una distribución puede ofrecer distintas ediciones y configurar cada entorno de manera diferente.
 
-Ocupan más y arrancan algo más despacio. A cambio, el programa llega igual a todas partes y directamente de quien lo hace.
+Elegir otro escritorio cambia la experiencia visual y algunos programas, pero no sustituye por sí solo el gestor de paquetes ni el calendario de soporte. Un servidor puede funcionar sin escritorio.
 
-## Cómo elegir
+## Otros formatos de aplicaciones
 
-Importa menos de lo que parece. Lo que se aprende en una, la [terminal](/articulos/terminal-y-shell/), los [permisos](/articulos/permisos-y-usuarios/), los [procesos](/articulos/que-es-un-proceso/), sirve en todas.
+Flatpak y AppImage intentan reducir diferencias al distribuir aplicaciones entre sistemas Linux. Lo hacen de formas distintas: Flatpak combina aplicaciones, entornos de ejecución compartidos y permisos de acceso; AppImage empaqueta una aplicación con componentes que necesita en un archivo ejecutable.
 
-- **Para empezar en el escritorio**: una con mucha comunidad y documentación, como Ubuntu, Linux Mint o Fedora.
-- **Para un servidor**: una versión de soporte prolongado de Debian o Ubuntu, o una compatible con RHEL. Se busca estabilidad y años de correcciones.
-- **Para un contenedor**: una imagen mínima, como Alpine o las variantes reducidas de Debian.
-- **Para aprender cómo se monta un sistema**: Arch.
+Ninguno significa «funciona en cualquier máquina». Siguen existiendo requisitos de arquitectura y del sistema anfitrión. El empaquetado tampoco determina por sí solo procedencia, mantenimiento o aislamiento. En Flatpak, por ejemplo, los permisos concedidos condicionan qué recursos puede alcanzar una aplicación.
 
-En un servidor, la continuidad pesa más que la novedad: nadie quiere que una actualización cambie el comportamiento de algo en producción.
+Para nuestro generador de informes podría ser una vía de obtener una versión concreta, pero alguien debe mantener ese paquete y sus dependencias. No basta con que el archivo arranque una vez.
+
+## Elegir para una tarea
+
+Empieza por los requisitos: aplicaciones y hardware admitidos, documentación, actualizaciones disponibles y tiempo para mantenerlas. Un servidor necesita un calendario de soporte y migración; un puesto de desarrollo puede necesitar herramientas recientes. Ambas necesidades pueden resolverse con distintas distribuciones y configuraciones.
+
+## Errores comunes
+
+- **Elegir solo por una captura del escritorio.** No muestra las decisiones de mantenimiento.
+- **Mezclar paquetes de proyectos distintos porque usan la misma extensión.** El formato no garantiza dependencias compatibles.
+- **Equiparar firma con ausencia de riesgo.** La confianza en el proveedor y la comprobación del funcionamiento siguen siendo necesarias.
 
 ## Lo esencial
 
-- Una distribución reúne el núcleo de Linux y el software necesario en un sistema instalable.
-- Se diferencian sobre todo en el gestor de paquetes y en el ritmo de publicación.
-- Las principales familias son Debian, Red Hat y Arch.
-- Las versiones fijas dan estabilidad; la publicación continua, software reciente.
-- El escritorio es un componente aparte, que no depende de la distribución.
+- Una distribución integra componentes y mantiene su combinación.
+- Paquetes, repositorios y políticas de actualización determinan el recorrido de una aplicación.
+- Versión fija y publicación continua requieren mantenimiento y pruebas.
+- Escritorio, formato de aplicación y soporte son decisiones relacionadas, pero diferentes.

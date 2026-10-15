@@ -1,167 +1,133 @@
 ---
 title: "¿Cómo funcionan los usuarios y los permisos?"
-description: "Un sistema operativo decide quién puede hacer qué mediante usuarios, grupos y permisos sobre cada archivo."
-level: basico
+description: "Los procesos actúan con una identidad. Los permisos permiten decidir qué operaciones pueden realizar sobre archivos y directorios, junto con otras restricciones."
+level: intermedio
 layer: sistemas
 prerequisites:
   - sistema-de-archivos
   - terminal-y-shell
-updated: 2026-10-14
+  - que-es-un-proceso
+updated: 2026-10-15
 sources:
-  - title: "Linux man-pages: chmod(1) (en inglés)"
+  - title: "GNU Coreutils: chmod(1), manual alojado en man7 (en inglés)"
     url: https://man7.org/linux/man-pages/man1/chmod.1.html
   - title: "Linux man-pages: credentials(7) (en inglés)"
     url: https://man7.org/linux/man-pages/man7/credentials.7.html
-  - title: "GNU Coreutils: File permissions (en inglés)"
-    url: https://www.gnu.org/software/coreutils/manual/html_node/File-permissions.html
+  - title: "Linux man-pages: path_resolution(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/path_resolution.7.html
+  - title: "Linux man-pages: capabilities(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/capabilities.7.html
+  - title: "Linux man-pages: chmod(2) (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/chmod.2.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un [sistema operativo](/articulos/que-es-un-sistema-operativo/) controla quién puede leer, modificar o ejecutar cada cosa mediante **usuarios**, **grupos** y **permisos**. Este artículo explica el modelo de los sistemas de tipo Unix, como Linux y macOS, que es también el de la mayoría de los servidores.
+Los **permisos** son reglas que el sistema utiliza para autorizar operaciones. Un [proceso](/articulos/que-es-un-proceso/) actúa con unas **credenciales**, como una identidad de usuario y grupos. El sistema contrasta esas credenciales con las reglas del recurso y otras restricciones. Aquí seguimos el modelo básico de archivos de tipo Unix, concretado en Linux.
 
-## Qué problema resuelve
+## Por qué no todos los programas tienen el mismo acceso
 
-Un ordenador lo comparten varias personas y, sobre todo, muchos programas. Sin control:
+Un editor necesita leer y modificar tus documentos; un servicio que atiende peticiones de internet puede necesitar solo una carpeta concreta. Ejecutarlos con identidades distintas permite reducir qué recursos puede afectar cada uno. Es el **mínimo privilegio**: conceder lo necesario para su tarea.
 
-- Un usuario podría leer los archivos de otro.
-- Un programa con un fallo, o uno malicioso, podría borrar el sistema entero.
-- Un servicio expuesto a internet que fuera atacado daría acceso a todo.
+Un **usuario** tiene un identificador numérico, **UID**. Un **grupo** reúne identidades a las que se puede conceder acceso conjunto. Los procesos conservan varias identidades con funciones diferentes; para el modelo habitual de acceso a archivos importan la identidad efectiva y los grupos aplicables. Un programa hereda credenciales al iniciarse, pero ciertos mecanismos autorizados pueden cambiarlas.
 
-Los permisos limitan el daño. Son la aplicación directa del principio de **mínimo privilegio** de la [ciberseguridad](/articulos/que-es-la-ciberseguridad/): cada cual, solo lo que necesita.
+Separar cuentas limita acceso; no demuestra que un fallo solo pueda afectar a esa cuenta. También importan los permisos concedidos, servicios accesibles y posibles vulnerabilidades.
 
-## Usuarios y grupos
+## Elegir el conjunto de permisos
 
-Cada persona o servicio tiene una cuenta de **usuario**, identificada internamente por un número, el **UID**.
+Cada archivo tiene propietario, grupo y tres conjuntos básicos:
 
-Un **grupo** reúne a varios usuarios para darles permisos en común. Un usuario puede pertenecer a varios.
-
-Los programas también tienen dueño: cada [proceso](/articulos/que-es-un-proceso/) se ejecuta en nombre de un usuario y hereda sus permisos. Cuando abres un editor, el editor puede tocar lo mismo que tú, y nada más.
-
-Por eso los servicios suelen tener un usuario propio con muy pocos permisos. Si atacan el servidor web, el atacante obtiene solo lo que ese usuario podía hacer.
-
-### El superusuario
-
-Hay un usuario especial, **root**, con UID 0, que puede hacerlo todo: los permisos no se le aplican.
-
-Trabajar siempre como root es peligroso, porque cualquier error tiene consecuencias sin límite. Lo habitual es usar una cuenta normal y pedir privilegios solo para la orden que los necesita, con `sudo`:
-
-```bash
-sudo apt install git
-```
-
-## Los permisos de un archivo
-
-Cada archivo y cada directorio tiene un usuario **propietario**, un **grupo** y tres conjuntos de permisos:
-
-| Para | Se aplica a |
+| Conjunto | Cuándo se utiliza en este modelo |
 | --- | --- |
-| Propietario | El usuario dueño del archivo |
-| Grupo | Los miembros del grupo del archivo |
-| Otros | Todos los demás |
+| Propietario | La identidad del proceso coincide con la del dueño |
+| Grupo | No coincide con el dueño, pero uno de sus grupos coincide con el del archivo |
+| Otros | No coincide ninguna de las anteriores |
 
-Cada conjunto tiene tres permisos:
+**No se suman los tres conjuntos.** Sin reglas adicionales, si eres el propietario se evalúan sus permisos, aunque «otros» tenga más. Las listas de control de acceso, o **ACL**, permiten reglas más detalladas y amplían este modelo.
 
-| Permiso | Letra | En un archivo | En un directorio |
-| --- | --- | --- | --- |
-| Lectura | `r` | Ver su contenido | Listar lo que contiene |
-| Escritura | `w` | Modificarlo | Crear y borrar archivos dentro |
-| Ejecución | `x` | Ejecutarlo como programa | Entrar en él |
+Cada conjunto tiene tres bits, escritos `r`, `w` y `x`:
 
-El significado cambia en los directorios, y trae una sorpresa: para borrar un archivo no hace falta permiso sobre el archivo, sino permiso de escritura sobre el **directorio** que lo contiene.
-
-## Cómo se leen
-
-La orden `ls -l` los muestra así:
-
-```
--rwxr-xr-- 1 ana editores 4096 mar 12 10:30 informe.sh
-```
-
-Los diez primeros caracteres son el tipo y los permisos:
-
-| Parte | Significa |
-| --- | --- |
-| `-` | Es un archivo. Una `d` indicaría un directorio |
-| `rwx` | El propietario, ana, puede leer, escribir y ejecutar |
-| `r-x` | El grupo, editores, puede leer y ejecutar |
-| `r--` | Los demás solo pueden leer |
-
-Un guion significa que falta ese permiso.
-
-## La notación numérica
-
-Los permisos se expresan también con números. Cada permiso tiene un valor: lectura 4, escritura 2, ejecución 1. Se suman para cada conjunto.
-
-| Permisos | Suma | Número |
+| Permiso | En un archivo regular | En un directorio |
 | --- | --- | --- |
-| `rwx` | 4 + 2 + 1 | 7 |
-| `r-x` | 4 + 1 | 5 |
-| `r--` | 4 | 4 |
-| `---` | 0 | 0 |
+| Lectura, `r` | Leer contenido | Enumerar nombres |
+| Escritura, `w` | Modificar contenido | Modificar entradas, junto con búsqueda |
+| Ejecución o búsqueda, `x` | Permitir su ejecución, si el resto de requisitos se cumple | Buscar entradas y recorrerlo |
 
-`rwxr-xr--` es `754`. Esos valores no son arbitrarios: cada permiso es un [bit](/articulos/que-es-un-bit/), y el número es la lectura en octal de los tres bits.
+Para abrir `/datos/informe.txt` hay que poder recorrer los directorios de la ruta y obtener el permiso correspondiente sobre el archivo. Leer los nombres de una carpeta no concede automáticamente lectura de todos sus archivos.
+
+Eliminar `informe.txt` modifica su entrada en el directorio. Normalmente requiere escritura y búsqueda en ese directorio, no escritura en el contenido del archivo. El **sticky bit**, utilizado en directorios compartidos como `/tmp`, restringe quién puede eliminar o renombrar entradas aunque pueda escribir allí. También pueden intervenir un montaje de solo lectura u otras políticas.
+
+## Leer letras y números
+
+Un modo como `rw-r-----` contiene tres tríos: propietario `rw-`, grupo `r--`, otros `---`. El propietario puede leer y escribir, el grupo leer y los demás no obtienen esos permisos.
+
+Cada posición tiene un valor: lectura 4, escritura 2 y ejecución 1. La suma de cada trío es una cifra de **octal**, base ocho. El modo anterior es `640`: seis para el propietario, cuatro para el grupo y cero para otros. Son nueve [bits](/articulos/que-es-un-bit/) de permiso.
+
+Este ejemplo convierte solo esos nueve caracteres básicos. Rechaza letras en una posición incorrecta; los indicadores especiales como `s` y `t` quedan fuera de su alcance:
 
 ```js
 function aNumero(permisos) {
+	if (typeof permisos !== "string" || permisos.length !== 9 ||
+		!/^(?:[r-][w-][x-]){3}$/.test(permisos)) {
+		throw new TypeError("Se esperan tres grupos de r, w y x o guiones");
+	}
 	const valores = { r: 4, w: 2, x: 1, "-": 0 };
 	let resultado = "";
-
 	for (let i = 0; i < 9; i += 3) {
 		const trio = permisos.slice(i, i + 3);
 		resultado += [...trio].reduce((suma, letra) => suma + valores[letra], 0);
 	}
-
 	return resultado;
 }
 
 console.log(aNumero("rwxr-xr--")); // "754"
 console.log(aNumero("rw-r--r--")); // "644"
-console.log(aNumero("rwxr-xr-x")); // "755"
+console.log(aNumero("rw-r-----")); // "640"
 ```
-
-Dos combinaciones aparecen constantemente:
-
-- `644`: el propietario lee y escribe; los demás solo leen. Lo normal para un archivo.
-- `755`: el propietario hace todo; los demás leen y ejecutan. Lo normal para un programa o un directorio.
-
-## Cambiarlos
-
-```bash
-chmod 644 notas.txt
-chmod u+x guion.sh
-chown ana:editores informe.txt
-```
-
-- `chmod` cambia los permisos, con números o con letras. `u+x` añade ejecución al propietario; `u`, `g` y `o` son usuario, grupo y otros.
-- `chown` cambia el propietario y el grupo.
-
-Un caso típico: escribes un [guion](/articulos/terminal-y-shell/) y, al ejecutarlo, el sistema responde "permiso denegado". Le falta el permiso de ejecución, y se arregla con `chmod u+x`.
 
 <Quiz
 	client:visible
-	question="Un archivo tiene los permisos 640. ¿Qué pueden hacer los usuarios que no son el propietario ni están en su grupo?"
-	options={["Leerlo", "Leerlo y ejecutarlo", "Nada"]}
+	question="En el modelo básico, un archivo tiene modo 640. Tu proceso no es el dueño ni pertenece al grupo del archivo. ¿Qué concede ese modo?"
+	options={["Lectura por sumar el permiso del grupo", "Lectura y escritura", "Ningún permiso de esos tres"]}
 	answer={2}
 />
 
-## Errores peligrosos
+## Cambiar el modo de un archivo propio
 
-- **`chmod 777`.** Da todos los permisos a todo el mundo. Hace desaparecer el error de permisos, y con él toda la protección. Casi nunca es la solución correcta.
-- **Ejecutar todo como root** para no tener problemas.
-- **Claves privadas legibles por otros.** Los archivos con secretos deben ser accesibles solo para su dueño, con permisos `600`.
-- **`sudo` con una orden que no se entiende**, sobre todo copiada de internet.
+`chmod` cambia permisos; no cambia la identidad del proceso. Este bloque completo usa Bash y utilidades de Linux, sin privilegios de administrador. Crea su propio directorio temporal y retira únicamente los objetos que acaba de crear:
 
-Ante un "permiso denegado", lo primero es entender por qué: quién es el dueño, con qué usuario se está actuando y qué permiso falta. Lo último es abrirlo todo.
+```bash
+(
+	carpeta_prueba=$(mktemp -d) || exit 1
+	archivo_prueba="$carpeta_prueba/nota.txt"
+	printf '%s\n' 'hola' > "$archivo_prueba" || exit 1
+	chmod 600 "$archivo_prueba" || exit 1
+	stat -c '%a' "$archivo_prueba"
+	chmod g+r "$archivo_prueba" || exit 1
+	stat -c '%a' "$archivo_prueba"
+	rm -- "$archivo_prueba" && rmdir -- "$carpeta_prueba"
+)
+```
 
-## Otros modelos
+Imprime `600` y `640`. Primero solo el dueño recibe lectura y escritura; después `g+r` añade lectura al grupo. `u`, `g` y `o` designan propietario, grupo y otros. El directorio temporal tiene sus propias restricciones: conceder lectura al grupo del archivo no concede recorrido por su carpeta.
 
-Los tres conjuntos de permisos se quedan cortos para casos finos, como dar acceso a un usuario concreto que no es el dueño ni está en el grupo. Para eso existen las **listas de control de acceso**, que permiten reglas por usuario. Windows basa su modelo en ellas.
+`chown` cambia propietario y grupo cuando quien lo solicita está autorizado. No hace falta cambiar de dueño para practicar con tu propio archivo. Tampoco hay un modo correcto universal: `644` permite lectura a otros; `600` la restringe en este modelo, pero no cifra el contenido ni impide accesos privilegiados.
+
+## Privilegios y otras restricciones
+
+**root**, normalmente UID 0, es la identidad administrativa tradicional. Linux separa facultades privilegiadas en **capacidades**. Permiten excepciones a ciertas comprobaciones, pero no significan que cualquier operación sea posible: pueden seguir aplicándose restricciones de montaje, políticas obligatorias o límites de un contenedor.
+
+`sudo` ejecuta una orden con la identidad autorizada por su política, frecuentemente root. No implica siempre pedir contraseña ni convierte toda orden en válida. Para editar una nota propia no hace falta elevar privilegios.
+
+## Errores comunes
+
+- **Responder a cualquier denegación con `chmod 777`.** Amplía los nueve permisos, pero no resuelve rutas incorrectas, montajes de solo lectura ni todas las políticas. Primero identifica proceso, operación y componente que la rechaza.
+- **Suponer que `x` basta para ejecutar.** También hacen falta un formato o intérprete válido, acceso a la ruta y un montaje que lo permita.
+- **Confundir propietario con copia protegida.** Los permisos regulan acceso; no sustituyen cifrado, copias ni un diseño que limite qué datos puede alcanzar cada servicio.
 
 ## Lo esencial
 
-- Cada proceso se ejecuta en nombre de un usuario y hereda sus permisos.
-- Cada archivo tiene propietario, grupo y permisos de lectura, escritura y ejecución para tres clases de usuarios.
-- Los permisos se escriben con letras o con tres cifras: `644` y `755` son las más habituales.
-- El usuario root no tiene límites, y por eso se usa lo menos posible.
-- Dar todos los permisos a todos resuelve el error y elimina la seguridad.
+- El sistema decide según credenciales, operación, recurso y restricciones.
+- Propietario, grupo y otros son clases que se seleccionan, no permisos que se suman.
+- Los bits tienen significados diferentes en archivos y directorios.
+- Los privilegios permiten excepciones concretas; no eliminan todos los límites.

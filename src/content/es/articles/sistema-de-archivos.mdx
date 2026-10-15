@@ -1,6 +1,6 @@
 ---
 title: "¿Qué es un sistema de archivos?"
-description: "El sistema de archivos es la parte del sistema operativo que organiza el disco en archivos y carpetas con nombre."
+description: "Un sistema de archivos organiza contenido, nombres y metadatos. Permite localizar archivos y controlar cómo se guardan, se comparten y se eliminan."
 level: basico
 layer: sistemas
 prerequisites:
@@ -11,25 +11,29 @@ sources:
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf
   - title: "Operating Systems: Three Easy Pieces, File System Implementation (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf
+  - title: "OSTEP: Crash Consistency, FSCK and Journaling (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf
+  - title: "Linux man-pages: inode(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/inode.7.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **sistema de archivos** es la parte del [sistema operativo](/articulos/que-es-un-sistema-operativo/) que organiza el almacenamiento en archivos y carpetas. Decide dónde se guarda cada dato en el disco, cómo se le pone nombre y cómo se vuelve a encontrar.
+Un **sistema de archivos** organiza contenido, nombres y metadatos y ofrece operaciones para encontrarlos y modificarlos. El [sistema operativo](/articulos/que-es-un-sistema-operativo/) permite utilizarlos mediante una interfaz común. Algunos se apoyan en un disco; otros, en memoria o en un servicio remoto. Aquí seguimos un sistema local de tipo Unix sobre almacenamiento.
 
 ## Qué problema resuelve
 
-Un disco, visto por dentro, es una secuencia enorme de bloques numerados. No sabe nada de documentos ni de fotos.
+Para este modelo, el dispositivo ofrece posiciones numeradas donde leer y escribir datos. Esa interfaz no expresa por sí sola documentos ni carpetas.
 
 Sin un sistema de archivos, cada programa tendría que recordar en qué bloques dejó sus datos y vigilar que no los pisara otro. El sistema de archivos se ocupa de eso y ofrece a todos una idea sencilla: archivos con nombre, organizados en carpetas.
 
 ## Archivos y directorios
 
-Un **archivo** es una secuencia de bytes con un nombre. Al sistema de archivos le da igual lo que contenga: texto, una imagen o un programa son, para él, bytes. Quien interpreta el contenido es el programa que lo abre.
+Un **[archivo regular](/articulos/que-es-un-archivo/)** ofrece una secuencia de [bytes](/articulos/que-es-un-byte/). Un byte es una unidad de ocho bits, suficiente para representar 256 valores. El nombre y los metadatos se gestionan aparte del contenido. Una imagen y un texto pueden guardarse como secuencias de bytes; el programa que los abre interpreta su formato.
 
 La extensión, como `.txt` o `.jpg`, es parte del nombre: una pista para personas y programas. Cambiarla no transforma el contenido.
 
-Un **directorio**, o carpeta, es una lista de nombres, cada uno asociado a un archivo o a otro directorio. Como un directorio puede contener otros, se forma un [árbol](/articulos/arboles-binarios-de-busqueda/), con un directorio **raíz** del que cuelga todo.
+Un **directorio**, o carpeta, relaciona nombres con archivos u otros directorios. Los directorios forman una jerarquía, o **árbol**, que parte de una **raíz**. Cada carpeta puede contener muchos elementos, que a su vez pueden ser otras carpetas.
 
 ## Rutas
 
@@ -38,9 +42,9 @@ La posición de un archivo en ese árbol se indica con una **ruta**.
 - Una **ruta absoluta** parte de la raíz: `/home/ana/notas.txt`.
 - Una **ruta relativa** parte del directorio en el que se está trabajando: `documentos/notas.txt`.
 
-Dos nombres especiales aparecen en todos los directorios: `.` es el propio directorio y `..` es el que lo contiene.
+Al resolver rutas de tipo Unix, `.` identifica el propio directorio y `..`, su padre. En la raíz, `..` permanece en ella. Son reglas de resolución; su representación interna depende del sistema de archivos.
 
-En Linux y macOS, las partes se separan con `/` y hay un único árbol. Windows usa `\` y tiene un árbol por unidad, como `C:\`.
+En los ejemplos Unix las partes se separan con `/`. Windows tiene otras convenciones, como `C:\` y rutas de red; no conviene trasladar una ruta literal entre entornos sin comprobar su significado.
 
 ## Lo que se guarda además del contenido
 
@@ -49,12 +53,12 @@ De cada archivo se conservan **metadatos**: datos sobre el archivo.
 - Su tamaño.
 - Quién es el propietario.
 - Qué permisos tiene.
-- Cuándo se creó y se modificó. La forma de guardar esas fechas está detrás del [problema del año 2038](/articulos/el-efecto-2000-y-el-problema-de-2038/).
+- Fechas de modificación, acceso y cambio de estado, según el formato. En Unix, `ctime` indica cambio de estado, no creación; algunos sistemas conservan además una fecha de nacimiento. Los límites de ciertas representaciones explican el [problema del año 2038](/articulos/el-efecto-2000-y-el-problema-de-2038/), pero no todas usan ese formato limitado.
 - En qué bloques del disco está su contenido.
 
 En los sistemas de tipo Unix, esa información vive en una estructura llamada **inodo**. Hay un inodo por archivo, identificado por un número.
 
-Un detalle que sorprende: **el nombre no está en el inodo**. Está en el directorio, que es una tabla de parejas de nombre y número de inodo. El archivo es el inodo; el nombre es solo una etiqueta que apunta a él.
+Un detalle que sorprende: **el nombre no está en el inodo**. Está en el directorio, que relaciona nombres y números de inodo. El inodo describe el archivo; el nombre permite localizar esa descripción desde el directorio.
 
 El número de inodo identifica esa estructura dentro de un sistema de archivos, no en todo el ordenador. Dos sistemas de archivos montados pueden utilizar el mismo número para archivos distintos. Tampoco permanece reservado para siempre: después de eliminar un archivo puede reutilizarse. Por eso no sirve como identificador universal permanente.
 
@@ -62,7 +66,7 @@ El número de inodo identifica esa estructura dentro de un sistema de archivos, 
 
 De ahí sale una consecuencia: un mismo archivo puede tener varios nombres.
 
-- Un **enlace duro** es otro nombre que apunta al mismo inodo. Los dos son igual de válidos, y el contenido solo se borra cuando desaparece el último.
+- Un **enlace duro** es otro nombre que apunta al mismo inodo. Los dos son igual de válidos; eliminar uno no elimina el acceso a través del otro.
 - Un **enlace simbólico** es un archivo pequeño que contiene la ruta de otro, como un acceso directo. Si el original se borra, el enlace queda apuntando a nada.
 
 El último nombre no es la única referencia relevante. Si un proceso mantiene abierto el archivo mediante un [descriptor](/articulos/descriptores-de-archivo/), puede seguir utilizándolo después de borrar su nombre. El espacio se libera cuando desaparecen los enlaces y las aperturas que lo conservan.
@@ -96,9 +100,11 @@ Un enlace simbólico relativo guarda una ruta que se interpreta desde el directo
 
 ## Cómo se reparte el disco
 
-El disco se divide en **bloques** de tamaño fijo, a menudo de 4 kilobytes. Un archivo ocupa un número entero de bloques, aunque le sobre sitio en el último.
+Un sistema local puede asignar espacio en **bloques** de tamaño fijo. En un modelo con bloques de 4096 bytes, un archivo de 5000 bytes necesita dos bloques de datos: 8192 bytes asignados, además de sus metadatos. Quedan 3192 bytes sin aprovechar en el último bloque.
 
-Los bloques de un archivo no tienen por qué estar seguidos. Cuando acaban muy dispersos se habla de **fragmentación**. En los discos mecánicos, que tienen que mover un cabezal para leer, eso ralentizaba el acceso. En las unidades de estado sólido apenas influye.
+No es una ley para cualquier archivo. Existen archivos dispersos, que representan zonas sin reservarles bloques, datos pequeños guardados junto a metadatos y formatos con compresión. Tamaño lógico y espacio físico ocupado pueden diferir.
+
+Los bloques de un archivo no tienen por qué estar seguidos. Esa dispersión es **fragmentación**. En un disco mecánico puede añadir movimientos del cabezal. Un SSD evita ese movimiento físico, pero la distribución aún puede afectar al número de operaciones y a la gestión de metadatos; su impacto depende de la carga y del dispositivo.
 
 ## Permisos
 
@@ -108,15 +114,15 @@ En los sistemas de tipo Unix, cada archivo tiene tres permisos para tres clases 
 
 | | Leer (`r`) | Escribir (`w`) | Ejecutar (`x`) |
 | --- | --- | --- | --- |
-| Propietario | | | |
-| Grupo | | | |
-| Otros | | | |
+| Propietario | Sí | Sí | Sí |
+| Grupo | Sí | No | Sí |
+| Otros | Sí | No | No |
 
 Se suelen ver escritos así: `rwxr-xr--`. Los tres primeros caracteres son para el propietario, los tres siguientes para el grupo y los tres últimos para los demás. Un guion indica que falta ese permiso.
 
 En ese ejemplo, el propietario puede leer, escribir y ejecutar; el grupo, leer y ejecutar; los demás, solo leer.
 
-En un directorio, los permisos significan otra cosa: leer es listar su contenido, escribir es crear o borrar archivos dentro, y ejecutar es poder entrar en él.
+En un directorio, leer permite enumerar nombres y ejecutar permite buscar entradas y recorrerlo. Crear o eliminar entradas requiere normalmente escritura y búsqueda en ese directorio, además de poder recorrer la ruta. Hay restricciones adicionales, como las de los directorios compartidos con bit de borrado restringido; se explican en el artículo de permisos.
 
 <Quiz
 	client:visible
@@ -127,9 +133,11 @@ En un directorio, los permisos significan otra cosa: leer es listar su contenido
 
 ## Sobrevivir a un apagón
 
-Crear un archivo implica varios cambios en el disco: reservar bloques, escribir el inodo, añadir el nombre al directorio. Si se corta la corriente a mitad, las estructuras quedan a medias y el sistema de archivos se corrompe.
+Crear un archivo puede implicar reservar bloques, escribir el inodo y añadir el nombre al directorio. Si la operación se interrumpe entre cambios, las estructuras podrían quedar incoherentes: por ejemplo, un nombre que referencia una estructura todavía no conservada.
 
-Los sistemas actuales lo evitan con un **[registro por diario](/articulos/sistema-de-archivos-con-registro/)** (*journaling*): antes de aplicar un cambio, anotan en un diario lo que van a hacer. Tras un apagón, basta con leer el diario para completar o descartar lo que quedó pendiente. Es la misma idea de atomicidad que las [transacciones](/articulos/transacciones-y-acid/) de una base de datos.
+Un **[registro por diario](/articulos/sistema-de-archivos-con-registro/)**, o *journaling*, agrupa cambios y registra información que permite recuperar un estado coherente tras una interrupción. Su alcance depende de qué se registra y de cuándo se confirma su persistencia. Otros sistemas usan estrategias distintas, como escribir nuevas estructuras antes de sustituir las referencias anteriores.
+
+Recuperar metadatos coherentes no garantiza conservar el último contenido que una aplicación creía haber guardado. Cachés, orden de escrituras y confirmaciones del dispositivo también importan. La recuperación del sistema de archivos y las [transacciones de una base de datos](/articulos/transacciones-y-acid/) son mecanismos relacionados, pero ofrecen contratos diferentes.
 
 ## Sistemas de archivos habituales
 
@@ -140,13 +148,13 @@ Los sistemas actuales lo evitan con un **[registro por diario](/articulos/sistem
 | APFS | macOS e iOS |
 | FAT32 y exFAT | Memorias USB y tarjetas, por su compatibilidad |
 
-Cada uno organiza el disco a su manera. Por eso un disco preparado para un sistema operativo puede no leerse en otro, y por eso las memorias USB suelen venir con FAT32 o exFAT, que casi todos entienden.
+Cada formato organiza datos y metadatos a su manera. Para utilizarlo hacen falta soporte del formato y de sus características concretas. FAT32 y exFAT son habituales en medios extraíbles, pero la compatibilidad debe comprobarse en cada destino.
 
 Preparar un disco para un sistema de archivos se llama **formatear**. Hacerlo accesible en un punto del árbol de directorios se llama **montarlo**.
 
 ## Borrar no es destruir
 
-Al borrar un archivo, normalmente solo se quita su nombre del directorio y se marcan sus bloques como libres. El contenido sigue ahí hasta que otro archivo lo sobrescribe. Por eso existen programas de recuperación, y por eso borrar un archivo no basta para destruir datos sensibles.
+Eliminar un nombre y liberar el espacio cuando ya no hay referencias no exige sobrescribir todos sus datos en ese instante. A veces quedan restos recuperables; otras veces, el descarte de bloques del SSD, su reutilización o el cifrado cambian esa posibilidad. Borrar no garantiza ni recuperación posterior ni destrucción segura. El artículo de [HDD y SSD](/articulos/discos-duros-y-ssd/) distingue borrado, TRIM y sanitización.
 
 ## Para comparar
 
@@ -154,8 +162,7 @@ Dos sistemas de archivos muy extendidos se comparan en [FAT y NTFS](/articulos/f
 
 ## Lo esencial
 
-- El sistema de archivos convierte los bloques de un disco en archivos y directorios con nombre.
+- El sistema de archivos organiza contenido, nombres y metadatos sobre distintos tipos de respaldo.
 - Un archivo son bytes más metadatos; un directorio asocia nombres con archivos.
 - Una ruta indica la posición de un archivo en el árbol, desde la raíz o desde el directorio actual.
-- Los permisos controlan quién puede leer, escribir y ejecutar.
-- El registro por diario protege la estructura frente a apagones.
+- Permisos, recuperación de estructuras y conservación del contenido son responsabilidades distintas.
