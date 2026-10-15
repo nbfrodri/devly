@@ -1,33 +1,43 @@
 ---
 title: "¿Qué es una clave foránea?"
-description: "Una clave foránea es una columna que guarda la clave primaria de otra tabla, para relacionarlas. La base de datos impide que apunte a algo que no existe."
+description: "Una clave foránea relaciona columnas con una clave de referencia y permite impedir datos huérfanos cuando la restricción está activa."
 level: basico
 kind: definicion
 layer: datos
 prerequisites:
   - que-es-una-clave-primaria
   - modelo-entidad-relacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Constraints, Foreign Keys (en inglés)"
     url: https://www.postgresql.org/docs/current/ddl-constraints.html
+  - title: "SQLite: Foreign Key Support (en inglés)"
+    url: https://www.sqlite.org/foreignkeys.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **clave foránea**, o ajena, es una columna que guarda el valor de la [clave primaria](/articulos/que-es-una-clave-primaria/) de **otra tabla**, para relacionar las dos. La base de datos se encarga de que siempre apunte a una fila que existe.
+Una **clave foránea**, o ajena, relaciona una o varias columnas con una clave de referencia, normalmente una [clave primaria](/articulos/que-es-una-clave-primaria/). Puede apuntar a otra tabla o a la misma. Con la restricción activa, los valores no nulos deben corresponder a una fila referenciada; los detalles de claves compuestas y nulos dependen del motor.
 
 ## Un ejemplo
 
+En una base SQLite vacía:
+
 ```sql
+PRAGMA foreign_keys = ON;
+CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL);
 CREATE TABLE pedidos (
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY,
 	cliente_id INTEGER NOT NULL REFERENCES clientes (id),
-	fecha DATE NOT NULL
+	fecha TEXT NOT NULL
 );
+INSERT INTO clientes VALUES (1, 'Ana');
+INSERT INTO pedidos VALUES (10, 1, '2026-10-15');
+SELECT id, cliente_id FROM pedidos;
+-- 10 | 1
 ```
 
-`cliente_id` es una clave foránea: cada pedido guarda el `id` de su cliente.
+La consulta devuelve el pedido 10 asociado al cliente 1. `cliente_id` es una clave foránea: cada pedido guarda el `id` de su cliente.
 
 ## Qué garantiza
 
@@ -42,7 +52,9 @@ Ese "qué hacer" se configura:
 | --- | --- |
 | Impedir (por defecto) | Se rechaza el borrado |
 | `ON DELETE CASCADE` | Se borran también sus pedidos |
-| `ON DELETE SET NULL` | Los pedidos quedan sin cliente |
+| `ON DELETE SET NULL` | Los pedidos quedan sin cliente si la columna admite NULL |
+
+El ejemplo exige cliente con `NOT NULL`, así que `SET NULL` no serviría sin cambiar esa regla. La comprobación de claves foráneas se activa por conexión en SQLite. La clave referenciada también puede ser una combinación de columnas con unicidad que el motor admita.
 
 ## Para qué sirve
 

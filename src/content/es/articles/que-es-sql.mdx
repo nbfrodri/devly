@@ -5,7 +5,7 @@ level: basico
 layer: datos
 prerequisites:
   - que-es-una-base-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: The SQL Language (documentación oficial, en inglés)"
     url: https://www.postgresql.org/docs/current/tutorial-sql.html
@@ -25,13 +25,15 @@ En un lenguaje como JavaScript escribes los pasos: recorre la lista, comprueba c
 
 Cada orden de SQL se llama **sentencia** y termina en punto y coma. Las palabras del lenguaje suelen escribirse en mayúsculas para distinguirlas de los nombres de tablas y columnas, aunque no es obligatorio.
 
-Los ejemplos de este artículo funcionan tal cual en SQLite y, con cambios mínimos, en cualquier otra base de datos relacional.
+Ejecuta los bloques en orden en una base de datos SQLite vacía. Otros motores pueden necesitar cambios de sintaxis. Sin `ORDER BY`, el orden de las filas del resultado no está garantizado.
 
 ## Crear una tabla
 
 Antes de guardar datos hay que definir la tabla: sus columnas y el tipo de cada una.
 
 ```sql
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE clientes (
 	id INTEGER PRIMARY KEY,
 	nombre TEXT NOT NULL,
@@ -125,10 +127,10 @@ Las funciones de agregación calculan un valor a partir de muchas filas. Con `GR
 SELECT clientes.nombre, SUM(pedidos.total) AS gastado
 FROM pedidos
 JOIN clientes ON clientes.id = pedidos.cliente_id
-GROUP BY clientes.nombre;
+GROUP BY clientes.id, clientes.nombre;
 ```
 
-Devuelve Ana con 65 y Marta con 15. `AS` da nombre a la columna calculada.
+Devuelve Ana con 65 y Marta con 15. `AS` da nombre a la columna calculada. Agrupamos por identificador y nombre: dos clientes llamados Ana deben seguir siendo dos clientes distintos.
 
 ## Modificar y borrar
 
@@ -141,7 +143,7 @@ DELETE FROM pedidos WHERE id = 12;
 
 ## Errores comunes
 
-- **Olvidar `WHERE` en un `UPDATE` o un `DELETE`.** Sin condición, la sentencia se aplica a todas las filas de la tabla. Es el error más caro de SQL.
+- **Olvidar `WHERE` en un `UPDATE` o un `DELETE`.** Sin condición, la sentencia afecta a todas las filas de la tabla, salvo que una restricción u otra regla impida el cambio.
 - **Usar comillas dobles para los textos.** Los valores de texto van entre comillas simples.
 - **Construir una sentencia pegando texto escrito por un usuario.** Permite que alguien cuele sus propias órdenes, un ataque llamado [inyección de SQL](/articulos/inyeccion-sql/). Los valores externos se pasan siempre como parámetros, nunca dentro del texto de la sentencia.
 

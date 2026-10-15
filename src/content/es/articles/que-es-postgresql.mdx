@@ -7,7 +7,7 @@ prerequisites:
   - que-es-una-base-de-datos
   - que-es-sql
   - transacciones-y-acid
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: About (en inglés)"
     url: https://www.postgresql.org/about/
@@ -17,6 +17,12 @@ sources:
     url: https://www.postgresql.org/docs/current/mvcc-intro.html
   - title: "PostgreSQL: JSON Types (en inglés)"
     url: https://www.postgresql.org/docs/current/datatype-json.html
+  - title: "PostgreSQL: Transaction Isolation (en inglés)"
+    url: https://www.postgresql.org/docs/current/transaction-iso.html
+  - title: "PostgreSQL: Write-Ahead Logging (en inglés)"
+    url: https://www.postgresql.org/docs/current/wal-intro.html
+  - title: "SQLite: JSON Functions and Operators (en inglés)"
+    url: https://www.sqlite.org/json1.html
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -40,7 +46,7 @@ No pertenece a ninguna empresa. Lo desarrolla una comunidad, y su [licencia](/ar
 - **[JOIN](/articulos/tipos-de-join/)**, subconsultas, vistas, funciones de ventana.
 - **[Índices](/articulos/indices-de-bases-de-datos/)** de varios tipos.
 
-Que las reglas las imponga la base de datos, y no solo la aplicación, es lo que impide que un error en el código deje datos incoherentes.
+Las restricciones activas rechazan las infracciones que expresan. Las demás reglas del negocio siguen necesitando validación, transacciones y un diseño correcto de la concurrencia.
 
 ### Tipos de datos ricos
 
@@ -49,20 +55,20 @@ Además de números, texto y fechas:
 | Tipo | Para qué sirve |
 | --- | --- |
 | `jsonb` | Documentos [JSON](/articulos/formatos-de-datos-json-csv-xml/), consultables e indexables |
-| Arrays | Varias valores en una columna |
+| Arrays | Varios valores en una columna |
 | `uuid` | Identificadores únicos |
 | Rangos | Intervalos de fechas o números |
 | Geométricos y de red | Puntos, [direcciones IP](/articulos/que-es-una-direccion-ip/) |
 
 ## JSON dentro de una base relacional
 
-El tipo `jsonb` guarda documentos y permite consultarlos:
+PostgreSQL ofrece `jsonb` para guardar documentos en una representación procesada y consultarlos. Para practicar la extracción de campos sin instalar un servidor, este ejemplo usa texto JSON en SQLite 3.38 o posterior. No reproduce el almacenamiento ni los índices de `jsonb`:
 
 ```sql
 CREATE TABLE productos (
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY,
 	nombre TEXT NOT NULL,
-	atributos JSONB
+	atributos TEXT
 );
 
 INSERT INTO productos (nombre, atributos)
@@ -71,25 +77,25 @@ VALUES ('Camiseta', '{"talla": "M", "color": "azul"}');
 SELECT nombre FROM productos WHERE atributos->>'color' = 'azul';
 ```
 
-El operador `->>` extrae un campo del documento como texto.
+La consulta devuelve Camiseta. En este caso `->>` extrae el campo textual `color`. PostgreSQL ofrece ese operador sobre sus tipos JSON, aunque los resultados para otros tipos y operadores no son idénticos en ambos motores.
 
 Esto permite combinar los dos mundos: columnas normales para lo que tiene estructura fija, y un documento para lo que varía. Buena parte de los motivos para elegir una [base de datos de documentos](/articulos/que-es-mongodb/) se cubren así, sin renunciar a las transacciones ni a los JOIN.
 
-## Concurrencia sin bloqueos de lectura
+## Concurrencia multiversión
 
 Cuando muchos usuarios leen y escriben a la vez, hay que evitar que se estorben. PostgreSQL usa **control de concurrencia multiversión**, MVCC.
 
-Al modificar una fila no se sobrescribe: se crea **una versión nueva**, y la antigua se conserva un tiempo. Cada transacción ve una instantánea coherente de los datos, la del momento en que empezó.
+Al modificar una fila no se sobrescribe: se crea **una versión nueva**, y la antigua se conserva un tiempo. La instantánea depende del nivel de aislamiento. En el predeterminado, Read Committed, cada sentencia ve los cambios confirmados antes de empezar esa sentencia, además de los cambios propios anteriores.
 
-La consecuencia práctica: **los que leen no bloquean a los que escriben, ni al revés**. Un informe largo no detiene las ventas.
+Una lectura ordinaria puede ver una versión anterior sin esperar a que una actualización de esa fila termine. Eso no elimina todos los bloqueos: una lectura con bloqueo explícito o ciertos cambios de estructura sí pueden esperar o detener otras operaciones.
 
 El coste es que las versiones antiguas ocupan sitio. Un proceso llamado `VACUUM` las elimina cuando ya nadie las necesita. Funciona solo, pero en bases con muchas modificaciones conviene vigilarlo.
 
 ## No perder datos
 
-Antes de modificar los datos, PostgreSQL anota el cambio en un **registro de escritura anticipada**, o WAL. Si la máquina se apaga a mitad de una operación, al arrancar lee ese registro y deja la base en un estado coherente.
+PostgreSQL escribe los registros necesarios en el **registro de escritura anticipada**, o WAL, antes de permitir que las páginas modificadas correspondientes lleguen al almacenamiento persistente. Si la máquina se apaga a mitad de una operación, al arrancar lee ese registro y deja la base en un estado coherente.
 
-El mismo registro sirve para la [replicación](/articulos/replicacion-y-particionado/): las réplicas lo reciben y aplican los mismos cambios. Y para recuperar la base en un instante concreto del pasado.
+El mismo registro sirve para la [replicación](/articulos/replicacion-y-particionado/): las réplicas lo reciben y aplican los mismos cambios. Para recuperar un instante pasado se necesita una copia base válida y los registros continuos necesarios; el WAL por sí solo no sustituye una copia de seguridad.
 
 ## Ampliable
 
@@ -103,10 +109,10 @@ Así una sola base de datos cubre necesidades que de otro modo exigirían varios
 
 <Quiz
 	client:visible
-	question="En PostgreSQL, ¿qué ocurre cuando una transacción lee una tabla mientras otra la modifica?"
+	question="Con MVCC, ¿cómo puede una lectura ordinaria consultar una fila mientras otra transacción la actualiza?"
 	options={[
 		"La lectura espera a que termine la escritura",
-		"Cada una ve su propia versión coherente de los datos, sin bloquearse",
+		"Puede leer una versión visible anterior sin esperar a esa actualización",
 		"La base de datos devuelve un error",
 	]}
 	answer={1}
@@ -116,15 +122,20 @@ Así una sola base de datos cubre necesidades que de otro modo exigirían varios
 
 `EXPLAIN` muestra el **plan de ejecución**: cómo va a obtener la base de datos el resultado.
 
+En SQLite se puede practicar con la tabla del ejemplo:
+
 ```sql
-EXPLAIN ANALYZE SELECT * FROM pedidos WHERE cliente_id = 42;
+EXPLAIN QUERY PLAN
+SELECT nombre FROM productos WHERE atributos->>'color' = 'azul';
 ```
 
-Dice si recorre la tabla entera o usa un índice, y cuánto tarda cada paso. Es la herramienta principal para diagnosticar una consulta lenta, y casi siempre la respuesta es un índice que falta.
+El plan indica un recorrido de productos (`SCAN`): no hemos creado un índice para esa expresión. El texto exacto puede variar según la versión. En PostgreSQL se usa `EXPLAIN`; con `ANALYZE` además **ejecuta** la sentencia y recoge medidas reales.
+
+El plan ayuda a distinguir recorridos, uniones y estimaciones. Una consulta lenta puede deberse a índices, estadísticas, grandes resultados, bloqueos o un diseño inadecuado; hay que medir antes de elegir la corrección.
 
 ## Sus puntos débiles
 
-- **Las conexiones son caras.** Cada una es un [proceso](/articulos/que-es-un-proceso/) del sistema operativo. Unos cientos ya pesan. Las aplicaciones usan un **agrupador de conexiones**, que reparte unas pocas entre muchas peticiones. Es imprescindible con [serverless](/articulos/que-es-serverless/).
+- **Las conexiones son caras.** Cada una es un [proceso](/articulos/que-es-un-proceso/) del sistema operativo. Unos cientos ya pesan. Las aplicaciones usan un **agrupador de conexiones**, que reparte unas pocas entre muchas peticiones. En entornos [serverless](/articulos/que-es-serverless/) hay que limitar y reutilizar conexiones; un agrupador o proxy puede resolverlo.
 - **Escalar las escrituras es difícil.** Se escala bien en vertical y con réplicas de lectura. Repartir los datos entre varias máquinas no viene incluido, y exige extensiones o sistemas derivados.
 - **Requiere mantenimiento**: vigilar `VACUUM`, los índices, las copias de seguridad. Los servicios gestionados de la nube quitan buena parte.
 - **Cambiar el esquema de una tabla grande** puede bloquearla. Hay que hacerlo con cuidado, como se explica en [estrategias de despliegue](/articulos/estrategias-de-despliegue/).
@@ -143,10 +154,16 @@ Casi siempre es una buena respuesta. Empezar con PostgreSQL y añadir otra cosa 
 
 Deja de serlo cuando se necesita repartir un volumen enorme de escrituras entre muchas máquinas, o cuando la base de datos debe ir incrustada en la aplicación.
 
+## Errores comunes
+
+- **Suponer una instantánea única por transacción en todos los niveles.** En Read Committed dos consultas sucesivas pueden observar cambios confirmados entre ambas.
+- **Dar por resuelta la recuperación porque existe WAL.** Hay que conservar una copia base y el historial necesario, y probar la restauración.
+- **Ejecutar `EXPLAIN ANALYZE` como si solo describiera.** Ejecuta la sentencia, incluidas sus modificaciones si las tiene.
+
 ## Lo esencial
 
 - PostgreSQL es una base de datos relacional de código abierto, fiable y fiel al estándar SQL.
 - Ofrece transacciones ACID, integridad y tipos de datos ricos, incluido JSON.
-- Con MVCC, las lecturas y las escrituras no se bloquean entre sí.
+- MVCC permite lecturas ordinarias de versiones visibles mientras hay actualizaciones; existen otros motivos de bloqueo.
 - Sus extensiones le añaden datos geográficos, vectores y más.
 - Escala muy bien en una máquina; repartir las escrituras entre varias es su límite.

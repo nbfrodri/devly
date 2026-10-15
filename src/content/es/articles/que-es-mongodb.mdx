@@ -6,9 +6,12 @@ layer: datos
 prerequisites:
   - bases-de-datos-nosql
   - formatos-de-datos-json-csv-xml
-  - sql-frente-a-nosql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "MongoDB: Schema Validation (en inglés)"
+    url: https://www.mongodb.com/docs/manual/core/schema-validation/
+  - title: "MongoDB: Server Side Public License FAQ (en inglés)"
+    url: https://www.mongodb.com/legal/licensing/server-side-public-license/faq
   - title: "MongoDB: Documents (en inglés)"
     url: https://www.mongodb.com/docs/manual/core/document/
   - title: "MongoDB: Data Modeling (en inglés)"
@@ -27,10 +30,12 @@ import { Quiz } from "@/components/quiz";
 
 En una base relacional, un pedido con sus líneas y su dirección de envío se reparte en varias tablas. Para leerlo completo hay que reunirlas con [JOIN](/articulos/tipos-de-join/), y para guardarlo, descomponer el objeto del programa en filas.
 
-En MongoDB se guarda como está: un documento con todo dentro.
+Una opción en MongoDB es guardar un documento con los datos que se consultan juntos. No obliga a incluir todas las relaciones ni impide usar documentos separados.
+
+Los bloques con operaciones MongoDB se ejecutan en `mongosh`, conectado a un servidor de práctica. El primero construye un documento y muestra cuántas líneas contiene:
 
 ```javascript
-{
+const pedido = {
 	_id: ObjectId("6710a1f2c3d4e5f6a7b8c9d0"),
 	cliente: "Ana",
 	fecha: ISODate("2026-10-14"),
@@ -39,7 +44,8 @@ En MongoDB se guarda como está: un documento con todo dentro.
 		{ producto: "Teclado", cantidad: 1, precio: 40 },
 		{ producto: "Ratón", cantidad: 2, precio: 15 }
 	]
-}
+};
+console.log(pedido.lineas.length); // 2
 ```
 
 Leer el pedido es una sola operación, y la forma del dato coincide con la que tiene en el código.
@@ -68,15 +74,22 @@ Para evitar el desorden, MongoDB permite definir **reglas de validación** que l
 
 ## Consultar
 
-Las consultas no se escriben en [SQL](/articulos/que-es-sql/), sino como documentos que describen lo que se busca:
+La API de consulta habitual utiliza documentos para describir lo que busca. En `mongosh`, ejecuta lo siguiente una vez en una base de práctica nueva llamada `devly_aprendizaje`:
 
 ```javascript
-db.productos.find({ precio: { $lt: 100 }, etiquetas: "oficina" });
+db = db.getSiblingDB("devly_aprendizaje");
+db.productos.insertMany([
+	{ nombre: "Teclado", precio: 40, etiquetas: ["oficina"] },
+	{ nombre: "Monitor", precio: 180, etiquetas: ["oficina", "imagen"] },
+	{ nombre: "Auriculares", precio: 60, etiquetas: ["audio"] },
+]);
+const encontrados = db.productos.find({ precio: { $lt: 100 }, etiquetas: "oficina" });
+console.log(encontrados.toArray().map((p) => p.nombre).join(" ")); // "Teclado"
 ```
 
 "Productos con precio menor que 100 y con la etiqueta oficina". Los operadores empiezan por `$`.
 
-La lógica equivale a este filtro:
+Para estos documentos, la condición equivale a este filtro JavaScript independiente, que puedes ejecutar en Node.js:
 
 ```js
 const productos = [
@@ -99,32 +112,38 @@ Como en cualquier base de datos, sin un [índice](/articulos/indices-de-bases-de
 Para agrupar, calcular y transformar se usa una **canalización de agregación**: una serie de etapas, donde cada una recibe los documentos de la anterior.
 
 ```javascript
-db.pedidos.aggregate([
+db.pedidos.insertMany([
+	{ cliente: "Ana", estado: "pagado", importe: 40 },
+	{ cliente: "Ana", estado: "pagado", importe: 30 },
+	{ cliente: "Luis", estado: "pendiente", importe: 100 },
+]);
+const resumen = db.pedidos.aggregate([
 	{ $match: { estado: "pagado" } },
 	{ $group: { _id: "$cliente", total: { $sum: "$importe" } } },
 	{ $sort: { total: -1 } }
-]);
+]).toArray();
+console.log(JSON.stringify(resumen)); // '[{"_id":"Ana","total":70}]'
 ```
 
-Filtra los pedidos pagados, suma el importe por cliente y ordena de mayor a menor. Es la misma idea que encadenar órdenes en una [terminal](/articulos/terminal-y-shell/).
+Este bloque continúa en `mongosh` y en la misma base. Filtra los dos pedidos pagados de Ana, suma 40 + 30 y devuelve su total de 70. El pedido pendiente de Luis no entra. La última etapa ordena de mayor a menor. Es la misma idea que encadenar órdenes en una [terminal](/articulos/terminal-y-shell/).
 
 ## La decisión clave: incrustar o referenciar
 
 Al diseñar, hay que decidir cómo representar las relaciones.
 
 - **Incrustar.** Los datos relacionados van dentro del documento, como las líneas dentro del pedido.
-- **Referenciar.** Se guarda el identificador de otro documento, como una clave foránea.
+- **Referenciar.** Se guarda el identificador de otro documento, pero MongoDB no impone por ello una clave foránea que garantice su existencia.
 
 | | Incrustar | Referenciar |
 | --- | --- | --- |
 | Lectura | Una operación | Varias, o una unión |
-| Datos repetidos | Posibles | No |
+| Datos repetidos | Posibles | Se pueden reducir; depende del diseño |
 | Actualizar un dato compartido | En cada copia | En un solo sitio |
 | Conviene cuando | Se leen juntos y pertenecen al padre | Se comparten o crecen sin límite |
 
-La regla del modelado en MongoDB es **diseñar según cómo se va a consultar**: lo que se lee junto, se guarda junto. Es lo contrario de la [normalización](/articulos/normalizacion-de-bases-de-datos/) relacional, que parte de la estructura de los datos y no de su uso.
+La regla del modelado en MongoDB es **diseñar según cómo se va a consultar**: lo que se lee junto, se guarda junto. La [normalización](/articulos/normalizacion-de-bases-de-datos/) analiza dependencias y redundancias. Ambos enfoques deben tener en cuenta significado, reglas y consultas; no son una prohibición de usar referencias o documentos.
 
-Un documento tiene un tamaño máximo de 16 megabytes. Una lista que crece sin fin, como los comentarios de una publicación muy popular, no se incrusta.
+Un documento BSON tiene un tamaño máximo de 16 MiB. Una lista que crece sin fin, como los comentarios de una publicación muy popular, no se incrusta.
 
 <Quiz
 	client:visible
@@ -150,7 +169,7 @@ Lo que eso implica se explica en [replicación y particionado](/articulos/replic
 
 Modificar un solo documento siempre ha sido atómico. Como un documento puede contener todo un pedido, muchas operaciones no necesitan más.
 
-Las [transacciones](/articulos/transacciones-y-acid/) que abarcan varios documentos existen desde la versión 4.0. Funcionan, con un coste de rendimiento. Si un diseño las necesita constantemente, es señal de que los datos son muy relacionales.
+MongoDB incorporó [transacciones](/articulos/transacciones-y-acid/) de varios documentos en conjuntos de réplicas en la versión 4.0 y en clústeres particionados en la 4.2. Su alcance y coste deben comprobarse: agrupar datos relacionados puede reducir coordinación, pero no elimina las reglas de negocio.
 
 ## Cuándo encaja
 
@@ -169,12 +188,18 @@ Un error frecuente ha sido elegir MongoDB por no tener que definir un esquema, p
 
 ## Licencia
 
-El código de MongoDB es público, pero su [licencia](/articulos/licencias-de-software/), la SSPL, impone condiciones a quien lo ofrezca como servicio, y la organización que define el término no la reconoce como código abierto. Para usarlo en una aplicación propia no supone diferencia.
+El código de MongoDB es público, pero su [licencia](/articulos/licencias-de-software/), la SSPL, impone condiciones a quien lo ofrezca como servicio, y la organización que define el término no la reconoce como código abierto. El alcance de las obligaciones depende de si se usa internamente, se distribuye o se ofrece la funcionalidad de la base como servicio. Hay que revisar la licencia de la edición y versión utilizadas.
+
+## Errores comunes
+
+- **Tratar una referencia como una clave foránea impuesta.** Guardar un identificador no comprueba automáticamente que exista el documento relacionado.
+- **Incrustar una lista que crece sin límite.** Puede superar el tamaño de documento o encarecer actualizaciones; conviene revisar el modelo antes.
+- **Cambiar campos sin prever lectores antiguos.** El esquema flexible no elimina la validación ni la migración de datos y código.
 
 ## Lo esencial
 
 - MongoDB guarda documentos parecidos a JSON, agrupados en colecciones.
-- El esquema es flexible, lo que traslada al código la responsabilidad de la estructura.
+- El esquema puede ser flexible y también imponer validación; la aplicación debe conocer el contrato de datos.
 - Se modela según cómo se consultan los datos: lo que se lee junto, se guarda junto.
 - Incluye replicación y particionado.
 - Encaja con datos en forma de documento, y mal con datos muy relacionados.

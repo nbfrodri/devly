@@ -6,8 +6,10 @@ kind: comparacion
 layer: datos
 prerequisites:
   - tipos-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "W3C: Model for Tabular Data and Metadata on the Web (en inglés)"
+    url: https://www.w3.org/TR/tabular-data-model/
   - title: "RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format"
     url: https://www.rfc-editor.org/info/rfc8259/
   - title: "RFC 4180: Common Format and MIME Type for Comma-Separated Values (CSV) Files"
@@ -37,17 +39,19 @@ Organiza los datos en dos estructuras que se combinan libremente:
 - **Objetos**: pares de nombre y valor, entre llaves.
 - **Listas**: valores en orden, entre corchetes.
 
+Comparemos primero la misma persona, Ana, de 30 años y residente en Madrid:
+
 ```json
 {
 	"nombre": "Ana",
 	"edad": 30,
-	"activa": true,
-	"etiquetas": ["admin", "editora"],
-	"direccion": { "ciudad": "Madrid" }
+	"ciudad": "Madrid"
 }
 ```
 
 Admite seis tipos de valor: texto, número, booleano, `null`, objeto y lista.
+
+También puede anidar una lista como `"etiquetas": ["admin", "editora"]` o un objeto como `"direccion": {"ciudad": "Madrid"}`. CSV exige decidir cómo aplanar o separar esas estructuras.
 
 En JavaScript se maneja con dos funciones:
 
@@ -66,15 +70,14 @@ console.log(deVuelta); // {"ciudad":"Madrid","poblacion":3}
 
 ## CSV
 
-Significa "valores separados por comas". Representa una **tabla**: cada línea es una fila y las comas separan las columnas. La primera línea suele llevar los nombres.
+Significa "valores separados por comas". Representa una **tabla**: los registros separan filas y las comas separan campos. Un campo entre comillas puede contener saltos de línea, así que una fila lógica puede ocupar varias líneas físicas. La primera fila suele llevar los nombres.
 
 ```csv
 nombre,edad,ciudad
 Ana,30,Madrid
-Luis,25,Sevilla
 ```
 
-- **A favor:** es el formato más compacto y simple. Lo abre cualquier hoja de cálculo, y se procesa línea a línea, lo que permite manejar archivos enormes sin cargarlos enteros en memoria.
+- **A favor:** para tablas sencillas suele ser compacto y está ampliamente admitido. Un analizador puede procesar registros de forma incremental, respetando campos entre comillas, sin cargar el archivo entero.
 - **En contra:** solo sirve para datos tabulares, no tiene tipos (todo es texto) y está poco estandarizado.
 
 ### Sus trampas
@@ -82,6 +85,7 @@ Luis,25,Sevilla
 Esa falta de estandarización causa problemas reales:
 
 - **Comas dentro de un valor.** Si un campo contiene una coma, debe ir entre comillas dobles: `"Pérez, Ana"`. Partir cada línea por las comas, sin más, lo rompe.
+- **Comillas y saltos de línea.** Una comilla dentro de un campo entre comillas se duplica. Separar primero por saltos de línea rompe los campos que los contienen.
 - **El separador varía.** En países donde la coma se usa para los decimales, muchos programas separan con punto y coma.
 - **La codificación no se indica.** Si no se abre con la [codificación de caracteres](/articulos/codificacion-de-caracteres/) correcta, las tildes se estropean.
 - **Las hojas de cálculo reinterpretan.** Un código como `00123` puede perder los ceros, y un texto que parezca una fecha puede convertirse en una.
@@ -104,24 +108,21 @@ console.log(filas[0].nombre); // "Ana"
 console.log(typeof filas[0].edad); // "string"
 ```
 
-Este lector sirve para el ejemplo y falla con valores entre comillas. Para datos reales conviene usar una biblioteca. La última línea muestra otra consecuencia: la edad llega como texto, y hay que convertirla.
+Este lector se limita a las filas sencillas del ejemplo: separadores de línea LF, sin comillas, saltos dentro de campos ni espacios significativos en los extremos. Para datos reales usa un analizador CSV. La última línea muestra que la edad llega como texto y que convertirla requiere conocer el esquema esperado.
 
 ## XML
 
 Usa **etiquetas** de apertura y cierre, como [HTML](/articulos/que-es-html/), pero con nombres que eliges tú.
 
 ```xml
-<usuario id="7">
+<usuario>
 	<nombre>Ana</nombre>
 	<edad>30</edad>
-	<etiquetas>
-		<etiqueta>admin</etiqueta>
-		<etiqueta>editora</etiqueta>
-	</etiquetas>
+	<ciudad>Madrid</ciudad>
 </usuario>
 ```
 
-Un dato puede ir como contenido de un elemento o como **atributo**, como el `id` del ejemplo.
+Representa a la misma Ana que JSON y CSV. Un dato puede ir como contenido de un elemento o como **atributo**, por ejemplo un identificador escrito en la etiqueta de apertura.
 
 - **A favor:** admite comentarios, permite mezclar texto con marcas (por eso es bueno para documentos) y tiene herramientas maduras para validar la estructura con un esquema.
 - **En contra:** es mucho más extenso. Cada dato va envuelto en dos etiquetas, y los archivos ocupan más y cuestan más de leer.
@@ -136,7 +137,7 @@ Fue el formato dominante para intercambiar datos antes de JSON. Hoy sigue muy pr
 | Tamaño | Medio | Pequeño | Grande |
 | Tipos de datos | Varios | Solo texto | Solo texto, salvo con esquema |
 | Comentarios | No | No | Sí |
-| Validación con esquema | Posible | No | Sí, muy desarrollada |
+| Validación con esquema | Posible | Posible mediante metadatos y herramientas externas, como CSVW | Sí, muy desarrollada |
 | Uso típico | API web, configuración | Exportar tablas, análisis de datos | Documentos, sistemas empresariales |
 
 <Quiz
@@ -149,7 +150,7 @@ Fue el formato dominante para intercambiar datos antes de JSON. Hoy sigue muy pr
 ## Otros formatos
 
 - **YAML**: pensado para que lo escriban personas. Usa la sangría en lugar de llaves y admite comentarios. Es común en archivos de configuración, como los de la [integración continua](/articulos/integracion-y-despliegue-continuos/).
-- **Formatos binarios**, como Protocol Buffers o Parquet: no son legibles, pero ocupan menos y se procesan más rápido. Se usan cuando el volumen o la velocidad importan.
+- **Formatos binarios**, como Protocol Buffers o Parquet: requieren herramientas para interpretarlos y pueden ahorrar espacio o trabajo en sus casos de uso. El resultado depende de datos, codificación y consultas; no son siempre más pequeños o rápidos.
 
 ## Cómo elegir
 

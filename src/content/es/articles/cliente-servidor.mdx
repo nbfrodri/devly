@@ -3,7 +3,7 @@ title: "¿Qué es el modelo cliente-servidor?"
 description: En el modelo cliente-servidor un programa pide un servicio y otro lo ofrece. Es la base de casi todas las aplicaciones web.
 level: basico
 layer: aplicaciones
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "MDN: Visión general cliente-servidor"
     url: https://developer.mozilla.org/es/docs/Learn_web_development/Extensions/Server-side/First_steps/Client-Server_overview
@@ -11,6 +11,8 @@ sources:
     url: https://developer.mozilla.org/es/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works
   - title: "RFC 9110: HTTP Semantics"
     url: https://www.rfc-editor.org/info/rfc9110/
+  - title: "MDN: WebSocket API (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -21,7 +23,7 @@ El **modelo cliente-servidor** es una forma de organizar una aplicación en dos 
 
 Imagina una red social en la que cada persona tuviera en su móvil una copia de todas las publicaciones. Las copias no coincidirían, ocuparían demasiado y nadie podría fiarse de los datos de otro.
 
-La solución es guardar los datos y las reglas en un solo lugar, el servidor, y dejar que muchos clientes se conecten a él. Así todos ven la misma información y solo hay un sitio que mantener y proteger.
+Una solución es concentrar la gestión de los datos y las reglas en un servicio al que se conectan los clientes. Ese servicio puede ejecutarse en varias máquinas. Facilita aplicar reglas comunes, pero la consistencia de las copias y la seguridad siguen necesitando un diseño explícito.
 
 ## Los dos papeles
 
@@ -42,7 +44,7 @@ Esto es lo que ocurre cuando consultas tus pedidos en una tienda en línea:
 5. Prepara una respuesta con esos datos y la envía.
 6. El cliente la recibe y la muestra en pantalla.
 
-El cliente siempre da el primer paso. El servidor no envía nada que no le hayan pedido.
+En este intercambio HTTP, el cliente solicita el recurso y el servidor responde. Eso no impide que, después de establecer un canal como [WebSocket](/articulos/websockets/), el servidor envíe novedades sin una petición nueva por cada mensaje.
 
 <Quiz
 	client:visible
@@ -55,7 +57,7 @@ El cliente siempre da el primer paso. El servidor no envía nada que no le hayan
 
 En desarrollo web, estas dos mitades tienen nombre:
 
-- **Frontend**: el código que se ejecuta en el cliente. Es lo que ves y con lo que interactúas. En la web se escribe con [HTML](/articulos/que-es-html/), [CSS](/articulos/que-es-css/) y JavaScript.
+- **Frontend**: la interfaz con la que interactúa el usuario. En la web utiliza [HTML](/articulos/que-es-html/), [CSS](/articulos/que-es-css/) y JavaScript. Parte de su preparación puede ejecutarse en el servidor, como ocurre al generar HTML antes de enviarlo.
 - **Backend**: el código que se ejecuta en el servidor. Gestiona datos, usuarios y reglas.
 
 Quien trabaja en las dos partes se llama desarrollador **full stack**.
@@ -78,9 +80,15 @@ Un servidor atiende a muchos clientes simultáneamente. Cuando las peticiones su
 
 En una red **entre pares** o *peer-to-peer* no hay un servidor central: cada participante hace de cliente y de servidor a la vez. Se usa, por ejemplo, para compartir archivos. La mayoría de las aplicaciones web, sin embargo, siguen el modelo cliente-servidor.
 
+## Errores comunes
+
+- **Equiparar servidor con una máquina especial.** El papel lo cumple un programa; una misma máquina puede alojar clientes y servidores.
+- **Confiar en un botón oculto para proteger una operación.** El cliente puede modificarse, por lo que el servicio debe comprobar permisos al recibir la petición.
+- **Suponer que un servicio central garantiza datos idénticos en todo momento.** Puede haber réplicas y cachés con estados distintos.
+
 ## Lo esencial
 
 - El cliente pide y muestra; el servidor guarda, decide y responde.
-- La comunicación siempre la inicia el cliente.
-- Frontend es el código del cliente; backend, el del servidor.
+- En una petición HTTP, el cliente inicia el intercambio y el servidor responde.
+- El frontend presenta la interfaz; el backend atiende servicios y aplica reglas.
 - Las comprobaciones de seguridad se hacen en el servidor.

@@ -6,8 +6,10 @@ layer: datos
 prerequisites:
   - que-es-una-base-de-datos
   - que-es-sql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "Boris Glavic, University of Illinois Chicago: Database Design and Normalization (en inglés)"
+    url: https://www.cs.uic.edu/~bglavic/cs480/2024-spring/pdfs/slides/ch06-db-design-handout.pdf
   - title: "E. F. Codd: A Relational Model of Data for Large Shared Data Banks (1970, en inglés)"
     url: https://www.seas.upenn.edu/~zives/03f/cis550/codd.pdf
   - title: "Microsoft Learn: Description of the database normalization basics (en inglés)"
@@ -63,16 +65,16 @@ La solución es una fila por cada valor:
 
 ## Segunda forma normal
 
-**Además de la primera, ninguna columna depende solo de una parte de la clave.**
+**Además de la primera, ningún atributo que no forme parte de una clave candidata depende de solo una parte de una clave candidata.** Una [clave candidata](/articulos/que-es-una-clave-candidata/) identifica una fila sin columnas sobrantes; puede haber varias.
 
-Solo afecta a tablas cuya clave primaria está formada por varias columnas. En la tabla de líneas de pedido, la clave es la pareja pedido y producto:
+El problema aparece con claves candidatas compuestas, aunque se haya elegido otra clave primaria de una sola columna. En esta tabla simplificada, la única clave candidata es la pareja pedido y producto:
 
 | pedido | producto | cantidad | precio_producto |
 | --- | --- | --- | --- |
 | 1 | Libro | 2 | 20 |
 | 3 | Libro | 1 | 20 |
 
-La `cantidad` depende de las dos: es cuánto de ese producto hay en ese pedido. Pero `precio_producto` depende solo del producto, y por eso se repite.
+La `cantidad` depende de las dos: es cuánto de ese producto hay en ese pedido. Aquí `precio_producto` significa el precio actual del catálogo, que depende solo del producto, y por eso se repite. El precio pactado en una venta sería otro hecho.
 
 Se separa en su propia tabla:
 
@@ -83,14 +85,14 @@ Se separa en su propia tabla:
 
 ## Tercera forma normal
 
-**Además de la segunda, ninguna columna depende de otra columna que no sea la clave.**
+En los casos sencillos, la tercera forma normal evita que un atributo ajeno a las claves dependa de ellas a través de otro atributo que no identifica la fila. Una **dependencia funcional** `X → Y` significa que un mismo valor de X no puede tener dos valores distintos de Y según las reglas del modelo.
 
 | cliente_id | nombre | codigo_postal | ciudad |
 | --- | --- | --- | --- |
 | 1 | Ana | 28001 | Madrid |
 | 2 | Marta | 28001 | Madrid |
 
-La ciudad no depende del cliente, sino del código postal. El cliente determina el código postal, y el código postal determina la ciudad. Esa cadena se llama **dependencia transitiva**.
+Supongamos que, en el territorio y catálogo de este ejemplo, cada código postal determina una sola ciudad. El cliente determina el código postal, y este determina la ciudad: es una **dependencia transitiva**. La ciudad también depende del cliente, pero a través de ese dato intermedio. La suposición no es universal: hay sistemas postales donde un código abarca varias localidades.
 
 Otra vez, se separa:
 
@@ -99,6 +101,8 @@ Otra vez, se separa:
 | 28001 | Madrid |
 
 Hay un resumen clásico de las tres formas: cada columna debe depender **de la clave, de toda la clave y de nada más que la clave**.
+
+Es una ayuda para recordar casos simples, no la definición completa. Una dependencia es **no trivial** cuando A no está ya entre los atributos de X. Formalmente, en tercera forma normal cada dependencia no trivial `X → A` exige que X identifique la fila o que A pertenezca a alguna clave candidata. Hay que estudiar todas las claves, no solo la elegida como primaria.
 
 ## El resultado
 
@@ -117,7 +121,7 @@ Las tres anomalías han desaparecido. La ciudad de Ana está en una sola fila; u
 
 <Quiz
 	client:visible
-	question="Una tabla de clientes guarda el código postal y también la ciudad, que depende del código postal. ¿Qué forma normal incumple?"
+	question="Si solo el identificador es clave y cada código postal determina una ciudad, ¿qué forma normal incumple guardar ambos datos en clientes?"
 	options={["La primera", "La segunda", "La tercera"]}
 	answer={2}
 />
@@ -139,15 +143,21 @@ Tiene un precio: vuelve la posibilidad de incoherencias, y la aplicación debe m
 | | Normalizado | Desnormalizado |
 | --- | --- | --- |
 | Repetición | Mínima | Deliberada |
-| Coherencia | La garantiza la estructura | La mantiene la aplicación |
+| Coherencia | Reduce anomalías por repetición; necesita restricciones y transacciones | Hay que mantener las copias con lógica en la aplicación o en la base |
 | Escrituras | Sencillas | Hay que actualizar varias copias |
 | Lecturas | Requieren combinar tablas | Más directas |
 
 La regla habitual es **normalizar primero** y desnormalizar solo donde se haya medido un problema de rendimiento. Es el camino contrario al de muchas [bases de datos NoSQL](/articulos/bases-de-datos-nosql/), que parten de guardar junto lo que se lee junto.
 
+## Errores comunes
+
+- **Inventar dependencias a partir de pocas filas.** Que todos los clientes de un código vivan hoy en la misma ciudad no demuestra una regla permanente del negocio.
+- **Añadir un id y dar la tabla por normalizada.** Las dependencias entre los demás atributos siguen existiendo.
+- **Eliminar el precio de venta por parecer duplicado.** Conservar una condición histórica no es repetir el precio actual del catálogo.
+
 ## Lo esencial
 
 - Normalizar es organizar las tablas para que cada hecho se guarde una vez.
 - Evita las anomalías de actualización, inserción y borrado.
-- Primera forma normal: un valor por casilla. Segunda: nada depende de una parte de la clave. Tercera: nada depende de otra columna que no sea la clave.
-- Desnormalizar acelera las lecturas a cambio de riesgo de incoherencia, y se hace de forma deliberada.
+- Las formas normales se analizan a partir de valores, claves candidatas y dependencias funcionales.
+- Desnormalizar puede acelerar lecturas concretas a cambio de mantener datos repetidos; el beneficio se mide.

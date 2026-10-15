@@ -5,7 +5,6 @@ level: basico
 layer: datos
 prerequisites:
   - que-es-una-base-de-datos
-  - discos-duros-y-ssd
 updated: 2026-10-15
 sources:
   - title: "Amazon EBS: Snapshots, documentación oficial (en inglés)"
@@ -16,8 +15,10 @@ sources:
     url: https://www.postgresql.org/docs/current/continuous-archiving.html
   - title: "NIST SP 800-34 Rev. 1: Contingency Planning Guide for Federal Information Systems (en inglés)"
     url: https://csrc.nist.gov/pubs/sp/800/34/r1/upd1/final
-  - title: "CISA: Data Backup Options (en inglés)"
-    url: https://www.cisa.gov/sites/default/files/publications/data_backup_options.pdf
+  - title: "SSA, alojado por NIST: Security Awareness Tips, Data Backups (marzo de 2025, en inglés)"
+    url: https://www.nist.gov/document/ssaawarenessandtrainingwebsiteattachmentpdf
+  - title: "NCSC: Backing up your data (en inglés)"
+    url: https://www.ncsc.gov.uk/collection/top-tips-for-staying-secure-online/always-back-up-your-most-important-data
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -39,7 +40,7 @@ Los datos se pierden de muchas formas:
 
 ## La replicación no es una copia de seguridad
 
-Es la confusión más peligrosa. La [replicación](/articulos/replicacion-y-particionado/) mantiene copias **sincronizadas** de los datos. Si alguien borra una tabla por error, el borrado se replica a todas las copias en milisegundos. Lo mismo un ataque que cifra los datos.
+La [replicación](/articulos/replicacion-y-particionado/) propaga cambios entre copias. Si alguien borra una tabla por error, el borrado también puede propagarse. Un ataque puede afectar a varias copias si comparten permisos, infraestructura o el flujo de cambios comprometido; no tiene por qué hacerlo con el mismo mecanismo ni al instante.
 
 La replicación puede ayudar ante el fallo de una máquina. Una copia de seguridad conserva el estado de **un momento pasado**, pero su protección depende de retención, integridad, aislamiento y capacidad de restauración.
 
@@ -53,9 +54,9 @@ La recomendación clásica:
 - En **2** soportes distintos.
 - **1** de ellas fuera del lugar donde están los originales.
 
-Así, ningún suceso único se lleva todo: ni la avería de un disco, ni un incendio en la oficina.
+Así se reducen fallos compartidos, como la avería de un disco o un incendio en la oficina. El número de copias no basta: si todas dependen de las mismas credenciales comprometidas, un único incidente puede afectar a varias.
 
-Hoy se añade una condición más: que al menos una copia sea **inmutable** o esté **desconectada**. Los ataques de secuestro buscan y cifran también las copias de seguridad a las que tienen acceso. Una copia que no se puede modificar durante un tiempo, o que no está conectada a la red, sobrevive.
+Otra medida es conservar al menos una copia **inmutable** o **desconectada**. Los ataques de secuestro pueden intentar alterar las copias accesibles. Impedir su modificación durante la retención o aislarla reduce ese riesgo, pero siguen importando su integridad, las claves para descifrarla y la posibilidad de restaurarla.
 
 ## Dos objetivos
 
@@ -66,7 +67,7 @@ Antes de elegir cómo copiar, hay que decidir qué se necesita. Dos cifras lo re
 | RPO, punto de recuperación | ¿Cuántos datos podemos permitirnos perder? | Como mucho una hora |
 | RTO, tiempo de recuperación | ¿Cuánto tiempo podemos estar sin servicio? | Como mucho cuatro horas |
 
-Con una copia cada noche, el RPO es de un día: si el fallo ocurre a las 23:59, se pierde todo el día.
+Si las copias válidas se completan cada 24 horas y no hay otro historial, la pérdida puede acercarse a un día. Eso describe la capacidad del mecanismo; el RPO es el objetivo que se exige. Si una copia falla o está corrupta, la pérdida real puede superar ese intervalo.
 
 Cuanto más exigentes, más caro. Una tienda en línea y un blog personal no necesitan lo mismo.
 
@@ -87,7 +88,7 @@ Se guardan varias, no solo la última. Si un error se descubre una semana tarde,
 	question="¿Por qué la replicación de una base de datos no sustituye a una copia de seguridad?"
 	options={[
 		"Porque es más lenta",
-		"Porque un borrado o un ataque se copian también a las réplicas al instante",
+		"Porque los cambios dañinos también pueden propagarse y no conservar el estado anterior",
 		"Porque las réplicas no guardan todos los datos",
 	]}
 	answer={1}
@@ -123,7 +124,7 @@ const restaurado = "pedidos de octubre";
 console.log(huella(restaurado) === huellaGuardada); // true
 ```
 
-Una [función hash](/articulos/funciones-hash/) calculada al copiar permite verificar que lo restaurado es idéntico.
+La igualdad de una [huella criptográfica](/articulos/funciones-hash/) permite detectar alteraciones con una probabilidad de colisión despreciable para este uso, si la huella de referencia es fiable. No demuestra que la copia inicial estuviera completa ni que el sistema pueda arrancar con ella: eso requiere ensayar la restauración.
 
 ## Proteger las copias
 

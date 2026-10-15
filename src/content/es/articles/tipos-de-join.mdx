@@ -5,7 +5,7 @@ level: intermedio
 layer: datos
 prerequisites:
   - que-es-sql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Joins Between Tables (documentación oficial, en inglés)"
     url: https://www.postgresql.org/docs/current/tutorial-join.html
@@ -43,6 +43,18 @@ Los ejemplos usan estas dos tablas:
 | 13 | NULL | 8 |
 
 Hay dos casos sin pareja, puestos a propósito: **Luis** no tiene pedidos, y el **pedido 13** no tiene cliente.
+
+Para ejecutar las consultas en orden en SQLite, prepara una base vacía:
+
+```sql
+CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT);
+CREATE TABLE pedidos (id INTEGER PRIMARY KEY, cliente_id INTEGER, total INTEGER);
+INSERT INTO clientes VALUES (1, 'Ana'), (2, 'Luis'), (3, 'Marta');
+INSERT INTO pedidos VALUES
+	(10, 1, 25), (11, 1, 40), (12, 3, 15), (13, NULL, 8);
+```
+
+Las tablas siguientes muestran el contenido del resultado. Su orden solo queda garantizado si añades `ORDER BY`.
 
 ## INNER JOIN
 
@@ -83,7 +95,7 @@ LEFT JOIN pedidos ON pedidos.cliente_id = clientes.id;
 | Luis | NULL |
 | Marta | 15 |
 
-Luis aparece, con el total vacío. Es el tipo que se necesita para preguntas como "todos los clientes, con sus pedidos si los tienen".
+Luis aparece, con `NULL` en el total. Es el tipo que se necesita para preguntas como "todos los clientes, con sus pedidos si los tienen".
 
 ### Encontrar lo que no tiene pareja
 
@@ -136,7 +148,7 @@ Tiene usos legítimos, como generar todas las combinaciones de tallas y colores.
 | `FULL` | Todas las de las dos |
 | `CROSS` | Todas las combinaciones |
 
-Este programa lo comprueba con SQLite, contando las filas de cada tipo:
+Este programa independiente usa `node:sqlite` de Node.js 22.13 o posterior y cuenta las filas de cada tipo:
 
 ```js
 import { DatabaseSync } from "node:sqlite";
@@ -201,7 +213,7 @@ Si un cliente tiene tres pedidos, aparece tres veces. Al sumar o contar después
 
 ### Olvidar los índices
 
-Un JOIN sobre columnas sin [índice](/articulos/indices-de-bases-de-datos/) obliga a recorrer tablas enteras. Las claves foráneas que se usan para combinar suelen merecer uno.
+Sin un [índice](/articulos/indices-de-bases-de-datos/) apropiado, el motor puede necesitar recorridos amplios, construir una estructura temporal o elegir otra estrategia de combinación. Un índice puede ayudar a localizar parejas, pero hay que comprobar el plan: leer toda una tabla pequeña también puede ser una buena decisión.
 
 ## Lo esencial
 
@@ -209,4 +221,4 @@ Un JOIN sobre columnas sin [índice](/articulos/indices-de-bases-de-datos/) obli
 - `INNER` conserva solo las filas con pareja; `LEFT`, además, todas las de la primera tabla.
 - `FULL` conserva todas las de ambas y `CROSS` genera todas las combinaciones.
 - Las filas sin pareja se completan con `NULL`.
-- En un `LEFT JOIN`, una condición sobre la segunda tabla va en el `ON`, no en el `WHERE`.
+- En un `LEFT JOIN`, usa `ON` para limitar las parejas conservando las filas de la izquierda; usa `WHERE` cuando quieras filtrar el resultado, incluidas esas filas sin pareja.

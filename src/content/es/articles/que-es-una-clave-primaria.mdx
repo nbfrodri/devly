@@ -1,32 +1,36 @@
 ---
 title: "¿Qué es una clave primaria?"
-description: "Una clave primaria es la columna, o columnas, que identifican de forma única cada fila de una tabla. No puede repetirse ni estar vacía."
+description: "Una clave primaria es la columna, o columnas, elegidas para identificar cada fila de una tabla sin duplicados ni valores NULL."
 level: basico
 kind: definicion
 layer: datos
 prerequisites:
   - que-es-una-base-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Constraints (en inglés)"
     url: https://www.postgresql.org/docs/current/ddl-constraints.html
+  - title: "SQLite: CREATE TABLE (en inglés)"
+    url: https://www.sqlite.org/lang_createtable.html
 ---
 
-import { Quiz } from "@/components/quiz";
-
-Una **clave primaria** es la columna, o el conjunto de columnas, que **identifica de forma única** cada fila de una tabla en una [base de datos relacional](/articulos/que-es-una-base-de-datos/). Dos filas no pueden tener la misma, y no puede estar vacía.
+Una **clave primaria** es la columna, o el conjunto de columnas, elegida para **identificar de forma única** cada fila de una tabla en una [base de datos relacional](/articulos/que-es-una-base-de-datos/). No debe repetirse ni contener NULL. Eso es distinto de un texto vacío, que necesitaría otra restricción si quieres prohibirlo.
 
 ## Un ejemplo
 
+Ejecuta este bloque en SQLite:
+
 ```sql
 CREATE TABLE clientes (
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY,
 	correo TEXT UNIQUE NOT NULL,
 	nombre TEXT NOT NULL
 );
+INSERT INTO clientes VALUES (1, 'ana@ejemplo.com', 'Ana');
+SELECT id, nombre FROM clientes;
 ```
 
-`id` es la clave primaria. La base de datos rechazará cualquier fila con un `id` repetido o nulo, y crea automáticamente un [índice](/articulos/indices-de-bases-de-datos/) sobre ella para buscar deprisa.
+La consulta devuelve `1, Ana`. `id` es la clave primaria y SQLite rechaza identificadores repetidos. Su forma especial `INTEGER PRIMARY KEY` genera un identificador si omites el valor o insertas NULL: no almacena ese NULL como clave. En otras claves de SQLite conviene declarar también `NOT NULL`, porque sus tablas ordinarias conservan excepciones históricas a esa regla.
 
 ## Para qué sirve
 
@@ -38,11 +42,11 @@ CREATE TABLE clientes (
 - **Natural**: un dato que ya es único en el mundo real, como un número de documento.
 - **Artificial**: un número o un identificador generado sin significado, como `id`.
 
-Se suelen preferir las artificiales. Los datos reales cambian o resultan no ser tan únicos como se creía: un correo se puede cambiar, un documento puede estar mal escrito. Un identificador sin significado nunca necesita cambiar.
+Una clave artificial desacopla la identidad de datos que pueden cambiar, como el correo. Tampoco vuelve únicos esos datos por sí sola: necesitas conservar sus restricciones de dominio.
 
 ## Compuesta
 
-A veces la clave son varias columnas juntas. En una tabla que une pedidos y productos, la pareja `(pedido_id, producto_id)` identifica cada línea, como explica el [modelo entidad-relación](/articulos/modelo-entidad-relacion/).
+A veces la clave son varias columnas juntas. La pareja `(pedido_id, producto_id)` sirve si un producto solo puede aparecer una vez en cada pedido; si admites varias líneas del mismo producto, necesitas otro identificador de línea.
 
 ## Otras formas de identificar
 
@@ -50,5 +54,5 @@ Una tabla puede tener varias [claves candidatas](/articulos/que-es-una-clave-can
 
 ## Con qué no confundirla
 
-- **Clave foránea**: apunta a la clave primaria de otra tabla. Puede repetirse.
+- **Clave foránea**: referencia una clave primaria o única admitida por el motor, incluso de la misma tabla. Puede repetirse si no se impone otra restricción.
 - **Columna única**: también impide repetidos, como `correo` en el ejemplo, pero una tabla puede tener varias. Clave primaria solo hay una.

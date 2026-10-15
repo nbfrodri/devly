@@ -1,7 +1,8 @@
 title: SQL en la práctica
-description: "Las consultas, uniones, índices y transacciones que se usan a diario."
+description: "Consultas, uniones, índices y transacciones. Para los costes de índices, conviene conocer búsqueda binaria y árboles de búsqueda de Introducción a los algoritmos y Estructuras de datos."
 layer: datos
 steps:
+  - que-es-una-base-de-datos
   - que-es-sql
   - null-en-sql
   - que-es-una-clave-primaria
@@ -12,6 +13,7 @@ steps:
   - cardinalidad-de-una-consulta
   - planes-de-ejecucion-sql
   - transacciones-y-acid
+  - que-es-postgresql
   - una-base-de-datos-por-dentro
   - niveles-de-aislamiento
   - funciones-de-ventana-en-sql

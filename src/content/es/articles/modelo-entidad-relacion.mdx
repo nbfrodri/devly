@@ -5,8 +5,7 @@ level: basico
 layer: datos
 prerequisites:
   - que-es-una-base-de-datos
-  - normalizacion-de-bases-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "IBM: ¿Qué es un diagrama entidad-relación?"
     url: https://www.ibm.com/es-es/think/topics/entity-relationship-diagram
@@ -14,6 +13,8 @@ sources:
     url: https://www.cs.uct.ac.za/mit_notes/database/htmls/chp06.html
   - title: "PostgreSQL: Constraints (en inglés)"
     url: https://www.postgresql.org/docs/current/ddl-constraints.html
+  - title: "SQLite: Foreign Key Support (en inglés)"
+    url: https://www.sqlite.org/foreignkeys.html
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -40,7 +41,7 @@ Suelen ser los sustantivos importantes del problema.
 
 Los **atributos** son lo que se sabe de cada entidad: de un cliente, su nombre, su correo, su fecha de alta.
 
-Uno o varios atributos forman el **identificador**: lo que distingue a cada instancia de las demás. Se convertirá en la clave primaria.
+Uno o varios atributos forman un **identificador**: lo que distingue a cada instancia de las demás. Puede haber varios candidatos; al diseñar las tablas se elige una [clave primaria](/articulos/que-es-una-clave-primaria/).
 
 ### Relaciones
 
@@ -52,13 +53,13 @@ Es lo más importante del modelo: cuántas instancias de cada lado pueden partic
 
 | Tipo | Significado | Ejemplo |
 | --- | --- | --- |
-| Uno a uno | Cada A con un B, y al revés | Persona y pasaporte |
+| Uno a uno | Como máximo un B por A y un A por B | Una cuenta y su perfil único en el sistema |
 | Uno a muchos | Cada A con varios B; cada B con un A | Cliente y pedidos |
 | Muchos a muchos | Cada A con varios B, y al revés | Pedidos y productos |
 
 Además se indica si la participación es **obligatoria u opcional**: ¿puede haber un cliente sin pedidos? Sí. ¿Un pedido sin cliente? No.
 
-Equivocarse en la cardinalidad es el error de diseño más caro: suponer que una persona tiene un solo teléfono, o que un producto pertenece a una sola categoría, y descubrir después que no.
+Equivocarse en la cardinalidad puede obligar a cambiar el diseño: suponer que una persona tiene un solo teléfono, o que un producto pertenece a una sola categoría, y descubrir después que no.
 
 ## Del diagrama a las tablas
 
@@ -68,17 +69,26 @@ El paso al modelo relacional sigue unas reglas casi mecánicas.
 
 **Uno a muchos**: se añade al lado "muchos" una **clave foránea** que apunta al lado "uno". Cada pedido guarda el identificador de su cliente.
 
+Los bloques siguientes se ejecutan en orden en una base SQLite vacía. Las fechas se guardan como texto `AAAA-MM-DD` y los importes, en céntimos enteros.
+
 ```sql
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE clientes (
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY,
 	nombre TEXT NOT NULL,
 	correo TEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE pedidos (
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY,
 	cliente_id INTEGER NOT NULL REFERENCES clientes (id),
-	fecha DATE NOT NULL
+	fecha TEXT NOT NULL
+);
+
+CREATE TABLE productos (
+	id INTEGER PRIMARY KEY,
+	nombre TEXT NOT NULL
 );
 ```
 
@@ -88,15 +98,27 @@ El `NOT NULL` de `cliente_id` expresa que la participación del pedido es obliga
 
 ```sql
 CREATE TABLE lineas_de_pedido (
-	pedido_id INTEGER REFERENCES pedidos (id),
-	producto_id INTEGER REFERENCES productos (id),
-	cantidad INTEGER NOT NULL,
-	precio NUMERIC NOT NULL,
+	pedido_id INTEGER NOT NULL REFERENCES pedidos (id),
+	producto_id INTEGER NOT NULL REFERENCES productos (id),
+	cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+	precio_centimos INTEGER NOT NULL CHECK (precio_centimos >= 0),
 	PRIMARY KEY (pedido_id, producto_id)
 );
+
+INSERT INTO clientes VALUES (1, 'Ana', 'ana@ejemplo.com');
+INSERT INTO pedidos VALUES (10, 1, '2026-10-15');
+INSERT INTO productos VALUES (7, 'Cuaderno'), (8, 'Lápiz');
+INSERT INTO lineas_de_pedido VALUES (10, 7, 2, 300), (10, 8, 1, 100);
+SELECT pedido_id, SUM(cantidad * precio_centimos) AS total_centimos
+FROM lineas_de_pedido GROUP BY pedido_id;
+-- 10 | 700
 ```
 
 A menudo esa relación tiene **sus propios atributos**: la cantidad, y el precio en el momento de la compra, que no es necesariamente el precio actual del producto. No pertenecen ni al pedido ni al producto, sino a la relación.
+
+La consulta devuelve el pedido 10 con un total de 700 céntimos: dos cuadernos a 300 y un lápiz a 100.
+
+Aquí un producto aparece como máximo una vez por pedido: la clave compuesta impone esa regla. Si el negocio admite varias líneas del mismo producto con descuentos distintos, hace falta otro identificador de línea.
 
 **Uno a uno**: una clave foránea única en cualquiera de los dos lados, o se fusionan en una sola tabla.
 
@@ -118,10 +140,13 @@ Hay varias notaciones. La original de Chen usa rectángulos para las entidades, 
 ```mermaid
 erDiagram
 	CLIENTE ||--o{ PEDIDO : realiza
-	PEDIDO }o--|| PRODUCTO : incluye
+	PEDIDO ||--o{ LINEA_DE_PEDIDO : contiene
+	PRODUCTO ||--o{ LINEA_DE_PEDIDO : aparece
 ```
 
 Lo importante no es la notación, sino que todos los que lo leen la entiendan igual.
+
+Este diagrama representa las tablas del ejemplo: cada línea pertenece a un pedido y a un producto; ambos pueden aparecer en varias líneas. Permite pedidos sin líneas mientras se preparan. Exigir al menos una línea antes de confirmarlos es una regla adicional que estas claves foráneas no imponen.
 
 ## Decisiones habituales
 
@@ -143,7 +168,13 @@ Las reglas del modelo se convierten en **restricciones**, que la base de datos i
 | No hay dos clientes con el mismo correo | `UNIQUE` |
 | Una cantidad es positiva | `CHECK (cantidad > 0)` |
 
-Así, aunque el código de la aplicación tenga un error, los datos no pueden quedar incoherentes.
+Así se rechazan las infracciones de las reglas declaradas y activas, aunque la aplicación tenga un error. Otras reglas, como comprobar que un pedido confirmado tenga líneas, necesitan mecanismos adicionales.
+
+## Errores comunes
+
+- **Dibujar muchos a muchos y guardar solo un identificador en pedido.** Esa columna permite un único producto por pedido; la tabla intermedia representa cada pareja.
+- **Confundir opcionalidad y cantidad máxima.** Un cliente puede tener cero pedidos y, a la vez, admitir muchos; ambas condiciones deben figurar en el modelo.
+- **Sobrescribir un precio histórico con el actual.** La línea guarda el precio pactado para poder reconstruir el pedido, aunque cambie el catálogo.
 
 ## Lo esencial
 

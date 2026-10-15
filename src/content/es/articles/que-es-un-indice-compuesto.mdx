@@ -1,42 +1,47 @@
 ---
 title: "¿Qué es un índice compuesto?"
-description: "Un índice compuesto cubre varias columnas a la vez. El orden de las columnas importa: sirve para buscar por la primera, o por la primera y la segunda, pero no por la segunda sola."
+description: "Un índice compuesto contiene varias columnas. En un árbol B, su orden determina qué grupos e intervalos puede localizar directamente."
 level: basico
 kind: definicion
 layer: datos
 prerequisites:
   - indices-de-bases-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Multicolumn Indexes (en inglés)"
     url: https://www.postgresql.org/docs/current/indexes-multicolumn.html
 ---
 
-import { Quiz } from "@/components/quiz";
-
-Un **índice compuesto**, o multicolumna, es un [índice](/articulos/indices-de-bases-de-datos/) que ordena las filas por **varias columnas** a la vez, en un orden concreto: primero por la primera, y en caso de empate, por la segunda.
+Un **índice compuesto**, o multicolumna, es un [índice](/articulos/indices-de-bases-de-datos/) que incluye **varias columnas**. En un árbol B se ordenan primero por la primera y, en caso de empate, por la segunda, y así sucesivamente.
 
 ## Un ejemplo
 
+Ejecuta este bloque en SQLite:
+
 ```sql
+CREATE TABLE clientes (id INTEGER PRIMARY KEY, apellido TEXT, nombre TEXT);
+INSERT INTO clientes VALUES (1, 'García', 'Ana'), (2, 'García', 'Luis'), (3, 'Ruiz', 'Ana');
 CREATE INDEX idx_apellido_nombre ON clientes (apellido, nombre);
+SELECT id FROM clientes WHERE apellido = 'García' AND nombre = 'Ana';
 ```
 
-Funciona como una guía telefónica: ordenada por apellido y, dentro de cada apellido, por nombre.
+La consulta devuelve `1`. El índice se parece a una guía telefónica: apellido y, dentro de cada apellido, nombre. El optimizador decide si utilizarlo; con tres filas recorrer la tabla también puede ser barato.
 
 ## El orden de las columnas importa
 
 Con ese índice:
 
-| Consulta | ¿Usa el índice? |
+| Consulta | ¿Qué puede localizar directamente? |
 | --- | --- |
-| `WHERE apellido = 'García'` | Sí |
-| `WHERE apellido = 'García' AND nombre = 'Ana'` | Sí, y muy eficiente |
-| `WHERE nombre = 'Ana'` | No de forma eficiente |
+| `WHERE apellido = 'García'` | El grupo del apellido |
+| `WHERE apellido = 'García' AND nombre = 'Ana'` | El intervalo de esa pareja |
+| `WHERE nombre = 'Ana'` | Las coincidencias están repartidas entre apellidos |
 
 Es la misma razón por la que una guía telefónica no ayuda a encontrar a todas las personas que se llaman Ana: están repartidas por toda la guía. El índice sirve para la columna inicial, o para las iniciales en orden.
 
-Por eso la regla práctica es poner primero la columna que más se usa para filtrar, y la que más reduce el número de filas.
+Las columnas posteriores también pueden filtrar entradas durante un recorrido. PostgreSQL documenta además *skip scan*: repetir búsquedas por los grupos de una columna anterior cuando su cantidad lo hace rentable. Comprueba el plan de tu motor y versión.
+
+El orden se elige según consultas, igualdades, rangos y ordenaciones; poner siempre primero la columna con más valores distintos no es una regla suficiente.
 
 ## Cuándo usarlo
 

@@ -17,6 +17,8 @@ sources:
     url: https://www.postgresql.org/docs/current/sql-createprocedure.html
   - title: "PostgreSQL: Triggers (en inglés)"
     url: https://www.postgresql.org/docs/current/triggers.html
+  - title: "SQLite: CREATE VIEW (en inglés)"
+    url: https://www.sqlite.org/lang_createview.html
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -31,22 +33,34 @@ Muchas consultas se repiten, y algunas son largas: varios [JOIN](/articulos/tipo
 
 ### Cómo se usan
 
+Los bloques SQL se ejecutan en orden en una base SQLite vacía. Fijamos la fecha de referencia en el 15 de octubre de 2026 para que el resultado sea reproducible.
+
 ```sql
+PRAGMA foreign_keys = ON;
+CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL);
+CREATE TABLE pedidos (
+	id INTEGER PRIMARY KEY,
+	cliente_id INTEGER NOT NULL REFERENCES clientes (id),
+	fecha TEXT NOT NULL,
+	importe INTEGER NOT NULL
+);
+INSERT INTO clientes VALUES (1, 'Ana'), (2, 'Luis');
+INSERT INTO pedidos VALUES
+	(10, 1, '2026-10-10', 100), (11, 2, '2026-01-01', 50);
+
 CREATE VIEW clientes_activos AS
-SELECT c.id, c.nombre, c.correo, MAX(p.fecha) AS ultimo_pedido
+SELECT c.id, c.nombre, MAX(p.fecha) AS ultimo_pedido
 FROM clientes c
 JOIN pedidos p ON p.cliente_id = c.id
-WHERE p.fecha > CURRENT_DATE - INTERVAL '90 days'
-GROUP BY c.id, c.nombre, c.correo;
+WHERE p.fecha > date('2026-10-15', '-90 days')
+GROUP BY c.id, c.nombre;
+
+SELECT nombre FROM clientes_activos ORDER BY id;
 ```
 
-A partir de ahí, se consulta como cualquier tabla:
+Devuelve Ana. El pedido de Luis queda fuera de la ventana de noventa días. En una aplicación real, la fecha de referencia avanzaría según la definición de cliente activo.
 
-```sql
-SELECT nombre FROM clientes_activos WHERE ultimo_pedido > '2026-10-01';
-```
-
-Una vista normal **no guarda datos**. Cada vez que se consulta, la base de datos ejecuta la consulta de la definición. Los resultados están siempre al día.
+Una vista normal **no almacena por separado el resultado**. Al consultarla, el motor resuelve su definición con los datos visibles para esa consulta. La vista no salta las reglas de [aislamiento](/articulos/niveles-de-aislamiento/): una transacción puede estar leyendo una instantánea anterior.
 
 ### Para qué sirven
 
@@ -59,14 +73,31 @@ Una vista normal **no guarda datos**. Cada vez que se consulta, la base de datos
 
 Si la consulta es costosa, ejecutarla en cada lectura sale caro. Una **vista materializada** **guarda el resultado**, como una tabla.
 
-```sql
-CREATE MATERIALIZED VIEW ventas_por_mes AS
-SELECT date_trunc('month', fecha) AS mes, SUM(importe) AS total
-FROM pedidos
-GROUP BY 1;
+PostgreSQL ofrece vistas materializadas y una orden de refresco. SQLite no tiene esa función nativa. Para observar la diferencia entre recalcular y conservar un resultado, hacemos una copia manual en una tabla:
 
-REFRESH MATERIALIZED VIEW ventas_por_mes;
+```sql
+CREATE VIEW ventas_por_mes AS
+SELECT substr(fecha, 1, 7) AS mes, SUM(importe) AS total
+FROM pedidos GROUP BY substr(fecha, 1, 7);
+
+CREATE TABLE resumen_guardado AS SELECT * FROM ventas_por_mes;
+INSERT INTO pedidos VALUES (12, 1, '2026-10-15', 20);
+
+SELECT total FROM ventas_por_mes WHERE mes = '2026-10';
+SELECT total FROM resumen_guardado WHERE mes = '2026-10';
 ```
+
+La vista calcula 120; la tabla conserva 100. La tabla es una demostración del resultado guardado, no una vista materializada con mantenimiento nativo. Para ponerla al día:
+
+```sql
+BEGIN;
+DELETE FROM resumen_guardado;
+INSERT INTO resumen_guardado SELECT * FROM ventas_por_mes;
+COMMIT;
+SELECT total FROM resumen_guardado WHERE mes = '2026-10';
+```
+
+Ahora devuelve 120. La transacción agrupa la sustitución para no confirmar un resumen vacío a medias.
 
 Consultarla puede ahorrar el cálculo de la agregación, aunque leer sus filas y utilizar índices sigue teniendo un coste. A cambio, los datos reflejan el último **refresco**. Es una [caché](/articulos/que-es-una-cache/) dentro de la base de datos, con el mismo dilema: coste de lectura frente a frescura.
 
@@ -74,7 +105,7 @@ Consultarla puede ahorrar el cálculo de la agregación, aunque leer sus filas y
 | --- | --- | --- |
 | Guarda datos | No | Sí |
 | Consulta | Ejecuta la definición cada vez | Lee el resultado guardado |
-| Datos | Siempre actuales | Del último refresco |
+| Datos | Visibles según la consulta y su aislamiento | Del último refresco |
 | Conviene para | Simplificar y controlar el acceso | Informes costosos que toleran cierto retraso |
 
 <Quiz
@@ -92,24 +123,22 @@ Consultarla puede ahorrar el cálculo de la agregación, aunque leer sus filas y
 
 Son bloques de código que se guardan y se ejecutan en el servidor de la base de datos. Se escriben en SQL o en un lenguaje propio del sistema, que añade variables, condicionales y bucles.
 
-```sql
-CREATE PROCEDURE transferir(origen INT, destino INT, cantidad NUMERIC)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-	UPDATE cuentas SET saldo = saldo - cantidad WHERE id = origen;
-	UPDATE cuentas SET saldo = saldo + cantidad WHERE id = destino;
-END;
-$$;
+Imagina una operación almacenada para confirmar un pedido. La aplicación entrega el identificador una vez y el servidor realiza este recorrido:
 
-CALL transferir(1, 2, 100);
-```
+| Paso | Decisión dentro de la operación |
+| --- | --- |
+| Leer el pedido | Comprobar que existe y aún se puede confirmar |
+| Comprobar líneas | Rechazar un pedido vacío o con cantidades inválidas |
+| Aplicar cambios | Actualizar el estado y guardar el registro de confirmación |
+| Terminar | Confirmar juntos los cambios o propagar el error y anularlos |
 
-Una **función** devuelve un valor y se puede usar dentro de una consulta. Un **procedimiento** se invoca por sí mismo, y puede controlar [transacciones](/articulos/transacciones-y-acid/).
+Guardar el código en la base de datos no lo vuelve correcto automáticamente: hay que diseñar su transacción, sus comprobaciones y su comportamiento ante concurrencia. El ejemplo de [transacciones](/articulos/transacciones-y-acid/) muestra por qué una actualización que afecta a cero filas también puede ser un fallo para el negocio.
+
+En PostgreSQL, una **función** puede usarse dentro de una consulta; un **procedimiento** se invoca con `CALL` y, en ciertos contextos permitidos, puede controlar transacciones. Las reglas cambian entre motores. SQLite no ofrece procedimientos almacenados como los de PostgreSQL.
 
 ### Disparadores
 
-Un **disparador**, en inglés *trigger*, es una función que se ejecuta **automáticamente** cuando ocurre algo en una tabla: antes o después de insertar, modificar o borrar una fila.
+Un **disparador**, en inglés *trigger*, ejecuta acciones **automáticamente** ante un evento configurado, como insertar, modificar o borrar. Puede actuar por fila o por sentencia según el motor. PostgreSQL utiliza funciones para su cuerpo; otros motores tienen otra sintaxis.
 
 Se usan para:
 
@@ -123,12 +152,12 @@ Su peligro es que son invisibles: quien lee el código de la aplicación no ve q
 
 - **Menos viajes.** Una operación de muchos pasos se hace en una llamada, sin ir y volver por la red.
 - **Cerca de los datos.** Procesar millones de filas dentro de la base de datos evita transferirlas.
-- **Reglas que nadie se salta.** Si la regla está en la base de datos, se cumple venga el cambio de la aplicación que venga.
+- **Un punto de control compartido.** Las restricciones activas se aplican a los cambios que cubren. Un procedimiento solo impone sus comprobaciones si las escrituras pasan por él o los permisos impiden evitarlas.
 - **Un solo sitio** para una operación que usan varias aplicaciones.
 
 ## Inconvenientes
 
-- **Peor de mantener.** Más difícil de versionar, de probar y de depurar que el código de la aplicación.
+- **Herramientas y despliegue adicionales.** Hace falta versionar, probar y depurar el código almacenado con medios adecuados; esa dificultad depende del entorno.
 - **Dependencia del sistema.** Cada base de datos tiene su propio lenguaje. Migrar significa reescribir.
 - **Lógica repartida.** Parte del comportamiento está en la aplicación y parte en la base de datos, y hay que mirar las dos para entender qué pasa.
 - **Escala peor.** La base de datos suele ser lo más difícil de escalar, y cargarla de cálculo la convierte antes en el cuello de botella, como explica [escalado vertical y horizontal](/articulos/escalado-vertical-y-horizontal/).
@@ -168,10 +197,16 @@ Si el panel admite diez minutos de retraso, reutilizar ese total puede ahorrar m
 
 Refrescar también consume trabajo y puede interferir con lecturas según el motor y el mecanismo. Si se exige una actualización frecuente de un resultado enorme, el coste de mantenimiento puede anular el ahorro. La comparación debe incluir tanto las consultas como la regeneración.
 
+## Errores comunes
+
+- **Confundir una vista normal con una copia.** Guarda la definición, no el resultado calculado.
+- **Materializar sin acordar la antigüedad tolerable.** Un total rápido pero atrasado puede ser incorrecto para la decisión que lo utiliza.
+- **Suponer que llamar a un procedimiento impide toda escritura alternativa.** Sus reglas se pueden eludir si los permisos permiten actualizar las tablas directamente.
+
 ## Lo esencial
 
 - Una vista es una consulta con nombre que se usa como una tabla, y no guarda datos.
 - Una vista materializada guarda el resultado, y hay que refrescarla.
 - Los procedimientos y funciones almacenados ejecutan código dentro de la base de datos.
 - Los disparadores se ejecutan solos ante cambios en una tabla.
-- Acercan la lógica a los datos, a cambio de ser más difíciles de mantener y de llevar a otro sistema.
+- Acercan la lógica a los datos; requieren pruebas, permisos y mantenimiento adecuados al motor.

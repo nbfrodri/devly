@@ -7,7 +7,7 @@ layer: sistemas
 prerequisites:
   - cliente-servidor
   - stateful-y-stateless
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Microsoft Azure: Diseño para escalar horizontalmente"
     url: https://learn.microsoft.com/es-es/azure/architecture/guide/design-principles/scale-out
@@ -35,13 +35,13 @@ Es como cambiar una furgoneta por un camión.
 
 **A favor:**
 
-- **Es simple.** La aplicación no cambia. Sigue habiendo una sola máquina.
-- **No hay que coordinar nada.** Todos los datos están en un sitio.
+- **Suele requerir menos cambios de arquitectura.** Sigue habiendo una máquina, aunque puede hacer falta ajustar límites, concurrencia o configuración para aprovecharla.
+- **Evita añadir coordinación entre máquinas** para esa ampliación. Dentro de la aplicación siguen pudiendo hacer falta bloqueos y transacciones.
 
 **En contra:**
 
 - **Tiene techo.** Existe una máquina más grande que todas las demás, y después de ella no hay nada.
-- **El precio no es proporcional.** Una máquina el doble de potente cuesta bastante más del doble en la gama alta.
+- **El coste depende del recurso y del proveedor.** Duplicar memoria o núcleos no garantiza duplicar capacidad útil ni un precio proporcional.
 - **Sigue siendo un único punto de fallo.** Si esa máquina cae, cae el servicio.
 - **Ampliar suele exigir parar**, aunque sea unos minutos.
 
@@ -53,59 +53,65 @@ Es como poner más furgonetas en lugar de un camión.
 
 **A favor:**
 
-- **No tiene un techo claro.** Siempre se puede añadir otra máquina.
-- **Tolera fallos.** Si una cae, las demás siguen atendiendo.
+- **Permite ampliar capacidad por unidades.** El crecimiento encuentra límites en la coordinación, las cuotas y los recursos compartidos.
+- **Puede tolerar fallos.** Requiere capacidad restante, detección de fallos y reparto de tráfico; una dependencia única todavía puede detener todo el servicio.
 - **Se ajusta a la demanda.** Se añaden máquinas en las horas punta y se quitan de madrugada. En [la nube](/articulos/computacion-en-la-nube/) esto se automatiza, y se llama **autoescalado**.
-- **Usa máquinas corrientes**, más baratas por unidad de potencia.
+- **Permite usar máquinas corrientes**, aunque aumenta costes de red, coordinación y operación.
 
 **En contra:**
 
 - **La aplicación tiene que estar preparada.**
 - **Es un sistema distribuido**, con todo lo que eso complica.
 
-## El requisito: no guardar estado
+## Facilitar el reparto del estado
 
 Con varias máquinas, dos peticiones seguidas del mismo usuario pueden llegar a servidores distintos. Si el primero guardó algo en su memoria, la sesión del usuario o un archivo subido, el segundo no lo tiene.
 
-Por eso el escalado horizontal exige que los servidores de la aplicación sean [stateless](/articulos/stateful-y-stateless/): que no guarden nada propio entre una petición y la siguiente. El estado se lleva a un lugar compartido, como una [base de datos](/articulos/que-es-una-base-de-datos/) o un almacén de [sesiones](/articulos/sesiones-y-tokens/).
+Una solución habitual es que las instancias de aplicación sean [stateless](/articulos/stateful-y-stateless/) respecto a la sesión local. El estado se lleva a un lugar compartido, como una [base de datos](/articulos/que-es-una-base-de-datos/) o un almacén de [sesiones](/articulos/sesiones-y-tokens/). También se pueden escalar sistemas con estado mediante particionado, replicación o asignación de clientes, con otros costes y mecanismos de recuperación.
 
-Cuando los servidores son intercambiables, añadir o quitar uno no afecta a nadie.
+Aunque sean intercambiables, retirar una instancia exige dejar terminar o trasladar sus peticiones activas. Añadir otra necesita además que el reparto de tráfico la incorpore.
 
 ## El estado es lo difícil
 
 Esto explica por qué escalar una aplicación suele ser fácil y escalar su base de datos, no.
 
-Los servidores de aplicación no guardan datos, así que se multiplican sin problema. Pero la base de datos **es** el estado. Repartirla entre varias máquinas obliga a decidir cómo se copian y se dividen los datos, lo que se trata en [replicación y particionado](/articulos/replicacion-y-particionado/), y a aceptar los límites que describe el [teorema CAP](/articulos/teorema-cap/).
+Externalizar el estado facilita multiplicar instancias de aplicación, pero no elimina los límites del servicio que lo guarda. Repartir la base de datos entre varias máquinas obliga a decidir cómo se copian y se dividen los datos, lo que se trata en [replicación y particionado](/articulos/replicacion-y-particionado/), y a aceptar los límites que describe el [teorema CAP](/articulos/teorema-cap/).
 
-De ahí que el camino habitual sea:
+Entre las opciones que conviene medir están:
 
 1. Escalar la base de datos en vertical mientras se pueda.
 2. Añadir réplicas de lectura.
 3. Poner una [caché](/articulos/que-es-una-cache/) delante.
-4. Particionar los datos solo cuando no queda otra opción.
+4. Particionar cuando el patrón de acceso y la capacidad necesaria justifiquen la complejidad.
 
 ## Comparación
 
 | | Vertical | Horizontal |
 | --- | --- | --- |
 | Qué se hace | Una máquina más potente | Más máquinas |
-| Límite | El de la mayor máquina disponible | Muy alto |
-| Cambios en la aplicación | Ninguno | Debe ser stateless |
-| Tolerancia a fallos | No mejora | Mejora |
-| Complejidad | Baja | Alta |
-| Ajuste a la demanda | Lento, a saltos | Rápido, gradual |
+| Límite | Recursos de la máquina disponible y uso que hace el programa | Coordinación, cuotas y recursos compartidos |
+| Cambios en la aplicación | A menudo configuración; quizá aprovechar más recursos | Repartir trabajo y gestionar estado |
+| Tolerancia a fallos | Una sola instancia sigue siendo un punto de fallo | Puede mejorar con redundancia y capacidad suficiente |
+| Complejidad | Generalmente menor | Generalmente mayor |
+| Ajuste a la demanda | Depende de cómo se amplíen los recursos | Depende del arranque, reparto y retirada de instancias |
 | Encaja con | Bases de datos, sistemas pequeños | Servidores web, cargas variables |
 
 <Quiz
 	client:visible
-	question="¿Qué necesita una aplicación para escalar horizontalmente sin problemas?"
+	question="Si una sesión solo existe en la memoria de una instancia, ¿qué facilita atender su siguiente petición desde otra?"
 	options={[
 		"Un servidor con más memoria",
-		"Que sus servidores no guarden estado propio entre peticiones",
+		"Hacer accesible ese estado, por ejemplo mediante un almacén compartido",
 		"Una base de datos NoSQL",
 	]}
 	answer={1}
 />
+
+## El mismo servicio, dos ampliaciones
+
+Supón que una API atiende 100 peticiones por segundo con su objetivo de latencia, y la medición sitúa el límite en CPU. Pasar de dos a cuatro núcleos puede ayudar si el programa usa esos núcleos. Añadir una segunda instancia también puede repartir las peticiones independientes. Ninguna opción demuestra por sí sola que se alcancen 200: hay que repetir la medición.
+
+Si ahora el límite está en la misma base de datos compartida, ambas ampliaciones de la aplicación pueden dejar la capacidad casi igual. El recurso que se amplía debe ser el que limita el recorrido completo.
 
 ## No siempre duplica
 
@@ -115,20 +121,26 @@ Antes de escalar hay que saber **qué** está limitando al sistema. Añadir capa
 
 ## Y antes de escalar, optimizar
 
-Una consulta sin [índice](/articulos/indices-de-bases-de-datos/) puede tardar mil veces más de lo necesario. Corregirla cuesta minutos y equivale a multiplicar las máquinas. Muchas veces un sistema no necesita más capacidad, sino dejar de malgastar la que tiene.
+Una consulta que recorre datos innecesarios puede consumir gran parte del tiempo. Un [índice](/articulos/indices-de-bases-de-datos/) adecuado puede reducirlo, pero también cuesta espacio y escrituras. Conviene medir la consulta y su plan antes de ampliar recursos o introducir el índice.
 
 ## Cómo elegir
 
 No son excluyentes, y lo normal es combinarlas.
 
-- **Empieza en vertical.** Es más simple, y una sola máquina moderna aguanta mucho más de lo que se suele pensar.
+- **Considera vertical** si el recurso admite ampliación, el programa la aprovecha y una sola instancia satisface los requisitos.
 - **Pasa a horizontal** cuando necesites tolerar la caída de una máquina, cuando la carga varíe mucho a lo largo del día o cuando te acerques al techo.
-- **Diseña sin estado desde el principio.** Cuesta poco y deja abierta la puerta.
+- **Define dónde vive el estado.** Externalizar sesiones facilita sustituir instancias; replicar o particionar datos puede ser necesario en otros componentes.
+
+## Confusiones frecuentes
+
+- **Más máquinas significa capacidad ilimitada.** La parte compartida o secuencial puede seguir siendo el límite.
+- **Horizontal equivale a tolerancia a fallos automática.** Si todas las instancias dependen de un único almacén indisponible, ninguna puede completar la operación.
+- **Un sistema con estado no puede escalar.** Puede hacerlo, pero debe definir quién guarda cada dato, cómo lo comparte y cómo se recupera.
 
 ## Lo esencial
 
 - Escalar en vertical es usar una máquina mayor; en horizontal, usar más máquinas.
 - El vertical es simple, pero tiene techo y no protege de fallos.
-- El horizontal crece sin un límite claro y tolera fallos, pero exige servidores sin estado.
+- El horizontal reparte capacidad; sus límites y tolerancia a fallos dependen de la coordinación, el estado y las dependencias.
 - Lo difícil de escalar es el estado: la base de datos.
 - Antes de escalar conviene medir dónde está el límite.

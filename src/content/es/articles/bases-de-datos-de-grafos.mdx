@@ -7,7 +7,7 @@ prerequisites:
   - grafos
   - que-es-una-base-de-datos
   - tipos-de-join
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Neo4j: What is a graph database (en inglés)"
     url: https://neo4j.com/docs/getting-started/graph-database/
@@ -19,7 +19,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Una **base de datos de grafos** guarda la información como un [grafo](/articulos/grafos/): un conjunto de **nodos**, que representan cosas, y de **relaciones** que los conectan. Las relaciones no se deducen al consultar, como en una base relacional: se almacenan directamente, y recorrerlas es rápido.
+Una **base de datos de grafos** guarda la información como un [grafo](/articulos/grafos/): un conjunto de **nodos**, que representan cosas, y de **relaciones** que los conectan. En un grafo de propiedades, las relaciones son elementos explícitos del modelo y pueden llevar datos propios. Una base relacional también almacena relaciones mediante claves y tablas; cambia cómo se representan y consultan.
 
 Son un tipo de [base de datos NoSQL](/articulos/bases-de-datos-nosql/), pensado para datos en los que las conexiones importan tanto como los datos mismos.
 
@@ -31,9 +31,9 @@ En una red social, la pregunta "¿quiénes son los amigos de los amigos de Ana?"
 - Amigos de amigos: dos.
 - Tres niveles: tres.
 
-Cada JOIN busca coincidencias en un índice, y el número de filas intermedias se multiplica en cada salto. A partir de tres o cuatro niveles, la consulta se vuelve lenta y difícil de escribir. Y si la profundidad no se conoce de antemano, como en "¿hay algún camino entre estas dos personas?", SQL se resiste.
+Cada salto añade trabajo, cuyo coste depende del plan y de cuántos vecinos se visiten. Un JOIN no usa siempre un índice, ni existe un número de niveles que lo vuelva inevitablemente lento. SQL también permite consultas recursivas para profundidad variable.
 
-En una base de grafos, cada nodo tiene acceso directo a sus vecinos. Saltar de uno a otro cuesta lo mismo sea cual sea el tamaño total de la base: el coste depende de la parte del grafo que se recorre, no de cuántos datos hay.
+Los motores de grafos ofrecen mecanismos para acceder a las relaciones adyacentes y lenguajes que expresan recorridos. Localizar el nodo inicial, leer relaciones y transferir resultados sigue teniendo coste. Un nodo con muchos vecinos puede exigir mucho trabajo.
 
 ## El modelo
 
@@ -53,21 +53,35 @@ Que las relaciones tengan propiedades es importante. "Ana compró un teclado el 
 
 El lenguaje más conocido es **Cypher**. Sus consultas describen un **patrón**, con una sintaxis que imita un dibujo: los nodos van entre paréntesis y las relaciones son flechas.
 
+Ejecuta estos bloques en orden en una base Neo4j de práctica vacía. Primero creamos la red:
+
 ```cypher
-MATCH (ana:Persona {nombre: "Ana"})-[:SIGUE]->(amigo)-[:SIGUE]->(otro)
-RETURN otro.nombre
+CREATE (ana:Persona {nombre: "Ana"}), (luis:Persona {nombre: "Luis"}),
+       (marta:Persona {nombre: "Marta"}), (pablo:Persona {nombre: "Pablo"}),
+       (sara:Persona {nombre: "Sara"}),
+       (ana)-[:SIGUE]->(luis), (ana)-[:SIGUE]->(marta),
+       (luis)-[:SIGUE]->(pablo), (marta)-[:SIGUE]->(pablo),
+       (marta)-[:SIGUE]->(sara);
 ```
 
-"Encuentra a Ana, a quienes sigue, y a quienes siguen estos." La base de datos busca en el grafo todo lo que encaje con ese dibujo.
+Ahora buscamos a quienes Ana puede alcanzar en dos saltos, excluyendo a Ana y a quienes ya sigue:
+
+```cypher
+MATCH (ana:Persona {nombre: "Ana"})-[:SIGUE]->(amigo)-[:SIGUE]->(otro)
+WHERE otro <> ana AND NOT (ana)-[:SIGUE]->(otro)
+RETURN DISTINCT otro.nombre ORDER BY otro.nombre;
+```
+
+Devuelve Pablo y Sara. Pablo aparece por dos caminos, pero `DISTINCT` evita repetirlo. La base busca los caminos que encajan con el patrón; los filtros excluyen resultados no deseados.
 
 Para una profundidad variable basta con indicarla:
 
 ```cypher
 MATCH (ana:Persona {nombre: "Ana"})-[:SIGUE*1..4]->(otro)
-RETURN DISTINCT otro.nombre
+RETURN DISTINCT otro.nombre ORDER BY otro.nombre;
 ```
 
-De uno a cuatro saltos. El equivalente en SQL sería largo y lento.
+Devuelve Luis, Marta, Pablo y Sara: ahora se admiten de uno a cuatro saltos, incluidos contactos directos. El límite acota la exploración; no garantiza una consulta barata en cualquier grafo.
 
 Por debajo ocurre un recorrido como este:
 
@@ -98,7 +112,7 @@ function amigosDeAmigos(persona) {
 console.log(amigosDeAmigos("ana").join(" ")); // "pablo sara"
 ```
 
-Solo se visitan los vecinos de Ana y los vecinos de estos. Da igual que la red tenga cinco personas o cinco millones.
+El bucle visita los vecinos de Ana y los vecinos de estos. Si ese entorno no cambia, el número de relaciones exploradas tampoco; aun así, la representación, la memoria y el coste de acceso pueden cambiar con el sistema.
 
 ## Para qué se usan
 
@@ -138,14 +152,14 @@ Se consulta con un lenguaje llamado SPARQL. Está pensado para publicar y enlaza
 | | Relacional | De grafos |
 | --- | --- | --- |
 | Unidad | Fila en una tabla | Nodo y relación |
-| Las relaciones | Se calculan al consultar, con JOIN | Están almacenadas |
-| Esquema | Fijo | Flexible |
+| Las relaciones | Se representan con claves y tablas; JOIN combina sus filas | Se representan como aristas; las consultas recorren patrones |
+| Esquema | Declarado, con reglas del motor | Etiquetas, propiedades y restricciones según el motor |
 | Destaca en | Agregar y filtrar grandes conjuntos | Recorrer conexiones |
 | Flojea en | Relaciones profundas o de profundidad variable | Agregaciones sobre todos los datos |
 
 ## Sus límites
 
-- **No sirven para todo.** "El total de ventas por mes" no es un recorrido: es una agregación sobre todos los datos, y una base relacional lo hace mejor.
+- **No sirven para todo.** "El total de ventas por mes" no es un recorrido: es una agregación sobre todos los datos, y hay que comparar los planes y costes de los motores para ese caso.
 - **Los supernodos.** Un nodo con millones de relaciones, como una celebridad en una red social, hace lento todo recorrido que pase por él.
 - **Repartirlas es difícil.** Cortar un grafo entre máquinas, como en el [particionado](/articulos/replicacion-y-particionado/), obliga a que muchos recorridos crucen de una a otra.
 - **Menos extendidas.** Menos herramientas, menos gente que las conozca, y varios lenguajes de consulta, aunque ya existe un estándar internacional, GQL.
@@ -158,10 +172,16 @@ La señal está en las **preguntas**. Si lo que se pregunta son caminos, alcance
 
 Hay opciones intermedias: SQL permite consultas recursivas, y existen extensiones que añaden consultas de grafos a bases relacionales como [PostgreSQL](/articulos/que-es-postgresql/). Para un grafo pequeño dentro de una aplicación mayor suelen bastar.
 
+## Errores comunes
+
+- **Confundir número de caminos y personas distintas.** Pablo aparece por Luis y por Marta; sin deduplicar, puede contarse dos veces.
+- **Dejar una profundidad ilimitada por comodidad.** El número de caminos puede crecer mucho incluso con pocos nodos.
+- **Elegir grafos porque existen relaciones.** Lo decisivo es el tipo de consulta, sus garantías y su coste medido.
+
 ## Lo esencial
 
 - Una base de datos de grafos guarda nodos y relaciones, con propiedades en ambos.
-- Las relaciones están almacenadas, así que recorrerlas no requiere JOIN.
+- Las relaciones se consultan como aristas; una base relacional también puede representar y recorrer el mismo grafo.
 - Las consultas describen patrones de conexión, como en Cypher.
 - Destacan en redes sociales, recomendaciones, fraude y dependencias.
-- No convienen para agregaciones sobre todos los datos.
+- Las agregaciones y los recorridos con muchos vecinos requieren medir el coste; no hay ventaja universal.

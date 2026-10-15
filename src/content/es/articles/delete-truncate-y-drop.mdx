@@ -7,7 +7,7 @@ layer: datos
 prerequisites:
   - que-es-sql
   - transacciones-y-acid
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: DELETE (en inglés)"
     url: https://www.postgresql.org/docs/current/sql-delete.html
@@ -15,6 +15,8 @@ sources:
     url: https://www.postgresql.org/docs/current/sql-truncate.html
   - title: "PostgreSQL: DROP TABLE (en inglés)"
     url: https://www.postgresql.org/docs/current/sql-droptable.html
+  - title: "SQLite: DELETE (en inglés)"
+    url: https://www.sqlite.org/lang_delete.html
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -23,37 +25,53 @@ import { Quiz } from "@/components/quiz";
 
 ## DELETE
 
+Los bloques se pueden ejecutar en orden en una base SQLite vacía. Preparamos dos pedidos y probamos cambios dentro de transacciones que después anulamos:
+
 ```sql
+CREATE TABLE pedidos (id INTEGER PRIMARY KEY, fecha TEXT NOT NULL);
+INSERT INTO pedidos VALUES (1, '2019-12-31'), (2, '2026-10-15');
+BEGIN;
 DELETE FROM pedidos WHERE fecha < '2020-01-01';
+SELECT id FROM pedidos ORDER BY id;
+ROLLBACK;
 ```
 
-Borra fila a fila las que cumplen la condición. Sin `WHERE`, las borra todas.
+La consulta devuelve solo el pedido 2. `ROLLBACK` recupera el pedido 1 para el siguiente ejemplo. `DELETE` elimina las filas que cumplen la condición; sin `WHERE`, elimina todas.
 
 - Permite elegir qué filas.
-- Activa los disparadores de la tabla.
-- Se puede deshacer dentro de una [transacción](/articulos/transacciones-y-acid/).
-- Con muchas filas, es lento.
+- Ejecuta los disparadores de borrado que correspondan, si existen.
+- En SQLite y PostgreSQL se puede deshacer dentro de una [transacción](/articulos/transacciones-y-acid/) todavía no confirmada.
+- Su coste depende de filas, índices, restricciones, disparadores y optimizaciones del motor.
 
 ## TRUNCATE
 
+PostgreSQL ofrece `TRUNCATE` para vaciar una tabla sin recorrerla fila a fila. SQLite no tiene esa orden; podemos observar el estado final equivalente, una tabla vacía que sigue existiendo, mediante `DELETE` sin condición:
+
 ```sql
-TRUNCATE TABLE registros;
+BEGIN;
+DELETE FROM pedidos;
+SELECT COUNT(*) AS filas FROM pedidos;
+ROLLBACK;
 ```
 
-Vacía la tabla entera sin recorrerla fila a fila. La tabla sigue existiendo, vacía.
+La consulta devuelve 0. Al anular la transacción recuperamos las dos filas. Esto demuestra el estado resultante, no reproduce las reglas de bloqueo y disparadores de `TRUNCATE` en PostgreSQL:
 
-- Mucho más rápido que un DELETE sin condición.
+- Evita el recorrido por fila, aunque puede esperar bloqueos.
 - No permite elegir filas.
-- No activa los disparadores de borrado por fila.
-- No se puede usar si otras tablas apuntan a esta con [claves foráneas](/articulos/que-es-una-clave-foranea/), salvo que se indique que se vacíen también.
+- No activa disparadores `ON DELETE`; puede activar los específicos `ON TRUNCATE`.
+- Si otras tablas la referencian con [claves foráneas](/articulos/que-es-una-clave-foranea/), exige incluirlas en el truncado o usar la opción de cascada, que también las vacía.
 
 ## DROP
 
 ```sql
-DROP TABLE registros_antiguos;
+BEGIN;
+DROP TABLE pedidos;
+SELECT COUNT(*) AS tablas FROM sqlite_schema
+WHERE type = 'table' AND name = 'pedidos';
+ROLLBACK;
 ```
 
-Elimina la tabla: las columnas, los índices, los permisos y los datos. Ya no existe.
+La consulta devuelve 0: ya no existe la tabla. `DROP` elimina su definición y sus datos; en este ejemplo `ROLLBACK` los recupera. Una consulta a `pedidos` antes de anular fallaría porque la tabla no existe.
 
 ## Comparación
 
@@ -62,7 +80,7 @@ Elimina la tabla: las columnas, los índices, los permisos y los datos. Ya no ex
 | Qué elimina | Filas elegidas | Todas las filas | La tabla entera |
 | La tabla sigue existiendo | Sí | Sí, vacía | No |
 | Admite condición | Sí | No | No |
-| Velocidad con muchas filas | Lenta | Rápida | Rápida |
+| Trabajo y bloqueo | Depende de filas y mecanismos del motor | En PostgreSQL evita recorrer filas, pero requiere bloqueo exclusivo | Elimina la estructura; puede esperar dependencias o bloqueos |
 | Disparadores por fila | Sí | No | No |
 
 En PostgreSQL, las tres se pueden deshacer si se ejecutan dentro de una transacción que todavía no se ha confirmado. En otros sistemas, TRUNCATE y DROP pueden confirmarse solas al instante.
@@ -72,12 +90,20 @@ En PostgreSQL, las tres se pueden deshacer si se ejecutan dentro de una transacc
 Son de las órdenes más peligrosas que existen. Un `DELETE` sin `WHERE` en la base de datos de producción es un error clásico. Antes de ejecutarlas:
 
 - Probar primero la condición con un `SELECT`.
-- Hacerlas dentro de una transacción, para poder deshacer.
+- Comprobar si el motor admite anular esa orden y, cuando lo haga, usar una transacción que se pueda revisar antes de confirmar.
 - Tener una [copia de seguridad](/articulos/copias-de-seguridad/) reciente y probada.
+
+## Cuál elegir y qué no confundir
+
+Para quitar solo el pedido antiguo, `DELETE` admite el filtro. Para vaciar pedidos conservando la estructura, el motor puede ofrecer `TRUNCATE`; hay que revisar sus bloqueos y relaciones. Para retirar la tabla del esquema, se usa `DROP`.
+
+- **Confundir vacío y ausente.** Después de vaciar se puede insertar otra fila en la misma tabla; después de eliminarla hay que crearla de nuevo.
+- **Esperar que una transacción siempre permita volver atrás.** El comportamiento de estas órdenes depende del motor; después de confirmar, `ROLLBACK` ya no revierte el cambio.
+- **Usar cascada para evitar un error sin revisar dependencias.** Puede ampliar el borrado a tablas o elementos que se querían conservar.
 
 ## Lo esencial
 
 - DELETE borra las filas que cumplen una condición, y sin ella las borra todas.
-- TRUNCATE vacía la tabla de golpe, más rápido, sin poder elegir filas.
+- TRUNCATE vacía la tabla sin condición y tiene reglas propias del motor; SQLite no ofrece esa orden.
 - DROP elimina la tabla entera, con su estructura.
-- Las tres son peligrosas: transacción y copia de seguridad antes de ejecutarlas.
+- Hay que comprobar el alcance, las dependencias y la posibilidad real de recuperar el estado anterior.

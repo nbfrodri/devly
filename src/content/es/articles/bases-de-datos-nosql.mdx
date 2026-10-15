@@ -5,8 +5,10 @@ level: intermedio
 layer: datos
 prerequisites:
   - que-es-una-base-de-datos
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
+  - title: "MongoDB: Schema Validation (en inglés)"
+    url: https://www.mongodb.com/docs/manual/core/schema-validation/
   - title: "MongoDB: Documents (documentación oficial, en inglés)"
     url: https://www.mongodb.com/docs/manual/core/document/
   - title: "Redis: Data types (documentación oficial, en inglés)"
@@ -25,11 +27,11 @@ El término suele leerse como *not only SQL*, "no solo SQL".
 
 El modelo relacional es sólido y sigue siendo la opción habitual. Aun así, hay situaciones en las que encaja mal:
 
-- **Datos de forma variable.** Una tabla exige que todas las filas tengan las mismas columnas. Un catálogo donde cada producto tiene características distintas obliga a dejar muchas columnas vacías o a crear muchas tablas.
+- **Datos de forma variable.** Un catálogo puede tener atributos distintos por producto. Un modelo de documentos los agrupa; una base relacional también puede usar tablas relacionadas o columnas JSON, con otros costes y restricciones.
 - **Volúmenes enormes.** Cuando una sola máquina no basta, hay que repartir los datos entre varias, y las relaciones entre tablas complican mucho ese reparto.
 - **Accesos muy simples y muy frecuentes.** Para guardar y recuperar un valor por su nombre, la maquinaria relacional es más de lo necesario.
 
-Las bases NoSQL renuncian a parte de las garantías relacionales a cambio de resolver bien uno de estos casos.
+Cada familia toma decisiones distintas sobre consultas, distribución y garantías. La etiqueta NoSQL no determina por sí sola si hay transacciones o consistencia fuerte.
 
 ## Las cuatro familias
 
@@ -49,13 +51,13 @@ console.log(producto.caracteristicas.memoria); // "16 GB"
 console.log(producto.etiquetas.length); // 2
 ```
 
-En una base relacional esta información se repartiría entre varias tablas. Aquí viaja junta, y leer el producto completo es una sola operación. [MongoDB](/articulos/que-es-mongodb/) es el ejemplo más conocido.
+Con un modelo normalizado, parte de esta información podría repartirse en tablas; también se puede guardar JSON en una base relacional. En el documento del ejemplo viaja junta, lo que encaja con leer el producto completo. [MongoDB](/articulos/que-es-mongodb/) es el ejemplo más conocido.
 
 ### Clave-valor
 
 Son las más simples: cada dato se guarda bajo una **clave** única y se recupera pidiéndola. Funcionan como un diccionario gigante.
 
-Son rapidísimas, pero solo saben buscar por clave. Se usan para sesiones de usuario, contadores y [**cachés**](/articulos/que-es-una-cache/), que son copias temporales de datos costosos de obtener. Redis es un ejemplo.
+Su operación básica es acceder por clave; algunos productos añaden índices y otros mecanismos de búsqueda. La latencia depende de la operación, la red y la carga. Se usan para sesiones de usuario, contadores y [**cachés**](/articulos/que-es-una-cache/), que son copias temporales de datos costosos de obtener. Redis es un ejemplo.
 
 ### Columnas anchas
 
@@ -63,7 +65,7 @@ Organizan los datos en filas, pero cada fila puede tener columnas distintas y en
 
 ### Grafos
 
-Guardan **nodos** y las **relaciones** entre ellos. Sirven cuando lo importante son las conexiones: quién sigue a quién en una red social, o qué rutas unen dos puntos. Recorrer muchas relaciones encadenadas es justo lo que más le cuesta a una base relacional.
+Guardan **nodos** y las **relaciones** entre ellos. Sirven cuando lo importante son las conexiones: quién sigue a quién en una red social, o qué rutas unen dos puntos. Su modelo y sus lenguajes facilitan expresar recorridos. El coste real también depende de índices, número de conexiones y datos visitados; las bases relacionales pueden representar grafos y consultar caminos.
 
 <Quiz
 	client:visible
@@ -74,27 +76,33 @@ Guardan **nodos** y las **relaciones** entre ellos. Sirven cuando lo importante 
 
 ## Lo que se gana y lo que se pierde
 
-**Esquema flexible.** No hay que definir la estructura por adelantado, y cada elemento puede ser distinto. La contrapartida es que la base de datos deja de vigilar la forma de los datos: esa responsabilidad pasa al programa.
+**Esquema flexible.** Algunos sistemas permiten documentos de formas distintas sin declarar cada campo por adelantado. Eso no elimina el contrato de datos: la aplicación debe comprenderlo y productos como MongoDB permiten imponer reglas de validación en la base.
 
 **Escalado horizontal.** Muchas bases NoSQL están diseñadas para repartir los datos entre varias máquinas y crecer añadiendo más.
 
 **Menos relaciones.** Combinar datos de varios sitios suele ser limitado o inexistente. Por eso se tiende a guardar junta la información que se lee junta, aunque eso suponga repetirla. Si un dato repetido cambia, hay que actualizarlo en todos los sitios.
 
-**Consistencia más débil.** Con los datos repartidos en varias máquinas, mantener todas las copias idénticas en cada instante es costoso. Muchos sistemas optan por la [**consistencia eventual**](/articulos/consistencia-eventual/): tras una escritura, las copias pueden diferir durante un momento y acaban coincidiendo. Para un contador de "me gusta" es aceptable. Para el saldo de una cuenta, no. El límite que obliga a elegir lo describe el [teorema CAP](/articulos/teorema-cap/).
+**Consistencia según el sistema y la operación.** Coordinar copias distribuidas tiene costes y límites ante fallos. Muchos sistemas optan por la [**consistencia eventual**](/articulos/consistencia-eventual/): tras una escritura, las copias pueden diferir durante un momento y acaban coincidiendo. Un contador informativo puede tolerar cierto retraso. Autorizar un pago exige definir garantías que impidan gastar un saldo de forma incompatible; no basta con escoger una etiqueta de base de datos. El límite que obliga a elegir lo describe el [teorema CAP](/articulos/teorema-cap/).
 
 ## Cómo elegir
 
 No se trata de cuál es mejor, sino de cuál se ajusta a los datos y al uso. La comparación detallada está en [diferencias entre bases de datos SQL y NoSQL](/articulos/sql-frente-a-nosql/).
 
-- Si los datos tienen una estructura clara y relaciones entre sí, y la corrección es prioritaria, una base **relacional** es la elección segura.
+- Si los datos tienen una estructura clara y relaciones entre sí, y la corrección es prioritaria, una base **relacional** suele encajar; hay que diseñar sus restricciones y transacciones.
 - Si la forma de los datos varía mucho o se leen casi siempre como bloques completos, una de **documentos** simplifica el trabajo.
 - Si solo necesitas guardar y recuperar por clave a toda velocidad, una **clave-valor**.
 
 Es frecuente combinar varias en una misma aplicación: una relacional para los datos principales y una clave-valor como caché.
 
+## Errores comunes
+
+- **Confundir NoSQL con ausencia de reglas.** Un esquema flexible sigue necesitando validación y evolución controlada de los datos.
+- **Elegir por promesas de velocidad.** Hay que medir las consultas previstas, su distribución y sus garantías.
+- **Suponer que todas las familias tienen los mismos límites.** Un almacén clave-valor y uno de grafos ofrecen operaciones diferentes.
+
 ## Lo esencial
 
 - NoSQL agrupa bases de datos que no usan el modelo de tablas relacionales.
 - Hay cuatro familias: documentos, clave-valor, columnas anchas y grafos.
-- Ofrecen flexibilidad y facilidad para repartir datos, a cambio de menos relaciones y garantías más débiles.
+- Cada sistema combina un modelo de datos, operaciones y garantías propias; hay que examinarlas por separado.
 - La elección depende de la forma de los datos y de cómo se van a consultar.

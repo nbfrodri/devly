@@ -4,9 +4,8 @@ description: "Una caché guarda temporalmente el resultado de algo costoso para 
 level: intermedio
 layer: aplicaciones
 prerequisites:
-  - que-es-http
   - tablas-hash
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Almacenamiento en caché de HTTP"
     url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Caching
@@ -35,7 +34,7 @@ Cuando se pide un dato:
 
 La proporción de aciertos mide lo útil que es una caché. Si casi todo son fallos, solo añade trabajo.
 
-Este ejemplo guarda los resultados de una función lenta en un [`Map`](/articulos/tablas-hash/):
+Este ejemplo guarda resultados en un [`Map`](/articulos/tablas-hash/). La función representa un cálculo costoso mediante un contador; elevar al cuadrado un número no necesita por sí solo esta optimización:
 
 ```js
 const cache = new Map();
@@ -109,6 +108,9 @@ class CacheLRU {
 	#datos = new Map();
 
 	constructor(capacidad) {
+		if (!Number.isInteger(capacidad) || capacidad < 0) {
+			throw new RangeError("La capacidad debe ser un entero no negativo");
+		}
 		this.capacidad = capacidad;
 	}
 
@@ -149,20 +151,20 @@ Al guardar `c` no cabe todo. Como `a` se acababa de consultar, la que se descart
 
 ## La caché de HTTP
 
-En la web, el servidor indica cuánto puede guardarse una respuesta con la cabecera `Cache-Control` de [HTTP](/articulos/que-es-http/):
+En la web, [HTTP](/articulos/que-es-http/) intercambia peticiones y respuestas. Sus **cabeceras** son campos de metadatos. El servidor utiliza `Cache-Control` para indicar reglas de almacenamiento y reutilización de una respuesta:
 
 | Valor | Significado |
 | --- | --- |
-| `max-age=3600` | Válida durante una hora |
-| `no-cache` | Se puede guardar, pero hay que preguntar al servidor antes de usarla |
-| `no-store` | No se guarda nunca |
-| `private` | Solo la guarda el navegador del usuario, no los intermediarios |
+| `max-age=3600` | Vida de frescura de una hora, teniendo en cuenta la edad de la respuesta |
+| `no-cache` | Se puede guardar, pero requiere validación satisfactoria antes de reutilizarla |
+| `no-store` | Ordena a las cachés no almacenar esta petición o respuesta; no borra copias anteriores |
+| `private` | Permite cachés privadas de un usuario, pero prohíbe almacenarla en cachés compartidas |
 
-Cuando una copia ha caducado, el navegador no tiene que descargarla entera. Pregunta al servidor si ha cambiado; si no, el servidor responde `304 Not Modified`, sin cuerpo, y se reutiliza la copia.
+Cuando una copia deja de estar fresca y dispone de un validador, como una etiqueta `ETag`, el cliente puede preguntar si ha cambiado. Una respuesta `304 Not Modified` permite reutilizar el cuerpo guardado. Si no hay validador o la representación ha cambiado, puede hacer falta descargarla de nuevo.
 
 <Quiz
 	client:visible
-	question="Una caché sirve un precio que ya ha cambiado en la base de datos. ¿Qué ha fallado?"
+	question="La aplicación exige el precio actualizado, pero la caché sirve uno anterior. ¿Qué política hay que revisar?"
 	options={[
 		"La política de desalojo",
 		"La invalidación: la copia quedó obsoleta",
@@ -182,7 +184,7 @@ Cuando una copia ha caducado, el navegador no tiene que descargarla entera. Preg
 
 Una caché compensa cuando el dato **cuesta de obtener**, se **lee mucho más de lo que cambia** y se tolera que esté **ligeramente desactualizado**.
 
-No arregla un diseño lento: lo tapa. Conviene medir primero dónde está el problema y añadir la caché como último recurso, no como primero.
+Mide el coste de obtener datos, la tasa de aciertos y la antigüedad tolerable. Una caché puede ser parte del diseño adecuado, pero también añade trabajo y reglas que mantener; no sustituye corregir una consulta innecesariamente costosa.
 
 ## Lo esencial
 
