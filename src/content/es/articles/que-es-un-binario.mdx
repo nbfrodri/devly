@@ -1,13 +1,13 @@
 ---
 title: "¿Qué es un binario? Ejecutables y código máquina"
-description: "Un binario es un archivo que no es texto. El caso más importante es el ejecutable: el programa ya traducido a instrucciones que el procesador entiende directamente."
+description: "Un archivo binario organiza bytes según un formato. Cuando se habla del binario de un programa, suele tratarse de una versión compilada para un entorno concreto."
 level: intermedio
 layer: programacion
 prerequisites:
   - compilador-e-interprete
   - que-es-un-archivo
   - sistema-hexadecimal
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Linux man-pages: elf(5) (en inglés)"
     url: https://man7.org/linux/man-pages/man5/elf.5.html
@@ -15,62 +15,89 @@ sources:
     url: https://learn.microsoft.com/es-es/windows/win32/debug/pe-format
   - title: "Linux man-pages: ld.so(8) (en inglés)"
     url: https://man7.org/linux/man-pages/man8/ld.so.8.html
+  - title: "Linux man-pages: dlopen(3) (en inglés)"
+    url: https://man7.org/linux/man-pages/man3/dlopen.3.html
   - title: "Linux man-pages: file(1) (en inglés)"
     url: https://man7.org/linux/man-pages/man1/file.1.html
+  - title: "W3C: PNG Specification, firma del archivo (en inglés)"
+    url: https://www.w3.org/TR/png-3/#5PNG-file-signature
+  - title: "x86-64 psABI: Low Level System Information (especificación, en inglés)"
+    url: https://gitlab.com/x86-psABIs/x86-64-ABI/-/raw/master/x86-64-ABI/low-level-sys-info.tex
+  - title: "Intel: Intel 64 and IA-32 Software Developer Manuals (en inglés)"
+    url: https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
+  - title: "NIST: FIPS 186-5, Digital Signature Standard (en inglés)"
+    url: https://csrc.nist.gov/pubs/fips/186-5/final
+  - title: "Reproducible Builds: definición de compilación reproducible (en inglés)"
+    url: https://reproducible-builds.org/docs/definition/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-En informática, **binario** tiene dos sentidos relacionados. En general, un **archivo binario** es cualquier archivo que no es texto: una imagen, un vídeo, una base de datos. En el día a día de un desarrollador, **un binario** suele ser un **ejecutable**: un programa ya traducido a **código máquina**, las instrucciones que el procesador entiende directamente.
+Un **archivo binario** organiza sus bytes según un formato que no se interpreta solo como texto. Puede ser una imagen, una base de datos o un programa. En una descarga, **el binario** suele significar la versión compilada del programa, lista para un entorno compatible.
 
-"Descarga el binario" significa descargar el programa listo para ejecutar, sin necesidad de compilarlo.
+La palabra no garantiza que sea ejecutable ni que funcione en tu equipo. Aquí seguiremos un **ejecutable nativo**: contiene instrucciones para una CPU concreta. Otros programas se distribuyen como scripts o bytecode y necesitan un intérprete o una máquina virtual.
 
-## Texto frente a binario
+## Texto y binario usan bytes
 
-Todos los archivos son, en el fondo, [bytes](/articulos/que-es-un-byte/). La diferencia está en cómo se interpretan:
+Todos los [archivos](/articulos/que-es-un-archivo/) contienen [bytes](/articulos/que-es-un-byte/). En el texto, una [codificación](/articulos/codificacion-de-caracteres/) indica cómo interpretarlos como caracteres. El editor debe reconocerla para mostrarlos correctamente.
 
-- Un **archivo de texto** contiene bytes que representan caracteres según una [codificación](/articulos/codificacion-de-caracteres/). Se puede abrir con cualquier editor.
-- Un **archivo binario** contiene bytes con un significado propio de su formato. Abierto en un editor de texto, se ve como basura.
+En una imagen PNG, unos bytes identifican el formato, otros describen dimensiones y otros contienen datos comprimidos. Puede incluir fragmentos de texto, pero leerlo todo como letras no reconstruye la imagen. Cambiar `.png` por `.txt` tampoco transforma su contenido.
 
-## Del código fuente al ejecutable
+Los formatos permiten que distintos programas interpreten la misma secuencia. Un ejecutable añade instrucciones y datos de carga para que el sistema prepare su ejecución.
 
-El [código fuente](/articulos/que-es-el-codigo-fuente/) es texto que escriben las personas. El procesador no lo entiende. Un [compilador](/articulos/compilador-e-interprete/) lo traduce a código máquina:
+## Del código fuente a las instrucciones
+
+Este programa C calcula el doble de siete:
 
 ```c
-int doble(int x) { return x * 2; }
+#include <stdio.h>
+
+int doble(int x) {
+	return x * 2;
+}
+
+int main(void) {
+	printf("%d\n", doble(7));
+	return 0;
+}
 ```
 
-En un procesador x86 de 64 bits, esa función puede quedar en unos pocos bytes, que se suelen mostrar en [hexadecimal](/articulos/sistema-hexadecimal/):
+En Linux con GCC, guarda el texto como `doble.c`, compílalo con `gcc -O2 doble.c -o doble` y ejecuta `./doble`. Imprime `14`. El ejemplo utiliza un valor cuyo doble cabe en `int`; una multiplicación con signo que desbordase no tendría ese comportamiento garantizado en C.
 
-```
-8d 04 3f    lea eax, [rdi + rdi]
-c3          ret
-```
+Una posible traducción de la función `doble` para x86-64 con la convención System V es:
 
-A la izquierda, los bytes que lee el procesador. A la derecha, la misma instrucción en **lenguaje ensamblador**, una forma legible de escribir código máquina. El compilador, muy listo, ha calculado `x + x` en lugar de multiplicar.
+| Bytes, en hexadecimal | Ensamblador, sintaxis Intel | Efecto |
+| --- | --- | --- |
+| `8d 04 3f` | `lea eax, [rdi + rdi]` | Calcula el doble y guarda los 32 bits inferiores en `eax` |
+| `c3` | `ret` | Devuelve el control a quien llamó |
 
-Por eso un binario es **específico de una arquitectura**: el código máquina de [x86 y el de ARM](/articulos/arquitecturas-x86-y-arm/) son distintos, y un ejecutable compilado para uno no funciona en el otro sin un [emulador](/articulos/emuladores/).
+Al entrar, el argumento ocupa `edi`, la parte inferior de `rdi`; al salir, el resultado está en `eax`. `lea` realiza aritmética de direcciones **sin leer memoria**. En este caso sirve para sumar el argumento consigo mismo. La [ABI](/articulos/que-es-una-abi/) fija cómo pasan los argumentos y resultados; otras convenciones usan otros registros.
 
-## Qué hay dentro de un ejecutable
+El **ensamblador** es una representación legible de las instrucciones. El procesador consume sus bytes. El compilador podría elegir otra secuencia o calcular `doble(7)` por adelantado dentro de `main`: la tabla muestra una traducción posible de la función, no todo el ejecutable.
 
-Un ejecutable no es solo código máquina. Tiene un **formato** que el sistema operativo sabe leer:
+## Qué necesita el sistema para cargarlo
 
-- Una **cabecera** que identifica el formato y la arquitectura.
-- Las **secciones**: el código, los datos con valor inicial, las constantes.
-- Dónde **empezar** a ejecutar.
-- Qué **bibliotecas** necesita.
+Los cuatro bytes anteriores no bastan para crear un programa que el sistema pueda abrir. Un formato ejecutable incluye información adicional:
 
-Cada sistema usa su formato: **ELF** en Linux, **PE** en Windows (los `.exe` y `.dll`) y **Mach-O** en macOS.
+1. **Cabecera:** identifica el formato, la arquitectura y otras propiedades.
+2. **Código y datos:** las instrucciones, constantes y valores iniciales.
+3. **Información de carga:** qué partes colocar en memoria y con qué permisos.
+4. **Entrada y dependencias:** dónde empezar y qué componentes externos resolver.
 
-## Reconocerlos por sus primeros bytes
+En **ELF**, habitual en Linux, las **secciones** organizan contenido para herramientas como el enlazador; los **segmentos** describen agrupaciones utilizadas al cargarlo. No son dos nombres para lo mismo. **PE** es el formato utilizado por ejecutables y bibliotecas de Windows. Compartir formato tampoco basta: un ELF puede contener instrucciones x86-64 o AArch64, por ejemplo.
 
-Muchos formatos empiezan con unos bytes fijos, un **número mágico**. Un ELF empieza siempre con el byte `7f` seguido de las letras E, L y F:
+La diferencia entre [x86 y Arm](/articulos/arquitecturas-x86-y-arm/) afecta al código nativo. No hace que una foto PNG sea exclusiva de una CPU: basta un lector compatible. El recorrido de [ejecutable a proceso](/articulos/del-ejecutable-al-proceso/) desarrolla cómo el sistema prepara memoria y ejecución.
+
+## Reconocer una firma no valida el archivo
+
+Muchos formatos empiezan con una **firma de formato**, también llamada número mágico. ELF comienza con cuatro bytes: `7f 45 4c 46`. PNG utiliza ocho: `89 50 4e 47 0d 0a 1a 0a`.
+
+Este ejemplo recibe un array de bytes e identifica esos prefijos. No comprueba el resto del archivo:
 
 ```js
 const NUMEROS_MAGICOS = [
 	{ formato: "ELF", bytes: [0x7f, 0x45, 0x4c, 0x46] },
-	{ formato: "PNG", bytes: [0x89, 0x50, 0x4e, 0x47] },
-	{ formato: "PDF", bytes: [0x25, 0x50, 0x44, 0x46] },
+	{ formato: "PNG", bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
 ];
 
 function identificar(primeros) {
@@ -78,36 +105,54 @@ function identificar(primeros) {
 	return encontrado?.formato ?? "desconocido";
 }
 
-console.log(identificar([0x7f, 0x45, 0x4c, 0x46, 0x02])); // "ELF"
-console.log(identificar([0x25, 0x50, 0x44, 0x46, 0x2d])); // "PDF"
+console.log(identificar([0x7f, 0x45, 0x4c, 0x46])); // "ELF"
+console.log(identificar([0x89, 0x50, 0x4e, 0x47])); // "desconocido"
+console.log(identificar([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])); // "PNG"
 ```
 
-Es lo que hace la orden `file` de Linux: identifica un archivo por su contenido, no por su extensión.
+La segunda entrada está truncada: faltan cuatro bytes de la firma PNG. La tercera tiene la firma completa, pero sigue sin contener una imagen. Para validarla harían falta sus bloques obligatorios y otras comprobaciones. La orden `file` utiliza firmas y más reglas de inspección; no se limita a mirar la extensión ni a esta función.
 
-## Bibliotecas: estático o dinámico
+<Quiz
+	client:visible
+	question="Un archivo de cuatro bytes empieza por 7f 45 4c 46. ¿Qué puedes concluir?"
+	options={[
+		"Que es un ejecutable válido para cualquier equipo Linux",
+		"Que coincide con la firma ELF, pero falta comprobar su estructura y compatibilidad",
+		"Que no puede contener errores porque tiene una firma",
+	]}
+	answer={1}
+/>
 
-Casi todo programa usa código ajeno, por ejemplo para escribir en pantalla. Hay dos formas de incluirlo:
+## Bibliotecas: enlazado estático y dinámico
 
-| | Enlazado estático | Enlazado dinámico |
+El programa anterior usa `printf`, una función de biblioteca. El **enlazador** conecta referencias del código con sus definiciones. Puede incorporar código de biblioteca al resultado o dejar dependencias que se resuelven durante la ejecución.
+
+| Criterio | Enlazado estático | Enlazado dinámico |
 | --- | --- | --- |
-| Las bibliotecas | Se copian dentro del ejecutable | Se cargan al arrancar el programa |
-| Tamaño | Mayor | Menor |
-| Dependencias | Ninguna: funciona solo | Necesita las bibliotecas instaladas |
-| Actualizar una biblioteca | Hay que recompilar | Basta con actualizarla en el sistema |
+| Código de esa biblioteca | Se incorpora al resultado | Permanece en un componente compartido |
+| Distribución | No necesita cargar por separado esa biblioteca | Necesita encontrar una versión compatible |
+| Tamaño del ejecutable | Puede crecer al incorporar código | Puede ser menor; la dependencia también ocupa espacio |
+| Actualización | Hay que volver a enlazar y distribuir el resultado | Puede sustituirse la biblioteca si conserva la compatibilidad necesaria |
 
-En Linux, el encargado de buscar y cargar las bibliotecas compartidas al arrancar un programa es el cargador dinámico, `ld.so`. Si falta una, el programa no arranca.
+Se pueden mezclar ambas formas. Incluso un programa enlazado estáticamente depende del sistema, sus interfaces y quizá archivos de datos o servicios. «Estático» no significa autosuficiente en cualquier máquina.
+
+En Linux, el cargador dinámico busca las bibliotecas requeridas al arrancar; si no encuentra una necesaria, el inicio falla. Un programa también puede cargar bibliotecas más tarde, por ejemplo mediante `dlopen`. Que una actualización mantenga el nombre del archivo no garantiza la misma ABI ni el mismo comportamiento.
 
 ## Binarios y confianza
 
-Un binario no se puede leer como el código fuente. Ejecutar uno descargado es confiar en quien lo compiló: puede hacer cualquier cosa que el usuario pueda hacer. Por eso se descargan de fuentes oficiales, se comprueba su [firma o su hash](/articulos/funciones-hash/), y en el software libre se busca que la compilación sea reproducible. Averiguar qué hace un binario sin su código es la [ingeniería inversa](/articulos/ingenieria-inversa/).
+La **firma de formato** no es una **firma digital**. La primera ayuda a reconocer una estructura; la segunda permite comprobar autoría e integridad respecto a una clave en la que confías. Un [hash](/articulos/funciones-hash/) permite comparar contenido con un valor esperado, pero no autentica a su autor si el valor esperado también procede de una fuente manipulada.
 
-## Compatibilidad entre binarios
+Un binario puede analizarse mediante [ingeniería inversa](/articulos/ingenieria-inversa/), aunque no conserve el fuente original. Una compilación reproducible permite contrastar un resultado con unas fuentes y herramientas declaradas; no demuestra que el programa carezca de fallos. Al ejecutarlo actúa con los permisos y restricciones de su entorno.
 
-Los componentes compilados necesitan acordar cómo pasan argumentos y representan datos. Ese contrato se llama [ABI](/articulos/que-es-una-abi/). Conservar los nombres de las funciones no basta para garantizar que una biblioteca nueva encaje con un programa ya compilado.
+## Errores comunes
+
+- **Equiparar archivo binario y ejecutable.** Una imagen también es binaria y no contiene necesariamente instrucciones de CPU.
+- **Elegir solo por «64 bits».** Importan ISA, formato, ABI, bibliotecas y sistema operativo.
+- **Confundir identificación con seguridad.** Un prefijo correcto no demuestra validez, autenticidad ni ausencia de comportamiento dañino.
 
 ## Lo esencial
 
-- Un archivo binario es cualquiera que no es texto; un binario suele ser un ejecutable.
-- Un ejecutable contiene código máquina, específico de una arquitectura.
-- Cada sistema tiene su formato: ELF en Linux, PE en Windows, Mach-O en macOS.
-- Las bibliotecas se incluyen dentro del ejecutable (estático) o se cargan al arrancar (dinámico).
+- Un formato da significado a los bytes; no todo binario es un programa.
+- Un ejecutable nativo combina instrucciones con información para cargarlo.
+- Reconocer una firma de formato no valida el archivo ni su compatibilidad.
+- El enlazado determina cómo se incorporan o resuelven bibliotecas, con dependencias y límites en ambos casos.

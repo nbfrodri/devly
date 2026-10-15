@@ -24,7 +24,7 @@ Un **compilador** traduce código a otra representación, como código máquina 
 
 Un [procesador](/articulos/como-funciona-un-procesador/) solo entiende **código máquina**: instrucciones muy simples escritas en binario, distintas para cada familia de procesadores.
 
-Las personas programamos en lenguajes de alto nivel, con variables, funciones y nombres legibles. Algo tiene que salvar la distancia entre lo que escribimos, el **código fuente**, y lo que la máquina ejecuta. Compilar e interpretar son las dos estrategias básicas.
+Las personas programamos en lenguajes de alto nivel, con variables, funciones y nombres legibles. Algo tiene que salvar la distancia entre lo que escribimos, el **[código fuente](/articulos/que-es-el-codigo-fuente/)**, y lo que la máquina ejecuta. Compilar e interpretar son las dos estrategias básicas.
 
 ## Una analogía
 
@@ -50,7 +50,7 @@ Las implementaciones habituales de C, C++, Rust y Go usan compilación por adela
 **Inconvenientes:**
 
 - **Hay un paso previo.** Tras cada cambio hay que compilar antes de probar.
-- **El ejecutable es específico.** Uno compilado para un tipo de procesador y un sistema operativo no funciona en otros; hay que compilar para cada uno.
+- **El ejecutable tiene un destino.** Necesita instrucciones e interfaces compatibles. Para otro destino puede hacer falta recompilar o usar una capa de traducción; compartir «64 bits» no basta.
 
 ## El intérprete
 
@@ -91,9 +91,9 @@ Muchas implementaciones combinan traducción y ejecución mediante dos mecanismo
 
 ### Bytecode y máquina virtual
 
-El código fuente se compila a un lenguaje intermedio, el **bytecode**. No es código máquina de ningún procesador real, sino de una máquina imaginaria más sencilla.
+El código fuente puede compilarse a un lenguaje intermedio, el **bytecode**. Sus operaciones se definen para una máquina abstracta; no se eligen necesariamente como instrucciones de la CPU del equipo.
 
-Después, un programa llamado **máquina virtual** ejecuta ese bytecode, y los motores modernos compilan sobre la marcha las partes más usadas, como explica [cómo ejecuta JavaScript un motor como V8](/articulos/motores-de-javascript-y-jit/). Así se reparte el trabajo: el análisis costoso se hace una vez, y el bytecode funciona en cualquier sitio donde exista la máquina virtual.
+Después, un programa llamado **máquina virtual** ejecuta ese bytecode. Algunas implementaciones también compilan durante la ejecución, como explica [cómo ejecuta JavaScript un motor como V8](/articulos/motores-de-javascript-y-jit/). Separar las etapas permite reutilizar el análisis previo; la portabilidad exige una máquina virtual y unas dependencias compatibles.
 
 Java suele compilarse a bytecode para la JVM. CPython, una implementación de Python, también genera bytecode y lo ejecuta en su máquina virtual. Ese bytecode no es un formato universal: su compatibilidad depende de la implementación y de la versión.
 
@@ -123,17 +123,17 @@ Así trabajan los motores de JavaScript de los navegadores, y también las máqu
 ## Otras traducciones
 
 - **Transpilador.** Traduce entre lenguajes de un nivel parecido. El de [TypeScript](/articulos/que-es-typescript/) produce JavaScript.
-- **Enlazador.** Une las distintas partes compiladas de un programa, y las bibliotecas que usa, en un solo ejecutable.
+- **Enlazador.** Conecta las partes compiladas y sus referencias. Puede producir un ejecutable o una biblioteca, incorporar código y dejar dependencias compartidas que se resuelven al ejecutar.
 
 ## Qué ocurre dentro
 
-Compiladores e intérpretes comparten las primeras fases, que detalla con un compilador de juguete [cómo funciona un compilador por dentro](/articulos/como-funciona-un-compilador-por-dentro/):
+Muchas cadenas de compilación e interpretación comparten fases, que detalla con un compilador de juguete [cómo funciona un compilador por dentro](/articulos/como-funciona-un-compilador-por-dentro/):
 
 1. **Análisis léxico.** El texto se divide en piezas con significado, llamadas *tokens*: palabras clave, nombres, números, símbolos.
-2. **Análisis sintáctico.** Con esas piezas se construye un [árbol](/articulos/arboles-binarios-de-busqueda/) que refleja la estructura del programa.
-3. **Análisis semántico.** Se comprueba que tiene sentido: que las variables existen y que los [tipos](/articulos/tipado-estatico-y-dinamico/) encajan.
+2. **Análisis sintáctico.** Se reconoce la estructura del programa y puede representarse como un árbol sintáctico: operaciones con expresiones subordinadas. No es un árbol binario de búsqueda.
+3. **Análisis semántico.** Se aplican las comprobaciones previas que permita el lenguaje, por ejemplo sobre nombres o [tipos](/articulos/tipado-estatico-y-dinamico/). Otras comprobaciones pueden quedar para la ejecución.
 
-A partir de ahí divergen: el compilador genera código y el intérprete recorre el árbol o el bytecode ejecutándolo.
+A partir de ahí, una etapa puede generar otra representación y otra puede ejecutarla. La organización concreta varía; no todas las herramientas construyen un árbol ni mantienen estas fases separadas.
 
 ## Para comparar
 

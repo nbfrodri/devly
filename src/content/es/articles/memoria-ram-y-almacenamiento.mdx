@@ -67,7 +67,7 @@ Guarda los datos en chips de memoria **flash**, sin ninguna pieza móvil. Llega 
 - **A favor:** mucho más rápida, silenciosa, resistente a los golpes.
 - **En contra:** más cara por gigabyte, y cada celda admite un número limitado de escrituras antes de desgastarse.
 
-Cambiar un disco mecánico por una SSD, cuyo funcionamiento se explica en [discos duros y SSD](/articulos/discos-duros-y-ssd/), es una de las mejoras que más se notan en un ordenador: arranca y abre programas mucho más deprisa.
+Cambiar un disco mecánico por una SSD puede reducir la espera al arrancar o abrir programas cuando dominan los accesos al disco. No garantiza la misma mejora si limita otro componente. Sus mecanismos se explican en [discos duros y SSD](/articulos/discos-duros-y-ssd/).
 
 ## Comparación
 
@@ -100,7 +100,7 @@ Cuantos más programas abres, más RAM se ocupa. Ante presión de memoria, el si
 
 Cuando se usa intercambio, recuperar las páginas añade accesos al almacenamiento. Si el sistema pasa el tiempo moviendo datos de un lado a otro, todo se ralentiza. Esa es una causa posible de los tirones; más RAM ayuda si evita ese intercambio, pero no corrige una CPU saturada ni un almacenamiento averiado.
 
-Lo que no hace más RAM es acelerar un ordenador al que ya le sobraba.
+Si la carga ya cabe en RAM y no obtiene utilidad de más caché de archivos, aumentar la capacidad por sí solo no acelera su cálculo. Cambiar también el ancho de banda de memoria sería otra modificación.
 
 ## La jerarquía completa
 
@@ -114,9 +114,9 @@ RAM y almacenamiento son dos escalones de una escalera más larga:
 | SSD | Media | Cientos de gigabytes |
 | Disco mecánico | Baja | Terabytes |
 
-Cuanto más cerca del procesador, más rápido, más pequeño y más caro. Las [cachés](/articulos/memoria-cache-del-procesador/) guardan copias de partes que pueden reutilizarse. No toda la tabla es una cadena literal de cachés: los registros tienen funciones explícitas y una SSD no tiene por qué ser una copia de un disco mecánico.
+La tabla orienta sobre capacidad y latencia típica, no promete un orden para cualquier operación. Un nivel cercano suele ofrecer menor latencia y capacidad a mayor coste por byte. Las [cachés](/articulos/memoria-cache-del-procesador/) guardan copias de partes que pueden reutilizarse. No toda la tabla es una cadena literal de cachés: los registros tienen funciones explícitas y una SSD no tiene por qué ser una copia de un disco mecánico.
 
-La jerarquía funciona porque los programas no usan todos los datos por igual: en un momento dado trabajan con una parte pequeña, que cabe en los niveles rápidos.
+La jerarquía aprovecha que muchas cargas reutilizan una parte de sus datos durante un intervalo. Si ese conjunto no cabe o apenas se reutiliza, las cachés ayudan menos; por eso importa el patrón de acceso.
 
 ## Confusiones frecuentes
 
@@ -128,6 +128,5 @@ La jerarquía funciona porque los programas no usan todos los datos por igual: e
 
 - La RAM es rápida y volátil; guarda lo que está en uso.
 - El almacenamiento es más lento y persistente; guarda lo que debe conservarse.
-- Una SSD no tiene partes móviles y es mucho más rápida que un disco mecánico.
+- Una SSD evita las esperas mecánicas; la mejora de una tarea depende de sus accesos y de otros límites.
 - Si falta RAM, el sistema intenta recuperar espacio; el intercambio puede ralentizarlo y no siempre evita fallos de reserva.
-- Las dos forman parte de una jerarquía que va de lo pequeño y rápido a lo grande y lento.
