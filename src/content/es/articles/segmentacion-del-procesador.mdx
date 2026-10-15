@@ -6,12 +6,16 @@ layer: hardware
 prerequisites:
   - como-funciona-un-procesador
   - circuitos-secuenciales-y-biestables
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 15, Pipelining the Beta (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c15/
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 7, Performance Measures (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c7/
+  - title: "Computation Structures: latencia y rendimiento (en inglés)"
+    url: https://computationstructures.org/notes/performance/notes.html
+  - title: "Computation Structures: costes de segmentar (en inglés)"
+    url: https://computationstructures.org/notes/tradeoffs/notes.html
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 8, Design Tradeoffs (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c8/
 ---
@@ -20,11 +24,11 @@ import { Quiz } from "@/components/quiz";
 
 La **segmentación**, en inglés *pipelining*, es una técnica que divide la ejecución de cada instrucción en varias **etapas** y hace que distintas instrucciones estén a la vez en etapas diferentes. Funciona como una cadena de montaje: mientras una instrucción se ejecuta, la siguiente se decodifica y la siguiente se lee de memoria.
 
-Todos los procesadores modernos la usan. Es la principal razón de que ejecuten mucho más de lo que su frecuencia sugiere.
+Es habitual en procesadores de propósito general. Mejora el ritmo al que pueden completarse instrucciones; no equivale a que cada instrucción tarde menos ni determina por sí sola cuántas se completan por ciclo.
 
 ## Qué problema resuelve
 
-Como explica el artículo sobre el [procesador](/articulos/como-funciona-un-procesador/), cada instrucción pasa por varios pasos. Una división habitual en cinco:
+Como explica el artículo sobre el [procesador](/articulos/como-funciona-un-procesador/), cada instrucción pasa por varios pasos. Usaremos un modelo didáctico de cinco etapas:
 
 | Etapa | Qué hace |
 | --- | --- |
@@ -34,13 +38,13 @@ Como explica el artículo sobre el [procesador](/articulos/como-funciona-un-proc
 | Memoria | Lee o escribe en memoria, si hace falta |
 | Escritura | Guarda el resultado en un registro |
 
-Sin segmentación, una instrucción hace las cinco y solo entonces empieza la siguiente. La mayor parte del circuito está ociosa: mientras la ALU trabaja, nadie usa la parte que lee instrucciones.
+En nuestra comparación sin solapamiento, una instrucción hace las cinco y solo entonces empieza la siguiente. La mayor parte del circuito está ociosa: mientras la ALU trabaja, nadie usa la parte que lee instrucciones.
 
 ## La cadena de montaje
 
 En una lavandería, lavar, secar y doblar llevan media hora cada uno. Con cuatro coladas, hacerlas de una en una lleva seis horas. Pero en cuanto la primera pasa a la secadora, la segunda puede entrar en la lavadora. Solapando, se termina en tres horas.
 
-Cada colada tarda lo mismo. Lo que aumenta es cuántas se terminan por hora.
+Suponemos una lavadora, una secadora, un puesto de doblado y transferencias sin demora. Cada colada tarda lo mismo; aumenta cuántas se terminan por hora. Si una fase durase más, limitaría el ritmo.
 
 En el procesador, con las etapas separadas por registros:
 
@@ -51,19 +55,20 @@ Instrucción 2      BUS  DEC  EJE  MEM  ESC
 Instrucción 3           BUS  DEC  EJE  MEM  ESC
 ```
 
-A partir del quinto ciclo, termina una instrucción **en cada ciclo**.
+En este modelo ideal, cada etapa dura un ciclo, hay recursos suficientes y no hay esperas: a partir del quinto ciclo termina una instrucción **en cada ciclo**.
 
 ```js
 const sinSegmentar = (instrucciones, etapas) => instrucciones * etapas;
-const segmentado = (instrucciones, etapas) => etapas + instrucciones - 1;
+const segmentado = (instrucciones, etapas) =>
+	instrucciones === 0 ? 0 : etapas + instrucciones - 1;
 
 console.log(sinSegmentar(100, 5)); // 500
 console.log(segmentado(100, 5)); // 104
 ```
 
-Cien instrucciones pasan de 500 ciclos a 104: casi cinco veces más rápido.
+Aquí las entradas son cantidades enteras no negativas de instrucciones y un número positivo de etapas. Comparamos intervalos de igual duración, no relojes distintos: cien instrucciones pasan de 500 intervalos a 104, una mejora ideal de unas 4,81 veces. Si cada etapa dura 2 ns, son 1000 ns frente a 208 ns.
 
-Además, como cada etapa hace menos trabajo, el ciclo puede ser más corto, y el reloj, más rápido.
+Una instrucción sigue tardando 10 ns en ese ejemplo. En hardware real, los registros entre etapas añaden retardo y consumo; dividir puede permitir ciclos más cortos, pero hay que comparar tiempos completos. No se debe contar esa reducción del periodo una segunda vez sobre el mismo ejemplo.
 
 ## Los riesgos
 
@@ -81,21 +86,21 @@ La segunda necesita `r1`, que la primera todavía no ha guardado: está un par d
 Soluciones:
 
 - **Esperar.** Se detiene la segunda instrucción unos ciclos. Esos huecos se llaman **burbujas**, y desperdician capacidad.
-- **Adelantar.** El resultado se lleva por un camino directo desde la salida de la ALU a su entrada, sin esperar a que se escriba en el registro. Elimina casi todas las esperas.
+- **Adelantar.** El resultado se lleva por un camino directo desde la salida de la ALU a su entrada, sin esperar a que se escriba en el registro. Evita ciertas esperas, siempre que el dato esté listo a tiempo. Una carga que no lo obtiene hasta memoria puede obligar a esperar antes de una instrucción que lo necesita en ejecución.
 
 ### De control
 
-Un salto condicional decide qué instrucción viene después. Pero esa decisión no se conoce hasta la etapa de ejecución, y para entonces la cadena ya ha empezado a leer las siguientes.
+Un salto condicional decide qué instrucción viene después. En nuestro modelo esa decisión se resuelve en ejecución, y para entonces la cadena ya ha empezado a leer las siguientes.
 
 Si el salto va a otro sitio, esas instrucciones eran las equivocadas y hay que descartarlas.
 
 ### Estructurales
 
-Dos etapas necesitan el mismo recurso en el mismo ciclo. Se evitan duplicando recursos, por ejemplo con cachés separadas para instrucciones y datos.
+Dos etapas necesitan el mismo recurso en el mismo ciclo. Pueden resolverse esperando o añadiendo recursos, por ejemplo separando accesos a instrucciones y datos. Duplicar tiene coste y no elimina cualquier conflicto.
 
 <Quiz
 	client:visible
-	question="Con segmentación, ¿qué mejora?"
+	question="En el modelo ideal explicado, ¿qué mejora al solapar las etapas?"
 	options={[
 		"El tiempo que tarda cada instrucción individual",
 		"Cuántas instrucciones se terminan por unidad de tiempo",
@@ -106,14 +111,18 @@ Dos etapas necesitan el mismo recurso en el mismo ciclo. Se evitan duplicando re
 
 ## Adivinar los saltos
 
-Los saltos son muy frecuentes: un [bucle](/articulos/bucles/) o un [condicional](/articulos/condicionales/) son saltos. Esperar a resolver cada uno vaciaría la cadena constantemente.
+Los saltos son muy frecuentes: un [bucle](/articulos/bucles/) o un [condicional](/articulos/condicionales/) pueden traducirse a saltos, aunque existen otras implementaciones. Esperar a resolver cada uno vaciaría la cadena constantemente.
 
-El procesador no espera: **predice** hacia dónde irá el salto y sigue ejecutando por ese camino, de forma especulativa. Si acierta, no pierde nada. Si falla, descarta el trabajo y vuelve atrás.
+Un procesador puede esperar o **predecir** el camino y avanzar de forma especulativa. Una predicción acertada evita parte de la penalización; no garantiza coste cero. Si falla, descarta los resultados especulativos que no deben confirmarse y reanuda el camino correcto.
 
-La predicción se basa en la historia: un salto suele comportarse como las últimas veces. Un esquema sencillo guarda para cada salto un pequeño contador.
+Un predictor puede usar el historial porque ciertos saltos repiten patrones. Un esquema sencillo guarda para cada salto un pequeño contador.
 
 ```js
 function acierto(resultados, bits) {
+	if (![1, 2].includes(bits) || resultados.length === 0 ||
+		!resultados.every((r) => typeof r === "boolean")) {
+		throw new RangeError("Se requiere una secuencia no vacía y 1 o 2 bits");
+	}
 	const maximo = 2 ** bits - 1;
 	let estado = maximo;
 	let aciertos = 0;
@@ -135,30 +144,23 @@ console.log(acierto(tresVeces, 1).toFixed(2)); // "0.83"
 console.log(acierto(tresVeces, 2).toFixed(2)); // "0.90"
 ```
 
-Un bucle de diez vueltas, ejecutado tres veces: el salto se toma nueve veces y la décima no. Con un bit de memoria, el predictor falla al salir del bucle y otra vez al volver a entrar. Con dos bits, un único fallo no le hace cambiar de opinión, y solo falla al salir.
+Un bucle de diez vueltas, ejecutado tres veces: el salto se toma nueve veces y la décima no. El predictor empieza suponiendo que se toma el salto. Con un bit falla en las tres salidas y las dos reentradas: 25 aciertos de 30. Con dos bits solo falla en las tres salidas: 27 de 30. El estado inicial y la secuencia importan; dos bits no garantizan mejorar cualquier caso.
 
-Los predictores reales combinan mucha más historia y aciertan casi siempre. El fallo cuesta caro: en procesadores con muchas etapas, una predicción errónea desperdicia decenas de ciclos.
+Los predictores reales pueden combinar historiales y direcciones. Su precisión y el coste de un fallo dependen del programa y de la microarquitectura, no de una tasa universal.
 
 Por eso a veces un mismo código es más rápido con datos ordenados: un condicional que da siempre el mismo resultado durante largos tramos es fácil de predecir.
 
 ## Más allá
 
-- **Más etapas.** Dividir más permite un reloj más rápido, pero cada fallo de predicción cuesta más. Hubo procesadores con más de treinta etapas; los actuales tienen menos.
-- **Superescalar.** Varias cadenas en paralelo, que inician varias instrucciones por ciclo.
-- [**Ejecución fuera de orden](/articulos/ejecucion-fuera-de-orden/).** El procesador mira por delante, y ejecuta las instrucciones cuyos datos ya están listos, aunque vengan después. Al final, presenta los resultados en el orden original.
+- **Más etapas.** Dividir puede reducir el trabajo por ciclo, a costa de registros y de aumentar ciertas penalizaciones. El equilibrio depende del diseño.
+- **Superescalar.** Dispone de recursos para iniciar o completar varias instrucciones por ciclo cuando las dependencias y unidades lo permiten.
+- [**Ejecución fuera de orden**](/articulos/ejecucion-fuera-de-orden/). El procesador mira por delante, y ejecuta las instrucciones cuyos datos ya están listos, aunque vengan después. Al final, presenta los resultados en el orden original.
 
-Todo esto ocurre sin que el programa lo sepa. Para quien programa, las instrucciones se ejecutan una tras otra. La realidad es mucho más paralela.
-
-## Un efecto secundario
-
-La ejecución especulativa deja huellas: las instrucciones descartadas pueden haber traído datos a la [caché](/articulos/memoria-cache-del-procesador/). Las vulnerabilidades Spectre y Meltdown, de 2018, aprovechaban eso para leer memoria ajena. Es un recordatorio de que las optimizaciones del hardware también son superficie de ataque.
-
-La [ejecución fuera de orden](/articulos/ejecucion-fuera-de-orden/) adelanta operaciones independientes mientras otras esperan, conservando el comportamiento arquitectónico exigido.
+Estas técnicas deben preservar el comportamiento que exige la arquitectura para las instrucciones confirmadas. El tiempo y la interacción con memoria siguen siendo relevantes para quien programa.
 
 ## Lo esencial
 
 - La segmentación divide cada instrucción en etapas y solapa varias a la vez.
-- No acelera cada instrucción, pero termina una por ciclo.
+- En el modelo ideal de una vía, puede completar una por ciclo tras llenar las etapas; la latencia es otra medida.
 - Las dependencias de datos se resuelven adelantando resultados o esperando.
 - Los saltos se predicen, y un fallo obliga a descartar trabajo.
-- Los procesadores modernos ejecutan varias instrucciones por ciclo y fuera de orden.

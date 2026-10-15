@@ -1,47 +1,41 @@
 ---
 title: "¿Qué es el kernel?"
-description: "El kernel, o núcleo, es la parte central del sistema operativo: la que se ejecuta con todos los privilegios y gestiona el procesador, la memoria y los dispositivos."
+description: "El kernel, o núcleo, es la parte privilegiada del sistema operativo que controla el acceso a recursos y ofrece servicios a los programas."
 level: basico
 kind: definicion
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
-  - llamadas-al-sistema
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "The Linux Kernel Archives: About Linux Kernel (en inglés)"
     url: https://www.kernel.org/category/about.html
-  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Limited Direct Execution (en inglés)"
+  - title: "OSTEP: Limited Direct Execution (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf
+  - title: "Linux Kernel: Userspace I/O HOWTO (en inglés)"
+    url: https://www.kernel.org/doc/html/latest/driver-api/uio-howto.html
+  - title: "Android Open Source Project: Descripción general del kernel"
+    url: https://source.android.com/docs/core/architecture/kernel?hl=es-419
 ---
 
-import { Quiz } from "@/components/quiz";
+El **kernel**, o **núcleo**, es la parte central y privilegiada de un [sistema operativo](/articulos/que-es-un-sistema-operativo/). Controla el acceso a recursos como procesador, memoria y dispositivos, y ofrece servicios que los programas pueden solicitar.
 
-El **kernel**, o **núcleo**, es la parte central de un [sistema operativo](/articulos/que-es-un-sistema-operativo/). Es el programa que se ejecuta con **todos los privilegios** y gestiona los recursos del equipo: reparte el procesador entre los procesos, administra la memoria y habla con los dispositivos.
+**Privilegiado** significa que puede realizar operaciones restringidas al código ordinario. No significa poder ilimitado sobre cualquier entorno: en un ordenador creado por software, o **máquina virtual**, el núcleo sigue sujeto al **hipervisor**, la capa que controla esa máquina. [Virtualización](/articulos/virtualizacion/) desarrolla esta organización.
 
-Todo lo demás, los programas, las herramientas y hasta el escritorio, funciona encima de él y le pide lo que necesita.
+## Una frontera concreta
 
-## Qué hace
+Imagina que un editor quiere abrir un archivo. Mediante una biblioteca solicita ese servicio al núcleo con una **[llamada al sistema](/articulos/llamadas-al-sistema/)**. El núcleo comprueba la petición y los permisos. Si no se permite leer, devuelve un error; si se permite, prepara el acceso.
 
-| Tarea | Ejemplo |
-| --- | --- |
-| Procesos | Crearlos, terminarlos y decidir cuál usa el procesador, con el [planificador](/articulos/planificador-de-procesos/) |
-| Memoria | Dar a cada proceso su espacio, con [memoria virtual](/articulos/memoria-virtual/) |
-| Dispositivos | Hablar con el hardware, mediante [controladores](/articulos/que-es-un-driver/) |
-| Archivos | Organizar los datos en el [sistema de archivos](/articulos/sistema-de-archivos/) |
-| Red | Enviar y recibir datos |
-| Seguridad | Hacer cumplir los [permisos](/articulos/permisos-y-usuarios/) |
+El editor no obtiene permiso para leer cualquier memoria por haber solicitado un archivo. El hardware ayuda a mantener esa separación. Reduce el alcance de fallos y accesos indebidos, pero no elimina vulnerabilidades ni agotamiento de recursos.
 
-## La frontera con los programas
+## Qué trabajo realiza
 
-El procesador distingue un modo privilegiado, el del kernel, y uno restringido, el de los programas. Un programa no puede tocar el hardware directamente: se lo pide al kernel mediante una [llamada al sistema](/articulos/llamadas-al-sistema/). Esa separación es lo que impide que un programa defectuoso tumbe todo el equipo.
+En un sistema como Linux, el núcleo organiza [procesos](/articulos/que-es-un-proceso/), administra [memoria](/articulos/memoria-virtual/), atiende archivos y red y coordina [controladores](/articulos/que-es-un-driver/) de dispositivos. El reparto exacto depende del diseño: algunos servicios y controladores pueden ejecutarse fuera del núcleo.
 
-## Kernel y sistema operativo
+El sistema también puede autorizar acceso directo a regiones de un dispositivo. Por tanto, la frontera consiste en **controlar qué acceso se concede**, no en obligar a que cada operación pase siempre por el mismo camino.
 
-No son lo mismo. El kernel es solo el núcleo. Un sistema operativo completo incluye además utilidades, bibliotecas, servicios y, a menudo, un entorno gráfico.
+## Núcleo y sistema completo
 
-Es la razón de que Linux, en sentido estricto, sea un kernel, como explica [qué es Linux](/articulos/que-es-linux/). Android usa ese mismo kernel con un sistema completamente distinto encima.
+Un sistema operativo completo incluye además bibliotecas, utilidades y servicios; puede tener escritorio gráfico. Linux es un núcleo utilizado por sistemas distintos, entre ellos Android. Compartir núcleo no implica compartir aplicaciones o interfaz.
 
-## Diseños
-
-Un kernel puede incluir casi todo el sistema o solo lo mínimo, como compara [núcleo monolítico y micronúcleo](/articulos/nucleo-monolitico-y-micronucleo/).
+[Núcleo monolítico y micronúcleo](/articulos/nucleo-monolitico-y-micronucleo/) compara cuánto trabajo se coloca dentro de esa frontera privilegiada y cuánto se organiza como servicios separados.

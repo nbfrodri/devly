@@ -1,55 +1,55 @@
 ---
 title: "¿Qué es un archivo?"
-description: "Un archivo es una secuencia de bytes con un nombre, guardada en un dispositivo de almacenamiento y organizada por el sistema de archivos."
+description: "Un archivo regular organiza datos como una secuencia de bytes. Los directorios permiten encontrarlo por nombre y sus metadatos describen tamaño, permisos y otras propiedades."
 level: basico
 kind: definicion
 layer: sistemas
 prerequisites:
-  - sistema-de-archivos
   - que-es-un-byte
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Files and Directories (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf
+  - title: "Node.js: File system, archivos y directorios temporales (en inglés)"
+    url: https://nodejs.org/api/fs.html
 ---
 
-import { Quiz } from "@/components/quiz";
+Un **archivo**, o fichero, permite organizar y recuperar datos como una unidad. Aquí hablamos de un **archivo regular**: una secuencia de [bytes](/articulos/que-es-un-byte/) que puede contener texto, una imagen o un programa. Su formato indica cómo interpretar el contenido.
 
-Un **archivo**, o fichero, es una secuencia de [bytes](/articulos/que-es-un-byte/) con un nombre, guardada de forma permanente en un disco, una SSD o una memoria. Para el [sistema operativo](/articulos/que-es-un-sistema-operativo/) es eso y nada más: bytes. Qué significan, un texto, una imagen o un programa, lo decide el programa que los lee.
+Un nombre dentro de un **directorio**, o carpeta, permite localizarlo. Guardarlo en una SSD puede conservarlo al apagar, pero no garantiza conservación permanente; también existen sistemas de archivos temporales en RAM.
 
-## Qué tiene un archivo
+## Contenido, nombres y metadatos
 
-- **Contenido**: los bytes.
-- **Nombre**, dentro de una carpeta o directorio.
-- **Metadatos**: tamaño, fechas de creación y modificación, dueño y [permisos](/articulos/permisos-y-usuarios/).
+Además del contenido están los **metadatos**: tamaño, fechas, propietario y [permisos](/articulos/permisos-y-usuarios/) de acceso. Según el sistema, varios nombres pueden referirse al mismo archivo. El nombre y los bytes no son la misma cosa.
 
-Dónde está físicamente cada byte en el disco lo lleva el [sistema de archivos](/articulos/sistema-de-archivos/), como explica también [FAT y NTFS](/articulos/fat-y-ntfs/).
+El **[sistema de archivos](/articulos/sistema-de-archivos/)** organiza nombres, metadatos y contenido, y lleva la ubicación de los datos. [FAT y NTFS](/articulos/fat-y-ntfs/) son ejemplos de formatos con reglas distintas.
 
-## Las operaciones básicas
+## Crear, leer y eliminar
 
-Abrir, leer, escribir y cerrar. Los programas las hacen mediante [llamadas al sistema](/articulos/llamadas-al-sistema/):
+Los programas utilizan bibliotecas que solicitan servicios del sistema operativo mediante **[llamadas al sistema](/articulos/llamadas-al-sistema/)**. Este ejemplo se ejecuta con Node.js, guardado en un archivo `.mjs`; crea su propio directorio temporal:
 
 ```js
-import { readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const ruta = join(tmpdir(), "devly-ejemplo.txt");
+const directorio = mkdtempSync(join(tmpdir(), "devly-archivo-"));
+const ruta = join(directorio, "saludo.txt");
 
-writeFileSync(ruta, "hola");
-
-console.log(readFileSync(ruta, "utf8")); // "hola"
-console.log(statSync(ruta).size); // 4
-
-unlinkSync(ruta);
+try {
+	writeFileSync(ruta, "hola", { encoding: "utf8", flag: "wx" });
+	console.log(readFileSync(ruta, "utf8")); // "hola"
+	console.log(statSync(ruta).size); // 4
+} finally {
+	if (existsSync(ruta)) unlinkSync(ruta);
+	rmdirSync(directorio);
+}
 ```
 
-El archivo ocupa 4 bytes: uno por cada letra.
+El contenido ocupa 4 bytes en UTF-8, uno por letra; el espacio asignado en disco puede ser mayor. Las funciones elegidas abren y cierran el archivo internamente. `wx` crea un archivo nuevo y falla si ya existe. `finally` intenta retirar el ejemplo al terminar, incluso si una operación falla, sin reutilizar una ruta fija de otro programa.
 
-## La extensión
+## La extensión no convierte el contenido
 
-La parte tras el punto, como `.txt` o `.jpg`, es solo una **convención** para saber qué programa abre el archivo. No cambia su contenido: renombrar una foto como `.txt` no la convierte en texto. Para saber qué hay realmente, muchos formatos empiezan con unos bytes característicos que los identifican.
+La parte final del nombre, como `.txt` o `.jpg`, es una convención que ayuda a elegir un programa. Renombrar una foto como `.txt` no la convierte en texto. Algunos formatos tienen bytes iniciales característicos, pero reconocerlos no valida todo el contenido: lo explica [qué es un binario](/articulos/que-es-un-binario/).
 
-## Todo es un archivo
-
-En los sistemas tipo Unix, muchas cosas que no son datos en un disco se presentan como archivos: los dispositivos, la información de los procesos, las conexiones. Se explica en [la jerarquía de directorios de Linux](/articulos/jerarquia-de-directorios-de-linux/).
+En sistemas tipo Unix, también hay interfaces similares a archivos para dispositivos o información de procesos. Eso no las convierte en archivos regulares almacenados en disco. La [jerarquía de directorios de Linux](/articulos/jerarquia-de-directorios-de-linux/) desarrolla esa organización.

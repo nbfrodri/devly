@@ -1,12 +1,12 @@
 ---
 title: "Diferencias entre la memoria RAM y el almacenamiento"
-description: "La RAM es rápida y se borra al apagar; el almacenamiento es lento y permanente. Un ordenador necesita los dos."
+description: "La RAM conserva los datos de trabajo mientras recibe alimentación; el almacenamiento los mantiene al apagar. Cumplen funciones distintas."
 level: basico
 kind: comparacion
 layer: hardware
 prerequisites:
   - como-funciona-un-procesador
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Operating Systems: Three Easy Pieces, I/O Devices (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf
@@ -14,18 +14,20 @@ sources:
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-disks.pdf
   - title: "Operating Systems: Three Easy Pieces, Flash-based SSDs (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf
+  - title: "Operating Systems: Three Easy Pieces, Beyond Physical Memory (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **memoria RAM** es donde un ordenador guarda lo que está usando en este momento: es muy rápida, pero se vacía al apagarlo. El **almacenamiento** es donde guarda lo que debe conservarse: es más lento, pero permanente. Se confunden a menudo porque las dos se miden en gigabytes.
+La **memoria RAM** es donde un ordenador guarda lo que está usando en este momento: es muy rápida, pero se vacía al apagarlo. El **almacenamiento** es donde guarda lo que debe conservarse: normalmente tarda más en atender un acceso, pero mantiene los datos sin alimentación. Aquí hablamos de la RAM volátil habitual y de almacenamiento como SSD y discos duros; «persistente» no significa indestructible. Se confunden a menudo porque las dos se miden en gigabytes.
 
 ## Por qué hacen falta dos
 
-Lo ideal sería una única memoria rápida, grande, barata y que no se borrase. No existe. Cada tecnología ofrece unas cualidades a costa de otras:
+El diseño busca combinar capacidad, latencia, coste y persistencia. No hay una tecnología que maximice esas cuatro cualidades a la vez. Cada tecnología ofrece unas cualidades a costa de otras:
 
 - Lo rápido es caro y, en general, pierde su contenido sin corriente.
-- Lo barato y permanente es lento.
+- El almacenamiento persistente ofrece más capacidad por coste, a cambio de mayores tiempos de acceso en esta comparación.
 
 La solución es combinar varias, cada una para lo que hace bien.
 
@@ -36,10 +38,10 @@ Piensa en una mesa de trabajo y un archivador. En la mesa tienes lo que estás u
 RAM significa *random access memory*, memoria de acceso aleatorio: se puede leer o escribir cualquier posición directamente, sin recorrer las anteriores.
 
 - **Es rápida.** El [procesador](/articulos/como-funciona-un-procesador/) lee y escribe en ella continuamente.
-- **Es volátil.** Necesita corriente para conservar los datos. Al apagar, se pierde todo.
+- **Es volátil.** Necesita corriente para conservar los datos. Al cortar la alimentación deja de conservar de forma fiable su contenido; no sustituye al almacenamiento.
 - **Es limitada y cara** por gigabyte, comparada con el almacenamiento.
 
-Contiene los programas en ejecución y los datos con los que trabajan. Cuando abres un programa, se copia del almacenamiento a la RAM, porque el procesador no puede trabajar a la velocidad que necesita directamente sobre el disco.
+Contiene los programas en ejecución y los datos con los que trabajan. En un ordenador convencional, el sistema carga en RAM las partes necesarias de los programas y datos. Puede hacerlo bajo demanda: no tiene por qué copiar todo el programa de golpe. El procesador accede mediante su jerarquía de memoria, que incluye cachés.
 
 Por eso, si se va la luz, pierdes lo que no habías guardado: estaba solo en la RAM.
 
@@ -65,7 +67,7 @@ Guarda los datos en chips de memoria **flash**, sin ninguna pieza móvil. Llega 
 - **A favor:** mucho más rápida, silenciosa, resistente a los golpes.
 - **En contra:** más cara por gigabyte, y cada celda admite un número limitado de escrituras antes de desgastarse.
 
-Cambiar un disco mecánico por una SSD, cuyo funcionamiento se explica en [discos duros y SSD](/articulos/discos-duros-y-ssd/), es una de las mejoras que más se notan en un ordenador: arranca y abre programas mucho más deprisa.
+Cambiar un disco mecánico por una SSD puede reducir la espera al arrancar o abrir programas cuando dominan los accesos al disco. No garantiza la misma mejora si limita otro componente. Sus mecanismos se explican en [discos duros y SSD](/articulos/discos-duros-y-ssd/).
 
 ## Comparación
 
@@ -77,7 +79,7 @@ Cambiar un disco mecánico por una SSD, cuyo funcionamiento se explica en [disco
 | Capacidad habitual | Gigabytes | Cientos de gigabytes | Terabytes |
 | Guarda | Lo que se está usando | Sistema, programas y archivos | Grandes volúmenes, copias |
 
-Las diferencias de velocidad no son pequeñas. Acceder a la RAM lleva del orden de nanosegundos; a una SSD, microsegundos; a un disco mecánico, milisegundos. Entre un extremo y otro hay un factor de un millón.
+Las capacidades de las tablas son ejemplos de escala, no límites de cada tecnología. Como orientación, una lectura puede tardar decenas de nanosegundos en RAM, decenas o cientos de microsegundos en una SSD y milisegundos en un disco mecánico. El dispositivo, la operación y las colas cambian esas cifras. Si comparamos valores ilustrativos de 100 ns y 10 ms, la razón es 100 000, no una constante universal. La latencia de un acceso tampoco es la velocidad de una copia grande y secuencial.
 
 <Quiz
 	client:visible
@@ -86,13 +88,19 @@ Las diferencias de velocidad no son pequeñas. Acceder a la RAM lleva del orden 
 	answer={0}
 />
 
+## El mismo documento en los dos lugares
+
+El almacenamiento contiene la versión «Hola». Al abrirla, el editor prepara una representación en RAM. Escribes «Hola, Ana»: esa versión de trabajo cambia, mientras el archivo puede seguir conteniendo «Hola».
+
+Guardar solicita escribir la nueva versión en el sistema de archivos. Para sobrevivir a un corte, los datos deben llegar al almacenamiento persistente; el sistema puede usar búferes antes de hacerlo. Si se corta la alimentación cuando el cambio solo estaba en RAM, el archivo conserva la versión anterior, suponiendo que esa versión ya estaba guardada de forma duradera. Un autoguardado puede reducir la pérdida; no convierte la RAM en persistente.
+
 ## Qué pasa cuando falta RAM
 
-Cuanto más programas abres, más RAM se ocupa. Cuando se llena, el sistema operativo no se detiene: mueve al almacenamiento lo que lleva tiempo sin usarse, para hacer sitio. Es el mecanismo de la [memoria virtual](/articulos/memoria-virtual/).
+Cuantos más programas abres, más RAM se ocupa. Ante presión de memoria, el sistema puede descartar copias recuperables, comprimir datos o trasladar páginas a una zona de intercambio si está disponible. Ese intercambio se explica en [swap y memoria RAM](/articulos/swap-y-memoria-ram/); la [memoria virtual](/articulos/memoria-virtual/) abarca también el direccionamiento y el aislamiento, no solo usar disco como apoyo. Si no puede liberar espacio suficiente, una reserva puede fallar o el sistema puede terminar procesos.
 
-Funciona, pero el almacenamiento es mucho más lento que la RAM. Si el sistema pasa el tiempo moviendo datos de un lado a otro, todo se ralentiza. Por eso un ordenador con poca RAM va a tirones al abrir muchas cosas, y por eso ampliar la RAM lo arregla.
+Cuando se usa intercambio, recuperar las páginas añade accesos al almacenamiento. Si el sistema pasa el tiempo moviendo datos de un lado a otro, todo se ralentiza. Esa es una causa posible de los tirones; más RAM ayuda si evita ese intercambio, pero no corrige una CPU saturada ni un almacenamiento averiado.
 
-Lo que no hace más RAM es acelerar un ordenador al que ya le sobraba.
+Si la carga ya cabe en RAM y no obtiene utilidad de más caché de archivos, aumentar la capacidad por sí solo no acelera su cálculo. Cambiar también el ancho de banda de memoria sería otra modificación.
 
 ## La jerarquía completa
 
@@ -106,20 +114,19 @@ RAM y almacenamiento son dos escalones de una escalera más larga:
 | SSD | Media | Cientos de gigabytes |
 | Disco mecánico | Baja | Terabytes |
 
-Cuanto más cerca del procesador, más rápido, más pequeño y más caro. Cada nivel guarda una copia de lo más usado del nivel inferior, que es la idea de una [caché](/articulos/que-es-una-cache/).
+La tabla orienta sobre capacidad y latencia típica, no promete un orden para cualquier operación. Un nivel cercano suele ofrecer menor latencia y capacidad a mayor coste por byte. Las [cachés](/articulos/memoria-cache-del-procesador/) guardan copias de partes que pueden reutilizarse. No toda la tabla es una cadena literal de cachés: los registros tienen funciones explícitas y una SSD no tiene por qué ser una copia de un disco mecánico.
 
-La jerarquía funciona porque los programas no usan todos los datos por igual: en un momento dado trabajan con una parte pequeña, que cabe en los niveles rápidos.
+La jerarquía aprovecha que muchas cargas reutilizan una parte de sus datos durante un intervalo. Si ese conjunto no cabe o apenas se reutiliza, las cachés ayudan menos; por eso importa el patrón de acceso.
 
 ## Confusiones frecuentes
 
-- **"Tengo 512 GB de memoria."** Casi siempre es almacenamiento. La RAM de un ordenador personal suele ser de 8, 16 o 32 gigabytes.
-- **"Más almacenamiento hace que vaya más rápido."** No. Tener más espacio no acelera nada; que el almacenamiento sea una SSD en lugar de un disco mecánico, sí.
-- **"Si cierro el programa, los datos siguen en la RAM."** El sistema recupera esa memoria para otros usos.
+- **"Tengo 512 GB de memoria."** Casi siempre es almacenamiento. Por ejemplo, 16 GB de RAM y una SSD de 512 GB describen capacidades de componentes distintos.
+- **"Más almacenamiento hace que vaya más rápido."** No. La capacidad no mide velocidad. Liberar espacio puede ayudar si el dispositivo estaba demasiado lleno; cambiar de tecnología puede reducir esperas, pero no acelera cualquier trabajo.
+- **"Si cierro el programa, los datos siguen en la RAM."** El sistema puede reutilizar esa memoria; dejar de usarla no asegura su borrado inmediato ni equivale a guardar un archivo.
 
 ## Lo esencial
 
 - La RAM es rápida y volátil; guarda lo que está en uso.
 - El almacenamiento es más lento y persistente; guarda lo que debe conservarse.
-- Una SSD no tiene partes móviles y es mucho más rápida que un disco mecánico.
-- Cuando la RAM se agota, el sistema usa el almacenamiento como apoyo, y todo va más lento.
-- Las dos forman parte de una jerarquía que va de lo pequeño y rápido a lo grande y lento.
+- Una SSD evita las esperas mecánicas; la mejora de una tarea depende de sus accesos y de otros límites.
+- Si falta RAM, el sistema intenta recuperar espacio; el intercambio puede ralentizarlo y no siempre evita fallos de reserva.

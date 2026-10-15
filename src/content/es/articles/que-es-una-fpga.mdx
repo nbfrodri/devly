@@ -1,49 +1,34 @@
 ---
 title: "¿Qué es una FPGA?"
-description: "Una FPGA es un chip cuyos circuitos se pueden reconfigurar después de fabricarlo. En lugar de ejecutar un programa, se convierte en el circuito que describas."
+description: "Una FPGA combina lógica y conexiones configurables. Describir su circuito permite dedicar recursos a una tarea, dentro de sus límites físicos."
 level: avanzado
 layer: hardware
 prerequisites:
   - puertas-logicas
   - circuitos-secuenciales-y-biestables
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "fpga4fun: What are FPGAs? (en inglés)"
-    url: https://www.fpga4fun.com/FPGAinfo1.html
-  - title: "fpga4fun: How FPGAs work (en inglés)"
-    url: https://www.fpga4fun.com/FPGAinfo2.html
-  - title: "Lattice Semiconductor: What is an FPGA? (en inglés)"
+  - title: "Lattice Semiconductor: configuración y usos de las FPGA (en inglés)"
     url: https://www.latticesemi.com/what-is-an-fpga
+  - title: "Lattice Semiconductor: procesador configurable LatticeMico32 (en inglés)"
+    url: https://www.latticesemi.com/products/designsoftwareandip/intellectualproperty/ipcore/ipcores02/latticemico32
+  - title: "Lattice Semiconductor: recursos de la familia MachXO2 (en inglés)"
+    url: https://www.latticesemi.com/machxo2
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **FPGA**, matriz de puertas programable en campo, es un chip de **lógica digital programable**: sus circuitos no están fijados de fábrica, sino que se **configuran** después, y se pueden reconfigurar tantas veces como haga falta. Una FPGA no ejecuta un programa como un [procesador](/articulos/como-funciona-un-procesador/): **se convierte** en el circuito que se le describe.
+Una **FPGA**, matriz de puertas programable en campo, es un circuito integrado con lógica e interconexiones que pueden configurarse después de fabricarlo. La configuración selecciona funciones y conexiones entre recursos existentes; no fabrica transistores nuevos ni permite convertir un chip pequeño en un circuito de tamaño ilimitado.
 
-## Procesador, ASIC y FPGA
+Muchos modelos pueden reconfigurarse, pero el mecanismo y sus límites dependen del dispositivo. La idea central es adaptar hardware a una tarea: decidir qué calcula cada bloque y cómo pasan los datos entre ellos.
 
-| | Procesador | ASIC (chip a medida) | FPGA |
-| --- | --- | --- | --- |
-| Qué hace | Ejecuta instrucciones una tras otra | Un circuito fijo para una tarea | Un circuito configurable |
-| Flexibilidad | Total: cambias el programa | Ninguna tras fabricarlo | Alta: se reconfigura |
-| Velocidad en una tarea concreta | Media | Máxima | Alta |
-| Coste de desarrollo | Bajo | Muy alto | Medio |
-| Paralelismo | Limitado a sus núcleos | Total | Total |
+## Una función como tabla
 
-En una FPGA, cada parte del circuito trabaja a la vez, en paralelo. Un procesador, en cambio, comparte sus recursos entre instrucciones.
+Una pieza habitual es la **tabla de consulta**, LUT. Una LUT de cuatro entradas guarda dieciséis bits: una salida para cada combinación posible. Las entradas seleccionan qué casilla leer, como una tabla de verdad de [lógica digital](/articulos/puertas-logicas/).
 
-## Por dentro: tablas de consulta
-
-Una FPGA está formada por miles de **celdas lógicas** conectadas por una red de cables configurable. Cada celda tiene:
-
-- Una pequeña **tabla de consulta**, o LUT, que puede implementar cualquier función lógica de unas pocas entradas.
-- Un **biestable**, para guardar un bit, como explica [circuitos secuenciales y biestables](/articulos/circuitos-secuenciales-y-biestables/).
-- Un multiplexor para usar o saltarse el biestable.
-
-La LUT es la clave: en lugar de construir la función con [puertas](/articulos/puertas-logicas/), se guarda su tabla de verdad entera. Una LUT de 4 entradas tiene 16 casillas, una por combinación:
+Tomemos `F = (x AND y AND z) OR w`. La salida debe activarse cuando x, y y z estén activos juntos, o cuando w esté activo por sí solo. Este JavaScript construye una LUT de ejemplo; no configura una FPGA real:
 
 ```js
-// La función (x AND y AND z) OR w, guardada como tabla.
 const lut = Array.from({ length: 16 }, (_, i) => {
 	const [x, y, z, w] = [(i >> 3) & 1, (i >> 2) & 1, (i >> 1) & 1, i & 1];
 	return (x & y & z) | w;
@@ -53,28 +38,53 @@ console.log(lut.join("")); // "0101010101010111"
 console.log(lut[0b1110], lut[0b1100]); // 1 0
 ```
 
-Cambiar la función es cambiar los 16 bits de la tabla. Con miles de LUT y las conexiones adecuadas, se puede construir cualquier circuito digital, incluso un procesador entero.
+Declaramos el orden `xyzw`: x es el bit más significativo. `1110` selecciona la casilla 14: las tres primeras entradas valen 1 y sale 1. `1100` selecciona la casilla 12: falta z y w tampoco activa la salida, por lo que sale 0. Si w pasa a 1, `1101` selecciona la casilla 13 y sale 1.
 
-## Cómo se programa
+Cambiar los bits almacenados cambia la función. Esto no significa que haya dieciséis procesos ejecutándose: la combinación de entradas selecciona un valor mediante el circuito de la LUT.
 
-1. Se **describe** el circuito con un lenguaje de descripción de hardware, como VHDL o Verilog.
-2. Las herramientas del fabricante lo **compilan**: deciden qué LUT usar y cómo conectarlas.
-3. El resultado es un archivo binario que se **carga** en la FPGA y la configura.
+<Quiz
+	client:visible
+	question="En la LUT descrita, x = 1, y = 1, z = 0 y w = 1. ¿Qué salida corresponde?"
+	options={["0, porque z falta siempre", "1, porque w basta para activar la salida", "No se puede determinar sin un programa de CPU"]}
+	answer={1}
+/>
 
-Describir hardware no es programar: no hay una secuencia de instrucciones, sino circuitos que funcionan todos a la vez.
+## Guardar estado y conectar bloques
 
-## Para qué se usan
+Los bloques lógicos suelen combinar LUT, [biestables](/articulos/circuitos-secuenciales-y-biestables/) y selección de conexiones. Una salida puede pasar directamente al siguiente bloque o guardarse en un registro, según el diseño.
 
-- **Prototipos de chips**: probar un diseño antes de fabricar un ASIC carísimo.
-- **Procesamiento de señales** y telecomunicaciones, donde hay que tratar datos en tiempo real.
-- **Aceleradores** en centros de datos, para tareas concretas.
-- **Equipos que se fabrican en pocas unidades**, donde un chip a medida no compensa.
+Por ejemplo, podríamos capturar F en cada flanco de reloj para que otro bloque use un valor estable. Debemos respetar tiempos de propagación y captura: configurar lógica no elimina esas restricciones.
 
-Su gran ventaja frente a un ASIC, como resume Lattice, es que se pueden reprogramar según las necesidades, lo que sale rentable a largo plazo.
+Una FPGA también puede incorporar bloques dedicados de memoria, multiplicadores o interfaces. La cantidad, organización y funciones disponibles varían entre familias. Las conexiones tienen límites de capacidad y retardo; un diseño puede caber en número de LUT y aun así no cumplir su frecuencia objetivo.
+
+## La misma función en CPU y FPGA
+
+Un [procesador](/articulos/como-funciona-un-procesador/) puede leer cuatro entradas, calcular F mediante instrucciones y escribir una salida. Su software decide cuándo repetir el cálculo, y puede compartir recursos con otras tareas.
+
+En la FPGA podemos dedicar una LUT y conexiones a F. Sus entradas producen una salida tras el retardo del circuito; si añadimos registro, se captura según el reloj. Otra LUT puede calcular otra función a la vez. También podemos compartir recursos entre ciclos si conviene ahorrar espacio.
+
+La comparación útil exige las mismas entradas, frecuencia de actualización y condiciones de salida. Leer sensores, transferir datos y sincronizar señales puede dominar el tiempo en ambos casos. Una FPGA no es automáticamente más rápida ni más eficiente para cualquier programa.
+
+Además, puede implementar un **procesador configurable**, como LatticeMico32, que sí ejecuta instrucciones. Algunos dispositivos combinan lógica programable con procesadores físicos ya integrados. Configurar hardware y ejecutar software pueden coexistir.
+
+## Del diseño a la configuración
+
+1. Describir funciones, registros e interfaces con un lenguaje de hardware, como Verilog o VHDL, y comprobar su comportamiento.
+2. **Sintetizar**: transformar la descripción en recursos lógicos compatibles con el dispositivo.
+3. **Colocar y enrutar**: asignar bloques físicos y conexiones, y comprobar restricciones temporales.
+4. Generar y cargar el archivo de configuración, llamado **bitstream**.
+
+Una descripción contiene comportamientos concurrentes y también construcciones secuenciales; no debe leerse automáticamente como una lista de instrucciones de CPU. Tampoco todo código válido para simulación puede sintetizarse en hardware.
+
+## Cuándo tiene sentido
+
+Una FPGA permite ensayar un circuito antes de fabricar un **ASIC**, un chip diseñado para una aplicación concreta, o adaptar interfaces y procesamiento de señales después de fabricar el equipo.
+
+Un ASIC puede optimizar área, energía y rendimiento para una tarea y un volumen suficientes, con un coste inicial de diseño y fabricación. Sus circuitos físicos quedan fijados, aunque puede incluir registros configurables o procesadores. Una CPU facilita cambiar programas; una FPGA ofrece lógica configurable dentro de sus recursos. Elegir exige comparar desarrollo, unidades producidas, consumo y requisitos, sin asignar a cada categoría una velocidad universal.
 
 ## Lo esencial
 
-- Una FPGA es un chip de lógica digital que se configura después de fabricarlo.
-- No ejecuta un programa: se convierte en el circuito descrito, que trabaja en paralelo.
-- Está hecha de celdas con tablas de consulta y biestables, unidas por conexiones configurables.
-- Se usa para prototipos de chips, tiempo real y aceleradores, entre el procesador y el chip a medida.
+- Una FPGA configura funciones y conexiones entre recursos físicos ya fabricados.
+- Una LUT almacena una tabla de verdad; los registros permiten conservar estado.
+- El paralelismo posible depende del diseño, los recursos y la llegada de datos.
+- Una FPGA puede alojar un procesador; configurar lógica no excluye ejecutar instrucciones.

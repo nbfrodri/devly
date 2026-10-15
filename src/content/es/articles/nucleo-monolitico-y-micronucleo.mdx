@@ -1,115 +1,117 @@
 ---
 title: "Diferencias entre núcleo monolítico y micronúcleo"
-description: "Un núcleo monolítico ejecuta casi todo el sistema operativo en modo privilegiado. Un micronúcleo deja ahí lo mínimo y saca el resto a procesos aparte."
+description: "Un núcleo monolítico integra muchos servicios en su espacio privilegiado; un micronúcleo separa más servicios en procesos que se comunican."
 level: avanzado
 kind: comparacion
 layer: sistemas
 prerequisites:
-  - que-es-un-sistema-operativo
+  - que-es-el-kernel
   - llamadas-al-sistema
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "The Linux Kernel Archives: About Linux Kernel (en inglés)"
     url: https://www.kernel.org/category/about.html
-  - title: "seL4: About (en inglés)"
-    url: https://sel4.systems/About/
-  - title: "MINIX 3 (en inglés)"
+  - title: "MINIX 3: diseño y recuperación de servicios (en inglés)"
     url: https://www.minix3.org/
-  - title: "Apple: Kernel Programming Guide, Kernel Architecture Overview (en inglés)"
+  - title: "seL4: What is seL4? (en inglés)"
+    url: https://sel4.systems/About/
+  - title: "seL4: Verification, alcance y supuestos (en inglés)"
+    url: https://sel4.systems/Verification/
+  - title: "Apple: Kernel Architecture Overview (en inglés)"
     url: https://developer.apple.com/library/archive/documentation/Darwin/Conceptual/KernelProgramming/Architecture/Architecture.html
+  - title: "Linux Kernel: Userspace I/O HOWTO (en inglés)"
+    url: https://www.kernel.org/doc/html/latest/driver-api/uio-howto.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-El **núcleo** es la parte del [sistema operativo](/articulos/que-es-un-sistema-operativo/) que se ejecuta con todos los privilegios. Hay dos formas opuestas de diseñarlo. Un **núcleo monolítico** pone en esa zona privilegiada casi todo: los controladores de dispositivos, el sistema de archivos, la red. Un **micronúcleo** deja ahí solo lo imprescindible y ejecuta lo demás como procesos normales.
+Un **núcleo monolítico** integra muchos servicios, como archivos, red y [controladores](/articulos/que-es-un-driver/), en el espacio privilegiado del núcleo. Un **micronúcleo** mantiene una base más reducida y organiza más servicios como procesos separados. La diferencia central es dónde están las fronteras de ejecución y comunicación.
 
-## Núcleo monolítico
+El **[núcleo](/articulos/que-es-el-kernel/)** es solo una parte del sistema operativo. Un diseño monolítico no mete el escritorio, el navegador y todas las utilidades dentro del núcleo.
 
-Todo el sistema operativo es un único programa grande, que se ejecuta en modo privilegiado:
+## El mismo caso: leer un documento
 
-```mermaid
-flowchart TB
-	subgraph N["Modo núcleo"]
-		K["planificador, memoria, archivos,<br>red, controladores de dispositivos"]
-	end
-	subgraph U["Modo usuario"]
-		P["programas"]
-	end
-	P --> K
-```
+Un editor pide cien bytes de un archivo que no están disponibles en memoria. Habrá que localizar sus datos y solicitarlos al almacenamiento. Comparamos dos organizaciones didácticas; los recorridos reales dependen del sistema y del dispositivo.
 
-Las partes se comunican con simples llamadas a funciones, dentro del mismo espacio de memoria.
+### En un núcleo monolítico
 
-- **A favor:** rápido. No hay que cambiar de modo para que el sistema de archivos hable con el controlador del disco.
-- **En contra:** un fallo en cualquier parte, por ejemplo en el controlador de una tarjeta de red, puede tumbar el sistema entero o abrir un agujero de seguridad. Y es una enorme cantidad de código privilegiado.
-
-[Linux](/articulos/que-es-linux/) es monolítico, aunque **modular**: los controladores se cargan y descargan mientras funciona. Siguen ejecutándose con todos los privilegios.
-
-## Micronúcleo
-
-El núcleo hace lo mínimo: gestionar la memoria, repartir el procesador entre procesos y permitir que estos se envíen mensajes. Todo lo demás son **servidores**, procesos en modo usuario:
+El editor hace una [llamada al sistema](/articulos/llamadas-al-sistema/). El código de archivos y el controlador pueden colaborar mediante llamadas a funciones y estructuras dentro del mismo espacio del núcleo:
 
 ```mermaid
-flowchart TB
-	subgraph N["Modo núcleo"]
-		K["memoria, procesos, mensajes"]
+flowchart TD
+	E["Editor en modo usuario"] -->|"Pide leer"| F
+	subgraph K["Espacio del núcleo"]
+		F["Servicio de archivos"] --> D["Controlador de almacenamiento"]
 	end
-	subgraph U["Modo usuario"]
-		F["servidor de archivos"]
-		R["servidor de red"]
-		C["controladores"]
-		P["programas"]
-	end
-	P --> K
-	F --> K
-	R --> K
-	C --> K
+	D --> H["Dispositivo"]
 ```
 
-Para leer un archivo, el programa envía un mensaje al servidor de archivos, que envía otro al controlador del disco. Todo pasando por el núcleo.
+Compartir ese espacio permite intercambiar datos sin cruzar una frontera de proceso en cada paso. También amplía lo que puede afectar un fallo de memoria: un controlador defectuoso dentro del núcleo podría corromper estructuras de otros subsistemas.
 
-- **A favor:** si falla un controlador, solo cae ese proceso, y se puede reiniciar. Hay mucho menos código privilegiado en el que confiar.
-- **En contra:** cada operación implica varios mensajes y cambios de modo, que cuestan tiempo.
+Linux usa este diseño y admite **módulos**, componentes que pueden incorporarse al núcleo. Poder cargar un módulo no lo convierte en un servicio aislado de usuario. Tampoco implica que cualquier componente pueda descargarse en cualquier momento: puede estar en uso o haberse integrado de otra forma.
 
-Ejemplos: MINIX 3, diseñado para la fiabilidad, y seL4, un micronúcleo cuya corrección se ha **demostrado matemáticamente**. Esa demostración solo es viable porque es pequeño: unos miles de líneas.
+### En un diseño con micronúcleo
 
-## Comparación
+En nuestro segundo modelo, el editor pide la lectura a un [servidor](/articulos/que-es-un-servidor/) de archivos, que solicita los bloques a un controlador ejecutado como otro proceso. El micronúcleo facilita la comunicación y controla qué recursos puede usar cada participante:
 
-| | Monolítico | Micronúcleo |
+```mermaid
+flowchart TD
+	subgraph U["Procesos separados"]
+		E["Editor"]
+		F["Servidor de archivos"]
+		D["Controlador"]
+	end
+	E <-->|"Petición y respuesta"| K["Micronúcleo: comunicación y control"]
+	F <--> K
+	D <--> K
+	D --> H["Dispositivo autorizado"]
+```
+
+Un **servidor** es aquí un proceso que presta un servicio; no tiene por qué ser otra máquina conectada a internet. La comunicación puede combinar mensajes con regiones compartidas autorizadas. Separar procesos no exige copiar todo el documento en cada intercambio.
+
+Si el controlador falla, la separación puede impedir que su escritura corrupta alcance la memoria privada del servidor. Pero la lectura queda pendiente o falla: reiniciar el controlador no reconstruye automáticamente operaciones, conexiones ni datos que se hayan perdido. Para recuperar el servicio hace falta un protocolo de detección, reinicio y tratamiento de peticiones pendientes. MINIX 3 desarrolla esta idea de recuperación.
+
+## Comparación sobre esa lectura
+
+| Criterio | Monolítico del ejemplo | Micronúcleo del ejemplo |
 | --- | --- | --- |
-| En modo núcleo | Casi todo el sistema | Lo mínimo |
-| Comunicación interna | Llamadas a funciones | Mensajes |
-| Rendimiento | Alto | Menor, por los mensajes |
-| Un controlador defectuoso | Puede tumbar el sistema | Cae solo ese servicio |
-| Código privilegiado | Millones de líneas | Miles |
-| Ejemplos | Linux, los BSD | MINIX 3, seL4, QNX |
+| Archivos y controlador | Dentro del núcleo | En procesos separados |
+| Comunicación entre ellos | Funciones y estructuras compartidas | Mensajes y recursos compartidos autorizados |
+| Frontera frente a un fallo de memoria del controlador | Comparte espacio con otros subsistemas | Puede quedar contenido por la separación |
+| Recuperar una lectura interrumpida | Depende del estado que sobrevivió | También requiere reconstruir o rechazar la operación |
+| Coste | Incluye llamadas, trabajo del servicio y espera del dispositivo | Añade comunicación entre componentes, con optimizaciones posibles |
+| Código que debe ser fiable | Núcleo y componentes necesarios para la operación | Micronúcleo y servicios de los que depende la operación |
 
-## Un debate famoso
-
-En 1992, el profesor Andrew Tanenbaum, autor de MINIX, publicó en un foro que Linux era un diseño anticuado por ser monolítico. Linus Torvalds respondió defendiendo su elección por razones prácticas. El intercambio se cita a menudo como el gran debate entre las dos escuelas.
-
-Con el tiempo, ambas tuvieron parte de razón: Linux triunfó, y los micronúcleos dominan donde la fiabilidad es crítica, en coches, aviones o equipos médicos.
-
-## Híbridos
-
-En la práctica, muchos sistemas mezclan. El núcleo de macOS, XNU, combina un micronúcleo, Mach, con componentes de un núcleo BSD ejecutándose en el mismo espacio privilegiado, por rendimiento. El de Windows también se describe a menudo como híbrido.
-
-Y Linux ha ido sacando cosas a modo usuario cuando conviene, como algunos sistemas de archivos.
+No se deduce una cifra de rendimiento de la etiqueta. Importan el coste de comunicación, las copias, las cachés, el dispositivo y la aplicación. Tampoco basta contar líneas privilegiadas: un servidor de archivos mal diseñado puede filtrar documentos aunque el micronúcleo cumpla perfectamente su contrato.
 
 <Quiz
 	client:visible
-	question="En un micronúcleo, ¿qué pasa si falla el controlador de un dispositivo?"
-	options={[
-		"Cae todo el sistema operativo",
-		"Cae solo ese proceso, y se puede reiniciar",
-		"El dispositivo se desconecta para siempre",
-	]}
+	question="El controlador separado se reinicia después de fallar durante una lectura. ¿Qué queda por resolver?"
+	options={["Nada: todas las lecturas se recuperan solas", "Qué ocurrió con la petición y cómo reanudarla o comunicar el error", "Convertir el editor en parte del núcleo"]}
 	answer={1}
 />
 
+## Cuándo interesa cada organización
+
+Integrar servicios puede simplificar ciertos intercambios y aprovechar un conjunto existente de controladores e interfaces. Separarlos puede facilitar limitar permisos, sustituir componentes y analizar qué daños puede propagar cada fallo. La elección depende del sistema completo que se necesita construir y mantener.
+
+Hay diseños que mezclan decisiones. La documentación de XNU, usado por macOS, describe componentes de Mach y BSD dentro del entorno del núcleo. Linux también permite determinados controladores y servicios en modo usuario. Las categorías describen una organización predominante, no prohíben todas las excepciones.
+
+## Qué demuestra la verificación de seL4
+
+seL4 dispone de pruebas formales de propiedades de su núcleo, con alcance por configuración y plataforma. Una **prueba formal** relaciona una implementación y una especificación mediante razonamiento matemático comprobado por herramientas.
+
+Sus garantías tienen supuestos, incluidos aspectos del hardware y del arranque. No convierten cualquier aplicación construida encima en un programa correcto ni certifican automáticamente todos sus plazos. Reducir la base que hay que verificar ayuda al trabajo; no vuelve la verificación una consecuencia automática de tener poco código.
+
+## Confusiones frecuentes
+
+- **Monolítico significa todo el sistema en el núcleo.** Las aplicaciones y muchos servicios siguen fuera.
+- **Separado significa recuperable sin trabajo.** Contener un fallo y reconstruir el servicio son problemas diferentes.
+- **Micronúcleo significa siempre más lento o invulnerable.** Es necesario evaluar implementación, configuración y carga.
+
 ## Lo esencial
 
-- Un núcleo monolítico ejecuta casi todo el sistema operativo en modo privilegiado.
-- Un micronúcleo deja ahí lo mínimo y ejecuta el resto como procesos que se envían mensajes.
-- El monolítico es más rápido; el micronúcleo, más robusto y con menos código en el que confiar.
-- Linux es monolítico y modular; muchos sistemas reales son híbridos.
+- Los diseños colocan distintas fronteras entre los servicios del sistema.
+- Compartir espacio facilita ciertos intercambios y amplía el alcance de algunos fallos.
+- Separar procesos puede contener fallos, pero exige comunicación y recuperación explícitas.
+- Rendimiento y garantías se evalúan sobre un sistema concreto, con sus supuestos.

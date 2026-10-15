@@ -6,14 +6,18 @@ layer: hardware
 prerequisites:
   - senales-analogicas-y-digitales
   - que-es-un-bit
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Digital audio concepts (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Audio_concepts
   - title: "MDN: Basic concepts behind Web Audio API (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Basic_concepts_behind_Web_Audio_API
-  - title: "Claude Shannon: A Mathematical Theory of Communication (1948, en inglés)"
-    url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
+  - title: "Analog Devices MT-001: ruido de cuantización y relación señal/ruido (en inglés)"
+    url: https://www.analog.com/media/en/training-seminars/tutorials/MT-001.pdf
+  - title: "Analog Devices MT-002: criterio de Nyquist y muestreo (en inglés)"
+    url: https://www.analog.com/media/en/training-seminars/tutorials/MT-002.pdf
+  - title: "Xiph.Org: formato FLAC (en inglés)"
+    url: https://xiph.org/flac/format.html
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -41,15 +45,15 @@ Es la conversión de [analógico a digital](/articulos/senales-analogicas-y-digi
 
 Se mide la señal a intervalos regulares. El número de medidas por segundo es la **frecuencia de muestreo**.
 
-El teorema del muestreo dice cuántas hacen falta: más del doble de la frecuencia más alta que se quiere conservar. Para cubrir los 20 000 hercios del oído, más de 40 000 muestras por segundo.
+Para una señal limitada a una frecuencia máxima, el teorema del muestreo permite reconstruirla idealmente si se toman muestras exactas a más del doble de esa frecuencia. Para conservar audio hasta 20 000 hercios, hacen falta más de 40 000 muestras por segundo y un filtro previo que atenúe las frecuencias superiores.
 
-| Frecuencia de muestreo | Frecuencia máxima | Uso |
+| Frecuencia de muestreo | Mitad: límite de Nyquist | Uso |
 | --- | --- | --- |
 | 8 000 Hz | 4 000 Hz | Telefonía clásica |
 | 44 100 Hz | 22 050 Hz | CD de audio |
 | 48 000 Hz | 24 000 Hz | Vídeo, producción |
 
-La telefonía clásica corta en 4000 hercios: la voz se entiende, pero suena "a teléfono".
+La banda útil debe quedar por debajo de esos límites. Los filtros reales necesitan una zona de transición: la telefonía clásica muestreada a 8000 Hz no conserva toda la banda hasta 4000 Hz.
 
 ### Qué pasa si se muestrea poco
 
@@ -79,17 +83,17 @@ Por eso, antes de muestrear, se filtra la señal para eliminar lo que esté por 
 
 Cada muestra se redondea a uno de un número finito de valores, para poder escribirla con bits. Cuantos más bits, más fina es la escala.
 
-Cada bit añadido duplica los niveles y mejora el margen entre el sonido más fuerte y el ruido de fondo en unos 6 decibelios.
+Cada bit añadido duplica los niveles y reduce aproximadamente a la mitad el paso de cuantización para un mismo rango. La **relación señal/ruido** compara la potencia de la señal con la del ruido; se expresa en decibelios. Para un conversor ideal, una onda sinusoidal que ocupa todo el rango y un modelo de error de cuantización uniforme, se aproxima así:
 
 ```js
-const margenEnDecibelios = (bits) => 20 * Math.log10(2 ** bits);
+const relacionIdealEnDecibelios = (bits) => 6.02 * bits + 1.76;
 
-console.log(Math.round(margenEnDecibelios(8))); // 48
-console.log(Math.round(margenEnDecibelios(16))); // 96
-console.log(Math.round(margenEnDecibelios(24))); // 144
+console.log(Math.round(relacionIdealEnDecibelios(8))); // 50
+console.log(Math.round(relacionIdealEnDecibelios(16))); // 98
+console.log(Math.round(relacionIdealEnDecibelios(24))); // 146
 ```
 
-Con 8 bits se oye un siseo de fondo. Con 16, la calidad del CD, el margen es de 96 decibelios, suficiente para casi cualquier escucha. Con 24 bits se graba y se produce, para tener holgura al procesar.
+Son unos 6 decibelios adicionales por bit bajo esas condiciones, no una garantía para cualquier grabación. El micrófono, la electrónica, el volumen de la señal y el procesado también limitan el resultado. El CD usa 16 bits por muestra; grabar a 24 permite más holgura de nivel y procesado, aunque no implica que el equipo alcance la cifra ideal.
 
 ## Cuánto ocupa
 
@@ -102,12 +106,12 @@ console.log(cd); // 1411200
 console.log(((cd * 60) / 8 / 1e6).toFixed(1)); // "10.6"
 ```
 
-El audio de un CD, en estéreo, son algo más de 1,4 millones de bits por segundo: unos 10,6 megabytes por minuto. Este formato, sin comprimir, se llama **PCM**, y es lo que contienen los archivos WAV.
+Son 44 100 muestras por segundo de cada uno de los dos canales, con 16 bits cada muestra: 1 411 200 bits por segundo, o 10,6 megabytes decimales por minuto. El cálculo describe las muestras de **PCM lineal**, una representación sin comprimir, y excluye cabeceras y metadatos. WAV es un contenedor que suele guardar PCM, pero también puede contener audio comprimido.
 
 <Quiz
 	client:visible
-	question="¿Qué frecuencia de muestreo hace falta para conservar sonidos de hasta 20 000 hercios?"
-	options={["Más de 20 000 muestras por segundo", "Más de 40 000 muestras por segundo", "1000 muestras por segundo"]}
+	question="Tras limitar la señal a 20 000 hercios, ¿qué frecuencia cumple la condición de muestreo para reconstruirla idealmente?"
+	options={["25 000 muestras por segundo", "44 100 muestras por segundo", "1000 muestras por segundo"]}
 	answer={1}
 />
 
@@ -115,20 +119,20 @@ El audio de un CD, en estéreo, son algo más de 1,4 millones de bits por segund
 
 ### Sin pérdida
 
-Formatos como FLAC reducen el tamaño a la mitad aproximadamente, y al descomprimir se obtiene exactamente el original. Aprovechan que cada muestra se parece a las anteriores: guardan la diferencia con una predicción, que ocupa menos.
+FLAC permite recuperar exactamente las muestras PCM originales. Puede predecir una muestra a partir de las anteriores y codificar el error de esa predicción de forma compacta. La reducción depende del contenido: una señal predecible ofrece más oportunidades que ruido sin estructura. Recuperar las muestras no equivale a recuperar la onda analógica anterior a la cuantización.
 
 ### Con pérdida
 
-MP3, AAC y Opus reducen diez veces o más. Lo consiguen eliminando lo que el oído no percibe, gracias a un modelo de la audición humana:
+MP3, AAC y Opus permiten reducir mucho la tasa de bits aceptando cambios en las muestras. Usan modelos de audición para dedicar menos información a detalles que se espera que resulten menos perceptibles:
 
-- **Enmascaramiento.** Un sonido fuerte oculta los sonidos más débiles de frecuencia parecida, que suenan a la vez o justo después. Se pueden descartar.
+- **Enmascaramiento.** Un sonido fuerte oculta los sonidos más débiles de frecuencia parecida, que suenan a la vez o justo después. El codificador puede representarlos con menos precisión.
 - **Umbral de audición.** Hay frecuencias en las que el oído es poco sensible. Necesitan menos precisión.
 
-La calidad se ajusta con la **tasa de bits**. Con una tasa alta, la diferencia con el original es difícil de oír. Con una baja, el sonido se vuelve metálico y pierde los agudos.
+La **tasa de bits**, los bits por segundo de audio codificado, condiciona cuánto puede conservarse. Aumentarla suele mejorar el resultado dentro de un mismo codificador, pero la calidad depende también del contenido y los ajustes. Una tasa insuficiente puede producir sonidos metálicos, pérdidas de detalle u otros artefactos; no hay una reducción fija que sea inaudible para cualquier audio.
 
 | Formato | Compresión | Uso |
 | --- | --- | --- |
-| WAV | Ninguna | Grabación y edición |
+| WAV con PCM | Ninguna | Grabación y edición |
 | FLAC | Sin pérdida | Archivo de música |
 | MP3 | Con pérdida | Música, por compatibilidad |
 | AAC | Con pérdida | Música, vídeo |
@@ -140,20 +144,25 @@ Los principios son los mismos que en la [compresión de datos](/articulos/compre
 
 El camino inverso: un **conversor digital-analógico** convierte las muestras en una señal eléctrica continua, que mueve la membrana de un altavoz.
 
-Las muestras son puntos, y entre ellos el conversor reconstruye una curva suave. El teorema del muestreo garantiza que, si se muestreó bien, la curva reconstruida es la original.
+El conversor y el filtro de reconstrucción producen una señal continua a partir de las muestras. La reconstrucción exacta pertenece al modelo ideal: señal limitada en frecuencia, muestras exactas y reconstrucción ideal. Un equipo real añade error de cuantización, ruido y otras imperfecciones; la compresión con pérdida introduce además sus propios cambios.
 
 ## En la latencia está el problema
 
 Para escuchar música, que el sonido llegue con un segundo de retraso no importa. Para una llamada o para tocar un instrumento, sí.
 
-El audio se procesa en pequeños bloques de muestras. Bloques grandes dan estabilidad; bloques pequeños, menos retraso pero más riesgo de cortes. En una videollamada, a eso se suma la [latencia de la red](/articulos/ancho-de-banda-latencia-y-rendimiento/) y su variación.
+El audio se procesa en pequeños bloques de muestras. Bloques grandes dan más margen para terminar el trabajo a tiempo; bloques pequeños reducen el retraso, pero exigen procesarlos con más frecuencia. Si el programa no entrega un bloque antes de que se agote el anterior, se produce un corte. En una videollamada, a eso se suma la [latencia de la red](/articulos/ancho-de-banda-latencia-y-rendimiento/) y su variación.
 
 El [aliasing](/articulos/aliasing/) se evita limitando la banda antes de muestrear: una vez confundidas las muestras, no basta con analizarlas más tiempo.
+
+## Errores comunes
+
+- **Confundir frecuencia de muestreo con bits por muestra.** La primera limita las frecuencias representables en este esquema; los segundos, los niveles disponibles para cada medida.
+- **Convertir un MP3 a FLAC esperando recuperar detalle.** FLAC conservará las muestras ya alteradas por la compresión anterior, sin inventar las originales.
+- **Grabar fuera de rango.** Si la señal supera lo que admite el conversor, sus picos se recortan. Añadir bits después no reconstruye esos picos.
 
 ## Lo esencial
 
 - El sonido digital es una lista de medidas de la onda, tomadas a intervalos regulares.
-- Hay que muestrear a más del doble de la frecuencia más alta que se quiera conservar.
-- Muestrear de menos hace aparecer frecuencias falsas.
-- Cada bit por muestra mejora el margen frente al ruido en unos 6 decibelios.
-- La compresión con pérdida elimina lo que el oído no percibe, como los sonidos enmascarados.
+- El muestreo requiere limitar antes la banda de la señal; de lo contrario pueden aparecer frecuencias falsas.
+- Más bits permiten pasos de cuantización más finos; la calidad real también depende del equipo y del procesado.
+- La compresión sin pérdida recupera las muestras exactas; la compresión con pérdida acepta cambios para reducir más el tamaño.

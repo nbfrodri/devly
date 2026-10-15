@@ -69,6 +69,8 @@ Verificación de interfaz: `pnpm check` pasa (558 tests, cero errores y avisos d
 
 Aceptación: «bit» enlaza «byte» y se revisan sistemáticamente las menciones del catálogo, con una lista explícita de grupos pendientes hasta cerrar la auditoría.
 
+Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos, y en los dos grupos de hardware y almacenamiento registrados en el backlog 8: 64 artículos distintos, incluidos los cinco nuevos de fundamentos. A esos grupos se añade la revisión de los cuatro casos cotidianos, CDN, cifrado y caché de la tanda 10, con enlaces entrantes desde compresión y DNS. La ruta de piezas del ordenador queda revisada en sus catorce pasos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
+
 ## 6. Fundamentos y redes para principiantes
 
 Leer primero las rutas `como-funciona-internet.yaml`, `redes-por-dentro.yaml` y `telecomunicaciones.yaml`, junto con los artículos introductorios que usan. Identificar palabras que dan por supuestos conocimientos de informática. Reforzar las explicaciones existentes cuando el concepto ya tenga artículo; crear los siguientes solo para cubrir huecos concretos.
@@ -82,6 +84,8 @@ Leer primero las rutas `como-funciona-internet.yaml`, `redes-por-dentro.yaml` y 
 
 Aceptación: una persona sin experiencia puede seguir el recorrido desde dispositivo y petición hasta servidor, protocolo y red; no necesita conocer antes siglas que el texto no explica.
 
+Avance: los cinco artículos propuestos están redactados y comprobados, con fuentes abiertas, enlaces entrantes y pasos en las rutas existentes. Se han releído y revisado los 32 artículos de internet y redes, ejecutado sus ejemplos y comprobado los recorridos de 14 y 25 pasos en móvil y escritorio. Las casillas de publicación permanecen abiertas hasta integrar la rama. Telecomunicaciones también está revisada y comprobada: trece pasos, con diez artículos corregidos y cuatro conservados al incluir la curiosidad sobre el nombre Wi-Fi. Falta revisar el encaje de las nuevas definiciones en desarrollo web. La tanda registra 563 pruebas correctas, 598 páginas y 538 artículos indexados; el detalle editorial y visual está en el backlog 8.
+
 ## 7. Aplicaciones e incidentes cotidianos
 
 Investigar fuentes oficiales antes de fijar el alcance. Separar mecanismos documentados de detalles internos no publicados y acotar las afirmaciones a la fecha de la fuente. No presentar diagramas didácticos como la arquitectura privada exacta de una empresa.
@@ -89,10 +93,14 @@ Investigar fuentes oficiales antes de fijar el alcance. Separar mecanismos docum
 - [ ] Spotify: explicar cómo llega el audio y por qué puede empezar antes de descargar la canción completa; conectar representación del sonido, compresión, búfer y distribución. Propuesta nueva: `src/content/es/articles/como-funciona-spotify.mdx`.
 - [ ] WhatsApp: seguir un mensaje entre dos personas, con cifrado de extremo a extremo, entrega y límites claramente separados. Propuesta nueva: `src/content/es/articles/como-funciona-whatsapp.mdx`.
 - [ ] Cloudflare: seguir una petición y explicar el papel de DNS, proxy y caché mediante un caso concreto, sin intentar catalogar todos sus productos. Propuesta nueva: `src/content/es/articles/que-hace-cloudflare.mdx`.
-- [ ] Elegir al menos un incidente con informe técnico primario y efectos cotidianos documentados. Explicar desencadenante, propagación, recuperación y lección, enlazando conceptos ya enseñados. Propuesta nueva: un artículo en `src/content/es/articles/` cuyo nombre se fijará al elegir y contrastar el caso.
+- [ ] Explicar la caída de Facebook, WhatsApp e Instagram del 4 de octubre de 2021: desencadenante, propagación por red y DNS, recuperación y efectos cotidianos documentados. Caso elegido tras contrastar el informe de sus ingenieros y las observaciones externas de Cloudflare. Artículo: `src/content/es/articles/la-caida-de-facebook-de-2021.mdx`.
 - [ ] Integrar los casos en rutas existentes de internet, aplicaciones web o historia cuando encajen; añadir enlaces desde los conceptos que ilustran.
 
 Aceptación: el lector puede relacionar una acción familiar con sus mecanismos y explicar por qué un fallo concreto afectó a un servicio. Las conclusiones se apoyan en fuentes abiertas y citadas.
+
+La tanda 10 del backlog 8 registra el alcance y los hallazgos previos. Los cuatro casos ampliarán la ruta de internet de catorce a dieciocho pasos. Se corregirán primero las explicaciones necesarias de CDN, cifrado y caducidad de caché; este trabajo no da por revisadas las demás rutas que las usan.
+
+**Resultado en la rama:** los cuatro casos y las tres bases están redactados, releídos y comprobados. La ruta de dieciocho pasos pasa en móvil y escritorio sin JavaScript. Pasan los cuatro ejemplos ejecutables, tres grupos de casos límite, catorce combinaciones de navegador y ocho visitas a enlaces entrantes; se inspeccionan las capturas completas. `pnpm check` pasa con 567 pruebas, 602 páginas y 542 artículos indexados. Las casillas de publicación permanecen abiertas hasta integrar la rama; el detalle está en la tanda 10 del backlog 8.
 
 ## 8. Computación cuántica, según los huecos encontrados
 
@@ -102,11 +110,15 @@ Aceptación: el lector puede relacionar una acción familiar con sus mecanismos 
 
 Aceptación: la ampliación responde a huecos identificados, con ejemplos comprensibles y fuentes primarias, no a una cuota de artículos.
 
+**Alcance elegido tras la lectura:** revisar `que-es-un-cubit` y añadir `puertas-cuanticas-e-interferencia` (seguir X, H y dos aplicaciones de H, con y sin medición intermedia) y `entrelazamiento-cuantico` (preparar una pareja de Bell, comparar con bits clásicos correlacionados y explicar por qué no transmite mensajes instantáneos). Los dos pasos seguirán al cúbit en `arquitectura-de-computadores`. La introducción explicará la probabilidad necesaria y enlazará su ampliación; los artículos nuevos declararán el cúbit y, para entrelazamiento, las puertas como prerrequisitos. La tanda 11 del backlog 8 registra los hallazgos antes de editar.
+
+**Resultado en la rama:** los tres artículos están escritos, releídos y comprobados con fuentes primarias. Los cuatro ejemplos coinciden con sus salidas y pasan los casos de fase, medición intermedia, CNOT, Bell y mezcla clásica. Se inspeccionan los tres artículos completos en móvil y escritorio; la ruta ampliada a diecinueve pasos pasa sin JavaScript. `pnpm check`: 569 pruebas, 604 páginas y 544 artículos indexados. La tanda 11 también completa la revisión clásica de arquitectura y sus prerrequisitos; las casillas de publicación permanecen abiertas hasta integrar la rama. Esa revisión añade conexiones de procesador a ALU, caché a byte y coherencia, y hilos a la pila de llamadas; no sustituye la auditoría de enlaces del catálogo completo.
+
 ## Hallazgos editoriales antes de la siguiente tanda
 
 La lectura inicial de `cliente-servidor`, `tipos-de-redes`, `que-es-una-direccion-ip`, `modelos-osi-y-tcp-ip` y `que-es-un-cubit` confirma huecos concretos. La ruta de internet introduce subredes antes de explicar servidor y protocolo. «Tipos de redes» presupone OSI y switches pese a declararse básico; presenta la comunicación entre todos los equipos locales como universal. La definición de IP necesita distinguir dirección de interfaz e identidad del dispositivo, contemplar NAT del operador y evitar exigir IP estática a cualquier servidor. OSI presenta la entrega de TCP como garantía sin fallo y niega que un router pueda inspeccionar capas superiores. Cliente-servidor niega cualquier servidor central en P2P, aunque pueden existir servicios de descubrimiento.
 
-El artículo de cúbit necesita delimitar medición en una base, usar el módulo al cuadrado para amplitudes complejas, acotar la correlación del entrelazamiento a un ejemplo concreto y distinguir un vector de estado general de simulaciones clásicas más compactas. Estos hallazgos justifican revisar la introducción y evaluar artículos separados sobre puertas e interferencia y sobre entrelazamiento. Todavía no se han corregido ni contrastado sus fuentes en esta tanda.
+El artículo de cúbit necesita delimitar medición en una base, usar el módulo al cuadrado para amplitudes complejas, acotar la correlación del entrelazamiento a un ejemplo concreto y distinguir un vector de estado general de simulaciones clásicas más compactas. Estos hallazgos justifican revisar la introducción y evaluar artículos separados sobre puertas e interferencia y sobre entrelazamiento. La tanda 11 corrige estos puntos y contrasta sus fuentes, como registra el resultado del apartado 8.
 
 ## Verificación y entrega
 
@@ -122,3 +134,5 @@ Actualizar `docs/architecture.md` cuando cambien flujos. Hacer commits coherente
 El usuario solicita integrar por tandas lo ya terminado, sin esperar a cerrar todo el backlog 8. La primera entrega incorpora navegación por rutas, estabilidad del buscador, marcas de progreso y guardado desde tarjetas. Los apartados editoriales permanecen pendientes; su trabajo no forma parte de esta entrega de interfaz. Se comprobará esta combinación contra `main` antes de publicarla mediante PR y CI.
 
 **Comprobación de esta entrega:** sobre la base de `main`, `pnpm check` pasa con 558 pruebas, cero errores y avisos de Astro, 593 páginas y 533 artículos indexados. Chromium repite escritura sin desplazamiento, carga diferida, foco, paginación, estados, guardado, recarga, sincronización entre pestañas, filtros, ordenación, rutas completas y ausencia de almacenamiento. Se inspeccionan cuatro capturas en móvil/escritorio y temas claro/oscuro. Los doce pasos de representación actualmente publicados pasan veinticuatro visitas de navegación sin JavaScript; esto comprueba la interfaz y no cierra la revisión editorial de esa ruta. Permanecen los avisos conocidos de Shiki para `svg` y de tamaño de un fragmento JavaScript.
+
+La siguiente entrega incorpora las once rutas verificadas y sus artículos relacionados, incluidos los once artículos nuevos. La auditoría general de enlaces y el encaje en fundamentos de desarrollo web continúan abiertos.

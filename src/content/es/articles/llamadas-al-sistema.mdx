@@ -1,69 +1,79 @@
 ---
 title: "¿Qué es una llamada al sistema?"
-description: "Una llamada al sistema es la forma en que un programa pide un servicio al núcleo del sistema operativo: abrir un archivo, crear un proceso, enviar datos por la red."
+description: "Una llamada al sistema permite pedir un servicio al núcleo mediante una entrada controlada, con argumentos, comprobaciones y un resultado."
 level: intermedio
 layer: sistemas
 prerequisites:
-  - que-es-un-sistema-operativo
+  - que-es-el-kernel
   - que-es-un-proceso
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Linux man-pages: syscalls(2) (en inglés)"
+  - title: "Linux man-pages: syscalls(2) y funciones de biblioteca (en inglés)"
     url: https://man7.org/linux/man-pages/man2/syscalls.2.html
-  - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, Mechanism: Limited Direct Execution (en inglés)"
+  - title: "Linux man-pages: syscall(2) y convenciones por arquitectura (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/syscall.2.html
+  - title: "Linux man-pages: read(2) (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/read.2.html
+  - title: "OSTEP: Limited Direct Execution (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf
-  - title: "Node.js: process (en inglés)"
-    url: https://nodejs.org/api/process.html
+  - title: "Node.js: File system (en inglés)"
+    url: https://nodejs.org/api/fs.html
+  - title: "Node.js: Process, identificador del proceso (en inglés)"
+    url: https://nodejs.org/api/process.html#processpid
+  - title: "Linux man-pages: proc_pid_stat(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/proc_pid_stat.5.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **llamada al sistema**, en inglés *system call* o *syscall*, es la forma en que un programa pide un servicio al **núcleo** del [sistema operativo](/articulos/que-es-un-sistema-operativo/): leer un archivo, crear un [proceso](/articulos/que-es-un-proceso/), reservar memoria, abrir una conexión de red.
+Una **llamada al sistema**, o *syscall*, es una petición de un programa al **[núcleo](/articulos/que-es-el-kernel/)** del sistema operativo. Permite solicitar servicios como abrir un archivo, crear un proceso o enviar datos sin conceder al programa el control general de esos recursos.
 
-Es la frontera entre los programas y el núcleo. Todo lo que un programa hace con el mundo exterior pasa por ella.
+## Una petición, no un permiso ilimitado
 
-## Por qué hacen falta
+Imagina que un editor quiere leer un documento. No debe poder saltarse los permisos y leer directamente cualquier bloque del disco. Solicita una apertura; el núcleo resuelve el nombre y comprueba las condiciones de acceso. Si la permite, devuelve un **[descriptor](/articulos/descriptores-de-archivo/)**: un número con el que ese proceso identifica el recurso abierto.
 
-Un programa corriente no puede tocar directamente el hardware, ni la memoria de otros programas, ni los archivos de otros usuarios. Si pudiera, cualquier fallo, o cualquier programa malicioso, tumbaría el sistema o leería lo que no debe.
+Después pide leer mediante ese descriptor. El permiso para ese archivo no le da acceso a toda la memoria ni a los documentos de otras personas. La frontera protege operaciones concretas, con reglas y posibles errores.
 
-Para impedirlo, el [procesador](/articulos/como-funciona-un-procesador/) tiene al menos dos **modos**:
+## Cómo se cruza la frontera
 
-| Modo | Quién | Qué puede hacer |
+El hardware distingue niveles de privilegio. En el modelo habitual, los programas ejecutan en **modo usuario** y el núcleo dispone de operaciones restringidas. Es una separación de capacidades: el núcleo de una máquina virtual, por ejemplo, sigue sujeto al hipervisor.
+
+Una llamada sigue este recorrido:
+
+1. El código prepara el identificador del servicio y sus argumentos según la convención del sistema y la arquitectura. Pueden ir en registros o en otras ubicaciones acordadas.
+2. Una instrucción especial transfiere el control a una entrada preparada por el núcleo. No permite elegir cualquier dirección dentro de él.
+3. El núcleo valida la petición: qué recurso identifica, si el acceso está permitido y si las direcciones de memoria aportadas son utilizables.
+4. Realiza el trabajo o devuelve un error. Algunas operaciones pueden dejar al proceso esperando.
+5. Cuando corresponde, vuelve al código de usuario con el resultado. Hay excepciones: terminar el proceso no devuelve el control al programa terminado.
+
+Linux en [x86-64](/articulos/arquitecturas-x86-y-arm/) puede usar la instrucción `syscall`; AArch64 utiliza `svc`. La idea es común, pero números, registros y resultados forman una interfaz concreta. Una llamada al sistema tampoco es una interrupción externa de un dispositivo: es una entrada solicitada por el programa, como distingue [interrupciones y entrada/salida](/articulos/interrupciones-y-entrada-salida/).
+
+## Seguir una lectura
+
+Supongamos que el editor ha abierto un archivo de cinco bytes y solicita hasta tres bytes cada vez:
+
+| Petición | Resultado posible en este ejemplo | Qué hace el editor |
 | --- | --- | --- |
-| Usuario | Los programas | Solo ejecutar instrucciones corrientes sobre su propia memoria |
-| Núcleo | El sistema operativo | Todo: hardware, memoria de cualquiera, instrucciones privilegiadas |
+| Primera lectura, hasta 3 bytes | 3 | Procesa esos tres bytes |
+| Segunda lectura, hasta 3 bytes | 2 | Procesa los dos restantes |
+| Tercera lectura | 0 | Reconoce el final del archivo |
 
-Un programa que intenta una operación privilegiada en modo usuario provoca una excepción, y el sistema operativo lo detiene.
+Pedir tres no garantiza recibir tres. `read` puede devolver menos por otras razones; un error tampoco equivale a final de archivo. Si los datos no están disponibles, una lectura bloqueante puede dejar la tarea esperando y permitir ejecutar otra. Si ya están disponibles, puede regresar sin cambiar de tarea.
 
-Para hacer algo privilegiado, el programa lo **pide** al núcleo. Esa petición es la llamada al sistema.
+**Cambiar de modo no obliga a cambiar de contexto.** El [cambio de contexto](/articulos/cambio-de-contexto/) selecciona otra ejecución; atender una syscall puede continuar la misma.
 
-## Cómo funciona
+<Quiz
+	client:visible
+	question="Pides hasta tres bytes y read devuelve dos. ¿Qué puedes concluir?"
+	options={["Que siempre hubo un error", "Que esa lectura entregó dos bytes y debes usar el resultado real", "Que el archivo entero mide dos bytes"]}
+	answer={1}
+/>
 
-1. El programa coloca en los registros el número de la llamada que quiere y sus argumentos.
-2. Ejecuta una instrucción especial que provoca un **salto controlado** al núcleo y cambia a modo privilegiado. Funciona como una [interrupción](/articulos/interrupciones-y-entrada-salida/).
-3. El núcleo comprueba que la petición es válida y que el programa tiene permiso.
-4. Hace el trabajo.
-5. Devuelve el resultado y vuelve al programa, en modo usuario.
+## La biblioteca prepara el trabajo
 
-El salto no va a cualquier sitio: solo a los puntos de entrada que el núcleo preparó al arrancar. El programa no puede elegir ejecutar código arbitrario del núcleo.
+Normalmente no escribes esas instrucciones de procesador. Las bibliotecas ofrecen funciones y hacen las llamadas necesarias. No existe una equivalencia universal de una función del lenguaje con una syscall: pueden agrupar, repetir o evitar operaciones usando datos ya disponibles.
 
-## Algunas llamadas
-
-Linux tiene unos cuantos cientos. Las más habituales:
-
-| Llamada | Qué hace |
-| --- | --- |
-| `open`, `read`, `write`, `close` | Trabajar con archivos |
-| `fork`, `execve` | Crear un proceso y cargar un programa en él, como detalla [del ejecutable al proceso](/articulos/del-ejecutable-al-proceso/) |
-| `exit` | Terminar el proceso |
-| `mmap` | Reservar memoria |
-| `socket`, `connect` | Comunicarse por la red |
-| `getpid` | Obtener el identificador del proceso |
-| `kill` | Enviar una [señal](/articulos/senales-y-comunicacion-entre-procesos/) a otro proceso |
-
-## Casi nunca se llaman directamente
-
-Los programas no las usan a mano. Las bibliotecas del lenguaje las envuelven en funciones cómodas.
+Este ejemplo se ejecuta con Node.js en Linux, con `/proc` montado:
 
 ```js
 import { readFileSync } from "node:fs";
@@ -74,33 +84,25 @@ console.log(typeof process.pid); // "number"
 console.log(contenido.split(" ")[0] === String(process.pid)); // true
 ```
 
-Para leer ese archivo, Node.js hace por debajo las llamadas `open`, `read` y `close`. Y `process.pid` se obtiene con `getpid`. El archivo `/proc/self/stat` no existe en ningún disco: lo genera el núcleo de [Linux](/articulos/que-es-linux/) cuando se lee, con datos del propio proceso.
+`/proc/self/stat` presenta información del proceso que lo lee; su primer campo es su identificador. El núcleo genera este contenido: leer un archivo no implica siempre acceder a un disco. La función síncrona devuelve el texto o lanza un error, por ejemplo si esa ruta no existe en el entorno.
 
-## Tienen un coste
+En Linux, `strace` permite observar las llamadas de una ejecución. Puedes encontrar `openat` aunque la biblioteca hable de «abrir», además de lecturas y cierres. Los nombres y cantidades deben comprobarse en la traza, no deducirse solo del nombre de una función JavaScript.
 
-Cambiar de modo, comprobar permisos y volver lleva tiempo, mucho más que una llamada a una función normal. Por eso los programas que hacen muchas operaciones pequeñas van lentos, y se agrupan: leer un archivo en bloques grandes en lugar de byte a byte.
+## Otros servicios y límites
 
-## Las ves con una herramienta
+`fork` crea un proceso; `execve` sustituye su programa. `mmap` establece regiones de memoria, que pueden ser anónimas o estar respaldadas por archivos. `socket` y `connect` preparan comunicaciones. Cada operación tiene argumentos y condiciones: compartir una forma de entrada no las vuelve intercambiables.
 
-En Linux, la orden `strace` muestra cada llamada al sistema que hace un programa mientras se ejecuta. Es una forma muy directa de ver qué hace realmente: qué archivos abre, a qué se conecta, dónde se queda esperando.
+El cruce, la validación y el servicio consumen tiempo. Agrupar lecturas puede reducir llamadas, pero también cambia memoria usada y latencia. Hay que medir la carga concreta.
 
-<Quiz
-	client:visible
-	question="¿Por qué un programa no puede leer directamente el disco y necesita una llamada al sistema?"
-	options={[
-		"Porque sería demasiado lento",
-		"Porque solo el núcleo, en modo privilegiado, puede acceder al hardware, para proteger el sistema",
-		"Porque el disco no tiene dirección",
-	]}
-	answer={1}
-/>
+## Errores comunes
 
-Operaciones como abrir, leer o cerrar identifican el recurso mediante un [descriptor de archivo](/articulos/descriptores-de-archivo/), un número local al proceso.
+- **Suponer que todo acceso necesita una nueva syscall.** El sistema puede haber autorizado memoria compartida o una región de dispositivo; después hay accesos directos dentro de ese permiso.
+- **Ignorar el resultado.** Una lectura parcial, un error y un final de archivo requieren decisiones distintas.
+- **Confundir biblioteca y núcleo.** Una interfaz cómoda no revela por sí sola sus operaciones internas.
 
 ## Lo esencial
 
-- Una llamada al sistema es una petición de un programa al núcleo del sistema operativo.
-- El procesador separa el modo usuario, limitado, del modo núcleo, con todos los privilegios.
-- La llamada provoca un salto controlado al núcleo, que comprueba permisos y hace el trabajo.
-- Las bibliotecas de cada lenguaje las envuelven en funciones cómodas.
-- Cambiar de modo tiene un coste, por eso conviene agrupar operaciones.
+- La syscall pide un servicio mediante una entrada controlada al núcleo.
+- Se validan argumentos y acceso; la petición puede fallar o esperar.
+- Una biblioteca puede realizar varias llamadas o ninguna para una operación.
+- Entrar en modo núcleo no implica cambiar a otra tarea.

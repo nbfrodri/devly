@@ -1,10 +1,11 @@
 title: Binarios y emulación
-description: "Qué hay dentro de un ejecutable, cómo se ejecuta en otra máquina y cómo se estudia sin su código."
+description: "Del ejecutable a su ejecución y análisis. Parte de programación básica y de Cómo funciona un ordenador, incluidos archivos, hexadecimal y sistema operativo."
 layer: sistemas
 steps:
   - compilador-e-interprete
   - que-es-un-binario
   - que-es-una-abi
+  - que-es-el-kernel
   - virtualizacion
   - emuladores
   - ingenieria-inversa

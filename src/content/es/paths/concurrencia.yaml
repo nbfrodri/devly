@@ -1,5 +1,5 @@
 title: Concurrencia
-description: Cómo hace un programa varias cosas a la vez y qué puede salir mal.
+description: Cómo coordinar tareas sin perder actualizaciones ni bloquear su progreso. Parte del sistema operativo y de programación básica; los ejemplos explican sus intercalaciones asíncronas.
 layer: sistemas
 steps:
   - que-es-un-proceso

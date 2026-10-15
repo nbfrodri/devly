@@ -1,154 +1,113 @@
 ---
 title: "¿Cómo funciona el wifi?"
-description: "El wifi conecta dispositivos a una red local por radio. Como todos comparten el mismo aire, lo principal es cómo se turnan y cómo se protege lo que se transmite."
-level: basico
+description: "El wifi conecta dispositivos a una red local por radio. Comparte recursos del canal, confirma transmisiones y puede proteger el enlace entre dispositivo y punto de acceso."
+level: intermedio
 layer: redes
 prerequisites:
   - capa-de-enlace
   - modulacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "IEEE 802.11: grupo de trabajo de redes locales inalámbricas (en inglés)"
     url: https://www.ieee802.org/11/
-  - title: "Wi-Fi Alliance: Discover Wi-Fi (en inglés)"
-    url: https://www.wi-fi.org/discover-wi-fi
-  - title: "Wi-Fi Alliance: Security (en inglés)"
-    url: https://www.wi-fi.org/discover-wi-fi/security
+  - title: "Cisco: diseño radio de una red wifi (en inglés)"
+    url: https://www.cisco.com/en/US/docs/solutions/Enterprise/Mobility/emob30dg/RFDesign.html
+  - title: "Cisco: tramas, acuses y análisis de comunicaciones 802.11 (en inglés)"
+    url: https://www.cisco.com/c/en/us/support/docs/wireless-mobility/80211/200527-Fundamentals-of-802-11-Wireless-Sniffing.html
+  - title: "Cisco: IEEE 802.11ax, sexta generación de wifi (en inglés)"
+    url: https://www.cisco.com/c/en/us/products/collateral/wireless/white-paper-c11-740788.html
+  - title: "Cisco: WPA3 y autenticación SAE (en inglés)"
+    url: https://www.cisco.com/c/en/us/td/docs/wireless/controller/9800/26-1/configuration-guide/wl-26-1-cg/wpa3/overview-of-wpa3.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-El **wifi** es una tecnología que conecta dispositivos a una red local mediante ondas de radio, sin cables. Técnicamente es la familia de estándares **IEEE 802.11**. Trabaja en la [capa de enlace](/articulos/capa-de-enlace/): es una alternativa inalámbrica a Ethernet, no una forma de internet.
+El **wifi** conecta dispositivos a una [red local](/articulos/tipos-de-redes/) mediante radio, usando tecnologías de la familia IEEE 802.11. Incluye funciones de transmisión física y de [enlace](/articulos/capa-de-enlace/); puede transportar datos sin que exista una conexión a internet.
 
-Esa última confusión es frecuente. El wifi te conecta con el router. Lo que conecta al router con internet es otra cosa: fibra, cable o red móvil. Se puede tener wifi perfecto y no tener internet.
+En una red doméstica habitual, el dispositivo se comunica con un **punto de acceso**. Aunque este suele compartir caja con el router, son funciones diferentes: el punto de acceso conecta estaciones por radio y el [router](/articulos/enrutamiento/) comunica redes. Una impresora local puede seguir funcionando aunque falle la salida a internet.
 
-El nombre tiene su propia historia: [qué significa Wi-Fi](/articulos/el-nombre-wi-fi/).
+## Encontrar y utilizar una red
 
-## Las piezas
-
-| Pieza | Qué es |
+| Término | Significado |
 | --- | --- |
-| Punto de acceso | El aparato que crea la red y la une a la red cableada |
-| Estación | Cada dispositivo que se conecta |
-| SSID | El nombre de la red, el que aparece en la lista |
-| Canal | La porción de frecuencias en la que emite |
+| Estación | Dispositivo participante, como un portátil |
+| Punto de acceso | Coordina el acceso de sus estaciones y suele enlazarlas con otra parte de la red |
+| SSID | Nombre anunciado de la red; puede repetirse en varios puntos de acceso |
+| Canal | Parte del espectro utilizada para comunicar |
 
-El router doméstico reúne varios aparatos en una caja: punto de acceso, conmutador, [router](/articulos/enrutamiento/) y, a menudo, módem.
+El punto de acceso envía **balizas**, tramas que anuncian información de la red. Un dispositivo también puede buscar redes activamente. Después se asocia y completa los procedimientos de seguridad que correspondan. El nombre visible por sí solo no prueba la identidad del punto de acceso.
 
-Un punto de acceso anuncia su presencia varias veces por segundo, con unas tramas llamadas **balizas**. Así es como tu dispositivo ve qué redes hay alrededor.
+Para utilizar IP necesita además una configuración apropiada, por ejemplo obtenida con [DHCP](/articulos/que-es-dhcp/). Estar asociado al wifi y poder llegar a un servidor son comprobaciones diferentes.
 
-## Las bandas
+## Bandas y canales
 
-El wifi usa frecuencias de uso libre, que no requieren licencia.
+Las bandas habituales son 2,4, 5 y 6 GHz. **GHz** significa miles de millones de oscilaciones por segundo, no una tasa de descarga. Las frecuencias y potencias utilizables dependen del país y del equipo.
 
-| Banda | Alcance | Velocidad | Saturación |
-| --- | --- | --- | --- |
-| 2,4 GHz | Mayor; atraviesa mejor las paredes | Menor | Alta |
-| 5 GHz | Menor | Mayor | Media |
-| 6 GHz | El menor | La mayor | Baja |
+| Banda | Aspecto que conviene considerar |
+| --- | --- |
+| 2,4 GHz | Suele ofrecer buena cobertura en interiores, pero comparte espacio con muchos equipos y dispone de pocos canales anchos independientes |
+| 5 GHz | Suele permitir más opciones de canal y mayor anchura; los obstáculos y la potencia siguen importando |
+| 6 GHz | Añade espectro para equipos compatibles; no garantiza ser más rápida que cualquier conexión en 5 GHz |
 
-Es una regla general de la radio: las frecuencias bajas llegan más lejos y atraviesan mejor los obstáculos; las altas tienen más espacio para datos, y se atenúan antes.
+La propagación depende de frecuencia, antenas, potencia, materiales y sensibilidad. La velocidad depende además de anchura de canal, [modulación](/articulos/modulacion/), flujos espaciales y ocupación. No se deduce de la banda por sí sola.
 
-La banda de 2,4 GHz está muy concurrida. La comparten el [Bluetooth](/articulos/como-funciona-bluetooth/), los microondas, los teléfonos inalámbricos y todas las redes de los vecinos.
+En 2,4 GHz, 1, 6 y 11 constituyen una planificación habitual de canales separados para ciertos anchos y regiones; no son una lista universal de los únicos canales válidos. Ampliar un canal puede aumentar capacidad, pero consume más espectro y reduce las posibilidades de coexistencia.
 
-### Canales
+## Cómo se reparte el medio
 
-Cada banda se divide en canales. En 2,4 GHz se solapan: solo tres, el 1, el 6 y el 11, no se pisan entre sí. Dos redes cercanas en canales que se solapan se interfieren.
+Dos transmisiones no coordinadas pueden interferirse. Una radio wifi ordinaria no detecta colisiones mientras transmite como lo haría Ethernet compartido antiguo. El acceso por contienda usa **CSMA/CA**, escucha del medio y evitación de colisiones:
 
-Un canal más ancho transporta más datos, y ocupa más espectro, con lo que es más fácil chocar con los vecinos.
+1. Comprueba si el canal parece ocupado y respeta los tiempos de espera.
+2. Utiliza un contador aleatorio de espera. Lo reduce mientras el canal está libre y lo pausa cuando detecta otra transmisión.
+3. Transmite cuando obtiene acceso.
+4. Para una trama individual que requiere confirmación, espera un **acuse**, o ACK. Si no llega, puede reintentar dentro de los límites del protocolo.
 
-## El problema central: un medio compartido
+En un ejemplo de contienda, Ana elige dos intervalos de espera y Bruno cinco. Tras dos intervalos libres, Ana empieza. Bruno pausa su contador con tres restantes y lo reanuda cuando vuelve a poder competir. Así no empiezan necesariamente a la vez; podrían escoger el mismo valor o no escucharse entre sí, por lo que aún puede haber colisiones.
 
-Por un cable Ethernet moderno, cada equipo tiene su propio camino hasta el conmutador. En el aire no. Todos los dispositivos de una red, y los de las redes vecinas en el mismo canal, usan el mismo medio. Si dos transmiten a la vez, las señales se mezclan y no se entiende ninguna: una **colisión**.
-
-Además, una radio no puede escuchar mientras emite, así que no detecta la colisión mientras ocurre.
-
-El wifi lo afronta **evitando** las colisiones. El método se llama CSMA/CA:
-
-1. **Escuchar antes de hablar.** Si el canal está ocupado, se espera.
-2. **Esperar un tiempo al azar** cuando queda libre. Si todos empezaran a la vez, chocarían. El azar hace que uno se adelante.
-3. **Transmitir.**
-4. **Esperar confirmación.** El receptor responde con un acuse de recibo. Si no llega, se supone que hubo colisión y se repite, esperando un tiempo mayor.
-
-### Lo que implica
-
-- **El aire se reparte.** Solo transmite uno cada vez. Con muchos dispositivos, cada uno espera más.
-- **El más lento perjudica a todos.** Un dispositivo lejano, con una [modulación](/articulos/modulacion/) lenta, tarda más en enviar lo mismo y ocupa el canal más tiempo.
-- **Las redes vecinas cuentan.** Si están en tu canal, compiten por el mismo aire, aunque no puedas conectarte a ellas.
-
-Por eso el wifi rinde bastante menos que la velocidad que anuncia la caja: buena parte del tiempo se va en esperas, confirmaciones y repeticiones.
+La ausencia de ACK también puede deberse a ruido, poca señal o pérdida del propio acuse. No identifica por sí sola la causa. Recibirlo confirma ese intercambio de enlace, no que un servidor remoto haya guardado un pedido.
 
 <Quiz
 	client:visible
-	question="¿Qué hace un dispositivo wifi antes de transmitir?"
-	options={[
-		"Pide permiso por escrito al router",
-		"Escucha el canal y, si está libre, espera un tiempo al azar",
-		"Transmite directamente y corrige después",
-	]}
+	question="Un portátil no recibe el ACK esperado. ¿Qué puede concluir?"
+	options={["Que necesariamente transmitió otro portátil a la vez", "Que falta la confirmación; puede haber varias causas", "Que el servidor de internet rechazó la petición"]}
 	answer={1}
 />
 
-## Cómo ha ganado velocidad
+Un dispositivo que necesita más tiempo para enviar los mismos datos ocupa más recursos. También cuentan redes cercanas que se escuchan o interfieren. Esperas, control y retransmisiones explican parte de la diferencia entre tasa física y [rendimiento útil](/articulos/ancho-de-banda-latencia-y-rendimiento/).
 
-| Nombre | Estándar | Novedad principal |
+## Varias transmisiones coordinadas
+
+La explicación por contienda no significa que solo pueda existir un flujo a la vez en todo sistema wifi. **MIMO** utiliza varias antenas para separar flujos espaciales cuando el canal y los equipos lo permiten. **OFDMA**, incorporado en Wi-Fi 6, reparte grupos de subportadoras entre estaciones dentro de una transmisión coordinada por el punto de acceso.
+
+| Nombre | Familia | Una capacidad característica |
 | --- | --- | --- |
-| Wi-Fi 4 | 802.11n | Varias antenas a la vez |
-| Wi-Fi 5 | 802.11ac | Canales más anchos, solo en 5 GHz |
-| Wi-Fi 6 | 802.11ax | Atiende a varios dispositivos a la vez |
-| Wi-Fi 6E | 802.11ax | Añade la banda de 6 GHz |
-| Wi-Fi 7 | 802.11be | Canales aún más anchos y varias bandas simultáneas |
+| Wi-Fi 4 | 802.11n | Varios flujos espaciales |
+| Wi-Fi 5 | 802.11ac | Canales anchos y mejoras de MIMO en 5 GHz |
+| Wi-Fi 6 / 6E | 802.11ax | OFDMA; 6E identifica su uso en 6 GHz |
+| Wi-Fi 7 | 802.11be | Operación con múltiples enlaces y otras mejoras de capacidad |
 
-Las técnicas que hay detrás:
+Ambos extremos deben admitir las funciones empleadas. La etiqueta de una generación no garantiza que todo dispositivo implemente cada combinación posible.
 
-- **Modulaciones más densas**, con más bits por símbolo.
-- **Canales más anchos.**
-- **MIMO.** Varias antenas emiten y reciben flujos distintos a la vez por el mismo canal, aprovechando que cada señal sigue un camino diferente.
-- **Reparto del canal.** Desde Wi-Fi 6, el punto de acceso divide el canal en porciones y atiende a varios dispositivos en la misma transmisión, en lugar de uno tras otro. Mejora sobre todo donde hay muchos aparatos.
+## Qué protege el cifrado wifi
 
-## Seguridad
+WPA2 y WPA3 pueden autenticar participantes y cifrar el tramo entre estación y punto de acceso. **WPA3-Personal** emplea SAE, un intercambio que resiste probar un diccionario de contraseñas fuera de línea a partir de una captura, a diferencia del esquema personal de WPA2. No elimina errores de implementación, configuraciones débiles ni todos los ataques.
 
-Una señal de radio no se queda en casa. Cualquiera a su alcance puede captarla. Sin cifrado, todo lo que se transmite se puede leer.
+Una contraseña larga y difícil de adivinar ayuda; repetir una palabra conocida muchas veces no aporta la misma resistencia que una elección imprevisible. También importan actualizaciones y configuración. WEP y el WPA original son mecanismos antiguos que deben sustituirse.
 
-| Protocolo | Estado |
-| --- | --- |
-| WEP | Roto. Se descifra en minutos. No debe usarse |
-| WPA | Obsoleto |
-| WPA2 | Aceptable, con una contraseña larga |
-| WPA3 | El actual |
+El cifrado wifi termina en el punto de acceso. [HTTPS](/articulos/https-y-tls/) protege otra conexión, entre cliente y servidor TLS: puede conservar la confidencialidad del contenido incluso sobre un wifi abierto. No oculta todos los metadatos ni convierte cualquier sitio en fiable. Una [VPN](/articulos/vpn-y-tuneles/) tiene sus propios extremos y límites.
 
-Con WPA2, quien capture el momento en que un dispositivo se conecta puede llevarse esos datos y probar contraseñas en su casa, sin límite de intentos. Una contraseña corta o común cae. WPA3 impide ese ataque.
+## Errores comunes al diagnosticar
 
-Recomendaciones:
-
-- **WPA3**, o WPA2 si algún dispositivo no lo admite.
-- **Una contraseña larga.** Su longitud es la protección.
-- **Cambiar la contraseña de administración** del router, que viene de fábrica.
-- **Mantenerlo actualizado.**
-- **Una red de invitados** para las visitas y para los aparatos del [internet de las cosas](/articulos/internet-de-las-cosas/), separada de la principal.
-
-Ocultar el nombre de la red no protege: se descubre con facilidad.
-
-### Redes públicas
-
-En una red abierta, o con una contraseña que conoce todo el local, hay que suponer que otros pueden observar el tráfico, o que el punto de acceso es falso y solo imita el nombre.
-
-Lo que protege ahí es el cifrado de extremo a extremo: [HTTPS](/articulos/https-y-tls/) hace que, aunque capturen los datos, no puedan leerlos. Una [VPN](/articulos/vpn-y-tuneles/) añade otra capa.
-
-## Qué hacer si va mal
-
-Casi todos los problemas son de señal o de saturación.
-
-- **Colocación.** En alto, en el centro de la casa, sin obstáculos. No dentro de un mueble ni junto a un microondas.
-- **Banda.** La de 5 GHz si se está cerca; la de 2,4 si hay paredes de por medio.
-- **Canal.** Uno menos concurrido que los de los vecinos.
-- **Distancia.** En casas grandes, varios puntos de acceso coordinados, en lo que se llama una red en malla. Mejor aún si se unen entre sí por cable.
-- **Cable para lo que no se mueve.** Un ordenador de sobremesa o un televisor conectados por Ethernet van mejor y dejan aire libre a los demás.
+- **Culpar al wifi de todo fallo de internet.** Compara acceso local, salida del router y servicio remoto para distinguir tramos.
+- **Elegir siempre el canal más ancho.** Puede aumentar la interferencia o la competencia por espectro.
+- **Confundir muchos puntos de acceso con una malla.** Pueden conectarse por cable o mediante enlaces inalámbricos; la [topología](/articulos/topologias-de-red/) y el transporte entre ellos importan.
+- **Confiar solo en el nombre de la red.** Un tercero puede anunciar el mismo SSID; ocultarlo tampoco sustituye la autenticación.
 
 ## Lo esencial
 
-- El wifi es una red local por radio; no es internet, sino el camino hasta el router.
-- Usa las bandas de 2,4, 5 y 6 GHz: a más frecuencia, más velocidad y menos alcance.
-- Todos los dispositivos comparten el aire, y se turnan escuchando antes de transmitir.
-- Cada generación ha ganado velocidad con modulaciones más densas, canales más anchos y varias antenas.
-- La señal sale de casa: hace falta WPA2 o WPA3 con una contraseña larga.
+- Wifi conecta una red local por radio; punto de acceso y router cumplen funciones distintas.
+- Las estaciones comparten recursos y pueden usar contienda o transmisiones coordinadas.
+- Banda, calidad de señal y generación no garantizan una tasa útil concreta.
+- El cifrado wifi y HTTPS protegen tramos diferentes.
+
+El [origen del nombre Wi-Fi](/articulos/el-nombre-wi-fi/) explica por qué no se debe interpretar como una sigla técnica.

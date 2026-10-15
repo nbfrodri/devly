@@ -16,19 +16,19 @@ Un **cambio de contexto** es la operación mediante la que el sistema guarda el 
 
 ## Qué hay que conservar
 
-Piensa en dos hilos. Uno está sumando una lista y otro espera procesar un mensaje. Para interrumpir el primero y continuar el segundo, hace falta conservar registros, posición de ejecución y estado de pila, entre otros datos. Si pertenecen a procesos distintos, también puede cambiar el contexto de memoria.
+Piensa en dos [hilos](/articulos/hilos-y-concurrencia/). Uno está sumando una lista y otro espera procesar un mensaje. Para interrumpir el primero y continuar el segundo, hace falta conservar registros, posición de ejecución y estado de pila, entre otros datos. Si pertenecen a procesos distintos, también puede cambiar el contexto de memoria.
 
 El [planificador](/articulos/planificador-de-procesos/) decide qué tarea debe ejecutarse; el mecanismo de cambio hace efectiva esa decisión. Son responsabilidades relacionadas, pero distintas.
 
 ## Un coste que no hace trabajo de la aplicación
 
-Guardar y restaurar estado consume tiempo. También puede cambiar qué datos e instrucciones resultan útiles en las cachés. La repercusión depende del procesador, del sistema y de las cargas de trabajo: no existe una cifra universal aplicable a cualquier cambio.
+Guardar y restaurar estado consume tiempo. También puede cambiar qué datos e instrucciones resultan útiles en las [cachés del procesador](/articulos/memoria-cache-del-procesador/). La repercusión depende del procesador, del sistema y de las cargas de trabajo: no existe una cifra universal aplicable a cualquier cambio.
 
 Por eso crear muchos más hilos de los necesarios puede empeorar el rendimiento. El problema no es únicamente repartir el tiempo, sino gastar demasiado en alternar y recuperar datos.
 
 ## No es cualquier salto del programa
 
-Llamar a una función no cambia automáticamente la tarea planificada. Entrar en el núcleo mediante una llamada al sistema tampoco obliga a seleccionar otro hilo: puede volver al mismo. Del mismo modo, una interrupción puede atenderse y devolver el control a la ejecución interrumpida sin un cambio entre tareas.
+Llamar a una función no cambia automáticamente la tarea planificada. Entrar en el núcleo mediante una [llamada al sistema](/articulos/llamadas-al-sistema/) tampoco obliga a seleccionar otro hilo: puede volver al mismo. Del mismo modo, una interrupción puede atenderse y devolver el control a la ejecución interrumpida sin un cambio entre tareas.
 
 ## Una lectura que deja paso a otra tarea
 

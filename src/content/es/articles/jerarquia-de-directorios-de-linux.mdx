@@ -1,93 +1,130 @@
 ---
 title: "¿Cómo se organizan las carpetas en Linux?"
-description: "Linux tiene un único árbol de directorios que empieza en /. Cada carpeta principal tiene una función definida por un estándar: programas, configuración, datos que cambian."
-level: basico
+description: "Las rutas de Linux parten de una raíz. Las convenciones de directorios separan programas, configuración, datos persistentes y estado temporal."
+level: intermedio
 layer: sistemas
 prerequisites:
   - sistema-de-archivos
   - que-es-linux
-updated: 2026-10-14
+  - terminal-y-shell
+updated: 2026-10-15
 sources:
   - title: "Linux man-pages: hier(7) (en inglés)"
     url: https://man7.org/linux/man-pages/man7/hier.7.html
   - title: "Linux Foundation: Filesystem Hierarchy Standard 3.0 (en inglés)"
     url: https://refspecs.linuxfoundation.org/FHS_3.0/fhs/index.html
+  - title: "Linux Foundation: /var/lib, información de estado (en inglés)"
+    url: https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s08.html
+  - title: "UAPI Group: Linux File System Hierarchy (en inglés)"
+    url: https://uapi-group.org/specifications/specs/linux_file_system_hierarchy/
+  - title: "Linux man-pages: mount_namespaces(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/mount_namespaces.7.html
+  - title: "Linux man-pages: mount(2) (en inglés)"
+    url: https://man7.org/linux/man-pages/man2/mount.2.html
+  - title: "Linux man-pages: proc_pid(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/proc_pid.5.html
+  - title: "Linux man-pages: proc_sys(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/proc_sys.5.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-En [Linux](/articulos/que-es-linux/), todos los archivos forman **un único árbol** que empieza en la **raíz**, escrita `/`. No hay letras de unidad como en Windows: los discos, las memorias USB y las particiones se **montan** en alguna carpeta de ese árbol. Qué va en cada carpeta principal lo define un estándar, el **Filesystem Hierarchy Standard**.
+La **jerarquía de directorios** de [Linux](/articulos/que-es-linux/) organiza las rutas en un árbol que parte de la **raíz**, `/`. Sus convenciones ayudan a localizar programas, configuración y datos sin conocer cada aplicación por separado.
 
-## Las carpetas principales
+El **Filesystem Hierarchy Standard**, o FHS, documenta una organización habitual. No obliga a que cualquier sistema basado en Linux tenga exactamente las mismas carpetas: las distribuciones, los sistemas mínimos y los contenedores pueden diferir. La jerarquía orienta; la documentación del sistema concreto decide los detalles.
 
-| Carpeta | Contenido |
-| --- | --- |
-| `/` | La raíz de todo |
-| `/home` | Las carpetas personales de los usuarios: `/home/ana` |
-| `/root` | La carpeta personal del administrador |
-| `/etc` | Archivos de configuración del sistema |
-| `/usr` | Programas y bibliotecas instalados |
-| `/usr/bin` | Los programas que puede ejecutar cualquier usuario |
-| `/var` | Datos que cambian: registros, colas, cachés, bases de datos |
-| `/var/log` | Los registros del sistema y de los servicios |
-| `/tmp` | Archivos temporales, que pueden borrarse al reiniciar |
-| `/opt` | Programas que se instalan como un bloque aparte |
-| `/dev` | Los dispositivos, representados como archivos |
-| `/proc` y `/sys` | Información del núcleo y de los procesos, generada al leerla |
-| `/boot` | Lo necesario para [arrancar](/articulos/arranque-de-un-sistema-operativo/): el núcleo y el cargador |
-| `/mnt` y `/media` | Puntos para montar discos y dispositivos extraíbles |
+## Seguir los archivos de una aplicación
 
-## La lógica detrás
+Imagina un servicio que genera informes a partir de pedidos. No todo lo que necesita pertenece a una única carpeta. En una instalación preparada para seguir estas convenciones podríamos encontrar:
 
-El reparto no es arbitrario. Separa los archivos según cómo se usan:
+| Ruta del ejemplo | Qué contiene | Cuándo cambia |
+| --- | --- | --- |
+| `/usr/bin/informes` | El programa instalado | Al actualizar el paquete |
+| `/etc/informes/config.conf` | La configuración de esta máquina | Al cambiar sus ajustes |
+| `/var/lib/informes/pedidos.db` | Los pedidos que conserva | Al registrar o modificar pedidos |
+| `/var/log/informes/actividad.log` | Un registro de actividad | Mientras trabaja |
+| `/run/informes/` | Datos de su ejecución actual | Al iniciar o terminar esa ejecución |
 
-- **Programas** en `/usr`: se cambian solo al instalar o actualizar.
-- **Configuración** en `/etc`: la edita el administrador.
-- **Datos variables** en `/var`: los escriben los programas mientras funcionan.
-- **Datos de usuario** en `/home`.
+Son rutas ilustrativas, no archivos que deban existir en tu equipo. La separación permite actualizar el programa sin tratar los pedidos como si fueran parte reemplazable del instalador. También ayuda a diagnosticar: un ajuste incorrecto, un dato perdido y un error de ejecución se investigan en lugares distintos.
 
-Así, por ejemplo, se puede hacer [copia de seguridad](/articulos/copias-de-seguridad/) de `/etc` y `/home` sin copiar todos los programas, o poner `/var` en un disco aparte para que unos registros desbocados no llenen el sistema.
-
-## Todo es un archivo
-
-En la tradición Unix, muchas cosas que no son archivos se presentan como si lo fueran.
-
-- En `/dev`, cada disco, cada terminal y cada dispositivo es un archivo. `/dev/null` es un sumidero que descarta todo lo que se escribe en él.
-- En `/proc`, cada [proceso](/articulos/que-es-un-proceso/) tiene una carpeta con su información. Esos archivos no están en ningún disco: los genera el núcleo al leerlos.
-
-```bash
-cat /proc/cpuinfo     # información del procesador
-ls /proc/1            # el primer proceso del sistema
-echo "nada" > /dev/null
-```
-
-## Rutas
-
-- **Absolutas**: empiezan en la raíz, `/home/ana/notas.txt`.
-- **Relativas**: parten de la carpeta actual, `notas.txt` o `../otra`.
-- `~` es un atajo de la [terminal](/articulos/terminal-y-shell/) para la carpeta personal: `~/notas.txt`.
-- `.` es la carpeta actual y `..`, la de arriba.
-
-Linux distingue mayúsculas: `Notas.txt` y `notas.txt` son archivos distintos.
-
-## Archivos ocultos
-
-Un archivo o carpeta cuyo nombre empieza por un punto, como `.bashrc` o `.config`, no se muestra al listar sin una opción especial. No es una protección: es solo una convención para no estorbar. La configuración de muchos programas de usuario vive así en la carpeta personal.
-
-## Con qué no confundirlo
-
-Los [permisos](/articulos/permisos-y-usuarios/) deciden quién puede leer o escribir cada carpeta. La jerarquía solo dice dónde va cada cosa. Por eso un usuario normal puede escribir en su `/home` y en `/tmp`, pero no en `/etc` ni en `/usr`.
+Una [copia de seguridad](/articulos/copias-de-seguridad/) de `/etc` conserva la configuración de este ejemplo, pero no los pedidos de `/var/lib`. Hay que identificar el estado real de la aplicación y obtener una copia consistente; copiar una base de datos mientras cambia puede exigir un procedimiento propio.
 
 <Quiz
 	client:visible
-	question="¿En qué carpeta se guardan normalmente los archivos de configuración del sistema en Linux?"
-	options={["/home", "/etc", "/tmp"]}
+	question="En el ejemplo, copias /etc pero pierdes /var/lib/informes. ¿Has conservado los pedidos?"
+	options={[
+		"Sí: toda la información de la aplicación está en /etc",
+		"No: has conservado sus ajustes, pero los pedidos estaban en otra ruta",
+		"Sí: el ejecutable siempre contiene una copia de los pedidos",
+	]}
 	answer={1}
 />
 
+## Las carpetas que encontrarás
+
+| Carpeta | Uso habitual |
+| --- | --- |
+| `/` | Raíz del árbol visible |
+| `/home` | Carpetas personales, como `/home/ana`; la ubicación real depende de la cuenta |
+| `/root` | Carpeta personal del usuario administrador; no es la raíz `/` |
+| `/usr` | Programas, bibliotecas y datos instalados del sistema |
+| `/usr/bin` | Muchas órdenes ejecutables; los permisos siguen determinando el acceso |
+| `/usr/local` | Software instalado localmente por el administrador |
+| `/etc` | Configuración del sistema y sus servicios |
+| `/var` | Datos variables: estado, registros, colas y cachés |
+| `/tmp` | Temporales que pueden eliminarse según la política del sistema |
+| `/run` | Estado temporal de ejecución, que no se conserva como datos permanentes entre arranques |
+| `/opt` | Una ubicación posible para paquetes adicionales |
+| `/srv` | Datos ofrecidos por servicios, según la organización del administrador |
+| `/boot` | Archivos usados en el arranque, según su configuración |
+| `/mnt` y `/media` | Ubicaciones convencionales para montajes temporales y medios extraíbles |
+
+En muchos sistemas, `/bin`, `/sbin` o `/lib` son [enlaces simbólicos](/articulos/sistema-de-archivos/) a ubicaciones dentro de `/usr`. Encontrar dos rutas no demuestra que existan dos copias. Tampoco `/usr` significa «mis documentos»: esos pertenecen al espacio personal del usuario.
+
+## Un árbol puede reunir varios sistemas de archivos
+
+**Montar** hace accesible un [sistema de archivos](/articulos/sistema-de-archivos/) en un punto del árbol. Un volumen con `pedidos.db` puede montarse en `/var/lib/informes`; la aplicación seguirá usando `/var/lib/informes/pedidos.db`.
+
+La ruta no dice por sí sola si los datos están en el mismo disco, otro dispositivo o un servicio remoto. Incluso puede haber sistemas de archivos respaldados por memoria.
+
+Si montas sobre una carpeta que ya contiene archivos, esos archivos quedan ocultos al acceder por esa ruta mientras el montaje los cubre; no se borran por ello. Si falta el montaje esperado, el programa podría encontrar la carpeta subyacente vacía y escribir en el lugar equivocado. Por eso importa comprobar los montajes al investigar datos aparentemente desaparecidos.
+
+Además, no todos los procesos tienen que ver los mismos montajes. Linux permite **espacios de nombres de montaje**, vistas separadas utilizadas, por ejemplo, en [contenedores](/articulos/que-es-docker/). Cada vista mantiene su árbol; «una raíz» no significa «la misma vista para todo el equipo».
+
+## Directorios que exponen el sistema
+
+`/dev` contiene interfaces de dispositivos y otros objetos especiales. `/dev/null` descarta lo que se escribe en él. Eso no implica que cada dispositivo físico tenga exactamente un archivo ni que todos esos objetos se comporten como documentos normales.
+
+`/proc` expone información del núcleo y de los [procesos](/articulos/que-es-un-proceso/). `/proc/self` se refiere al proceso que consulta esa ruta. Los identificadores y la información accesible dependen del entorno y sus permisos. `/sys` presenta objetos y atributos del núcleo y los dispositivos. Algunas entradas de estas interfaces permiten cambiar ajustes al escribir; no son solo informes de lectura.
+
+Estas órdenes se pueden ejecutar en una terminal de Linux con `/proc` montado. Consultan datos; no cambian la configuración:
+
+```bash
+ls -ld / /root /usr/bin /etc /var/lib
+cat /proc/self/status
+```
+
+La primera muestra información sobre esas carpetas, no sus contenidos. La segunda muestra el estado del proceso `cat` que abre el archivo: su identificador, credenciales y otros campos. La salida concreta depende del equipo; un entorno restringido puede limitar lo que permite consultar.
+
+## Rutas, nombres y permisos
+
+Una ruta **absoluta** parte de `/`; una **relativa**, del directorio de trabajo. `.` identifica el directorio actual y `..` permite resolver su padre. En shells como Bash, `~` sin comillas se expande a la carpeta personal: es una función de la shell, no otro directorio fijo del sistema.
+
+Es habitual distinguir `Notas.txt` de `notas.txt`, pero la sensibilidad depende del sistema de archivos y su configuración. No la deduzcas solo del nombre Linux; la [comparación entre sistemas](/articulos/linux-windows-y-macos/) desarrolla ese caso.
+
+El punto inicial de `.config` hace que herramientas como `ls` la omitan en su listado habitual; `ls -a` la incluye. Esa convención de ocultación no protege el contenido.
+
+Los [permisos](/articulos/permisos-y-usuarios/) y otras restricciones deciden quién puede recorrer y modificar cada ruta. Estar en `/usr/bin` no concede ejecución universal, ni estar en una carpeta personal garantiza acceso desde cualquier proceso.
+
+## Errores comunes
+
+- **Confundir `/root` con `/`.** Uno es un directorio personal; el otro, la raíz.
+- **Guardar datos importantes como temporales.** `/tmp` puede limpiarse; un nombre no garantiza persistencia.
+- **Deducir almacenamiento o acceso por la ruta.** Comprueba el montaje y los permisos, además de la convención de nombres.
+
 ## Lo esencial
 
-- Linux tiene un único árbol de archivos que empieza en `/`; los discos se montan dentro.
-- Cada carpeta principal tiene una función: `/etc` configuración, `/usr` programas, `/var` datos variables, `/home` usuarios.
-- La separación permite hacer copias, actualizar y repartir discos con criterio.
-- Muchos dispositivos e información del núcleo aparecen como archivos, en `/dev` y `/proc`.
+- La jerarquía organiza rutas; FHS y otras convenciones orientan su distribución.
+- Programa, configuración, estado persistente y temporales tienen funciones distintas.
+- Un árbol puede reunir varios montajes y diferir de la vista de otro proceso.
+- La ubicación no sustituye permisos, políticas de conservación ni copias verificadas.

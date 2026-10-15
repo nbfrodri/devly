@@ -1,13 +1,22 @@
 title: Cómo funciona internet
-description: Qué ocurre desde que escribes una dirección hasta que recibes la página.
+description: De una red local a una petición web completa, para entender después Spotify, WhatsApp, Cloudflare y una caída que afectó a los tres servicios de Facebook.
 layer: redes
 steps:
+  - tipos-de-redes
+  - que-es-un-servidor
+  - que-es-un-protocolo-de-red
+  - cliente-servidor
   - que-es-una-direccion-ip
-  - subredes-y-cidr
   - ipv4-frente-a-ipv6
   - modelos-osi-y-tcp-ip
   - tcp-y-udp
   - que-es-dns
   - que-es-http
+  - subredes-y-cidr
+  - enrutamiento
   - como-viaja-un-paquete-por-internet
   - que-es-ntp
+  - como-funciona-spotify
+  - como-funciona-whatsapp
+  - que-hace-cloudflare
+  - la-caida-de-facebook-de-2021

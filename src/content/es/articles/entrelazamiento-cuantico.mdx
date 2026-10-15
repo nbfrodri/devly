@@ -1,0 +1,111 @@
+---
+title: "¿Qué es el entrelazamiento cuántico?"
+description: "Dos cúbits entrelazados requieren describir su estado conjunto. Una pareja de Bell muestra sus correlaciones y por qué no permite enviar mensajes instantáneos."
+level: intermedio
+layer: hardware
+prerequisites:
+  - que-es-un-cubit
+  - puertas-cuanticas-e-interferencia
+updated: 2026-10-15
+sources:
+  - title: "Microsoft Learn: entrelazamiento y correlaciones"
+    url: https://learn.microsoft.com/es-es/azure/quantum/concepts-entanglement
+  - title: "IBM Quantum Learning: información cuántica de varios sistemas (en inglés)"
+    url: https://quantum.cloud.ibm.com/learning/en/courses/basics-of-quantum-information/multiple-systems/quantum-information
+  - title: "IBM Quantum Learning: circuitos y preparación de una pareja entrelazada (en inglés)"
+    url: https://quantum.cloud.ibm.com/learning/en/courses/basics-of-quantum-information/quantum-circuits/circuits
+---
+
+import { Quiz } from "@/components/quiz";
+
+El **entrelazamiento cuántico** es una relación entre sistemas cuyo estado conjunto no puede representarse mediante estados independientes, ni mediante una mezcla de esas preparaciones independientes. Para entenderlo, seguiremos dos [cúbits](/articulos/que-es-un-cubit/) ideales y una preparación concreta llamada **pareja de Bell**.
+
+Aquí «mezcla» significa elegir al azar entre distintas preparaciones. No es lo mismo que combinar amplitudes en una superposición.
+
+## Cuatro resultados posibles
+
+Llamaremos A y B a los cúbits. Escribiremos primero A y después B: `01` significa A = 0 y B = 1. Este orden se declara para evitar confundirlo con convenciones de herramientas que pueden enumerarlos al revés.
+
+Un estado puro conjunto tiene amplitudes para `00`, `01`, `10` y `11`. Considera estas dos preparaciones:
+
+- **Independiente:** ambos cúbits tienen amplitudes `[1/√2, 1/√2]`. Las cuatro combinaciones tienen amplitud 1/2 y probabilidad 1/4.
+- **Bell:** las amplitudes de `00` y `11` son `1/√2`; las otras dos son cero. Medir ambos en la base computacional produce `00` o `11`, con probabilidad 1/2 cada uno.
+
+En ambos casos, mirar solo el resultado de A da 0 o 1 con igual probabilidad. La diferencia está en las relaciones entre los dos resultados.
+
+## Preparar la pareja
+
+Partimos de `|00⟩`. Aplicamos [Hadamard, H](/articulos/puertas-cuanticas-e-interferencia/), a A: aparecen las componentes `|00⟩` y `|10⟩`, con amplitudes iguales. B sigue en 0.
+
+Después aplicamos **CNOT**, una puerta de dos cúbits. A es el control y B el objetivo. En cada componente de la base, invierte B cuando A vale 1:
+
+| Entrada | Salida |
+| --- | --- |
+| `00` | `00` |
+| `01` | `01` |
+| `10` | `11` |
+| `11` | `10` |
+
+Se aplica a las amplitudes sin medir A. Por eso la componente `|10⟩` pasa a `|11⟩` y conserva su amplitud. Queda la superposición de `|00⟩` y `|11⟩` que buscábamos.
+
+Este cálculo clásico usa amplitudes reales en el orden declarado; no simula un dispositivo físico:
+
+```js
+const hEnA = ([a, b, c, d]) =>
+	[a + c, b + d, a - c, b - d].map((v) => v / Math.SQRT2);
+const cnot = ([a, b, c, d]) => [a, b, d, c];
+
+const inicial = [1, 0, 0, 0];
+const bell = cnot(hEnA(inicial));
+
+console.log(bell.map((a) => (a * a).toFixed(2)).join(" ")); // "0.50 0.00 0.00 0.50"
+```
+
+CNOT no entrelaza cualquier entrada. Si la aplicamos directamente a `|00⟩`, sigue `|00⟩`: la preparación previa importa.
+
+Tampoco hemos copiado una superposición en dos cúbits independientes. Si ese fuera el resultado, aparecerían las cuatro combinaciones de la primera preparación. La pareja obtenida conserva amplitudes solo para `00` y `11`.
+
+## Por qué una correlación no basta
+
+También podríamos lanzar una moneda clásica y preparar `|00⟩` cuando salga cara y `|11⟩` cuando salga cruz. Medir directamente daría la misma distribución que Bell. Por tanto, ver resultados iguales en una sola base **no demuestra entrelazamiento**.
+
+Para distinguir estas preparaciones podemos cambiar las operaciones antes de medir. Aplicamos H a ambos cúbits y después medimos en la base computacional:
+
+| Preparación inicial | Medición directa | H en ambos y después medición |
+| --- | --- | --- |
+| Pareja de Bell descrita | `00` o `11`, mitad cada uno | `00` o `11`, mitad cada uno |
+| Mezcla aleatoria de `00` y `11` | `00` o `11`, mitad cada uno | Las cuatro parejas, un cuarto cada una |
+
+En la mezcla, cada preparación produce cuatro resultados equiprobables tras las H. En Bell, las amplitudes de las componentes se combinan: las contribuciones de `01` y `10` se cancelan. Elegir estados al azar y superponerlos conduce a predicciones distintas.
+
+## Medir uno y conocer el otro
+
+En nuestra pareja de Bell, si Ana mide A en la base computacional y obtiene 0, sabe que Luis obtendrá 0 al medir B en esa misma base, suponiendo que no haya operaciones ni ruido que alteren el caso. Si obtiene 1, predice 1.
+
+La condición es concreta. Otras parejas entrelazadas y otras bases de medición pueden producir correlaciones diferentes; no vale afirmar que medir cualquier cúbit entrelazado determina cualquier medida del otro.
+
+<Quiz
+	client:visible
+	question="Ana obtiene 0 en la pareja de Bell descrita. Sin otros cambios, ¿qué obtendrá Luis al medir B en la misma base?"
+	options={[
+		"0, por la correlación de este estado y esta base",
+		"Lo que Ana decida enviarle después",
+		"Siempre 1, porque el entrelazamiento obliga a resultados opuestos",
+	]}
+	answer={0}
+/>
+
+## Por qué no envía mensajes instantáneos
+
+Ana no puede escoger el resultado aleatorio de su medición para escribir un mensaje en B. Desde el lado de Luis, sus resultados locales siguen siendo 0 y 1 con probabilidades iguales, tanto si Ana mide como si no lo hace.
+
+Para comprobar las coincidencias tienen que comparar registros utilizando comunicación clásica. Saber cómo se relacionan dos resultados no equivale a controlar a distancia qué resultado recibe la otra persona.
+
+El entrelazamiento es un recurso para protocolos y cálculos cuánticos, pero no sustituye las operaciones de esos protocolos ni garantiza una ventaja por sí solo. Los errores físicos pueden degradar las correlaciones: las predicciones exactas de este artículo pertenecen al modelo ideal.
+
+## Lo esencial
+
+- El entrelazamiento exige describir las relaciones del estado conjunto.
+- H seguida de CNOT prepara la pareja de Bell explicada a partir de `00`.
+- Resultados correlacionados en una sola base también pueden tener una explicación clásica.
+- Una correlación no permite elegir el resultado remoto ni enviar información instantánea.

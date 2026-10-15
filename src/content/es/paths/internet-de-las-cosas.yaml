@@ -1,10 +1,10 @@
 title: Internet de las cosas
-description: Dispositivos pequeños conectados, y los protocolos con los que envían sus datos.
+description: "Del sensor al consumidor, después de hardware e internet. Para los ejemplos de mensajería: programación básica, HTTP y transacciones."
 layer: redes
 steps:
   - microcontrolador-y-microprocesador
   - tcp-y-udp
   - internet-de-las-cosas
-  - protocolo-mqtt
   - colas-de-mensajes
+  - protocolo-mqtt
   - gemelo-digital

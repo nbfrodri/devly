@@ -1,6 +1,6 @@
 ---
 title: "¿Qué es ARP?"
-description: "ARP es el protocolo que averigua la dirección MAC que corresponde a una IP dentro de la red local. Sin él, un paquete no podría entregarse al equipo de al lado."
+description: "ARP obtiene la dirección MAC del siguiente destinatario en una red local IPv4. Para un destino remoto, normalmente se resuelve la MAC del router."
 level: basico
 kind: concepto
 layer: redes
@@ -8,8 +8,12 @@ prerequisites:
   - que-es-una-direccion-mac
   - que-es-una-direccion-ip
   - capa-de-enlace
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "RFC 1027: Using ARP to Implement Transparent Subnet Gateways (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc1027.html
+  - title: "RFC 4861: Neighbor Discovery for IPv6 (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc4861.html
   - title: "RFC 826: An Ethernet Address Resolution Protocol (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc826
   - title: "Linux man-pages: ip-neighbour(8) (en inglés)"
@@ -18,17 +22,19 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-**ARP**, protocolo de resolución de direcciones, es el mecanismo con el que un equipo averigua **qué [dirección MAC](/articulos/que-es-una-direccion-mac/) corresponde a una [dirección IP](/articulos/que-es-una-direccion-ip/)** dentro de su red local. Lo definió en 1982 el RFC 826, para convertir direcciones de protocolo, como las IP, en direcciones físicas de la red local, como las de Ethernet.
+**ARP**, protocolo de resolución de direcciones, permite obtener la [dirección MAC](/articulos/que-es-una-direccion-mac/) asociada a una dirección IPv4 en el ámbito local. En IPv4 sobre Ethernet se utiliza para preparar la trama dirigida al siguiente destinatario: el equipo final si es local, o un router si hay que salir a otra red.
 
 ## Por qué hace falta
 
-Las IP sirven para encontrar un equipo en cualquier lugar del mundo. Pero dentro de una red local, los datos viajan en tramas de la [capa de enlace](/articulos/capa-de-enlace/), que se entregan por dirección MAC. Para enviar un paquete al equipo `192.168.1.35`, o a la [puerta de enlace](/articulos/puerta-de-enlace-predeterminada/), primero hay que saber su MAC.
+La tabla de rutas determina el siguiente salto mediante direcciones IP. Ethernet necesita además una MAC para construir la trama de [enlace](/articulos/capa-de-enlace/). ARP conecta esas dos decisiones sin cambiar la IP de destino del paquete.
 
 ## Cómo funciona
 
-1. El equipo envía a **toda la red** (difusión) una pregunta: "¿quién tiene la IP 192.168.1.35? Dímelo a mí".
-2. Todos los equipos la reciben, pero solo el que tiene esa IP **responde**, directamente al que preguntó, con su MAC.
+1. El equipo envía una **difusión local**: "¿quién tiene la IP 192.168.1.35? Dímelo a mí".
+2. En este caso normal, el equipo que tiene esa IP responde al solicitante con su MAC. No está garantizado que llegue una respuesta ni que nadie responda falsamente.
 3. El que preguntó **guarda** la respuesta en su **tabla ARP** durante un tiempo, para no preguntar cada vez.
+
+La simulación siguiente usa una red conocida y respuestas inmediatas. Omite los tiempos de espera, la caducidad y las actualizaciones de la tabla real:
 
 ```js
 const tablaArp = new Map();
@@ -38,6 +44,7 @@ let preguntas = 0;
 function macDe(ip) {
 	if (!tablaArp.has(ip)) {
 		preguntas++; // difusión: "¿quién tiene esta IP?"
+		if (!red[ip]) return null; // no se almacena una respuesta inexistente
 		tablaArp.set(ip, red[ip]);
 	}
 	return tablaArp.get(ip);
@@ -46,23 +53,39 @@ function macDe(ip) {
 macDe("192.168.1.35");
 macDe("192.168.1.35");
 console.log(macDe("192.168.1.1"), preguntas); // aa:bb:cc:00:00:01 2
+console.log(macDe("192.168.1.99"), preguntas); // null 3
 ```
 
 La segunda consulta a la misma IP sale de la tabla, sin preguntar a la red. En Linux, la tabla se consulta con `ip neigh`; su página de manual recuerda que la tabla de vecinos de IPv4 también se llama tabla ARP.
 
 ## Solo dentro de la red local
 
-ARP nunca sale de la red local. Para un destino en otra red, el equipo pregunta por la MAC de su **puerta de enlace**, y le entrega el paquete. Cada router del camino repite el proceso en cada red que cruza: la IP de destino se mantiene, pero la MAC cambia en cada salto.
+Los routers no reenvían estas preguntas ARP por internet. Si el destino es remoto y la ruta elegida pasa por `192.168.1.1`, se busca la MAC de ese router. La IP de destino del paquete sigue siendo la del servicio remoto; la MAC de la trama es la del siguiente salto.
+
+Otros enlaces pueden utilizar tecnologías diferentes. Incluso en Ethernet puede bastar una entrada ya guardada, sin enviar una nueva pregunta por cada paquete. También existe proxy ARP, donde un router responde por otro destino; ARP no demuestra por sí solo dónde está conectado el dueño final de una IP.
+
+<Quiz
+	client:visible
+	question="Tu ruta hacia un servidor remoto pasa por 192.168.1.1. ¿Qué asociación necesitas para enviar la primera trama Ethernet?"
+	options={[
+		"La IP del servidor con la MAC del servidor lejano",
+		"192.168.1.1 con la MAC de ese router local",
+		"El nombre del sitio con su contraseña",
+	]}
+	answer={1}
+/>
 
 En IPv6, ARP se sustituye por un mecanismo equivalente, el descubrimiento de vecinos.
 
 ## Su punto débil
 
-ARP se diseñó sin autenticación: cualquiera puede responder. Un atacante en la misma red puede enviar respuestas falsas, "la IP de la puerta de enlace es mi MAC", y hacer pasar el tráfico de otros por su equipo. Es el **envenenamiento ARP**, y la razón por la que una wifi pública no es de fiar sin [HTTPS](/articulos/https-y-tls/) o una [VPN](/articulos/vpn-y-tuneles/).
+ARP no autentica por sí mismo las asociaciones recibidas. Una respuesta falsa puede alterar la tabla y desviar o cortar tráfico: es el **envenenamiento ARP**. [HTTPS](/articulos/https-y-tls/) puede proteger el contenido y autenticar el extremo del intercambio aunque alguien observe el camino; no impide que ese intermediario bloquee la comunicación. El riesgo no es exclusivo de una wifi pública.
+
+Si una IP cambia de interfaz y queda una asociación antigua, las tramas pueden dirigirse a una MAC equivocada hasta actualizar la entrada. Si nadie responde, no se puede completar esa entrega local mediante ARP. Ninguno de los dos síntomas demuestra por sí solo una avería del servidor remoto.
 
 ## Lo esencial
 
-- ARP traduce una dirección IP en la dirección MAC correspondiente dentro de la red local.
-- Pregunta a toda la red, responde solo el dueño de la IP, y la respuesta se guarda en la tabla ARP.
-- Para salir de la red, se busca la MAC de la puerta de enlace; la MAC cambia en cada salto.
+- ARP obtiene asociaciones entre IPv4 y MAC en el ámbito local.
+- Una difusión solicita la asociación y la respuesta puede guardarse temporalmente.
+- Para un destino remoto se resuelve la MAC del router local elegido, no la del servidor lejano.
 - No tiene autenticación, lo que permite el envenenamiento ARP.

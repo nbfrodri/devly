@@ -1,97 +1,132 @@
 ---
 title: "¿Qué es un emulador?"
-description: "Un emulador hace que un ordenador se comporte como otro distinto: imita su procesador y su hardware para ejecutar programas que no fueron hechos para él."
+description: "Un emulador reproduce el comportamiento de una máquina o interfaz para ejecutar software compatible con ese modelo, aunque el anfitrión utilice otras instrucciones."
 level: intermedio
 layer: sistemas
 prerequisites:
   - virtualizacion
   - como-funciona-un-procesador
   - que-es-un-binario
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "QEMU: About QEMU (en inglés)"
-    url: https://www.qemu.org/docs/master/about/index.html
-  - title: "QEMU: Introduction (en inglés)"
+  - title: "QEMU: System emulation, Introduction (en inglés)"
     url: https://www.qemu.org/docs/master/system/introduction.html
+  - title: "QEMU: User space emulator (en inglés)"
+    url: https://www.qemu.org/docs/master/user/main.html
+  - title: "QEMU: Translator Internals (en inglés)"
+    url: https://www.qemu.org/docs/master/devel/tcg.html
   - title: "MAME: About (en inglés)"
     url: https://www.mamedev.org/about.html
-  - title: "Android Developers: Ejecuta apps en Android Emulator"
-    url: https://developer.android.com/studio/run/emulator
-  - title: "Apple Developer: About the Rosetta translation environment (en inglés)"
-    url: https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
+  - title: "Android Developers: Cómo ejecutar apps en Android Emulator"
+    url: https://developer.android.com/studio/run/emulator?hl=es-419
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **emulador** es un programa que hace que un ordenador se comporte como **otro distinto**. Imita el procesador, la memoria y los dispositivos de la máquina original con tanta fidelidad que los programas escritos para ella funcionan sin cambios. Con un emulador se puede jugar en un PC a una consola de los años noventa o probar una aplicación de Android sin tener el móvil.
+Un **emulador** reproduce por software el comportamiento de una máquina o de parte de ella. Permite ejecutar programas preparados para ese modelo, incluso cuando el ordenador anfitrión entiende otras instrucciones. La compatibilidad depende de qué comportamientos implemente y con qué fidelidad.
 
-## Emular frente a virtualizar
+Sirve para ejecutar software antiguo, probar un dispositivo sin tenerlo físicamente o estudiar un programa de otra arquitectura. No basta con cambiar el nombre o el formato de un [binario](/articulos/que-es-un-binario/): alguien debe realizar las operaciones que ese programa espera.
 
-Se parecen, pero no son lo mismo:
+## Qué se reproduce
 
-| | Virtualización | Emulación |
-| --- | --- | --- |
-| Arquitectura del invitado | La misma que la del anfitrión | Puede ser otra distinta |
-| Las instrucciones | Se ejecutan directamente en el procesador real | Se traducen o se interpretan |
-| Velocidad | Casi la del hardware real | Bastante menor |
-| Ejemplo | Un Linux x86 dentro de un Windows x86 | Un programa ARM en un PC x86 |
+Hay dos alcances frecuentes:
 
-La [virtualización](/articulos/virtualizacion/) reparte un hardware real. La emulación lo **imita** por software, porque el procesador real no entiende las instrucciones del invitado. QEMU, uno de los emuladores más usados, hace las dos cosas: se define como un emulador y virtualizador de máquinas.
+- **Una máquina completa:** CPU, memoria y dispositivos suficientes para arrancar un sistema invitado. QEMU ofrece este modo; MAME documenta y reproduce máquinas históricas.
+- **Un proceso de usuario:** sus instrucciones y su interacción con el sistema. QEMU puede ejecutar un programa Linux de otra arquitectura traduciendo sus llamadas al sistema al anfitrión, sin arrancar otro núcleo completo.
 
-## Cómo funciona: el bucle de un procesador
+Emular no exige una arquitectura diferente. También puede interesar reproducir un dispositivo antiguo o una característica ausente en el equipo actual.
 
-Un procesador repite sin parar tres pasos: **leer** una instrucción de la memoria, **decodificarla** y **ejecutarla**. Un emulador hace lo mismo en software:
+## Un procesador pequeño, definido por completo
+
+Nuestro modelo tiene un **acumulador** `a` de ocho bits, que empieza en cero, y un **contador de programa** `pc`, que indica la posición de la siguiente instrucción. El programa es un array de bytes, enteros del 0 al 255. Sus instrucciones son:
+
+| Código | Nombre | Longitud | Efecto |
+| --- | --- | --- | --- |
+| `01` | CARGAR | 2 bytes | Copiar el byte siguiente en `a` |
+| `02` | SUMAR | 2 bytes | Sumar el byte siguiente y conservar ocho bits |
+| `ff` | PARAR | 1 byte | Terminar y devolver `a` |
+
+Los códigos están en hexadecimal. La suma vuelve a cero tras 255: `250 + 10` deja `4`, porque 260 módulo 256 es 4. Este modelo no tiene saltos, dispositivos ni otras instrucciones; exige encontrar PARAR antes del final. Los bytes posteriores a PARAR no se ejecutan.
 
 ```js
 function ejecutar(programa) {
-	const registros = { a: 0 };
-	let pc = 0;
+	if (!Array.isArray(programa) || !Array.from(programa).every(
+		(b) => Number.isInteger(b) && b >= 0 && b <= 255,
+	)) throw new TypeError("El programa debe contener bytes");
 
+	let a = 0;
+	let pc = 0;
 	while (pc < programa.length) {
 		const codigo = programa[pc];
-		if (codigo === 0x01) {
-			registros.a = programa[pc + 1];
-			pc += 2;
-		} else if (codigo === 0x02) {
-			registros.a += programa[pc + 1];
-			pc += 2;
-		} else if (codigo === 0xff) {
-			break;
-		} else {
-			throw new Error(`Instrucción desconocida: ${codigo}`);
+		if (codigo === 0xff) return a;
+		if (codigo !== 0x01 && codigo !== 0x02) {
+			throw new Error(`Instrucción desconocida en ${pc}`);
 		}
+		if (pc + 1 >= programa.length) {
+			throw new Error(`Falta el operando en ${pc}`);
+		}
+		const valor = programa[pc + 1];
+		a = codigo === 0x01 ? valor : (a + valor) % 256;
+		pc += 2;
 	}
-	return registros.a;
+	throw new Error("El programa terminó sin PARAR");
 }
 
-const programa = [0x01, 5, 0x02, 7, 0x02, 30, 0xff];
-console.log(ejecutar(programa)); // 42
+console.log(ejecutar([0x01, 5, 0x02, 7, 0x02, 30, 0xff])); // 42
+console.log(ejecutar([0x01, 250, 0x02, 10, 0xff])); // 4
 ```
 
-Un procesador inventado con tres instrucciones: cargar un valor, sumar y parar. El emulador lee cada [byte](/articulos/que-es-un-byte/), decide qué instrucción es y actualiza los registros simulados. Un emulador real hace esto con cientos de instrucciones, y además imita la memoria, la pantalla, el sonido y los mandos, con la temporización exacta del original.
+El primer programa recorre estos estados:
 
-## Más rápido: traducir en lugar de interpretar
+| `pc` antes | Instrucción | `a` antes | `a` después | Continuación |
+| --- | --- | --- | --- | --- |
+| 0 | CARGAR 5 | 0 | 5 | `pc = 2` |
+| 2 | SUMAR 7 | 5 | 12 | `pc = 4` |
+| 4 | SUMAR 30 | 12 | 42 | `pc = 6` |
+| 6 | PARAR | 42 | 42 | Devolver 42 |
 
-Interpretar instrucción a instrucción es lento: cada instrucción del invitado cuesta decenas de instrucciones reales. Los emuladores rápidos **traducen** bloques enteros de código del invitado a código del anfitrión, la primera vez que se ejecutan, y guardan la traducción para reutilizarla. Es la compilación sobre la marcha que explica [compilador e intérprete](/articulos/compilador-e-interprete/). QEMU la usa con un traductor propio, el Tiny Code Generator, capaz de emular muchos procesadores distintos.
+El emulador **lee**, **decodifica** y **ejecuta** cada instrucción actualizando el estado simulado. CARGAR ocupa dos bytes: su operando no es otra instrucción. `[0x01]` falla por falta de operando; `[0x01, 5]` carga el cinco, pero falla después porque falta PARAR. Detectar ambos casos evita producir un resultado que nuestra máquina no define.
 
-Rosetta, de Apple, lleva la idea más lejos: al cambiar sus Mac de procesadores Intel a procesadores propios ARM, traduce los programas x86 a ARM, a menudo antes de ejecutarlos, para que las aplicaciones antiguas sigan funcionando mientras sus autores publican versiones nativas.
+<Quiz
+	client:visible
+	question="El acumulador contiene 250 y se ejecuta SUMAR 10. ¿Qué queda en este modelo de ocho bits?"
+	options={["260", "4", "El emulador siempre se detiene"]}
+	answer={1}
+/>
 
-## Para qué se usan
+## Traducir bloques para reutilizar el trabajo
 
-- **Desarrollo**: el emulador de Android Studio simula móviles de distintos tamaños y versiones; también se emulan [microcontroladores](/articulos/microcontrolador-y-microprocesador/) antes de tener la placa.
-- **Compatibilidad**: ejecutar programas de otra arquitectura, como hace Rosetta.
-- **Preservación**: el proyecto MAME emula máquinas recreativas para que el software histórico no desaparezca cuando el hardware original deja de funcionar. Para preservarlo de verdad, hay que poder usarlo.
-- **Seguridad**: analizar un [malware](/articulos/que-es-el-malware/) en un entorno controlado.
+El bucle anterior interpreta cada operación. Un **traductor binario dinámico** convierte bloques de instrucciones invitadas en instrucciones del anfitrión y conserva el resultado para reutilizarlo. QEMU utiliza TCG para esa tarea.
 
-## Lo difícil
+La traducción debe respetar el estado visible: tamaños de registros, efectos en memoria y excepciones. Si el programa modifica su código o cambia un estado relevante, puede ser necesario invalidar una traducción. El coste depende de la carga y de cuánto trabajo pueda reutilizarse; no existe un número fijo de instrucciones anfitrionas por instrucción invitada.
 
-Imitar un procesador es solo el principio. Los programas antiguos dependían de detalles exactos del hardware: cuántos ciclos tardaba cada instrucción, en qué momento se dibujaba cada línea de la pantalla. Un emulador fiel debe reproducirlos, y eso exige conocer el hardware original a fondo, a menudo mediante [ingeniería inversa](/articulos/ingenieria-inversa/).
+## Relación con la virtualización
 
-Un aparte legal: un emulador en sí es software como cualquier otro. Las copias de juegos o del firmware original, en cambio, están protegidas por derechos de autor.
+La [virtualización](/articulos/virtualizacion/) presenta recursos virtuales y controla su uso. Cuando las instrucciones son compatibles, puede ejecutar gran parte del código directamente en la CPU con asistencia del hardware. La emulación reproduce operaciones mediante software. Una misma herramienta puede combinar ambas.
+
+| Caso | Qué hace falta |
+| --- | --- |
+| Programa AArch64 en CPU x86-64 | Traducir o interpretar instrucciones y proporcionar interfaces compatibles |
+| Sistema invitado compatible con la CPU | Puede usar virtualización asistida; sus dispositivos aún pueden ser emulados |
+| Aplicación Android sin teléfono físico | Un entorno que modele los componentes necesarios; la aceleración depende del equipo y de la imagen |
+
+El nombre «emulador» de un producto no dice qué parte utiliza ejecución directa. Tampoco permite comparar velocidades sin fijar equipo, programa y grado de fidelidad.
+
+## Los límites de reproducir una máquina
+
+Un programa puede depender de instrucciones documentadas, peculiaridades de un dispositivo o de cuándo ocurre cada evento. Un emulador funcional puede producir el resultado aritmético correcto y fallar si un juego espera una interrupción en un momento preciso. Reproducir esos tiempos requiere un modelo adicional; no todos los emuladores lo ofrecen.
+
+También hacen falta datos y componentes compatibles, como firmware o imágenes del sistema cuando el modelo los necesita. Conocer el hardware mediante [ingeniería inversa](/articulos/ingenieria-inversa/) ayuda a implementar sus comportamientos, pero disponer del emulador no concede derechos sobre cualquier programa que pueda ejecutar.
+
+## Errores comunes
+
+- **Confundir traducir instrucciones con disponer del entorno.** Un programa también puede necesitar bibliotecas, llamadas al sistema y dispositivos concretos.
+- **Llamar fiel a cualquier resultado parecido.** Compatibilidad funcional y temporización exacta son objetivos diferentes.
+- **Usar el tipo numérico del anfitrión sin definir el invitado.** La suma del modelo debe limitarse a ocho bits aunque JavaScript pueda representar 260.
 
 ## Lo esencial
 
-- Un emulador imita por software otro ordenador, aunque tenga otra arquitectura.
-- Repite el ciclo de leer, decodificar y ejecutar instrucciones, en software.
-- Los emuladores rápidos traducen bloques de código al del procesador real.
-- Se usan para desarrollar, mantener la compatibilidad, preservar software histórico y analizar malware.
+- Emular es reproducir comportamientos; el alcance puede ser una máquina o un proceso.
+- El modelo debe definir instrucciones, estado, tamaños y situaciones inválidas.
+- Interpretar y traducir bloques son técnicas distintas para realizar esas operaciones.
+- Compatibilidad, fidelidad y rendimiento dependen de la implementación y de la carga.

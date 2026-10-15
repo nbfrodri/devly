@@ -1,15 +1,15 @@
 ---
 title: "Diferencias entre hub, switch y router"
-description: "Los tres conectan equipos en una red. El hub repite todo a todos, el switch entrega cada trama solo a su destino y el router une redes distintas."
+description: "El hub repite señales, el switch aprende destinos de enlace y el router reenvía paquetes entre redes. El mismo envío muestra sus diferencias y límites."
 level: basico
 kind: comparacion
 layer: redes
 prerequisites:
-  - capa-de-enlace
-  - enrutamiento
-  - modelos-osi-y-tcp-ip
-updated: 2026-10-14
+  - que-es-una-direccion-ip
+updated: 2026-10-15
 sources:
+  - title: "Cisco: Troubleshoot LAN Switching Environments (en inglés)"
+    url: https://www.cisco.com/c/en/us/support/docs/lan-switching/ethernet/12006-chapter22.html
   - title: "NIST: Glossary, switch (en inglés)"
     url: https://csrc.nist.gov/glossary/term/switch
   - title: "NIST: Glossary, router (en inglés)"
@@ -18,41 +18,68 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **hub**, un **switch** y un **router** son aparatos que conectan equipos en una red, cada uno a un nivel distinto. El **hub**, o concentrador, repite todo lo que recibe por todos sus puertos. El **switch**, o conmutador, entrega cada trama solo al equipo al que va dirigida. El **router**, o encaminador, conecta **redes distintas** entre sí, como tu red de casa con internet.
+Un **hub**, o concentrador, repite señales hacia sus otras conexiones. Un **switch**, o conmutador, aprende por dónde alcanzar direcciones de la red local y decide qué conexiones utilizar. Un **router**, o encaminador, consulta direcciones IP para reenviar paquetes entre redes. Un aparato puede combinar varias de estas funciones.
 
 ## Hub
 
 Es el más simple. Cada señal que entra por un puerto sale **por todos los demás**. No entiende nada de lo que transporta: trabaja en la capa física del [modelo OSI](/articulos/modelos-osi-y-tcp-ip/).
 
-- Todos los equipos reciben todo, aunque no sea para ellos.
+- La señal se propaga por los otros puertos, aunque los equipos destinatarios descarten datos que no les corresponden.
 - Solo puede transmitir uno a la vez; si dos lo hacen, chocan.
-- Prácticamente ha desaparecido.
+- No permite el mismo aislamiento entre enlaces que un switch; no es la opción habitual para construir una LAN Ethernet moderna.
 
 ## Switch
 
-Trabaja en la [capa de enlace](/articulos/capa-de-enlace/) y entiende las [direcciones MAC](/articulos/que-es-una-direccion-mac/). Aprende qué equipo está conectado a cada puerto mirando el origen de las tramas que recibe, y envía cada trama **solo** por el puerto de su destino.
+Trabaja en la [capa de enlace](/articulos/capa-de-enlace/). Examina **tramas**, los bloques de datos de Ethernet, y sus [**direcciones MAC**](/articulos/que-es-una-direccion-mac/), usadas para entregar datos en ese ámbito local. Aprende asociando la MAC de origen con el puerto por el que entró la trama.
+
+Si conoce la MAC de destino, utiliza el puerto aprendido. Si no la conoce, normalmente **inunda**: envía la trama por los demás puertos habilitados de esa misma red lógica. Una difusión también requiere alcanzar varios puertos; un switch no envía siempre a un único destino.
+
+Esta simulación usa tres puertos de una misma red, sin filtros, bucles ni caducidad de entradas. `A` y `B` representan direcciones MAC:
 
 ```js
 const tabla = new Map();
+const puertos = [1, 2, 3];
 
 function recibir(trama, puerto) {
 	tabla.set(trama.origen, puerto);
-	return tabla.has(trama.destino) ? [tabla.get(trama.destino)] : "todos";
+	const salida = tabla.get(trama.destino);
+	if (salida === puerto) return [];
+	return salida === undefined ? puertos.filter((p) => p !== puerto) : [salida];
 }
 
-console.log(recibir({ origen: "A", destino: "B" }, 1)); // todos
+console.log(recibir({ origen: "A", destino: "B" }, 1).join(" ")); // "2 3"
 console.log(recibir({ origen: "B", destino: "A" }, 2).join(" ")); // "1"
+console.log(recibir({ origen: "A", destino: "B" }, 1).join(" ")); // "2"
+console.log(recibir({ origen: "C", destino: "A" }, 1).length); // 0
 ```
 
-La primera vez no sabe dónde está B y lo envía a todos los puertos. Al recibir la respuesta de B, ya sabe que A está en el puerto 1, y la entrega solo ahí.
+Primero aprende `A → 1`, pero desconoce B: salen copias por 2 y 3. Al responder B aprende `B → 2` y entrega a A por 1. El siguiente envío a B ya sale solo por 2. La última llamada representa otro equipo detrás del mismo puerto que A; no hay que devolver la trama por donde entró.
 
-Cada equipo tiene su propio canal, y pueden transmitir a la vez.
+En enlaces Ethernet con **dúplex completo**, ambos extremos pueden transmitir y recibir simultáneamente sin las colisiones de un medio compartido con hub. La capacidad de puertos y del propio switch sigue siendo limitada.
+
+<Quiz
+	client:visible
+	question="Con la tabla vacía, llega A → B por el puerto 1. ¿Por dónde sale en esta simulación?"
+	options={["Solo por 1", "Por 2 y 3", "Por todos, incluido 1"]}
+	answer={1}
+/>
 
 ## Router
 
 Trabaja en la capa de red y entiende las [direcciones IP](/articulos/que-es-una-direccion-ip/). Su trabajo es decidir por dónde enviar cada paquete para que llegue a **otra red**, como explica [enrutamiento](/articulos/enrutamiento/).
 
-Separa redes: lo que va dentro de tu red local se queda en ella, y solo pasa por el router lo que tiene que salir.
+Consulta una tabla de rutas para elegir el siguiente salto. No necesita que la red siguiente esté en otro país: también puede conectar dos subredes del mismo edificio.
+
+## El mismo caso, con dos destinos
+
+Ana y Bruno están en una misma red Ethernet; Carla está en otra red. Ana quiere enviar datos:
+
+| Envío | Con hub o switch en la red de Ana | Papel del router |
+| --- | --- | --- |
+| Ana → Bruno | El hub repite la señal; el switch usa la MAC aprendida o inunda si aún la desconoce | No hace falta enrutar entre subredes para ese envío local |
+| Ana → Carla | Ana entrega una trama a la MAC del router; hub o switch permiten llegar hasta él | El router examina la IP de Carla y reenvía hacia la otra red |
+
+Cambiar el hub por un switch no sustituye la ruta hacia Carla. Cambia cómo se distribuyen las tramas en el primer tramo. La forma en que se conectan esos equipos se estudia en [topologías de red](/articulos/topologias-de-red/).
 
 ## Comparación
 
@@ -60,17 +87,21 @@ Separa redes: lo que va dentro de tu red local se queda en ella, y solo pasa por
 | --- | --- | --- | --- |
 | Capa | Física | Enlace | Red |
 | Entiende | Nada, solo señales | Direcciones MAC | Direcciones IP |
-| Envía cada mensaje | A todos | Solo al destino | Hacia la red de destino |
+| Reenvía según | Señal recibida: a los otros puertos | MAC aprendida, o difusión/inundación según el caso | Ruta hacia la IP de destino |
 | Conecta | Equipos de una red | Equipos de una red | Redes distintas |
-| Hoy | Obsoleto | En cualquier red local | En cualquier salida a internet |
+| Uso | Redes Ethernet compartidas antiguas | Conectar enlaces de una LAN | Conectar redes IP |
 
 ## El "router" de casa
 
 El aparato que da el proveedor de internet reúne varias piezas en una caja: un router, un switch con varios puertos, un punto de acceso [wifi](/articulos/como-funciona-el-wifi/), un [cortafuegos](/articulos/cortafuegos/) y a menudo un módem. Por eso se le llama router aunque haga mucho más.
 
+## Límites de la comparación
+
+No confundas un switch con una garantía de privacidad: que normalmente seleccione un puerto no cifra los datos ni sustituye permisos. Tampoco todos los equipos comercializados como switches se limitan a la capa de enlace; algunos incorporan enrutamiento.
+
 ## Lo esencial
 
-- El hub repite todo por todos sus puertos y está obsoleto.
-- El switch aprende dónde está cada equipo y entrega cada trama solo a su destino.
+- El hub repite señales por los otros puertos.
+- El switch aprende MAC y puertos; un destino desconocido puede requerir inundación.
 - El router conecta redes distintas y decide por dónde enviar cada paquete.
 - El router doméstico combina router, switch, wifi y cortafuegos en un aparato.

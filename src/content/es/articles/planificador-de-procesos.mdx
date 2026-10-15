@@ -1,139 +1,134 @@
 ---
 title: "¿Cómo reparte el procesador un sistema operativo?"
-description: "El planificador decide qué proceso usa el procesador en cada momento. Sus criterios determinan lo ágil que se siente un sistema."
+description: "El planificador elige qué tarea preparada recibe CPU. Sus políticas equilibran respuesta, terminación, equidad y costes de alternar."
 level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-proceso
-updated: 2026-10-14
+  - hilos-y-concurrencia
+updated: 2026-10-15
 sources:
-  - title: "Operating Systems: Three Easy Pieces, Scheduling: Introduction (en inglés)"
+  - title: "OSTEP: Scheduling, Introduction (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf
-  - title: "Operating Systems: Three Easy Pieces, Scheduling: The Multi-Level Feedback Queue (en inglés)"
+  - title: "OSTEP: Scheduling, The Multi-Level Feedback Queue (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf
+  - title: "OSTEP: Limited Direct Execution (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf
+  - title: "Linux Kernel: EEVDF Scheduler (en inglés)"
+    url: https://docs.kernel.org/scheduler/sched-eevdf.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-El **planificador** es la parte del [sistema operativo](/articulos/que-es-un-sistema-operativo/) que decide qué [proceso](/articulos/que-es-un-proceso/) se ejecuta en cada momento y durante cuánto tiempo. Sus decisiones, tomadas cientos de veces por segundo, determinan si un sistema se siente ágil o torpe.
+El **planificador** elige qué tarea preparada recibe tiempo de procesador. En sistemas con [hilos](/articulos/hilos-y-concurrencia/), la unidad planificada suele ser un hilo; hablaremos de procesos de un solo hilo para seguir los ejemplos sin mezclar ambas organizaciones.
 
 ## Qué problema resuelve
 
-Un ordenador tiene muchos más procesos que núcleos de procesador. Hay que repartir.
+Si hay más tareas listas que capacidad de ejecución, algunas esperan. Pero «repartir bien» puede significar cosas diferentes:
 
-Y no hay un reparto que sea el mejor en todo, porque se persiguen objetivos que chocan:
+- **Respuesta:** tiempo desde que llega una tarea hasta su primera oportunidad de ejecutar, en nuestro modelo. No equivale a terminar toda su petición.
+- **Retorno:** tiempo desde que llega hasta que termina.
+- **Espera:** tiempo que pasa preparada sin recibir CPU.
+- **Equidad:** cómo se reparte la capacidad entre participantes, según pesos o reglas.
 
-- **Tiempo de respuesta**: cuánto tarda el sistema en reaccionar. Es lo que importa cuando tecleas o mueves el ratón.
-- **Tiempo de retorno**: cuánto tarda un trabajo desde que llega hasta que termina. Es lo que importa al comprimir un archivo.
-- **Equidad**: que ningún proceso se quede sin atender.
+Una tarea bloqueada por datos no compite por CPU hasta estar preparada. El [estado de un proceso](/articulos/que-es-un-proceso/) importa tanto como su prioridad.
 
-Favorecer uno suele perjudicar a otro. Cada política de planificación es una forma de resolver ese conflicto.
+## Tres trabajos sobre un procesador
 
-## Dos tipos de procesos
+Tenemos A, B y C, con duraciones de 24, 3 y 3 unidades. Llegan todos en el instante cero, no esperan entrada/salida, conocemos sus duraciones y omitimos costes de planificación. Estas condiciones permiten comparar las políticas; no describen cualquier carga real.
 
-- Los **intensivos en cálculo** usan el procesador sin parar: codificar un vídeo, compilar.
-- Los **intensivos en entrada y salida** lo usan a ráfagas cortas y pasan casi todo el tiempo esperando: un editor de texto aguarda a que pulses una tecla.
+### Orden de llegada
 
-Un buen planificador atiende enseguida a los segundos, que necesitan poco pero lo necesitan ya.
+Desempatamos en el orden A, B, C. Cada trabajo conserva la CPU hasta terminar:
 
-## Las políticas básicas
+| Trabajo | Intervalo | Espera | Retorno |
+| --- | --- | --- | --- |
+| A | 0 a 24 | 0 | 24 |
+| B | 24 a 27 | 24 | 27 |
+| C | 27 a 30 | 27 | 30 |
 
-### Por orden de llegada
-
-Se atiende al primero que llega, hasta que termina. Simple y justo en apariencia.
-
-Su problema es el **efecto convoy**: si el primero es muy largo, todos los demás esperan detrás, como una cola del supermercado encabezada por un carro lleno.
+La espera media es `(0 + 24 + 27) / 3 = 17`. Dos trabajos breves quedan detrás del largo: un **efecto convoy**. En una carga con entrada/salida, también puede dejar dispositivos esperando mientras la CPU atiende el trabajo largo.
 
 ### El más corto primero
 
-Se ejecuta primero el trabajo que menos va a tardar. Reduce mucho la espera media.
+Ordenamos B, C, A. B termina en 3; C, en 6; A, en 30. Sus esperas son 0, 3 y 6: la media baja a 3. El trabajo total sigue siendo 30 unidades.
+
+Este código calcula la espera para una lista no vacía de duraciones enteras positivas, con las condiciones anteriores:
 
 ```js
 function esperaMedia(duraciones) {
+	if (!Array.isArray(duraciones) || duraciones.length === 0 ||
+		!Array.from(duraciones).every((d) => Number.isSafeInteger(d) && d > 0)) {
+		throw new TypeError("Se requieren duraciones enteras positivas");
+	}
 	let reloj = 0;
 	let esperaTotal = 0;
-
 	for (const duracion of duraciones) {
-		esperaTotal = esperaTotal + reloj;
-		reloj = reloj + duracion;
+		esperaTotal += reloj;
+		reloj += duracion;
+		if (!Number.isSafeInteger(reloj) || !Number.isSafeInteger(esperaTotal)) {
+			throw new RangeError("El modelo excede los enteros seguros");
+		}
 	}
-
 	return esperaTotal / duraciones.length;
 }
 
 const trabajos = [24, 3, 3];
-
 console.log(esperaMedia(trabajos)); // 17
 console.log(esperaMedia(trabajos.toSorted((a, b) => a - b))); // 3
 ```
 
-Con el trabajo largo delante, los otros dos esperan 24 y 27 unidades: una media de 17. Ordenando del más corto al más largo, la media baja a 3. El trabajo total es el mismo.
+El ejemplo usa `toSorted`, disponible en Node.js 20 y posteriores. Calcula tiempos abstractos, no mide cuánto tarda el ordenador.
 
-Tiene dos pegas. El sistema no sabe de antemano cuánto va a durar un proceso. Y si no dejan de llegar trabajos cortos, uno largo puede no ejecutarse nunca: es la **inanición**.
+En la práctica no conocemos la duración futura de cada ráfaga. Además, si llegan continuamente trabajos breves, uno largo puede quedar postergado: **inanición**. «El más corto» necesita información y una política para nuevas llegadas.
 
 ### Turno rotatorio
 
-En el **turno rotatorio** (*round robin*), cada proceso recibe un intervalo pequeño, el **cuanto**, de unos milisegundos. Cuando se le acaba, vuelve al final de la cola, haya terminado o no.
+El **turno rotatorio**, o *round robin*, concede como máximo un intervalo, llamado **cuanto**, antes de dar paso a otra tarea preparada. Usamos un cuanto de 3 y el orden inicial A, B, C:
 
-Nadie espera mucho para recibir atención, así que el tiempo de respuesta es bueno. Es la base de los sistemas interactivos.
-
-El tamaño del cuanto es un compromiso:
-
-| Cuanto | Efecto |
+| Intervalo | Qué ocurre |
 | --- | --- |
-| Muy corto | Respuesta rápida, pero se pierde mucho tiempo cambiando de proceso |
-| Muy largo | Menos cambios, pero el sistema responde con lentitud |
+| 0 a 3 | A usa 3; le quedan 21 y vuelve a la cola |
+| 3 a 6 | B usa 3 y termina; no vuelve a la cola |
+| 6 a 9 | C usa 3 y termina |
+| 9 a 30 | Solo queda A; puede consumir los turnos restantes |
 
-Cada cambio de proceso, el [**cambio de contexto**](/articulos/cambio-de-contexto/), tiene un coste: hay que guardar el estado de uno y restaurar el de otro.
+Las primeras respuestas llegan en 0, 3 y 6, en lugar de 0, 24 y 27. B y C terminan en 6 y 9: reciben atención antes que con A entero delante, pero terminan después que con el más corto primero.
 
-## Expropiación
-
-Las dos primeras políticas son **cooperativas**: el proceso usa el procesador hasta que termina o lo cede. Si uno entra en un bucle infinito, bloquea todo el sistema.
-
-El turno rotatorio es **expropiativo**: el sistema operativo quita el procesador a la fuerza. Lo consigue con un temporizador del hardware que interrumpe al proceso en ejecución y devuelve el control al sistema.
-
-Todos los sistemas operativos de uso general actuales son expropiativos. Por eso un programa colgado no impide usar los demás.
-
-## Prioridades
-
-No todos los procesos importan igual. Muchos planificadores asignan a cada uno una **prioridad** y atienden primero a los de mayor nivel.
-
-El riesgo vuelve a ser la inanición de los de prioridad baja. La solución habitual es el **envejecimiento**: la prioridad de un proceso sube poco a poco mientras espera.
+Un trabajo terminado sale del conjunto. Uno que espera datos pasa a bloqueado; solo vuelve a competir cuando está preparado. Agotar un cuanto no obliga a cambiar de tarea si no hay otra elegible.
 
 <Quiz
 	client:visible
-	question="¿Qué problema tiene atender los procesos estrictamente por orden de llegada?"
-	options={[
-		"Un proceso largo hace esperar a todos los que van detrás",
-		"Los procesos cortos nunca se ejecutan",
-		"Hay demasiados cambios de contexto",
-	]}
-	answer={0}
+	question="En el turno rotatorio descrito, ¿cuándo termina C?"
+	options={["En 6, porque su duración es 3", "En 9, después de los primeros turnos de A y B", "En 30, después de que termine A"]}
+	answer={1}
 />
 
-## Lo que hacen los sistemas reales
+## Recuperar el control y pagar los cambios
 
-El ideal sería ejecutar primero lo más corto, pero no se conoce la duración. Los sistemas reales la **deducen del comportamiento**.
+La **expropiación** permite retirar la CPU sin esperar a que la aplicación la ceda voluntariamente. Una interrupción de temporizador puede devolver el control al núcleo, que decide si continúa la misma tarea o realiza un [cambio de contexto](/articulos/cambio-de-contexto/).
 
-La técnica clásica es la **cola multinivel con realimentación**. Hay varias colas, de mayor a menor prioridad:
+Las variantes sin expropiación anteriores esperan a que la tarea termine o se bloquee. No todas las variantes de «el más corto» son iguales: también existe una que interrumpe para atender al de menor tiempo restante.
 
-- Un proceso nuevo entra en la más alta.
-- Si agota su cuanto, es que necesita mucho procesador: baja de nivel.
-- Si cede el procesador antes, porque se pone a esperar una tecla o un dato, es que es interactivo: se queda arriba.
-- Cada cierto tiempo, todos vuelven a la cola más alta, para que nadie se quede relegado para siempre.
+Un cuanto pequeño puede mejorar respuesta y aumentar cambios; uno grande reduce alternancias, pero alarga la espera de otras tareas. El coste depende del equipo y de sus cachés. La expropiación ayuda a repartir, pero no evita por sí sola sobrecarga, bloqueos, prioridades mal asignadas o fallos del núcleo.
 
-Sin saber nada de antemano, el planificador acaba dando prioridad a los procesos interactivos y dejando los cálculos largos en segundo plano. Aprende observando.
+## Aprender del comportamiento
 
-## Con varios núcleos
+Una **cola multinivel con realimentación** mantiene varios niveles de prioridad y ajusta la posición según el uso observado. Un diseño clásico favorece tareas con ráfagas cortas y reduce prioridad cuando consumen su presupuesto de CPU. Contabilizar el consumo acumulado evita premiar a quien cede justo antes de cada límite.
 
-Con varios núcleos hay que decidir además **en cuál** se ejecuta cada proceso.
+Un ascenso periódico de prioridades puede evitar relegar indefinidamente algunas tareas. No es la política universal de los sistemas actuales: Linux documenta EEVDF para su planificación de reparto justo, además de otras clases.
 
-Conviene que un proceso vuelva al mismo núcleo en el que estuvo, porque allí siguen sus datos en la [caché](/articulos/que-es-una-cache/) del procesador. Y a la vez hay que repartir la carga para que no quede un núcleo saturado y otro ocioso. Otro equilibrio.
+Con varios núcleos también hay que elegir dónde ejecutar. La **afinidad** puede conservar datos útiles en [caché del procesador](/articulos/memoria-cache-del-procesador/); repartir carga puede justificar mover una tarea. Ni la caché ni la capacidad disponible son constantes.
+
+## Errores comunes
+
+- **Comparar medias sin declarar llegadas y esperas de E/S.** Cambiarlas altera el resultado.
+- **Confundir comenzar pronto con terminar pronto.** Respuesta y retorno miden cosas distintas.
+- **Poner en la cola una tarea terminada o bloqueada.** La política elige entre tareas elegibles.
 
 ## Lo esencial
 
-- El planificador decide qué proceso se ejecuta y cuánto tiempo.
-- Tiempo de respuesta, tiempo de retorno y equidad son objetivos que compiten.
-- El turno rotatorio reparte el procesador en intervalos cortos y da buena respuesta.
-- La expropiación impide que un proceso monopolice el procesador.
-- Los sistemas reales deducen el tipo de cada proceso de su comportamiento y ajustan su prioridad.
+- El planificador elige entre tareas preparadas, según una política.
+- Respuesta, retorno, espera y equidad no son el mismo objetivo.
+- El cuanto y la expropiación permiten alternar, con costes y límites.
+- Los resultados dependen de la carga, las llegadas y los recursos disponibles.

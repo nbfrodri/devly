@@ -13,13 +13,13 @@ sources:
     url: https://www.rfc-editor.org/rfc/rfc1191.html
 ---
 
-La **MTU**, *Maximum Transmission Unit* o unidad máxima de transmisión, es el tamaño máximo de un paquete que un enlace puede transportar sin fragmentarlo en esa capa. Para IP sobre Ethernet suele encontrarse una MTU de 1500 bytes, aunque no es un valor universal.
+La **MTU**, *Maximum Transmission Unit* o unidad máxima de transmisión, es el tamaño máximo de un paquete que un enlace puede transportar sin fragmentarlo en esa capa. Para IP sobre Ethernet suele encontrarse una MTU de 1500 [bytes](/articulos/que-es-un-byte/), aunque no es un valor universal.
 
 ## Del enlace al camino
 
 Una comunicación atraviesa varios enlaces. La **MTU del camino** es el menor límite de ese recorrido. Si tu equipo puede enviar un paquete de 1500 bytes pero un tramo solo admite 1400, el límite del primer enlace no resuelve el problema.
 
-Los túneles, como algunas VPN, añaden cabeceras. Si esas cabeceras ocupan parte del espacio disponible, puede ser necesario reducir la MTU de los paquetes interiores.
+Los túneles, como algunas [VPN](/articulos/vpn-y-tuneles/), añaden cabeceras. Si esas cabeceras ocupan parte del espacio disponible, puede ser necesario reducir la MTU de los paquetes interiores.
 
 ## Qué ocurre si el paquete no cabe
 
@@ -29,7 +29,7 @@ Si los mensajes necesarios no llegan, pueden aparecer fallos extraños: una cone
 
 ## MTU no es MSS
 
-La **MSS** de TCP limita los datos de un segmento TCP; no incluye sus cabeceras ni las de IP. La MTU se refiere al paquete transportado por el enlace. Restar las cabeceras relaciona ambos valores, pero debes tener en cuenta opciones y encapsulaciones: no siempre basta con memorizar una resta fija.
+La **MSS** de [TCP](/articulos/tcp-y-udp/) limita los datos de un segmento TCP; no incluye sus cabeceras ni las de IP. La MTU se refiere al paquete transportado por el enlace. Restar las cabeceras relaciona ambos valores, pero debes tener en cuenta opciones y encapsulaciones: no siempre basta con memorizar una resta fija.
 
 ## Calcular cuánto espacio queda para datos
 

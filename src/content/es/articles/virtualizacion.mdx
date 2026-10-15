@@ -1,95 +1,114 @@
 ---
 title: "¿Qué es la virtualización?"
-description: "La virtualización hace que un solo ordenador físico funcione como varios. Un hipervisor reparte el procesador, la memoria y los discos entre máquinas virtuales aisladas."
+description: "La virtualización presenta máquinas y recursos lógicos sobre hardware físico. Un hipervisor controla su ejecución y acceso a memoria y dispositivos."
 level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
   - que-es-el-kernel
-  - contenedores-y-maquinas-virtuales
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "OSTEP: Virtual Machine Monitors (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/vmm-intro.pdf
+  - title: "Linux Kernel: KVM API (en inglés)"
+    url: https://docs.kernel.org/virt/kvm/api.html
+  - title: "Microsoft Learn: Arquitectura de Hyper-V"
+    url: https://learn.microsoft.com/es-es/windows-server/virtualization/hyper-v/architecture
+  - title: "QEMU: System emulation, Introduction (en inglés)"
+    url: https://www.qemu.org/docs/master/system/introduction.html
+  - title: "QEMU: Disk Images y snapshots de máquinas virtuales (en inglés)"
+    url: https://www.qemu.org/docs/master/system/images.html
   - title: "Red Hat: ¿Qué es la virtualización?"
     url: https://www.redhat.com/es/topics/virtualization/what-is-virtualization
-  - title: "AWS: ¿Qué es la virtualización?"
-    url: https://aws.amazon.com/es/what-is/virtualization/
-  - title: "Linux KVM (en inglés)"
-    url: https://www.linux-kvm.org/page/Main_Page
-  - title: "The Linux Kernel documentation: KVM (en inglés)"
-    url: https://docs.kernel.org/virt/kvm/index.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **virtualización** es la técnica que permite que un solo ordenador físico se comporte como **varios ordenadores independientes**. Cada uno, una **máquina virtual**, tiene su propio sistema operativo y sus programas, y cree tener un hardware para él solo. En realidad comparte el procesador, la memoria y los discos con las demás.
+La **virtualización** presenta recursos lógicos sobre recursos físicos. En la virtualización de sistemas, una **máquina virtual**, o **VM**, dispone de CPU, memoria y dispositivos virtuales sobre los que puede ejecutar su propio sistema operativo. El equipo físico puede alojar varias VM, compartiendo sus recursos reales.
 
-Es la base de la [computación en la nube](/articulos/computacion-en-la-nube/): cuando se alquila un servidor a un proveedor, casi siempre es una máquina virtual dentro de un ordenador mucho mayor.
+Eso permite probar sistemas distintos o separar cargas sin dedicar un ordenador a cada una. Es una técnica de [la nube](/articulos/computacion-en-la-nube/), aunque los proveedores también ofrecen servidores físicos dedicados y otras formas de ejecución.
 
-## El hipervisor
+## El hipervisor controla la frontera
 
-El programa que lo hace posible es el **hipervisor**, también llamado monitor de máquinas virtuales. Separa los recursos físicos y los reparte entre las máquinas virtuales según lo que necesita cada una. Al ordenador físico se le llama **anfitrión** y a cada máquina virtual, **invitada**.
+Un **hipervisor**, o monitor de máquinas virtuales, controla la ejecución y el acceso a los recursos. Llamamos **anfitrión** al entorno físico y **invitado** al sistema que corre dentro de la VM.
 
-Hay dos formas de instalarlo:
+El [núcleo](/articulos/que-es-el-kernel/) invitado puede administrar sus procesos, pero eso no le concede control ilimitado sobre el anfitrión. El hipervisor y el hardware mantienen una frontera entre los recursos asignados a cada VM.
 
-| | Tipo 1, nativo | Tipo 2, alojado |
-| --- | --- | --- |
-| Se instala | Directamente sobre el hardware | Como un programa dentro de un sistema operativo |
-| Uso típico | Servidores y centros de datos | Ordenadores personales, para probar otro sistema |
-| Rendimiento | Mayor | Algo menor |
-| Ejemplos | Xen, Hyper-V, VMware ESXi | VirtualBox, VMware Workstation |
+## Dos máquinas sobre el mismo equipo
 
-KVM, el hipervisor integrado en el [núcleo](/articulos/que-es-el-kernel/) de Linux, convierte al propio Linux en un hipervisor de tipo 1. Es el que usan muchas nubes.
+Supón un anfitrión de cuatro núcleos y 16 GiB de RAM. Reservamos 2 GiB para el entorno anfitrión y asignamos 6 GiB a cada una de dos VM; quedan 2 GiB de margen. Es una cuenta didáctica con reservas fijas, no una recomendación de dimensionamiento.
 
-## Cómo engaña al sistema invitado
+Cada VM tiene cuatro **CPU virtuales**, o **vCPU**: contextos de ejecución que el anfitrión debe programar sobre sus procesadores. Ocho vCPU configuradas no crean ocho núcleos físicos.
 
-El sistema operativo invitado espera controlar el hardware directamente: ejecutar instrucciones privilegiadas, manejar la [memoria virtual](/articulos/memoria-virtual/), hablar con los discos. El hipervisor debe interceptar esas operaciones y simularlas, sin que el invitado note nada y sin que pueda afectar a los demás.
+| Situación | Qué puede ocurrir |
+| --- | --- |
+| Solo A necesita CPU | Puede aprovechar capacidad disponible, dentro de sus límites |
+| A y B necesitan sus cuatro vCPU | Compiten por los cuatro núcleos; no ejecutan ocho tareas en ocho núcleos inexistentes |
+| A espera datos del disco | El anfitrión puede ejecutar trabajo de B mientras A espera |
+| Ambas necesitan mucha E/S | Pueden competir por el mismo almacenamiento o enlace físico |
 
-Hay varias técnicas:
+La distribución depende del planificador, las cuotas y otros trabajos. Un uso medio del 10 % no demuestra que quepan diez cargas: sus picos pueden coincidir y la memoria o el disco pueden ser el límite.
 
-- **Virtualización completa**: el invitado no sabe que es virtual. Al principio se lograba traduciendo sobre la marcha las instrucciones problemáticas, algo lento.
-- **Paravirtualización**: el invitado se modifica para colaborar con el hipervisor, llamándolo directamente en lugar de tocar el hardware. Muy usada para discos y redes, con [drivers](/articulos/que-es-un-driver/) especiales.
-- **Asistida por hardware**: los procesadores modernos incluyen extensiones para virtualizar, Intel VT y AMD-V. El procesador ejecuta el código del invitado directamente y avisa al hipervisor solo cuando hace falta. KVM las exige.
+## CPU: ejecutar directamente y recuperar el control
 
-Gracias al soporte del hardware, una máquina virtual actual se acerca mucho al rendimiento de un ordenador real.
+Con instrucciones compatibles, buena parte del código invitado puede ejecutarse directamente. La asistencia de virtualización del procesador permite configurar qué eventos devuelven el control al hipervisor, por ejemplo ciertas operaciones privilegiadas o accesos a dispositivos.
 
-## Lo que se gana
+Ese retorno se llama **salida de la VM**. El hipervisor atiende el evento, actualiza el estado virtual y puede reanudar al invitado. No necesita interpretar cada suma; tampoco toda operación privilegiada exige siempre una salida, porque algunas se gestionan mediante controles del hardware.
 
-- **Aprovechar el hardware**: un servidor que estaría ocupado al 10 % aloja diez máquinas.
-- **Aislamiento**: un fallo o un ataque en una máquina virtual no afecta a las demás.
-- **Instantáneas**: guardar el estado completo de una máquina y volver a él.
-- **Mover máquinas** de un servidor físico a otro, incluso en marcha.
-- **Probar** otros sistemas operativos sin reinstalar nada.
+KVM proporciona mecanismos de virtualización dentro de Linux. Un programa como QEMU puede crear una VM mediante su API, gestionar memoria y dispositivos y usar KVM para ejecutar las vCPU. Repartir responsabilidades entre núcleo y procesos de usuario no elimina la virtualización.
 
-## No solo ordenadores
+## Memoria y dispositivos
 
-La idea de separar los recursos lógicos de los físicos se aplica a más cosas:
+La dirección que un invitado considera física no tiene por qué ser una dirección física del anfitrión. La traducción mantiene sus accesos dentro de las regiones asignadas; el mecanismo concreto depende de la plataforma. Es un nivel adicional al que utiliza el invitado para la [memoria virtual](/articulos/memoria-virtual/) de sus procesos.
 
-- **Almacenamiento**: varios discos se gestionan como un único almacén.
-- **Red**: redes enteras, con sus switches y cortafuegos, definidas por software sobre la red física. Los operadores de telecomunicaciones virtualizan así funciones de red que antes eran aparatos dedicados.
-- **Escritorio**: el escritorio de un usuario corre en un servidor y se muestra a distancia.
+Los dispositivos pueden presentarse de varias formas:
 
-## Y la emulación
+- **Emulados:** software reproduce una interfaz de hardware conocida por el invitado.
+- **Paravirtualizados:** el invitado usa una interfaz diseñada para colaborar con el entorno virtual, como los dispositivos VirtIO de QEMU.
+- **Asignados directamente:** un dispositivo físico se dedica al invitado con los mecanismos de aislamiento necesarios; no cualquier dispositivo o configuración lo permite.
 
-Si el sistema invitado es de otra arquitectura, por ejemplo ARM sobre un procesador x86, sus instrucciones no se pueden ejecutar directamente: hay que imitarlas por software. Es lo que hace un [emulador](/articulos/emuladores/), mucho más lento.
-
-## Y los contenedores
-
-Los [contenedores](/articulos/contenedores-y-maquinas-virtuales/) son una forma más ligera de aislar programas: comparten el núcleo del sistema anfitrión en lugar de virtualizar todo el hardware. Arrancan en segundos y gastan menos, pero aíslan menos. A menudo se combinan: contenedores dentro de máquinas virtuales.
+La **paravirtualización** no obliga a sustituir todo el sistema invitado. Puede limitarse a controladores que evitan reproducir detalles de un dispositivo antiguo. Un sistema que funciona sin cambios también puede detectar que se ejecuta en una VM: compatibilidad no significa ocultación perfecta.
 
 <Quiz
 	client:visible
-	question="¿Qué diferencia a un hipervisor de tipo 1 de uno de tipo 2?"
+	question="Dos VM tienen cuatro vCPU cada una sobre cuatro núcleos físicos. Ambas quieren calcular a la vez. ¿Qué implica la configuración?"
 	options={[
-		"El de tipo 1 se instala directamente sobre el hardware; el de tipo 2, dentro de un sistema operativo",
-		"El de tipo 1 solo ejecuta Linux",
-		"El de tipo 2 no necesita procesador",
+		"Que el equipo dispone ahora de ocho núcleos físicos",
+		"Que sus contextos virtuales comparten la capacidad física disponible",
+		"Que la segunda VM no puede arrancar nunca",
 	]}
-	answer={0}
+	answer={1}
 />
+
+## Tipo 1 y tipo 2
+
+Un hipervisor de **tipo 1** administra la virtualización directamente sobre el hardware; uno de **tipo 2** se aloja sobre un sistema operativo general. La clasificación resume la organización, no establece una puntuación de velocidad o seguridad.
+
+Hyper-V, por ejemplo, utiliza un hipervisor y una partición raíz con Windows para administración y servicios. Ver una interfaz de escritorio no basta para clasificar lo que hay debajo. Importan los componentes que ejecutan el invitado y controlan los recursos.
+
+## Qué aportan las instantáneas y la separación
+
+Una **instantánea**, o *snapshot*, conserva un estado según las capacidades de la herramienta: puede abarcar discos y, en ciertos modos, memoria, CPU y dispositivos. Restaurar solo el disco no equivale a reanudar toda la ejecución. Tampoco deshace una petición que ya recibió un servicio externo.
+
+Si la instantánea depende del mismo almacenamiento que falla, puede perderse junto con la VM. No sustituye por sí sola una copia independiente. La migración de una VM también depende de compatibilidad de destino, dispositivos, memoria y almacenamiento; no es una propiedad garantizada de cualquier configuración.
+
+La separación puede contener el fallo del sistema invitado. No evita fallos del anfitrión, agotamiento de recursos compartidos, errores de configuración ni vulnerabilidades del hipervisor.
+
+## Relación con emulación y contenedores
+
+Si la CPU no entiende las instrucciones del invitado, una capa debe traducirlas o interpretarlas: eso lo desarrolla [emuladores](/articulos/emuladores/). QEMU permite combinar ejecución asistida y dispositivos emulados. El coste depende del mecanismo y de la carga.
+
+Los [contenedores](/articulos/contenedores-y-maquinas-virtuales/) separan procesos que comparten un núcleo, mientras una VM puede tener su propio núcleo invitado. También pueden ejecutarse contenedores dentro de una VM.
+
+## Errores comunes
+
+- **Sumar vCPU como si fueran núcleos nuevos.** Son contextos virtuales que necesitan recursos físicos.
+- **Equiparar aislamiento con invulnerabilidad.** Hay componentes, capacidad y posibles fallos compartidos.
+- **Confundir snapshot con copia independiente.** El alcance y las dependencias del estado guardado determinan qué permite recuperar.
 
 ## Lo esencial
 
-- La virtualización hace que un ordenador físico funcione como varios aislados entre sí.
-- El hipervisor reparte los recursos; puede ir sobre el hardware (tipo 1) o sobre un sistema operativo (tipo 2).
-- Los procesadores actuales tienen extensiones que hacen la virtualización casi tan rápida como el hardware real.
-- La misma idea se aplica al almacenamiento, la red y los escritorios, y es la base de la nube.
+- Una VM presenta recursos virtuales sobre los que corre un sistema invitado.
+- El hipervisor controla la ejecución y la frontera de memoria y dispositivos.
+- La virtualización reparte capacidad; no crea recursos físicos adicionales.
+- Rendimiento, aislamiento y recuperación dependen de la configuración y del trabajo.

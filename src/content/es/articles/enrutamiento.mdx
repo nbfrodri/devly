@@ -6,15 +6,15 @@ layer: redes
 prerequisites:
   - que-es-una-direccion-ip
   - modelos-osi-y-tcp-ip
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
-  - title: "RFC 791: Internet Protocol"
+  - title: "RFC 791: Internet Protocol (en inglés)"
     url: https://www.rfc-editor.org/info/rfc791/
-  - title: "RFC 1812: Requirements for IP Version 4 Routers"
+  - title: "RFC 1812: Requirements for IP Version 4 Routers (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1812/
-  - title: "RFC 4632: Classless Inter-domain Routing (CIDR)"
+  - title: "RFC 4632: Classless Inter-domain Routing (CIDR) (en inglés)"
     url: https://www.rfc-editor.org/info/rfc4632/
-  - title: "RFC 4271: A Border Gateway Protocol 4 (BGP-4)"
+  - title: "RFC 4271: A Border Gateway Protocol 4 (BGP-4) (en inglés)"
     url: https://www.rfc-editor.org/info/rfc4271/
 ---
 
@@ -26,25 +26,25 @@ Es la tarea de la capa de red de los [modelos OSI y TCP/IP](/articulos/modelos-o
 
 ## Qué problema resuelve
 
-Internet no es una sola red, sino decenas de miles de redes independientes conectadas entre sí. Entre tu ordenador y un servidor de otro continente no hay un cable directo: hay una cadena de equipos intermedios, y muchos caminos posibles.
+Internet conecta redes administradas por distintas organizaciones. Entre tu ordenador y un servidor remoto suele haber una cadena de equipos intermedios y puede existir más de un camino.
 
-Nadie conoce el mapa completo. Aun así, un paquete tiene que llegar. La solución es que cada router tome una decisión pequeña y local.
+Para reenviar un paquete, un router no necesita almacenar cada detalle de todas esas redes: utiliza una tabla que relaciona destinos con salidas y siguientes saltos.
 
 ## Salto a salto
 
-Un router no calcula el camino entero. Solo responde a una pregunta: **¿a cuál de mis vecinos le paso este paquete para que se acerque a su destino?**
+Al reenviar un paquete, el router elige el siguiente salto con su tabla. Responde a una pregunta: **¿a cuál de mis vecinos le paso este paquete para que se acerque a su destino?**
 
 El siguiente router hace lo mismo, y así hasta el final. Cada uno de esos pasos es un **salto**.
 
 Es como preguntar una dirección en un pueblo: nadie te da la ruta completa hasta otra ciudad, pero cada persona te señala hacia dónde seguir.
 
-Esto hace a internet resistente. Si un enlace cae, los routers vecinos empiezan a enviar el tráfico por otro lado, y el resto de la red no necesita enterarse.
+Si un enlace cae y existe una alternativa utilizable, los mecanismos de enrutamiento pueden actualizar las tablas. Esa **convergencia** tarda tiempo y puede afectar a otros routers. Sin un camino alternativo o una configuración adecuada, no hay recuperación automática.
 
 ## Redes y prefijos
 
 Los routers no guardan una entrada por cada dispositivo del mundo. Agrupan las [direcciones IP](/articulos/que-es-una-direccion-ip/) por redes.
 
-Una dirección IPv4 tiene dos partes: la que identifica la **red** y la que identifica el **equipo** dentro de ella. Dónde está la frontera lo indica el **prefijo**, con la notación **CIDR**:
+Un prefijo divide las direcciones en una parte común y otra que distingue valores dentro del bloque. La frontera se expresa mediante [**CIDR**](/articulos/subredes-y-cidr/):
 
 ```
 192.168.1.0/24
@@ -60,7 +60,7 @@ El `/24` significa que los primeros 24 [bits](/articulos/que-es-un-bit/) identif
 
 Cuanto menor es el número, mayor es la red.
 
-Para saber si una dirección pertenece a una red, se comparan sus primeros bits con los del prefijo:
+Para comprobar si una dirección coincide con un prefijo, se comparan sus bits iniciales. El ejemplo supone direcciones IPv4 válidas y prefijos enteros entre 0 y 32:
 
 ```js
 function aNumero(ip) {
@@ -101,7 +101,7 @@ Esta regla permite tener una ruta general para un bloque grande y excepciones pa
 
 `0.0.0.0/0` coincide con cualquier dirección. Es la **ruta por defecto**: adónde enviar lo que no encaja con nada más específico.
 
-Tu ordenador tiene una tabla muy corta: su red local y una ruta por defecto que apunta al router de casa, su **[puerta de enlace](/articulos/puerta-de-enlace-predeterminada/)**. Todo lo que no es local se lo entrega a él.
+Un ordenador doméstico puede tener una ruta para su red local y otra por defecto hacia el router, su [**puerta de enlace predeterminada**](/articulos/puerta-de-enlace-predeterminada/). Una VPN u otra interfaz puede añadir rutas más específicas. Si ninguna entrada coincide y no hay ruta por defecto, no puede elegirse un siguiente salto para ese destino.
 
 <Quiz
 	client:visible
@@ -114,7 +114,7 @@ Tu ordenador tiene una tabla muy corta: su red local y una ruta por defecto que 
 
 Un error de configuración puede hacer que dos routers se pasen un paquete el uno al otro sin fin. Para evitarlo, cada paquete lleva un contador, el **TTL** (*time to live*).
 
-Cada router resta uno antes de reenviarlo. Si llega a cero, lo descarta y avisa al remitente.
+En la práctica, cada router suele restar uno al [TTL](/articulos/ttl-en-ip/). Si se agota, descarta el paquete y normalmente envía un aviso ICMP; ese aviso puede filtrarse o limitarse. La especificación IPv4 exige una reducción de al menos uno, no un cronómetro exacto del viaje.
 
 Ese mecanismo es el que aprovecha la herramienta [`traceroute`](/articulos/como-funciona-traceroute/). Envía paquetes con TTL 1, luego 2, luego 3, y con los avisos que recibe reconstruye la lista de routers del camino.
 
@@ -123,7 +123,7 @@ Ese mecanismo es el que aprovecha la herramienta [`traceroute`](/articulos/como-
 - **Enrutamiento estático.** Alguien escribe las rutas a mano. Sirve para redes pequeñas.
 - **Enrutamiento dinámico.** Los routers se intercambian información mediante **[protocolos de enrutamiento](/articulos/protocolos-de-enrutamiento/)** y calculan las rutas solos. Si un enlace cae, recalculan.
 
-La red de routers y enlaces es un [grafo](/articulos/grafos/), y calcular las rutas es un problema de caminos más cortos sobre él.
+Routers y enlaces pueden representarse como un [grafo](/articulos/grafos/). Algunos protocolos calculan caminos de menor coste; otros incorporan políticas y anuncios sin construir un mapa completo de internet.
 
 ## Internet a gran escala
 
@@ -131,7 +131,7 @@ Internet está dividida en **sistemas autónomos**: grandes redes gestionadas po
 
 Dentro de un sistema autónomo, cada organización enruta como prefiere. Entre sistemas autónomos se usa un único protocolo, **BGP**. Con él, cada uno anuncia a sus vecinos a qué redes puede llevar tráfico.
 
-BGP no busca solo el camino más corto. Las decisiones dependen también de acuerdos comerciales entre organizaciones: por quién se paga por pasar y por quién no. Y se basa en la confianza entre ellas, por lo que un anuncio erróneo de una sola red puede desviar o cortar tráfico de medio mundo.
+BGP no busca solo el camino más corto. Las decisiones dependen también de acuerdos comerciales entre organizaciones: por quién se paga por pasar y por quién no. Y se basa en la confianza entre ellas, por lo que un anuncio erróneo de una sola red puede desviar o cortar tráfico de muchas redes.
 
 ## Lo que el enrutamiento no garantiza
 
@@ -141,11 +141,17 @@ La capa de red hace lo que puede y nada más:
 - Pueden llegar **desordenados**, porque dos paquetes del mismo mensaje pueden seguir caminos distintos.
 - Pueden llegar **duplicados**.
 
-Corregir todo eso es tarea de la capa superior, en concreto de [TCP](/articulos/tcp-y-udp/).
+Cuando se usa [TCP](/articulos/tcp-y-udp/), este detecta pérdidas, retransmite y ordena bytes. No puede mantener una comunicación si el camino deja de ser utilizable indefinidamente; la aplicación también necesita gestionar fallos.
+
+## Errores comunes
+
+- **Elegir la primera coincidencia sin comparar prefijos.** Una ruta `/16` debe ganar a una `/8` coincidente en este modelo de selección.
+- **Confundir tener una ruta con poder llegar.** El siguiente salto puede estar caído, un filtro puede bloquear el tráfico o faltar la ruta de respuesta.
+- **Esperar que dos routers mal configurados se detengan solos antes de formar un bucle.** El TTL limita cada paquete; no repara las tablas erróneas.
 
 ## Lo esencial
 
-- Cada router decide solo el siguiente salto; nadie conoce el camino completo.
+- Al reenviar, cada router elige un siguiente salto mediante su tabla.
 - Las direcciones se agrupan en redes mediante prefijos, escritos en notación CIDR.
 - La tabla de enrutamiento asocia redes con vecinos, y gana la ruta de prefijo más largo.
 - El TTL impide que un paquete circule para siempre.

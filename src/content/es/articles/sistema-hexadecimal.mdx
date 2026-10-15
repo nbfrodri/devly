@@ -5,7 +5,7 @@ level: basico
 layer: hardware
 prerequisites:
   - que-es-un-bit
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Number.prototype.toString()"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Number/toString
@@ -60,7 +60,7 @@ Dieciséis es 2 elevado a 4. Por eso cada cifra hexadecimal equivale exactamente
 
 `10101111` es `AF`. Para pasar de hex a binario, se hace al revés: cada cifra se sustituye por sus cuatro bits.
 
-Un byte, que son ocho bits, se escribe siempre con **dos cifras hexadecimales**: de `00` a `FF`, es decir, de 0 a 255. Esa correspondencia tan limpia es la razón de su éxito.
+Para mostrar un byte de ocho bits con anchura fija se usan **dos cifras hexadecimales**: de `00` a `FF`, es decir, de 0 a 255. Un valor pequeño también puede escribirse sin el cero inicial: `A` y `0A` representan diez. La anchura fija facilita separar los bytes.
 
 ## Cómo se reconoce
 
@@ -81,7 +81,9 @@ console.log((47).toString(2)); // "101111"
 
 ### Colores
 
-En [CSS](/articulos/que-es-css/), un color se escribe con seis cifras hexadecimales tras una almohadilla: dos para el rojo, dos para el verde y dos para el azul.
+Una forma de escribir un color en [CSS](/articulos/que-es-css/) utiliza seis cifras hexadecimales tras una almohadilla: dos para el rojo, dos para el verde y dos para el azul.
+
+El ejemplo presupone una cadena válida de la forma `#RRGGBB`. CSS admite además formas cortas y un canal alfa; esta función no las interpreta ni valida entradas:
 
 ```js
 function aRgb(color) {
@@ -95,7 +97,7 @@ function aRgb(color) {
 console.log(aRgb("#ff8800")); // "255, 136, 0"
 ```
 
-Cada componente va de `00` a `ff`, de nada a todo. `#ff8800` es rojo al máximo, verde a la mitad y nada de azul: un naranja. `#000000` es negro y `#ffffff`, blanco.
+Cada componente va de `00` a `ff`, de nada a todo. `#ff8800` es rojo al máximo, verde algo por encima de la mitad y nada de azul: un naranja. `#000000` es negro y `#ffffff`, blanco.
 
 ### Direcciones
 
@@ -112,7 +114,7 @@ Cada componente va de `00` a `ff`, de nada a todo. `#ff8800` es rojo al máximo,
 
 <Quiz
 	client:visible
-	question="¿Cuántas cifras hexadecimales hacen falta para escribir un byte?"
+	question="¿Cuántas cifras hexadecimales se usan para mostrar cualquier byte con anchura fija?"
 	options={["1", "2", "8"]}
 	answer={1}
 />

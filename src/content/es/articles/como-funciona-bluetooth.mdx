@@ -1,42 +1,52 @@
 ---
 title: "¿Cómo funciona Bluetooth?"
-description: "Bluetooth conecta dispositivos cercanos por radio, en la misma banda que el wifi, saltando entre canales. Su versión de bajo consumo mueve relojes, sensores y balizas."
+description: "Bluetooth conecta dispositivos por radio en 2,4 GHz. Sus modalidades, perfiles y procedimientos de seguridad determinan cómo intercambian datos y cuánta energía utilizan."
 level: intermedio
 layer: redes
 prerequisites:
   - tipos-de-redes
   - modulacion
   - como-funciona-el-wifi
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Bluetooth SIG: Bluetooth Technology Overview (en inglés)"
+  - title: "Bluetooth SIG: visión general de la tecnología (en inglés)"
     url: https://www.bluetooth.com/learn-about-bluetooth/tech-overview/
-  - title: "Bluetooth SIG: Understanding Bluetooth Range (en inglés)"
+  - title: "Bluetooth SIG: Bluetooth LE Primer (en inglés)"
+    url: https://www.bluetooth.com/bluetooth-le-primer/
+  - title: "Bluetooth SIG: LE Audio (en inglés)"
+    url: https://www.bluetooth.com/learn-about-bluetooth/feature-enhancements/le-audio/
+  - title: "Bluetooth SIG: alcance de Bluetooth (en inglés)"
     url: https://www.bluetooth.com/learn-about-bluetooth/key-attributes/range/
-  - title: "Explain that Stuff: How does Bluetooth work? (en inglés)"
-    url: https://www.explainthatstuff.com/howbluetoothworks.html
+  - title: "Bluetooth Core 6.2: arquitectura y modelos de asociación (en inglés)"
+    url: https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Core-62/out/en/architecture,-change-history,-and-conventions/architecture.html
+  - title: "Bluetooth SIG: origen del nombre (en inglés)"
+    url: https://www.bluetooth.com/about-us/bluetooth-origin/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**Bluetooth** es una tecnología de radio para conectar dispositivos **cercanos** sin cables: auriculares, teclados, relojes, altavoces, sensores. Es la tecnología típica de las [redes de área personal](/articulos/tipos-de-redes/). La mantiene un consorcio de empresas, el Bluetooth SIG.
+**Bluetooth** es una familia de tecnologías de radio para intercambiar datos entre dispositivos: auriculares, teléfonos, teclados, sensores y otros equipos. Utiliza la banda de 2,4 GHz y especificaciones mantenidas por Bluetooth SIG.
 
-El nombre viene de Harald Bluetooth, un rey danés del siglo X que unió a los pueblos escandinavos: la idea era unir la comunicación entre dispositivos.
+Permite comunicar aparatos sin conectarlos a un router wifi. Un sensor puede entregar una medida al teléfono y este decidir después si la guarda o la envía a internet: son enlaces distintos.
 
-## Dos Bluetooth distintos
+## Clásico y de bajo consumo
 
-| | Bluetooth clásico | Bluetooth de bajo consumo (LE) |
+| Aspecto | Bluetooth clásico: BR/EDR, tasa básica o mejorada | Bluetooth Low Energy (LE), de bajo consumo |
 | --- | --- | --- |
-| Pensado para | Flujos continuos de datos | Mensajes cortos y ocasionales |
-| Ejemplo | Auriculares, altavoces | Relojes, sensores, balizas, cerraduras |
-| Canales | 79 | 40 |
-| Consumo | Moderado | Muy bajo: una pila puede durar meses |
+| Ejemplos | Audio y transferencia de datos | Sensores, balizas, accesorios y también LE Audio |
+| Canales radio | 79 de 1 MHz | 40 de 2 MHz, con usos diferenciados para anuncios y datos |
+| Comunicación | Enlaces coordinados en pequeñas redes | Conexiones, difusión y otras modalidades, según las funciones utilizadas |
+| Energía | Depende de actividad y equipos | Diseñado para facilitar bajo consumo; depende del tiempo activo y de la aplicación |
 
-Los dos usan la banda de **2,4 GHz**, de uso libre sin licencia, la misma que parte del [wifi](/articulos/como-funciona-el-wifi/) y los microondas. Muchos dispositivos actuales incluyen los dos.
+**LE Audio** transmite sonido usando la radio LE; bajo consumo no significa incapacidad para audio continuo. Los dispositivos deben compartir perfiles y funciones compatibles. Que ambos lleven una versión reciente de Bluetooth no basta para deducir que admiten cualquier uso.
 
-## Saltar entre canales
+El alcance tampoco es siempre diez metros. Potencia, sensibilidad, antenas, modo físico y obstáculos cambian la distancia utilizable. Reducir la tasa o añadir redundancia puede ayudar a recibir señales más débiles, con otros costes.
 
-Con tantos aparatos compartiendo la misma banda, las interferencias son inevitables. Bluetooth las esquiva con el **salto de frecuencia**: los dispositivos conectados cambian de canal muchas veces por segundo, siguiendo una secuencia que ambos conocen y que parece aleatoria para los demás.
+## Saltar entre frecuencias
+
+Bluetooth comparte espectro con parte del [wifi](/articulos/como-funciona-el-wifi/) y otros aparatos. En las conexiones, los participantes cambian de canal siguiendo reglas comunes: **salto de frecuencia**. No consiste en escoger un canal al azar de forma independiente en cada extremo.
+
+Esta simulación solo ilustra una secuencia reproducible; no implementa el algoritmo de Bluetooth ni sus canales LE:
 
 ```js
 function secuencia(semilla, saltos, canales) {
@@ -52,27 +62,50 @@ function secuencia(semilla, saltos, canales) {
 console.log(secuencia(3, 6, 79).join(" ")); // "56 9 0 5 11 34"
 ```
 
-Los dos extremos generan la misma secuencia a partir de la misma semilla, así que saben dónde estará el otro en cada momento. Si un canal tiene interferencias, solo se pierde ese instante. El cálculo real es más elaborado, y además evita los canales que detecta ocupados, por ejemplo por un wifi cercano.
+Con iguales parámetros, los dos extremos calculan la misma lista. También necesitan compartir cuándo cambiar, no solo a qué canal. La selección adaptativa puede excluir canales clasificados como inadecuados. Aun así, una interferencia puede causar pérdidas y retransmisiones; saltar no garantiza inmunidad ni hace secreta la comunicación.
 
-## Piconets: quién habla con quién
+## Un sensor entrega la temperatura
 
-Cuando dos o más dispositivos se conectan, forman una pequeña red improvisada, una **piconet**. Un dispositivo, normalmente el móvil o el ordenador, coordina la comunicación y marca el ritmo de los saltos; los demás le siguen. Los dispositivos pueden entrar y salir en cualquier momento, y varias piconets pueden unirse en una red mayor.
+Supón un termómetro LE que ofrece un valor de temperatura legible sin autenticación en este ejemplo. El teléfono actúa como **central**, que inicia la conexión, y el sensor como **periférico**, que la acepta. Son papeles de comunicación, no una clasificación fija de los tipos de aparato.
 
-## Emparejar
+1. Emite **anuncios**, mensajes breves que permiten descubrirlo. No necesita estar emparejado para anunciarse.
+2. El teléfono escucha anuncios y solicita una conexión si el termómetro la permite.
+3. Una vez conectados, coordinan oportunidades de comunicación. Entre ellas, la radio del sensor puede permanecer inactiva y ahorrar energía.
+4. La aplicación descubre un **servicio**, un conjunto de funciones relacionadas, y lee una **característica**, un valor con propiedades y permisos. En nuestro ejemplo recibe 21,5 °C.
+5. Si ambos lo admiten, la aplicación puede habilitar notificaciones de cambios en lugar de pedir cada medida por separado.
 
-Antes de intercambiar datos, dos dispositivos se **emparejan**: se reconocen y acuerdan claves de [cifrado](/articulos/cifrado-simetrico-y-asimetrico/) para que nadie pueda escuchar ni suplantar a ninguno. Por eso a veces hay que confirmar un código en las dos pantallas: así se comprueba que nadie se ha colado en medio de la conexión, haciéndose pasar por el otro dispositivo. Una vez emparejados, se recuerdan y se reconectan solos.
+Estas operaciones se organizan mediante **GATT**, el perfil genérico de atributos. Una característica protegida exigiría cumplir sus permisos antes de leerla. Además, existen usos basados en anuncios sin conexión: el recorrido anterior es uno de los posibles.
 
-## Perfiles: qué se hace con la conexión
+<Quiz
+	client:visible
+	question="El teléfono ve un anuncio del termómetro. ¿Qué demuestra?"
+	options={["Que ya se han acordado y guardado claves", "Que ha recibido el anuncio; todavía puede faltar conexión y autorización para leer", "Que el termómetro tiene acceso a internet"]}
+	answer={1}
+/>
 
-La radio solo transporta bits. Para que unos auriculares de una marca funcionen con un móvil de otra, Bluetooth define **perfiles**: acuerdos sobre cómo transmitir audio, cómo comportarse como un teclado o cómo leer un sensor de pulso. En Bluetooth LE, cada dispositivo expone **servicios** con **características**, valores que se pueden leer o a los que suscribirse, como la frecuencia cardiaca o el nivel de batería.
+## Conectar, emparejar y recordar
 
-## El alcance
+**Conectar** establece un enlace de comunicación. **Emparejar** ejecuta procedimientos para acordar material de seguridad, como claves. **Vincular**, o *bonding*, guarda información para conexiones posteriores. Son operaciones relacionadas, pero no sinónimos ni pasos obligatorios para todo intercambio.
 
-Depende mucho del dispositivo, de su potencia y de los obstáculos. El Bluetooth SIG explica que va desde unos pocos metros, en unos auriculares, hasta más de un kilómetro en condiciones ideales con equipos preparados para ello. El cuerpo humano, las paredes y otros aparatos lo reducen.
+Los métodos de emparejamiento ofrecen garantías diferentes. Comparar correctamente números en dos pantallas puede ayudar a detectar a un intermediario. El método **Just Works**, pensado para equipos sin esa interacción, no proporciona esa protección frente a un atacante activo durante el emparejamiento. Cifrar el enlace y autenticar con quién se está acordando la clave son problemas distintos.
+
+Guardar claves facilita reconectar sin repetir todo el proceso, pero no obliga a que la reconexión ocurra: el equipo puede estar apagado, fuera de alcance o haber borrado la vinculación.
+
+## Entenderse por encima de la radio
+
+Un **perfil** define un uso interoperable, como audio o entrada de teclado. Dos dispositivos pueden encontrarse por radio sin compartir el perfil necesario para la tarea. Los servicios y características de GATT permiten describir muchas aplicaciones LE, pero no son el único mecanismo de toda la familia Bluetooth.
+
+La palabra Bluetooth alude a Harald Bluetooth, rey danés del siglo X. Según Bluetooth SIG, el nombre provisional evocaba unir tecnologías de comunicación; terminó conservándose.
+
+## Errores comunes
+
+- **Esperar meses de batería por usar LE.** La radio activa, la frecuencia de medidas y el procesamiento también consumen.
+- **Suponer que emparejado significa protegido frente a cualquier suplantación.** Importan método, autenticación y configuración.
+- **Buscar compatibilidad solo por número de versión.** Hay que comprobar el perfil y las funciones admitidas en ambos extremos.
 
 ## Lo esencial
 
-- Bluetooth conecta dispositivos cercanos por radio en la banda de 2,4 GHz.
-- El clásico sirve para flujos continuos como el audio; el de bajo consumo, para mensajes cortos.
-- Salta entre canales siguiendo una secuencia compartida para esquivar interferencias.
-- Los dispositivos se emparejan acordando claves, y se entienden mediante perfiles y servicios.
+- Clásico y LE ofrecen modalidades distintas; LE también puede transportar audio.
+- Compartir secuencia y tiempos permite saltar de canal, con límites frente a interferencias.
+- Descubrir, conectar, emparejar y guardar claves son acciones diferentes.
+- Perfiles, servicios y permisos determinan qué pueden hacer juntos los dispositivos.

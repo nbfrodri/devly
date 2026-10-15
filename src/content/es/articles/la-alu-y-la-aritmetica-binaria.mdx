@@ -1,172 +1,135 @@
 ---
 title: "¿Qué es la ALU? Cómo suma, resta y multiplica un procesador"
-description: "La unidad aritmético-lógica es el circuito del procesador que hace las cuentas. Todo se reduce a sumar bits, con unos pocos trucos."
+description: "La unidad aritmético-lógica es el circuito del procesador que hace las cuentas. El tamaño y la interpretación de los bits determinan qué significa el resultado."
 level: intermedio
 layer: hardware
 prerequisites:
   - puertas-logicas
   - complemento-a-dos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 4, Combinational Logic (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c4/
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 13, Building the Beta (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c13/
+  - title: "Computation Structures: diseño de una ALU y comparación con signo (en inglés)"
+    url: https://computationstructures.org/exercises/alu/lab.html
+  - title: "MDN: límites del desplazamiento a la izquierda en JavaScript (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Left_shift
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **ALU**, unidad aritmético-lógica, es la parte del [procesador](/articulos/como-funciona-un-procesador/) que hace las operaciones: sumas, restas, comparaciones y operaciones lógicas sobre bits. Está construida con [puertas lógicas](/articulos/puertas-logicas/), y casi toda su aritmética se apoya en una sola operación: **sumar**.
+La **ALU**, unidad aritmético-lógica, realiza operaciones enteras dentro del [procesador](/articulos/como-funciona-un-procesador/): suma, resta, compara y combina bits. Recibe operandos y una selección de operación; entrega un resultado y puede producir señales que describen ese resultado.
 
-## Qué hace
+Estudiaremos un modelo de ocho bits construido con [puertas lógicas](/articulos/puertas-logicas/). Sus bits representan valores de 0 a 255 sin signo, o de −128 a 127 en [complemento a dos](/articulos/complemento-a-dos/). La misma secuencia de bits puede tener esas dos interpretaciones.
 
-Recibe dos números, en binario, y un código que indica qué operación hacer. Devuelve el resultado y unas cuantas señales sobre él.
+## Sumar una columna
 
-| Tipo | Operaciones |
-| --- | --- |
-| Aritméticas | Sumar, restar, a veces multiplicar |
-| Lógicas | AND, OR, XOR, NOT, bit a bit |
-| Desplazamientos | Mover los bits a la izquierda o a la derecha |
-| Comparaciones | Igual, menor, mayor |
+Un **sumador completo** recibe los dos bits de una columna y el acarreo de la anterior. Devuelve el bit de suma y el acarreo siguiente. En la columna con entradas 1, 1 y acarreo 1, el total es tres: `11` en binario. Sale un 1 y se lleva otro 1.
 
-Es un circuito **combinacional**: su salida depende solo de las entradas de ese instante, no guarda nada. Lo que hay que recordar va en los registros, que son [circuitos secuenciales](/articulos/circuitos-secuenciales-y-biestables/).
-
-## Sumar bit a bit
-
-Se suma en binario igual que a mano en decimal: columna a columna, de derecha a izquierda, llevándose una cuando no cabe.
-
-Para una columna hacen falta tres entradas, los dos bits y el acarreo que llega de la anterior, y dos salidas, el bit del resultado y el acarreo que se pasa a la siguiente. Ese circuito es un **sumador completo**: unas pocas puertas XOR, AND y OR.
-
-Encadenando uno por bit, el acarreo de cada uno entra en el siguiente:
+Al encadenar ocho columnas obtenemos este sumador. Acepta únicamente enteros entre 0 y 255; JavaScript lo simula, no reproduce sus tiempos eléctricos:
 
 ```js
-function sumadorCompleto(a, b, acarreoEntrada) {
-	const suma = a ^ b ^ acarreoEntrada;
-	const acarreo = (a & b) | (acarreoEntrada & (a ^ b));
-
-	return { suma, acarreo };
+function sumadorCompleto(a, b, entrada) {
+	return {
+		suma: a ^ b ^ entrada,
+		acarreo: (a & b) | (entrada & (a ^ b)),
+	};
 }
 
-function sumar(x, y, bits = 8) {
+function sumar8(x, y) {
+	if (![x, y].every((n) => Number.isInteger(n) && n >= 0 && n <= 255)) {
+		throw new RangeError("Se requieren dos enteros de 0 a 255");
+	}
 	let acarreo = 0;
 	let resultado = 0;
-
-	for (let i = 0; i < bits; i++) {
+	for (let i = 0; i < 8; i++) {
 		const columna = sumadorCompleto((x >> i) & 1, (y >> i) & 1, acarreo);
-		resultado = resultado | (columna.suma << i);
+		resultado |= columna.suma << i;
 		acarreo = columna.acarreo;
 	}
-
-	return { resultado, desbordamiento: acarreo };
+	const desbordamientoConSigno = Number(((~(x ^ y) & (x ^ resultado)) & 128) !== 0);
+	return { resultado, acarreo, desbordamientoConSigno };
 }
 
-console.log(sumar(100, 27).resultado); // 127
-console.log(sumar(200, 100).resultado); // 44
-console.log(sumar(200, 100).desbordamiento); // 1
-```
-
-200 + 100 son 300, que no cabe en 8 bits, cuyo máximo es 255. El resultado da la vuelta y queda 44, con un acarreo que sobra por la izquierda. Ese acarreo final avisa del **desbordamiento**.
-
-### El acarreo, un cuello de botella
-
-En este diseño, llamado **sumador de acarreo propagado**, cada columna espera a la anterior. Con 64 bits, el acarreo puede tener que atravesar 64 sumadores uno tras otro.
-
-Los procesadores reales usan **sumadores con anticipación de acarreo**: circuitos adicionales que calculan de antemano, a partir de las entradas, dónde se generará un acarreo. Gastan más puertas y suman mucho más deprisa. Es un ejemplo constante en el diseño de hardware: se cambia espacio por tiempo.
-
-## Restar es sumar
-
-No hace falta un circuito de restar. Con el [complemento a dos](/articulos/complemento-a-dos/), un número negativo se obtiene invirtiendo todos los bits y sumando 1. Restar es sumar el opuesto.
-
-```js
-function sumar(x, y) {
-	return (x + y) & 255;
+for (const [a, b] of [[100, 27], [200, 100], [127, 1]]) {
+	const r = sumar8(a, b);
+	console.log(r.resultado, r.acarreo, r.desbordamientoConSigno);
 }
-
-const opuesto = (x) => sumar(~x & 255, 1);
-
-console.log(opuesto(5)); // 251
-console.log(sumar(20, opuesto(5))); // 15
+// 127 0 0
+// 44 1 0
+// 128 0 1
 ```
 
-En 8 bits, el −5 se escribe como 251. Sumar 20 y 251 da 271, que no cabe; descartando lo que sobra quedan 15, que es 20 − 5.
+La fórmula final detecta operandos del mismo signo cuyo resultado tiene el signo contrario. El bit de peso 128 es el bit de signo; la máscara descarta los demás.
 
-La misma ALU sirve para las dos operaciones: una señal decide si se invierte el segundo número antes de sumarlo.
+## Acarreo y desbordamiento no son lo mismo
 
-## Multiplicar
+En **200 + 100 sin signo**, 300 supera 255: los ocho bits bajos conservan 44 y el acarreo vale 1. Interpretados con signo, esos mismos operandos son −56 y 100; su suma, 44, sí cabe.
 
-Multiplicar en binario es más fácil que en decimal, porque cada cifra del multiplicador es 0 o 1: o se suma el multiplicando, o no.
-
-```js
-function multiplicar(a, b) {
-	let resultado = 0;
-	let multiplicando = a;
-	let multiplicador = b;
-
-	while (multiplicador > 0) {
-		if (multiplicador & 1) {
-			resultado = resultado + multiplicando;
-		}
-
-		multiplicando = multiplicando << 1;
-		multiplicador = multiplicador >> 1;
-	}
-
-	return resultado;
-}
-
-console.log(multiplicar(13, 11)); // 143
-```
-
-Desplazar a la izquierda multiplica por 2, igual que añadir un cero multiplica por 10 en decimal. El algoritmo suma copias desplazadas del multiplicando: **desplazar y sumar**.
-
-Los procesadores actuales tienen circuitos de multiplicación que hacen todas esas sumas en paralelo. Dividir es más costoso, y sigue siendo de las operaciones más lentas.
-
-## Los indicadores
-
-Además del resultado, la ALU anota unas señales sobre él, llamadas **indicadores**:
-
-| Indicador | Se activa cuando |
-| --- | --- |
-| Cero | El resultado es 0 |
-| Negativo | El bit más alto es 1 |
-| Acarreo | Sobra un acarreo, en una operación sin signo |
-| Desbordamiento | El resultado con signo no cabe |
-
-Son la base de las decisiones. Para comparar dos números, la ALU los **resta** y mira los indicadores: si el resultado es cero, son iguales; si es negativo, el primero es menor. Después, una instrucción de salto condicional consulta esos indicadores. Así se implementa un [condicional](/articulos/condicionales/).
+En **127 + 1 con signo**, el resultado matemático es 128, fuera del intervalo permitido. El patrón obtenido, `10000000`, se interpreta como −128. Hay desbordamiento con signo aunque no haya acarreo de salida.
 
 <Quiz
 	client:visible
-	question="¿Cómo resta la ALU dos números?"
-	options={[
-		"Con un circuito de restar independiente",
-		"Sumando el complemento a dos del segundo número",
-		"Dividiendo y multiplicando",
-	]}
+	question="Al sumar 127 y 1 con ocho bits, ¿qué indica que el resultado con signo no cabe?"
+	options={["El acarreo, que necesariamente vale 1", "El desbordamiento con signo, aunque el acarreo sea 0", "El indicador de cero"]}
 	answer={1}
 />
 
-## Operaciones lógicas y desplazamientos
+## Restar reutilizando la suma
 
-Las operaciones lógicas se aplican a cada pareja de bits por separado, sin acarreos: son las más rápidas.
+Para calcular A − B en ocho bits podemos sumar A, los bits invertidos de B y un acarreo inicial de 1. Se conservan los ocho bits bajos:
 
-Se usan para manejar bits sueltos dentro de un número:
+```js
+const opuesto8 = (x) => ((~x & 255) + 1) & 255;
+const restar8 = (a, b) => (a + opuesto8(b)) & 255;
+const conSigno8 = (n) => n < 128 ? n : n - 256;
 
-- **AND con una máscara** extrae unos bits concretos.
-- **OR** activa bits.
-- **XOR** los invierte.
+console.log(opuesto8(5)); // 251
+console.log(restar8(20, 5)); // 15
+console.log(conSigno8(restar8(127, 255))); // -128
+```
 
-Los [permisos de archivos](/articulos/permisos-y-usuarios/) de Unix se guardan como bits y se comprueban así.
+Estas funciones reciben patrones de ocho bits, enteros de 0 a 255. El patrón 251 representa −5; 20 + 251 deja 15 al descartar el acarreo. En la última línea, 255 representa −1: **127 − (−1)** desborda. El valor negativo almacenado no implica que 127 sea menor que −1.
 
-## Lo que esto explica en el software
+Para comparar con signo mediante una resta se debe combinar su indicador negativo **N** con el desbordamiento **V**: A es menor que B cuando `N XOR V` vale 1. Aquí N = 1 y V = 1, por lo que da 0. Igualdad se comprueba con el resultado cero. Las comparaciones sin signo requieren otra interpretación; además, no todas las arquitecturas exponen registros de indicadores.
 
-- **Los enteros tienen límite.** Un entero de 32 bits que supera su máximo da la vuelta y se vuelve negativo, sin error en muchos lenguajes. Ha causado fallos en programas y en cohetes.
-- **Multiplicar y dividir por potencias de 2 es barato**, y los compiladores lo convierten en desplazamientos.
-- **Los decimales van aparte.** Las operaciones con [coma flotante](/articulos/coma-flotante/) usan otra unidad, con circuitos específicos.
+## Multiplicar desplazando y sumando
+
+Cada bit del multiplicador decide si se añade una copia desplazada del multiplicando. Para 13 × 11, el 11 binario es `1011`: se suman 13, 26 y 104; la posición de 52 no participa. El resultado es 143.
+
+```js
+function multiplicar8(a, b) {
+	if (![a, b].every((n) => Number.isInteger(n) && n >= 0 && n <= 255)) {
+		throw new RangeError("Se requieren dos enteros de 0 a 255");
+	}
+	let resultado = 0;
+	while (b > 0) {
+		if (b & 1) resultado += a;
+		a <<= 1;
+		b >>= 1;
+	}
+	return resultado;
+}
+
+console.log(multiplicar8(13, 11)); // 143
+console.log(multiplicar8(255, 255)); // 65025
+```
+
+El producto completo puede necesitar dieciséis bits. Los límites de entrada mantienen los desplazamientos dentro de los enteros de 32 bits que usa JavaScript para estas operaciones; aumentar arbitrariamente el tamaño rompería el modelo.
+
+## Del modelo a una implementación
+
+En el sumador encadenado, el acarreo puede recorrer todas las columnas. Diseños con anticipación o árboles de acarreo reducen esa dependencia usando más lógica. Los multiplicadores pueden combinar productos parciales en paralelo o repartir trabajo entre ciclos: no hay una implementación universal.
+
+Una ALU combinacional no guarda su resultado; lo capturan [registros](/articulos/circuitos-secuenciales-y-biestables/). Las unidades reales pueden estar segmentadas y repartir operaciones entre varios circuitos. AND, OR y XOR actúan sobre cada posición sin propagar acarreo, pero sus latencias concretas dependen del diseño.
+
+El programa también importa: un lenguaje puede descartar bits sobrantes, detectar el desbordamiento o prohibirlo. Un desplazamiento no sustituye cualquier división con signo, por las reglas de redondeo. La [coma flotante](/articulos/coma-flotante/) requiere otro tratamiento de representación y operaciones.
 
 ## Lo esencial
 
-- La ALU es el circuito del procesador que hace las operaciones aritméticas y lógicas.
-- Suma columna a columna con sumadores completos encadenados.
-- Resta sumando el complemento a dos, y multiplica desplazando y sumando.
-- Anota indicadores sobre el resultado, que se usan para comparar y decidir.
-- Los números tienen un tamaño fijo, y desbordarlo da resultados incorrectos.
+- La ALU combina operandos según la operación seleccionada.
+- Un sumador completo maneja dos bits y un acarreo; varios permiten sumar una palabra.
+- Acarreo y desbordamiento con signo responden a interpretaciones distintas.
+- El tamaño, los indicadores y las reglas del lenguaje condicionan el significado del resultado.

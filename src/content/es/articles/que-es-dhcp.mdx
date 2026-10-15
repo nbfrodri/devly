@@ -1,12 +1,12 @@
 ---
 title: "¿Qué es DHCP?"
-description: "DHCP es el protocolo que da a cada equipo su dirección IP, su máscara, su puerta de enlace y sus servidores DNS al conectarse a una red, sin configurar nada a mano."
+description: "DHCP permite obtener una configuración IPv4 y renovarla durante un arrendamiento. Sigue los mensajes de descubrimiento, oferta, solicitud y confirmación."
 level: basico
 layer: redes
 prerequisites:
   - que-es-una-direccion-ip
   - puerta-de-enlace-predeterminada
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RFC 2131: Dynamic Host Configuration Protocol (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc2131
@@ -16,51 +16,84 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-**DHCP**, protocolo de configuración dinámica de equipos, es el que hace que un dispositivo funcione en una red nada más conectarse. Al unirse a una wifi o enchufar un cable, el equipo pide a un **servidor DHCP**, normalmente el router, todo lo que necesita: su [dirección IP](/articulos/que-es-una-direccion-ip/), la máscara de [subred](/articulos/subredes-y-cidr/), la [puerta de enlace](/articulos/puerta-de-enlace-predeterminada/) y los servidores [DNS](/articulos/que-es-dns/).
+**DHCP**, protocolo de configuración dinámica de equipos, permite obtener parámetros de red sin escribirlos manualmente en cada dispositivo. Aquí tratamos **DHCP para IPv4**: un cliente puede solicitar una [dirección IP](/articulos/que-es-una-direccion-ip/) y recibir además máscara de [subred](/articulos/subredes-y-cidr/), [puerta de enlace](/articulos/puerta-de-enlace-predeterminada/) y servidores [DNS](/articulos/que-es-dns/).
 
-Sin DHCP, habría que escribir todo eso a mano en cada dispositivo, y evitar que dos usaran la misma IP.
+Lo proporciona un [servidor](/articulos/que-es-un-servidor/) DHCP, a menudo integrado en el router doméstico. Conectarse físicamente no garantiza que ese servidor responda ni que la configuración permita acceder a internet.
+
+Centralizar las asignaciones facilita evitar direcciones duplicadas y actualizar parámetros. La configuración manual sigue siendo posible. IPv6 tiene mecanismos distintos, como SLAAC y DHCPv6; no toda asignación automática es este intercambio de cuatro mensajes.
 
 ## Los cuatro mensajes
 
-El intercambio básico tiene cuatro pasos, que se recuerdan por sus iniciales en inglés, **DORA**:
+Una asignación nueva puede seguir cuatro pasos, recordados como **DORA**. Este ejemplo ofrece `192.168.1.50` durante 24 horas; esos valores son una elección de la red, no una exigencia del protocolo:
 
 ```mermaid
+---
+config:
+  sequence:
+    width: 80
+    diagramMarginX: 4
+    actorMargin: 24
+---
 sequenceDiagram
-	participant C as Equipo nuevo
-	participant S as Servidor DHCP
-	C->>S: DISCOVER (a toda la red): ¿hay algún servidor?
-	S->>C: OFFER: te ofrezco la 192.168.1.50
-	C->>S: REQUEST: acepto la 192.168.1.50
-	S->>C: ACK: confirmada, por 24 horas
+	participant C as Cliente
+	participant S as Servidor
+	C->>S: DISCOVER<br/>Busco servidor
+	S->>C: OFFER<br/>192.168.1.50
+	C->>S: REQUEST<br/>Elijo esa oferta
+	S->>C: ACK<br/>Durante 24 horas
 ```
 
 1. **Discover**: el equipo, que aún no tiene dirección, envía un mensaje de difusión para localizar servidores.
 2. **Offer**: un servidor responde ofreciendo una configuración.
-3. **Request**: el equipo pide la configuración ofrecida, y con ello rechaza implícitamente otras ofertas.
+3. **Request**: el equipo difunde qué oferta ha seleccionado, identificando al servidor. Los otros servidores saben así que sus ofertas no fueron elegidas.
 4. **Ack**: el servidor la confirma.
 
-Los mensajes viajan por [UDP](/articulos/tcp-y-udp/), porque el equipo todavía no tiene una dirección con la que establecer una conexión.
+El protocolo usa [UDP](/articulos/tcp-y-udp/), con los puertos 67 del servidor y 68 del cliente. Admite el descubrimiento mediante difusión incluso antes de disponer de una dirección utilizable. Un **agente de retransmisión** puede llevar las solicitudes a un servidor situado en otra subred; no tiene que vivir siempre dentro del router local.
+
+La oferta no es todavía una concesión confirmada. Tras la confirmación, el cliente debe comprobar posibles conflictos antes de usar la dirección; si detecta uno, puede rechazarla y reiniciar la búsqueda.
+
+<Quiz
+	client:visible
+	question="Dos servidores ofrecen una configuración. ¿Qué comunica el REQUEST inicial del ejemplo?"
+	options={[
+		"Qué oferta y servidor ha seleccionado el cliente",
+		"Que el cliente quiere utilizar las dos IP a la vez",
+		"Que ya no necesita confirmación",
+	]}
+	answer={0}
+/>
 
 ## El arrendamiento
 
-DHCP no regala las direcciones: las **presta** durante un tiempo, el **arrendamiento** (*lease*). Antes de que caduque, el equipo pide renovarlo. Si se desconecta y no lo renueva, la dirección vuelve a quedar libre para otro. Así un router con 200 direcciones atiende a muchos más dispositivos que entran y salen.
+Una asignación dinámica dura un **arrendamiento** (*lease*). El cliente intenta renovarlo antes de que caduque. Desconectar el cable no informa necesariamente al servidor de que ya puede reutilizar la dirección: puede seguir reservada hasta su vencimiento o liberación.
+
+Con una concesión de 24 horas y los tiempos predeterminados del protocolo, la secuencia sería:
+
+| Momento | Acción si no se ha renovado |
+| --- | --- |
+| Inicio | El cliente obtiene la concesión |
+| A las 12 horas | Intenta renovar con el servidor que la concedió |
+| A las 21 horas | Intenta obtener renovación de cualquier servidor adecuado |
+| A las 24 horas | Si no hay renovación, debe dejar de usar esa concesión |
+
+El servidor puede indicar otros tiempos. Una primera renovación sin respuesta no obliga a perder inmediatamente una concesión todavía vigente. Reutilizar direcciones permite atender usuarios que entran y salen, pero no asignar a la vez más direcciones distintas de las disponibles.
 
 ## Direcciones fijas
 
-Algunos equipos necesitan siempre la misma IP, como una impresora o un servidor. Hay dos formas:
+Una dirección estable puede facilitar encontrar una impresora o administrar un servicio. Dos formas de mantenerla son:
 
-- **Reserva en el servidor DHCP**: siempre le da la misma IP a esa [dirección MAC](/articulos/que-es-una-direccion-mac/).
+- **Reserva en el servidor DHCP**: asocia una dirección a un identificador del cliente, que puede basarse en la [MAC](/articulos/que-es-una-direccion-mac/). Si cambia el identificador o la configuración, la reserva puede dejar de coincidir.
 - **Configuración estática** en el propio equipo, fuera del rango que reparte el servidor.
 
 ## Problemas típicos
 
-- **Sin respuesta del servidor**: el equipo se queda sin dirección válida, o con una que solo sirve dentro de la red local, y no llega a internet. Suele bastar con reiniciar la conexión o el router.
-- **Dos servidores DHCP** en la misma red, por ejemplo un router añadido sin desactivar el suyo, reparten configuraciones distintas y provocan fallos intermitentes.
-- **Un servidor DHCP malicioso**: DHCP no autentica al servidor, así que en una red sin proteger alguien podría responder antes que el router y anunciarse como puerta de enlace.
+- **Sin respuesta y sin concesión vigente**: puede fallar el servidor, agotarse el conjunto de direcciones o bloquearse el intercambio. Reiniciar no resuelve necesariamente la causa.
+- **Servidores mal coordinados**: pueden ofrecer direcciones duplicadas o salidas incompatibles. Tener varios servidores no es por sí solo un error; necesitan una configuración coherente.
+- **Una oferta falsa**: el intercambio básico no demuestra que el servidor sea de confianza. Una oferta maliciosa puede anunciar una puerta de enlace o DNS controlados por otra persona.
 
 ## Lo esencial
 
 - DHCP configura automáticamente IP, máscara, puerta de enlace y DNS al conectarse a una red.
-- El intercambio tiene cuatro mensajes: Discover, Offer, Request y Ack.
+- Una asignación inicial puede seguir Discover, Offer, Request y Ack; la renovación tiene otro recorrido.
 - Las direcciones se prestan por un tiempo y se renuevan.
-- Una reserva en el servidor garantiza la misma IP a un equipo concreto.
+- Una reserva relaciona una dirección con un identificador del cliente, según la configuración.

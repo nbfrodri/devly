@@ -1,48 +1,54 @@
 ---
 title: "¿Qué es la capa de enlace?"
-description: "La capa de enlace entrega datos entre equipos conectados a la misma red, usando direcciones MAC. Ethernet y wifi trabajan aquí."
+description: "La capa de enlace transporta tramas en cada tramo de una comunicación. Ethernet y wifi usan direcciones MAC, pero sus mecanismos de acceso y recuperación difieren."
 level: intermedio
 layer: redes
 prerequisites:
   - modelos-osi-y-tcp-ip
   - que-es-una-direccion-ip
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "RFC 826: An Ethernet Address Resolution Protocol"
+  - title: "Cisco: 802.11 Wireless Sniffing (en inglés)"
+    url: https://www.cisco.com/c/en/us/support/docs/wireless-mobility/80211/200527-Fundamentals-of-802-11-Wireless-Sniffing.html
+  - title: "IEEE: Registration Authority FAQs (en inglés)"
+    url: https://standards.ieee.org/faqs/regauth/
+  - title: "Apple: Private Wi-Fi Addresses (en inglés)"
+    url: https://support.apple.com/en-us/102509
+  - title: "RFC 826: An Ethernet Address Resolution Protocol (en inglés)"
     url: https://www.rfc-editor.org/info/rfc826/
-  - title: "RFC 894: A Standard for the Transmission of IP Datagrams over Ethernet Networks"
+  - title: "RFC 894: A Standard for the Transmission of IP Datagrams over Ethernet Networks (en inglés)"
     url: https://www.rfc-editor.org/info/rfc894/
-  - title: "RFC 1122: Requirements for Internet Hosts, Communication Layers"
+  - title: "RFC 1122: Requirements for Internet Hosts, Communication Layers (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1122/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **capa de enlace** es la parte de una red que se ocupa de llevar datos entre equipos conectados directamente, dentro de la misma red local. Ethernet, por cable, y wifi, por radio, son sus tecnologías más conocidas.
+La **capa de enlace** transporta datos dentro de un enlace o una red local, en unidades llamadas **tramas**. Ethernet y wifi incluyen funciones de esta capa: permiten cubrir un tramo de una comunicación que puede atravesar muchas redes.
 
 Es la capa 2 del modelo OSI y la inferior del [modelo TCP/IP](/articulos/modelos-osi-y-tcp-ip/).
 
 ## Qué problema resuelve
 
-La capa de red, con las [direcciones IP](/articulos/que-es-una-direccion-ip/), decide el camino entre dos puntos cualesquiera de internet. Ese camino está hecho de tramos: de tu ordenador al router, de ese router al siguiente, y así hasta el destino.
+La capa de red utiliza [direcciones IP](/articulos/que-es-una-direccion-ip/) para encaminar paquetes entre redes. Ese recorrido está hecho de tramos: del ordenador al router, de ese router al siguiente y así hasta el destino, si existe una ruta utilizable.
 
 La capa de enlace resuelve cada tramo. Su tarea es más modesta y más concreta: entregar un bloque de datos al equipo vecino por el medio que los une, sea un cable, fibra o el aire.
 
-En un viaje con escalas, la capa de red planifica el itinerario completo. La capa de enlace es cada uno de los vuelos.
+Se parece a un viaje con escalas: enlace resuelve el transporte de un tramo e IP permite avanzar entre redes. La analogía tiene un límite: cada router decide el siguiente salto, sin necesitar conocer de antemano el recorrido completo.
 
 ## Tramas
 
-La unidad de datos de esta capa es la **trama**. Envuelve el paquete que le entrega la capa de red y le añade:
+Una trama Ethernet envuelve el paquete de la capa de red y añade, entre otros campos:
 
 - La dirección del destinatario en esta red.
 - La dirección del remitente.
 - Un código para detectar errores.
 
-En cada tramo se crea una trama nueva. El paquete IP de dentro viaja intacto de extremo a extremo, pero su envoltorio se sustituye en cada salto.
+Cuando un router reenvía el paquete a otro enlace, crea el envoltorio correspondiente a ese tramo. El paquete IP tampoco es inmutable: cambian campos como TTL, y NAT puede modificar direcciones. Un switch, en cambio, puede reenviar dentro de la misma red de enlace sin hacer un salto IP.
 
 ## Direcciones MAC
 
-En esta capa los equipos no se identifican por su dirección IP, sino por su **dirección MAC**, también llamada dirección física. Es un número de 48 [bits](/articulos/que-es-un-bit/) asignado a cada interfaz de red, que se escribe con seis pares de cifras [hexadecimales](/articulos/sistema-hexadecimal/):
+Ethernet y wifi emplean [**direcciones MAC**](/articulos/que-es-una-direccion-mac/) de 48 [bits](/articulos/que-es-un-bit/) para identificar destinatarios en el ámbito del enlace. Se escriben con seis pares de cifras [hexadecimales](/articulos/sistema-hexadecimal/):
 
 ```
 3c:22:fb:9a:41:07
@@ -52,27 +58,27 @@ En esta capa los equipos no se identifican por su dirección IP, sino por su **d
 console.log(2 ** 48); // 281474976710656
 ```
 
-La primera mitad identifica al fabricante de la tarjeta de red.
+Algunas MAC provienen de bloques asignados a organizaciones; otras se configuran localmente. El formato de 48 bits no implica que toda dirección permita identificar al fabricante ni que sea permanente.
 
 ### Por qué dos tipos de dirección
 
 | | Dirección IP | Dirección MAC |
 | --- | --- | --- |
 | Capa | Red | Enlace |
-| Identifica | Una posición en la red | Una interfaz de red |
-| Alcance | Toda internet | La red local |
-| Cambia | Al cambiar de red | En principio, no |
+| Uso | Dirigir paquetes entre redes | Entregar tramas en el ámbito de enlace |
+| Alcance | Depende de la dirección y las rutas | El enlace o la red local |
+| Puede cambiar | Sí | Sí |
 | Sirve para | Encaminar entre redes | Entregar al vecino |
 
-Si te llevas el portátil de casa a una cafetería, su dirección IP cambia y su dirección MAC, no. La IP funciona como una dirección postal, que depende de dónde estés; la MAC, como un número de identidad.
+Al pasar de casa a una cafetería puede cambiar la IP y también la MAC, si el sistema usa direcciones privadas para wifi. Ninguna de ellas demuestra por sí sola la identidad de la persona.
 
-Las dos hacen falta. La IP sola no sirve en el último tramo, porque el medio físico no entiende de direcciones IP. La MAC sola no sirve para internet, porque no dice nada de dónde está el equipo.
+En IP sobre Ethernet se usan ambas porque resuelven decisiones distintas: IP identifica el destino de red y la trama identifica a quién entregarlo en este tramo. No todas las tecnologías de enlace tienen el mismo formato ni utilizan MAC de esta manera.
 
 ## De IP a MAC: el protocolo ARP
 
 Tu ordenador quiere enviar un paquete a la IP `192.168.1.20`, que está en su misma red. Para construir la trama necesita la dirección MAC de ese equipo, y no la conoce.
 
-El protocolo **ARP** la averigua:
+El protocolo [**ARP**](/articulos/que-es-arp/) la averigua en este caso IPv4:
 
 1. Tu ordenador envía una pregunta a todos los equipos de la red: "¿quién tiene la IP 192.168.1.20?".
 2. El equipo con esa IP contesta: "yo, y mi MAC es esta".
@@ -97,27 +103,27 @@ Si el destino está en otra red, el proceso es el mismo, pero se pregunta por la
 
 En una red cableada, los equipos se conectan a un **conmutador** (*switch*). El conmutador aprende qué dirección MAC hay en cada uno de sus puertos, observando las tramas que le llegan, y lo anota en una tabla.
 
-Cuando recibe una trama, mira la MAC de destino y la envía solo por el puerto correspondiente. Si todavía no sabe dónde está ese destino, la envía por todos y aprende de la respuesta.
+Cuando conoce una MAC de destino, reenvía por el puerto aprendido. Si la desconoce, normalmente inunda los otros puertos habilitados de la misma red lógica, excluyendo el de entrada. Aprende observando las MAC de origen, no preguntando quién está detrás de cada cable. Los casos completos están en [hub, switch y router](/articulos/hub-switch-y-router/).
 
-Un conmutador trabaja en la capa de enlace: solo mira direcciones MAC. Un **router** trabaja en la capa de red: mira direcciones IP y conecta redes distintas. El aparato doméstico al que llamamos "router" suele hacer las dos cosas, además de punto de acceso wifi.
+Estas son funciones de enlace del conmutador. El enrutamiento usa direcciones IP para conectar redes; un mismo aparato puede realizar ambas tareas y aplicar filtros adicionales.
 
 ## Compartir el medio
 
-Cuando varios equipos comparten un mismo medio, dos transmisiones simultáneas se mezclan y ninguna se entiende: es una **colisión**.
+En un medio compartido, transmisiones simultáneas pueden interferir y provocar una **colisión**: el receptor no puede recuperar correctamente una trama.
 
 El [wifi](/articulos/como-funciona-el-wifi/) tiene este problema, porque todos los dispositivos usan el mismo aire. Lo afronta con una regla: antes de transmitir, cada equipo escucha, y si el canal está ocupado espera un tiempo aleatorio antes de volver a intentarlo.
 
-En las redes cableadas actuales, cada equipo tiene su propio cable hasta el conmutador, así que las colisiones han desaparecido.
+En un enlace Ethernet punto a punto con dúplex completo, los extremos pueden enviar y recibir simultáneamente y no se utiliza el mecanismo de colisiones del Ethernet compartido antiguo.
 
 ## Detectar errores
 
 Las interferencias pueden alterar bits durante la transmisión. Cada trama lleva al final un código calculado a partir de su contenido. El receptor repite el cálculo y, si el resultado no coincide, descarta la trama.
 
-Esta capa detecta el error, pero normalmente no lo repara. Recuperar lo perdido es tarea de capas superiores, en concreto de [TCP](/articulos/tcp-y-udp/).
+Detectar un error no reconstruye los datos. Ethernet convencional descarta la trama dañada; wifi puede usar confirmaciones y retransmisiones en el propio enlace. Aun con recuperación local, pueden perderse paquetes en otros puntos: [TCP](/articulos/tcp-y-udp/) aporta recuperación de extremo a extremo cuando se utiliza.
 
 ## Tamaño máximo
 
-Cada tecnología limita cuántos datos caben en una trama. Ese límite se llama [**MTU**](/articulos/que-es-una-mtu/); en Ethernet es de 1500 bytes. Un mensaje mayor tiene que partirse en varios trozos.
+La [**MTU**](/articulos/que-es-una-mtu/) limita el tamaño del paquete transportado por un enlace; en IP sobre Ethernet suele ser 1500 [bytes](/articulos/que-es-un-byte/). No es el tamaño total de la trama, que añade información propia. Un paquete que no cabe puede necesitar un tamaño menor o fragmentación cuando esté permitida; también puede ser descartado.
 
 El [origen del nombre Ethernet](/articulos/por-que-ethernet-se-llama-asi/) recuerda el medio compartido de sus primeras implementaciones.
 
@@ -125,6 +131,6 @@ El [origen del nombre Ethernet](/articulos/por-que-ethernet-se-llama-asi/) recue
 
 - La capa de enlace entrega datos entre equipos de la misma red local.
 - Los datos viajan en tramas, que se renuevan en cada tramo del camino.
-- Los equipos se identifican por su dirección MAC, de 48 bits.
-- ARP averigua la MAC que corresponde a una IP de la red local.
+- Ethernet y wifi usan direcciones MAC de 48 bits en el ámbito del enlace.
+- En IPv4 sobre Ethernet, ARP obtiene la MAC del siguiente destinatario local.
 - Un conmutador reenvía tramas según la MAC; un router conecta redes según la IP.

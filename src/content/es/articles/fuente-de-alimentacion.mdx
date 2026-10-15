@@ -1,43 +1,48 @@
 ---
 title: "¿Qué es la fuente de alimentación de un ordenador?"
-description: "La fuente convierte la corriente alterna del enchufe en la corriente continua de baja tensión que necesitan los chips. Parte de la energía se pierde en forma de calor."
+description: "La fuente convierte la energía del enchufe en alimentación estable para el equipo. Sus vatios nominales, el consumo real y las pérdidas de conversión son cosas distintas."
 level: basico
 layer: hardware
 prerequisites:
   - partes-de-un-ordenador
-  - senales-analogicas-y-digitales
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "80 PLUS: programa de certificación de fuentes de alimentación (en inglés)"
-    url: https://www.clearesult.com/80plus/
+  - title: "STMicroelectronics: STEVAL-ISA147V2, ejemplo de conversión AC/DC (en inglés)"
+    url: https://www.st.com/en/evaluation-tools/steval-isa147v2.html
+  - title: "Intel: ATX12VO Desktop Power Supply Design Guide, revisión 2.11 (en inglés, PDF)"
+    url: https://cdrdv2-public.intel.com/613768/613768_2.11.pdf
   - title: "80 PLUS: Program Details (en inglés)"
     url: https://www.clearesult.com/80plus/program-details
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **fuente de alimentación** es la pieza que da energía a todo el ordenador. Recibe la **corriente alterna** del enchufe, de alta tensión, y la convierte en **corriente continua** de baja tensión, que es la que necesitan los chips. Además, reparte esa energía entre la placa base, el procesador, la tarjeta gráfica y los discos.
+La **fuente de alimentación** transforma la energía del enchufe en alimentación eléctrica adecuada para el ordenador. La red entrega **corriente alterna**, cuyo sentido cambia periódicamente. Los circuitos del equipo necesitan **corriente continua**, con una polaridad estable y tensiones mucho menores.
 
-En un portátil, ese trabajo lo hace el cargador, y la batería guarda la energía.
+La tensión, medida en voltios, es la diferencia de potencial eléctrico entre dos puntos. No basta con que llegue energía: cada componente necesita que esa tensión permanezca dentro de sus límites mientras cambia el trabajo que realiza.
 
-## Qué hace, paso a paso
+## Cómo consigue una salida estable
 
-1. **Rectifica**: convierte la corriente alterna, que cambia de sentido muchas veces por segundo, en corriente que va en un solo sentido.
-2. **Filtra** y estabiliza el resultado.
-3. **Reduce la tensión** a los valores que usan los componentes.
-4. **Protege**: se corta si detecta un cortocircuito, una sobrecarga o un calentamiento excesivo.
+Una fuente conmutada típica combina varias etapas:
 
-Además, los propios componentes suelen ajustar la tensión una vez más cerca de ellos. El procesador, por ejemplo, trabaja con una tensión muy baja que se genera en la placa base, justo a su lado.
+1. **Rectificación:** convierte la entrada alterna en una tensión de polaridad fija, todavía pendiente de acondicionar.
+2. **Conmutación y transformación:** [transistores](/articulos/que-es-un-transistor/) conectan y desconectan rápidamente la corriente. Un transformador adapta la tensión y permite aislar eléctricamente la salida de la entrada.
+3. **Rectificación y filtrado de salida:** los pulsos se convierten en una alimentación continua con pequeñas variaciones residuales.
+4. **Regulación:** un circuito mide la salida y ajusta la conmutación cuando cambia la demanda, para mantener la tensión prevista.
 
-## La potencia
+Los diseños concretos varían y pueden incorporar otras etapas. La idea central es esa regulación: al empezar un cálculo intenso, el equipo pide más corriente, y la fuente debe responder sin que la tensión se salga de lo permitido.
 
-La fuente indica la **potencia máxima** que puede entregar, en vatios. Debe cubrir el consumo de todo el equipo con margen. La tarjeta gráfica y el procesador son los que más consumen.
+En la [placa base](/articulos/la-placa-base-y-los-buses/) y en otros componentes hay reguladores adicionales que generan las tensiones finales de los chips. En un portátil, el adaptador externo proporciona alimentación continua; circuitos internos la distribuyen, gestionan la carga de la batería y vuelven a regularla. La batería almacena energía, no realiza por sí sola todo ese trabajo.
 
-Una fuente demasiado justa puede apagar el equipo en los momentos de más carga. Una muy sobredimensionada no daña nada, pero cuesta más.
+## Qué significan los vatios de la etiqueta
 
-## La eficiencia
+La **potencia**, medida en vatios, indica cuánta energía se entrega por unidad de tiempo. Una fuente nominal de 800 W está diseñada para entregar hasta la potencia especificada bajo sus condiciones de funcionamiento. **No consume siempre 800 W** ni obliga a los componentes a recibir esa cantidad.
 
-Ninguna conversión es perfecta: parte de la energía que entra se pierde como **calor**. La **eficiencia** es el porcentaje que llega a los componentes.
+Supongamos que el equipo demanda 400 W en sus salidas. La fuente entrega esos 400 W y toma algo más del enchufe porque la conversión tiene pérdidas. Tampoco basta con sumar vatios: importan los límites de cada salida, los conectores, la temperatura de funcionamiento y la respuesta a aumentos breves de demanda. Una potencia nominal mayor no corrige una conexión incompatible.
+
+## La eficiencia: seguir la energía
+
+La **eficiencia** es la fracción de la potencia de entrada que se convierte en potencia útil de salida. Este ejemplo supone una demanda constante y una eficiencia conocida en ese punto de funcionamiento:
 
 ```js
 function perdidas(consumoDelEquipo, eficiencia) {
@@ -49,17 +54,27 @@ console.log(perdidas(400, 0.8)); // 100
 console.log(perdidas(400, 0.92)); // 35
 ```
 
-Para dar 400 vatios al equipo, una fuente con un 80 % de eficiencia toma 500 del enchufe y pierde 100 en calor. Con un 92 %, solo pierde unos 35. Menos pérdidas significa menos factura, menos calor y ventiladores más silenciosos.
+Con un 80 %, para entregar 400 W necesita 500 W de entrada: 400 llegan al equipo y 100 se disipan en la fuente. Con un 92 %, las pérdidas son unos 35 W, redondeadas. Reducirlas disminuye el calor que la fuente necesita evacuar; el ruido también depende de su ventilador y su control.
 
-El programa **80 PLUS** certifica la eficiencia de las fuentes en niveles: Standard, Bronze, Silver, Gold, Platinum, Titanium y Ruby, de menos a más eficiente. Cada nivel exige una eficiencia mínima medida a distintas cargas, porque una fuente no rinde igual al 20 % de su capacidad que al 100 %.
+Si el primer caso dura una hora, se toman **500 Wh**, o 0,5 kWh, del enchufe. Los vatios describen potencia; los vatios hora, energía acumulada durante un tiempo.
 
-## Por qué importa una buena fuente
+<Quiz
+	client:visible
+	question="Una fuente de 800 W entrega 400 W con un 80 % de eficiencia. ¿Qué potencia toma del enchufe?"
+	options={["800 W, porque lo indica su etiqueta", "500 W", "320 W"]}
+	answer={1}
+/>
 
-Una fuente de mala calidad puede entregar una tensión inestable, que provoca fallos difíciles de diagnosticar, o estropearse llevándose otros componentes por delante. En los centros de datos, donde hay miles de fuentes funcionando sin parar, cada punto de eficiencia se nota en el consumo eléctrico, y los servidores suelen llevar **dos fuentes** por si una falla.
+## Qué certifica 80 PLUS
+
+El programa **80 PLUS** comprueba requisitos de eficiencia en condiciones y cargas definidas. Sus categorías distinguen, entre otras cosas, la tensión de entrada y el tipo de fuente. Un nivel como Gold o Platinum debe interpretarse dentro de la categoría correspondiente: no significa que la eficiencia sea constante con cualquier carga.
+
+Esa certificación no resume por sí sola la calidad completa de una fuente. La estabilidad eléctrica y las protecciones son aspectos distintos. Las protecciones frente a sobrecorriente, cortocircuitos o temperatura excesiva pueden limitar o cortar la salida cuando detectan esas condiciones; no garantizan que ningún fallo pueda dañar el equipo.
+
+Para continuar, [la refrigeración del ordenador](/articulos/refrigeracion-de-un-ordenador/) explica qué sucede con el calor generado tanto en la fuente como en los componentes que alimenta.
 
 ## Lo esencial
 
-- La fuente convierte la corriente alterna del enchufe en corriente continua de baja tensión.
-- Se elige por su potencia máxima, con margen sobre el consumo del equipo.
-- La energía que no llega a los componentes se pierde como calor.
-- La certificación 80 PLUS clasifica las fuentes por su eficiencia.
+- La fuente convierte y regula la alimentación; otros reguladores ajustan las tensiones cerca de los chips.
+- La potencia nominal no es el consumo constante del ordenador.
+- La energía de entrada se reparte entre la entregada al equipo y las pérdidas de conversión.

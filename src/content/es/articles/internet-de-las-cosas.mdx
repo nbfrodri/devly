@@ -6,7 +6,7 @@ layer: redes
 prerequisites:
   - tcp-y-udp
   - microcontrolador-y-microprocesador
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RFC 7228: Terminology for Constrained-Node Networks"
     url: https://www.rfc-editor.org/info/rfc7228/
@@ -18,51 +18,79 @@ sources:
     url: https://owasp.org/www-project-internet-of-things/
   - title: "UIT-T Y.2060: Overview of the Internet of things (en inglés)"
     url: https://www.itu.int/rec/T-REC-Y.2060-201206-I
+  - title: "RFC 9112: HTTP/1.1, conexiones persistentes (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc9112.html
+  - title: "RFC 8323: CoAP over TCP, TLS, and WebSockets (en inglés)"
+    url: https://www.rfc-editor.org/info/rfc8323/
+  - title: "USENIX: Understanding the Mirai Botnet (en inglés)"
+    url: https://www.usenix.org/conference/usenixsecurity17/technical-sessions/presentation/antonakakis
 ---
 
 import { Quiz } from "@/components/quiz";
 
-El **internet de las cosas**, o IoT por sus siglas en inglés, es el conjunto de objetos físicos que llevan sensores, algo de capacidad de cálculo y conexión a una red, y que con ello envían datos y reciben órdenes. Un termostato que se controla desde el móvil, un contador de luz que comunica el consumo, un sensor que vigila la humedad de un cultivo.
+El **internet de las cosas**, o IoT (*Internet of Things*), conecta objetos físicos con programas mediante redes. Los dispositivos pueden medir con sensores, actuar sobre su entorno o comunicar su identidad y estado. Un termostato que se controla desde el móvil, un contador de luz que comunica el consumo, un sensor que vigila la humedad de un cultivo.
 
-La diferencia con el internet de siempre es quién está conectado: no personas ante una pantalla, sino objetos que funcionan solos.
+El énfasis está en conectar el mundo físico con programas: medir, identificar o actuar. Puede haber personas en el circuito, como quien cambia el objetivo del termostato desde una aplicación; no todo dispositivo funciona de forma autónoma.
 
 ## Las piezas
 
-Un sistema de IoT tiene casi siempre cuatro capas.
+Para entender un sistema de IoT podemos separar cuatro funciones; no tienen por qué estar en cuatro máquinas distintas.
 
 | Capa | Qué hace | Ejemplo |
 | --- | --- | --- |
 | Dispositivos | Miden y actúan | Un sensor de temperatura, una válvula |
 | Conectividad | Lleva los datos | Wifi, Bluetooth, redes de largo alcance |
-| Plataforma | Recibe, guarda y procesa | Servidores en [la nube](/articulos/computacion-en-la-nube/) |
+| Plataforma | Recibe, guarda y procesa | Un [servidor](/articulos/que-es-un-servidor/) local o en [la nube](/articulos/computacion-en-la-nube/) |
 | Aplicación | Muestra y decide | Un panel, una alerta, una automatización |
 
 ### Los dispositivos
 
-Tienen dos tipos de componentes:
+Dos tipos de componentes habituales son:
 
 - **Sensores**, que convierten una magnitud física en un dato: temperatura, luz, movimiento, posición.
 - **Actuadores**, que hacen algo en el mundo: encender un motor, abrir una cerradura.
 
-En el centro hay normalmente un [microcontrolador](/articulos/microcontrolador-y-microprocesador/): un chip pequeño, barato y de muy bajo consumo.
+En el centro hay normalmente un [microcontrolador](/articulos/microcontrolador-y-microprocesador/), que ejecuta el programa del dispositivo. Sus recursos y consumo dependen del modelo y del uso.
 
 ### La pasarela
 
-Muchos dispositivos no hablan directamente con internet. Se conectan a una **pasarela** cercana, que traduce su protocolo de corto alcance y reenvía los datos. El altavoz o el concentrador de una casa conectada hacen ese papel.
+Muchos dispositivos no hablan directamente con internet. Se conectan a una **pasarela** cercana, que conecta su red con otra. Puede reenviar paquetes o traducir entre [protocolos](/articulos/que-es-un-protocolo-de-red/), según las tecnologías. Un concentrador doméstico, o un altavoz que incluya esa función, puede hacer ese papel.
+
+## De una lectura a una alerta
+
+Supongamos un sensor de temperatura conectado por Bluetooth a una pasarela y un servidor que muestra un panel. El objetivo es avisar si la lectura supera 30 °C.
+
+1. El sensor mide 32 °C. Su programa prepara una lectura con dispositivo `sala-1`, secuencia `42`, unidad `°C` y hora de medida.
+2. La pasarela recibe el dato y lo reenvía por internet. Si pierde la conexión, puede guardarlo para después, pero solo si tiene almacenamiento y esa función está implementada.
+3. El servidor valida formato, identidad y secuencia, guarda el dato y actualiza el panel. La secuencia permite reconocer un reenvío de la misma lectura; en un sistema real también hay que definir cómo cambia tras reiniciar el sensor.
+4. El panel muestra «32 °C, medidos hace 10 segundos» y genera la alerta. Si vuelve a recibir la lectura 42, no debería enviar una segunda alerta por el mismo evento.
+
+Si se corta la red, el panel no sabe la temperatura actual por el mero hecho de conservar 32. Debe mostrar la antigüedad o la pérdida de comunicación. Enviar una orden de ventilación tampoco demuestra que el ventilador arrancó: hace falta confirmar la ejecución o medir su efecto. Estos límites conectan transporte, reintentos y estado físico.
+
+<Quiz
+	client:visible
+	question="La pasarela reenvía la lectura 42 después de un corte, pero el servidor ya generó su alerta. ¿Qué permite evitar otra alerta por el mismo evento?"
+	options={[
+		"Reconocer el dispositivo y la identidad de esa lectura ya procesada",
+		"Tratar cada llegada como una medida nueva",
+		"Cambiar automáticamente su unidad de temperatura",
+	]}
+	answer={0}
+/>
 
 ## Lo que lo hace distinto: las limitaciones
 
-Un servidor tiene gigabytes de memoria y corriente continua. Un sensor puede tener unos kilobytes y una pila que debe durar años. Esa diferencia lo condiciona todo.
+Un servidor de centro de datos dispone de alimentación continua y abundante memoria. Un sensor puede tener unos kilobytes y una pila que deba durar años; una cámara alimentada por cable tiene otras restricciones. Esa diferencia lo condiciona todo.
 
-- **Poca memoria y poco procesador.** No cabe un sistema operativo corriente ni las bibliotecas habituales.
-- **Energía.** Es la restricción más dura. Lo que más gasta es la radio.
+- **Memoria y cálculo limitados.** En los dispositivos más pequeños no cabe un sistema operativo de escritorio ni cualquier biblioteca.
+- **Energía.** Puede dominar el diseño de un equipo a pilas. La radio puede gastar mucho, pero un motor, un calentador o un sensor también pueden ser el mayor consumo.
 - **Red poco fiable**, lenta y a veces de pago por cada dato.
 - **Sin pantalla ni teclado.** Configurarlos y actualizarlos es complicado.
 - **Muchos años en servicio**, a menudo en lugares de difícil acceso.
 
 ### Dormir casi siempre
 
-La forma de que una pila dure años es que el dispositivo esté casi todo el tiempo dormido: despierta, mide, transmite y vuelve a dormir.
+Una forma de reducir el consumo es mantener el dispositivo dormido entre medidas: despierta, mide, transmite y vuelve a dormir.
 
 ```js
 const diasDeBateria = (capacidad, consumo) =>
@@ -75,30 +103,32 @@ console.log(diasDeBateria(2000, 80)); // 1
 console.log(diasDeBateria(2000, consumoMedio(80, 0.01, 0.001))); // 926
 ```
 
-Con una batería de 2000 miliamperios hora, un dispositivo que consume 80 miliamperios todo el rato dura un día. Si solo está activo una milésima parte del tiempo, y dormido consume una centésima de miliamperio, dura dos años y medio.
+La capacidad se introduce en miliamperios hora (mAh) y las corrientes en miliamperios (mA). Dividir capacidad entre corriente da horas; dividir después entre 24 da días. Son valores inventados: 80 mA continuos dan unas 25 horas; el promedio de 80 mA durante el 0,1 % del tiempo y 0,01 mA el resto es 0,08999 mA, unos 926 días ideales.
 
-Esa decisión condiciona el software: un dispositivo dormido no puede recibir mensajes. Es él quien pregunta al despertar.
+El cálculo omite autodescarga, temperatura, conversión de tensión, envejecimiento y picos de arranque. Sirve para comparar estrategias, no para prometer autonomía de una batería real.
+
+Esa decisión condiciona el software: si la radio está apagada, no recibe en ese periodo. Puede abrir ventanas de recepción al despertar; la pasarela o el servidor tendrán que conservar lo pendiente si el diseño lo permite.
 
 ## Conectividad
 
 No hay una red para todo. Se elige según alcance, consumo y cantidad de datos.
 
-| Tecnología | Alcance | Consumo | Uso típico |
-| --- | --- | --- | --- |
-| Wifi | Una casa | Alto | Cámaras, enchufes con corriente |
-| [Bluetooth](/articulos/como-funciona-bluetooth/) de baja energía | Unos metros | Muy bajo | Pulseras, balizas |
-| Redes en malla, como Zigbee o Thread | Una casa, saltando entre dispositivos | Muy bajo | Bombillas, sensores domésticos |
-| Redes de largo alcance y baja potencia, como LoRaWAN | Kilómetros | Muy bajo | Agricultura, contadores |
-| Red móvil | Donde haya cobertura | Medio o bajo | Vehículos, seguimiento |
+| Tecnología | Qué conviene comprobar | Uso posible |
+| --- | --- | --- |
+| [Wifi](/articulos/como-funciona-el-wifi/) | Cobertura, actividad de radio y alimentación | Cámaras y enchufes |
+| [Bluetooth](/articulos/como-funciona-bluetooth/) de baja energía | Distancia, intervalos de conexión y datos por envío | Sensores cercanos y pulseras |
+| [Malla](/articulos/topologias-de-red/), como Zigbee o Thread | Nodos que reenvían, rutas y energía de esos nodos | Sensores y automatización de edificios |
+| Largo alcance y baja potencia, como LoRaWAN | Tamaño y frecuencia de mensajes, cobertura y límites de uso del canal | Agricultura y contadores |
+| [Red móvil](/articulos/redes-moviles/) | Cobertura, modalidad de radio, consumo y coste del servicio | Seguimiento y equipos distribuidos |
 
-Las de largo alcance y bajo consumo pagan un precio: transmiten muy pocos datos, unos cuantos bytes cada vez.
+No hay un alcance ni un consumo garantizados por el nombre. Las modalidades para pocos datos y baja actividad pueden ahorrar energía, a costa de limitar volumen, frecuencia o rapidez de recepción.
 
 ## Protocolos ligeros
 
-[HTTP](/articulos/que-es-http/) es pesado para un sensor: cabeceras de texto largas y una conexión por petición. Se usan alternativas pensadas para estas condiciones:
+[HTTP](/articulos/que-es-http/) también se usa en IoT y puede reutilizar conexiones; sus versiones no tienen todas el mismo formato de cabeceras. Conviene medir el intercambio completo: establecimiento, seguridad, frecuencia de datos y memoria necesaria. Dos alternativas son:
 
-- **[MQTT](/articulos/protocolo-mqtt/).** Publicación y suscripción a través de un intermediario, con mensajes mínimos. Es el más extendido.
-- **CoAP.** Parecido a HTTP en su modelo, pero binario, compacto y sobre [UDP](/articulos/tcp-y-udp/).
+- **[MQTT](/articulos/protocolo-mqtt/).** Publicación y suscripción a través de un intermediario, con un formato compacto. Permite recibir publicaciones sin consultar repetidamente al productor.
+- **CoAP.** Modelo de petición y respuesta con formato compacto; su especificación original usa [UDP](/articulos/tcp-y-udp/), y existen transportes posteriores sobre TCP, TLS y WebSocket.
 
 ## Dónde se procesa
 
@@ -106,45 +136,34 @@ Enviarlo todo a la nube no siempre es posible ni conveniente. Procesar los datos
 
 - **Menos latencia.** Un freno de emergencia no puede esperar una respuesta de un servidor lejano.
 - **Menos datos transmitidos.** Se envía "todo normal" en lugar de mil lecturas.
-- **Funciona sin conexión.**
-- **Privacidad.** Los datos en bruto no salen.
+- **Autonomía local.** Puede seguir funcionando sin internet si las decisiones y recursos necesarios son locales.
+- **Menos datos expuestos.** Puede evitar enviar datos en bruto, aunque aún hay que proteger lo que se conserva y transmite.
 
-<Quiz
-	client:visible
-	question="¿Cuál es la principal razón de que un sensor a pilas pase casi todo el tiempo dormido?"
-	options={[
-		"Para no saturar la red",
-		"Para que la batería dure meses o años",
-		"Para que sus medidas sean más precisas",
-	]}
-	answer={1}
-/>
+## Seguridad durante la vida del dispositivo
 
-## Seguridad: el punto débil
-
-El IoT tiene un historial de [seguridad](/articulos/que-es-la-ciberseguridad/) malo, y las razones son estructurales.
+La [seguridad](/articulos/que-es-la-ciberseguridad/) abarca dispositivo, comunicaciones, plataforma y mantenimiento. Estas condiciones dificultan proteger algunos despliegues:
 
 - **Contraseñas de fábrica.** Miles de dispositivos con el mismo usuario y la misma clave, que nadie cambia.
 - **Sin actualizaciones.** Muchos no reciben parches nunca, y siguen conectados una década.
 - **Poco margen.** El cifrado cuesta memoria y energía que el dispositivo apenas tiene.
-- **Acceso físico.** Cualquiera puede abrir un sensor instalado en la calle y leer su memoria.
+- **Acceso físico.** Un sensor accesible puede sufrir manipulación o extracción de datos si no cuenta con protecciones adecuadas.
 - **Precio.** En un producto de pocos euros, la seguridad compite con el margen.
 
 En 2016, una red de cientos de miles de cámaras y routers domésticos infectados, llamada Mirai, lanzó ataques que dejaron inaccesibles servicios importantes de internet. Los dispositivos se habían infectado probando una lista corta de contraseñas de fábrica.
 
-Las consecuencias, además, son físicas: un dispositivo comprometido abre una puerta, apaga una calefacción o detiene una máquina.
+Las consecuencias, además, son físicas: un dispositivo comprometido puede abrir una puerta, apagar una calefacción o detener una máquina, según los permisos y controles de la instalación.
 
-Lo mínimo exigible:
+Medidas que deben formar parte del diseño, ajustadas a las amenazas:
 
-- Una credencial distinta por dispositivo, nunca una común.
-- Comunicación cifrada.
+- Credenciales distintas para los dispositivos y permisos acotados.
+- Comunicación protegida, autenticando a sus participantes además de cifrar.
 - Actualizaciones remotas, firmadas.
 - Recoger solo los datos necesarios.
 - Separar estos dispositivos del resto de la red.
 
 ## Privacidad
 
-Sensores en casas, coches y cuerpos recogen datos muy íntimos: cuándo hay alguien en casa, cómo duerme, por dónde se mueve. Suelen ser datos personales, sujetos a normas como el [RGPD](/articulos/rgpd-y-proteccion-de-datos/).
+Sensores en casas, coches y cuerpos recogen datos muy íntimos: cuándo hay alguien en casa, cómo duerme, por dónde se mueve. Cuando permiten identificar a una persona, hay que considerar las obligaciones de [protección de datos](/articulos/rgpd-y-proteccion-de-datos/) que correspondan al tratamiento y su jurisdicción.
 
 ## Otros retos
 
@@ -152,10 +171,16 @@ Sensores en casas, coches y cuerpos recogen datos muy íntimos: cuándo hay algu
 - **Escala.** Millones de dispositivos enviando datos a la vez exigen una plataforma preparada, a menudo con [colas de mensajes](/articulos/colas-de-mensajes/).
 - **Dependencia del fabricante.** Si la empresa cierra sus servidores, el aparato puede dejar de funcionar.
 
+## Errores comunes
+
+- **Mostrar el último dato como si fuera actual.** Una desconexión puede dejar al panel con una medida antigua; hay que indicar su edad.
+- **Calcular autonomía solo con el consumo dormido.** Transmisión, despertares y sensores también gastan; importa el promedio del ciclo completo.
+- **Confundir conectividad con compatibilidad.** Compartir red no basta si los programas no acuerdan mensajes, unidades y permisos.
+
 ## Lo esencial
 
-- El IoT son objetos con sensores, cálculo y conexión que funcionan sin una persona delante.
-- Un sistema tiene dispositivos, conectividad, plataforma y aplicación.
-- La energía es la mayor limitación: los dispositivos duermen casi siempre.
-- Usan redes y protocolos ligeros, elegidos según alcance y consumo.
-- La seguridad es su mayor problema, por contraseñas comunes y falta de actualizaciones.
+- El IoT conecta medidas y acciones del mundo físico con programas, directamente o mediante pasarelas.
+- Una lectura necesita identidad, unidad y contexto temporal para interpretarse y tratar reenvíos.
+- Energía, cobertura y capacidad condicionan cuánto se mide, transmite y conserva.
+- Un dato recibido puede estar atrasado; una orden enviada no demuestra un efecto físico.
+- Seguridad y mantenimiento deben cubrir todo el recorrido y la vida del dispositivo.

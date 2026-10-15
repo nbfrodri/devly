@@ -1,147 +1,110 @@
 ---
 title: "¿Qué es Linux?"
-description: "Linux es el núcleo de un sistema operativo, libre y de código abierto. Con el resto del software que lo acompaña mueve servidores, móviles y casi todo lo demás."
+description: "Linux es un núcleo de sistema operativo. Las distribuciones lo combinan con bibliotecas, utilidades y aplicaciones para construir sistemas completos."
 level: basico
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "The Linux Kernel Archives: About Linux Kernel (en inglés)"
-    url: https://www.kernel.org/category/about.html
-  - title: "GNU: Linux y el sistema GNU"
-    url: https://www.gnu.org/gnu/linux-and-gnu.es.html
-  - title: "GNU: ¿Qué es el software libre?"
-    url: https://www.gnu.org/philosophy/free-sw.es.html
+    url: https://www.kernel.org/linux.html
+  - title: "Debian: ¿Qué es GNU/Linux?"
+    url: https://www.debian.org/releases/stable/amd64/ch01s02.es.html
+  - title: "Linux Kernel: reglas de licencia (en inglés)"
+    url: https://docs.kernel.org/process/license-rules.html
+  - title: "GNU GPL versión 2, texto en el repositorio de Linux (en inglés)"
+    url: https://github.com/torvalds/linux/blob/master/LICENSES/preferred/GPL-2.0
   - title: "Linux Kernel: HOWTO do Linux kernel development (en inglés)"
     url: https://www.kernel.org/doc/html/latest/process/howto.html
+  - title: "Android: Descripción general de la arquitectura"
+    url: https://source.android.com/docs/core/architecture?hl=es-419
+  - title: "Microsoft: Acerca de los contenedores de Windows"
+    url: https://learn.microsoft.com/es-es/virtualization/windowscontainers/about/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**Linux** es, en sentido estricto, un **núcleo**: la parte central de un [sistema operativo](/articulos/que-es-un-sistema-operativo/), la que gestiona el hardware y los programas. En el uso corriente, la palabra designa también a los sistemas operativos completos construidos sobre ese núcleo.
+**Linux** es, en sentido estricto, un **[núcleo](/articulos/que-es-el-kernel/)**: software que gestiona ejecución, memoria y acceso a recursos del ordenador. En el uso corriente, «Linux» también designa [sistemas operativos](/articulos/que-es-un-sistema-operativo/) completos que utilizan ese núcleo. Conviene distinguir ambos sentidos para entender qué se instala y quién mantiene cada parte.
 
-Es software libre y de código abierto: cualquiera puede usarlo, estudiarlo, modificarlo y distribuirlo.
+## De un núcleo a un sistema utilizable
 
-## De dónde viene
+Linus Torvalds inició Linux en 1991. Su publicación permitió que otras personas lo probaran y contribuyeran a desarrollarlo; la historia de su nombre se amplía en [por qué Linux se llama Linux](/articulos/por-que-linux-se-llama-linux/).
 
-En 1991, Linus Torvalds, un estudiante finlandés, empezó a escribir un núcleo como pasatiempo y lo publicó en internet para que otros lo probaran y mejoraran. Cómo acabó llamándose así lo cuenta [por qué Linux se llama Linux](/articulos/por-que-linux-se-llama-linux/).
+Un núcleo necesita otros programas para ofrecer un entorno de uso. El proyecto **GNU** ya desarrollaba herramientas para un sistema libre de tipo Unix: un [compilador](/articulos/compilador-e-interprete/) para traducir código y una [shell](/articulos/terminal-y-shell/) para interpretar órdenes, entre otras piezas. Su combinación con Linux dio lugar a sistemas conocidos como **GNU/Linux**. No todo sistema que usa el núcleo Linux contiene exactamente ese conjunto.
 
-Un núcleo solo no es un sistema utilizable. Hacen falta un intérprete de órdenes, un compilador, utilidades. Esas piezas ya existían: desde 1983, el proyecto **GNU**, iniciado por Richard Stallman, estaba construyendo un sistema operativo libre completo, y le faltaba justo el núcleo.
+Una **[distribución](/articulos/distribuciones-de-linux/)** selecciona, integra y mantiene componentes. Por ejemplo, dos instalaciones pueden usar distintas versiones o configuraciones de Linux, distintos escritorios y diferentes herramientas de actualización. Compartir la familia del núcleo no significa que sus archivos sean idénticos.
 
-Las dos partes encajaron. Por eso hay quien defiende que el nombre correcto del sistema es GNU/Linux.
-
-## Núcleo y sistema
-
-Conviene separar las capas.
-
-| Capa | Qué hace | Ejemplos |
+| Pieza | Responsabilidad | Ejemplo de componente |
 | --- | --- | --- |
-| Núcleo | Gestiona procesador, memoria, dispositivos y procesos | Linux |
-| Utilidades y bibliotecas | Órdenes básicas, intérprete, biblioteca de C | Las de GNU |
-| Sistema de arranque y servicios | Inicia el sistema y sus servicios | systemd |
-| Gestor de paquetes | Instala y actualiza programas | apt, dnf, pacman |
-| Entorno gráfico | Ventanas y escritorio, si lo hay | GNOME, KDE Plasma |
+| Núcleo | Administrar recursos y ofrecer servicios básicos | Linux |
+| Biblioteca | Ofrecer funciones reutilizables a programas | Una biblioteca de C |
+| Intérprete de órdenes | Interpretar instrucciones de una shell | Bash |
+| Gestor de servicios | Iniciar y supervisar trabajo del sistema | systemd, en sistemas que lo eligen |
+| Gestor de paquetes | Instalar y actualizar componentes preparados | APT, DNF o pacman |
+| Entorno gráfico | Organizar ventanas e interacción visual | GNOME o KDE Plasma |
 
-El núcleo es común. Todo lo demás se puede cambiar, y de combinarlo de formas distintas salen las [distribuciones](/articulos/distribuciones-de-linux/): Debian, Ubuntu, Fedora, Arch y cientos más.
-
-Android usa el núcleo de Linux con un conjunto de componentes completamente distinto por encima. Por eso es Linux en un sentido y no en el otro.
-
-## Qué hace el núcleo
-
-Lo mismo que cualquier núcleo:
-
-- **Reparte el procesador** entre los [procesos](/articulos/que-es-un-proceso/), mediante el [planificador](/articulos/planificador-de-procesos/).
-- **Gestiona la memoria**, con [memoria virtual](/articulos/memoria-virtual/).
-- **Habla con los dispositivos** a través de controladores.
-- **Ofrece [sistemas de archivos](/articulos/sistema-de-archivos/)**.
-- **Implementa la red.**
-- **Hace cumplir los [permisos](/articulos/permisos-y-usuarios/).**
-
-Los programas le piden servicios mediante **llamadas al sistema**: abrir un archivo, crear un proceso, enviar datos.
-
-Linux es un núcleo **monolítico**: todo eso se ejecuta junto, en el mismo espacio privilegiado. Es **modular**: los controladores y otras partes se cargan y descargan mientras el sistema funciona, sin reiniciar.
-
-## Software libre
-
-Linux se distribuye bajo la [licencia](/articulos/licencias-de-software/) **GPL**, versión 2. Garantiza cuatro libertades: usar el programa, estudiarlo, modificarlo y distribuirlo, con o sin cambios.
-
-Y pone una condición: quien distribuya una versión modificada debe hacerlo bajo la misma licencia, con el código fuente. Las mejoras no se pueden cerrar.
-
-Esa condición explica cómo se desarrolla. Empresas que compiten entre sí, fabricantes de procesadores, proveedores de la nube, fabricantes de móviles, contribuyen al mismo núcleo, porque les resulta más barato compartir el mantenimiento que sostener cada una su versión. Participan miles de personas, y Torvalds sigue coordinando qué entra.
-
-De paso, para gestionar ese desarrollo creó en 2005 otra herramienta: [Git](/articulos/control-de-versiones-con-git/).
+Android también utiliza Linux, pero añade sus propias bibliotecas, servicios y entorno de ejecución de aplicaciones. Compartir núcleo con una distribución de escritorio no hace intercambiables automáticamente sus aplicaciones.
 
 <Quiz
 	client:visible
-	question="En sentido estricto, ¿qué es Linux?"
-	options={[
-		"Un sistema operativo completo, con su escritorio",
-		"El núcleo de un sistema operativo",
-		"Una empresa que vende software",
-	]}
+	question="Dos equipos utilizan Linux, pero tienen distinto escritorio y gestor de paquetes. ¿Hay una contradicción?"
+	options={["Sí: Linux exige un único escritorio", "No: el núcleo es una pieza del sistema completo", "Sí: el gestor de paquetes forma parte obligatoria del núcleo"]}
 	answer={1}
 />
 
-## Dónde está
+## Seguir la lectura de una nota
 
-En casi todas partes, salvo en el escritorio.
+Imagina que abres `nota.txt` con un editor. El recorrido ayuda a separar responsabilidades:
 
-- **Servidores.** La gran mayoría de los que sostienen internet y [la nube](/articulos/computacion-en-la-nube/).
-- **Móviles.** Android.
-- **Dispositivos integrados.** Routers, televisores, coches, electrodomésticos.
-- **Superordenadores.**
-- **Contenedores.** [Docker](/articulos/que-es-docker/) se apoya en funciones del núcleo de Linux; un contenedor es un proceso de Linux aislado.
+1. **El editor** interpreta tu acción y decide qué archivo necesita. Su interfaz no la dibuja el núcleo.
+2. **Una biblioteca** puede preparar la solicitud. El programa pide al sistema abrir y leer mediante [llamadas al sistema](/articulos/llamadas-al-sistema/).
+3. **Linux** resuelve la ruta, comprueba el acceso aplicable y utiliza la implementación del [sistema de archivos](/articulos/sistema-de-archivos/). Si necesita datos del dispositivo, intervienen sus controladores.
+4. **El editor** recibe bytes e interpreta el formato del documento para mostrártelo.
 
-En ordenadores personales su presencia es minoritaria, aunque es muy común entre quienes desarrollan software.
+La lectura no exige siempre acceder físicamente al disco: los datos pueden estar ya en memoria. Tampoco equivale una petición a leer todo el archivo de una vez. Cada capa tiene un contrato; un error de ruta, permisos o formato puede aparecer en una etapa distinta.
 
-## Ideas que hereda de Unix
+Mientras ocurre, Linux reparte tiempo de procesador entre tareas y organiza su memoria. Un **[proceso](/articulos/que-es-un-proceso/)** es una ejecución con recursos propios; los **[permisos](/articulos/permisos-y-usuarios/)** limitan operaciones según las identidades y reglas del sistema.
 
-Linux no desciende del código de Unix, el sistema creado en los años setenta, pero reproduce su diseño. Varias ideas explican cómo se trabaja en él.
+## Cómo se organiza Linux por dentro
 
-- **Todo es un archivo.** Los dispositivos, y mucha información del sistema, se presentan como archivos que se leen y se escriben con las mismas operaciones.
-- **Programas pequeños que hacen una cosa.** Y que se combinan: la salida de uno es la entrada de otro, como muestra el artículo sobre la [terminal](/articulos/terminal-y-shell/).
-- **Texto como formato común.** La configuración son archivos de texto, que se editan, se comparan y se versionan.
-- **Varios usuarios.** Cada uno con sus permisos, y una cuenta de administración, `root`, que puede todo.
-- **Un solo árbol de directorios**, que empieza en `/`. No hay letras de unidad: los discos se integran en ese árbol.
+Linux se describe como **monolítico y modular**. Muchos servicios esenciales comparten el espacio privilegiado del núcleo; ciertos componentes pueden construirse como módulos cargables. La comparación de [núcleo monolítico y micronúcleo](/articulos/nucleo-monolitico-y-micronucleo/) explica esa frontera.
 
-| Directorio | Contenido |
-| --- | --- |
-| `/home` | Las carpetas personales de los usuarios |
-| `/etc` | Configuración del sistema |
-| `/var` | Datos que cambian: registros, colas |
-| `/usr` | Programas y bibliotecas |
-| `/tmp` | Archivos temporales |
-| `/dev` | Dispositivos, como archivos |
-| `/proc` | Información del núcleo y de los procesos, como archivos |
+No todos los componentes son módulos, ni cualquier módulo puede descargarse mientras está en uso. Un **controlador** es software que permite gestionar un dispositivo; su disponibilidad depende del hardware, la versión y la configuración. La existencia de Linux para una arquitectura no garantiza soporte para cualquier equipo con ese procesador.
 
-## Por qué importa a quien desarrolla
+## Qué permite su licencia
 
-- **Es donde se ejecuta el código.** Lo más probable es que tu aplicación acabe en un servidor Linux, aunque la escribas en otro sistema.
-- **Los contenedores son Linux.** Para entender Docker o [Kubernetes](/articulos/que-es-kubernetes/) hay que entender procesos, archivos y permisos de Linux.
-- **Las herramientas nacen ahí.** Casi todo el instrumental de desarrollo se piensa primero para entornos de tipo Unix.
-- **Se puede mirar dentro.** Al ser abierto, sirve para aprender cómo funciona un sistema operativo de verdad.
+El núcleo se distribuye bajo **GPL versión 2**, con las notas y excepciones que documenta el proyecto. Permite usar, estudiar, modificar y redistribuir el software conforme a sus condiciones. **Libre no significa obligatoriamente sin precio**: puede cobrarse por distribuirlo o prestar soporte.
 
-En Windows se puede usar un entorno Linux completo mediante un subsistema integrado, WSL. macOS no es Linux, pero también desciende de Unix, y la terminal se parece mucho.
+La redistribución de código o binarios tiene obligaciones, entre ellas conservar los derechos de la licencia y proporcionar el código fuente correspondiente mediante las formas admitidas. Modificarlo para uso privado no obliga por sí solo a publicar esos cambios en internet. La interfaz de llamadas al sistema tampoco convierte automáticamente cualquier aplicación que la use en GPL.
 
-## Sus dificultades
+Una distribución reúne componentes con licencias propias. El artículo sobre [licencias de software](/articulos/licencias-de-software/) desarrolla sus diferencias; no basta con mirar el nombre del núcleo para determinar la licencia de todo lo instalado.
 
-- **Fragmentación.** Cientos de distribuciones, con formas distintas de instalar programas y configurar el sistema.
-- **Compatibilidad de hardware.** Si un fabricante no publica controladores ni documentación, el soporte llega tarde o incompleto.
-- **Software comercial.** Parte no tiene versión para Linux.
-- **Exige aprender.** Da mucho control, y pide entender lo que se hace.
+El desarrollo se organiza mediante revisiones, mantenedores de subsistemas y contribuciones de personas y organizaciones. Que el código sea accesible permite inspeccionarlo y proponer cambios; no hace que cualquier propuesta se incorpore sin revisión.
 
-## Para seguir
+## Ideas de tipo Unix que encontrarás
 
-- Dónde está cada cosa: [la jerarquía de directorios](/articulos/jerarquia-de-directorios-de-linux/).
-- Cómo se instalan programas: [gestores de paquetes](/articulos/gestores-de-paquetes/).
-- Los programas en segundo plano: [servicios y demonios](/articulos/servicios-y-demonios/).
-- La filosofía detrás: [software libre y código abierto](/articulos/software-libre-y-codigo-abierto/).
+Linux sigue interfaces y convenciones de tipo Unix. Muchas operaciones utilizan descriptores de archivos, incluso para dispositivos o canales, pero «todo es un archivo» es una simplificación: cada recurso tiene capacidades diferentes.
+
+El árbol de directorios parte de `/`. Otros sistemas de archivos se incorporan en puntos de ese árbol, lo que se llama **montar**. Directorios como `/etc`, para configuración, y `/var`, para datos variables, tienen convenciones que explica [la jerarquía de Linux](/articulos/jerarquia-de-directorios-de-linux/).
+
+La [shell](/articulos/terminal-y-shell/) permite conectar herramientas. Muchas configuraciones usan texto, aunque también existen formatos binarios e interfaces de administración. El usuario `root` tiene facultades administrativas; sus excepciones y restricciones se estudian con los permisos, no como un poder sin límites.
+
+## Dónde encaja y qué comprobar
+
+Linux se utiliza en servidores, ordenadores personales, sistemas Android y dispositivos integrados. Los **[contenedores Linux](/articulos/contenedores-y-maquinas-virtuales/)** comparten un núcleo Linux; en un equipo anfitrión de otro sistema puede proporcionarlo una máquina virtual. También existen contenedores de Windows, por lo que «contenedor» no significa siempre Linux.
+
+Al preparar un equipo, comprueba aplicaciones, controladores, arquitectura y mantenimiento de la distribución concreta. Estudiar Linux permite observar mecanismos reales del sistema operativo; no obliga a atribuirle ventajas universales de velocidad, seguridad o compatibilidad.
+
+## Errores comunes
+
+- **Descargar solo el núcleo esperando un escritorio.** Para un entorno completo necesitas componentes integrados.
+- **Confundir código disponible con ausencia de condiciones.** Las licencias determinan derechos y obligaciones.
+- **Atribuir cualquier problema al núcleo.** El editor, biblioteca, servicio, configuración o controlador también forman parte del recorrido.
 
 ## Lo esencial
 
-- Linux es un núcleo; un sistema completo le añade utilidades, servicios y gestor de paquetes.
-- Nació en 1991 y se combinó con las herramientas del proyecto GNU.
-- Es software libre, bajo la licencia GPL, y lo desarrollan miles de personas y empresas.
-- Domina en servidores, móviles, dispositivos integrados y contenedores.
-- Hereda de Unix la idea de archivos, programas pequeños combinables y configuración en texto.
+- Linux nombra un núcleo y, coloquialmente, sistemas construidos sobre él.
+- Las distribuciones integran y mantienen componentes que pueden variar.
+- Las aplicaciones solicitan recursos al núcleo mediante interfaces definidas.
+- Licencia, soporte de hardware y compatibilidad de aplicaciones se comprueban por separado.

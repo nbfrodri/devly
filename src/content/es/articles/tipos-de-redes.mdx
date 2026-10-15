@@ -3,15 +3,14 @@ title: "Tipos de redes: PAN, LAN, WLAN, MAN y WAN"
 description: "Las redes se clasifican por su alcance: desde la red personal de tu móvil y tus auriculares hasta las redes que cruzan continentes."
 level: basico
 layer: redes
-prerequisites:
-  - modelos-osi-y-tcp-ip
-  - hub-switch-y-router
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Explain that Stuff: How computer networks work (en inglés)"
-    url: https://www.explainthatstuff.com/howcomputernetworkswork.html
-  - title: "IEEE 802.15 Working Group for Wireless Personal Area Networks (en inglés)"
-    url: https://www.ieee802.org/15/
+  - title: "Cisco: What Is a LAN? (en inglés)"
+    url: https://www.cisco.com/site/us/en/learn/topics/networking/what-is-a-lan-local-area-network.html
+  - title: "Cisco: What Is a WAN? (en inglés)"
+    url: https://www.cisco.com/site/us/en/learn/topics/networking/what-is-a-wan-wide-area-network.html
+  - title: "Bluetooth SIG: Technology Overview (en inglés)"
+    url: https://www.bluetooth.com/learn-about-bluetooth/tech-overview/
   - title: "IEEE 802.11 Wireless LAN Working Group (en inglés)"
     url: https://www.ieee802.org/11/
   - title: "IEEE 802.3 Ethernet Working Group (en inglés)"
@@ -20,13 +19,13 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Las redes de ordenadores se suelen clasificar por su **alcance**: cuánto espacio cubren. De menor a mayor: la red personal, la local, la metropolitana y la de área amplia. Cada una tiene tecnologías propias, porque conectar unos auriculares a medio metro no tiene nada que ver con cruzar un océano.
+Una **red** conecta dispositivos para que intercambien datos. Puede clasificarse por su **alcance**: personal, local, metropolitano o de área amplia. Esa clasificación describe la escala de uso, no una distancia exacta ni una tecnología exclusiva. Una red puede existir sin conectarse a internet.
 
 ## La escala
 
 | Tipo | Nombre | Alcance típico | Ejemplo | Tecnologías |
 | --- | --- | --- | --- | --- |
-| PAN | Red de área personal | Unos metros | Móvil, reloj y auriculares | Bluetooth, USB |
+| PAN | Red de área personal | Entorno de una persona | Móvil, reloj y auriculares | Bluetooth |
 | LAN | Red de área local | Una casa, una oficina, un edificio | La red de tu casa | Ethernet, wifi |
 | WLAN | Red de área local inalámbrica | Igual que una LAN | El wifi de una cafetería | Wifi |
 | MAN | Red de área metropolitana | Una ciudad | La red que une los edificios de una universidad | Fibra óptica |
@@ -34,32 +33,58 @@ Las redes de ordenadores se suelen clasificar por su **alcance**: cuánto espaci
 
 ## PAN: la red personal
 
-Una **red de área personal** conecta los dispositivos de una sola persona, a pocos metros: el móvil con los auriculares, el reloj o el teclado. Es, en esencia, una red para una persona. El grupo del IEEE que normaliza estas redes inalámbricas es el 802.15, y su tecnología más conocida es [Bluetooth](/articulos/como-funciona-bluetooth/).
+Una **red de área personal** conecta dispositivos en el entorno de una persona: un móvil con auriculares, reloj o teclado. [Bluetooth](/articulos/como-funciona-bluetooth/) es una tecnología habitual para esos intercambios. Su alcance real depende del modo de funcionamiento, la potencia, las antenas y los obstáculos; PAN no impone por sí sola un máximo de metros.
 
 ## LAN y WLAN: la red local
 
-Una **red de área local** conecta los equipos de un lugar: los ordenadores, la impresora y el router de una oficina o una casa. Todos los equipos se ven entre sí directamente, a través de [switches](/articulos/hub-switch-y-router/), usando sus [direcciones MAC](/articulos/que-es-una-direccion-mac/).
+Una **red de área local** conecta equipos en un ámbito limitado, como una casa, oficina o edificio. Puede permitir que un ordenador use una impresora sin salir a internet. Estar conectado al mismo lugar no garantiza acceso a todos los equipos: las redes de invitados, la segmentación y los filtros pueden separarlos.
 
-- Con cable, la tecnología es **Ethernet** (IEEE 802.3).
+- Con cable, una tecnología habitual es **Ethernet** (IEEE 802.3), normalmente con [switches](/articulos/hub-switch-y-router/) que conectan los equipos.
 - Sin cable, es una **WLAN**, una LAN inalámbrica, con **wifi** (IEEE 802.11), como explica [cómo funciona el wifi](/articulos/como-funciona-el-wifi/).
 
-La WLAN no es otro nivel de alcance: es una LAN cuyo medio es la radio. En una casa normal conviven las dos, y el router hace de punto de unión.
+**WLAN** significa LAN inalámbrica: describe el medio, no otro escalón de distancia. Un punto de acceso wifi permite conectar clientes inalámbricos a la red. El aparato doméstico llamado router suele integrar ese punto de acceso y conexiones Ethernet.
 
-Una LAN suele usar [direcciones IP privadas](/articulos/subredes-y-cidr/) y sale a internet a través del router.
+Para salir a otras redes IP interviene un **router**, que reenvía datos entre ellas. Si falla la conexión del proveedor, la LAN puede seguir permitiendo intercambios locales aunque no abra páginas externas.
 
 ## MAN: la red de una ciudad
 
-Una **red de área metropolitana** une varias redes locales repartidas por una ciudad: los campus de una universidad, las sedes de un ayuntamiento. Suele ir sobre fibra óptica tendida por la ciudad. El término se usa menos hoy, porque la frontera con las WAN es difusa.
+Una **red de área metropolitana** conecta ubicaciones a escala de una ciudad, por ejemplo sedes de un ayuntamiento. Puede usar fibra óptica. Las fronteras entre LAN, MAN y WAN son descriptivas: no hay una distancia universal que convierta automáticamente una categoría en otra.
 
 ## WAN: la red de área amplia
 
-Una **red de área amplia** cubre grandes distancias: une las oficinas de una empresa en distintos países o forma la red de un operador. Rara vez es de una sola organización de extremo a extremo: se alquilan enlaces a operadores de telecomunicaciones.
+Una **red de área amplia** conecta ubicaciones dispersas: oficinas en diferentes regiones o redes de un operador. Una organización puede utilizar enlaces propios, contratar conectividad o combinar ambos.
 
-**Internet** es la WAN más grande, aunque en realidad es una **red de redes**: millones de LAN de hogares, empresas y universidades, conectadas por las redes de los operadores, que se entienden gracias a los protocolos que explica [los modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/).
+**Internet** es una **red de redes** de alcance mundial. Distintas organizaciones conectan sus redes y emplean [protocolos](/articulos/que-es-un-protocolo-de-red/) compatibles para intercambiar datos. No toda WAN forma parte de la internet pública.
+
+## Seguir una operación cotidiana
+
+En una biblioteca, el portátil se conecta por wifi y la impresora por Ethernet:
+
+1. Ambos participan en la red local, si la configuración permite que se comuniquen. La parte wifi es una WLAN.
+2. Al imprimir, los datos pueden quedarse dentro de esa LAN.
+3. Al abrir una página alojada fuera, el tráfico pasa por el router y por redes del proveedor hasta el servicio remoto.
+4. Si se corta la salida a internet, imprimir puede seguir funcionando. Si el documento necesita descargarse primero, esa dependencia externa sí impide completar el trabajo.
+
+<Quiz
+	client:visible
+	question="El portátil imprime en la biblioteca pero no puede abrir ninguna página externa. ¿Qué demuestra eso?"
+	options={[
+		"Que toda la red, incluida internet, funciona",
+		"Que funciona ese intercambio local; la salida externa puede tener un problema",
+		"Que el portátil no está conectado a ninguna red",
+	]}
+	answer={1}
+/>
 
 ## Unir redes lejanas: la VPN
 
-Una empresa con oficinas en varias ciudades quiere que todas se vean como una sola red local. En lugar de alquilar líneas dedicadas, puede crear una [VPN](/articulos/vpn-y-tuneles/): un túnel cifrado a través de internet que une las LAN como si estuvieran juntas.
+Una empresa puede conectar sus sedes mediante una [VPN](/articulos/vpn-y-tuneles/), transportando tráfico por un túnel sobre otra red. Una VPN enrutada conserva subredes distintas; no las convierte automáticamente en una única LAN ni elimina la latencia de la distancia.
+
+## Alcance, forma y permisos son cosas distintas
+
+La **topología** describe cómo se conectan los participantes: estrella, anillo o malla, por ejemplo. Una LAN puede adoptar distintas [topologías de red](/articulos/topologias-de-red/); LAN no significa necesariamente estrella.
+
+Tampoco «local» significa «de confianza». Una red de invitados puede estar cerca físicamente y tener permisos distintos. La distancia y el medio no deciden por sí solos quién puede leer o modificar datos.
 
 ## Lo esencial
 

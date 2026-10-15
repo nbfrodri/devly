@@ -1,110 +1,126 @@
 ---
 title: "¿Cómo se programan tareas periódicas? Cron"
-description: "Cron es el programa de los sistemas tipo Unix que ejecuta órdenes en momentos fijos: cada noche, cada lunes, cada quince minutos."
-level: basico
+description: "Cron compara campos de calendario con el reloj y lanza órdenes cuando coinciden. El entorno, la zona horaria y la duración del trabajo también forman parte del resultado."
+level: intermedio
 layer: sistemas
 prerequisites:
   - servicios-y-demonios
   - terminal-y-shell
-updated: 2026-10-14
+  - variable-de-entorno-path
+updated: 2026-10-15
 sources:
-  - title: "Linux man-pages: crontab(5) (en inglés)"
+  - title: "Cronie: crontab(5), manual alojado en man7 (en inglés)"
     url: https://man7.org/linux/man-pages/man5/crontab.5.html
-  - title: "Linux man-pages: systemd.service(5) (en inglés)"
-    url: https://man7.org/linux/man-pages/man5/systemd.service.5.html
+  - title: "systemd: systemd.timer(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/systemd.timer.5.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**Cron** es un [demonio](/articulos/servicios-y-demonios/) de los sistemas tipo Unix que ejecuta órdenes de forma automática en momentos programados: cada noche a las tres, cada lunes, cada quince minutos. Las tareas se describen en una tabla llamada **crontab**.
+**Cron** es un [demonio](/articulos/servicios-y-demonios/) que lanza órdenes según un calendario. Una **crontab** es la tabla que relaciona momentos y tareas: por ejemplo, preparar un informe cada mañana.
 
-Es la forma clásica de automatizar el mantenimiento: [copias de seguridad](/articulos/copias-de-seguridad/), limpieza de archivos antiguos, envío de informes.
+La orden no necesita estar abierta en tu terminal. Cron compara los campos de tiempo con su reloj y solicita la ejecución cuando corresponde. Que llegue la hora no garantiza que el trabajo termine correctamente ni que empiece sin retraso bajo cualquier carga.
 
-## La sintaxis
+## Leer los cinco campos
 
-Cada línea de un crontab tiene **cinco campos** de tiempo y la orden a ejecutar:
+En una crontab de usuario, una línea habitual tiene cinco campos de tiempo y después una orden:
 
-```
+```text
 +------------- minuto (0-59)
 | +----------- hora (0-23)
-| | +--------- día del mes (1-31)
+| | +--------- dia del mes (1-31)
 | | | +------- mes (1-12)
-| | | | +----- día de la semana (0-7; 0 y 7 son domingo)
+| | | | +----- dia de la semana (0-7; domingo: 0 o 7)
 | | | | |
-0 3 * * *   /usr/local/bin/copia-de-seguridad.sh
+0 9 * * 1-5   /usr/bin/printf 'informe-listo\n'
 ```
 
-Se lee: a las 3:00, todos los días.
+El ejemplo imprime `informe-listo` a las 9:00 de lunes a viernes, según la zona horaria aplicable y si el sistema y cron están funcionando. No produce un informe real: permite separar el calendario de la orden que ejecutarías.
 
-| Símbolo | Significado | Ejemplo |
-| --- | --- | --- |
-| `*` | Cualquier valor | `*` en el mes: todos los meses |
-| `,` | Lista | `1,15`: los días 1 y 15 |
-| `-` | Rango | `1-5`: de lunes a viernes |
-| `/` | Cada tantos | `*/15`: cada 15 |
+Una crontab del sistema puede añadir un campo de usuario antes de la orden. Copiar una línea entre ambos formatos sin ajustarla cambia su interpretación. Los servicios que aceptan expresiones «cron» también pueden añadir segundos o aplicar reglas distintas; comprueba su formato.
 
-Algunos ejemplos:
-
-| Expresión | Cuándo |
+| Forma | Qué selecciona dentro de un campo |
 | --- | --- |
-| `*/15 * * * *` | Cada 15 minutos |
-| `0 9 * * 1-5` | A las 9:00, de lunes a viernes |
-| `30 2 1 * *` | El día 1 de cada mes, a las 2:30 |
-| `0 0 * * 0` | Cada domingo a medianoche |
+| `*` | Todos sus valores |
+| `5,35` | Los dos valores enumerados |
+| `5-20` | Los valores de 5 a 20, ambos incluidos |
+| `*/15` | Un paso de 15 desde el inicio del rango del campo |
+| `5-20/10` | Un paso de 10 desde 5: selecciona 5 y 15 |
 
-Para comprobar qué minutos de una hora cumple un campo:
+El paso parte del inicio del rango, no siempre de cero. Este modelo JavaScript calcula esa selección para un rango de minutos; no analiza una crontab completa:
 
 ```js
-function minutos(campo) {
-	const [rango, paso = "1"] = campo.split("/");
-	const todos = Array.from({ length: 60 }, (_, i) => i);
-	const base = rango === "*" ? todos : rango.split(",").map(Number);
-
-	return base.filter((m) => m % Number(paso) === 0);
+function minutosDeRango(inicio, fin, paso) {
+	if (!Number.isInteger(inicio) || !Number.isInteger(fin) ||
+		inicio < 0 || fin > 59 || inicio > fin ||
+		!Number.isSafeInteger(paso) || paso < 1) {
+		throw new RangeError("Se espera un rango de minutos y un paso positivo");
+	}
+	const resultado = [];
+	for (let minuto = inicio; minuto <= fin; minuto += paso) {
+		resultado.push(minuto);
+	}
+	return resultado;
 }
 
-console.log(minutos("*/15").join(" ")); // "0 15 30 45"
-console.log(minutos("5,35").join(" ")); // "5 35"
+console.log(minutosDeRango(0, 59, 15).join(" ")); // "0 15 30 45"
+console.log(minutosDeRango(5, 20, 10).join(" ")); // "5 15"
+console.log(minutosDeRango(0, 59, 35).join(" ")); // "0 35"
 ```
 
-La expresión de cron se ha extendido mucho más allá de este programa: la usan las plataformas de integración continua, los servicios en la nube y [Kubernetes](/articulos/que-es-kubernetes/) para tareas periódicas.
-
-## Usarlo
-
-```bash
-crontab -e     # editar las tareas del usuario actual
-crontab -l     # listarlas
-```
-
-## Trampas habituales
-
-- **Otro entorno.** Cron no carga la configuración de la sesión del usuario. Las [variables de entorno](/articulos/variables-de-entorno-y-secretos/) y la ruta de búsqueda de programas son mínimas. Una orden que funciona en la terminal puede fallar en cron porque no encuentra un programa. Conviene usar rutas completas.
-- **El silencio.** Si la tarea falla, nadie se entera. Hay que guardar la salida en un registro, o mejor, vigilar que la tarea se ha ejecutado.
-- **La zona horaria** del servidor, que puede no ser la que se cree.
-- **El cambio de hora.** Una tarea programada para las 2:30 puede no ejecutarse, o hacerlo dos veces, el día en que el reloj se adelanta o se atrasa.
-- **Solapamiento.** Si una tarea tarda más que su intervalo, la siguiente empieza antes de que termine la anterior. Hay que impedir que se ejecuten a la vez, o que sean [idempotentes](/articulos/atomicidad-e-idempotencia/).
-- **Equipo apagado.** Si el ordenador está apagado a la hora prevista, la tarea no se ejecuta.
-
-## Alternativas
-
-Los sistemas con systemd ofrecen **temporizadores**, que hacen lo mismo con algunas ventajas: registran cada ejecución, pueden ejecutar al arrancar lo que se perdió estando apagado, y se gestionan como cualquier otro servicio.
-
-En aplicaciones distribuidas, con varios servidores, cron en cada máquina ejecutaría la tarea varias veces. Se usa un planificador central, o una [cola de mensajes](/articulos/colas-de-mensajes/).
+En un campo de minutos, `*/35` selecciona los minutos 0 y 35 de cada hora. Entre 10:00 y 10:35 pasan 35 minutos; entre 10:35 y 11:00, 25. **Seleccionar posiciones del reloj no equivale a esperar siempre la misma duración desde la última ejecución.**
 
 <Quiz
 	client:visible
-	question="¿Qué significa la expresión de cron «0 9 * * 1-5»?"
-	options={[
-		"A las 9:00 del día 1 al 5 de cada mes",
-		"A las 9:00 de lunes a viernes",
-		"Cada 9 minutos, 5 veces",
-	]}
+	question="Una tarea usa */35 en el campo de minutos. Tras ejecutarse a las 10:35, ¿cuál es su siguiente coincidencia horaria habitual?"
+	options={["A las 11:10", "A las 11:00", "Solo al día siguiente"]}
 	answer={1}
 />
 
+## Dos campos para el día
+
+En la sintaxis tradicional documentada por Cronie, cuando día del mes y día de la semana están restringidos, basta con que coincida uno de ellos. `0 9 1 * 1` selecciona las 9:00 de los días 1 **y también** las de cada lunes; no significa «solo los lunes que sean día 1».
+
+Los demás campos también deben coincidir. Con el día de la semana sin restricción, pedir el 31 de febrero no produce una coincidencia: esa fecha no existe. Si necesitas una condición más compleja, el programa puede comprobarla explícitamente o puedes elegir un planificador con la semántica adecuada.
+
+## El programa recibe otro contexto
+
+Cron no reproduce automáticamente tu sesión interactiva. Puede usar otra shell, otro [PATH](/articulos/variable-de-entorno-path/) y otras variables. Una ruta absoluta al ejecutable resuelve su localización, pero no proporciona todas sus dependencias, credenciales ni directorio de trabajo.
+
+Para nuestro informe hay que definir por separado:
+
+1. Qué programa se ejecuta y con qué cuenta.
+2. Dónde están sus datos de entrada y su configuración.
+3. Dónde queda el resultado y cómo se reconoce un fallo.
+4. Qué hacer si falta un dato, cambia la red o ya hay otro informe en marcha.
+
+`crontab -l` consulta la tabla del usuario y puede indicar que no existe ninguna. `crontab -e` abre su edición; guardar una entrada válida puede programar ejecuciones reales. Conviene probar primero la orden con el contexto que recibirá.
+
+Cron puede enviar la salida por correo si existe la infraestructura y configuración necesarias; también puedes dirigirla a un registro. No presupongas que alguien recibirá el error. La [observabilidad](/articulos/observabilidad/) debe comprobar resultado y antigüedad del último éxito.
+
+## Zona horaria y equipo apagado
+
+«A las 9:00» necesita una zona horaria. Algunas implementaciones permiten configurarla por tabla; no todas admiten las mismas variables. Los cambios de hora y los ajustes del reloj también reciben tratamientos distintos: una hora local puede faltar o repetirse. Consulta el cron utilizado y prueba las fechas importantes.
+
+El cron clásico no recupera por sí solo cada ejecución perdida mientras el equipo estaba apagado. Un **temporizador de systemd** puede usar `Persistent=true` con un calendario para activar un trabajo pendiente al volver a estar disponible. No equivale a reproducir una vez cada instante perdido ni elimina la necesidad de tratar fallos.
+
+## Duración, solapamiento y repetición
+
+Si un informe tarda veinte minutos y se programa cada quince, puede empezar otro antes de terminar el anterior. Hace falta decidir si se permiten trabajos simultáneos, se omite el siguiente, se espera o se usa una cola.
+
+Un bloqueo compartido puede impedir solapamientos dentro de su alcance. La [idempotencia](/articulos/atomicidad-e-idempotencia/) permite repetir una operación sin multiplicar su efecto definido, pero no demuestra por sí sola que dos ejecuciones simultáneas sean seguras. Son propiedades distintas.
+
+En varios servidores, instalar la misma crontab puede lanzar varias copias. Un coordinador o una [cola de mensajes](/articulos/colas-de-mensajes/) ayuda a repartir trabajo, pero los reintentos y fallos de comunicación siguen pudiendo producir duplicados. La aplicación debe reconocer qué trabajo se ha completado.
+
+## Errores comunes
+
+- **Leer un paso como una duración continua.** Los campos seleccionan valores del reloj.
+- **Confundir día del mes y día de la semana con una condición conjunta.** Comprueba la regla de la implementación.
+- **Dar por hecho éxito o ejecución única.** Registra resultados y define qué ocurre ante retrasos y reintentos.
+
 ## Lo esencial
 
-- Cron ejecuta órdenes en momentos programados, descritos en un crontab.
-- Cada línea tiene cinco campos: minuto, hora, día del mes, mes y día de la semana.
-- Cron no tiene el entorno de la terminal: conviene usar rutas completas.
-- Hay que vigilar las tareas, evitar que se solapen y tener en cuenta la hora del servidor.
+- La crontab relaciona condiciones de calendario con órdenes.
+- Formato, zona horaria y contexto de ejecución deben quedar definidos.
+- Una coincidencia de horario no garantiza finalización, recuperación ni exclusión.
+- La tarea necesita controlar fallos, solapamientos y posibles repeticiones.

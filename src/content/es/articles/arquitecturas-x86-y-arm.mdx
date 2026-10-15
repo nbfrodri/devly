@@ -1,148 +1,136 @@
 ---
 title: "Diferencias entre las arquitecturas x86 y ARM"
-description: "x86 y ARM son las dos familias de procesadores dominantes. Entienden instrucciones distintas, y un programa compilado para una no funciona en la otra."
-level: basico
+description: "x86 y Arm definen instrucciones diferentes. Un mismo programa puede compilarse para ambas, pero sus ejecutables necesitan instrucciones y entornos compatibles."
+level: intermedio
 kind: comparacion
 layer: hardware
 prerequisites:
   - como-funciona-un-procesador
   - compilador-e-interprete
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Arm: Glossary, RISC (en inglés)"
-    url: https://www.arm.com/glossary/risc
-  - title: "Arm: CPU Architecture (en inglés)"
-    url: https://www.arm.com/architecture/cpu
-  - title: "RISC-V International: About RISC-V (en inglés)"
-    url: https://riscv.org/about/
+  - title: "Intel: Intel 64 and IA-32 Software Developer Manuals (en inglés)"
+    url: https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
+  - title: "Arm: A64 Instruction Set Architecture Guide (PDF, en inglés)"
+    url: https://documentation-service.arm.com/static/68cd1a81cccf2a5517018d62
+  - title: "x86-64 psABI: Low Level System Information (especificación, en inglés)"
+    url: https://gitlab.com/x86-psABIs/x86-64-ABI/-/raw/master/x86-64-ABI/low-level-sys-info.tex
+  - title: "Arm: Procedure Call Standard for the Arm 64-bit Architecture (en inglés)"
+    url: https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst
   - title: "Microsoft: Windows en Arm"
     url: https://learn.microsoft.com/es-es/windows/arm/overview
+  - title: "Docker: Multi-platform builds (en inglés)"
+    url: https://docs.docker.com/build/building/multi-platform/
+  - title: "RISC-V International: About RISC-V (en inglés)"
+    url: https://riscv.org/about/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**x86** y **ARM** son las dos familias de procesadores más extendidas. Se diferencian en su **arquitectura**: el conjunto de instrucciones que el procesador entiende. Un programa compilado para una no funciona en la otra. x86 domina en ordenadores de sobremesa y servidores; ARM, en móviles, y cada vez más en portátiles y centros de datos.
+**x86** y **Arm** son familias de arquitecturas con instrucciones y codificaciones diferentes. Un [programa compilado](/articulos/compilador-e-interprete/) para una no se ejecuta directamente como código nativo de la otra. Puede haber una versión recompilada o una capa que traduzca sus instrucciones.
 
-## Qué es una arquitectura
+Aquí comparamos **x86-64**, también llamada AMD64, con **AArch64**, el estado de ejecución de 64 bits de Arm que utiliza las instrucciones **A64**. Precisar las variantes evita atribuir sus propiedades a toda la historia de ambas familias.
 
-Un [procesador](/articulos/como-funciona-un-procesador/) ejecuta instrucciones muy simples: sumar dos números, copiar un dato, saltar a otra parte del programa. El conjunto de instrucciones que entiende, y cómo se codifican en bits, es su **arquitectura del conjunto de instrucciones**.
+## El contrato y su implementación
 
-Es el contrato entre el hardware y el software. Un [compilador](/articulos/compilador-e-interprete/) traduce el código fuente a las instrucciones de una arquitectura concreta.
+La **arquitectura del conjunto de instrucciones**, o **ISA**, define las operaciones que entiende un [procesador](/articulos/como-funciona-un-procesador/), sus registros y la forma de codificarlas. Los registros son pequeños espacios de trabajo dentro de la CPU.
 
-Dos procesadores de fabricantes distintos, con diseños internos distintos, pueden compartir arquitectura y ejecutar los mismos programas. Y dos con arquitecturas diferentes no, por parecidos que sean en potencia.
+La **microarquitectura** es cómo un diseño concreto cumple ese contrato: sus unidades de ejecución, [cachés](/articulos/memoria-cache-del-procesador/) o [segmentación](/articulos/segmentacion-del-procesador/). Dos chips pueden entender las mismas instrucciones y tardar tiempos distintos en ejecutarlas.
 
-## x86
+La compatibilidad de un programa exige más que compartir ISA. También cuentan las extensiones utilizadas, el sistema operativo, las bibliotecas y la **[ABI](/articulos/que-es-una-abi/)**: reglas como dónde se pasan los argumentos de una función y dónde se devuelve el resultado.
 
-Nace con el procesador 8086 de Intel, de 1978. Sus sucesores, hasta hoy, han mantenido la compatibilidad con él.
+## La misma suma en las dos arquitecturas
 
-- **64 bits.** La versión actual, llamada x86-64 o AMD64, la diseñó AMD a principios de los años 2000. Intel la adoptó después.
-- **Dos fabricantes.** Intel y AMD producen casi todos los procesadores x86.
-- **Compatibilidad hacia atrás.** Su mayor virtud y su mayor carga. Un programa de hace décadas sigue funcionando, y el procesador arrastra instrucciones y modos que nadie usaría hoy.
+Queremos que una función reciba `7` y `5` y devuelva `12`. Este programa C permite comprobar el resultado:
 
-## ARM
+```c
+#include <stdio.h>
 
-Procede de un diseño de la empresa británica Acorn, de 1985, pensado para ser simple y consumir poco.
+int sumar(int a, int b) {
+	return a + b;
+}
 
-Su modelo de negocio es distinto. La empresa Arm **no fabrica procesadores**: diseña la arquitectura y núcleos de referencia, y los licencia. Otras compañías los integran en sus propios chips, a menudo junto con gráficos, módem y otros componentes, en lo que se llama un **sistema en un chip**.
+int main(void) {
+	printf("%d\n", sumar(7, 5));
+	return 0;
+}
+```
 
-Eso ha dado lugar a una enorme variedad, desde [microcontroladores](/articulos/microcontrolador-y-microprocesador/) de unos céntimos hasta procesadores de servidor.
+Guardado como `suma.c`, se compila con `gcc -O2 suma.c -o suma` en un entorno Linux con GCC. Al ejecutar `./suma`, imprime `12`. Aquí los operandos caben en `int`; el ejemplo no define qué hacer si una suma con signo desborda.
 
-## CISC y RISC
+La tabla muestra una posible traducción de la función `sumar`, no del programa entero. Usa la ABI System V para x86-64 y AAPCS64 para AArch64. Los nombres de instrucciones son **ensamblador**, una escritura legible del código máquina.
 
-La diferencia histórica entre las dos es de filosofía.
-
-### CISC
-
-*Complex instruction set computer*: conjunto de instrucciones complejo. Es el enfoque de x86.
-
-- Muchas instrucciones, algunas muy elaboradas: una sola puede leer de memoria, operar y volver a escribir.
-- De longitud variable: de 1 a 15 bytes.
-
-Tenía sentido cuando la memoria era carísima y se programaba a mano: instrucciones potentes daban programas más cortos.
-
-### RISC
-
-*Reduced instruction set computer*: conjunto de instrucciones reducido. Es el enfoque de ARM.
-
-- Pocas instrucciones, simples y regulares.
-- Todas del mismo tamaño: 4 bytes en ARM de 64 bits.
-- Solo unas instrucciones específicas acceden a la memoria. Las demás operan con **registros**, las pequeñas memorias internas del procesador.
-
-La idea, de los años ochenta: con compiladores que generan el código, las instrucciones complicadas apenas se usan. Es mejor tener pocas, sencillas, y hacerlas rapidísimas. Un programa necesita más instrucciones, y cada una cuesta menos.
-
-Las instrucciones de tamaño fijo son además fáciles de **decodificar**: el procesador sabe dónde empieza cada una y puede preparar varias a la vez. En x86 hay que analizar cada instrucción para saber dónde acaba.
-
-| | x86 | ARM |
+| Paso | x86-64, sintaxis Intel | AArch64 |
 | --- | --- | --- |
-| Filosofía | CISC | RISC |
-| Longitud de las instrucciones | Variable, de 1 a 15 bytes | Fija, 4 bytes |
-| Acceso a memoria | Casi cualquier instrucción | Solo cargar y guardar |
-| Quién fabrica | Intel y AMD | Muchos, bajo licencia |
-| Terreno tradicional | Sobremesa, portátiles, servidores | Móviles, dispositivos integrados |
-| Punto fuerte | Compatibilidad, software existente | Eficiencia energética |
+| Argumentos al entrar | `edi = 7`, `esi = 5` | `w0 = 7`, `w1 = 5` |
+| Calcular | `lea eax, [rdi + rsi]` | `add w0, w0, w1` |
+| Resultado | `eax = 12` | `w0 = 12` |
+| Volver a quien llamó | `ret` | `ret` |
 
-## La frontera se ha difuminado
+### En x86-64
 
-La distinción es menos tajante de lo que sugiere la tabla.
+`lea` calcula la suma indicada entre corchetes y deja sus 32 bits inferiores en `eax`. Aunque su escritura recuerda a una dirección de memoria, **no lee esa memoria**. Para esta operación el compilador puede aprovecharla como suma. Otra traducción válida podría usar `mov` y `add`.
 
-- **Los x86 modernos son RISC por dentro.** Traducen cada instrucción compleja a varias **microoperaciones** simples, y ejecutan esas. La complejidad queda en la capa de traducción.
-- **ARM ha crecido.** Tiene hoy cientos de instrucciones, incluidas extensiones para cálculo vectorial y criptografía.
+### En AArch64
 
-Lo que queda de la diferencia es, sobre todo, el coste de decodificar instrucciones de longitud variable, y décadas de compatibilidad acumulada.
+`add` suma los registros `w0` y `w1` y escribe en `w0`. Los nombres que empiezan por `w` acceden a 32 bits de los registros generales. Al volver, quien llamó encuentra ahí el resultado según la convención acordada.
 
-## La eficiencia
-
-ARM se diseñó para consumir poco, y eso lo hizo dueño de los móviles, donde manda la batería.
-
-Una técnica característica es combinar núcleos de dos tipos en el mismo chip: unos **potentes**, para las tareas exigentes, y otros **eficientes**, para todo lo demás. El [sistema operativo](/articulos/que-es-un-sistema-operativo/) reparte el trabajo con su [planificador](/articulos/planificador-de-procesos/). Los procesadores x86 recientes han adoptado la misma idea.
-
-Durante años se pensó que ARM era eficiente pero lento, válido solo para móviles. Eso cambió.
-
-- **Portátiles.** En 2020, Apple empezó a sustituir los procesadores de Intel de sus ordenadores por chips propios basados en ARM, con más rendimiento y mucha más autonomía. Hay también portátiles con Windows sobre ARM.
-- **Servidores.** Los grandes proveedores de [la nube](/articulos/computacion-en-la-nube/) diseñan sus propios procesadores ARM. En un centro de datos, la electricidad y la refrigeración son buena parte del coste.
+Las dos versiones producen `12`, pero cambian registros, codificación y convención de llamada. Incluso `ret`, escrito igual, tiene una codificación y un mecanismo de retorno propios de cada ISA. El compilador también puede calcular una llamada con constantes de antemano; la tabla estudia la función cuando recibe argumentos durante la ejecución.
 
 <Quiz
 	client:visible
-	question="¿Por qué un programa compilado para x86 no funciona directamente en un procesador ARM?"
+	question="Las dos versiones de sumar devuelven 12. ¿Qué permite que quien las llama encuentre el resultado?"
 	options={[
-		"Porque ARM es más lento",
-		"Porque cada arquitectura entiende un conjunto de instrucciones distinto",
-		"Porque usan sistemas operativos diferentes",
+		"Que todas las CPU usan el registro eax",
+		"Que cada versión respeta la convención de llamada de su destino",
+		"Que el código fuente tiene los mismos nombres de variables",
 	]}
 	answer={1}
 />
 
-## Qué implica al desarrollar
+## CISC y RISC: qué explican y qué no
 
-Con un lenguaje interpretado o con máquina virtual, como JavaScript, Python o Java, casi nada: el mismo código funciona en las dos, porque es el intérprete el que está compilado para cada una.
+**CISC** alude a conjuntos de instrucciones complejos; **RISC**, a un enfoque de instrucciones regulares y operaciones aritméticas sobre registros. Son familias de decisiones de diseño, no medidas de velocidad.
 
-Importa en estos casos:
+| Criterio | x86-64 | A64 |
+| --- | --- | --- |
+| Longitud de instrucción | Variable, hasta 15 bytes | 4 bytes |
+| Suma del ejemplo | Puede aprovechar `lea` | Usa `add` entre registros |
+| Datos en memoria | Diversas instrucciones admiten un operando en memoria | La aritmética ordinaria trabaja con registros; cargas y almacenes trasladan datos |
+| Compatibilidad | Depende del modo y las extensiones disponibles | Depende de la versión y las extensiones disponibles |
+| Rendimiento y consumo | Dependen del chip y del trabajo | Dependen del chip y del trabajo |
 
-- **Programas compilados.** Hay que generar un ejecutable por arquitectura. Compilar en una máquina para otra distinta se llama **compilación cruzada**.
-- **Dependencias con código nativo.** Una biblioteca que incluye partes compiladas necesita una versión para cada arquitectura. Es una fuente habitual de errores al cambiar de máquina.
-- **Contenedores.** Una imagen de [Docker](/articulos/que-es-docker/) se construye para una arquitectura. Una hecha en un portátil ARM no arranca en un servidor x86, y da un error poco claro. La solución son las imágenes **multiarquitectura**, que agrupan una variante para cada una.
-- **Rendimiento.** El código optimizado con instrucciones específicas de una arquitectura hay que reescribirlo para la otra.
+La longitud fija facilita localizar los límites de las instrucciones A64. No implica que todas tarden lo mismo ni que existan pocas: ambas familias incluyen operaciones vectoriales y otras extensiones. La regla de cuatro bytes es de A64, no de cualquier instrucción Arm; otras variantes usan otras codificaciones.
 
-### Emulación
+Muchos procesadores x86 traducen instrucciones a **microoperaciones** internas. Eso describe su implementación; no convierte su ISA en otra ni permite ejecutar directamente un binario Arm. Tampoco es cierto que cada instrucción se convierta siempre en varias microoperaciones.
 
-Para ejecutar programas de otra arquitectura sin recompilarlos se usa una capa que **traduce** las instrucciones. Así funcionan las aplicaciones antiguas de x86 en los ordenadores ARM.
+## Cuál conviene y cómo distribuir un programa
 
-Sale bien con programas corrientes, con cierta pérdida de rendimiento. Es una ayuda para la transición, no una solución definitiva.
+Si necesitas una aplicación o un controlador concreto, comprueba sus destinos admitidos. Para elegir hardware por rendimiento o autonomía, mide una carga representativa y considera memoria, refrigeración y consumo del sistema completo. La etiqueta x86 o Arm no decide el resultado.
 
-## RISC-V
+Para distribuir software hay varias opciones:
 
-Hay una tercera arquitectura que crece: **RISC-V**. Nació en 2010 en la Universidad de California en Berkeley.
+- **Compilar por destino.** Generar versiones compatibles con cada arquitectura y sistema. Si el destino difiere del equipo donde compilas, se habla de **compilación cruzada**.
+- **Distribuir fuente o bytecode.** Necesita un intérprete o entorno compatible. Las extensiones nativas y dependencias del sistema siguen importando.
+- **Usar emulación o traducción.** Una capa reproduce instrucciones de otro destino. Windows en Arm, por ejemplo, permite ejecutar muchas aplicaciones x86 y x64. La cobertura y el coste dependen de la capa y de la aplicación; no cubre automáticamente cualquier controlador.
 
-Su diferencia no es técnica, sino de [licencia](/articulos/licencias-de-software/): es un **estándar abierto**. Cualquiera puede diseñar y fabricar un procesador RISC-V sin pagar ni pedir permiso.
+Una imagen de [Docker](/articulos/que-es-docker/) con binarios nativos tiene un destino concreto. Una publicación **multiplataforma** puede agrupar variantes para que se seleccione la adecuada. También puede utilizarse emulación cuando el entorno la proporciona; un contenedor por sí solo no traduce instrucciones.
 
-Además es modular: un núcleo mínimo de instrucciones, y extensiones opcionales.
+## Dónde encaja RISC-V
 
-Se usa ya mucho en microcontroladores y chips especializados. En ordenadores de uso general, todavía le falta software y rendimiento.
+**RISC-V** es otra ISA, con una base y extensiones. Su especificación abierta permite implementarla sin pagar regalías por esa ISA. Eso no hace gratuitos todos los diseños de núcleos, herramientas ni servicios de fabricación. Puede haber implementaciones abiertas o propietarias.
+
+También difiere técnicamente de x86 y Arm: tiene sus instrucciones, registros y codificaciones. Compartir el enfoque RISC no permite intercambiar sus ejecutables sin traducción o recompilación.
+
+## Confusiones frecuentes
+
+- **«64 bits significa compatible».** Describe aspectos de la arquitectura, no una ISA, ABI o sistema operativo comunes.
+- **«Un programa antiguo funcionará siempre».** Puede necesitar modos, bibliotecas o interfaces que el entorno ya no ofrece.
+- **«Menos instrucciones significa menos tiempo».** Importan el coste de cada operación, las dependencias, la memoria y la ejecución interna.
 
 ## Lo esencial
 
-- La arquitectura es el conjunto de instrucciones que entiende un procesador.
-- x86 sigue la filosofía CISC, con instrucciones de longitud variable y décadas de compatibilidad.
-- ARM sigue la filosofía RISC, con instrucciones simples de tamaño fijo, y se licencia a muchos fabricantes.
-- ARM destaca en eficiencia, y ha pasado de los móviles a portátiles y servidores.
-- Los programas compilados y las imágenes de contenedor dependen de la arquitectura.
+- La ISA define instrucciones; la microarquitectura decide cómo se ejecutan.
+- El mismo cálculo puede compilarse para x86-64 y AArch64 con instrucciones distintas.
+- Un ejecutable necesita instrucciones, ABI y entorno compatibles, o una traducción adecuada.
+- Rendimiento y consumo se comparan con programas y equipos concretos.

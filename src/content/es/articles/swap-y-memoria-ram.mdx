@@ -1,61 +1,105 @@
 ---
 title: "Diferencias entre swap y memoria RAM"
-description: "La RAM es la memoria rápida donde trabajan los programas; el swap es una zona del disco donde el sistema aparca lo que no cabe. Sirve de colchón, pero es mucho más lenta."
-level: basico
+description: "La RAM permite trabajar con las páginas de memoria; el swap conserva algunas fuera de sus marcos de uso directo. Comparamos capacidad, acceso y presión de memoria."
+level: intermedio
 kind: comparacion
 layer: sistemas
 prerequisites:
   - memoria-virtual
   - memoria-ram-y-almacenamiento
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "ArchWiki: Swap (en inglés)"
-    url: https://wiki.archlinux.org/title/Swap
-  - title: "The Linux Kernel documentation: sysctl vm, swappiness (en inglés)"
+  - title: "OSTEP: Beyond Physical Memory, Mechanisms (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf
+  - title: "Linux Kernel: sysctl vm, swappiness (en inglés)"
     url: https://docs.kernel.org/admin-guide/sysctl/vm.html
+  - title: "Linux Kernel: zram (en inglés)"
+    url: https://docs.kernel.org/admin-guide/blockdev/zram.html
+  - title: "Linux Kernel: zswap (en inglés)"
+    url: https://docs.kernel.org/admin-guide/mm/zswap.html
+  - title: "Linux Kernel: Swap suspend (en inglés)"
+    url: https://docs.kernel.org/power/swsusp.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **[memoria RAM](/articulos/memoria-ram-y-almacenamiento/)** es donde los programas guardan lo que están usando ahora mismo. El **swap**, o espacio de intercambio, es una zona del **disco** donde el sistema operativo aparca páginas de memoria que llevan tiempo sin usarse, para dejar sitio en la RAM. La suma de las dos es la memoria virtual disponible, como explica [memoria virtual](/articulos/memoria-virtual/).
+La **[RAM](/articulos/memoria-ram-y-almacenamiento/)** contiene los datos e instrucciones disponibles para la ejecución. El **swap**, o espacio de intercambio, permite conservar ciertas páginas de memoria fuera de sus marcos de uso directo en RAM y recuperar ese espacio. Puede apoyarse en un archivo o partición de almacenamiento; también existen dispositivos de intercambio comprimidos en RAM.
 
-## Para comparar
+La **[memoria virtual](/articulos/memoria-virtual/)** organiza direcciones, traducción y protección. No es simplemente «RAM más swap»: un sistema puede tener memoria virtual sin disponer de intercambio.
 
-| | RAM | Swap |
-| --- | --- | --- |
-| Dónde está | Chips de memoria | Una partición o un archivo en el disco |
-| Velocidad | Muy rápida | Mucho más lenta, incluso en un SSD |
-| Qué guarda | Lo que se está usando | Páginas que llevan tiempo sin usarse |
-| Al apagar | Se borra | Normalmente se descarta |
-| Si se llena | El sistema empieza a usar swap | El sistema mata procesos para liberar memoria |
+## La misma carga con distinto espacio
 
-## Cómo funciona
+Una **página** es una unidad de memoria virtual; un **marco** es el espacio físico que puede alojarla. Usaremos cuatro páginas de datos modificados, A, B, C y D. Necesitamos conservarlas, pero el programa consulta repetidamente solo A, B y C.
 
-Linux divide la RAM en bloques llamados **páginas**. Cuando falta memoria, copia algunas páginas poco usadas al swap y libera su sitio. Si un programa vuelve a necesitarlas, se traen de vuelta, y eso se nota: leer del disco es mucho más lento que de la RAM.
+Con cuatro marcos disponibles para esas páginas, todas pueden permanecer en RAM. Con tres marcos y swap en disco, el sistema podría apartar D y conservar el grupo activo:
+
+| Momento | En los tres marcos | Fuera, en swap | Qué ocurre |
+| --- | --- | --- | --- |
+| Tras apartar D | A, B, C | D | Se conserva D sin ocupar uno de esos marcos |
+| Consultar B | A, B, C | D | B ya está disponible |
+| Consultar D | A, C, D | B | En este ejemplo se aparta B y se recupera D |
+| Consultar B otra vez | A, B, C | D | Elegimos apartar D y recuperar B |
+
+La elección de víctima de la tabla es didáctica, no una regla de Linux. Omitimos cachés, páginas compartidas y otros consumos. Recuperar una página puede provocar un **fallo de página** y una espera de entrada/salida; no es un fallo del programa por sí mismo.
 
 ```mermaid
-flowchart LR
-	P["Programa"] --> R["RAM"]
-	R -- "páginas poco usadas" --> S["Swap en disco"]
-	S -- "si se vuelven a necesitar" --> R
+flowchart TD
+	P["Acceso a una página"] --> R{"¿Está disponible<br/>en RAM?"}
+	R -- "Sí" --> U["Continuar el acceso"]
+	R -- "No, está en swap" --> F["Conseguir un marco<br/>y recuperar los datos"]
+	F --> U
 ```
 
-## El colchón y el abismo
+## Capacidad no es rendimiento
 
-- **Un poco de swap es bueno**: el sistema aparca lo que no se usa, por ejemplo partes de programas abiertos pero inactivos, y deja más RAM para la caché de disco.
-- **Mucho swap en uso es malo**: si los programas activos no caben en la RAM, el sistema se pasa el tiempo moviendo páginas entre RAM y disco. El equipo se vuelve lentísimo sin llegar a colgarse.
+Si D permanece inactiva, tenerla en swap puede dejar espacio útil a otras tareas. Que aparezcan muchos megabytes ocupados allí no demuestra que el equipo esté intercambiando continuamente.
 
-Sin swap, cuando la RAM se llena, el núcleo no tiene margen y termina un proceso a la fuerza para liberar memoria.
+Si la carga consulta A, B, C y D una y otra vez con solo tres marcos, habrá que recuperar páginas repetidamente. Cuando esa actividad domina sobre el trabajo útil hablamos de **thrashing**, o intercambio excesivo. Añadir más espacio de swap permite conservar más datos, pero no añade marcos para el conjunto activo.
 
-## Cuánto se usa
+<Quiz
+	client:visible
+	question="D permanece en swap y el programa solo consulta A, B y C, residentes en RAM. ¿Qué demuestra tener swap ocupado?"
+	options={["Que cada acceso está leyendo el disco", "Que hay datos conservados allí; no demuestra intercambio continuo", "Que la memoria virtual está desactivada"]}
+	answer={1}
+/>
 
-En Linux, el parámetro `swappiness` indica la preferencia del núcleo por escribir en el swap frente a liberar caché de archivos. Según la documentación del kernel, va de 0 a 200 y vale 60 por defecto: un valor bajo hace que el núcleo prefiera liberar caché; uno alto, que use más el swap.
+| Criterio | RAM para páginas residentes | Swap en almacenamiento |
+| --- | --- | --- |
+| Acceso del programa | A través de sus direcciones virtuales y la jerarquía de memoria | La página debe recuperarse antes de ese acceso |
+| Capacidad que aporta | Marcos para el conjunto activo | Respaldo para páginas que pueden apartarse |
+| Coste | Accesos de memoria, afectados por cachés y carga | Incluye gestión y transferencia desde el dispositivo |
+| Si aumenta | Puede reducir recuperaciones si faltaban marcos | No asegura acelerar una carga que intercambia continuamente |
+| Conservación | La RAM habitual es volátil | No convierte la memoria de la aplicación en archivos guardados |
 
-El swap también sirve para **hibernar**: guardar el contenido de la RAM en el disco y apagar el equipo.
+Un SSD reduce ciertos costes frente a un disco mecánico, pero no hace equivalente ese recorrido a disponer de la página residente.
+
+## Qué puede liberar el sistema
+
+No toda recuperación de RAM exige escribir swap. Una página limpia que copia datos de un archivo puede descartarse y volver a leerse desde ese archivo. Las páginas modificadas requieren conservar sus cambios por el mecanismo correspondiente; algunas páginas ni siquiera son intercambiables.
+
+Sin swap aún pueden liberarse cachés y otros recursos. Si no se consigue memoria suficiente para una solicitud, esta puede fallar o el sistema puede terminar procesos, según sus políticas y límites. No hay una secuencia universal «RAM llena, swap lleno, matar»: también influyen límites por grupo y restricciones de la asignación.
+
+## Intercambio comprimido y ajustes
+
+En Linux, **zram** ofrece un dispositivo de bloques comprimido en RAM que puede usarse como swap. **zswap** es una caché comprimida para páginas destinadas a un dispositivo de intercambio de respaldo. Son organizaciones distintas. Ambas consumen RAM y CPU; su resultado depende de cuánto se compriman los datos y de la carga. No crean memoria física adicional.
+
+El parámetro **swappiness** representa el coste relativo estimado de intercambiar páginas frente a recuperar páginas respaldadas por archivos. La documentación de Linux define valores de 0 a 200 y un valor predeterminado de 60. No es un porcentaje de RAM a llenar ni un límite de ocupación del swap. Un valor adecuado depende de dispositivos y carga; aumentarlo no prescribe por sí solo cuántos bytes se moverán.
+
+La **hibernación** guarda un estado para reanudar tras apagar. Puede utilizar intercambio persistente, si la configuración y la capacidad lo permiten. Un dispositivo que solo vive en RAM no conserva por sí mismo esa imagen al quitar la alimentación.
+
+## Cuándo ayuda cada uno
+
+Si falta espacio para datos inactivos, el intercambio puede aportar margen. Si faltan marcos para el conjunto que se usa constantemente, reducir la carga o ampliar RAM puede evitar recuperaciones. Hay que observar actividad de intercambio, latencia y carga; la ocupación aislada no decide.
+
+## Errores comunes
+
+- **Sumar RAM y swap como si fueran la misma capacidad de trabajo.** El programa no accede de la misma forma a una página residente y a una apartada.
+- **Confundir ocupación con presión actual.** Una página inactiva puede permanecer en swap sin causar nuevas esperas.
+- **Usar swap como copia de seguridad.** No sustituye guardar documentos ni conservar copias independientes.
 
 ## Lo esencial
 
-- La RAM es la memoria rápida donde trabajan los programas; el swap, una zona del disco.
-- El sistema aparca en el swap las páginas poco usadas para liberar RAM.
-- Un poco de swap ayuda; depender de él vuelve el equipo muy lento.
-- En Linux, `swappiness` regula cuánto se usa.
+- RAM y swap cumplen funciones distintas dentro de la gestión de memoria.
+- Apartar páginas puede liberar marcos; recuperarlas tiene un coste.
+- La memoria virtual no exige swap ni se define como una suma de capacidades.
+- El resultado depende del conjunto activo, el respaldo y la configuración.
