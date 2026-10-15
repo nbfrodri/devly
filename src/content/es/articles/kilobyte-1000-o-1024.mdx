@@ -1,13 +1,13 @@
 ---
 title: "¿Un kilobyte son 1000 o 1024 bytes?"
-description: "Depende de a quién se pregunte. La confusión explica por qué un disco de 1 terabyte aparece con unos 931 gigas en el ordenador."
+description: "El prefijo kilo significa 1000; kibi, 1024. Su uso ambiguo explica por qué 1 TB puede mostrarse como unos 931 «gigas»."
 level: basico
 kind: curiosidad
 layer: hardware
 prerequisites:
   - que-es-un-bit
   - sistema-hexadecimal
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "NIST: Prefixes for binary multiples (en inglés)"
     url: https://physics.nist.gov/cuu/Units/binary.html
@@ -68,7 +68,7 @@ console.log(Math.round(bytes / 1e9)); // 1000
 console.log(Math.round(bytes / 2 ** 30)); // 931
 ```
 
-Son los mismos bytes. Lo que cambia es la unidad con la que se cuentan. No falta espacio: el fabricante dice 1000 gigabytes, y el sistema dice 931 gibibytes, aunque escriba "GB".
+Son los mismos bytes. Lo que cambia es la unidad con la que se cuentan. Esa diferencia numérica no representa espacio perdido: son 1000 gigabytes o unos 931 gibibytes, aunque la interfaz escriba "GB". Aparte pueden existir particiones, metadatos y reservas que reduzcan el espacio utilizable; eso no se explica solo cambiando de unidad.
 
 Unos sistemas operativos usan unidades decimales y otros binarias, así que el mismo disco puede aparecer con cifras distintas según dónde se mire.
 

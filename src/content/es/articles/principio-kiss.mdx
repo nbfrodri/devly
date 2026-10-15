@@ -4,7 +4,7 @@ description: "KISS es el principio de diseño que pide elegir la solución más 
 level: basico
 kind: definicion
 layer: aplicaciones
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "RFC 1958: Architectural Principles of the Internet"
     url: https://www.rfc-editor.org/info/rfc1958/
@@ -26,7 +26,7 @@ El principio no es exclusivo de la programación. Los criterios de diseño de in
 
 ## Un ejemplo
 
-Las dos funciones dicen si un número es par:
+Las dos funciones dicen si un **entero seguro de JavaScript** es par. Ese dominio evita fracciones y números que se muestran en notación exponencial:
 
 ```js
 function esParComplicado(numero) {

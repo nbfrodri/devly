@@ -1,16 +1,17 @@
 title: Cómo se representa la información
-description: Cómo se convierten en bits los números, el texto y los decimales.
+description: De bits y bytes a números, texto, imagen y sonido; después, compresión y detección de errores. Los ejemplos finales usan lógica booleana y programación básica.
 layer: hardware
 steps:
   - que-es-un-bit
-  - sistema-hexadecimal
   - que-es-un-byte
+  - sistema-hexadecimal
   - endianness
   - complemento-a-dos
   - codificacion-de-caracteres
   - por-que-0-1-mas-0-2-no-da-0-3
   - coma-flotante
   - como-se-representa-una-imagen
+  - senales-analogicas-y-digitales
   - como-se-representa-el-sonido
   - compresion-de-datos
   - deteccion-y-correccion-de-errores
