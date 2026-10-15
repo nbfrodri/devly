@@ -1,9 +1,13 @@
 title: Fundamentos de desarrollo web
-description: Los lenguajes de una página, cómo llega al navegador y cómo se gestiona el código.
+description: Crea una página, entiende cómo llega del servidor al navegador y aprende a guardar la historia de su código.
 layer: aplicaciones
 steps:
   - que-es-html
   - que-es-css
+  - que-es-un-servidor
   - cliente-servidor
+  - que-es-un-protocolo-de-red
+  - que-es-una-direccion-ip
+  - que-es-dns
   - que-es-http
   - control-de-versiones-con-git

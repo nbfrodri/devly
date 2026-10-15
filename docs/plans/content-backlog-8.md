@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución y entrega incremental.** Once de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
+**Estado: en ejecución y entrega incremental.** Doce de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -52,7 +52,7 @@ Resultado esperado: modelar datos, anticipar el resultado de una consulta y expl
 
 Resultado esperado: seguir cómo se representa un dato, lo procesa el hardware y lo administra el sistema operativo.
 
-- [ ] Cómo se representa la información (`como-se-representa-la-informacion`): bits, bytes, signo, orden y precisión; revisar la progresión byte/hexadecimal/endianness y mostrar conversiones completas.
+- [x] Cómo se representa la información (`como-se-representa-la-informacion`): bits, bytes, signo, orden y precisión; revisar la progresión byte/hexadecimal/endianness y mostrar conversiones completas.
 - [x] Las piezas de un ordenador (`piezas-de-un-ordenador`): función, conexiones y límites de cada componente con operaciones concretas.
 - [x] Cómo funciona un ordenador (`como-funciona-un-ordenador`): conectar circuito, instrucciones, memoria, ejecutable y proceso sin exigir explicaciones que aparecen después.
 - [x] Arquitectura de computadores (`arquitectura-de-computadores`): seguir instrucciones y transferencias; distinguir coherencia, dependencias, interrupciones y DMA; comprobar diagramas y cálculos de Amdahl.
@@ -623,6 +623,12 @@ La lectura previa de HTML, CSS y Git, junto con la ruta y sus transiciones de re
 
 **Hallazgos antes de editar Git:** el artículo confunde el contenido del índice con todos los archivos, describe una historia con un único padre por commit y omite la configuración y los archivos necesarios para reproducir su ejemplo. Debe explicar cuándo `git add` captura el contenido, por qué una fusión limpia no demuestra compatibilidad, qué conserva un clon y por qué ignorar un archivo no elimina su seguimiento previo. El recorrido usará un archivo de notas, identidad exclusiva del repositorio de práctica, rama principal explícita y estados observables. Las simplificaciones relacionadas de `git-por-dentro`, `merge-y-rebase` y `git-y-github` se registran para la ruta Git en equipo; no se dan por corregidas mediante esta introducción.
 
+**Resultado comprobado de fundamentos web:** HTML y CSS desarrollan una página local de biblioteca, sus enlaces y controles, selección, cascada, herencia y adaptación del mismo aviso. Se contrastan todas sus fuentes primarias y se ejecutan dieciocho grupos de comprobación, incluidos teclado, atributos booleanos, recuperación de marcado, colores y anchos de caja en 1280, 601, 600 y 390 píxeles. Se releen los textos finales y se inspeccionan ocho capturas completas en ambos anchos y temas, con respuestas correctas e incorrectas de los quizzes.
+
+Git sigue un archivo desde su creación hasta dos confirmaciones y una rama con avance rápido. Los siete bloques reales se ejecutan tanto en PowerShell como en Git Bash, en repositorios temporales distintos: se contrastan estados, índice frente a archivo editado, tres commits y contenido final, conservando la configuración global. Se relee el artículo y se inspeccionan sus dos capturas completas, con quiz y sin desbordamiento. Sus diferencias y límites de clonación, preparación y fusión se contrastan con documentación oficial; no se afirma ejecución nativa en Linux o macOS.
+
+**Cierre de la combinación:** los cuatro archivos entregados coinciden con los hashes finales de las revisiones. Los nueve pasos se recorren en móvil y escritorio sin JavaScript: dieciocho visitas, anterior, siguiente y fin correctos. La rama de revisión y la combinación de entrega sobre `main` pasan por separado `pnpm check`, con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Permanece el aviso conocido de tamaño de un fragmento JavaScript. La ruta queda comprobada y pendiente de integración; la auditoría general de enlaces sigue abierta.
+
 ### Cierre pendiente de representación de la información
 
 Se contrasta la versión actual de los trece pasos, la curiosidad de unidades y KISS con las verificaciones registradas en la tanda 5 y las revisiones posteriores publicadas. Se conservarán las pruebas y capturas cuyo contenido siga vigente; cualquier corrección nueva requiere su verificación específica. La entrega separada incluirá únicamente los artículos relacionados y el archivo de esta ruta, sin arrastrar las tandas editoriales todavía abiertas de la PR #2.
@@ -630,3 +636,17 @@ Se contrasta la versión actual de los trece pasos, la curiosidad de unidades y 
 **Cierre comprobado del 16 de octubre:** se releen completos los trece pasos, unidades, KISS y el prerrequisito de lógica booleana. No se encuentran bloqueos nuevos y se conservan los textos. Los ocho artículos aún pendientes de publicar coinciden con la versión verificada de la tanda 5; los 45 bloques JavaScript y el SVG siguen idénticos, por lo que se reutilizan sus fuentes contrastadas, salidas y treinta capturas completas inspeccionadas. Bit y compresión contienen únicamente las ampliaciones posteriores ya publicadas y comprobadas en sus tandas. Se verifica el orden de prerrequisitos y el destino de 74 enlaces entre artículos.
 
 La ruta actual pasa veintiséis visitas sin JavaScript a 1280 y 390 píxeles, con anterior, siguiente, fin, ruta alternativa y ausencia de desbordamiento; se inspeccionan seis capturas nuevas de navegación. La expectativa antigua de un helper sobre el vecino de bit se corrige contra la ruta publicada, sin alterar el contenido para satisfacer la prueba. La combinación de entrega sobre `main` repite las veintiséis visitas y pasa `pnpm check`: 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados; permanece el aviso conocido de tamaño de un fragmento JavaScript. Representación queda lista para integración. El cierre no cubre las demás rutas ni la auditoría sistemática del catálogo.
+
+**Publicación:** representación se integra mediante la [PR #7](https://github.com/nbfrodri/devly/pull/7), en `5c865e4`, tras superar CI y Cloudflare. Se marca su casilla; quedan doce rutas publicadas y treinta y cinco pendientes.
+
+### Tanda 18 · Git en equipo (en curso)
+
+Antes de editar se releen los cinco pasos y sus prerrequisitos. Git/GitHub generaliza la integridad de los clones y presenta ejemplos incompletos; merge/rebase atribuye un commit a cualquier fusión y utiliza dibujos de texto; Git por dentro generaliza SHA-1, los archivos sueltos y las garantías de recuperación. Revisión de código necesita un caso completo, criterios de bloqueo frente a preferencias y preguntas que comprueben el razonamiento, sin convertir un tamaño de cambio en regla universal.
+
+Se desarrollarán ejemplos aislados de colaboración con remoto local y dos clones, comparación de merge y rebase desde un mismo estado e inspección de objetos con comandos Git. La explicación mínima de identificadores de contenido permitirá revisar el prerrequisito de hashes sin ocultar conocimientos necesarios; la introducción de Git permanece como base. Si la revisión de código usa programación, se declarará ese punto de entrada. Esta tanda no modifica los tres artículos ya comprobados de fundamentos web.
+
+### Continuación de los cierres de datos y programación
+
+La relectura de Análisis de datos encuentra dos prerrequisitos que no cubren las rutas declaradas de entrada: aprendizaje automático antes de preparación y clasificación, y programación funcional antes de MapReduce. Se incorporarán como pasos en esos puntos, tras revisar sus artículos; la ruta pasará de diecinueve a veintiún pasos. La versión revisada de aprendizaje automático aún difiere de la publicada, por lo que debe incluirse y comprobarse en la misma entrega. Los tres pasos estadísticos compartidos conservan un único responsable de revisión.
+
+En Fundamentos de programación, la relectura detecta una frase de `arrays` que atribuye recibir una función a todos los métodos enumerados, incluidos `includes` e `indexOf`, que reciben valores. Se acotará a los métodos de transformación y selección que corresponden, sin cambiar los ejemplos ni los prerrequisitos. Para entregar Estadística con sus conocimientos previos coherentes se comprobará también la versión revisada de montículos: la publicada aún contiene un dibujo de texto y una garantía excesiva de memoria auxiliar.
