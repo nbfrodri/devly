@@ -1,12 +1,12 @@
 ---
 title: "¿Por qué 0,1 + 0,2 no da 0,3?"
-description: "En casi todos los lenguajes, sumar 0,1 y 0,2 da 0,30000000000000004. No es un fallo: es la forma en que los ordenadores guardan los decimales."
+description: "Con el tipo number de JavaScript, 0,1 + 0,2 produce un valor distinto de 0,3. La causa es el redondeo de su representación binaria, no un fallo de la suma."
 level: basico
 kind: curiosidad
 layer: hardware
 prerequisites:
   - que-es-un-bit
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "David Goldberg: What Every Computer Scientist Should Know About Floating-Point Arithmetic (1991, en inglés)"
     url: https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
@@ -25,7 +25,7 @@ console.log(0.1 + 0.2); // 0.30000000000000004
 console.log(0.1 + 0.2 === 0.3); // false
 ```
 
-No es un error de JavaScript. Ocurre igual en Python, en Java, en C y en casi cualquier lenguaje. Es una consecuencia de cómo guardan los ordenadores los números con decimales.
+No es un error de JavaScript. También se observa con tipos binarios de doble precisión en otros lenguajes, aunque la forma de mostrar el resultado varía. Depende del tipo y de sus operaciones: los tipos decimales o racionales pueden representar este cálculo de forma exacta.
 
 ## El mismo problema, en decimal
 
@@ -47,7 +47,7 @@ Algunos números encajan a la perfección:
 | 0,25 | 0,01 |
 | 0,75 | 0,11 |
 
-Otros no. Un décimo no se puede escribir como suma de medios, cuartos y octavos. En binario es periódico:
+Otros no. Un décimo no se puede escribir como una suma **finita** de potencias negativas de dos. En binario es periódico:
 
 ```
 0,0001100110011001100110011...
@@ -55,7 +55,7 @@ Otros no. Un décimo no se puede escribir como suma de medios, cuartos y octavos
 
 El grupo `0011` se repite sin fin, igual que el 3 de un tercio.
 
-Como la memoria es finita, el ordenador corta en algún punto y guarda el número más cercano que puede representar. Lo que se guarda al escribir `0.1` no es exactamente un décimo, sino algo como:
+Como la memoria es finita, el formato utiliza un número limitado de cifras y redondea al representable más cercano, con una regla para resolver empates. Lo que se guarda al escribir `0.1` no es exactamente un décimo, sino algo como:
 
 ```js
 console.log((0.1).toFixed(20)); // "0.10000000000000000555"
@@ -71,17 +71,17 @@ console.log(0.5 + 0.25 === 0.75); // true
 
 ## La coma flotante
 
-El formato que usan los ordenadores para estos números se llama **coma flotante**, y está definido en un estándar internacional, el IEEE 754. Por eso todos los lenguajes dan el mismo resultado.
+El tipo `number` de JavaScript usa **coma flotante binaria de doble precisión**, un formato definido en IEEE 754. El estándar también incluye otros formatos: compartir su nombre no obliga a todos los tipos y lenguajes a producir o mostrar el mismo resultado.
 
 Guarda cada número como en la notación científica: unas cifras significativas y un exponente que indica dónde va la coma. El formato más común usa 64 [bits](/articulos/que-es-un-bit/), lo que da unas quince o dieciséis cifras decimales de precisión.
 
-Es un compromiso muy bueno: con el mismo tamaño representa desde números minúsculos hasta enormes. El precio es que casi ningún decimal se guarda de forma exacta.
+Es un compromiso muy bueno: con el mismo tamaño representa desde números minúsculos hasta enormes. El precio es que muchos decimales finitos, como 0,1, necesitan aproximación en esa representación binaria.
 
 ## Cómo convivir con ello
 
-### No comparar con igualdad
+### Elegir qué significa «igual»
 
-Preguntar si dos números con decimales son exactamente iguales rara vez funciona. Se comprueba si están lo bastante cerca:
+La igualdad exacta es útil cuando quieres saber si dos valores representados coinciden, y funciona en operaciones exactas como `0.5 + 0.25 === 0.75`. Cuando esperas pequeñas diferencias de redondeo, puedes comprobar si están dentro de una tolerancia adecuada al problema:
 
 ```js
 function casiIguales(a, b) {
@@ -91,13 +91,13 @@ function casiIguales(a, b) {
 console.log(casiIguales(0.1 + 0.2, 0.3)); // true
 ```
 
-`Number.EPSILON` es una distancia minúscula, válida para números de tamaño cercano a 1. Para valores grandes hay que usar una tolerancia proporcional a su magnitud.
+`Number.EPSILON` es la distancia entre 1 y el siguiente `number` mayor. Resuelve este ejemplo, pero no es una tolerancia universal ni siquiera para todo cálculo cerca de 1. El error depende de las operaciones y de los datos. Puede hacer falta combinar tolerancia absoluta cerca de cero y relativa para magnitudes mayores.
 
-### El dinero, en enteros
+### Importes con reglas explícitas
 
-Nunca se guarda dinero en coma flotante. Un céntimo de error por operación, multiplicado por millones de operaciones, es un problema serio.
+Si un importe exige exactitud en unidades decimales, conviene usar enteros en una unidad fijada o un tipo decimal apropiado. Una aproximación binaria puede cambiar el resultado de un redondeo; no introduce automáticamente un céntimo de error en cada operación.
 
-Lo habitual es trabajar en la unidad más pequeña, los céntimos, con números enteros, que sí son exactos:
+Por ejemplo, estos importes usan céntimos enteros dentro del rango seguro de `number`:
 
 ```js
 const precioEnCentimos = 10 + 20;
@@ -106,11 +106,11 @@ console.log(precioEnCentimos); // 30
 console.log(precioEnCentimos / 100); // 0.3
 ```
 
-La división solo se hace al final, para mostrar el importe. Las bases de datos y muchos lenguajes ofrecen además tipos decimales exactos, pensados para esto.
+La división final produce un `number` cuya presentación es `0.3`; no convierte su representación binaria en tres décimos exactos. Al calcular impuestos, repartir importes o convertir monedas, también hay que definir escala y redondeo. Muchos lenguajes y motores ofrecen tipos decimales, con una precisión finita que igualmente tiene límites.
 
 ### Redondear al mostrar
 
-El error está en una cifra muy lejana. Al mostrar el número con los decimales que interesan, desaparece:
+En este caso, el formateo oculta la diferencia al mostrar dos decimales. No cambia el valor utilizado en cálculos posteriores:
 
 ```js
 console.log((0.1 + 0.2).toFixed(2)); // "0.30"
@@ -118,7 +118,7 @@ console.log((0.1 + 0.2).toFixed(2)); // "0.30"
 
 ## También afecta a los enteros grandes
 
-En JavaScript todos los números corrientes son de coma flotante, también los enteros. Eso significa que solo son exactos hasta cierto tamaño:
+En JavaScript todos los números corrientes son de coma flotante, también los enteros. Todos los enteros del rango seguro se representan exactamente; por encima, algunos siguen siendo exactos y otros ya no se distinguen:
 
 ```js
 console.log(Number.MAX_SAFE_INTEGER); // 9007199254740991
@@ -129,10 +129,10 @@ Por encima de ese límite, sumar 1 puede no cambiar nada. Para enteros mayores e
 
 <Quiz
 	client:visible
-	question="¿Por qué 0,1 no se guarda de forma exacta en un ordenador?"
+	question="¿Por qué number de JavaScript no representa exactamente un décimo?"
 	options={[
 		"Porque JavaScript tiene un error",
-		"Porque en binario tiene infinitas cifras y hay que cortarlo",
+		"Porque su expansión binaria es infinita y el formato tiene precisión finita",
 		"Porque los ordenadores no admiten decimales",
 	]}
 	answer={1}
@@ -140,8 +140,8 @@ Por encima de ese límite, sumar 1 puede no cambiar nada. Para enteros mayores e
 
 ## Lo esencial
 
-- Sumar 0,1 y 0,2 da 0,30000000000000004 en casi cualquier lenguaje.
+- Con `number` de JavaScript, las aproximaciones de 0,1 y 0,2 suman un valor distinto de la aproximación de 0,3.
 - La causa es que 0,1 tiene infinitas cifras en binario, como un tercio en decimal, y se guarda aproximado.
 - El formato de coma flotante es un estándar: no es un fallo de ningún lenguaje.
-- Los decimales se comparan con un margen, no con igualdad exacta.
-- El dinero se guarda en enteros o en tipos decimales exactos.
+- La tolerancia depende del cálculo; igualdad exacta y proximidad responden preguntas distintas.
+- Para importes con exactitud decimal, usa una representación y reglas de redondeo acordes al dominio.
