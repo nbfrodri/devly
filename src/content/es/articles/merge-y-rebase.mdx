@@ -1,114 +1,194 @@
 ---
 title: "Diferencias entre merge y rebase en Git"
-description: "Las dos combinan el trabajo de dos ramas. Merge conserva la historia tal como ocurrió; rebase la reescribe para que parezca lineal."
+description: "Merge conecta historias existentes; rebase vuelve a aplicar cambios sobre otra base. El contenido puede coincidir aunque los commits sean distintos."
 level: intermedio
 kind: comparacion
 layer: aplicaciones
 prerequisites:
   - control-de-versiones-con-git
   - git-y-github
-updated: 2026-10-14
+updated: 2026-10-16
 sources:
   - title: "Pro Git: Reorganizar el trabajo realizado"
     url: https://git-scm.com/book/es/v2/Ramificaciones-en-Git-Reorganizar-el-Trabajo-Realizado
-  - title: "Git: documentación de git-rebase (en inglés)"
+  - title: "Git: git-merge, avances rápidos y conflictos (en inglés)"
+    url: https://git-scm.com/docs/git-merge
+  - title: "Git: git-rebase, reaplicar commits (en inglés)"
     url: https://git-scm.com/docs/git-rebase
+  - title: "Git: git-diff, comparar estados"
+    url: https://git-scm.com/docs/git-diff/es
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**Merge** y **rebase** son dos formas de incorporar a una rama de [Git](/articulos/control-de-versiones-con-git/) los cambios de otra. **Merge** une las dos historias con un commit nuevo y conserva todo tal como ocurrió. **Rebase** traslada tus commits para que parezca que empezaste a trabajar desde la versión más reciente, y deja una historia en línea recta.
+**Merge**, o fusión, integra trabajo conectando historias de [Git](/articulos/control-de-versiones-con-git/) sin sustituir los commits existentes. **Rebase**, o reorganización, vuelve a aplicar una serie de cambios sobre una base diferente y normalmente crea commits nuevos. Las dos operaciones pueden producir los mismos archivos con historias distintas.
 
-## El punto de partida
+## El problema compartido
 
-Creaste una rama para una funcionalidad a partir de `main`. Mientras trabajabas, otras personas añadieron commits a `main`:
+Has trabajado en una rama mientras `main` avanzaba. Necesitas incorporar ambos trabajos. La decisión no trata solo del contenido final: también determina qué commits conservarán su identidad y cómo se verá la relación entre los cambios.
 
-```
-          A---B   tu-rama
-         /
-    C---D---E---F   main
-```
+Una fusión puede resolverlo mediante un commit con varios padres. Si una rama ya contiene toda la historia de la otra, puede bastar un **avance rápido**, que mueve el nombre de la rama sin crear un commit. Rebase intenta construir una secuencia sobre la base elegida; puede detenerse por conflictos o descartar cambios que ya estén presentes.
 
-Ahora quieres juntar las dos.
+## Preparar el mismo punto de partida
 
-## Merge
+Esta práctica es independiente de otros ejemplos. Usa Git 2.28 o posterior, PowerShell o Bash y un editor de texto. Abre una terminal fuera de otros repositorios, donde no exista `practica-integracion`:
 
 ```bash
+mkdir practica-integracion
+cd practica-integracion
+git init -b main
+git config --local user.name "Persona de prueba"
+git config --local user.email "practica@example.com"
+```
+
+Crea dos archivos de texto UTF-8: `color.txt` con una línea `azul` e `idioma.txt` con una línea `es`.
+
+```bash
+git add color.txt idioma.txt
+git commit -m "A: establece color e idioma"
+git switch -c tarea
+```
+
+Sustituye `azul` por `verde` en `color.txt` y guarda:
+
+```bash
+git add color.txt
+git commit -m "B: cambia el color a verde"
 git switch main
-git merge tu-rama
 ```
 
-Git crea un **commit de fusión** que tiene dos padres, uno de cada rama:
-
-```
-          A---B
-         /     \
-    C---D---E---F---M   main
-```
-
-- **A favor:** no cambia nada de lo que ya existía. La historia refleja lo que ocurrió de verdad, incluido que hubo trabajo en paralelo.
-- **En contra:** en un proyecto con mucho movimiento, la historia se llena de bifurcaciones y commits de fusión, y cuesta seguirla.
-
-## Rebase
+Ahora `color.txt` vuelve a contener `azul`. Cambia `idioma.txt` de `es` a `en`:
 
 ```bash
-git switch tu-rama
+git add idioma.txt
+git commit -m "C: cambia el idioma a en"
+git branch caso-merge main
+git branch caso-rebase tarea
+git status --short
+```
+
+El estado queda limpio. `git branch` crea nombres para comparar las dos estrategias sin mover `main` ni `tarea`. A, B y C son etiquetas explicativas de los mensajes; los identificadores reales serán distintos.
+
+En los diagramas, las flechas van de una versión anterior a una posterior:
+
+```mermaid
+flowchart TD
+	A["A: azul y es"] --> B["B: verde y es<br>tarea<br>caso-rebase"]
+	A --> C["C: azul y en<br>main<br>caso-merge"]
+```
+
+## Resolverlo con merge
+
+```bash
+git switch caso-merge
+git merge --no-ff -m "M: combina color e idioma" tarea
+git show HEAD:color.txt
+git show HEAD:idioma.txt
+git log -1 --format="%s | padres: %p"
+```
+
+La rama actual, `caso-merge`, recibe el trabajo de `tarea`. Como las historias divergieron, se crea M con dos padres: C y B. `--no-ff` expresa que queremos un commit de fusión; en este caso ya hacía falta por la divergencia.
+
+Las consultas muestran `verde` y `en`. La última línea imprime el mensaje de M y dos identificadores de padres. B y C conservan sus identidades.
+
+```mermaid
+flowchart TD
+	A["A"] --> B["B: tarea"]
+	A --> C["C: main"]
+	B --> M["M: verde y en<br>caso-merge"]
+	C --> M
+```
+
+## Resolverlo con rebase
+
+Vuelve al otro caso, que aún apunta a B:
+
+```bash
+git switch caso-rebase
 git rebase main
+git show HEAD:color.txt
+git show HEAD:idioma.txt
+git log -1 --format="%s | padres: %p"
+git diff caso-merge caso-rebase
 ```
 
-Git toma tus commits A y B y los **vuelve a aplicar** encima del último commit de `main`, como si hubieras empezado ahí:
+Git toma el cambio de color introducido por B y lo aplica encima de C. El resultado B′ tiene un padre, C. Su identificador cambia porque ahora representa otra historia y su instantánea incluye el idioma `en`.
 
+Las consultas vuelven a mostrar `verde` y `en`. `git diff` no imprime diferencias entre las dos ramas: los archivos coinciden. Eso no significa que sus commits coincidan.
+
+```mermaid
+flowchart TD
+	A["A"] --> C["C: main"]
+	C --> BN["B′: verde y en<br>caso-rebase"]
 ```
-    C---D---E---F---A'---B'   tu-rama
-```
 
-A' y B' tienen los mismos cambios que A y B, pero son commits **nuevos**, con otros identificadores. Después, `main` puede avanzar hasta B' sin commit de fusión.
-
-- **A favor:** historia lineal, fácil de leer.
-- **En contra:** **reescribe la historia**. Y si hay conflictos, aparecen commit a commit.
-
-## Comparación
-
-| | Merge | Rebase |
-| --- | --- | --- |
-| Historia | Conserva lo que ocurrió | La reescribe, lineal |
-| Commits existentes | No cambian | Se sustituyen por copias nuevas |
-| Commit extra | Uno de fusión | Ninguno |
-| Conflictos | Se resuelven una vez | Se pueden repetir en cada commit |
-| Seguro con ramas compartidas | Sí | No |
-
-## La regla de oro
-
-**No hagas rebase de commits que ya has compartido** con otras personas.
-
-Si alguien ya tiene los commits A y B y tú los sustituyes por A' y B', las dos historias divergen. Al sincronizar, aparecen commits duplicados y conflictos confusos. El libro Pro Git lo resume en esa regla.
-
-Rebase es seguro para ordenar **tu propio trabajo local** antes de compartirlo.
-
-## Cuál usar
-
-Es en buena parte una cuestión de convención en cada equipo:
-
-- Muchos hacen **rebase** de su rama sobre `main` antes de proponer los cambios, para que sea fácil de revisar, y después **merge** para incorporarla.
-- Otros usan siempre merge y aceptan una historia más ramificada.
-- Las plataformas como GitHub permiten elegir al aceptar una solicitud de cambios: fusionar, reorganizar o **aplastar**, que reúne todos los commits de la rama en uno solo.
-
-Lo importante es que todo el equipo siga el mismo criterio.
+La rama `tarea` sigue conservando B para esta comparación. `main` continúa en C: reorganizar `caso-rebase` no incorpora por sí solo sus cambios a `main`.
 
 <Quiz
 	client:visible
-	question="¿Por qué no se debe hacer rebase de commits que ya se han compartido?"
+	question="Después de la práctica, git diff no muestra diferencias entre caso-merge y caso-rebase. ¿Qué puedes concluir?"
 	options={[
-		"Porque se pierden los cambios",
-		"Porque rebase crea commits nuevos y la historia de los demás deja de coincidir",
-		"Porque Git no lo permite",
+		"Sus archivos coinciden, aunque sus commits y padres son distintos",
+		"Ambas ramas apuntan necesariamente al mismo commit",
+		"Rebase creó también el commit M",
 	]}
-	answer={1}
+	answer={0}
 />
+
+## Qué cambia cuando hay un conflicto
+
+Los casos anteriores cambiaban archivos distintos. Para producir un conflicto real, crea otra rama desde `main`, que todavía contiene `azul`:
+
+```bash
+git switch -c conflicto main
+```
+
+Cambia `color.txt` a `rojo` y guarda:
+
+```bash
+git add color.txt
+git commit -m "D: cambia el color a rojo"
+git merge tarea
+```
+
+La última orden se detiene con un conflicto: desde el mismo `azul`, una rama pidió `rojo` y la otra `verde`. `git status` identifica el archivo pendiente. Dentro aparecen marcas que separan las dos propuestas.
+
+Para esta práctica, decide que el resultado sea `verde`. Sustituye todo el contenido de `color.txt` por esa única línea, sin dejar las marcas, y ejecuta:
+
+```bash
+git add color.txt
+git commit -m "Resuelve el color compartido"
+git status --short
+```
+
+El estado vuelve a quedar limpio. Has elegido un resultado y creado la confirmación que completa la fusión; Git no decidió qué color era correcto.
+
+En un rebase, un conflicto detiene la reaplicación del commit correspondiente. Después de editar y preparar la solución, `git rebase --continue` prosigue. Puede aparecer otro conflicto al aplicar un commit posterior. `git rebase --abort` abandona la operación y recupera el punto de partida de la rama. Para abandonar una fusión en curso existe `git merge --abort`. Conviene iniciar ambas operaciones con el trabajo confirmado o guardado aparte: mezclar ediciones pendientes complica recuperar el estado anterior.
+
+## Comparación y elección
+
+| Criterio | Merge | Rebase |
+| --- | --- | --- |
+| Commits existentes | Conserva sus identidades | Puede sustituir los reaplicados por otros |
+| Commit adicional | De fusión si hace falta o se solicita; ninguno en avance rápido | Normalmente una nueva versión por commit reaplicado |
+| Historia | Mantiene las bifurcaciones integradas | Suele reorganizar la serie como una secuencia sobre la nueva base |
+| Conflictos | Se resuelven para la integración solicitada | Pueden reaparecer en distintas reaplicaciones |
+| Trabajo compartido | Facilita conservar referencias que otros ya usan | Requiere coordinar cualquier historia publicada que se reescriba |
+
+Merge resulta apropiado para integrar ramas compartidas conservando sus relaciones. Rebase puede ayudar a actualizar una rama personal antes de compartirla. La elección también depende de las convenciones del equipo; una historia lineal no demuestra que el código sea mejor.
+
+La opción habitual de rebase no conserva todos los commits de fusión de la serie. Existen opciones específicas para reorganizar historias con fusiones; no conviene extrapolar el ejemplo sencillo a cualquier historial.
+
+## Errores comunes
+
+- **Reorganizar commits sobre los que otras personas ya trabajan sin avisar.** Sus ramas seguirán basadas en los identificadores anteriores y tendrán que reconciliarse con la historia nueva.
+- **Confundir ausencia de conflictos con comportamiento correcto.** Una edición puede cambiar un nombre y otra seguir utilizándolo en otro archivo. Git puede integrarlas sin protestar aunque el programa falle.
+- **Eliminar marcas sin comprender la decisión.** Resolver un conflicto exige preservar el comportamiento acordado, no solo conseguir que Git continúe.
+- **Tratar squash como una fusión normal.** Una integración *squash* reúne cambios en una confirmación sin conservar la misma relación de padres que una fusión ordinaria.
 
 ## Lo esencial
 
-- Merge une dos ramas con un commit de fusión y conserva la historia real.
-- Rebase reaplica tus commits sobre la otra rama y deja una historia lineal.
-- Rebase crea commits nuevos: no se usa con commits ya compartidos.
-- Muchos equipos combinan los dos: rebase para ordenar, merge para incorporar.
+- Merge conecta historias; un avance rápido no crea un commit de fusión.
+- Rebase reaplica cambios y puede cambiar los identificadores de los commits.
+- Dos resultados pueden tener archivos iguales e historias diferentes.
+- Tras cualquier integración, revisa y prueba el comportamiento; coordina la reescritura de historia compartida.
