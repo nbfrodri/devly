@@ -145,9 +145,9 @@
 	display: none !important;
 }
 
-html {
-	/* Keeps anchored targets clear of the sticky header. */
-	scroll-padding-top: 5rem;
+:target {
+	/* Offset fragment links without scrolling the sticky search field on typing. */
+	scroll-margin-top: 5rem;
 }
 
 body {
@@ -1982,6 +1982,12 @@ html:not(.progress-ready) .filter-progress {
 	font-size: 1.0625rem;
 }
 
+.path-nav-title {
+	flex-basis: 100%;
+	margin: 0;
+	font-size: 1.25rem;
+}
+
 .path-nav a {
 	display: inline-flex;
 	align-items: center;
@@ -2163,11 +2169,11 @@ html:not(.progress-ready) .filter-progress {
 
 /* Motion. Everything here answers an action or a navigation; nothing loops. */
 
-@view-transition {
-	navigation: auto;
-}
-
 @media (prefers-reduced-motion: no-preference) {
+	@view-transition {
+		navigation: auto;
+	}
+
 	::view-transition-old(root),
 	::view-transition-new(root) {
 		animation-duration: 160ms;

@@ -4,7 +4,7 @@ Contrato para escribir artículos. Vale igual para una persona que para un model
 
 ## Flujo
 
-El plan actual es el [plan de contenido 8](plans/content-backlog-8.md), que revisa la profundidad y la continuidad de las rutas de aprendizaje y añade artículos cuando detecta huecos justificados. Los planes anteriores se conservan en `docs/plans/content-backlog*.md`. Elige del plan actual, marca la casilla al publicar y cumplir sus criterios de revisión, y apunta ahí las ideas nuevas.
+El [plan de contenido 8](plans/content-backlog-8.md) revisa la profundidad y la continuidad de las rutas de aprendizaje y añade artículos cuando detecta huecos justificados. El [plan 9](plans/content-backlog-9.md) incorpora la auditoría de enlaces, fundamentos para principiantes y nuevos casos cotidianos, junto con mejoras de búsqueda y progreso. Ambos siguen abiertos. Los planes anteriores se conservan en `docs/plans/content-backlog*.md`. Elige del plan correspondiente, marca la casilla al publicar y cumplir sus criterios de revisión, y apunta ahí las ideas nuevas.
 
 1. Escribe el artículo en `src/content/es/articles/<slug>.mdx`.
 2. Míralo con `pnpm dev` y repasa la lista de comprobación de abajo.

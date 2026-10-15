@@ -64,7 +64,6 @@ const pathContexts = await Promise.all(
 		};
 	}),
 );
-const mainContext = pathContexts[0];
 ---
 
 <BaseLayout title={article.data.title} description={article.data.description}>
@@ -166,26 +165,29 @@ const mainContext = pathContexts[0];
 				<ProgressButtons id={article.id} scope="article" />
 			</section>
 			{
-				mainContext && (
-					<nav class="path-nav" aria-label={`Ruta ${mainContext.path.data.title}`}>
-						{mainContext.previous ? (
-							<a href={`/articulos/${mainContext.previous.id}/`}>
+				pathContexts.map((context) => (
+					<nav class="path-nav" aria-label={`Ruta ${context.path.data.title}`} data-pagefind-ignore>
+						<h2 class="path-nav-title">
+							<a href={`/rutas/${context.path.id}/`}>{context.path.data.title}</a>
+						</h2>
+						{context.previous ? (
+							<a href={`/articulos/${context.previous.id}/`}>
 								<Icon name="arrow-left" />
-								{mainContext.previous.data.title}
+								{context.previous.data.title}
 							</a>
 						) : (
-							<a href={`/rutas/${mainContext.path.id}/`}>Volver a la ruta</a>
+							<a href={`/rutas/${context.path.id}/`}>Volver a la ruta</a>
 						)}
-						{mainContext.next ? (
-							<a href={`/articulos/${mainContext.next.id}/`}>
-								{mainContext.next.data.title}
+						{context.next ? (
+							<a href={`/articulos/${context.next.id}/`}>
+								{context.next.data.title}
 								<Icon name="arrow-right" />
 							</a>
 						) : (
-							<a href={`/rutas/${mainContext.path.id}/`}>Fin de la ruta</a>
+							<a href={`/rutas/${context.path.id}/`}>Fin de la ruta</a>
 						)}
 					</nav>
-				)
+				))
 			}
 		</article>
 	</div>
