@@ -7,10 +7,16 @@ prerequisites:
   - pilas-y-colas
   - cliente-servidor
   - atomicidad-e-idempotencia
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "RabbitMQ: AMQP 0-9-1 Model Explained (en inglés)"
     url: https://www.rabbitmq.com/tutorials/amqp-concepts
+  - title: "RabbitMQ: Consumer Acknowledgements and Publisher Confirms (en inglés)"
+    url: https://www.rabbitmq.com/docs/confirms
+  - title: "RabbitMQ: Queues (en inglés)"
+    url: https://www.rabbitmq.com/docs/queues
+  - title: "AWS: Transactional outbox pattern (en inglés)"
+    url: https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html
   - title: "Apache Kafka: Introduction (en inglés)"
     url: https://kafka.apache.org/intro
   - title: "AWS: ¿Qué es Amazon Simple Queue Service?"
@@ -21,7 +27,7 @@ import { Quiz } from "@/components/quiz";
 
 Una **cola de mensajes** es un componente que guarda mensajes enviados por una parte de un sistema hasta que otra los recoge y los procesa. Permite que dos servicios se comuniquen sin que tengan que estar disponibles a la vez, y sin que el que envía espere al que recibe.
 
-Aplica a escala de sistema la misma idea que la [cola](/articulos/pilas-y-colas/) como estructura de datos: lo primero que entra es lo primero que sale.
+Parte de la idea de una [cola](/articulos/pilas-y-colas/), pero no hay que dar por supuesto que las tareas terminarán en orden: prioridades, reintentos y varios consumidores pueden cambiarlo. Las garantías concretas dependen del servicio y de su configuración.
 
 ## Qué problema resuelve
 
@@ -30,25 +36,27 @@ Un usuario hace un pedido en una tienda. El servidor tiene que guardar el pedido
 Si hace todo eso antes de responder:
 
 - **El usuario espera** a que terminen cinco tareas, cuando solo le importa saber que el pedido está hecho.
-- **Si el servicio de correo falla, falla el pedido**, aunque el correo sea lo de menos.
-- **Un pico de pedidos** satura todos los servicios a la vez.
+- **Si se propaga el fallo del correo, puede fallar la respuesta del pedido**, aunque el pedido ya esté guardado.
+- **Un pico de pedidos** puede sobrecargar varios servicios a la vez.
 
 A esto se le llama comunicación **síncrona**: el que llama se queda esperando. Los servicios quedan **acoplados**: la caída o la lentitud de uno se propaga a los demás.
 
 ## La idea
 
-Poner un intermediario. El servidor guarda el pedido, deja un mensaje, "se ha creado el pedido 512", y responde al usuario. Otros programas recogen ese mensaje cuando pueden y hacen el resto.
+Poner un intermediario. El servidor guarda el pedido y encarga tareas posteriores mediante mensajes, por ejemplo «enviar confirmación del pedido 512». Puede responder con el pedido aceptado mientras el correo sigue pendiente. La aplicación debe decidir qué pasos deben completarse antes de confirmar; encolar un cobro no demuestra que esté pagado.
+
+Guardar el pedido y publicar son dos acciones: un fallo entre ellas puede dejar un pedido sin aviso. Una solución es guardar el pedido y una intención de publicación en la misma transacción, y enviarla después. Es la bandeja de salida transaccional; la cola por sí sola no resuelve esa frontera.
 
 Es lo que ocurre en un restaurante: el camarero deja la comanda en la barra de la cocina y sigue atendiendo mesas. No se queda mirando al cocinero.
 
-Es comunicación **asíncrona**, la misma idea que las [promesas](/articulos/promesas-y-async-await/), entre programas distintos.
+Es comunicación **asíncrona**: el envío y el procesamiento ocurren por separado. Una [promesa](/articulos/promesas-y-async-await/) representa un resultado pendiente dentro de un programa; no es por sí misma una cola persistente entre servicios.
 
 ## Las piezas
 
 | Pieza | Función |
 | --- | --- |
 | Productor | Envía mensajes |
-| Cola | Los guarda, en orden, hasta que alguien los recoge |
+| Cola | Conserva mensajes pendientes según sus reglas de entrega y retención |
 | Consumidor | Recoge mensajes y los procesa |
 | Intermediario | El programa que gestiona las colas; en inglés, *broker* |
 
@@ -71,25 +79,25 @@ console.log(procesados.join(", ")); // "pedido 1, pedido 2, pedido 3"
 console.log(cola.length); // 0
 ```
 
-En un sistema real, el productor y el consumidor son programas distintos, en máquinas distintas, y la cola guarda los mensajes en disco para no perderlos.
+Aquí productor y consumidor comparten un array; se pierde al terminar el proceso. En un sistema real pueden ejecutarse por separado. La persistencia requiere opciones de durabilidad, mensajes persistentes y confirmaciones adecuadas; ni tener un intermediario ni usar disco evita cualquier pérdida.
 
 ## Qué se gana
 
 - **Respuestas rápidas.** El usuario no espera al trabajo lento.
-- **Desacoplamiento.** El productor no necesita saber quién consume ni si está en marcha. Si el servicio de correo cae una hora, los mensajes se acumulan y se procesan cuando vuelve.
+- **Desacoplamiento.** El productor no necesita saber quién consume ni si está en marcha. Si el servicio de correo cae, los mensajes pueden esperar hasta que vuelva, dentro de la capacidad y retención configuradas.
 - **Absorber picos.** Si llegan mil pedidos en un minuto, la cola crece y los consumidores la vacían a su ritmo. Hace de amortiguador.
 - **Escalar por separado.** Si la cola crece demasiado, se añaden consumidores. Varios pueden leer de la misma cola y repartirse el trabajo.
-- **Reintentos.** Un mensaje que falla se vuelve a intentar.
+- **Reintentos.** Se puede configurar qué fallos se reintentan, con límites y esperas.
 
 ## Dos modelos
 
 ### Cola de trabajo
 
-Cada mensaje lo procesa **un solo** consumidor. Si hay varios, se lo reparten. Sirve para distribuir tareas: redimensionar imágenes, enviar correos.
+Los consumidores **se reparten** las entregas; no recibe cada uno una copia deliberada de todo. Si falla un procesamiento o su confirmación, el mismo mensaje puede entregarse de nuevo, incluso a otro consumidor. Sirve para distribuir tareas: redimensionar imágenes, enviar correos.
 
 ### Publicación y suscripción
 
-Cada mensaje llega a **todos** los que se han suscrito, como detalla [publicador/suscriptor](/articulos/publicador-suscriptor/). El productor publica "se ha creado un pedido" y el servicio de facturas, el de correo y el de almacén reciben cada uno su copia.
+Cada suscripción interesada puede recibir su copia, dentro de las reglas de entrega del sistema, como detalla [publicador/suscriptor](/articulos/publicador-suscriptor/). El productor publica «se ha creado un pedido» y facturas, correo y almacén mantienen suscripciones separadas. Poner los tres servicios a competir en una única cola de trabajo no consigue ese reparto de copias.
 
 Lo valioso es que se puede añadir un cuarto servicio sin tocar el que publica.
 
@@ -97,12 +105,14 @@ Lo valioso es que se puede añadir un cuarto servicio sin tocar el que publica.
 
 ¿Qué pasa si un consumidor recoge un mensaje y se cae a mitad de procesarlo?
 
-Para no perderlo, el consumidor **confirma** el mensaje al terminar. Hasta entonces, el intermediario lo conserva. Si la confirmación no llega, lo entrega otra vez.
+Para no perderlo, el consumidor **confirma** el mensaje al terminar. En un sistema con confirmación manual, el intermediario mantiene pendiente la entrega hasta recibir el acuse. Ante un cierre de conexión o un plazo vencido, según el producto, puede volver a entregarla. La confirmación del intermediario al productor es distinta: acepta responsabilidad sobre el mensaje, pero no acredita que el consumidor haya terminado.
 
 ```js
 const cola = ["cobro-1", "cobro-2"];
 const intentos = {};
 const hechos = [];
+const fallidos = [];
+const maxIntentos = 3;
 
 function procesar(mensaje) {
 	intentos[mensaje] = (intentos[mensaje] ?? 0) + 1;
@@ -120,15 +130,17 @@ while (cola.length > 0) {
 	try {
 		procesar(mensaje);
 	} catch {
-		cola.push(mensaje);
+		if (intentos[mensaje] < maxIntentos) cola.push(mensaje);
+		else fallidos.push(mensaje);
 	}
 }
 
 console.log(hechos.join(" ")); // "cobro-2 cobro-1"
 console.log(intentos["cobro-1"]); // 2
+console.log(fallidos.length); // 0
 ```
 
-El primer cobro falla, vuelve a la cola y se completa al segundo intento. Fíjate en el resultado: se ha procesado **después** del segundo. Los reintentos alteran el orden.
+El primer cobro falla, vuelve a la cola y se completa al segundo intento. Fíjate en el resultado: se ha procesado **después** del segundo. Los reintentos alteran el orden. Es una simulación en memoria y sin esperas; no conecta con un servicio de cobros ni implementa confirmaciones de red. En producción también se espacian y limitan los reintentos para no agravar la sobrecarga.
 
 ## Garantías de entrega
 
@@ -136,9 +148,16 @@ El primer cobro falla, vuelve a la cola y se completa al segundo intento. Fíjat
 | --- | --- | --- |
 | Como mucho una vez | Se entrega y no se reintenta | Se pueden perder mensajes |
 | Al menos una vez | Se reintenta hasta confirmar | Puede haber duplicados |
-| Exactamente una vez | Ni pérdidas ni duplicados | Muy difícil; solo en condiciones concretas |
+| Exactamente una vez | Un efecto o entrega único dentro de un alcance definido | Hay que precisar participantes, estado conservado y fallos cubiertos |
 
-La habitual es **al menos una vez**. Y trae una consecuencia: un consumidor puede terminar su trabajo, caerse justo antes de confirmar, y recibir el mismo mensaje de nuevo.
+Con **al menos una vez**, puede ocurrir esta secuencia:
+
+1. Se entrega «cobrar pedido 512».
+2. El consumidor realiza el cobro.
+3. Se corta su conexión antes de confirmar la entrega.
+4. El intermediario vuelve a entregar el mensaje: no sabe si el cobro ocurrió.
+
+Recibir otra vez no autoriza a repetir el efecto. El consumidor debe reconocer la misma operación y recuperar su resultado.
 
 Por eso los consumidores deben ser **idempotentes**: procesar dos veces el mismo mensaje tiene que dar el mismo resultado que procesarlo una. Si no, se cobra dos veces. Cómo conseguirlo se explica en [atomicidad e idempotencia](/articulos/atomicidad-e-idempotencia/).
 
@@ -157,29 +176,35 @@ Las tres garantías se comparan con ejemplos en [como mucho una vez, al menos un
 
 ## Mensajes que nunca funcionan
 
-Un mensaje mal formado fallará siempre. Si se reintenta sin fin, bloquea a los demás. Tras un número de intentos, se aparta a una **cola de mensajes fallidos**, donde alguien puede examinarlo.
+Un mensaje mal formado fallará siempre. Si se reintenta sin fin, consume capacidad y, según el sistema, puede bloquear el avance de otros mensajes. Tras un número de intentos, se aparta a una **cola de mensajes fallidos**, donde alguien puede examinarlo.
 
 ## Colas y registros
 
 Hay dos familias de sistemas.
 
 - **Colas clásicas.** Un mensaje se elimina cuando se confirma. Están pensadas para repartir tareas.
-- **Registros de eventos.** Los mensajes se añaden a un registro que se conserva. Cada consumidor recuerda por dónde va, y puede volver atrás y releer. Sirven para flujos de datos y para que un servicio nuevo procese lo ocurrido antes de existir. Son la base de la [arquitectura orientada a eventos](/articulos/arquitectura-orientada-a-eventos/), y el modelo de [Kafka](/articulos/como-funciona-kafka/).
+- **Registros de eventos.** Los mensajes se añaden a un registro que se conserva según una política de retención. Cada consumidor recuerda por dónde va y puede releer lo que siga disponible. Sirven para flujos de datos y para que un servicio nuevo procese hechos anteriores. Pueden sostener una [arquitectura orientada a eventos](/articulos/arquitectura-orientada-a-eventos/) y son el modelo de [Kafka](/articulos/como-funciona-kafka/).
 
 ## Lo que cuesta
 
 - **Una pieza más** que instalar, vigilar y mantener.
-- **Consistencia eventual.** Entre que se crea el pedido y se envía el correo pasa un tiempo. El sistema está, durante un momento, a medias. Se explica en [consistencia eventual](/articulos/consistencia-eventual/).
+- **Trabajo pendiente visible.** Pedido aceptado y correo enviado son estados distintos. Las vistas mantenidas por otros consumidores pueden ir retrasadas; cuando convergen bajo las condiciones del sistema hablamos de [consistencia eventual](/articulos/consistencia-eventual/). La cola sola no garantiza esa convergencia.
 - **Depurar es más difícil.** El trabajo ya no ocurre en una sola petición que se pueda seguir de principio a fin.
 - **El orden no está garantizado** con varios consumidores o con reintentos.
-- **No sirve si se necesita la respuesta.** Si el usuario tiene que saber ya si el pago se ha aceptado, hay que esperar.
+- **No elimina la espera por un resultado.** Se puede diseñar petición y respuesta sobre colas, pero si el usuario debe saber si un pago se aceptó, tendrá que esperar esa confirmación.
 
 La [contrapresión](/articulos/contrapresion/) limita el ritmo de producción según la capacidad del consumidor. Una cola mayor no corrige una entrada sostenidamente superior a la salida.
+
+## Errores comunes
+
+- **Confirmar antes de completar el trabajo.** Si el consumidor falla después del acuse, el intermediario puede haber retirado ya el mensaje.
+- **Tratar cada entrega como una operación nueva.** Una confirmación perdida puede provocar otra entrega de un trabajo ya hecho.
+- **Usar una cola mayor como solución permanente a la sobrecarga.** Aplaza el límite: si entra trabajo más rápido de lo que sale, seguirá creciendo.
 
 ## Lo esencial
 
 - Una cola guarda mensajes hasta que un consumidor los procesa.
-- Desacopla los servicios: el que envía no espera ni depende del que recibe.
+- Separa el envío del procesamiento; siguen existiendo dependencias de disponibilidad, capacidad y confirmación del intermediario.
 - Absorbe picos y permite reintentar lo que falla.
 - Lo normal es la entrega al menos una vez, que exige consumidores idempotentes.
 - A cambio, el sistema deja de ser inmediato y es más difícil de seguir.

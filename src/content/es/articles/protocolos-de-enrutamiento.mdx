@@ -1,14 +1,16 @@
 ---
 title: "Protocolos de enrutamiento: RIP, OSPF y BGP"
-description: "Los routers se ponen de acuerdo sobre los caminos con protocolos de enrutamiento. Dentro de una organización se usan RIP u OSPF; entre las redes de internet, BGP."
+description: "RIP intercambia distancias, OSPF distribuye estado de enlaces y BGP anuncia rutas entre sistemas autónomos sujetas a políticas. Sus decisiones y límites son distintos."
 level: avanzado
 layer: redes
 prerequisites:
   - enrutamiento
   - grafos
   - algoritmo-de-dijkstra
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "RFC 6811: BGP Prefix Origin Validation (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc6811.html
   - title: "RFC 2453: RIP Version 2 (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc2453
   - title: "RFC 2328: OSPF Version 2 (en inglés)"
@@ -19,7 +21,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un router decide por dónde enviar cada paquete consultando su tabla de [enrutamiento](/articulos/enrutamiento/). En una red pequeña, esa tabla se escribe a mano. En una grande, los routers la construyen solos, intercambiando información con sus vecinos mediante **protocolos de enrutamiento**. Si un enlace cae, la recalculan.
+Los **protocolos de enrutamiento** permiten intercambiar información para seleccionar rutas. Un router utiliza las rutas instaladas para reenviar paquetes; no consulta a todos sus vecinos por cada paquete nuevo. Las rutas pueden ser configuradas manualmente o aprendidas por distintos protocolos.
 
 Hay dos ámbitos distintos:
 
@@ -28,7 +30,9 @@ Hay dos ámbitos distintos:
 
 ## RIP: vector de distancias
 
-RIP es un protocolo de **vector de distancias**, basado en el algoritmo de Bellman-Ford. Cada router conoce solo a sus vecinos y les cuenta periódicamente a qué distancia está de cada destino. Cada uno se queda con el mejor camino que le ofrezcan:
+RIP es un protocolo de **vector de distancias**, basado en Bellman-Ford. Cada router anuncia distancias hacia destinos; otro combina lo anunciado con el coste de llegar a ese vecino. Con coste uno por enlace, la métrica cuenta saltos. RIP limita las métricas alcanzables a 15 y usa 16 para indicar inalcanzable.
+
+El siguiente ejemplo ilustra la relajación de distancias de Bellman-Ford con costes inventados. Tiene el grafo completo en memoria para observar las rondas; **no implementa los mensajes, temporizadores ni reglas de RIP**, y sus costes no representan simplemente saltos:
 
 ```js
 const coste = { A: { B: 1, C: 4 }, B: { A: 1, C: 2, D: 5 }, C: { A: 4, B: 2, D: 1 }, D: { B: 5, C: 1 } };
@@ -51,18 +55,33 @@ for (let ronda = 1; ronda <= 3; ronda++) {
 
 Las distancias desde A mejoran ronda a ronda, a medida que llega información de más lejos: C pasa de 4 a 3 al descubrir el camino por B, y D de 5 a 4 por C.
 
-Es sencillo, pero lento al reaccionar a cambios y limitado: la propia especificación de RIP fija un máximo de 15 saltos, y su forma de resolver ciertos bucles, "contar hasta infinito", es lenta en redes grandes. Hoy se usa poco.
+RIP debe afrontar además información que queda desactualizada. Tras un corte, dos vecinos pueden creer que el otro aún conoce una ruta y anunciar distancias crecientes: el problema de **contar hasta infinito**. El límite y las reglas para evitar anunciar ciertas rutas de vuelta ayudan, pero no convierten la recuperación en instantánea.
 
 ## OSPF: estado de enlaces
 
-OSPF es un protocolo de **estado de enlaces**, pensado para funcionar dentro de un único sistema autónomo. Cada router anuncia a todos los demás el estado de sus propios enlaces, de modo que todos mantienen una **base de datos idéntica** con el mapa completo de la red. Con ese mapa, cada uno calcula los caminos más cortos con el [algoritmo de Dijkstra](/articulos/algoritmo-de-dijkstra/).
+OSPF es un protocolo de **estado de enlaces**, usado dentro de un sistema autónomo. Distribuye anuncios que describen enlaces y costes. Los routers de una misma **área** buscan mantener una base de datos coherente de su topología y calculan rutas de menor coste con [Dijkstra](/articulos/algoritmo-de-dijkstra/).
+
+Una red OSPF puede dividirse en áreas; no todos sus routers conservan cada detalle de toda la organización. Durante un cambio, los anuncios tardan en propagarse, así que las bases de datos y las decisiones pueden diferir temporalmente.
 
 | | Vector de distancias (RIP) | Estado de enlaces (OSPF) |
 | --- | --- | --- |
-| Qué conoce cada router | Lo que le cuentan sus vecinos | El mapa completo de la red |
+| Información central | Distancias anunciadas por vecinos | Estado de enlaces de su área |
 | Algoritmo | Bellman-Ford | Dijkstra |
-| Reacción a cambios | Lenta | Rápida |
-| Coste | Bajo | Más memoria y cálculo |
+| Cambios | Actualizaciones de distancias y reglas de convergencia | Distribución de anuncios y recálculo |
+| Coste | Mantener rutas y actualizar vecinos | Mantener estado de enlaces y calcular caminos |
+
+En el mismo grafo del ejemplo, A tiene un enlace directo a C de coste 4 y otro camino A → B → C de coste total 3. OSPF con esos costes elegiría el segundo. Un RIP configurado con coste uno por enlace preferiría el enlace directo: un salto frente a dos. «Más corto» depende de qué se mide.
+
+<Quiz
+	client:visible
+	question="Con los costes del ejemplo, ¿por qué A → B → C puede ganar al enlace directo A → C?"
+	options={[
+		"Porque siempre se prefieren más saltos",
+		"Porque suma 3 de coste frente a 4, aunque use más enlaces",
+		"Porque una ruta directa nunca puede usarse",
+	]}
+	answer={1}
+/>
 
 ## BGP: el protocolo de internet
 
@@ -72,11 +91,17 @@ Internet es una red de miles de **sistemas autónomos**: operadores, grandes emp
 - Las sesiones BGP van sobre [TCP](/articulos/tcp-y-udp/), en el puerto 179, lo que le da entrega fiable y ordenada sin reinventarla.
 - No busca solo el camino más corto: cada organización aplica **políticas** según sus acuerdos comerciales, por ejemplo preferir un enlace por el que no paga.
 
-BGP se basa en la confianza. Un sistema autónomo que anuncie, por error o con mala intención, redes que no son suyas puede desviar o dejar sin servicio una parte de internet. Por eso se están extendiendo mecanismos para firmar qué redes pertenece anunciar a cada uno.
+BGP no demuestra por sí solo que un anuncio esté autorizado. Un origen o camino incorrecto puede desviar tráfico o interrumpir un servicio. La validación de origen basada en RPKI permite contrastar qué sistema autónomo está autorizado a originar un prefijo, pero no valida por sí sola cada tramo de la ruta anunciada.
+
+## Convergencia y fallos
+
+Si desaparece un enlace, primero debe detectarse el cambio, después propagarse la información necesaria y finalmente actualizarse las rutas. Durante ese intervalo pueden perderse paquetes o aparecer decisiones incompatibles. Tener un protocolo dinámico no crea una ruta alternativa donde físicamente no la hay.
+
+RIP, OSPF y BGP tampoco son tres sustitutos intercambiables para cualquier red: difieren en ámbito, información y objetivos. Dentro de una organización puede interesar el coste de sus enlaces; entre organizaciones también importan las políticas de tránsito.
 
 ## Lo esencial
 
 - Los protocolos de enrutamiento permiten a los routers construir sus tablas solos y adaptarse a fallos.
 - RIP es de vector de distancias: cada router se fía de lo que le cuentan sus vecinos.
-- OSPF es de estado de enlaces: todos tienen el mapa completo y calculan con Dijkstra.
+- OSPF distribuye estado de enlaces por áreas y calcula rutas con Dijkstra.
 - BGP une los sistemas autónomos de internet, con rutas guiadas por políticas, sobre TCP.

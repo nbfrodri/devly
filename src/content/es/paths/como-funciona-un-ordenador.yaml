@@ -1,18 +1,20 @@
 title: Cómo funciona un ordenador
-description: De los bits al programa en ejecución, de abajo arriba.
+description: De los bits al programa en ejecución. Introduce los conceptos físicos y los archivos; sus ejemplos de código parten de programación básica.
 layer: hardware
 steps:
   - que-es-un-bit
-  - que-es-un-transistor
+  - sistema-hexadecimal
   - puertas-logicas
+  - que-es-un-transistor
   - codificacion-de-caracteres
   - como-funciona-un-procesador
+  - compilador-e-interprete
   - arquitecturas-x86-y-arm
   - que-es-una-gpu
   - memoria-ram-y-almacenamiento
   - memoria-cache-del-procesador
   - discos-duros-y-ssd
-  - compilador-e-interprete
+  - que-es-un-archivo
   - que-es-un-binario
   - que-es-un-sistema-operativo
   - que-es-un-proceso

@@ -1,38 +1,43 @@
 ---
-title: "¿Qué son TCP y UDP?"
-description: TCP y UDP son los dos protocolos que llevan los datos de un programa a otro a través de internet, con garantías muy distintas.
+title: "Diferencias entre TCP y UDP"
+description: TCP entrega un flujo ordenado de bytes y recupera pérdidas; UDP conserva mensajes separados sin retransmitirlos por sí mismo. Ninguno evita todos los fallos.
 level: basico
+kind: comparacion
 layer: redes
 prerequisites:
   - que-es-una-direccion-ip
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "RFC 9293: Transmission Control Protocol (TCP)"
+  - title: "RFC 9293: Transmission Control Protocol (TCP) (en inglés)"
     url: https://www.rfc-editor.org/info/rfc9293/
-  - title: "RFC 768: User Datagram Protocol"
+  - title: "RFC 768: User Datagram Protocol (en inglés)"
     url: https://www.rfc-editor.org/info/rfc768/
-  - title: "RFC 9114: HTTP/3"
+  - title: "RFC 9114: HTTP/3 (en inglés)"
     url: https://www.rfc-editor.org/info/rfc9114/
+  - title: "RFC 9000: QUIC (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc9000.html
+  - title: "RFC 6335: Service Names and Port Numbers (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc6335.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**TCP** y **UDP** son los dos protocolos que se encargan de llevar datos de un programa a otro a través de internet. Resuelven el mismo problema con prioridades opuestas: TCP garantiza que todo llega bien; UDP prefiere la rapidez.
+**TCP** y **UDP** son [protocolos](/articulos/que-es-un-protocolo-de-red/) de transporte: permiten intercambiar datos entre puntos de comunicación de los programas. TCP ofrece un **flujo ordenado de bytes** y recupera pérdidas mediante retransmisiones. UDP envía **mensajes separados**, llamados datagramas, sin ordenar ni retransmitir por sí mismo. Una conexión TCP también puede interrumpirse; UDP no garantiza menor tiempo de llegada.
 
 ## Qué problema resuelven
 
 El protocolo IP lleva paquetes de una [dirección IP](/articulos/que-es-una-direccion-ip/) a otra, pero se queda corto en dos cosas:
 
-- **Entrega a una máquina, no a un programa.** En un ordenador hay muchos programas usando la red a la vez. Falta saber a cuál de ellos va cada paquete.
-- **No garantiza nada.** Un paquete puede perderse, llegar duplicado o llegar después de otro que se envió más tarde.
+- **La IP no identifica por sí sola al programa.** En un ordenador puede haber varios servicios de red. Hace falta distinguir sus puntos de comunicación.
+- **IP no ofrece entrega fiable y ordenada.** Un paquete puede perderse, duplicarse o llegar después de otro enviado más tarde.
 
-TCP y UDP trabajan por encima de IP y cubren esos huecos. Forman la llamada **capa de transporte** de los [modelos de red](/articulos/modelos-osi-y-tcp-ip/).
+Ambos añaden puertos; TCP añade además recuperación y orden. Trabajan por encima de IP, en la **capa de transporte** de los [modelos de red](/articulos/modelos-osi-y-tcp-ip/).
 
 ## Los puertos
 
-Para saber a qué programa va cada paquete se usan los **puertos**: números del 0 al 65 535 que identifican un punto de comunicación dentro de una máquina.
+Los [**puertos**](/articulos/que-es-un-puerto/) son números de 16 bits que ayudan a identificar puntos de comunicación. El campo admite valores de 0 a 65 535, aunque el 0 está reservado; no es un puerto ordinario para publicar un servicio.
 
-Si la dirección IP es la dirección de un edificio, el puerto es el número del piso. Algunos servicios usan siempre el mismo:
+Si la IP es la dirección de un edificio, el puerto se parece al número del piso. Estos son puertos convencionales; un servicio puede configurarse en otro:
 
 | Puerto | Servicio |
 | --- | --- |
@@ -46,9 +51,9 @@ El límite de 65 535 se debe a que el número de puerto ocupa 16 [bits](/articul
 console.log(2 ** 16 - 1); // 65535
 ```
 
-## TCP: que llegue todo y en orden
+## TCP: un flujo ordenado con recuperación
 
-TCP (*Transmission Control Protocol*) ofrece al programa la ilusión de un canal fiable, aunque por debajo los paquetes se pierdan o se desordenen. Para conseguirlo hace varias cosas.
+TCP (*Transmission Control Protocol*) organiza los bytes en una conexión entre dos extremos. Para recuperar pérdidas y mantener el orden hace varias cosas.
 
 ### Establece una conexión
 
@@ -62,57 +67,83 @@ A partir de ahí los datos pueden circular en los dos sentidos.
 
 ### Numera y confirma
 
-Cada fragmento lleva un número de secuencia. El receptor los usa para **reordenar** lo que llega desordenado y para descartar duplicados.
+Cada segmento lleva un número de secuencia que indica la posición de sus datos en el flujo de [bytes](/articulos/que-es-un-byte/). No es simplemente el número del paquete. El receptor utiliza esas posiciones para detectar huecos, ordenar y descartar duplicados.
 
-El receptor confirma lo que recibe. Si el emisor no obtiene confirmación de un fragmento al cabo de un tiempo, **lo vuelve a enviar**.
+El receptor envía confirmaciones, llamadas **ACK**. Si los datos no se confirman, el emisor puede retransmitirlos al vencer un temporizador o detectar otras señales de pérdida. La entrega al programa respeta el orden del flujo.
 
 ### Regula la velocidad
 
-TCP ajusta el ritmo de envío para no desbordar al receptor ni saturar la red. Si detecta pérdidas, interpreta que hay congestión y reduce la velocidad.
+El **control de flujo** limita lo pendiente según lo que admite el receptor. El [**control de congestión**](/articulos/control-de-congestion-tcp/) ajusta el envío según señales del camino. Son límites distintos: tener memoria libre en el destino no significa que la red tenga capacidad disponible.
 
 Todo esto tiene un coste: el intercambio inicial, las confirmaciones y las esperas cuando algo se pierde añaden retraso.
 
 ## UDP: enviar y ya está
 
-UDP (*User Datagram Protocol*) hace lo mínimo. Añade los puertos y una comprobación de errores, y nada más.
+UDP (*User Datagram Protocol*) transporta datagramas individuales con puertos y longitud. Incluye un campo de comprobación de errores, cuyo uso depende de la versión de IP; esa comprobación no cifra el contenido ni autentica a quien lo envió.
 
 - No establece conexión: envía directamente.
 - No confirma la recepción ni reenvía lo perdido.
 - No garantiza el orden.
 
-A cambio es rápido y ligero. Si un programa que usa UDP necesita alguna garantía, tiene que construirla él mismo.
+Evita las confirmaciones y retransmisiones propias de TCP, pero eso no determina cuánto tarda la red. Si la aplicación necesita recuperar pérdidas, ordenar o controlar la congestión, debe resolverlo ella u otro protocolo construido sobre UDP.
+
+## El mismo envío con una pérdida
+
+Queremos transmitir `ABCDEF`, seis bytes en ASCII. Para comparar, suponemos que TCP ya está conectado y divide estos datos en dos segmentos; con UDP, la aplicación elige dos mensajes: `ABC` y `DEF`. En ambos casos se pierde el primer envío y llega el segundo.
+
+| Paso | TCP | UDP sin recuperación añadida |
+| --- | --- | --- |
+| Se envía `ABC` | Ocupa posiciones 1000–1002; se pierde | Primer datagrama; se pierde |
+| Llega `DEF` | Ocupa 1003–1005; falta el inicio | Segundo datagrama disponible para el programa |
+| El receptor espera `ABC` | No entrega `DEF` como si fuera el inicio del flujo; puede guardarlo | UDP no sabe que falta otro mensaje |
+| El emisor detecta la pérdida | Retransmite los bytes no confirmados | UDP no retransmite por su cuenta |
+| Llega la retransmisión | El programa puede leer `ABCDEF` en orden | Sigue habiendo solo `DEF`, salvo una acción de la aplicación |
+
+TCP tampoco garantiza que el programa lea seis bytes en una sola operación: puede recibirlos en varias lecturas. No conserva las fronteras de las escrituras originales. El programa necesita reglas para reconocer dónde termina cada mensaje.
+
+Si se corta la conexión antes de recuperar `ABC`, TCP no puede fabricar los bytes. Puede terminar con un error; la aplicación debe definir además cuánto está dispuesta a esperar.
+
+<Quiz
+	client:visible
+	question="En el ejemplo TCP, llega DEF pero todavía falta ABC. ¿Por qué no se entrega DEF como inicio del flujo?"
+	options={[
+		"Porque TCP debe conservar el orden de los bytes",
+		"Porque TCP solo admite mensajes de seis bytes",
+		"Porque el número de puerto decide el orden",
+	]}
+	answer={0}
+/>
 
 ## Cuál se usa para qué
 
 | | TCP | UDP |
 | --- | --- | --- |
-| Conexión previa | Sí | No |
-| Entrega garantizada | Sí | No |
-| Orden garantizado | Sí | No |
-| Retraso añadido | Mayor | Mínimo |
+| Unidad que ve el programa | Flujo de bytes | Datagramas separados |
+| Conexión de transporte | Sí | No |
+| Recuperación de pérdidas | Retransmisiones | No incorporada |
+| Orden de entrega | Orden del flujo | Sin garantía de orden |
+| Consecuencia de una pérdida | Puede retrasar bytes posteriores | Puede faltar un mensaje sin retener otros |
+| Límites | La conexión puede fallar | La aplicación debe gestionar lo que necesite |
 
 La elección depende de qué es peor para cada aplicación: perder datos o esperar.
 
-- **Una página web, un correo o un archivo** deben llegar completos. Un byte perdido lo estropea todo. Se usa TCP.
-- **Una videollamada o un juego en línea** necesitan inmediatez. Si se pierde un instante de sonido, no sirve de nada recibirlo medio segundo tarde: es mejor seguir adelante. Se usa UDP.
-- **Una consulta de DNS** es una pregunta corta con una respuesta corta. Montar una conexión costaría más que la propia consulta, así que normalmente va por UDP.
-
-<Quiz
-	client:visible
-	question="¿Qué protocolo encaja mejor para una videollamada?"
-	options={["TCP", "UDP", "Ninguno de los dos"]}
-	answer={1}
-/>
+- **Un archivo** necesita todos sus bytes correctos. TCP puede proporcionar esa entrega ordenada, pero la aplicación también debe comprobar que terminó la transferencia.
+- **Audio en directo** puede preferir seguir con muestras nuevas cuando las antiguas ya no sirven a tiempo. UDP permite esa política; la aplicación aún necesita gestionar pérdidas, ritmo y congestión.
+- **DNS** utiliza UDP y TCP, entre otros transportes. Una consulta pequeña puede evitar abrir una conexión TCP, pero no todas las respuestas ni todos los usos siguen ese camino.
 
 ## HTTP y la capa de transporte
 
-Las versiones clásicas de HTTP funcionan sobre TCP. La más reciente, HTTP/3, funciona sobre **QUIC**, un protocolo que se apoya en UDP y construye por encima sus propias garantías de entrega y de orden. Es un ejemplo de lo dicho antes: UDP sirve de base cuando una aplicación quiere decidir por sí misma cómo conseguir la fiabilidad.
+HTTP/1.1 y HTTP/2 se apoyan normalmente en TCP. HTTP/3 usa **QUIC**, que funciona sobre UDP y ofrece flujos fiables y ordenados, además de cifrado y control de congestión. Por eso «usa UDP» no significa que una descarga tolere perder bytes: hay que mirar qué se construye encima.
 
-El [control de congestión de TCP](/articulos/control-de-congestion-tcp/) protege el camino compartido; se combina con el control de flujo que protege al receptor.
+## Errores comunes
+
+- **Confundir un ACK con una operación terminada.** Confirma recepción en TCP, no que el programa haya guardado un archivo o procesado un pago.
+- **Leer cada bloque recibido como un mensaje completo en TCP.** Las lecturas pueden dividir o juntar escrituras; el protocolo de aplicación debe marcar sus límites.
+- **Elegir UDP solo porque «es más rápido».** La red sigue teniendo colas y pérdidas. Añadir recuperación también añade trabajo y esperas.
 
 ## Lo esencial
 
 - TCP y UDP llevan datos de un programa a otro; los puertos indican a qué programa.
-- TCP establece una conexión y garantiza que todo llega, completo y en orden.
-- UDP envía sin garantías, con el mínimo retraso.
-- Se elige TCP cuando no puede faltar nada y UDP cuando lo que importa es la inmediatez.
+- TCP recupera pérdidas y entrega bytes en orden, mientras la conexión pueda progresar.
+- UDP conserva datagramas separados sin recuperación ni orden incorporados.
+- La elección depende del protocolo completo y de cómo debe reaccionar la aplicación ante pérdidas y retrasos.

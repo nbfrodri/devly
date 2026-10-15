@@ -1,82 +1,115 @@
 ---
 title: "¿Qué es un gemelo digital?"
-description: "Un gemelo digital es una réplica virtual de un objeto o proceso real que se mantiene sincronizada con él mediante datos, para vigilarlo, simularlo y predecir su comportamiento."
+description: "Un gemelo digital representa un objeto o proceso real y se actualiza con sus datos. Permite vigilarlo y ensayar escenarios, con límites de precisión y actualidad."
 level: intermedio
 layer: datos
 prerequisites:
   - internet-de-las-cosas
-  - metodo-de-monte-carlo
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "NIST IR 8356: Security and Trust Considerations for Digital Twin Technology (en inglés)"
-    url: https://doi.org/10.6028/NIST.IR.8356
+    url: https://csrc.nist.gov/pubs/ir/8356/final
   - title: "AWS: ¿Qué es la tecnología de gemelo digital?"
     url: https://aws.amazon.com/es/what-is/digital-twin/
   - title: "IBM: ¿Qué es un gemelo digital?"
-    url: https://www.ibm.com/es-es/topics/what-is-a-digital-twin
+    url: https://www.ibm.com/es-es/think/topics/digital-twin
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **gemelo digital** es una **representación virtual** de un objeto, una máquina, un edificio o un proceso del mundo real, que se mantiene **sincronizada** con él gracias a los datos que recibe. Si la pieza real se calienta, su gemelo lo refleja. Y como es software, sobre el gemelo se pueden hacer pruebas que serían caras o peligrosas con el original.
+Un **gemelo digital** es una representación digital de un objeto o proceso real que se actualiza con datos de ese objeto o proceso. Combina su estado observado con modelos para vigilarlo, analizarlo o ensayar cambios. No es una copia perfecta: refleja lo que se mide, con una frecuencia, un retraso y una fidelidad determinados.
 
-El instituto de normas de Estados Unidos, NIST, lo define en su informe sobre esta tecnología como una representación virtual de entidades y procesos reales, sincronizada con una frecuencia y una fidelidad determinadas.
+Por ejemplo, el gemelo de una turbina puede reunir su temperatura, sus horas de funcionamiento y un modelo de calentamiento. Permite estudiar un cambio antes de aplicarlo, siempre que el modelo represente suficientemente ese comportamiento.
 
-## Qué no es
+## Modelo, simulación y gemelo
 
-- **No es un simple modelo en 3D.** Un plano o un modelo de diseño describe cómo debería ser algo. El gemelo digital refleja **cómo está ahora**, con datos reales.
-- **No es solo una simulación.** Una simulación estudia qué pasaría en general; el gemelo representa un objeto concreto, con su historia y su estado actual.
+Un modelo 3D puede mostrar la forma de una turbina sin conocer cómo funciona hoy. Una simulación calcula la evolución de un modelo bajo unas condiciones. Puede representar una máquina genérica o una concreta.
+
+El gemelo conecta la representación con el objeto real y sus actualizaciones. Puede incluir una simulación y una vista 3D, pero ninguna de ellas por separado garantiza esa conexión. Tampoco necesita gráficos para ser útil: valores, relaciones y ecuaciones pueden representar el comportamiento relevante.
 
 ## Cómo funciona
 
 ```mermaid
-flowchart LR
-	R["Objeto real<br>turbina"] -- datos de sensores --> G["Gemelo digital<br>modelo, historial, simulación"]
-	G -- ajustes y avisos --> R
+flowchart TD
+	R["Turbina real"] --> S["Sensores: medidas con fecha"]
+	S --> G["Gemelo: estado y modelo"]
+	G --> D["Análisis y decisión"]
+	D -. "ajuste, si está autorizado" .-> R
 ```
 
-1. **Sensores** en el objeto real miden temperatura, vibración, consumo o posición, como en el [internet de las cosas](/articulos/internet-de-las-cosas/).
-2. Los datos llegan al gemelo, que actualiza su estado.
-3. El gemelo combina esos datos con un **modelo**: física, reglas o [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/).
-4. Se usa para vigilar, simular y decidir. A veces el resultado vuelve al objeto real como un ajuste.
+1. Los sensores miden temperatura, vibración o posición, como en el [internet de las cosas](/articulos/internet-de-las-cosas/).
+2. El sistema comprueba el origen y la calidad de las medidas y actualiza la representación. Debe tratar duplicados, datos atrasados y periodos sin comunicación.
+3. Un modelo relaciona variables: puede usar física, reglas o [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/).
+4. Una persona o un programa interpreta el resultado. Si se permite actuar sobre la máquina, hacen falta controles y confirmación de esa acción; no todo gemelo envía órdenes.
 
-## Un ejemplo sencillo
+## De una medida a una previsión
+
+En esta simulación, una máquina envía temperatura y horas acumuladas de funcionamiento. `instante` expresa segundos desde un origen común del ejemplo. Suponemos un único emisor con tiempos crecientes; no resolvemos aquí la sincronización de relojes ni reinicios del dispositivo.
 
 ```js
-const gemelo = { temperatura: 60, horas: 0 };
+const gemelo = { temperatura: 60, horas: 0, instante: 0 };
 
 function actualizar(lectura) {
-	gemelo.temperatura = lectura.temperatura;
-	gemelo.horas += lectura.horas;
+	if (lectura.instante <= gemelo.instante) return false;
+	Object.assign(gemelo, lectura);
+	return true;
 }
 
 function preverTemperatura(horasFuturas, subidaPorHora) {
 	return gemelo.temperatura + horasFuturas * subidaPorHora;
 }
 
-actualizar({ temperatura: 72, horas: 8 });
+console.log(actualizar({ temperatura: 72, horas: 8, instante: 60 })); // true
+console.log(actualizar({ temperatura: 68, horas: 7, instante: 30 })); // false
+console.log(actualizar({ temperatura: 72, horas: 8, instante: 60 })); // false
 console.log(gemelo.horas); // 8
 console.log(preverTemperatura(10, 1.5)); // 87
 ```
 
-El gemelo de una máquina recibe lecturas reales y, con un modelo muy simple, prevé que en diez horas llegará a 87 grados. Si el límite es 85, se puede parar antes de que se estropee. Un gemelo real usa modelos mucho más ricos, y técnicas como el [método de Monte Carlo](/articulos/metodo-de-monte-carlo/) para estudiar muchos escenarios posibles.
+La primera lectura sustituye el estado anterior. La segunda es más antigua y la tercera repite el mismo instante: no deben hacer retroceder el estado actual ni sumar horas otra vez. Un sistema puede conservar ambas en un historial sin usarlas como estado más reciente. Las horas son un contador acumulado del emisor, no un incremento que debamos sumar por cada mensaje recibido.
 
-## Para qué se usa
+El modelo calcula `72 + 10 × 1,5 = 87 °C`. Es una previsión **si la temperatura aumenta constantemente 1,5 °C por hora durante diez horas**, no una medición del futuro. Si cambia la carga, la refrigeración o la temperatura ambiente, esa hipótesis puede dejar de servir.
 
-- **Mantenimiento predictivo**: reparar una máquina antes de que falle, no cuando falla ni por calendario.
-- **Probar cambios** en una fábrica, una red eléctrica o el tráfico de una ciudad sin tocar la real.
-- **Diseño**: comparar cómo se comportan de verdad los productos ya fabricados con lo previsto.
-- **Formación**: practicar con el gemelo de una instalación peligrosa.
+Supongamos un umbral de alerta de 85 °C. El resultado justifica investigar o simular otros escenarios; no demuestra que la máquina vaya a fallar ni que detenerla en cierto momento sea seguro. Las decisiones necesitan un modelo validado para su propósito.
 
-## Sus riesgos
+<Quiz
+	client:visible
+	question="El gemelo conserva una medida de 72 °C, pero lleva dos horas sin recibir datos. ¿Qué puede afirmar el panel?"
+	options={[
+		"Que la máquina sigue exactamente a 72 °C",
+		"Que 72 °C es la última medida conocida, con dos horas de antigüedad",
+		"Que la máquina está apagada",
+	]}
+	answer={1}
+/>
 
-El informe del NIST subraya que un gemelo digital concentra mucha información sobre el objeto que representa. Si un atacante lo compromete, tiene acceso a todos esos datos, y si el gemelo puede enviar órdenes al objeto real, también puede manipularlo. Por eso necesita la misma [seguridad](/articulos/que-es-la-ciberseguridad/) que el sistema físico.
+## Comprobar que el modelo sirve
 
-Además, un gemelo es tan bueno como sus datos: sensores mal calibrados o un modelo poco fiel dan una copia que no se parece al original, como recuerda la [calidad de datos](/articulos/calidad-de-datos/).
+No basta con conectar sensores. Hay que comparar previsiones con medidas posteriores en condiciones representativas. Si el modelo prevé 87 °C y se observan 78 °C, la diferencia obliga a revisar parámetros, condiciones o sensores; cambiar el dibujo del panel no mejora la explicación.
+
+También hay que mostrar cuándo se midió cada dato y cuándo se recibió. Una medida recién recibida puede ser antigua porque estuvo esperando en una pasarela. Si falta información, el gemelo debe expresar esa incertidumbre en vez de presentar el último valor como actual.
+
+Cuando interesa explorar muchas combinaciones de condiciones inciertas, se puede usar el [método de Monte Carlo](/articulos/metodo-de-monte-carlo/). Es una herramienta posible, no un requisito de todo gemelo digital.
+
+## Para qué se usa y qué cuesta
+
+- **Mantenimiento:** detectar cambios compatibles con desgaste y decidir qué inspeccionar; no elimina fallos imprevistos.
+- **Ensayo de cambios:** comparar condiciones de operación sin aplicarlas primero al objeto. Las conclusiones valen dentro del alcance del modelo.
+- **Diseño y formación:** contrastar comportamiento observado con el previsto o practicar situaciones en una representación.
+
+El coste incluye sensores, transmisión, almacenamiento, calibración y actualización del modelo cuando cambia el objeto. Un modelo detallado de una máquina antigua puede dejar de representar una pieza sustituida.
+
+## Errores comunes y riesgos
+
+- **Confundir sincronización con simultaneidad perfecta.** La captura y la transmisión tienen retrasos; hay que declarar la antigüedad tolerable.
+- **Tratar el modelo como verdad.** Datos mal calibrados y supuestos incorrectos producen resultados engañosos, como en cualquier problema de [calidad de datos](/articulos/calidad-de-datos/).
+- **Confiar en cualquier lectura recibida.** Hay que verificar origen, formato y coherencia; un atacante podría alterar la representación mediante datos falsos.
+- **Dar al gemelo control ilimitado.** Si puede enviar órdenes, comprometerlo puede afectar al objeto real. El NIST destaca la necesidad de analizar esa confianza y proteger datos, modelos y comunicaciones.
 
 ## Lo esencial
 
-- Un gemelo digital es una réplica virtual de algo real, sincronizada con datos.
-- A diferencia de un modelo o una simulación, refleja el estado actual de un objeto concreto.
-- Se usa para vigilar, prever fallos y probar cambios sin tocar lo real.
-- Concentra datos y a veces control, por lo que necesita protegerse como el sistema físico.
+- El gemelo conecta una representación con datos de un objeto o proceso real.
+- Estado observado y previsión son cosas distintas; ambos tienen límites de calidad y actualidad.
+- Duplicados y datos atrasados requieren reglas de actualización.
+- Sirve para analizar y ensayar decisiones si el modelo está validado para ese uso.
+- Su acceso a información y, a veces, a controles físicos exige protección adecuada.

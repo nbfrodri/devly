@@ -14,6 +14,8 @@ sources:
     url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/pages/readings/
   - title: "Claude Shannon: A Mathematical Theory of Communication (1948, en inglés)"
     url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
+  - title: "Cisco: IEEE 802.11ax, modulación e intervalos de guarda (en inglés)"
+    url: https://www.cisco.com/c/en/us/products/collateral/wireless/white-paper-c11-740788.html
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -26,13 +28,13 @@ Un aparato que hace las dos cosas es un **módem**: modulador y demodulador.
 
 Los bits son una idea. Lo que viaja es una magnitud física, y como explica el artículo sobre [señales](/articulos/senales-analogicas-y-digitales/), el medio es siempre analógico.
 
-Enviar los bits tal cual, como un voltaje que salta entre dos niveles, funciona en un cable corto. No sirve para la radio ni para distancias largas, por varias razones:
+Una señal en **banda base** ocupa las frecuencias originales de la información, sin trasladarlas alrededor de una portadora. Puede transmitirse por medios adecuados, como ciertos enlaces Ethernet. Modular una portadora permite adaptar la señal a otros canales y repartir el espectro:
 
-- **Las antenas.** Una antena eficaz tiene un tamaño comparable a la longitud de la onda que emite. Las señales de baja frecuencia necesitarían antenas de kilómetros.
-- **Cada medio deja pasar ciertas frecuencias** y atenúa las demás.
-- **Compartir el medio.** Si todos emitieran en las mismas frecuencias, se mezclarían. Dando a cada uno una portadora distinta, conviven: es lo que hacen las emisoras de radio, y se llama **multiplexación por división de frecuencia**.
+- **Las antenas.** En diseños comunes, como el dipolo, el tamaño se relaciona con la longitud de onda. A 100 kHz esta mide unos 3 km; usar frecuencias mayores facilita antenas compactas, aunque el tamaño también depende del diseño.
+- **El medio transmite unas frecuencias mejor que otras.** Hay que elegir una banda que pueda transportar la señal con suficiente calidad.
+- **Compartir el medio.** Separar las bandas ocupadas por distintas portadoras y filtrarlas permite distinguir transmisiones, como las de emisoras de radio. Se llama **multiplexación por división de frecuencia**; que dos portadoras tengan frecuencias distintas no basta si sus bandas se interfieren.
 
-La solución es trasladar la información a una onda de alta frecuencia, adecuada al medio.
+La portadora sitúa la información en una banda adecuada al medio. Su frecuencia no es la tasa de datos: una onda puede oscilar miles de millones de veces por segundo sin representar un bit nuevo en cada oscilación.
 
 ## La portadora
 
@@ -51,11 +53,11 @@ Modular es variar una, o varias, según los datos.
 Cuando lo que se transmite es una señal continua, como el sonido:
 
 - **AM**, modulación de amplitud. La altura de la portadora sigue a la señal. Es simple, y muy sensible al ruido, porque las interferencias alteran justamente la amplitud.
-- **FM**, modulación de frecuencia. La amplitud es constante, y lo que varía es la frecuencia. Resiste mejor el ruido, y por eso la radio FM suena más limpia.
+- **FM**, modulación de frecuencia. Varía la frecuencia de una portadora de amplitud idealmente constante. El receptor puede rechazar parte de las perturbaciones de amplitud. Esa ventaja depende de la potencia recibida y del diseño; con señal insuficiente también falla.
 
 ## Modulación digital
 
-Cuando lo que se transmite son bits, la propiedad elegida salta entre unos valores fijos.
+Cuando lo que se transmite son bits, se eligen estados de un conjunto finito. El filtrado da forma a las transiciones físicas: no exige saltos instantáneos perfectos.
 
 | Técnica | Qué varía | Ejemplo con dos valores |
 | --- | --- | --- |
@@ -63,7 +65,9 @@ Cuando lo que se transmite son bits, la propiedad elegida salta entre unos valor
 | FSK | La frecuencia | Un tono para 1, otro para 0 |
 | PSK | La fase | Onda normal para 1, invertida para 0 |
 
-Cada estado distinto que puede tomar la señal se llama **símbolo**.
+Cada elección transmitida durante un intervalo se llama **símbolo**. El receptor debe recuperar también el ritmo y la referencia que permiten reconocerlo.
+
+En una BPSK didáctica, una modulación de dos fases, asignamos `1` a una portadora y `0` a su inversión. Para enviar `101`, el transmisor elige fase normal, invertida y normal durante tres intervalos. Un receptor idealmente sincronizado compara cada intervalo con su portadora de referencia: un resultado positivo representa `1` y uno negativo, `0`. Así, `0,8; −0,7; 0,9` se interpreta como `101`. Si una perturbación cambia el segundo resultado a positivo, se decide `111`: la modulación no detecta por sí sola ese error.
 
 ## Más de un bit por símbolo
 
@@ -78,44 +82,44 @@ console.log(bitsPorSimbolo(256)); // 8
 console.log(bitsPorSimbolo(1024)); // 10
 ```
 
-Para tener muchos estados se combinan amplitud y fase. Es la **QAM**, modulación de amplitud en cuadratura, la técnica dominante en wifi, redes móviles, cable y televisión digital. El número que la acompaña indica los estados: 16-QAM, 256-QAM, 1024-QAM.
+Una forma habitual de conseguir muchos estados combina dos componentes de una portadora, desfasadas un cuarto de ciclo. Es la **QAM**, modulación de amplitud en cuadratura, utilizada en wifi, redes móviles y otros sistemas. La combinación cambia amplitud y fase. El número que la acompaña indica los estados: 16-QAM, 256-QAM, 1024-QAM.
 
-Si se dibuja cada estado como un punto, según su amplitud y su fase, se obtiene una cuadrícula llamada **constelación**.
+La **constelación** dibuja cada estado como un punto. En QAM rectangular, los ejes representan las dos componentes y los puntos forman una cuadrícula. La distancia al origen indica amplitud y el ángulo indica fase; no todas las constelaciones tienen forma de cuadrícula.
 
 De aquí sale una distinción:
 
 - Los **baudios** miden símbolos por segundo.
 - Los **bits por segundo** son los baudios multiplicados por los bits de cada símbolo.
 
-Una línea a 1000 baudios con 256-QAM transmite 8000 bits por segundo.
+Una línea a 1000 baudios con 256-QAM representa 8000 bits por segundo antes de descontar redundancia y control. La fórmula del ejemplo supone un número de estados que sea potencia de dos y una asignación fija de bits.
 
 ## El precio: el ruido
 
 Si poner más estados da más velocidad, ¿por qué no poner un millón?
 
-Porque cuantos más puntos tiene la constelación, más juntos están. El ruido desplaza cada punto recibido un poco, al azar. Si los puntos están muy cerca, el receptor confunde uno con su vecino y lee bits equivocados.
+Porque, manteniendo la misma potencia media y una forma comparable, más puntos dejan menos separación entre vecinos. El ruido desplaza cada punto recibido un poco, al azar. Si los puntos están muy cerca, el receptor confunde uno con su vecino y lee bits equivocados.
 
 Hace falta una señal limpia para usar muchos estados. Por eso los sistemas modernos usan **modulación adaptativa**: miden la calidad del enlace y eligen sobre la marcha.
 
-- Cerca del punto de acceso, con buena señal: 1024-QAM, velocidad máxima.
-- Lejos, con paredes de por medio: una modulación de pocos estados, más lenta y más robusta.
+- Con suficiente calidad y equipos compatibles puede elegirse una modulación densa, como 1024-QAM.
+- Si disminuye el margen frente al ruido y las interferencias, puede elegirse otra con menos estados y más separación.
 
-Es la razón de que la velocidad del [wifi](/articulos/como-funciona-el-wifi/) caiga al alejarse. La conexión no se corta: cambia a una modulación más conservadora.
+Esto explica parte de la caída de velocidad del [wifi](/articulos/como-funciona-el-wifi/) al alejarse. También influyen retransmisiones y competencia por el canal. Si ni el modo más robusto permite comunicarse, la conexión puede cortarse.
 
 <Quiz
 	client:visible
-	question="¿Por qué la velocidad del wifi baja al alejarse del punto de acceso?"
+	question="Con la misma tasa de símbolos, un enlace pasa de 16 estados a 4 para distinguirlos mejor. ¿Qué cambia?"
 	options={[
-		"Porque la señal tarda más en llegar",
-		"Porque con más ruido hay que usar una modulación con menos bits por símbolo",
-		"Porque el router limita a los dispositivos lejanos",
+		"Cada símbolo representa el doble de bits",
+		"Cada símbolo representa 2 bits en lugar de 4",
+		"La onda tarda el doble en recorrer la distancia",
 	]}
 	answer={1}
 />
 
 ## El límite de Shannon
 
-En 1948, Claude Shannon demostró que todo canal tiene una **capacidad máxima**, que depende de dos cosas: su [ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/), en hercios, y la relación entre la potencia de la señal y la del ruido.
+La **capacidad** de un canal describe la tasa de información que puede transmitirse con una probabilidad de error arbitrariamente pequeña bajo un modelo dado. Shannon estudió estos límites. Para un canal de banda limitada con ruido aditivo blanco gaussiano —un modelo de perturbación con potencia uniforme en la banda— y una potencia media limitada, se obtiene:
 
 ```js
 function capacidad(anchoDeBandaEnHercios, relacionSenalRuido) {
@@ -126,20 +130,22 @@ console.log(Math.round(capacidad(3000, 1000))); // 29902
 console.log(Math.round(capacidad(20e6, 1000) / 1e6)); // 199
 ```
 
-Una línea telefónica clásica, con unos 3000 hercios y una señal mil veces más potente que el ruido, no puede superar los 30 000 bits por segundo, se haga lo que se haga. Un canal de 20 megahercios con la misma calidad admite unos 199 megabits por segundo.
+En ese modelo, 3000 hercios y una relación de potencias de 1000 dan unos 29 902 bit/s; 20 megahercios dan unos 199 Mbit/s. La relación es lineal: 1000, no 1000 decibelios. Son límites calculados bajo esos supuestos, no velocidades medidas ni una promesa sobre cualquier línea telefónica.
 
 El resultado tiene dos lecturas:
 
-- **Es un techo.** Ninguna modulación, por ingeniosa que sea, lo supera.
-- **Es alcanzable.** Por debajo de ese límite, se puede transmitir con tan pocos errores como se quiera, usando códigos de corrección adecuados.
+- **Limita la transmisión fiable dentro del modelo.** Una tasa mayor obliga a aceptar una probabilidad de error que no se puede hacer arbitrariamente pequeña.
+- **No promete un código práctico sin errores.** Acercarse al límite puede exigir bloques largos, más demora y más procesamiento.
 
-Para tener más velocidad solo hay tres caminos: más ancho de banda, más potencia o menos ruido. Los sistemas actuales están ya muy cerca del límite, y por eso las mejoras vienen de usar más espectro o varias antenas a la vez.
+Cambiar la banda, la relación señal/ruido o el número de canales espaciales puede cambiar la capacidad. También puede mejorarse un equipo que todavía aprovecha mal su canal; la fórmula no dice que todo producto esté cerca del límite.
 
 ## Muchas portadoras a la vez
 
 Una señal de radio rebota en paredes y objetos, y al receptor llegan varias copias con retrasos distintos, que se estorban.
 
-La técnica **OFDM** lo afronta dividiendo el canal en cientos o miles de portadoras estrechas, y enviando por cada una un flujo lento de datos. Los símbolos lentos toleran bien los ecos. Además, si una interferencia estropea unas pocas portadoras, el resto sigue funcionando.
+La técnica **OFDM** reparte datos entre numerosas subportadoras coordinadas. Sus frecuencias se eligen para que puedan separarse al analizar cada símbolo con una [transformada de Fourier](/articulos/transformada-de-fourier/). Cada subportadora transmite a un ritmo menor que un único flujo con todos los datos.
+
+Un **intervalo de guarda**, normalmente una copia del final del símbolo colocada al principio, deja margen para los ecos antes de la parte que analiza el receptor. Si los retardos exceden ese margen o falla la sincronización, reaparece interferencia entre símbolos. Perder algunas subportadoras tampoco garantiza recuperar el mensaje: ayudan la codificación y la adaptación del enlace.
 
 La usan el wifi, las [redes móviles](/articulos/redes-moviles/) desde la cuarta generación, el ADSL y la televisión digital.
 
@@ -151,7 +157,7 @@ La usan el wifi, las [redes móviles](/articulos/redes-moviles/) desde la cuarta
 | Cable de cobre | Señales eléctricas: ADSL, cable, Ethernet |
 | Fibra óptica | Luz: su intensidad, y en los sistemas rápidos también su fase |
 
-Es el trabajo de la capa física del [modelo OSI](/articulos/modelos-osi-y-tcp-ip/). Por encima, la [capa de enlace](/articulos/capa-de-enlace/) ya solo ve bits.
+Estas operaciones pertenecen a la capa física del [modelo OSI](/articulos/modelos-osi-y-tcp-ip/). La [capa de enlace](/articulos/capa-de-enlace/) organiza los datos en tramas y puede utilizar información sobre la calidad o los fallos de la transmisión.
 
 ## Ancho de banda en hercios frente a tasa de bits
 
@@ -175,12 +181,15 @@ Si una cuarta parte de lo transmitido se utiliza en redundancia y control, la ta
 
 El ancho en hercios sirve para describir qué intervalo espectral se utiliza; los bits por segundo, cuánto se transmite; los símbolos por segundo, a qué ritmo se eligen estados. Mantener las tres unidades separadas permite localizar qué promete realmente una especificación de enlace.
 
-La [transformada de Fourier](/articulos/transformada-de-fourier/) permite estudiar las componentes de frecuencia de una señal y relacionarlas con su banda.
+## Errores comunes
+
+- **Confundir frecuencia de portadora con tasa de bits.** Las oscilaciones transportan símbolos; cada oscilación no es un dato nuevo.
+- **Elegir más estados sin comprobar la calidad.** A igual potencia, la menor separación puede aumentar los errores y las retransmisiones.
+- **Leer la capacidad como velocidad de descarga.** El modelo, los códigos, las cabeceras y los recursos compartidos importan.
 
 ## Lo esencial
 
-- Modular es variar una onda portadora para que transporte información.
-- Se puede alterar su amplitud, su frecuencia o su fase.
-- Con más estados por símbolo se envían más bits, pero hace falta menos ruido.
-- La modulación se adapta a la calidad del enlace: por eso la velocidad cae con la distancia.
-- La capacidad de un canal tiene un máximo, que depende de su ancho de banda y de su ruido.
+- Modular adapta una señal al canal variando amplitud, frecuencia o fase.
+- Hercios, símbolos por segundo y bits por segundo describen magnitudes distintas.
+- Más estados por símbolo permiten más bits, pero exigen distinguir puntos más próximos.
+- La adaptación y la codificación tienen límites; la capacidad depende del modelo del canal.

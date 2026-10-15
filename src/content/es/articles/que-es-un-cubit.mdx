@@ -1,70 +1,102 @@
 ---
 title: "Computación cuántica: ¿qué es un cúbit?"
-description: "Un cúbit es la unidad de información de un ordenador cuántico. A diferencia de un bit, puede estar en una superposición de 0 y 1 hasta que se mide."
+description: "Un cúbit se describe mediante amplitudes; medirlo produce un resultado clásico, no una lectura de todas sus posibilidades."
 level: intermedio
 layer: hardware
 prerequisites:
   - que-es-un-bit
-  - probabilidad-basica
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "IBM: ¿Qué es la computación cuántica?"
+  - title: "Microsoft Learn: el cúbit en la computación cuántica"
+    url: https://learn.microsoft.com/es-es/azure/quantum/concepts-the-qubit
+  - title: "IBM Quantum Learning: estados, mediciones y operaciones (en inglés)"
+    url: https://quantum.cloud.ibm.com/learning/en/courses/basics-of-quantum-information/single-systems/quantum-information
+  - title: "Daniel Gottesman: The Heisenberg Representation of Quantum Computers (1998, en inglés)"
+    url: https://arxiv.org/abs/quant-ph/9807006
+  - title: "Peter Shor: algoritmos cuánticos de factorización y logaritmo discreto (en inglés)"
+    url: https://arxiv.org/abs/quant-ph/9508027
+  - title: "IBM: qué es la computación cuántica"
     url: https://www.ibm.com/es-es/think/topics/quantum-computing
-  - title: "IBM Quantum Learning: Basics of quantum information (en inglés)"
-    url: https://quantum.cloud.ibm.com/learning/en/courses/basics-of-quantum-information/single-systems/introduction
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **cúbit**, o bit cuántico, es la unidad de información de un **ordenador cuántico**. Un [bit](/articulos/que-es-un-bit/) clásico vale 0 o 1. Un cúbit puede estar en una **superposición** de los dos, una combinación de ambos estados, hasta que se **mide**: entonces da 0 o 1, con unas probabilidades que dependen de esa combinación.
+Un **cúbit**, o bit cuántico, es una unidad de información descrita por las reglas de la mecánica cuántica. Al medirlo de la forma que usaremos aquí, se obtiene un [bit](/articulos/que-es-un-bit/): 0 o 1. Antes de medir, su estado puede contener una **superposición**, una combinación de los estados asociados a esos resultados.
 
-## Superposición
+La utilidad no consiste en leer muchos valores a la vez. Consiste en transformar esas combinaciones para obtener distribuciones de resultados útiles para ciertos cálculos.
 
-El estado de un cúbit se describe con dos números, las **amplitudes**, uno para el 0 y otro para el 1. Al medir, la probabilidad de cada resultado es el cuadrado del valor de su amplitud. Como explica IBM, al medir un sistema cuántico su estado pasa de una superposición de posibilidades a un estado binario, un cero o un uno.
+## Qué describe el estado
+
+Trabajaremos con un modelo ideal de un cúbit aislado, sin ruido, en un **estado puro**: descrito mediante un vector de amplitudes. Para un cúbit son dos números, `a` y `b`, asociados a los estados que escribimos `|0⟩` y `|1⟩`. Los símbolos entre barras y ángulos nombran estados; no son instrucciones de programación.
+
+La expresión `a |0⟩ + b |1⟩` indica una superposición. Las **amplitudes** no son directamente probabilidades: pueden tener signo o ser números complejos. Estos últimos tienen una parte real y otra imaginaria; no hace falta operarlos para seguir los primeros ejemplos.
+
+Para pasar de amplitud a probabilidad se calcula su **módulo al cuadrado**. Si la amplitud es real, basta elevarla al cuadrado. Si es `x + yi`, el resultado es `x² + y²`. Las probabilidades de 0 y 1 deben sumar uno.
+
+## Un resultado de cada medición
+
+Una **base de medición** especifica qué estados se distinguen. Usaremos la base computacional, formada por `|0⟩` y `|1⟩`. Medir entrega uno de esos resultados, con probabilidad `|a|²` o `|b|²`.
+
+La [probabilidad](/articulos/probabilidad-basica/) va de 0 a 1: 0,36 equivale al 36 %. Considera las amplitudes reales 0,6 y 0,8:
 
 ```js
-// Superposición a partes iguales.
-const amplitudes = [Math.SQRT1_2, Math.SQRT1_2];
+const amplitudes = [0.6, 0.8];
+const probabilidades = amplitudes.map((a) => a * a);
 
-const probabilidades = amplitudes.map((a) => (a * a).toFixed(2));
-console.log(probabilidades.join(" ")); // "0.50 0.50"
+console.log(probabilidades.map((p) => p.toFixed(2)).join(" ")); // "0.36 0.64"
+console.log(probabilidades.reduce((suma, p) => suma + p, 0).toFixed(2)); // "1.00"
 ```
 
-Este cúbit, al medirlo, da 0 la mitad de las veces y 1 la otra mitad. Pero no es lo mismo que una moneda al aire: las amplitudes pueden ser negativas, e incluso números complejos, y se pueden **sumar o cancelar** entre sí. Esa **interferencia** es la que aprovechan los algoritmos cuánticos para que la respuesta buscada sea más probable y las erróneas se anulen.
+El código calcula las probabilidades del modelo; no mide un cúbit físico. Si preparas muchas veces ese mismo estado y mides cada preparación, esperas aproximarte a esas proporciones, sin exigir exactamente 36 ceros en cien intentos.
 
-## Entrelazamiento
+En una medición ideal, obtener 0 deja el estado en `|0⟩`. Medir inmediatamente otra vez en la misma base, sin operaciones ni ruido intermedios, vuelve a dar 0. Para repetir el experimento original hay que preparar de nuevo la superposición.
 
-Varios cúbits pueden **entrelazarse**: su estado se describe como un todo, y medir uno determina lo que dará el otro. IBM lo define como la capacidad de los cúbits de correlacionar su estado con el de otros.
+<Quiz
+	client:visible
+	question="Una medición ideal da 0. Sin cambiar el estado, se mide otra vez en la misma base. ¿Qué se obtiene?"
+	options={[
+		"Una lectura de las dos amplitudes originales",
+		"0 otra vez",
+		"1 para compensar el resultado anterior",
+	]}
+	answer={1}
+/>
 
-## Por qué es tan difícil de simular
+## Por qué no basta con lanzar una moneda
 
-Para describir n cúbits hacen falta 2^n amplitudes. Con cada cúbit, el tamaño se duplica:
+Las amplitudes `[0.6, 0.8]` y `[0.6, -0.8]` dan las mismas probabilidades en esa base. Sin embargo, otras operaciones pueden distinguir sus efectos: las amplitudes se combinan antes de convertirlas en probabilidades.
+
+Esa combinación puede reforzar o cancelar contribuciones. Se llama **interferencia**. El siguiente artículo, [puertas cuánticas e interferencia](/articulos/puertas-cuanticas-e-interferencia/), sigue dos operaciones para mostrar una cancelación con números. Un listado de probabilidades, por sí solo, pierde la información de fase necesaria para predecir ese recorrido.
+
+## Varios cúbits y el coste de representarlos
+
+Dos cúbits pueden dar `00`, `01`, `10` o `11` al medir en la base computacional. Un vector general de estado puro asigna una amplitud a cada combinación. Para `n` cúbits, esa representación tiene `2^n` entradas.
+
+Si guardamos explícitamente cada amplitud compleja con dos números de ocho bytes:
 
 ```js
-const bytesPorAmplitud = 16; // un número complejo en doble precisión
+const bytesPorAmplitud = 16;
 const cubits = 50;
-
 const petabytes = (2 ** cubits * bytesPorAmplitud) / 1e15;
+
 console.log(petabytes.toFixed(0)); // "18"
 ```
 
-Simular 50 cúbits en un ordenador clásico requiere unos 18 petabytes solo para guardar su estado. Es la [complejidad exponencial](/articulos/complejidad-algoritmica/) que da a los ordenadores cuánticos su potencial.
+Son unos 18 petabytes decimales solo para ese vector denso. **No es un mínimo para toda simulación de cincuenta cúbits.** Algunos estados y familias de operaciones admiten representaciones mucho más compactas, como muestra el formalismo de estabilizadores estudiado por Gottesman. Tampoco puedes extraer las `2^n` amplitudes mediante una sola medición: obtienes una cadena de `n` bits.
 
-## Para qué servirían
+El **[entrelazamiento](/articulos/entrelazamiento-cuantico/)** añade relaciones entre cúbits que no se describen asignando un estado puro independiente a cada uno. Sus consecuencias dependen del estado conjunto y de cómo se mida.
 
-Un ordenador cuántico **no** es un ordenador más rápido para todo. Solo supera a los clásicos en problemas concretos donde existe un algoritmo cuántico que aprovecha la interferencia:
+## Del modelo al dispositivo
 
-- **Simular moléculas y materiales**, que son sistemas cuánticos por naturaleza.
-- **Factorizar números grandes**, lo que rompería parte del [cifrado asimétrico](/articulos/cifrado-simetrico-y-asimetrico/) actual. Por eso ya se están adoptando algoritmos de cifrado resistentes a la computación cuántica.
-- Ciertos problemas de **optimización** y búsqueda.
+Las operaciones físicas tienen errores. La **decoherencia** degrada las relaciones de fase al interactuar el sistema con su entorno; no significa que cualquier interacción destruya instantáneamente todo el estado. Hay diferentes tecnologías y condiciones de funcionamiento, no una única temperatura exigida por la definición de cúbit.
 
-## El problema: la decoherencia
+La corrección de errores busca proteger información lógica utilizando varios cúbits físicos y operaciones adicionales. Contar cúbits físicos no basta para conocer qué cálculo fiable puede ejecutar una máquina.
 
-Los cúbits son muy frágiles. Cualquier interacción con el entorno, una vibración, un cambio de temperatura, destruye la superposición: es la **decoherencia**, otro de los principios que menciona IBM. Por eso muchos ordenadores cuánticos funcionan a temperaturas cercanas al cero absoluto, y por eso se investiga en **corrección de errores** cuánticos, que agrupa muchos cúbits físicos para formar uno lógico fiable.
+Tampoco hay aceleración universal. El algoritmo de Shor, por ejemplo, proporciona un procedimiento eficiente de factorización en el modelo cuántico ideal; ejecutarlo a una escala útil requiere recursos y control de errores. Ese resultado no demuestra que cualquier programa cotidiano vaya a funcionar más rápido.
 
 ## Lo esencial
 
-- Un cúbit puede estar en superposición de 0 y 1; al medirlo, da uno de los dos con cierta probabilidad.
-- Las amplitudes pueden sumarse o cancelarse: esa interferencia es la base de los algoritmos cuánticos.
-- Describir n cúbits exige 2^n números, por eso simularlos es tan costoso.
-- Solo ganan en problemas concretos, y la decoherencia los hace muy difíciles de construir.
+- Las amplitudes describen el estado; sus módulos al cuadrado dan probabilidades en la base elegida.
+- Medir devuelve un resultado clásico y puede cambiar el estado.
+- Interferencia y entrelazamiento permiten operaciones distintas de las de un bit clásico.
+- El coste de simulación y las ventajas prácticas dependen del estado, del algoritmo y del dispositivo.

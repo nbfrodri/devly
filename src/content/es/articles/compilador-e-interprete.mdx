@@ -1,12 +1,12 @@
 ---
 title: "Diferencias entre compilador e intérprete"
-description: "Un compilador traduce todo el programa antes de ejecutarlo; un intérprete lo va ejecutando directamente. La mayoría de lenguajes actuales combinan ambos."
+description: "Un compilador genera una representación ejecutable; un intérprete ejecuta las operaciones de una representación. Una misma herramienta puede combinar ambos."
 level: intermedio
 kind: comparacion
 layer: programacion
 prerequisites:
   - como-funciona-un-procesador
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "Robert Nystrom: Crafting Interpreters, A Map of the Territory (libro libre, en inglés)"
     url: https://craftinginterpreters.com/a-map-of-the-territory.html
@@ -18,82 +18,90 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **compilador** traduce un programa completo a otro lenguaje, normalmente el del procesador, antes de que se ejecute. Un **intérprete** lee el programa y lo va ejecutando directamente, sin generar esa traducción previa.
+Un **compilador** traduce código a otra representación, como código máquina o bytecode. Un **intérprete** ejecuta las operaciones descritas por una representación del programa, como un árbol sintáctico o bytecode. La diferencia es qué hace cada etapa; una herramienta puede combinar ambas, incluso compilar mientras el programa se está ejecutando.
 
 ## El problema de fondo
 
 Un [procesador](/articulos/como-funciona-un-procesador/) solo entiende **código máquina**: instrucciones muy simples escritas en binario, distintas para cada familia de procesadores.
 
-Las personas programamos en lenguajes de alto nivel, con variables, funciones y nombres legibles. Algo tiene que salvar la distancia entre lo que escribimos, el **código fuente**, y lo que la máquina ejecuta. Compilar e interpretar son las dos estrategias básicas.
+Las personas programamos en lenguajes de alto nivel, con variables, funciones y nombres legibles. Algo tiene que salvar la distancia entre lo que escribimos, el **[código fuente](/articulos/que-es-el-codigo-fuente/)**, y lo que la máquina ejecuta. Compilar e interpretar son las dos estrategias básicas.
 
 ## Una analogía
 
 Tienes un libro escrito en un idioma que tu público no entiende.
 
-- **Traducirlo entero** y publicar la traducción. Cuesta tiempo al principio, pero después cualquiera lo lee de corrido. Eso es compilar.
-- **Contratar a un intérprete** que lo lea en voz alta traduciendo frase a frase. Se empieza al instante, pero cada lectura repite el trabajo y va más despacio. Eso es interpretar.
+- **Preparar una traducción** que se podrá leer después. Se parece a compilar por adelantado.
+- **Contratar a un intérprete** que comunique su contenido durante la lectura. Se parece a ejecutar mediante un intérprete.
+
+La analogía explica la separación entre preparar una representación y usarla. No demuestra cuál será más rápido ni obliga a traducir todo el libro de una vez.
 
 ## El compilador
 
-Un compilador recibe el código fuente y produce un archivo ejecutable en código máquina, un [binario](/articulos/que-es-un-binario/). Ese archivo se ejecuta después tantas veces como se quiera, sin necesidad del compilador ni del código fuente.
+En una cadena de compilación **por adelantado**, el código fuente se traduce y se enlaza para producir un [binario](/articulos/que-es-un-binario/). Puede ejecutarse sin el compilador ni el fuente, aunque quizá necesite bibliotecas y un entorno de ejecución compatibles. No todos los compiladores producen directamente un ejecutable: también pueden generar archivos objeto, bytecode u otro lenguaje.
 
-C, C++, Rust y Go funcionan así.
+Las implementaciones habituales de C, C++, Rust y Go usan compilación por adelantado a código nativo.
 
 **Ventajas:**
 
-- **Velocidad.** El programa ya está en el lenguaje del procesador. Además, el compilador ha tenido tiempo de analizarlo entero y optimizarlo.
-- **Errores detectados antes.** Muchos fallos salen al compilar, sin ejecutar nada.
+- **Ejecución nativa.** Evita interpretar cada operación. Las optimizaciones pueden reducir trabajo, pero el rendimiento depende del programa y de la implementación.
+- **Comprobaciones previas.** Puede detectar errores de sintaxis y, según el lenguaje y las comprobaciones implementadas, de tipos. No descubre todos los fallos.
 - **Se distribuye sin el código fuente.**
 
 **Inconvenientes:**
 
 - **Hay un paso previo.** Tras cada cambio hay que compilar antes de probar.
-- **El ejecutable es específico.** Uno compilado para un tipo de procesador y un sistema operativo no funciona en otros; hay que compilar para cada uno.
+- **El ejecutable tiene un destino.** Necesita instrucciones e interfaces compatibles. Para otro destino puede hacer falta recompilar o usar una capa de traducción; compartir «64 bits» no basta.
 
 ## El intérprete
 
-Un intérprete lee el programa y lo ejecuta sobre la marcha. No deja ningún ejecutable: para volver a ejecutar el programa hace falta de nuevo el intérprete y el código fuente.
+Un intérprete ejecuta el programa a partir de una representación que entiende. Puede recibir texto ya analizado, un árbol o bytecode; no necesariamente vuelve a leer el fuente línea por línea. Hace falta el intérprete compatible, pero el fuente original puede no ser necesario si se distribuye la representación intermedia.
 
 **Ventajas:**
 
-- **Inmediatez.** Se escribe y se ejecuta, sin esperas.
-- **Portabilidad.** El mismo código funciona en cualquier máquina que tenga el intérprete.
+- **Ciclo de trabajo breve.** La herramienta puede analizar y ejecutar sin que el usuario gestione una compilación separada. Ese análisis también consume tiempo.
+- **Portabilidad del programa.** Se puede reutilizar en entornos con un intérprete compatible, siempre que también lo sean sus bibliotecas, archivos y dependencias del sistema.
 - **Interactividad.** Permite ejecutar una línea, ver el resultado y seguir.
 
 **Inconvenientes:**
 
-- **Es más lento**, porque el análisis se hace mientras el programa corre.
-- **Los errores aparecen al llegar a la línea**, quizá tras horas de ejecución.
+- **Coste de interpretación.** Despachar operaciones añade trabajo, aunque una operación puede llamar a una biblioteca nativa muy rápida.
+- **Errores durante la ejecución.** Algunos solo aparecen al recorrer un caso concreto. Otros, como un error de sintaxis, pueden detectarse antes de ejecutar la primera instrucción.
 - **Quien ejecuta necesita el intérprete instalado.**
 
 ## Comparación
 
 | | Compilador | Intérprete |
 | --- | --- | --- |
-| Cuándo traduce | Antes de ejecutar, todo de una vez | Mientras ejecuta |
-| Qué produce | Un ejecutable | Nada: ejecuta directamente |
-| Velocidad de ejecución | Mayor | Menor |
-| Tiempo hasta empezar | Hay que compilar antes | Inmediato |
-| Portabilidad | Un ejecutable por plataforma | El mismo código en todas |
-| Errores | Muchos, al compilar | Al ejecutar cada línea |
+| Trabajo principal | Generar otra representación | Ejecutar las operaciones de una representación |
+| Resultado | Código máquina, bytecode u otro código | Efectos y resultados de la ejecución |
+| Momento | Por adelantado o durante la ejecución, con JIT | Durante la ejecución |
+| Coste característico | Traducción y posibles optimizaciones | Despacho de las operaciones interpretadas |
+| Portabilidad | Depende del formato y destino generado | Depende del intérprete y del entorno disponibles |
+| Errores | Las comprobaciones dependen del lenguaje y la herramienta | Puede haber análisis previo y comprobaciones al ejecutar |
+
+### La misma suma en dos recorridos
+
+Para `2 + 3`, un compilador puede generar una instrucción que cargue `5`, calculando la suma durante la traducción. Un intérprete de árboles puede visitar los nodos `2` y `3` y aplicar la suma al ejecutar. Ambos deben producir `5`: cambia dónde se realiza el trabajo. Un compilador también podría generar una suma, y un intérprete podría recibir un árbol ya simplificado.
+
+Al elegir una implementación, importan el tiempo de arranque, el trabajo repetido, los destinos de distribución y el entorno disponible. Un servicio que ejecuta millones de veces una función puede amortizar una optimización que no compensa en un guion de una sola ejecución. Hay que medir ese caso, no deducir el resultado de la etiqueta.
 
 ## La realidad está en medio
 
-Casi ningún lenguaje actual es un caso puro. Se han impuesto dos soluciones intermedias.
+Muchas implementaciones combinan traducción y ejecución mediante dos mecanismos.
 
 ### Bytecode y máquina virtual
 
-El código fuente se compila a un lenguaje intermedio, el **bytecode**. No es código máquina de ningún procesador real, sino de una máquina imaginaria más sencilla.
+El código fuente puede compilarse a un lenguaje intermedio, el **bytecode**. Sus operaciones se definen para una máquina abstracta; no se eligen necesariamente como instrucciones de la CPU del equipo.
 
-Después, un programa llamado **máquina virtual** ejecuta ese bytecode, y los motores modernos compilan sobre la marcha las partes más usadas, como explica [cómo ejecuta JavaScript un motor como V8](/articulos/motores-de-javascript-y-jit/). Así se reparte el trabajo: el análisis costoso se hace una vez, y el bytecode funciona en cualquier sitio donde exista la máquina virtual.
+Después, un programa llamado **máquina virtual** ejecuta ese bytecode. Algunas implementaciones también compilan durante la ejecución, como explica [cómo ejecuta JavaScript un motor como V8](/articulos/motores-de-javascript-y-jit/). Separar las etapas permite reutilizar el análisis previo; la portabilidad exige una máquina virtual y unas dependencias compatibles.
 
-Java se compila a bytecode que ejecuta la JVM. Python también: lo que se suele llamar "el intérprete de Python" compila primero el programa a bytecode y luego lo ejecuta en su máquina virtual.
+Java suele compilarse a bytecode para la JVM. CPython, una implementación de Python, también genera bytecode y lo ejecuta en su máquina virtual. Ese bytecode no es un formato universal: su compatibilidad depende de la implementación y de la versión.
 
 ### Compilación en tiempo de ejecución
 
 Un compilador **JIT** (*just in time*) traduce a código máquina mientras el programa ya está funcionando.
 
-Empieza interpretando, para arrancar rápido. Mientras tanto observa qué partes se ejecutan muchas veces, y esas las compila a código máquina optimizado. Como ve el programa en funcionamiento, puede optimizar con información que un compilador tradicional no tiene.
+En un motor por niveles, puede empezar interpretando para arrancar pronto y compilar después partes usadas con frecuencia. No todo JIT sigue esa política. Al observar la ejecución, puede usar información de los valores y caminos reales para especializar código, con comprobaciones para abandonar una optimización cuando sus supuestos dejan de cumplirse.
 
 Así trabajan los motores de JavaScript de los navegadores, y también las máquinas virtuales de Java y de C#.
 
@@ -102,7 +110,7 @@ Así trabajan los motores de JavaScript de los navegadores, y también las máqu
 	question="¿Qué hace un compilador JIT?"
 	options={[
 		"Compila todo el programa antes de ejecutarlo",
-		"Compila a código máquina las partes más usadas mientras el programa funciona",
+		"Genera código máquina durante la ejecución del programa",
 		"Traduce el programa a otro lenguaje de alto nivel",
 	]}
 	answer={1}
@@ -115,25 +123,31 @@ Así trabajan los motores de JavaScript de los navegadores, y también las máqu
 ## Otras traducciones
 
 - **Transpilador.** Traduce entre lenguajes de un nivel parecido. El de [TypeScript](/articulos/que-es-typescript/) produce JavaScript.
-- **Enlazador.** Une las distintas partes compiladas de un programa, y las bibliotecas que usa, en un solo ejecutable.
+- **Enlazador.** Conecta las partes compiladas y sus referencias. Puede producir un ejecutable o una biblioteca, incorporar código y dejar dependencias compartidas que se resuelven al ejecutar.
 
 ## Qué ocurre dentro
 
-Compiladores e intérpretes comparten las primeras fases, que detalla con un compilador de juguete [cómo funciona un compilador por dentro](/articulos/como-funciona-un-compilador-por-dentro/):
+Muchas cadenas de compilación e interpretación comparten fases, que detalla con un compilador de juguete [cómo funciona un compilador por dentro](/articulos/como-funciona-un-compilador-por-dentro/):
 
 1. **Análisis léxico.** El texto se divide en piezas con significado, llamadas *tokens*: palabras clave, nombres, números, símbolos.
-2. **Análisis sintáctico.** Con esas piezas se construye un [árbol](/articulos/arboles-binarios-de-busqueda/) que refleja la estructura del programa.
-3. **Análisis semántico.** Se comprueba que tiene sentido: que las variables existen y que los [tipos](/articulos/tipado-estatico-y-dinamico/) encajan.
+2. **Análisis sintáctico.** Se reconoce la estructura del programa y puede representarse como un árbol sintáctico: operaciones con expresiones subordinadas. No es un árbol binario de búsqueda.
+3. **Análisis semántico.** Se aplican las comprobaciones previas que permita el lenguaje, por ejemplo sobre nombres o [tipos](/articulos/tipado-estatico-y-dinamico/). Otras comprobaciones pueden quedar para la ejecución.
 
-A partir de ahí divergen: el compilador genera código y el intérprete recorre el árbol o el bytecode ejecutándolo.
+A partir de ahí, una etapa puede generar otra representación y otra puede ejecutarla. La organización concreta varía; no todas las herramientas construyen un árbol ni mantienen estas fases separadas.
 
 ## Para comparar
 
 La diferencia entre compilar y traducir entre lenguajes de alto nivel se explica en [compilar y transpilar](/articulos/compilar-y-transpilar/).
 
+## Confusiones frecuentes
+
+- **Equiparar compilación y tipado estático.** Una traducción puede conservar comprobaciones de tipos para la ejecución; un intérprete puede ejecutar código previamente verificado.
+- **Dar por portátil cualquier fuente interpretado.** Una llamada exclusiva de un sistema operativo no se vuelve universal por usar un intérprete.
+- **Atribuir todos los errores a una fase.** Una división problemática o un archivo ausente dependen de datos y condiciones que pueden aparecer después de compilar.
+
 ## Lo esencial
 
-- Un compilador traduce el programa entero antes de ejecutarlo; un intérprete lo ejecuta directamente.
-- Compilar da velocidad y detección temprana de errores; interpretar da inmediatez y portabilidad.
-- La mayoría de los lenguajes actuales combinan ambas ideas mediante bytecode, máquinas virtuales y compilación JIT.
+- Un compilador genera otra representación; un intérprete ejecuta sus operaciones.
+- Rendimiento, comprobaciones y portabilidad dependen de la implementación y del entorno.
+- Bytecode y JIT permiten combinar etapas de compilación e interpretación.
 - Es una característica de la herramienta, no del lenguaje.

@@ -1,11 +1,11 @@
 ---
 title: "¿Qué es la memoria virtual?"
-description: "La memoria virtual hace creer a cada proceso que tiene toda la memoria para él, y el sistema operativo traduce esas direcciones a memoria real."
+description: "Cada proceso usa direcciones virtuales. Las tablas y permisos determinan a qué memoria física puede acceder y qué ocurre si falta una traducción."
 level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-proceso
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "Operating Systems: Three Easy Pieces, The Abstraction: Address Spaces (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-intro.pdf
@@ -13,126 +13,104 @@ sources:
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf
   - title: "Operating Systems: Three Easy Pieces, Beyond Physical Memory: Mechanisms (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-beyondphys.pdf
+  - title: "Documentación de Linux: memoria virtual, fallos y copia en escritura (en inglés)"
+    url: https://docs.kernel.org/admin-guide/mm/concepts.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **memoria virtual** es una técnica del sistema operativo que da a cada [proceso](/articulos/que-es-un-proceso/) la ilusión de tener para él solo un bloque de memoria grande y continuo. Las direcciones que usa el programa no son las de la memoria real: el sistema las traduce sobre la marcha.
+La **memoria virtual** permite que un [proceso](/articulos/que-es-un-proceso/) trabaje con direcciones que se traducen a recursos físicos. El sistema operativo configura esas traducciones y permisos; el hardware los aplica al acceder a memoria. Dos procesos pueden usar el mismo número de dirección y llegar a lugares diferentes.
 
-## Qué problema resuelve
+Además de separar espacios de direcciones, permite compartir regiones de forma controlada y mantener fuera de la RAM ciertos datos. No promete memoria ilimitada ni convierte cada fallo de acceso en una lectura de disco.
 
-La memoria física, la [RAM](/articulos/memoria-ram-y-almacenamiento/), es una sola y la comparten todos los programas. Si cada programa usara directamente direcciones reales, habría tres problemas:
+## Direcciones del proceso y direcciones físicas
 
-- **Colisiones.** Dos programas podrían querer la misma dirección.
-- **Falta de protección.** Un programa podría leer o sobrescribir la memoria de otro, o la del sistema.
-- **Límite rígido.** No cabrían más programas de los que entran en la RAM.
+Una **dirección virtual** pertenece al espacio que ve el proceso. No todo ese espacio tiene que ser accesible: puede contener huecos y regiones con permisos diferentes. Que la numeración permita cero no significa que el programa tenga memoria asignada en esa dirección.
 
-La memoria virtual resuelve los tres con una capa de traducción entre lo que el programa cree que usa y lo que realmente ocupa.
+Una **dirección física** identifica una posición en el espacio físico del sistema. En los ejemplos siguientes apuntará a [RAM](/articulos/memoria-ram-y-almacenamiento/). Las traducciones pertenecen al contexto del proceso, por lo que la dirección virtual 100 de A no tiene por qué significar lo mismo que la 100 de B.
 
-## Dos tipos de direcciones
+## Páginas, marcos y desplazamientos
 
-- Una **dirección virtual** es la que ve el programa. Cada proceso tiene su propio conjunto, su **espacio de direcciones**, que empieza en cero.
-- Una **dirección física** es una posición real en los chips de memoria.
+En un sistema paginado, las **páginas** dividen el espacio virtual y los **marcos** dividen la memoria física. Usaremos páginas de 4096 bytes, cuatro kibibytes; existen otros tamaños.
 
-Dos procesos pueden usar la misma dirección virtual sin estorbarse, porque cada una se traduce a una dirección física distinta.
+Una dirección se separa en número de página y **desplazamiento**, la posición dentro de ella. La tabla de páginas proporciona el marco y los permisos. Para este modelo hemos asignado deliberadamente la página cero:
 
-Es parecido a los números de habitación de dos hoteles: la 101 existe en los dos, pero son habitaciones diferentes.
+| Proceso | Página virtual | Marco físico | Permiso |
+| --- | --- | --- | --- |
+| A | 0 | 5 | Leer y escribir |
+| B | 0 | 9 | Leer y escribir |
+| A y B | 1 | 2 | Leer |
 
-## Páginas y marcos
+La dirección 100 pertenece a la página 0 con desplazamiento 100. En A llega a `5 × 4096 + 100 = 20580`; en B, a `9 × 4096 + 100 = 36964`.
 
-Traducir dirección a dirección sería inmanejable. La memoria se divide en bloques de tamaño fijo:
-
-- El espacio virtual se divide en **páginas**.
-- La memoria física se divide en **marcos**, del mismo tamaño.
-
-Un tamaño habitual es de 4 kilobytes. La traducción se hace por páginas enteras: cada página virtual se asocia a un marco físico.
-
-Las páginas de un proceso no tienen que estar juntas ni en orden en la memoria física. Lo que el programa ve como un bloque continuo puede estar repartido por toda la RAM.
-
-## La tabla de páginas
-
-Cada proceso tiene una **tabla de páginas**, donde el sistema operativo anota en qué marco está cada página:
-
-| Página virtual | Marco físico |
-| --- | --- |
-| 0 | 5 |
-| 1 | 2 |
-| 2 | No está en memoria |
-
-Una dirección se divide en dos partes: el número de página y el **desplazamiento** dentro de ella. Para traducir, se cambia el número de página por el de marco y se conserva el desplazamiento.
+En cambio, 4100 pertenece a la página 1 con desplazamiento 4. Ambos procesos llegan a 8196: el ejemplo comparte ese marco para lectura. No hay contradicción entre espacios propios y páginas compartidas.
 
 ```js
-const TAMANO_DE_PAGINA = 4096;
-const tablaDePaginas = { 0: 5, 1: 2 };
+const tamano = 4096;
+const tablaA = { 0: { marco: 5, escritura: true }, 1: { marco: 2, escritura: false } };
+const tablaB = { 0: { marco: 9, escritura: true }, 1: { marco: 2, escritura: false } };
 
-function traducir(direccionVirtual) {
-	const pagina = Math.floor(direccionVirtual / TAMANO_DE_PAGINA);
-	const desplazamiento = direccionVirtual % TAMANO_DE_PAGINA;
-	const marco = tablaDePaginas[pagina];
-
-	if (marco === undefined) {
-		return "fallo de página";
+function traducir(tabla, direccion, escribir = false) {
+	if (!Number.isSafeInteger(direccion) || direccion < 0) {
+		throw new RangeError("Dirección entera no negativa requerida");
 	}
-
-	return marco * TAMANO_DE_PAGINA + desplazamiento;
+	const pagina = Math.floor(direccion / tamano);
+	const entrada = tabla[pagina];
+	if (entrada === undefined) return "sin traducción presente";
+	if (escribir && !entrada.escritura) return "escritura no permitida";
+	return entrada.marco * tamano + direccion % tamano;
 }
 
-console.log(traducir(100)); // 20580
-console.log(traducir(4100)); // 8196
-console.log(traducir(9000)); // "fallo de página"
+console.log(traducir(tablaA, 100)); // 20580
+console.log(traducir(tablaB, 100)); // 36964
+console.log(traducir(tablaA, 4100), traducir(tablaB, 4100)); // 8196 8196
+console.log(traducir(tablaA, 4100, true)); // "escritura no permitida"
+console.log(traducir(tablaA, 9000)); // "sin traducción presente"
 ```
 
-La dirección 100 está en la página 0, con desplazamiento 100. La página 0 está en el marco 5, así que la dirección física es 5 × 4096 + 100.
+La función explica traducción y permisos en tablas pequeñas. No simula un sistema operativo ni decide si una página ausente debe crearse, recuperarse o rechazarse.
 
-### Quién hace la traducción
+## La MMU y la TLB
 
-Esta operación ocurre en cada acceso a memoria, millones de veces por segundo. Hacerla por software sería lentísimo, así que la realiza un componente del [procesador](/articulos/como-funciona-un-procesador/), la **unidad de gestión de memoria** (MMU).
+La **unidad de gestión de memoria**, MMU, participa en la traducción y comprobación de permisos. Para evitar recorrer tablas en cada acceso, una caché llamada **TLB** conserva traducciones y atributos recientes.
 
-Para no consultar la tabla en cada acceso, el procesador guarda las traducciones recientes en una caché pequeña y muy rápida, la **TLB**. Como los programas suelen usar las mismas páginas una y otra vez, casi todas las traducciones se resuelven ahí.
+Un fallo de TLB significa que la traducción no estaba en esa caché. Puede resolverse consultando las tablas, sin traer datos del disco. El recorrido lo realiza hardware o software según la arquitectura. Su coste depende de la organización de tablas y del patrón de acceso; no existe una tasa de aciertos garantizada.
 
-## Más memoria de la que hay
+## Qué significa un fallo de página
 
-No todas las páginas de un proceso tienen que estar en la RAM. Las que llevan tiempo sin usarse pueden guardarse en el disco, en una zona llamada **espacio de intercambio** o *swap*, y dejar su marco libre para otra. Compara los dos [swap y memoria RAM](/articulos/swap-y-memoria-ram/).
+Cuando el acceso no puede completarse con la traducción o los permisos disponibles, el procesador entrega el control al sistema operativo. Este examina la dirección, el tipo de acceso y las regiones válidas del proceso. Según el sistema y el caso, puede ocurrir lo siguiente:
 
-Cuando un programa accede a una página que no está en memoria se produce un **fallo de página**:
+| Causa | Respuesta posible |
+| --- | --- |
+| Primera escritura en memoria anónima válida | Asignar un marco inicializado, sin leer una copia del disco |
+| Página válida guardada en intercambio | Recuperarla del almacenamiento |
+| Escritura sobre una página compartida con copia en escritura | Crear una copia privada y ajustar permisos |
+| Dirección no asignada o acceso prohibido | Rechazar el acceso y notificar o terminar el proceso |
 
-1. El procesador avisa al sistema operativo.
-2. El sistema busca un marco libre. Si no hay, elige una página poco usada y la lleva al disco.
-3. Carga desde el disco la página pedida.
-4. Actualiza la tabla de páginas.
-5. El programa continúa sin enterarse.
+La **copia en escritura** permite compartir inicialmente una página mientras nadie la modifique. El primer escritor obtiene su copia para que su cambio no afecte al otro proceso. Una página de solo lectura no autoriza siempre esta solución: depende de cómo esté definida la región.
 
-Así, la suma de la memoria que usan todos los procesos puede superar la RAM instalada.
-
-### El precio
-
-El disco es muchísimo más lento que la memoria. Unos pocos fallos de página no se notan. Pero si la memoria se queda corta y el sistema pasa más tiempo moviendo páginas entre el disco y la RAM que ejecutando programas, todo se vuelve lentísimo. A esa situación se la llama **hiperpaginación** (*thrashing*), y es la razón de que un ordenador con poca memoria vaya "a tirones".
+Si el sistema resuelve el fallo, actualiza el estado necesario y puede reintentar la instrucción. El programa observa al menos el tiempo empleado; si no se puede resolver, no continúa como si nada.
 
 <Quiz
 	client:visible
-	question="¿Qué ocurre cuando un programa accede a una página que no está en la memoria física?"
-	options={[
-		"El programa se cierra con un error",
-		"Se produce un fallo de página y el sistema la carga desde el disco",
-		"El procesador la ignora",
-	]}
+	question="Se produce un fallo de página. ¿Puede concluirse que habrá una lectura de disco?"
+	options={["Sí, es la definición de fallo de página", "No: hay que examinar la causa y la región de memoria", "No, porque todos los fallos se ignoran"]}
 	answer={1}
 />
 
-## Qué más se consigue
+## Capacidad, protección y coste
 
-- **Aislamiento.** Un proceso no puede nombrar siquiera la memoria de otro: sus direcciones virtuales solo se traducen a sus propios marcos. Si intenta acceder a una dirección que no tiene asignada, el sistema lo detiene.
-- **Permisos por página.** Cada página puede marcarse como de solo lectura, de escritura o ejecutable. Impedir que los datos se ejecuten como código frena una clase entera de ataques.
-- **Compartir sin copiar.** Si diez programas usan la misma biblioteca, sus tablas apuntan a los mismos marcos. Está una sola vez en memoria.
-- **Reservar sin gastar.** Un programa puede pedir mucha memoria; el sistema solo le asigna marcos reales cuando la usa.
+El **[intercambio o swap](/articulos/swap-y-memoria-ram/)** permite retirar ciertas páginas de RAM, pero puede no estar habilitado y no toda página es intercambiable. Algunas páginas respaldadas por archivos pueden descartarse y volver a leerse sin escribir una copia nueva.
 
-## Para comparar
+Si el conjunto de páginas activas no cabe y hay que moverlas continuamente, el sistema puede sufrir **hiperpaginación** o *thrashing*. Reservar espacio virtual tampoco garantiza conseguir RAM después: influyen los límites y la política de asignación.
 
-Las dos zonas en que un programa organiza su memoria se explican en [la pila y el montículo](/articulos/pila-y-monticulo-de-memoria/).
+La protección depende de traducciones, permisos y privilegios correctamente aplicados. Las regiones compartidas son explícitas; una dirección virtual por sí sola no concede acceso a memoria ajena. Marcar datos como no ejecutables ayuda a limitar ataques, pero no sustituye las demás defensas.
+
+La [pila y el montículo](/articulos/pila-y-monticulo-de-memoria/) organizan regiones usadas por el programa dentro de este espacio; no son dos memorias físicas independientes.
 
 ## Lo esencial
 
-- Cada proceso trabaja con direcciones virtuales, que el sistema traduce a direcciones físicas.
-- La memoria se gestiona en páginas y marcos, relacionados mediante la tabla de páginas.
-- La traducción la hace el procesador, con ayuda de una caché de traducciones.
-- Las páginas poco usadas pueden ir al disco, lo que permite usar más memoria de la instalada a costa de velocidad.
+- La dirección virtual se interpreta dentro de un espacio de direcciones y sus permisos.
+- La traducción cambia página por marco y conserva el desplazamiento.
+- Un fallo de TLB y un fallo de página son situaciones distintas.
+- Un fallo de página puede requerir asignar, copiar, recuperar datos o rechazar el acceso.

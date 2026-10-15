@@ -1,91 +1,139 @@
 ---
 title: "Diferencias entre Linux, Windows y macOS"
-description: "Los tres sistemas operativos de escritorio más usados tienen orígenes, modelos y filosofías distintos. Para quien desarrolla, la diferencia más práctica es Unix frente a Windows."
-level: basico
+description: "Comparamos un mismo proyecto en Linux, Windows y macOS: rutas, nombres, permisos y ejecución. La compatibilidad depende del entorno concreto, no solo de su familia."
+level: intermedio
 kind: comparacion
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
   - que-es-linux
-updated: 2026-10-14
+  - sistema-de-archivos
+  - terminal-y-shell
+updated: 2026-10-15
 sources:
   - title: "Microsoft: Información general de los componentes de Windows"
     url: https://learn.microsoft.com/es-es/windows-hardware/drivers/kernel/overview-of-windows-components
   - title: "Apple: Kernel Programming Guide, Kernel Architecture Overview (en inglés)"
     url: https://developer.apple.com/library/archive/documentation/Darwin/Conceptual/KernelProgramming/Architecture/Architecture.html
   - title: "The Linux Kernel Archives: About Linux Kernel (en inglés)"
-    url: https://www.kernel.org/category/about.html
-  - title: "Microsoft: ¿Qué es el Subsistema de Windows para Linux?"
-    url: https://learn.microsoft.com/es-es/windows/wsl/about
+    url: https://www.kernel.org/linux.html
+  - title: "Microsoft: Comparación de versiones de WSL"
+    url: https://learn.microsoft.com/es-es/windows/wsl/compare-versions
+  - title: "Microsoft: Distinción entre mayúsculas y minúsculas"
+    url: https://learn.microsoft.com/es-es/windows/wsl/case-sensitivity
+  - title: "Apple: Formatos del sistema de archivos disponibles en Utilidad de Discos"
+    url: https://support.apple.com/es-es/guide/disk-utility/dsku19ed921c/mac
+  - title: "Node.js: Path (en inglés)"
+    url: https://nodejs.org/api/path.html
+  - title: "Node.js: File system (en inglés)"
+    url: https://nodejs.org/api/fs.html
+  - title: "Docker: Instalación de Docker Desktop en Mac (en inglés)"
+    url: https://docs.docker.com/desktop/setup/install/mac-install/
+  - title: "Docker: Instalación de Docker Desktop en Windows (en inglés)"
+    url: https://docs.docker.com/desktop/setup/install/windows-install/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**Linux**, **Windows** y **macOS** son los tres [sistemas operativos](/articulos/que-es-un-sistema-operativo/) de ordenador más extendidos. Hacen lo mismo, gestionar el hardware y ejecutar programas, con orígenes y filosofías muy distintos. Para quien programa, la diferencia más útil es otra: macOS y Linux pertenecen a la familia **Unix**, y Windows no.
+Los sistemas basados en **Linux**, **Windows** y **macOS** administran hardware y ejecutan programas, pero ofrecen interfaces y entornos diferentes. Aquí comparamos su uso en un ordenador de desarrollo. Linux designa una familia de sistemas construidos alrededor de un núcleo; Windows y macOS son familias de productos de Microsoft y Apple.
 
-## Origen y modelo
+## Qué compone cada entorno
 
-| | Linux | Windows | macOS |
+[Linux](/articulos/que-es-linux/) se integra en [distribuciones](/articulos/distribuciones-de-linux/) con bibliotecas, gestores de paquetes y políticas de actualización propias. Windows utiliza el núcleo de la familia NT, servicios e [interfaces para las aplicaciones, o APIs](/articulos/que-es-una-api/). macOS utiliza XNU, que combina componentes como Mach y BSD, junto con aplicaciones y frameworks de Apple: conjuntos de herramientas y estructuras para desarrollar programas.
+
+Linux y macOS comparten convenciones de tipo Unix, pero no tienen las mismas bibliotecas ni ejecutan automáticamente los mismos binarios. La familia del sistema orienta sobre ciertas interfaces; no resuelve toda la compatibilidad.
+
+| Criterio | Distribución Linux | Windows | macOS |
 | --- | --- | --- | --- |
-| Quién lo hace | Comunidad y empresas | Microsoft | Apple |
-| Código | Libre y abierto | Cerrado | Cerrado, con partes abiertas |
-| Precio | Gratuito | De pago, normalmente incluido con el equipo | Incluido con los equipos de Apple |
-| Hardware | Casi cualquiera | Casi cualquiera | Solo el de Apple |
-| Núcleo | [Linux, monolítico](/articulos/nucleo-monolitico-y-micronucleo/) | Windows NT, híbrido | XNU, híbrido |
-| Familia | Tipo Unix | Propia | Unix certificado |
+| Integración y mantenimiento | Proyecto y proveedores de la distribución | Microsoft y proveedores de componentes | Apple y proveedores de componentes |
+| Núcleo | Linux, con versión y configuración concretas | Familia Windows NT | XNU |
+| Entorno de aplicaciones | Depende de distribución y paquetes | APIs y herramientas de Windows | APIs y frameworks de macOS |
+| Hardware admitido | Arquitecturas, controladores y configuración compatibles | Requisitos de la edición y controladores | Modelos admitidos por esa versión de macOS |
+| Licencias y coste | Licencias de cada componente; puede haber soporte de pago | Condiciones de la edición y su adquisición | Condiciones de Apple y del software instalado |
 
-[Linux](/articulos/que-es-linux/) se distribuye en muchas [distribuciones](/articulos/distribuciones-de-linux/) distintas. Windows y macOS son productos de una sola empresa.
+Un sistema puede incorporar componentes abiertos y cerrados. Precio, acceso al código y permiso de redistribución son cuestiones distintas.
 
-## Dónde se usa cada uno
+## El mismo proyecto: leer un archivo de datos
 
-- **Windows** domina en el escritorio, en empresas y en videojuegos.
-- **macOS** es habitual en diseño, edición de audio y vídeo y, cada vez más, entre quienes desarrollan software.
-- **Linux** domina en servidores, en [la nube](/articulos/computacion-en-la-nube/), en [contenedores](/articulos/que-es-docker/) y en dispositivos integrados. Android usa su núcleo.
+Nuestro proyecto guarda `Foto.csv` dentro de una carpeta llamada `Datos`. El archivo contiene una cabecera y una fila. Queremos obtener esas dos líneas en los tres entornos.
 
-## Diferencias que se notan al programar
+### Construir la ruta
 
-| | Linux y macOS | Windows |
-| --- | --- | --- |
-| Separador de rutas | `/` | `\` |
-| Raíz del sistema de archivos | Una sola, `/` | Una por unidad: `C:\`, `D:\` |
-| Mayúsculas en nombres de archivo | Linux las distingue; macOS normalmente no | No las distingue |
-| [Final de línea](/articulos/salto-de-linea-en-windows-y-linux/) | LF | CR LF |
-| Terminal habitual | Bash o Zsh | PowerShell |
-| Permisos | Usuario, grupo y otros | Listas de control de acceso |
-| Ejecutables | Cualquier archivo con permiso de ejecución | Por la extensión, como `.exe` |
+En un entorno Linux típico puede estar bajo `/home/ana/proyecto`; en macOS, bajo `/Users/ana/proyecto`; en Windows, bajo una ruta como `C:\Users\Ana\proyecto`. Son ejemplos, no ubicaciones obligatorias.
 
-Un programa que construye rutas uniendo textos con `/`, o que confunde `Foto.jpg` con `foto.jpg`, funciona en un sistema y falla en otro. Por eso los lenguajes ofrecen funciones para manejar rutas sin depender del sistema.
+La biblioteca de rutas del lenguaje permite unir componentes usando las reglas del entorno. No convierte cualquier ruta ajena en una ruta equivalente: unir nombres y traducir la ubicación de un archivo son problemas distintos.
 
-## Por qué tanta gente desarrolla en Unix
+Este programa Node.js crea sus propios datos temporales y utiliza siempre la misma escritura de los nombres. Guárdalo como `leer.mjs` y ejecútalo con `node leer.mjs` en un entorno con Node disponible:
 
-Casi todo el software de servidor acaba ejecutándose en Linux. Desarrollar en un sistema de la misma familia reduce sorpresas: las mismas órdenes de [terminal](/articulos/terminal-y-shell/), las mismas rutas, los mismos [permisos](/articulos/permisos-y-usuarios/).
+```js
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync,
+	unlinkSync, rmdirSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-macOS ofrece un entorno Unix con aplicaciones comerciales. Linux, el mismo sistema que el servidor.
+const base = mkdtempSync(join(tmpdir(), "devly-rutas-"));
+const carpeta = join(base, "Datos");
+const archivo = join(carpeta, "Foto.csv");
+try {
+	mkdirSync(carpeta);
+	writeFileSync(archivo, "valor\n12\n", "utf8");
+	const lineas = readFileSync(archivo, "utf8").trim().split(/\r?\n/);
+	console.log(lineas.length); // 2
+} finally {
+	if (existsSync(archivo)) unlinkSync(archivo);
+	if (existsSync(carpeta)) rmdirSync(carpeta);
+	rmdirSync(base);
+}
+```
 
-Windows lo resolvió con el **Subsistema de Windows para Linux**, WSL, que ejecuta un entorno Linux completo dentro de Windows. Y los contenedores permiten tener el mismo entorno en cualquiera de los tres.
+El ejemplo lee líneas; no es un analizador completo de CSV. Tampoco usa una carpeta fija que pudiera contener datos anteriores.
 
-## Otras diferencias
+### Respetar mayúsculas y contenido
 
-- **Instalación de programas.** Linux usa [gestores de paquetes](/articulos/gestores-de-paquetes/) desde el principio. Windows y macOS tienen tiendas oficiales e instaladores, y hoy también gestores de paquetes.
-- **Actualizaciones.** En Windows y macOS las decide el fabricante. En Linux, cada distribución, y el usuario tiene más control.
-- **Personalización.** Linux permite cambiar prácticamente todo; macOS, lo que Apple decide.
-- **Compatibilidad.** Windows mantiene la compatibilidad con programas de hace décadas. macOS ha cambiado varias veces de [arquitectura de procesador](/articulos/arquitecturas-x86-y-arm/), y en cada cambio dejó atrás programas antiguos.
+Si el código intenta abrir `datos/foto.csv`, puede funcionar donde los nombres no distinguen mayúsculas y fallar donde sí. Lo correcto es utilizar `Datos` y `Foto.csv`, como se crearon.
 
-## Ninguno es mejor en abstracto
+La sensibilidad depende del sistema de archivos y de su configuración. APFS tiene variantes con y sin distinción; Windows puede configurar esa propiedad por directorio en NTFS. En Linux es habitual distinguir nombres, pero los volúmenes montados también tienen sus reglas. No se deduce únicamente del logotipo del sistema operativo.
 
-Depende del uso, de los programas que se necesitan y de las preferencias. Lo que se aprende en uno, procesos, archivos, permisos, red, sirve para los tres.
+Los [finales de línea](/articulos/salto-de-linea-en-windows-y-linux/) también pertenecen al contenido y a las herramientas. El patrón del ejemplo admite LF y CRLF; no presupone que todo archivo de Windows tenga uno ni que todo archivo de Linux tenga otro.
 
 <Quiz
 	client:visible
-	question="¿Qué dos de estos sistemas pertenecen a la familia Unix?"
-	options={["Windows y macOS", "Linux y macOS", "Linux y Windows"]}
+	question="El proyecto crea Foto.csv pero busca foto.csv. Funciona en un volumen y falla en otro. ¿Qué conviene corregir primero?"
+	options={["Añadir memoria RAM", "Hacer coincidir exactamente los nombres y comprobar la configuración del volumen", "Cambiar solo la extensión por .exe"]}
 	answer={1}
 />
 
+## Acceder y ejecutar no es lo mismo
+
+Para leer el archivo hay que tener acceso a su ruta y contenido. Linux y macOS ofrecen permisos de tipo Unix y mecanismos adicionales; Windows utiliza reglas de acceso basadas en identidades y listas. Copiar un archivo entre formatos no conserva necesariamente todas esas reglas.
+
+Ejecutar un programa exige además un formato y un entorno admitidos. Los ejecutables nativos habituales usan ELF en Linux, PE en Windows y Mach-O en macOS, con [arquitectura y ABI](/articulos/que-es-una-abi/) compatibles. Ni añadir `.exe` ni conceder ejecución transforma bytes arbitrarios en un programa válido.
+
+El ejemplo usa código JavaScript y una instalación de Node para cada destino. Una dependencia con código nativo puede necesitar una compilación distinta; que el archivo fuente sea idéntico no garantiza que toda su cadena de dependencias lo sea.
+
+## WSL, máquinas virtuales y contenedores
+
+**WSL** permite utilizar entornos Linux desde Windows. WSL 1 traduce llamadas mediante una capa de compatibilidad; WSL 2 ejecuta un núcleo Linux en una máquina virtual administrada. Su integración no elimina diferencias de rutas, permisos o acceso a archivos entre ambos lados.
+
+Un **[contenedor Linux](/articulos/contenedores-y-maquinas-virtuales/)** necesita un núcleo Linux compatible. En macOS, herramientas como Docker Desktop lo proporcionan mediante una máquina virtual; en Windows pueden utilizar WSL 2 u otros mecanismos. También existen contenedores de Windows.
+
+Un contenedor ayuda a fijar herramientas y bibliotecas, pero arquitectura, núcleo, volúmenes y servicios externos siguen influyendo. Para nuestro proyecto, montar una carpeta anfitriona puede conservar diferencias de nombres o permisos que no aparecen dentro de la imagen.
+
+## Elegir según la tarea
+
+Si necesitas una aplicación, un dispositivo o una herramienta de plataforma concreta, empieza comprobando sus sistemas y versiones admitidos. Si el proyecto se publicará en Linux, prueba su ejecución allí aunque desarrolles en otro entorno. El mismo criterio se aplica a un destino Windows o macOS.
+
+La continuidad de actualizaciones, las necesidades del equipo y el soporte disponible también cuentan. No hay una clasificación universal de rendimiento, facilidad o seguridad que decida todos los proyectos.
+
+## Errores comunes
+
+- **Equiparar familia Unix con binarios intercambiables.** Las interfaces y dependencias concretas pueden diferir.
+- **Dar por válida una ruta porque funciona en un equipo.** Comprueba nombres, base, volumen y permisos.
+- **Suponer que el contenedor reproduce todo el ordenador.** Fija parte del entorno; aún hay dependencias externas.
+
 ## Lo esencial
 
-- Linux es libre y lo desarrolla una comunidad; Windows y macOS son productos de una empresa.
-- Linux domina en servidores y la nube; Windows, en el escritorio; macOS, en sectores creativos y de desarrollo.
-- macOS y Linux son de la familia Unix; Windows tiene su propio diseño.
-- Las rutas, los finales de línea y las mayúsculas en los nombres causan errores entre sistemas.
-- WSL y los contenedores permiten trabajar con Linux desde cualquier sistema.
+- Los tres entornos resuelven necesidades similares con interfaces y componentes distintos.
+- El mismo proyecto debe definir rutas, nombres, formatos y permisos coherentes.
+- Fuente compartida no garantiza compatibilidad de todas las dependencias.
+- La prueba relevante es ejecutar el proyecto en sus destinos reales.

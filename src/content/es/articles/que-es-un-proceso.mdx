@@ -5,7 +5,7 @@ level: basico
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Operating Systems: Three Easy Pieces, The Abstraction: The Process (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf
@@ -17,76 +17,96 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **proceso** es un programa en ejecución. El programa es el archivo guardado en el disco; el proceso es lo que existe mientras ese programa está funcionando, con su memoria y su estado en cada momento.
+Un **proceso** es una instancia de un programa en ejecución, con memoria, recursos y estado propios. El programa describe qué hacer; el proceso conserva lo que está ocurriendo al hacerlo. Una receta es el programa; una preparación concreta del plato es el proceso.
 
 ## Programa y proceso no son lo mismo
 
-Un programa es algo pasivo: una lista de instrucciones en un archivo. No hace nada hasta que se ejecuta.
+Un programa puede estar guardado en archivos sin que nadie lo esté ejecutando. Al iniciarlo, el [sistema operativo](/articulos/que-es-un-sistema-operativo/) prepara un contexto de ejecución: memoria accesible, instrucciones por ejecutar y recursos iniciales. No necesita cargar de golpe todos sus archivos en RAM; algunas partes pueden incorporarse cuando se usan.
 
-Cuando lo abres, el [sistema operativo](/articulos/que-es-un-sistema-operativo/) lo carga en memoria y empieza a ejecutarlo. Eso es un proceso. Una receta es el programa; cocinar el plato es el proceso.
+En un programa interpretado, un intérprete ejecuta las instrucciones del lenguaje dentro de un proceso. El archivo de código fuente no se convierte sin más en instrucciones de la CPU.
 
-De un mismo programa pueden salir varios procesos. Si abres dos veces el editor de texto, hay dos procesos del mismo programa, cada uno con su documento.
+Un mismo programa puede tener varias instancias. Imagina un conversor que se lanza dos veces: el proceso A trabaja con `foto-a.png` y el B con `foto-b.png`. Ambos ejecutan el mismo código, pero pueden estar en pasos distintos y conservar datos distintos.
 
-## Qué tiene un proceso
+La relación con las ventanas depende de la aplicación. Dos ventanas pueden pertenecer al mismo proceso, y una sola aplicación puede repartir su trabajo entre varios. Contar ventanas no permite contar procesos.
 
-- **Un identificador**: un número único llamado **PID**.
-- **Su memoria**: una zona reservada con el código, los datos y el espacio para lo que vaya creando. El mecanismo que se la da es la [memoria virtual](/articulos/memoria-virtual/).
-- **Su estado de ejecución**: por qué instrucción va y qué valores tiene en los registros del [procesador](/articulos/como-funciona-un-procesador/).
-- **Sus recursos abiertos**: archivos, conexiones de red.
+## Qué conserva el sistema
 
-## Aislamiento
+- **Un identificador**, normalmente un número llamado **PID**. Distingue procesos dentro de un ámbito del sistema; puede reutilizarse después de que un proceso termine.
+- **Un espacio de direcciones** con código, datos y zonas disponibles para nuevas asignaciones. No implica que toda esa memoria esté ocupando RAM física. Lo explica la [memoria virtual](/articulos/memoria-virtual/).
+- **Estado de ejecución**: el punto por el que va cada hilo y sus registros del [procesador](/articulos/como-funciona-un-procesador/).
+- **Recursos y permisos**: por ejemplo, archivos abiertos, conexiones y la identidad con la que puede acceder a ellos.
 
-Cada proceso ve su memoria como si fuera el único que hay. No puede leer ni modificar la de otro. De eso se encarga el sistema operativo junto con el procesador.
+En los dos conversores, una variable llamada `ancho` puede valer 800 en A y 1200 en B. Usar el mismo nombre, o incluso la misma dirección virtual, no obliga a compartir el mismo dato físico.
 
-Este aislamiento es lo que hace que, cuando un programa falla, se cierre solo él y el resto siga funcionando.
+## Aislamiento y sus límites
 
-## Los estados de un proceso
+En un sistema con protección de memoria, un proceso no obtiene acceso arbitrario a la memoria privada de otro por conocer su dirección. El sistema operativo configura permisos que el hardware comprueba.
 
-Hay muchos más procesos que núcleos de procesador, así que no pueden estar todos ejecutándose. En cada momento un proceso está en uno de estos estados:
+Eso no significa que toda memoria esté separada: se pueden autorizar regiones compartidas o mecanismos de inspección. Tampoco garantiza que un fallo solo afecte al proceso que lo causó. Si A termina de forma inesperada, B puede seguir ejecutándose, pero ambos podrían depender de un archivo que A dejó incompleto o de un servicio que ya no responde.
 
-| Estado | Significa |
+El aislamiento limita daños directos; no elimina las dependencias entre programas ni todos los errores de software.
+
+## En ejecución, listo y bloqueado
+
+Para seguir el reparto de CPU, supongamos **dos procesos con un solo hilo cada uno** y un único contexto de ejecución disponible, sin multihilo simultáneo. Usaremos tres estados básicos:
+
+| Estado | Qué falta para avanzar |
 | --- | --- |
-| En ejecución | Un núcleo está ejecutando sus instrucciones |
-| Listo | Podría ejecutarse, pero espera su turno |
-| Bloqueado | Espera a que ocurra algo: una tecla, datos del disco o de la red |
+| En ejecución | Nada: la CPU está ejecutando sus instrucciones |
+| Listo | Que el planificador le asigne CPU |
+| Bloqueado | Que ocurra un evento que espera, como finalizar una lectura |
 
-Un proceso bloqueado no consume tiempo de procesador. Por eso un programa que espera a que escribas apenas gasta recursos.
+Sigamos A y B en una ejecución posible:
+
+| Paso | A | B | Qué ocurre |
+| --- | --- | --- | --- |
+| 1 | En ejecución | Listo | A calcula el tamaño de su imagen |
+| 2 | Bloqueado | En ejecución | A pide una lectura y debe esperar; B aprovecha la CPU |
+| 3 | Listo | En ejecución | La lectura de A termina, pero B conserva su turno |
+| 4 | En ejecución | Listo | El planificador elige A y guarda el estado de B |
+
+La transición clave es la tercera: **dejar de esperar datos no equivale a empezar a ejecutar**. A ya tiene lo que necesitaba, pero todavía necesita turno. Un proceso que espera activamente consultando una condición seguiría ejecutándose cuando tiene CPU; no estaría bloqueado en este sentido.
+
+Un proceso bloqueado no ejecuta instrucciones de su hilo durante esa espera, pero conserva recursos como memoria y archivos. El sistema también puede gastar CPU en completar la operación que lo despertará. Bloqueado no significa «sin coste».
 
 <Quiz
 	client:visible
-	question="Un editor de texto está esperando a que pulses una tecla. ¿En qué estado está su proceso?"
+	question="La lectura que bloqueaba al único hilo de A termina. B sigue usando la CPU y el planificador aún no ha elegido A. ¿En qué estado queda A?"
 	options={["En ejecución", "Listo", "Bloqueado"]}
-	answer={2}
+	answer={1}
 />
 
 ## Repartir el procesador
 
-El sistema operativo deja que un proceso use un núcleo durante un intervalo muy corto y después da paso a otro. La parte que decide a quién le toca es el [**planificador**](/articulos/planificador-de-procesos/).
+El [planificador](/articulos/planificador-de-procesos/) decide qué tarea lista obtiene CPU según su política. Puede cambiar de tarea porque la actual se bloquea, termina, agota su turno o aparece otra con prioridad suficiente. No todas las políticas usan el mismo intervalo fijo.
 
-Cambiar de un proceso a otro se llama [**cambio de contexto**](/articulos/cambio-de-contexto/). El sistema guarda el estado del proceso que sale (por dónde iba y qué tenía en los registros) y restaura el del que entra. Cuando al primero le vuelve a tocar, continúa exactamente donde lo dejó, sin haberse enterado de la pausa.
+El [cambio de contexto](/articulos/cambio-de-contexto/) guarda el estado necesario de quien sale y restaura el de quien entra. A puede continuar desde su punto de ejecución conservado, pero sí puede observar que pasó tiempo o que cambió un recurso compartido. Guardar registros no congela el resto del mundo.
 
-Estos cambios ocurren muchas veces por segundo. De ahí la impresión de que todo funciona a la vez aunque haya pocos núcleos.
+Si hay varios núcleos, A y B pueden ejecutarse en paralelo. Si hay menos recursos de ejecución que tareas listas, el sistema tiene que repartirlos.
 
 ## Cómo nace y cómo termina
 
-Un proceso lo crea otro proceso, mediante una llamada al sistema. El que crea se llama **padre** y el creado, **hijo**. Al arrancar, el sistema operativo lanza un primer proceso y de él descienden todos los demás.
+Los sistemas ofrecen operaciones para crear procesos e iniciar programas. En Unix, por ejemplo, `fork` crea un proceso hijo a partir del padre y la familia `exec` sustituye el programa que ejecuta un proceso. Son acciones diferentes: ejecutar otro programa con `exec` no crea por sí solo otro PID. Otros sistemas ofrecen interfaces distintas.
 
-Un proceso termina cuando acaba su trabajo, cuando falla o cuando otro con permiso lo detiene. El sistema operativo recupera entonces su memoria y cierra sus recursos.
+Un proceso termina cuando acaba su trabajo, sufre un fallo fatal o es detenido con los permisos necesarios. El sistema libera sus recursos; puede conservar temporalmente información de la terminación para que otro proceso la recoja. Un archivo ya escrito no se borra automáticamente al salir.
 
-## Hilos
+## Varios hilos dentro de un proceso
 
-Dentro de un proceso puede haber varios [**hilos**](/articulos/hilos-y-concurrencia/): flujos de ejecución que avanzan por separado pero comparten la misma memoria. Un navegador puede usar un hilo para atender tus clics y otro para descargar una imagen.
+Un proceso puede contener varios [hilos](/articulos/hilos-y-concurrencia/): flujos de ejecución con su punto de ejecución y su pila de llamadas, que comparten el espacio de direcciones del proceso.
 
-Al compartir memoria, los hilos se coordinan con facilidad, pero también pueden estorbarse si dos modifican el mismo dato a la vez, lo que se conoce como [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/).
+Con varios hilos, uno puede estar bloqueado mientras otro ejecuta. Por eso la tabla anterior usaba deliberadamente procesos de un solo hilo: en un sistema real, la planificación suele trabajar con esas unidades de ejecución.
 
-## Para comparar
+Compartir memoria facilita intercambiar datos, pero exige coordinación cuando el orden importa. Dos actualizaciones sin la sincronización adecuada pueden producir una [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/). La comparación [proceso e hilo](/articulos/proceso-e-hilo/) desarrolla cuándo conviene cada organización.
 
-La diferencia con un hilo se detalla en [proceso e hilo](/articulos/proceso-e-hilo/).
+## Errores comunes
+
+- **Confundir el programa con una instancia.** Dos procesos pueden ejecutar el mismo código con datos y estados diferentes.
+- **Contar ventanas como procesos.** La aplicación decide cómo reparte su trabajo; una ventana no es una unidad del planificador.
+- **Equiparar listo con bloqueado.** Al primero solo le falta CPU; el segundo espera además un evento. Añadir CPU no resuelve una lectura todavía pendiente.
 
 ## Lo esencial
 
-- Un proceso es un programa en ejecución, con su memoria y su estado.
-- Cada proceso está aislado de los demás.
-- Pasa por los estados en ejecución, listo y bloqueado.
-- El planificador reparte el procesador y el cambio de contexto guarda y restaura el estado.
-- Los hilos son flujos de ejecución dentro de un mismo proceso que comparten memoria.
+- Un proceso reúne una ejecución de un programa, su memoria, recursos y estado.
+- La protección de memoria limita accesos; compartir recursos o depender de otro proceso requiere tener en cuenta esas relaciones.
+- En el modelo de un hilo, listo significa esperar CPU y bloqueado significa esperar un evento.
+- El planificador reparte CPU y el cambio de contexto permite continuar; varios hilos comparten memoria dentro de un proceso.

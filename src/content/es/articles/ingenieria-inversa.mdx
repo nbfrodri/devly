@@ -1,92 +1,127 @@
 ---
 title: "¿Qué es la ingeniería inversa de software?"
-description: "La ingeniería inversa estudia un programa ya compilado para descubrir cómo funciona sin tener su código fuente. Se usa en seguridad, compatibilidad y preservación."
+description: "La ingeniería inversa estudia un programa construido para reconstruir su comportamiento y sus interfaces, combinando análisis estático, observación y comprobación de hipótesis."
 level: avanzado
 layer: sistemas
 prerequisites:
   - que-es-un-binario
   - emuladores
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Ghidra: Software Reverse Engineering framework (en inglés)"
     url: https://github.com/NationalSecurityAgency/ghidra
   - title: "GNU Binutils: objdump (en inglés)"
     url: https://sourceware.org/binutils/docs/binutils/objdump.html
   - title: "BOE: Ley de Propiedad Intelectual, artículo 100"
-    url: https://www.boe.es/buscar/act.php?id=BOE-A-1996-8930
+    url: https://www.boe.es/buscar/act.php?id=BOE-A-1996-8930#a100
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **ingeniería inversa** de software consiste en estudiar un programa ya construido para **descubrir cómo funciona**, sin tener su código fuente ni su documentación. Se parte del [binario](/articulos/que-es-un-binario/), el ejecutable, y se intenta reconstruir qué hace y por qué.
+La **ingeniería inversa** estudia un programa ya construido para reconstruir su comportamiento, estructura o interfaces. Puede partir de un [binario](/articulos/que-es-un-binario/) sin disponer de su fuente, aunque también aprovecha documentación, símbolos de depuración y otras evidencias disponibles.
 
-Es lo contrario del camino normal: en lugar de ir del diseño al programa, se va del programa al diseño.
+Sirve para recuperar conocimiento perdido, estudiar compatibilidad, investigar fallos o preservar software. El resultado suele ser una explicación contrastada de cómo funciona, no una recuperación literal de lo que escribió su autor.
 
-## Para qué se usa
+## Análisis estático: inspeccionar sin ejecutar
 
-- **Seguridad**: entender qué hace un [malware](/articulos/que-es-el-malware/), o buscar vulnerabilidades en un programa del que no se tiene el código.
-- **Compatibilidad**: hacer que un programa propio funcione con otro cuyo formato o protocolo no está documentado. Así nacieron muchos programas libres que abren archivos de otros fabricantes.
-- **Preservación**: entender hardware y software antiguos para poder [emularlos](/articulos/emuladores/).
-- **Mantenimiento**: recuperar el funcionamiento de un programa propio cuyo código se perdió.
-- **Aprendizaje**: entender cómo traduce un compilador lo que escribimos.
+**Desensamblar** convierte bytes de instrucciones en una representación legible. Hay que conocer arquitectura, modo y punto de inicio; los mismos bytes pueden interpretarse de otra forma bajo otro modelo. `objdump`, de GNU Binutils, permite inspeccionar archivos objeto y desensamblar código para los destinos admitidos por su instalación.
 
-## Las técnicas
+**Descompilar** intenta reconstruir operaciones y control de flujo en una forma parecida a un lenguaje de alto nivel. Nombres, tipos o estructuras pueden haberse perdido o transformado; algunos sobreviven en símbolos y metadatos. Varias fuentes distintas pueden generar el mismo código máquina, así que no suele existir una única reconstrucción original.
 
-### Análisis estático: leer sin ejecutar
+## Un desensamblador que conoce su formato
 
-- **Desensamblar**: convertir los bytes de código máquina en instrucciones de ensamblador legibles. La herramienta `objdump`, de las binutils de GNU, lo hace en Linux.
-- **Descompilar**: ir un paso más allá e intentar reconstruir un código parecido al original, en un lenguaje como C. El resultado nunca es el código original: los nombres de las variables y los comentarios se pierden al compilar.
-- **Buscar pistas**: los textos que contiene el binario, las funciones del sistema que llama, las bibliotecas que usa.
+Usaremos una máquina didáctica con acumulador de ocho bits. CARGAR (`01`) y SUMAR (`02`) llevan un operando de un byte; PARAR (`ff`) no lleva ninguno. SUMAR conserva el resultado módulo 256. Es el mismo modelo que desarrolla [emuladores](/articulos/emuladores/).
 
-Un desensamblador, en miniatura, para el procesador inventado del artículo sobre [emuladores](/articulos/emuladores/):
+Este desensamblador recibe un array de bytes que se supone contiene instrucciones desde la posición cero. Recorre toda la entrada y rechaza códigos desconocidos u operandos ausentes:
 
 ```js
 const INSTRUCCIONES = { 0x01: "CARGAR", 0x02: "SUMAR", 0xff: "PARAR" };
 
 function desensamblar(bytes) {
+	if (!Array.isArray(bytes) || !Array.from(bytes).every(
+		(b) => Number.isInteger(b) && b >= 0 && b <= 255,
+	)) throw new TypeError("La entrada debe contener bytes");
+
 	const lineas = [];
-	let i = 0;
-	while (i < bytes.length) {
-		const nombre = INSTRUCCIONES[bytes[i]] ?? "???";
-		if (nombre === "PARAR" || nombre === "???") {
-			lineas.push(nombre);
-			i += 1;
+	let pc = 0;
+	while (pc < bytes.length) {
+		const codigo = bytes[pc];
+		const nombre = INSTRUCCIONES[codigo];
+		if (!nombre) throw new Error(`Instrucción desconocida en ${pc}`);
+		if (codigo === 0xff) {
+			lineas.push(`${pc}: ${nombre}`);
+			pc += 1;
 		} else {
-			lineas.push(`${nombre} ${bytes[i + 1]}`);
-			i += 2;
+			if (pc + 1 >= bytes.length) throw new Error(`Falta el operando en ${pc}`);
+			lineas.push(`${pc}: ${nombre} ${bytes[pc + 1]}`);
+			pc += 2;
 		}
 	}
 	return lineas.join("; ");
 }
 
-console.log(desensamblar([0x01, 5, 0x02, 7, 0x02, 30, 0xff])); // "CARGAR 5; SUMAR 7; SUMAR 30; PARAR"
+console.log(desensamblar([0x01, 5, 0x02, 7, 0x02, 30, 0xff])); // "0: CARGAR 5; 2: SUMAR 7; 4: SUMAR 30; 6: PARAR"
 ```
 
-De una lista de números se pasa a algo que una persona puede leer y razonar: el programa empieza en 5, suma 7 y 30, y para. Con un procesador real, el principio es el mismo, con muchas más instrucciones.
+La longitud importa: tras CARGAR en cero, el siguiente código está en dos, no en uno. El cinco es un dato de la instrucción. Para `[0x01]` falta ese dato, así que el resultado no puede ser «CARGAR undefined».
 
-### Análisis dinámico: observar mientras se ejecuta
+La función muestra instrucciones; **no las ejecuta**. Por eso puede describir `[0x01, 5]` aunque el emulador no acepte terminar sin PARAR. También recorre bytes después de PARAR, que podrían ser datos o código no alcanzado: la suposición de que toda la entrada es código pertenece a este ejemplo, no a cualquier binario real.
 
-- Ejecutar el programa con un [depurador](/articulos/que-es-un-depurador/), deteniéndolo y examinando la memoria y los registros.
-- Observar qué archivos abre, qué conexiones hace y qué llamadas al sistema realiza.
-- Ejecutarlo en un entorno aislado, como una [máquina virtual](/articulos/virtualizacion/), cuando puede ser dañino.
+## De las instrucciones a una hipótesis
 
-## Las herramientas
+Con la semántica definida podemos reconstruir el estado:
 
-Ghidra es un entorno completo de ingeniería inversa, creado por la agencia de seguridad estadounidense NSA y publicado como código abierto. Desensambla, descompila, dibuja el flujo del programa y permite automatizar tareas, para binarios de Windows, macOS, Linux y muchos procesadores. Hay otras alternativas libres y comerciales.
+| Instrucción | Acumulador después |
+| --- | --- |
+| CARGAR 5 | 5 |
+| SUMAR 7 | 12 |
+| SUMAR 30 | 42 |
+| PARAR | Se devuelve 42 |
 
-## Lo difícil
+La hipótesis es «este programa devuelve 42». Ejecutarlo en el emulador permite contrastarla. Cambiar el operando 30 por 31 produce 43 según el mismo modelo. Si observásemos otra cosa, revisaríamos la decodificación, la semántica o las condiciones iniciales.
 
-- **Se pierde información al compilar**: nombres, comentarios, tipos, la estructura original.
-- **Optimización**: el compilador reorganiza el código, y lo que en el fuente era claro aparece transformado.
-- **Ofuscación**: algunos programas se protegen a propósito para dificultar el análisis, como hace mucho malware.
+En un programa con entradas variables, probar un caso no demuestra todos sus comportamientos. Un análisis debe distinguir qué afirma el código, qué se ha observado y qué sigue siendo una hipótesis.
 
-## ¿Es legal?
+<Quiz
+	client:visible
+	question="El desensamblador muestra CARGAR 5, pero no hay PARAR. ¿Por qué aún no garantiza una ejecución válida?"
+	options={[
+		"Porque desensamblar siempre altera los bytes",
+		"Porque reconocer una instrucción no comprueba las condiciones de terminación del programa",
+		"Porque los operandos no aparecen en el binario",
+	]}
+	answer={1}
+/>
 
-Depende del país y del propósito. En España, la Ley de Propiedad Intelectual, en su artículo 100, permite al usuario legítimo de un programa **observar, estudiar y verificar su funcionamiento** para conocer las ideas y principios en que se basa. También permite descompilar las partes necesarias para lograr la **interoperabilidad** con un programa creado de forma independiente, con condiciones: que esa información no esté ya disponible, que se limite a lo necesario y que no se use para crear un programa sustancialmente similar. Las licencias de uso pueden añadir restricciones, y la ley no ampara copiar el programa ni saltarse protecciones para piratearlo. Ante un caso concreto, conviene consultar a un profesional.
+## Análisis dinámico y herramientas
+
+El **análisis dinámico** observa el programa mientras se ejecuta: argumentos, resultados, memoria y operaciones externas. Un [depurador](/articulos/que-es-un-depurador/) permite detenerse en puntos concretos e inspeccionar el estado. Esa observación puede depender de la entrada, del entorno y de la temporización.
+
+**Ghidra** combina desensamblado, descompilación, análisis de flujo y automatización para distintos formatos y procesadores. Sus nombres y tipos inferidos deben contrastarse; una representación legible puede ser incorrecta si parte de una arquitectura o dirección equivocada.
+
+Para software potencialmente dañino, el entorno de análisis requiere aislamiento y control de archivos y comunicaciones. Una [máquina virtual](/articulos/virtualizacion/) ayuda a separar recursos, pero no garantiza contención si comparte datos sensibles, tiene servicios expuestos o existe una vulnerabilidad de escape.
+
+## Qué dificulta la reconstrucción
+
+- **Optimización:** una función puede integrarse en otra o desaparecer por completo; el código generado no conserva necesariamente la organización del fuente.
+- **Código y datos mezclados:** una secuencia de bytes puede parecer una instrucción sin ejecutarse nunca.
+- **Ofuscación y generación dinámica:** el programa puede ocultar o construir operaciones durante su ejecución; una pasada estática no las revela todas.
+
+## Límites legales: España
+
+El artículo 100 de la Ley de Propiedad Intelectual, consultado el 15 de octubre de 2026, distingue dos supuestos. Su apartado 3 permite al usuario legítimo estudiar el funcionamiento durante operaciones que tiene derecho a realizar. Los apartados 5 a 7 regulan la reproducción y traducción indispensables para obtener interoperabilidad con un programa independiente.
+
+Esta segunda excepción exige una persona facultada, información que no esté disponible de forma fácil y rápida y limitarse a las partes necesarias. Restringe el uso y la comunicación de lo obtenido y no permite crear una expresión sustancialmente similar ni perjudicar injustificadamente la explotación normal. No es una autorización general para copiar cualquier programa. La jurisdicción, los derechos disponibles y los actos concretos determinan el análisis; observar y descompilar no son permisos intercambiables.
+
+## Errores comunes
+
+- **Tomar el descompilado por el fuente original.** Es una reconstrucción, con información conservada y decisiones inferidas.
+- **Concluir seguridad porque una ejecución no falló.** Puede haber caminos que la prueba no recorrió.
+- **Leer cualquier byte como código.** Hay que justificar formato, arquitectura y límites de las instrucciones.
 
 ## Lo esencial
 
-- La ingeniería inversa estudia un programa compilado para entender cómo funciona.
-- Se usa en seguridad, compatibilidad, preservación y aprendizaje.
-- El análisis estático desensambla y descompila; el dinámico observa el programa en ejecución.
-- En España, la ley permite estudiar un programa y descompilarlo para la interoperabilidad, con condiciones.
+- La ingeniería inversa reconstruye conocimiento a partir de un programa y sus evidencias.
+- Desensamblar, descompilar y observar la ejecución responden a preguntas distintas.
+- Las hipótesis necesitan condiciones explícitas y comprobaciones.
+- La posibilidad técnica de analizar software no determina por sí sola los derechos para hacerlo.

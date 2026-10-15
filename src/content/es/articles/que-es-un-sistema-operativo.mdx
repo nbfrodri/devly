@@ -1,12 +1,12 @@
 ---
 title: ¿Qué es un sistema operativo?
-description: El sistema operativo es el programa que gestiona el hardware y permite que los demás programas funcionen.
+description: El sistema operativo gestiona recursos y ofrece servicios a los programas. Procesador, memoria, archivos y dispositivos se usan mediante reglas y permisos.
 level: basico
 layer: sistemas
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
-  - title: "Operating Systems: Three Easy Pieces, libro de texto libre (en inglés)"
-    url: https://pages.cs.wisc.edu/~remzi/OSTEP/
+  - title: "Operating Systems: Three Easy Pieces, introducción a los sistemas operativos (en inglés)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/intro.pdf
   - title: "Linux man-pages: syscalls(2), llamadas al sistema de Linux (en inglés)"
     url: https://man7.org/linux/man-pages/man2/syscalls.2.html
   - title: "Android Open Source Project: Kernel overview (en inglés)"
@@ -15,52 +15,64 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **sistema operativo** es el programa que gestiona el hardware de un dispositivo y permite que los demás programas funcionen. Windows, macOS, Linux, Android e iOS son sistemas operativos.
+Un **sistema operativo** es el conjunto de software que gestiona los recursos de un dispositivo y ofrece servicios a los programas. Windows, macOS, Android, iOS y las distribuciones basadas en Linux son ejemplos.
 
 ## Qué problema resuelve
 
-Imagina un ordenador sin sistema operativo. Cada programa tendría que saber hablar directamente con ese modelo concreto de disco, de pantalla y de teclado. Un editor de texto necesitaría incluir instrucciones distintas para cada fabricante. Y si dos programas quisieran usar la memoria o la impresora a la vez, nada les impediría pisarse.
+Imagina un editor que tuviera que incluir por su cuenta cómo comunicarse con cada disco, pantalla y teclado. Además de editar texto, tendría que resolver cómo compartir esos dispositivos y la memoria con otros programas.
+
+Un programa pequeño puede funcionar sin un sistema operativo, pero entonces él u otras bibliotecas deben asumir el control que necesite. En un ordenador con varias aplicaciones conviene ofrecer servicios comunes y reglas de acceso.
 
 El sistema operativo se coloca en medio y resuelve las dos cosas:
 
 - **Oculta las diferencias del hardware.** Un programa pide "guarda este archivo" y no necesita saber qué tipo de disco hay debajo.
-- **Reparte los recursos.** Decide quién usa el procesador, la memoria y los dispositivos, y evita que un programa interfiera con otro.
+- **Reparte los recursos.** Decide quién usa el procesador, la memoria y los dispositivos, y limita interferencias mediante permisos y protección.
 
 ## De qué se encarga
 
 ### Procesos
 
-Un programa es un archivo guardado en el disco. Cuando lo abres, el sistema operativo lo carga en memoria y empieza a ejecutarlo: a ese programa en ejecución se le llama [**proceso**](/articulos/que-es-un-proceso/).
+Un programa describe instrucciones; una instancia en ejecución, con sus datos y recursos, es un [**proceso**](/articulos/que-es-un-proceso/). El sistema prepara su memoria y estado, sin necesitar que todos sus archivos se carguen de golpe.
 
-Un [procesador](/articulos/como-funciona-un-procesador/) puede atender muy pocas tareas a la vez, pero tú tienes abiertos el navegador, la música y varios programas más. El sistema operativo reparte el tiempo: deja que un proceso use el procesador durante una fracción de segundo, lo pausa, da paso al siguiente y así sucesivamente. El cambio es tan rápido que parece que todos funcionan a la vez. La parte que decide a quién le toca se llama **planificador**.
+El [procesador](/articulos/como-funciona-un-procesador/) ejecuta las instrucciones. Cuando hay más tareas listas que recursos para ejecutarlas a la vez, el sistema reparte tiempo entre ellas. También puede dejar avanzar una mientras otra espera datos del disco. La parte que elige a quién le toca es el [**planificador**](/articulos/planificador-de-procesos/). Varios núcleos permiten además ejecutar trabajo en paralelo.
 
 ### Memoria
 
-Cada proceso necesita memoria para sus datos. El sistema operativo asigna a cada uno su propia zona y no le deja leer ni modificar la de los demás. Así, un fallo en un programa no corrompe a otro, y un programa no puede espiar los datos de otro.
+Cada proceso necesita memoria para sus datos. En un sistema con protección de memoria, el sistema operativo y el hardware comprueban qué regiones puede leer o modificar. Así se limitan accesos a la memoria privada de otros procesos. Puede haber regiones compartidas con autorización; el aislamiento no elimina todos los fallos ni las dependencias entre programas.
 
 ### Archivos
 
-Un disco es, físicamente, una enorme secuencia de [bits](/articulos/que-es-un-bit/). El [**sistema de archivos**](/articulos/sistema-de-archivos/) es la parte del sistema operativo que la organiza en archivos y carpetas con nombre, recuerda dónde está cada trozo y controla quién puede leer o modificar cada cosa.
+Un dispositivo de almacenamiento conserva datos representados mediante [bits](/articulos/que-es-un-bit/). El [**sistema de archivos**](/articulos/sistema-de-archivos/) los organiza en archivos y carpetas con nombre y registra dónde están. El sistema operativo utiliza esa organización y sus reglas de permisos para atender peticiones. Los detalles físicos del dispositivo quedan en otra capa.
 
 ### Dispositivos
 
-Teclado, pantalla, red, impresora: cada dispositivo se maneja de una forma distinta. El sistema operativo se comunica con ellos mediante programas llamados **controladores** o *drivers*. Cuando conectas un dispositivo nuevo y "se instala", lo que se instala es su controlador.
+Teclado, pantalla, red e impresora necesitan formas concretas de comunicación. Los **controladores**, o *drivers*, traducen operaciones del sistema al mecanismo del dispositivo. Al conectar uno, puede utilizarse un controlador ya instalado, uno genérico compatible o uno específico que haya que añadir.
 
 ## El núcleo
 
-La parte central del sistema operativo se llama **núcleo** o *kernel*. Es la única que tiene permiso para hablar directamente con el hardware.
+La parte central del sistema operativo se llama **núcleo**, o *kernel*. En el modelo habitual de protección, ejecuta operaciones privilegiadas: por ejemplo, configurar qué memoria puede usar una aplicación. Los controladores pueden formar parte del núcleo o ejecutarse por separado con accesos autorizados, según el diseño.
 
-Los programas normales se ejecutan con permisos limitados. Cuando necesitan algo del hardware, como leer un archivo o enviar datos por la red, se lo piden al núcleo mediante una **llamada al sistema**. El núcleo comprueba que la petición está permitida, la realiza y devuelve el resultado.
+Las aplicaciones normales se ejecutan con permisos limitados. Para pedir un servicio protegido, como abrir un archivo, utilizan una [**llamada al sistema**](/articulos/llamadas-al-sistema/), normalmente a través de una función de biblioteca. El núcleo valida la petición y devuelve un resultado o un error. No todas las funciones de un programa necesitan hacer una llamada al sistema.
 
-Esta separación es la que da estabilidad y seguridad: un programa con un error puede cerrarse sin tumbar todo el ordenador, porque nunca tuvo acceso directo a lo que hay debajo.
+### Seguir la lectura de una nota
+
+En un modelo con archivo local y lectura bloqueante, abrir `nota.txt` en un editor puede seguir estos pasos:
+
+1. El editor pide abrir el archivo para leer. El sistema resuelve su nombre y comprueba los permisos; si no existe o el acceso está prohibido, devuelve un error.
+2. Si la apertura tiene éxito, entrega una referencia al archivo abierto. El editor la usa para pedir una cantidad de datos.
+3. Si los datos necesarios ya están en memoria, el sistema puede atender la lectura desde esa copia. Si hacen falta datos del dispositivo, solicita la operación mediante su controlador.
+4. Mientras espera una lectura que lo bloquea, el hilo del editor deja de ejecutar. El planificador puede dar CPU a otra tarea lista.
+5. Cuando la lectura se completa, el editor recibe los datos o un error y decide cómo mostrarlos. Estar listo para continuar no garantiza recibir CPU inmediatamente.
+
+El editor conoce archivos y texto; el controlador conoce la comunicación con el dispositivo. La política de permisos y el reparto de CPU permiten que esa operación conviva con otras. No garantizan que el dispositivo nunca falle ni que todas las solicitudes terminen con éxito.
 
 <Quiz
 	client:visible
-	question="¿Qué hace un programa cuando necesita leer un archivo del disco?"
+	question="En el ejemplo, el editor no tiene permiso para abrir nota.txt. ¿Qué debe ocurrir?"
 	options={[
-		"Accede al disco directamente",
-		"Se lo pide al núcleo con una llamada al sistema",
-		"Instala un controlador",
+		"El editor accede al disco saltándose los permisos",
+		"El sistema rechaza la apertura y devuelve un error",
+		"Se instala otro controlador para permitir la lectura",
 	]}
 	answer={1}
 />
@@ -82,5 +94,5 @@ Varios sistemas pueden compartir núcleo y diferenciarse en todo lo demás. Andr
 
 - El sistema operativo hace de intermediario entre el hardware y los programas.
 - Gestiona procesos, memoria, archivos y dispositivos.
-- Su núcleo es la única parte que habla con el hardware; los programas le hacen peticiones mediante llamadas al sistema.
+- El núcleo controla operaciones privilegiadas; las llamadas al sistema permiten solicitar servicios con comprobaciones de acceso.
 - La interfaz gráfica es una capa encima, no el sistema operativo en sí.

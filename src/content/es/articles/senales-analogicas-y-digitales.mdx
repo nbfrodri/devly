@@ -1,29 +1,32 @@
 ---
 title: "Diferencias entre señales analógicas y digitales"
-description: "Una señal analógica varía de forma continua; una digital solo toma unos valores concretos. Por eso lo digital resiste el ruido y se copia sin pérdida."
+description: "Una representación analógica conserva variaciones continuas; una digital distingue símbolos. El margen para reconocerlos permite regenerar la señal, mientras el ruido no los confunda."
 level: basico
+kind: comparacion
 layer: redes
 prerequisites:
   - que-es-un-bit
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.02: Digital Communication Systems, cap. 1 (en inglés)"
     url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/resources/mit6_02f12_chap01/
-  - title: "MIT OpenCourseWare 6.02: Digital Communication Systems, lecturas del curso (en inglés)"
-    url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/pages/readings/
+  - title: "MIT OpenCourseWare 6.02: Why Digital? (en inglés)"
+    url: https://ocw.mit.edu/courses/6-02-introduction-to-eecs-ii-digital-communication-systems-fall-2012/resources/mit6_02f12_chap04/
+  - title: "Analog Devices MT-002: criterio de Nyquist y muestreo (en inglés)"
+    url: https://www.analog.com/media/en/training-seminars/tutorials/MT-002.pdf
   - title: "Claude Shannon: A Mathematical Theory of Communication (1948, en inglés)"
     url: https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **señal** es una magnitud física que cambia con el tiempo y transporta información: un voltaje en un cable, una onda de radio, la luz en una [fibra](/articulos/como-funciona-la-fibra-optica/). Una señal **analógica** puede tomar cualquier valor dentro de un rango, de forma continua. Una señal **digital** solo toma unos pocos valores definidos, normalmente dos.
+Una **señal** es una magnitud física que cambia con el tiempo y transporta información: un voltaje en un cable, una onda de radio, la luz en una [fibra](/articulos/como-funciona-la-fibra-optica/). En una representación **analógica**, las variaciones continuas de esa magnitud representan la información. En una **digital**, el receptor interpreta ciertos rangos como símbolos distintos, por ejemplo 0 y 1. La señal física sigue pudiendo variar de forma continua.
 
-Esa diferencia explica por qué toda la comunicación moderna es digital.
+Distinguir símbolos permite regenerarlos y procesarlos como datos. Por eso gran parte de las comunicaciones usa representaciones digitales, aunque sus circuitos y medios físicos también tienen componentes analógicos.
 
 ## Analógica
 
-El mundo físico es analógico. El sonido es una variación continua de la presión del aire, y un micrófono la convierte en un voltaje que sube y baja de la misma forma. La señal es una **analogía** de lo que representa, y de ahí el nombre.
+La presión del aire que lleva el sonido se modela como una variación continua, y un micrófono la convierte en un voltaje que sube y baja de la misma forma. La señal es una **analogía** de lo que representa, y de ahí el nombre.
 
 Entre dos valores cualesquiera hay infinitos intermedios. Un disco de vinilo, una radio de FM o un termómetro de mercurio funcionan así.
 
@@ -31,20 +34,43 @@ Entre dos valores cualesquiera hay infinitos intermedios. Un disco de vinilo, un
 
 Una señal digital distingue solo unos niveles. Con dos, cada uno representa un [bit](/articulos/que-es-un-bit/): un voltaje alto es un 1, y uno bajo, un 0.
 
-Por debajo, sigue habiendo un voltaje real, con sus imperfecciones. Lo digital es una **interpretación**: todo lo que esté por encima de cierto umbral se lee como 1, y lo que esté por debajo, como 0.
+Por debajo, sigue habiendo un voltaje real, con sus imperfecciones. Lo digital es una **interpretación**. En un modelo sencillo, un umbral separa 0 y 1; los circuitos reales suelen especificar un rango bajo válido, uno alto válido y una zona intermedia donde no se garantiza la lectura.
 
 ## El problema de fondo: el ruido
 
-Ninguna señal viaja intacta. Se debilita con la distancia, y se le suman perturbaciones: interferencias de otros aparatos, el propio calor de los componentes. A todo eso se le llama **ruido**.
+Una señal puede debilitarse al propagarse y recibir perturbaciones, como interferencias de otros aparatos o fluctuaciones térmicas de los componentes. Estas perturbaciones son **ruido**; la reducción de amplitud por el recorrido se llama **atenuación**.
 
 Aquí está la diferencia decisiva.
 
-- En una señal **analógica**, cualquier alteración cambia la información. Si un voltaje de 3,2 llega como 3,3, no hay forma de saber que era 3,2. El ruido queda mezclado para siempre. Y al amplificar la señal, se amplifica también el ruido.
-- En una señal **digital**, un 1 que llega algo deformado sigue estando por encima del umbral. Se lee como 1, y el ruido desaparece.
+- En una representación **analógica**, una alteración del valor puede cambiar la medida interpretada. Se puede filtrar parte del ruido si se conocen sus características, pero no reconstruir siempre el valor exacto a partir de una medida ambigua. Amplificar sin distinguir señal y ruido aumenta ambos.
+- En una representación **digital**, una perturbación suficientemente pequeña mantiene el valor dentro del rango correcto. Si lo desplaza al rango de otro símbolo, el receptor puede leer un bit equivocado.
 
-Por eso una señal digital se puede **regenerar**: un repetidor la lee, decide qué bits son y emite una señal nueva y limpia. Puede cruzar un océano pasando por cientos de repetidores y llegar idéntica.
+Por eso una señal digital se puede **regenerar**: un repetidor decide qué símbolos recibió y emite niveles nuevos. La información se conserva si las decisiones son correctas. Si interpreta mal un símbolo, también puede regenerar limpiamente el símbolo equivocado.
 
-Una copia de una cinta de casete es peor que el original, y la copia de la copia, peor todavía. La copia de un archivo es exactamente igual, las veces que se haga.
+### El mismo cable, dos interpretaciones
+
+Supón que enviamos 1 voltio y una perturbación lo reduce a 0,8. Si el voltaje representa una medida analógica, leeríamos 0,8 en lugar de 1. Si codifica un bit y el umbral del modelo es 0,5, leeríamos correctamente 1. Una perturbación mayor que lo deje en 0,4 haría fallar esa lectura digital.
+
+| Criterio | Analógica | Digital |
+| --- | --- | --- |
+| Qué representa el valor | Una magnitud continua | Uno de varios símbolos |
+| Ruido en el ejemplo de 1 a 0,8 V | Cambia la medida interpretada | Conserva el bit con el umbral de 0,5 V |
+| Regeneración | Requiere estimar la señal, sin garantía de exactitud | Recupera símbolos si se reconocen correctamente |
+| Copia | Puede acumular ruido y distorsión | Puede ser idéntica bit a bit si no hay errores |
+| Procesado | Circuitos que actúan sobre la señal | Operaciones sobre los valores codificados |
+
+Una cinta copiada puede acumular degradación. Un archivo digital puede copiarse exactamente y comprobarse con mecanismos de [detección de errores](/articulos/deteccion-y-correccion-de-errores/); que sea digital no vuelve imposible una corrupción.
+
+<Quiz
+	client:visible
+	question="¿Por qué una señal digital puede recorrer grandes distancias sin degradarse?"
+	options={[
+		"Porque no le afecta el ruido en absoluto",
+		"Porque se puede regenerar: mientras se distinga cada bit, se vuelve a emitir limpia",
+		"Porque viaja más rápido que una analógica",
+	]}
+	answer={1}
+/>
 
 ## Convertir de analógico a digital
 
@@ -54,15 +80,15 @@ Para guardar o transmitir en digital algo del mundo físico, hay que convertirlo
 
 Se mide la señal a intervalos regulares. Cada medida es una **muestra**. El número de muestras por segundo es la **frecuencia de muestreo**.
 
-Lo que pasa entre dos muestras se pierde. Aun así, un resultado fundamental, el teorema del muestreo, dice que no se pierde nada si se muestrea a **más del doble** de la frecuencia más alta que contiene la señal.
+No se mide directamente lo que pasa entre muestras. Sin embargo, para una señal limitada en frecuencia, sus muestras exactas permiten reconstruirla idealmente si se toman a **más del doble** de la frecuencia máxima. Esa condición no elimina el error de cuantización ni el ruido de un equipo real.
 
-El oído humano percibe hasta unos 20 000 hercios. Por eso el audio de un CD usa 44 100 muestras por segundo.
+Para conservar sonido hasta 20 000 hercios —20 000 oscilaciones por segundo— se necesita superar 40 000 muestras por segundo y filtrar previamente las frecuencias superiores. Las 44 100 muestras por segundo del CD permiten cubrir esa banda.
 
-Si se muestrea más despacio, las frecuencias altas no solo se pierden: aparecen disfrazadas de otras más bajas que no estaban. Es el efecto por el que, en una película, las ruedas de un coche parecen girar hacia atrás.
+Si se muestrea más despacio, las frecuencias altas no solo se pierden: aparecen disfrazadas de otras más bajas que no estaban. Es el [aliasing](/articulos/aliasing/), que también puede hacer que las ruedas de un coche parezcan girar hacia atrás en una película.
 
 ### Cuantización
 
-Cada muestra es un valor continuo, y hay que redondearlo a uno de un número finito de niveles, para poder escribirlo con bits. Con 3 bits hay 8 niveles; con 16, más de 65 000.
+Cada muestra se redondea a uno de un número finito de niveles para escribirla con bits. Con 3 bits hay 8 niveles; con 16, 65 536. En este ejemplo las entradas están entre −1 y 1, y usamos 8 niveles uniformemente separados, incluidos los extremos:
 
 ```js
 const muestras = Array.from({ length: 8 }, (_, i) =>
@@ -76,11 +102,15 @@ const niveles = muestras.map((muestra) => cuantizar(muestra, 8));
 
 console.log(niveles.join(" ")); // "5 7 7 5 2 0 0 2"
 console.log(niveles[0].toString(2).padStart(3, "0")); // "101"
+const reconstruida = (niveles[0] / 7) * 2 - 1;
+console.log(muestras[0].toFixed(3)); // "0.383"
+console.log(reconstruida.toFixed(3)); // "0.429"
+console.log((reconstruida - muestras[0]).toFixed(3)); // "0.046"
 ```
 
-Una onda se mide 8 veces, y cada medida se redondea a uno de 8 niveles, que se escribe con 3 bits. La onda suave se ha convertido en una escalera.
+La primera muestra vale aproximadamente 0,383. Al desplazarla y escalarla al intervalo de índices de 0 a 7 obtenemos 4,839, que se redondea a 5, o `101` en binario. El nivel 5 representa aproximadamente 0,429: el error es 0,046. Se guarda el índice, no todos los decimales de la medida.
 
-La diferencia entre el valor real y el redondeado es el **error de cuantización**. Es una pérdida que no se recupera, pero se puede hacer tan pequeña como se quiera añadiendo bits.
+La diferencia entre el valor real y el redondeado es el **error de cuantización**. Los valores que caen en un mismo nivel ya no se distinguen. Aumentar los bits reduce el paso ideal para el mismo rango, pero en un aparato real la precisión también está limitada por el ruido y los circuitos.
 
 | Decisión | Qué determina | Si es insuficiente |
 | --- | --- | --- |
@@ -89,22 +119,11 @@ La diferencia entre el valor real y el redondeado es el **error de cuantización
 
 Un aparato que hace esta conversión es un **conversor analógico-digital**. El que hace la contraria, para mover un altavoz, es un conversor digital-analógico.
 
-<Quiz
-	client:visible
-	question="¿Por qué una señal digital puede recorrer grandes distancias sin degradarse?"
-	options={[
-		"Porque no le afecta el ruido en absoluto",
-		"Porque se puede regenerar: mientras se distinga cada bit, se vuelve a emitir limpia",
-		"Porque viaja más rápido que una analógica",
-	]}
-	answer={1}
-/>
-
 ## Lo que se gana con lo digital
 
 - **Resistencia al ruido** y regeneración.
 - **Copias perfectas.**
-- **Detección y corrección de errores.** Se añaden bits de comprobación que permiten saber si algo se alteró, e incluso repararlo.
+- **Detección y corrección de errores.** Añadir redundancia permite detectar o corregir ciertos patrones de error, según el código usado.
 - **Compresión.** Se elimina la redundancia.
 - **Cifrado.**
 - **Un mismo tratamiento para todo.** Voz, imagen y texto son bits, y viajan por la misma red.
@@ -112,8 +131,18 @@ Un aparato que hace esta conversión es un **conversor analógico-digital**. El 
 ## Lo que cuesta
 
 - **La conversión pierde algo**, por poco que sea.
-- **Necesita más ancho de banda** que la señal analógica equivalente, si no se comprime.
-- **Falla de golpe.** Una señal analógica empeora poco a poco: la radio se oye con más ruido. Una digital funciona perfectamente hasta que el ruido supera el umbral, y entonces deja de funcionar. Es el paso de una videollamada nítida a una imagen congelada.
+- **Consume recursos de transmisión y procesado.** El ancho de banda necesario depende de la tasa de datos, la modulación, la compresión y los códigos de protección; no existe una regla universal que ordene analógico y digital.
+- **Puede presentar cortes bruscos.** Al crecer el ruido aumentan las decisiones erróneas. Un sistema puede ocultarlas hasta agotar su capacidad de corrección y después perder bloques o congelar una imagen. No significa que todos los sistemas digitales pasen de perfecto a apagado en un único umbral.
+
+## Cuándo conviene cada una
+
+La representación analógica encaja en la captación inicial de una magnitud y en circuitos que deben actuar directamente sobre ella, como un amplificador. La digital facilita almacenar, copiar y modificar datos mediante programas. Se combinan: un micrófono entrega una señal analógica, el ordenador procesa muestras digitales y el altavoz necesita de nuevo una señal analógica.
+
+## Confusiones frecuentes
+
+- **Digital significa inmune al ruido.** Solo hay margen mientras los símbolos puedan distinguirse; después hacen falta corrección, retransmisión o aceptar pérdidas.
+- **Una copia exacta recupera el original analógico.** Conserva los valores ya cuantizados, incluidos los errores de la captura.
+- **Muestrear más sustituye a usar más bits.** Son decisiones distintas: instantes de medida frente a niveles para cada medida.
 
 ## El medio siempre es analógico
 
@@ -127,8 +156,7 @@ Los [filtros digitales](/articulos/filtros-digitales/) modifican las muestras co
 
 ## Lo esencial
 
-- Una señal analógica toma cualquier valor de un rango; una digital, solo unos pocos.
-- El ruido se mezcla con una señal analógica sin remedio, y se elimina de una digital mientras se distingan los niveles.
-- Digitalizar exige muestrear, a más del doble de la frecuencia máxima, y cuantizar.
-- Lo digital permite copiar sin pérdida, corregir errores, comprimir y cifrar.
-- El medio físico es siempre analógico: los bits son una interpretación.
+- Una representación analógica sigue una magnitud continua; una digital interpreta símbolos sobre una señal física.
+- Regenerar conserva los símbolos cuando el receptor los distingue correctamente.
+- Digitalizar exige decidir cuándo medir y con cuántos niveles representar cada medida.
+- Lo digital permite copias exactas y corrección de ciertos errores; no garantiza por sí solo una transmisión perfecta.

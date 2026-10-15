@@ -5,8 +5,14 @@ level: basico
 layer: hardware
 prerequisites:
   - que-es-un-bit
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
+  - title: "Unicode Consortium: UTF-8, UTF-16, UTF-32 and BOM (en inglés)"
+    url: https://www.unicode.org/faq/utf_bom.html
+  - title: "Unicode Standard Annex 29: Text Segmentation (en inglés)"
+    url: https://www.unicode.org/reports/tr29/
+  - title: "MDN: String and UTF-16 (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
   - title: "Unicode Consortium: What is Unicode? (en inglés)"
     url: https://www.unicode.org/standard/WhatIsUnicode.html
   - title: "RFC 3629: UTF-8, a transformation format of ISO 10646"
@@ -43,11 +49,11 @@ ASCII cubre las letras del inglés, las cifras y algunos signos. No tiene la `ñ
 
 Para cubrir otros idiomas aparecieron decenas de tablas distintas, cada una pensada para una región. El mismo número significaba una letra en una tabla y otra en la de al lado.
 
-Un archivo solo se leía bien si se sabía con qué tabla se había escrito, y un documento no podía mezclar idiomas de tablas diferentes.
+Un archivo solo se leía bien si se sabía con qué tabla se había escrito, y mezclar texto de varias tablas exigía indicar cómo interpretar cada parte o utilizar otra codificación.
 
 ## Unicode
 
-**Unicode** resuelve el problema con una sola tabla para todos los sistemas de escritura. Asigna a cada carácter un número único, su **punto de código**, que se escribe con `U+` seguido del número en hexadecimal.
+**Unicode** proporciona un repertorio común de caracteres y reglas para procesar texto. Sus posiciones se llaman **puntos de código** y se escriben con `U+` seguido de un número hexadecimal. Un carácter percibido por una persona puede corresponder a uno o a varios puntos de código.
 
 | Carácter | Punto de código | En decimal |
 | --- | --- | --- |
@@ -55,27 +61,27 @@ Un archivo solo se leía bien si se sabía con qué tabla se había escrito, y u
 | ñ | U+00F1 | 241 |
 | € | U+20AC | 8364 |
 
-Los primeros 128 puntos de código coinciden con ASCII. Unicode tiene sitio para más de un millón de caracteres: alfabetos, ideogramas, símbolos matemáticos y [emojis](/articulos/de-donde-salen-los-emojis/).
+Los primeros 128 puntos de código coinciden con ASCII. El espacio de códigos de Unicode tiene más de un millón de posiciones, no todas asignadas a caracteres: alfabetos, ideogramas, símbolos matemáticos y [emojis](/articulos/de-donde-salen-los-emojis/).
 
 ```js
 console.log("ñ".codePointAt(0)); // 241
 console.log("€".codePointAt(0)); // 8364
 ```
 
-## Unicode no dice cómo guardar los números
+## Del punto de código a los bytes
 
-Unicode asigna números, pero no fija cómo escribirlos en bytes. Eso lo decide una **codificación**. Usar siempre cuatro bytes por carácter sería sencillo, pero un texto en inglés ocuparía el cuádruple de lo necesario.
+El punto de código identifica una posición del repertorio; una **codificación** define cómo representarla. El propio estándar Unicode define formas como UTF-8, UTF-16 y UTF-32. No son alfabetos distintos: codifican el mismo repertorio con unidades diferentes. UTF-32 usa cuatro bytes por valor escalar; UTF-8 necesita solo uno para las letras ASCII.
 
 ### UTF-8
 
-**UTF-8** es la codificación más usada en la web. Emplea entre uno y cuatro bytes por carácter, según el punto de código:
+**UTF-8** es la codificación más usada en la web. Emplea entre uno y cuatro bytes por **valor escalar Unicode**: un punto de código válido para texto, excluyendo las posiciones reservadas para sustitutos de UTF-16. Estos son ejemplos, no una clasificación completa por idioma:
 
 | Caracteres | Bytes |
 | --- | --- |
 | Los de ASCII | 1 |
-| Letras con tilde, `ñ`, griego, cirílico | 2 |
-| La mayoría de los demás, como `€` o los ideogramas chinos | 3 |
-| Emojis y caracteres poco frecuentes | 4 |
+| `ñ` (U+00F1), `é` (U+00E9) | 2 |
+| `€` (U+20AC), `中` (U+4E2D) | 3 |
+| `😀` (U+1F600) | 4 |
 
 ```js
 const codificador = new TextEncoder();
@@ -86,7 +92,7 @@ console.log(codificador.encode("€").length); // 3
 console.log(codificador.encode("😀").length); // 4
 ```
 
-UTF-8 tiene una propiedad decisiva: un texto que solo usa caracteres ASCII se escribe exactamente igual en ASCII que en UTF-8. Los programas y archivos antiguos siguieron funcionando sin cambios, y eso facilitó que se adoptara en todas partes.
+UTF-8 tiene una propiedad decisiva: un texto que solo usa caracteres ASCII se escribe exactamente igual en ASCII que en UTF-8. Esa compatibilidad facilita reutilizar datos ASCII; no garantiza que cualquier programa antiguo pueda procesar correctamente texto no ASCII.
 
 <Quiz
 	client:visible
@@ -97,9 +103,16 @@ UTF-8 tiene una propiedad decisiva: un texto que solo usa caracteres ASCII se es
 
 ## Cuando la codificación no coincide
 
-La `ñ` se guarda en UTF-8 como dos bytes, 195 y 177. Si un programa lee esos bytes creyendo que cada uno es un carácter de una tabla antigua, muestra dos símbolos: `Ã±`.
+La `ñ` se guarda en UTF-8 como dos bytes, 195 y 177. Si un programa interpreta esos bytes como Windows-1252 o ISO-8859-1, muestra dos símbolos: `Ã±`. El recorrido se puede comprobar:
 
-Nada se ha estropeado en el archivo. Los bytes son correctos; lo equivocado es la tabla con la que se interpretan. Por eso una página web declara su codificación en el [HTML](/articulos/que-es-html/) con `<meta charset="utf-8">`.
+```js
+const bytes = new TextEncoder().encode("ñ");
+console.log([...bytes].map((b) => b.toString(16)).join(" ")); // "c3 b1"
+console.log(new TextDecoder("utf-8").decode(bytes)); // "ñ"
+console.log(new TextDecoder("windows-1252").decode(bytes)); // "Ã±"
+```
+
+En este ejemplo los bytes originales siguen intactos; lo equivocado es la decodificación. Si después se guarda el texto mal interpretado, también puede cambiar el archivo. Por eso una página web declara su codificación en el [HTML](/articulos/que-es-html/) con `<meta charset="utf-8">`.
 
 ## Carácter no es lo mismo que byte
 
@@ -111,11 +124,32 @@ console.log(new TextEncoder().encode("año").length); // 4
 console.log("😀".length); // 2
 ```
 
-El último resultado sorprende. JavaScript guarda los textos por dentro con otra codificación, UTF-16, en la que ese emoji ocupa dos unidades, y `length` cuenta unidades, no caracteres. Hay que tenerlo presente al limitar la longitud de un texto o al cortarlo.
+El último resultado sorprende. JavaScript define sus cadenas como secuencias de unidades UTF-16: ese emoji ocupa dos, y `length` cuenta unidades, no caracteres percibidos. Es la representación observable del lenguaje; el motor puede optimizar su almacenamiento interno. Hay que tenerlo presente al limitar la longitud de un texto o al cortarlo.
+
+## Un carácter visible puede ser una secuencia
+
+La `ñ` puede escribirse como U+00F1 o como `n` (U+006E) seguida de una tilde combinante (U+0303). La apariencia puede ser la misma aunque sus secuencias difieran:
+
+```js
+const compuesta = "ñ";
+const descompuesta = "n\u0303";
+console.log(compuesta === descompuesta); // false
+console.log(descompuesta.length); // 2
+console.log(new TextEncoder().encode(descompuesta).length); // 3
+console.log(compuesta === descompuesta.normalize("NFC")); // true
+```
+
+NFC es una forma de normalización Unicode que unifica ciertas representaciones equivalentes. No traduce texto ni convierte cualquier símbolo visualmente parecido en el mismo carácter. Para contar unidades percibidas se utilizan reglas de segmentación en **grupos de grafemas**, no solo el número de bytes o puntos de código.
+
+## Errores comunes
+
+- **Suponer un byte por letra.** Falla con UTF-8 fuera de ASCII y con secuencias combinadas.
+- **Cortar una cadena por cualquier unidad UTF-16.** Puede separar un par sustituto o un grupo de grafemas.
+- **Confundir decodificación y normalización.** La primera interpreta bytes; la segunda transforma secuencias Unicode según reglas de equivalencia.
 
 ## Lo esencial
 
 - Una codificación convierte caracteres en números y al revés.
-- Unicode asigna un número único a cada carácter de todos los sistemas de escritura.
-- UTF-8 guarda esos números con entre uno y cuatro bytes y es compatible con ASCII.
+- Unicode define un repertorio y reglas; un carácter percibido puede ocupar varios puntos de código.
+- UTF-8 usa entre uno y cuatro bytes por valor escalar y conserva los bytes de ASCII.
 - Los símbolos extraños aparecen cuando un texto se lee con una codificación distinta de aquella con la que se escribió.

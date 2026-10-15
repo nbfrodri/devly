@@ -1,167 +1,135 @@
 ---
 title: "¿Cómo recuerda un circuito? Biestables y circuitos secuenciales"
-description: "Un biestable guarda un bit gracias a una realimentación. Con ellos se construyen registros, contadores y máquinas de estados, al ritmo de un reloj."
+description: "Un biestable guarda un bit gracias a una realimentación. El estado guardado permite construir registros, contadores y máquinas de estados."
 level: intermedio
 layer: hardware
 prerequisites:
   - puertas-logicas
-  - que-es-un-transistor
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 5, Sequential Logic (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c5/
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 6, Finite State Machines (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c6/
+  - title: "Computation Structures: almacenamiento, reloj y restricciones temporales (en inglés)"
+    url: https://computationstructures.org/notes/sequential_logic/notes.html
+  - title: "Computation Structures: máquinas de Moore y Mealy (en inglés)"
+    url: https://computationstructures.org/notes/fsms/notes.html
+  - title: "Texas Instruments: biestables SR CD4043B y CD4044B (en inglés)"
+    url: https://www.ti.com/lit/ds/symlink/cd4043b.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un circuito **secuencial** es un circuito cuya salida depende no solo de las entradas actuales, sino de lo que ocurrió antes: **recuerda**. La pieza básica de esa memoria es el **biestable**, un circuito que guarda un bit y lo mantiene mientras haya corriente.
+Un circuito **secuencial** conserva un estado: su comportamiento depende de las entradas y de lo que haya guardado. Un **biestable** tiene dos estados estables que permiten representar un bit. En los circuitos volátiles que veremos, mantenerlo exige alimentación.
 
-Con biestables se construyen los registros del procesador, la memoria caché, los contadores y cualquier circuito que tenga que seguir unos pasos.
+Esto permite guardar el resultado de una suma, contar acontecimientos o recordar qué paso debe ejecutar una máquina. Una combinación de [puertas lógicas](/articulos/puertas-logicas/) sin memoria solo calcula a partir de sus entradas, después de su tiempo de propagación.
 
-## Qué problema resuelven
+## Un lazo que mantiene el estado
 
-Las [puertas lógicas](/articulos/puertas-logicas/) por sí solas forman circuitos **combinacionales**: su salida es función de las entradas en ese instante. Un sumador da el resultado de los números que tiene delante, y en cuanto cambian, cambia.
+Dos puertas NOR cruzadas pueden formar un biestable **SR**, también llamado *latch SR*. Tiene entradas S, de *set*, y R, de *reset*, y salidas Q y su complementaria durante el funcionamiento válido.
 
-Pero un ordenador necesita guardar cosas: el resultado de una suma para usarlo después, la instrucción por la que va, un contador. Hace falta un circuito cuya salida se mantenga aunque las entradas cambien.
+| S | R | Q después de estabilizarse |
+| --- | --- | --- |
+| 0 | 0 | Conserva el valor anterior |
+| 1 | 0 | 1 |
+| 0 | 1 | 0 |
+| 1 | 1 | Combinación que debe evitarse |
 
-## La idea: realimentación
-
-El truco es conectar la salida de una puerta de vuelta a la entrada de otra, formando un lazo.
-
-Dos puertas NOR cruzadas, cada una alimentando a la otra, forman un **biestable SR**. Tiene dos entradas:
-
-- **S**, de *set*: pone la salida a 1.
-- **R**, de *reset*: la pone a 0.
-
-Con las dos a 0, el lazo **mantiene** lo que hubiera. Cada puerta sostiene a la otra.
+Si S fuerza Q a 1, la realimentación mantiene ese valor cuando S vuelve a 0. Para borrarlo, activamos R. Este modelo funcional reproduce las tres combinaciones válidas; no calcula tensiones ni tiempos:
 
 ```js
-const nor = (a, b) => (a || b ? 0 : 1);
-
 function biestable(s, r, anterior) {
-	let q = anterior;
-	let qNegada = nor(s, q);
-
-	for (let i = 0; i < 4; i++) {
-		q = nor(r, qNegada);
-		qNegada = nor(s, q);
+	if (![s, r, anterior].every((b) => b === 0 || b === 1)) {
+		throw new RangeError("Se requieren bits");
 	}
-
-	return q;
+	if (s && r) throw new Error("Combinación SR no permitida");
+	if (s) return 1;
+	if (r) return 0;
+	return anterior;
 }
 
 const historia = [];
 let q = 0;
-
 for (const [s, r] of [[1, 0], [0, 0], [0, 1], [0, 0]]) {
 	q = biestable(s, r, q);
 	historia.push(q);
 }
-
 console.log(historia.join(" ")); // "1 1 0 0"
 ```
 
-El bucle imita el tiempo que tardan las señales en recorrer el lazo hasta estabilizarse. La secuencia muestra la memoria: tras activar S, la salida queda en 1 **aunque S vuelva a 0**. Solo R la devuelve a 0.
+En el circuito NOR, mantener S = R = 1 fuerza ambas salidas a 0: dejan de ser complementarias. El problema aparece al liberar ambas entradas a la vez, cuando no se garantiza qué estado quedará. El código rechaza esa entrada en vez de inventar una simulación de su comportamiento analógico.
 
-Activar S y R a la vez no tiene sentido y deja el circuito en un estado indefinido. Es una de las razones para usar diseños más controlados.
+<Quiz
+	client:visible
+	question="Tras activar S y volver a S = R = 0, ¿por qué Q puede seguir en 1?"
+	options={["Porque el estado se mantiene mediante realimentación", "Porque S sigue obligatoriamente en 1", "Porque cada lectura vuelve a escribirlo en un disco"]}
+	answer={0}
+/>
 
-## El reloj
+## Latch y flip-flop
 
-En un circuito con millones de biestables, si cada uno cambiara en cuanto cambian sus entradas, las señales llegarían a destiempo y el resultado dependería de qué cable es más corto. Sería un caos.
+No todos los biestables se controlan de la misma manera:
 
-La solución es un **reloj**: una señal que alterna entre 0 y 1 a un ritmo constante, y que llega a todo el circuito. Los biestables solo cambian **en el instante en que el reloj sube**, el flanco de subida. Entre un flanco y otro, sus salidas no se mueven.
+- Un **latch D** permite que la salida siga al dato D mientras su habilitación esté activa; al desactivarla, conserva el dato.
+- Un **flip-flop D** captura D en un flanco concreto del reloj y lo conserva entre capturas. Puede diseñarse para flanco de subida o de bajada.
 
-El **biestable D** funciona así: tiene una entrada de dato y la del reloj. En cada flanco copia el dato a la salida, y lo mantiene hasta el siguiente.
+Considera un flip-flop de subida con Q = 0. D cambia a 1 mientras el reloj está bajo: Q continúa en 0. Llega el flanco de subida: captura 1. Si D vuelve a 0 después, Q conserva 1 hasta el siguiente flanco activo. Un latch habilitado habría seguido ese cambio de D.
 
-Esto organiza todo el diseño:
+El dato debe permanecer estable durante ciertos intervalos antes y después del flanco, llamados **setup** y **hold**. La salida también tarda en responder. Violar estas condiciones puede dejar el circuito temporalmente en un estado no válido, denominado **metaestabilidad**; el reloj no elimina por sí solo los problemas físicos.
 
-1. En el flanco, los biestables guardan sus nuevos valores.
-2. Durante el resto del ciclo, la lógica combinacional calcula los siguientes valores a partir de ellos.
-3. En el siguiente flanco, se guardan.
+## Para qué sirve el reloj
 
-La frecuencia del reloj, en gigahercios, la limita el camino más lento de la lógica combinacional: el cálculo tiene que terminar antes del siguiente flanco.
+En un diseño síncrono, el reloj coordina la captura del estado. Después de un flanco, la lógica calcula los valores siguientes; deben llegar a tiempo para el próximo. El periodo debe cubrir el retardo del registro, el camino combinacional más lento y el tiempo de preparación, además de los márgenes del diseño.
 
-## Registros
+Esto no significa que todo circuito secuencial necesite un reloj común: el SR anterior ya recuerda sin él. Tampoco excluye entradas especiales de borrado que puedan actuar fuera del flanco.
 
-Un **registro** son varios biestables D que comparten el reloj. Con 64, guarda un número de 64 bits.
+## Registros y contadores
 
-Los registros son la memoria más rápida del [procesador](/articulos/como-funciona-un-procesador/): ahí están los datos con los que opera la [ALU](/articulos/la-alu-y-la-aritmetica-binaria/) en cada instrucción. También es un registro el **contador de programa**, que indica la dirección de la siguiente instrucción.
+Agrupando ocho flip-flops con el mismo reloj obtenemos un **registro** de ocho bits. En el [procesador](/articulos/como-funciona-un-procesador/), los registros conservan datos para la [ALU](/articulos/la-alu-y-la-aritmetica-binaria/) y direcciones como la del contador de programa.
 
-## Contadores
-
-Un registro cuya entrada es su propia salida más uno cuenta los ciclos de reloj:
+Si conectamos la entrada de un registro a su valor actual más uno, tenemos un contador. En este ejemplo ideal de tres bits, cada iteración representa una captura válida:
 
 ```js
 let cuenta = 6;
 const valores = [];
-
 for (let flanco = 0; flanco < 4; flanco++) {
 	cuenta = (cuenta + 1) % 8;
 	valores.push(cuenta);
 }
-
 console.log(valores.join(" ")); // "7 0 1 2"
 ```
 
-Con 3 bits llega hasta 7 y vuelve a 0. Los contadores miden tiempos, dividen la frecuencia de un reloj y recorren direcciones de memoria.
-
-<Quiz
-	client:visible
-	question="¿Qué permite a un biestable mantener su valor cuando las entradas vuelven a reposo?"
-	options={[
-		"Una batería interna",
-		"Que sus puertas están conectadas en lazo y se sostienen mutuamente",
-		"Que copia el valor a la memoria RAM",
-	]}
-	answer={1}
-/>
+El contador pasa de `110` a `111`, después a `000`: al conservar tres bits, ocho vuelve a cero. No es una simulación de la frecuencia ni de las demoras de las puertas.
 
 ## Máquinas de estados
 
-Un circuito secuencial general se describe como una **máquina de estados finitos**:
+Una **[máquina de estados finitos](/articulos/automatas-finitos/)** combina estado almacenado y reglas para elegir el siguiente estado. Sus salidas pueden depender solo del estado, modelo de Moore, o también de las entradas actuales, modelo de Mealy.
 
-- Un número limitado de **estados**, guardados en un registro.
-- Unas reglas que dicen, para cada estado y cada entrada, cuál es el **siguiente**.
-- Unas salidas que dependen del estado.
-
-Un [semáforo](/articulos/semaforos-en-concurrencia/) es el ejemplo clásico:
+Un semáforo de tráfico simplificado recorre tres estados. Supondremos que cada iteración representa una señal externa que indica «ha terminado el tiempo de este color»:
 
 ```js
 const siguiente = { verde: "amarillo", amarillo: "rojo", rojo: "verde" };
-
 let estado = "verde";
 const recorrido = [estado];
-
 for (let i = 0; i < 3; i++) {
 	estado = siguiente[estado];
 	recorrido.push(estado);
 }
-
 console.log(recorrido.join(" ")); // "verde amarillo rojo verde"
 ```
 
-En hardware, el estado se guarda en biestables y la tabla de transiciones es lógica combinacional. El reloj marca el paso de uno a otro.
+La salida es el color del estado, por lo que este caso sigue el modelo de Moore. Un controlador real necesita temporización y condiciones adicionales, como cruces y peticiones de peatones. No cambia de color en cada ciclo del reloj rápido del chip.
 
-Las máquinas de estados están por todas partes: el control de un procesador, que dirige cada fase de una instrucción, los protocolos de comunicación, los ascensores. Y son un concepto de la [teoría de la computación](/articulos/maquina-de-turing/): la versión más simple de una máquina que procesa entradas, más limitada que una máquina de Turing porque su memoria es finita. Son también la base de las [expresiones regulares](/articulos/expresiones-regulares/).
+## Memoria y alimentación
 
-## De los biestables a la memoria
+Las celdas de **SRAM**, habituales en cachés, mantienen un estado mediante realimentación mientras reciben alimentación, sin refresco periódico. Son distintas de los flip-flops empleados en nuestro registro.
 
-| Memoria | Cómo guarda un bit | Características |
-| --- | --- | --- |
-| Registros y caché | Biestables, con varios transistores cada uno | Muy rápida, cara, ocupa mucho |
-| [RAM](/articulos/memoria-ram-y-almacenamiento/) | Un condensador y un transistor | Más densa y barata; pierde la carga y hay que refrescarla miles de veces por segundo |
-| Flash | Carga atrapada en un transistor | Conserva los datos sin corriente |
-
-La memoria construida con biestables se llama estática, porque mantiene el valor sin intervención. Es la que forma la [caché del procesador](/articulos/memoria-cache-del-procesador/). La RAM principal es dinámica: cada bit es un condensador que se descarga, y un circuito lo lee y lo vuelve a escribir constantemente.
-
-Todas son volátiles salvo la flash: sin corriente, el lazo se rompe y el bit se pierde.
+La memoria principal suele ser **DRAM**: almacena carga que se pierde gradualmente y necesita refresco. Ambas son [RAM](/articulos/memoria-ram-y-almacenamiento/) volátiles; RAM no significa exclusivamente DRAM. La [flash](/articulos/discos-duros-y-ssd/) conserva información sin alimentación mediante otro mecanismo. Ni todas las memorias usan biestables ni todas dependen de un reloj de la misma forma.
 
 ## Lo esencial
 
-- Un circuito secuencial recuerda; uno combinacional solo calcula con lo que tiene delante.
-- Un biestable guarda un bit mediante puertas conectadas en lazo.
-- El reloj sincroniza el circuito: los biestables solo cambian en sus flancos.
-- Varios biestables forman un registro; un registro que se incrementa es un contador.
-- Una máquina de estados combina un registro de estado con lógica que calcula el siguiente.
+- Un circuito secuencial conserva estado; un biestable puede guardar un bit.
+- La realimentación mantiene el SR cuando sus entradas vuelven al reposo válido.
+- Un latch sigue el dato mientras está habilitado; un flip-flop lo captura en un flanco.
+- Registros y lógica de transición permiten construir contadores y máquinas de estados.

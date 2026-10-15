@@ -1,24 +1,29 @@
 title: Redes por dentro
-description: Las capas de una red una a una, del cable al transporte.
+description: Continúa Cómo funciona internet, del enlace al transporte y P2P. Los ejemplos usan JavaScript básico; el cierre presupone Algoritmos sobre grafos.
 layer: redes
 steps:
-  - modelos-osi-y-tcp-ip
   - tipos-de-redes
+  - que-es-una-direccion-ip
+  - modelos-osi-y-tcp-ip
   - capa-de-enlace
-  - que-es-arp
-  - que-es-dhcp
+  - que-es-una-direccion-mac
+  - hub-switch-y-router
+  - topologias-de-red
+  - subredes-y-cidr
   - enrutamiento
   - puerta-de-enlace-predeterminada
-  - protocolos-de-enrutamiento
-  - como-funciona-traceroute
-  - ttl-en-ip
-  - que-es-una-direccion-ip
-  - que-es-una-mtu
-  - subredes-y-cidr
-  - que-es-nat
+  - que-es-arp
+  - que-es-dhcp
   - tcp-y-udp
-  - control-de-congestion-tcp
+  - que-es-una-mtu
+  - que-es-nat
+  - ttl-en-ip
+  - como-funciona-traceroute
   - ancho-de-banda-latencia-y-rendimiento
   - jitter-de-red
+  - control-de-congestion-tcp
   - proxy-y-proxy-inverso
   - como-viaja-un-paquete-por-internet
+  - redes-peer-to-peer
+  - como-funciona-bittorrent
+  - protocolos-de-enrutamiento

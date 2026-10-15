@@ -1,32 +1,26 @@
 ---
 title: "¿Qué es la variable de entorno PATH?"
-description: "PATH es la lista de carpetas donde la terminal busca los programas que escribes. Por eso basta con escribir git en lugar de la ruta completa del ejecutable."
-level: basico
+description: "PATH ordena los directorios donde determinadas herramientas buscan ejecutables por su nombre. Su orden puede decidir qué copia de un programa se utiliza."
+level: intermedio
 kind: definicion
 layer: sistemas
 prerequisites:
   - terminal-y-shell
-  - variables-de-entorno-y-secretos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "The Open Group: POSIX Environment Variables, PATH (en inglés)"
-    url: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html
+    url: https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap08.html
+  - title: "GNU Bash: bash(1), manual alojado en man7 (en inglés)"
+    url: https://man7.org/linux/man-pages/man1/bash.1.html
 ---
 
-import { Quiz } from "@/components/quiz";
+**PATH** es una [variable de entorno](/articulos/variables-de-entorno-y-secretos/): un valor que los programas reciben al iniciarse. Contiene directorios que ciertas funciones y herramientas, incluida la [shell](/articulos/terminal-y-shell/), consultan para localizar ejecutables por su nombre.
 
-**PATH** es una [variable de entorno](/articulos/variables-de-entorno-y-secretos/) que contiene la **lista de directorios** donde el sistema busca un programa cuando escribes solo su nombre. Gracias a ella, en la [terminal](/articulos/terminal-y-shell/) basta con escribir `git` en lugar de `/usr/bin/git`.
+En sistemas de tipo Unix se separan con `:`. La lista se recorre en orden al buscar un nombre sin `/`. Escribir `./programa` o `/usr/bin/programa` ya proporciona una ruta y evita esa búsqueda.
 
-El estándar POSIX la define como la secuencia de prefijos de ruta en los que se busca un ejecutable conocido solo por su nombre, separados por dos puntos.
+## Dos copias, un orden
 
-## Cómo se ve
-
-```bash
-echo $PATH
-# /home/ana/.local/bin:/usr/local/bin:/usr/bin:/bin
-```
-
-Al escribir `node`, la shell prueba en orden `/home/ana/.local/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`... y ejecuta el **primero** que encuentra.
+Este modelo representa solo la búsqueda entre rutas absolutas de ejecutables ya comprobados. No examina archivos ni permisos reales:
 
 ```js
 const ruta = "/home/ana/.local/bin:/usr/local/bin:/usr/bin:/bin";
@@ -39,20 +33,30 @@ console.log(buscar("node")); // "/usr/local/bin/node"
 console.log(buscar("python")); // "no encontrado"
 ```
 
-Hay dos `node` instalados y gana el del directorio que aparece antes. Para saber cuál se ejecutará, `which node` lo dice.
+La primera carpeta no aporta `node`; la segunda sí, así que gana frente a `/usr/bin/node`. En una búsqueda real también importan permisos, tipo de archivo y posibilidad de ejecutarlo.
 
-## Problemas típicos
+## Saber qué interpreta tu shell
 
-- **"command not found"**: el programa está instalado, pero su carpeta no está en PATH.
-- **Se ejecuta la versión equivocada**: hay dos copias y la que no quieres está antes en la lista.
-- **Añadir el directorio actual** al principio de PATH es peligroso: un programa malicioso llamado `ls` en una carpeta descargada se ejecutaría en lugar del real.
+En Bash puedes consultar el valor y la resolución de una orden:
 
-Para añadir una carpeta de forma permanente, se modifica PATH en el archivo de configuración de la shell, por ejemplo `~/.bashrc`: `export PATH="$HOME/.local/bin:$PATH"`.
+```bash
+printf '%s\n' "$PATH"
+command -v sh
+type cd
+```
 
-En Windows existe la misma variable, con las carpetas separadas por punto y coma.
+Las dos primeras salidas dependen del entorno. La tercera identifica `cd` como una orden interna de Bash. Alias y funciones también pueden intervenir antes de buscar un archivo en PATH; `which` no describe necesariamente todas esas reglas. Bash puede recordar rutas resueltas; `hash -r` vacía esa memoria cuando necesitas repetir la búsqueda.
+
+Un mensaje de orden no encontrada puede deberse a un nombre incorrecto, una instalación ausente o un directorio fuera de PATH. Tener el archivo localizado tampoco demuestra que sus dependencias estén disponibles.
+
+## Cambiar el alcance correcto
+
+Un `export PATH=...` afecta a esa shell y a los programas que inicie después; no actualiza procesos que ya estaban ejecutándose. Los archivos de inicio dependen de la shell y del tipo de sesión: `.bashrc` se lee normalmente en Bash interactivo sin inicio de sesión, pero no configura por sí solo todos los servicios y guiones.
+
+Añadir `.` o una entrada vacía puede incluir el directorio actual en la búsqueda. Si otra persona controla esa carpeta, podría introducir una orden con un nombre esperado. Conserva un orden deliberado y directorios apropiados para el contexto.
 
 ## Lo esencial
 
-- PATH es la lista de directorios donde se buscan los programas por su nombre.
-- Se recorre en orden y se ejecuta el primero que coincide.
-- "command not found" suele significar que falta una carpeta en PATH.
+- PATH sirve para buscar ejecutables por nombre; una ruta con `/` sigue otro recorrido.
+- El orden importa, pero la shell también resuelve alias, funciones y órdenes internas.
+- El valor pertenece al entorno de cada proceso; cambiarlo en una sesión no cambia todas.

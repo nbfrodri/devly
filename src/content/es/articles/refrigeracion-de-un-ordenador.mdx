@@ -1,77 +1,100 @@
 ---
 title: "¿Cómo se refrigera un ordenador?"
-description: "Toda la energía que consume un ordenador acaba convertida en calor. Disipadores, ventiladores y refrigeración líquida lo sacan, y si no basta, el procesador baja su velocidad."
+description: "Disipadores, aire y líquidos transportan el calor fuera de los chips. Su temperatura depende del consumo, del ambiente y de lo fácil que resulte evacuar ese calor."
 level: basico
 layer: hardware
 prerequisites:
   - como-funciona-un-procesador
   - fuente-de-alimentacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "Intel: información de gestión térmica de procesadores (en inglés)"
+    url: https://www.intel.com/content/www/us/en/support/articles/000006744/processors.html
+  - title: "Intel: qué es el thermal throttling (en inglés)"
+    url: https://www.intel.com/content/www/us/en/support/articles/000088048/processors.html
+  - title: "Texas Instruments: potencia y temperatura (vídeo en inglés con transcripción)"
+    url: https://www.ti.com/es-mx/video/4621925352001
   - title: "The Linux Kernel documentation: Generic Thermal Sysfs driver (en inglés)"
     url: https://docs.kernel.org/driver-api/thermal/sysfs-api.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un procesador o una tarjeta gráfica convierten en **calor** prácticamente toda la energía eléctrica que consumen. Un chip que consume 150 vatios produce 150 vatios de calor en una superficie de pocos centímetros cuadrados. Si ese calor no se saca, la temperatura sube en segundos hasta dañar el chip. La **refrigeración** es el sistema que lo evita.
+Un procesador convierte en **calor** prácticamente toda la energía eléctrica que consume. La refrigeración transporta ese calor hasta el entorno para mantener el chip dentro de sus condiciones de funcionamiento. No elimina la energía: la lleva a otro lugar.
+
+Consumir 150 vatios y alcanzar 150 grados son cosas distintas. Los vatios indican la rapidez con la que se produce calor; la temperatura depende también de lo fácil que resulte evacuarlo y de la temperatura del ambiente.
 
 ## De dónde sale el calor
 
-Cada vez que uno de los miles de millones de [transistores](/articulos/que-es-un-transistor/) de un chip cambia de estado, consume un poco de energía, que se disipa como calor. Cuantos más transistores y más rápido conmutan, más calor. Por eso la [frecuencia de reloj](/articulos/como-funciona-un-procesador/) no puede subir indefinidamente: llega un punto en que no hay forma práctica de sacar el calor.
+Al cambiar de estado, los [transistores](/articulos/que-es-un-transistor/) cargan y descargan pequeñas capacidades eléctricas: sus estructuras almacenan carga temporalmente. Ese trabajo consume energía. También hay corrientes de fuga incluso cuando no conmutan. Influyen la tensión, la frecuencia y cuántos circuitos están activos, además del diseño del chip.
 
-## El camino del calor
+Por eso el número de transistores no basta para calcular el consumo. Un chip puede dejar partes inactivas o reducir frecuencia y tensión cuando el trabajo lo permite.
+
+## El camino hasta el aire
+
+En un sistema de refrigeración por aire, el recorrido típico es:
 
 ```mermaid
-flowchart LR
-	C[Chip] --> P[pasta térmica] --> D[disipador] --> A[aire] --> F[fuera de la caja]
-	V[ventilador] --> A
+flowchart TD
+	C[Chip] --> P[Interfaz térmica]
+	P --> D[Disipador]
+	D --> A[Aire alrededor]
+	A --> F[Aire del exterior]
+	V[Ventiladores] -. Mueven el aire .-> A
 ```
 
-1. **Pasta térmica**: rellena las imperfecciones microscópicas entre el chip y el disipador. Sin ella, quedaría aire, que conduce muy mal el calor.
-2. **Disipador**: una pieza de metal, de aluminio o cobre, con muchas aletas. Recoge el calor y lo reparte en una gran superficie.
-3. **Ventilador**: mueve aire entre las aletas para llevarse el calor.
-4. **Flujo de la caja**: otros ventiladores renuevan el aire caliente del interior con aire fresco de fuera.
+La **interfaz térmica**, como una pasta o una almohadilla adecuada al montaje, rellena irregularidades entre superficies. Reduce las bolsas de aire, que dificultan la conducción. El **disipador** distribuye el calor por una pieza metálica con aletas para ofrecer más superficie al aire.
 
-## Tipos de refrigeración
+Un ventilador renueva el aire junto a esas aletas. El calor todavía debe salir de la caja: recircular aire cada vez más caliente limita el resultado aunque el ventilador gire deprisa. El polvo que obstruye el paso del aire o un mal contacto térmico dificultan distintas partes de ese recorrido.
 
-| Tipo | Cómo funciona | Dónde |
-| --- | --- | --- |
-| Pasiva | Solo un disipador, sin ventilador | Chips de bajo consumo, móviles |
-| Por aire | Disipador y ventilador | La mayoría de ordenadores |
-| Líquida | Un líquido recoge el calor y lo lleva a un radiador | Equipos potentes, algunos servidores |
-| Por inmersión | Los componentes sumergidos en un líquido que no conduce la electricidad | Algunos centros de datos |
+## Un modelo para separar consumo y temperatura
 
-Un móvil no tiene ventilador: reparte el calor por todo su cuerpo, y por eso se calienta al usarlo mucho.
-
-## Cuando no basta: bajar el ritmo
-
-Los chips tienen **sensores de temperatura**. Si se acercan al límite, el procesador **reduce su frecuencia** para producir menos calor. Es el estrangulamiento térmico: el equipo sigue funcionando, pero más lento. Si aun así la temperatura sigue subiendo, se apaga para protegerse.
-
-El sistema operativo participa. En Linux, la gestión térmica organiza el equipo en **zonas térmicas**, que son los sensores, y **dispositivos de refrigeración**, como un ventilador o el propio procesador al bajar su velocidad. Cada zona tiene **umbrales**: al superar cada uno, se activa un dispositivo, desde subir las revoluciones del ventilador hasta reducir la frecuencia.
+Imaginemos un montaje cuya **resistencia térmica efectiva** sea de 0,4 °C por vatio: en equilibrio, cada vatio disipado mantiene el chip 0,4 °C por encima del ambiente. Son valores inventados para entender la relación, no datos de un procesador concreto.
 
 ```js
-const umbrales = [
-	{ temperatura: 60, accion: "ventilador al 50 %" },
-	{ temperatura: 80, accion: "ventilador al 100 %" },
-	{ temperatura: 95, accion: "bajar la frecuencia" },
-];
+function temperaturaEstable(ambiente, potencia, resistencia) {
+	return ambiente + potencia * resistencia;
+}
 
-const actuar = (t) =>
-	umbrales.filter((u) => t >= u.temperatura).map((u) => u.accion).at(-1) ?? "nada";
-
-console.log(actuar(45)); // "nada"
-console.log(actuar(85)); // "ventilador al 100 %"
-console.log(actuar(97)); // "bajar la frecuencia"
+console.log(temperaturaEstable(25, 100, 0.4)); // 65
+console.log(temperaturaEstable(25, 150, 0.4)); // 85
+console.log(temperaturaEstable(40, 100, 0.4)); // 80
 ```
 
-## En los centros de datos
+Con el mismo montaje, aumentar el consumo o calentar el ambiente eleva la temperatura. En un equipo real la resistencia efectiva puede variar con el flujo de aire y el montaje, y la temperatura tarda en cambiar: este modelo solo aproxima el estado estable.
 
-En un centro de datos, la refrigeración consume una parte importante de toda la energía. Por eso se diseñan pasillos de aire frío y caliente, se aprovecha el aire exterior y se buscan emplazamientos fríos. Es una de las razones del impacto ambiental de la informática.
+<Quiz
+	client:visible
+	question="En este modelo, el ambiente sube de 25 a 40 °C sin cambiar potencia ni resistencia térmica. ¿Qué ocurre?"
+	options={[
+		"El chip conserva su temperatura porque consume lo mismo",
+		"La temperatura estable del chip sube 15 °C",
+		"El chip consume necesariamente 15 W más",
+	]}
+	answer={1}
+/>
+
+## Aire, líquido y refrigeración pasiva
+
+| Sistema | Cómo transporta el calor |
+| --- | --- |
+| Pasivo | Lo reparte por el disipador o la carcasa; el aire circula sin ventilador |
+| Aire forzado | Un ventilador mueve aire por el disipador |
+| Circuito líquido | Un líquido lo lleva desde un bloque hasta un radiador, que lo cede al entorno |
+| Inmersión | Un líquido adecuado rodea los componentes y transporta su calor hacia un sistema de intercambio |
+
+Un circuito líquido también necesita evacuar calor fuera del equipo. Por sí solo, no mantiene un chip activo por debajo de la temperatura del aire que enfría su radiador. Muchos móviles emplean soluciones pasivas y reparten calor por el cuerpo del dispositivo.
+
+## Qué pasa al acercarse al límite
+
+Los sensores permiten ajustar ventiladores y limitar el consumo. El **estrangulamiento térmico**, o *thermal throttling*, reduce el ritmo de trabajo para producir menos calor. Según el equipo, también puede haber un apagado de protección. Los límites y las respuestas dependen del componente, del fabricante y de su configuración.
+
+En Linux, las **zonas térmicas** representan regiones cuya temperatura se vigila. Sus umbrales y políticas relacionan esas lecturas con dispositivos de refrigeración, incluidos ventiladores o mecanismos que limitan el procesador. Reducir su frecuencia no implica apagar el ventilador: las medidas pueden combinarse.
+
+Para evitar cambios continuos cerca de un umbral, una política puede usar **histéresis**: activar una medida a cierta temperatura y retirarla a otra menor. Por ejemplo, activarla a 80 °C y retirarla al bajar de 75 °C. Son umbrales didácticos, no una configuración recomendada para cualquier equipo.
 
 ## Lo esencial
 
-- Casi toda la energía que consume un chip se convierte en calor.
-- El calor pasa del chip al disipador a través de la pasta térmica, y el aire o un líquido se lo lleva.
-- Si la temperatura sube demasiado, el procesador baja su frecuencia o el equipo se apaga.
-- El sistema operativo vigila sensores y activa la refrigeración por umbrales.
+- Refrigerar significa transportar calor hasta el entorno.
+- La temperatura depende del consumo, del ambiente y del recorrido térmico completo.
+- Limitar el trabajo puede reducir el calor producido, pero los límites y protecciones dependen del equipo.

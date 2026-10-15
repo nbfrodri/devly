@@ -1,98 +1,131 @@
 ---
 title: "¿Cómo viaja un paquete por internet? El enrutamiento paso a paso"
-description: "Todo lo que ocurre desde que tu equipo envía un paquete hasta que llega a un servidor lejano: DNS, máscara, ARP, puerta de enlace, NAT, routers, TTL y BGP."
+description: "Sigue un paquete IPv4 desde el portátil al servidor: DNS, rutas, ARP, Ethernet, NAT y TTL, con las direcciones que cambian en cada tramo."
 level: intermedio
 layer: redes
 prerequisites:
   - modelos-osi-y-tcp-ip
   - enrutamiento
-updated: 2026-10-14
+  - tcp-y-udp
+  - que-es-dns
+updated: 2026-10-15
 sources:
   - title: "RFC 1812: Requirements for IP Version 4 Routers (en inglés)"
-    url: https://www.rfc-editor.org/rfc/rfc1812
+    url: https://www.rfc-editor.org/rfc/rfc1812.html
   - title: "RFC 826: An Ethernet Address Resolution Protocol (en inglés)"
-    url: https://www.rfc-editor.org/rfc/rfc826
+    url: https://www.rfc-editor.org/rfc/rfc826.html
   - title: "RFC 3022: Traditional IP Network Address Translator (en inglés)"
-    url: https://www.rfc-editor.org/rfc/rfc3022
+    url: https://www.rfc-editor.org/rfc/rfc3022.html
   - title: "RFC 4271: A Border Gateway Protocol 4 (BGP-4) (en inglés)"
-    url: https://www.rfc-editor.org/rfc/rfc4271
+    url: https://www.rfc-editor.org/rfc/rfc4271.html
+  - title: "RFC 5737: IPv4 Address Blocks Reserved for Documentation (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc5737.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Escribes una dirección en el navegador y, en unos milisegundos, la respuesta llega desde un servidor que puede estar en otro continente. Por el camino, el paquete pasa por una docena de equipos que no se conocen entre sí. Este artículo sigue ese viaje paso a paso y enlaza cada pieza con su explicación detallada.
+Un **paquete IP** contiene datos y una cabecera con direcciones y otros campos de control. Para cruzar internet se transporta por una sucesión de enlaces; los routers deciden el siguiente salto. Este recorrido une DNS, direccionamiento, transporte y enlace en un caso concreto.
 
-El escenario: tu portátil, `192.168.1.20`, en la wifi de casa, quiere hablar con un servidor web.
+El escenario es inventado: un portátil `192.168.1.20/24` conectado por **Ethernet**, un router local `192.168.1.1` que aplica NAPT y un servidor `203.0.113.10`. La dirección pública del router es `198.51.100.7`; estas direcciones externas están reservadas para documentación. No todas las conexiones reales usan IPv4, Ethernet o NAT.
 
 ```mermaid
-flowchart LR
+flowchart TD
 	P["Portátil<br>192.168.1.20"] --> R["Router de casa<br>NAT"]
 	R --> O1["Router del operador"]
-	O1 --> X["Punto de intercambio<br>BGP entre operadores"]
-	X --> O2["Red del proveedor<br>del servidor"]
-	O2 --> S["Servidor<br>93.184.216.34"]
+	O1 --> O2["Router del proveedor<br>del servidor"]
+	O2 --> S["Servidor<br>203.0.113.10"]
 ```
 
 ## 1. Del nombre a la dirección: DNS
 
-El navegador tiene un nombre, `ejemplo.com`, pero los paquetes se dirigen a direcciones IP. Primero pregunta al [DNS](/articulos/que-es-dns/), que responde con la IP del servidor, por ejemplo `93.184.216.34`.
+El navegador parte de un nombre, `example.com`. Supongamos que [DNS](/articulos/que-es-dns/) devuelve `203.0.113.10` en este escenario didáctico. La respuesta podría proceder de una caché o requerir consultas. Resolver el nombre no transporta todavía la página.
 
-## 2. ¿Está en mi red? La máscara
+Después se establece el transporte. Seguiremos un paquete con datos de una conexión **TCP y TLS ya establecida** hacia el puerto 443: [TLS](/articulos/https-y-tls/) protege el intercambio HTTPS mediante cifrado y autenticación. Los mensajes de establecimiento también atraviesan la red, pero los omitimos para observar un paquete de datos.
 
-El sistema operativo compara la IP de destino con su propia red usando la máscara de [subred](/articulos/subredes-y-cidr/). `93.184.216.34` no está en `192.168.1.0/24`, así que el paquete no se puede entregar directamente: hay que dárselo a la [puerta de enlace predeterminada](/articulos/puerta-de-enlace-predeterminada/), el router de casa, `192.168.1.1`.
+## 2. Elegir el siguiente salto
 
-## 3. ¿Cuál es la MAC del router? ARP
+La tabla local tiene una ruta a `192.168.1.0/24` y una predeterminada por `192.168.1.1`. El destino `203.0.113.10` no coincide con la [subred](/articulos/subredes-y-cidr/) local, así que se elige la [puerta de enlace predeterminada](/articulos/puerta-de-enlace-predeterminada/). Si hubiera una ruta más específica, esa podría ganar: no todo destino remoto utiliza siempre la ruta predeterminada.
 
-Dentro de la red local, los datos viajan en tramas que se entregan por [dirección MAC](/articulos/que-es-una-direccion-mac/). El portátil consulta su tabla [ARP](/articulos/que-es-arp/) y, si no conoce la MAC del router, la pregunta a toda la red.
+## 3. Obtener la MAC del router: ARP
 
-## 4. El paquete se empaqueta
+En este enlace Ethernet, la trama necesita una [dirección MAC](/articulos/que-es-una-direccion-mac/) de destino. El portátil consulta su tabla [ARP](/articulos/que-es-arp/) y, si no conoce la MAC de `192.168.1.1`, envía una pregunta por difusión local.
 
-Cada capa añade su cabecera, como explican los [modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/):
+El router responde con la MAC de su interfaz local. Esa dirección identifica al siguiente destinatario de la trama, no al servidor remoto.
 
-| Capa | Qué añade | En el ejemplo |
+## 4. Preparar el envío
+
+Los [modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/) ayudan a separar las piezas. El sistema forma un segmento TCP, lo incluye en un paquete IPv4 y prepara una trama Ethernet:
+
+| Capa | Información relevante | En el ejemplo |
 | --- | --- | --- |
 | Transporte | Puertos de origen y destino | 51000 hacia 443, sobre [TCP](/articulos/tcp-y-udp/) |
-| Red | IP de origen y destino, y el TTL | De 192.168.1.20 a 93.184.216.34 |
-| Enlace | MAC de origen y destino | De la del portátil a la del router |
+| Red | IP de origen y destino, TTL | `192.168.1.20` hacia `203.0.113.10`, TTL 64 |
+| Enlace | MAC del tramo | Del portátil al router local |
 
-La IP de destino es la del servidor; la MAC de destino, la del router. Esa diferencia es la clave de todo el enrutamiento.
+La IP de destino es la del servidor; la MAC de destino, la del router local. Esa diferencia permite entregar el paquete al primer salto sin cambiar su destino remoto.
 
-## 5. El router de casa: NAT
+<Quiz
+	client:visible
+	question="Al salir del portátil, ¿qué pareja de destinos lleva este envío?"
+	options={[
+		"IP del servidor y MAC del router local",
+		"IP y MAC del servidor lejano",
+		"IP y MAC del router local",
+	]}
+	answer={0}
+/>
 
-El router recibe la trama, ve que el paquete no es para él y lo reenvía hacia su propia puerta de enlace, en la red del operador. Antes, aplica [NAT](/articulos/que-es-nat/): cambia la IP privada de origen por la IP pública de casa y anota la correspondencia, para saber a quién devolver la respuesta.
+## 5. El router doméstico aplica NAT
 
-## 6. Salto a salto
+El router procesa la trama y consulta la ruta hacia el servidor. En este caso lo reenvía al operador y aplica [NAPT](/articulos/que-es-nat/): convierte `192.168.1.20:51000` en `198.51.100.7:40001` y conserva esa correspondencia para las respuestas. También actualiza los campos de comprobación afectados. El TTL pasa de 64 a 63.
 
-A partir de aquí, cada router repite lo mismo, según las reglas de los routers IPv4:
+No está actuando como servidor web: el puerto 443 de destino sigue siendo el del servidor remoto. Tampoco necesita descifrar HTTPS para realizar esta traducción.
 
-1. Recibe el paquete y comprueba que la cabecera es válida.
-2. **Resta uno al TTL**. Si llega a cero, lo descarta y avisa al remitente: es lo que aprovecha [traceroute](/articulos/como-funciona-traceroute/).
-3. Busca el destino en su **tabla de [enrutamiento](/articulos/enrutamiento/)** y elige la ruta del prefijo más largo que coincide.
-4. Averigua la MAC del siguiente router y reenvía el paquete en una trama nueva.
+## 6. Avanzar salto a salto
 
-La IP de destino no cambia en todo el viaje. Las MAC cambian en cada salto, porque cada tramo es una red local distinta.
+Cada router realiza decisiones de reenvío. Resumimos sus responsabilidades sin imponer este orden a todas las implementaciones:
 
-## 7. Entre operadores: BGP
+1. Procesa el paquete y comprueba su cabecera.
+2. Reduce el [**TTL**](/articulos/ttl-en-ip/), normalmente en uno. Si se agota, descarta el paquete y normalmente genera un aviso ICMP, que puede filtrarse o limitarse.
+3. Consulta la tabla de [enrutamiento](/articulos/enrutamiento/) y elige una ruta coincidente, dando prioridad al prefijo más largo.
+4. Prepara el envío por el enlace elegido. Si es Ethernet, utiliza la MAC del siguiente salto, desde caché o mediante ARP; otra tecnología puede tener otro mecanismo.
 
-El destino está en la red de otra organización. Las grandes redes de internet, los **sistemas autónomos**, se cuentan entre sí qué direcciones pueden alcanzar mediante [BGP](/articulos/protocolos-de-enrutamiento/). Gracias a esos anuncios, los routers del operador saben hacia qué red vecina mandar el paquete. Dentro de cada sistema autónomo, otros protocolos, como OSPF, deciden el camino interno.
+Aquí no hay traducción de destino: `203.0.113.10` se conserva. Otras configuraciones pueden traducir también el destino. El envoltorio de enlace se prepara para cada tramo enrutado.
 
-## 8. La llegada y la respuesta
+Con los tres routers del dibujo y una reducción de uno por router:
 
-El último router entrega el paquete en la red del servidor, otra vez con ARP. El sistema operativo del servidor ve que la IP es suya, entrega los datos al programa que escucha en el puerto 443 y este responde.
+| Salida | IP de origen | IP de destino | TTL |
+| --- | --- | --- | --- |
+| Portátil | `192.168.1.20` | `203.0.113.10` | 64 |
+| Router doméstico | `198.51.100.7` | `203.0.113.10` | 63 |
+| Router del operador | `198.51.100.7` | `203.0.113.10` | 62 |
+| Router de la red del servidor | `198.51.100.7` | `203.0.113.10` | 61 |
 
-La respuesta hace el viaje al revés, no necesariamente por el mismo camino. Al llegar al router de casa, NAT consulta su tabla, restaura la IP privada del portátil y se la entrega.
+## 7. Cómo se conocen las rutas entre operadores
 
-## 9. Lo que puede salir mal
+Las redes administradas de forma independiente, llamadas **sistemas autónomos**, intercambian anuncios mediante [BGP](/articulos/protocolos-de-enrutamiento/). Esos anuncios y las políticas de cada organización ayudan a construir rutas hacia otras redes.
 
-- Un paquete puede **perderse** en un router saturado, llegar **desordenado** o **duplicado**: el enrutamiento no garantiza nada, y [TCP](/articulos/tcp-y-udp/) lo corrige reenviando y ordenando.
-- Cada salto añade **latencia**, y la distancia física añade más, como recuerda [ancho de banda, latencia y rendimiento](/articulos/ancho-de-banda-latencia-y-rendimiento/).
-- Un [cortafuegos](/articulos/cortafuegos/) en el camino puede bloquearlo.
+Dentro de una organización puede haber rutas estáticas o protocolos como OSPF. BGP no negocia una ruta nueva por cada paquete de una página: el reenvío utiliza la información ya instalada.
 
-Todo eso ocurre para cada paquete, y una sola página web necesita cientos.
+## 8. Llegada y respuesta
+
+Suponemos que el último enlace también es Ethernet. El router obtiene o reutiliza la MAC del servidor y le entrega la trama. El servidor reconoce su IP y su conexión TCP, recupera el flujo de bytes y procesa TLS antes de interpretar la petición HTTP. Un solo paquete no contiene necesariamente toda la petición.
+
+La respuesta usa como destino `198.51.100.7:40001`, la dirección y puerto observados al recibir. No tiene por qué seguir el mismo camino de vuelta. Al llegar al router doméstico, la tabla NAPT permite traducir ese destino a `192.168.1.20:51000` y devolver los datos al portátil.
+
+## 9. Qué puede impedir completar el recorrido
+
+- **Falta una ruta o falla el siguiente salto.** Tener resuelto DNS no demuestra que exista un camino utilizable.
+- **Una cola se llena o se daña una transmisión.** Puede perderse un paquete. TCP intenta recuperar datos y mantener el orden; también puede terminar fallando.
+- **Un filtro bloquea el envío o la respuesta.** Llegar en una dirección no demuestra que el retorno funcione.
+- **El paquete supera una MTU.** Puede requerir un tamaño menor o fragmentación cuando esté permitida; no basta con que quepa en el primer enlace.
+- **Caduca la correspondencia NAT.** La respuesta puede dejar de tener un destinatario interno conocido.
+
+Cada paquete tiene su propio recorrido y estado. Una página suele requerir varios intercambios; las cachés, la versión de HTTP, la conexión reutilizada y el contenido cambian su cantidad y duración.
 
 ## Lo esencial
 
-- El DNS da la IP; la máscara decide si el destino es local o hay que pasar por la puerta de enlace.
-- ARP da la MAC del siguiente equipo; la IP de destino se mantiene, la MAC cambia en cada salto.
-- El router de casa aplica NAT; cada router resta uno al TTL y consulta su tabla de rutas.
-- Entre las redes de internet, BGP decide hacia dónde seguir.
+- DNS aporta direcciones; la tabla de rutas elige el siguiente salto.
+- En Ethernet, la MAC identifica al destinatario de ese tramo, mientras IP dirige el paquete hacia su destino de red.
+- NAT puede cambiar direcciones y puertos; los routers reducen el TTL y preparan nuevos envíos de enlace.
+- La respuesta necesita su propio camino; ningún paso aislado garantiza que la aplicación termine correctamente.

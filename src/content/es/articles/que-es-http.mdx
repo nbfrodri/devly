@@ -6,9 +6,9 @@ layer: redes
 prerequisites:
   - que-es-una-direccion-ip
   - que-es-dns
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
-  - title: "RFC 9110: HTTP Semantics"
+  - title: "RFC 9110: HTTP Semantics (en inglés)"
     url: https://www.rfc-editor.org/info/rfc9110/
   - title: "MDN: Generalidades del protocolo HTTP"
     url: https://developer.mozilla.org/es/docs/Web/HTTP/Guides/Overview
@@ -20,9 +20,9 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-**HTTP** (*Hypertext Transfer Protocol*) es el protocolo que usan los navegadores y los servidores web para comunicarse. Define cómo se pide un recurso, como una página o una imagen, y cómo se contesta.
+**HTTP** (*Hypertext Transfer Protocol*) es el protocolo que usan los navegadores y los [servidores web](/articulos/que-es-un-servidor/) para comunicarse. Define cómo se pide un recurso, como una página o una imagen, y cómo se contesta.
 
-Un **protocolo** es un conjunto de reglas que dos programas acuerdan seguir para entenderse. HTTP se apoya en otro protocolo, normalmente [TCP](/articulos/tcp-y-udp/), que se ocupa de que los mensajes lleguen completos.
+Un [**protocolo**](/articulos/que-es-un-protocolo-de-red/) es un conjunto de reglas que dos programas acuerdan seguir para entenderse. HTTP/1.1 y HTTP/2 utilizan [TCP](/articulos/tcp-y-udp/) como transporte fiable; HTTP/3 utiliza QUIC, construido sobre UDP. La fiabilidad permite detectar y recuperar pérdidas durante la conexión, pero una avería todavía puede impedir completar una petición.
 
 ## Qué problema resuelve
 
@@ -35,13 +35,13 @@ HTTP funciona siempre igual: una parte pregunta y la otra contesta.
 - El **cliente**, normalmente el navegador, envía una **petición**.
 - El **servidor** devuelve una **respuesta**.
 
-El servidor nunca habla primero. Solo responde a lo que le piden. Cuando una aplicación necesita que el servidor envíe datos por iniciativa propia, se usan [WebSockets](/articulos/websockets/).
+El cliente inicia el intercambio. Para recibir novedades puede abrir una respuesta que permanezca activa, como un flujo de eventos, o establecer un canal [WebSocket](/articulos/websockets/) en el que ambas partes envíen mensajes.
 
-Cargar una página no es una sola petición. El navegador pide primero el documento y, al leerlo, descubre que necesita estilos, imágenes y programas, y hace una petición por cada uno.
+Cargar una página suele requerir varias peticiones. El navegador pide el documento y descubre estilos, imágenes y programas; los solicita según los necesita, salvo que ya disponga de una copia reutilizable en caché o estén incluidos en el propio documento.
 
 ## Cómo es una petición
 
-Una petición es texto con una estructura fija:
+En HTTP/1.1, la línea inicial y las cabeceras tienen una representación textual como esta. HTTP/2 y HTTP/3 transmiten información equivalente mediante estructuras binarias:
 
 ```
 GET /articulos/ HTTP/1.1
@@ -85,9 +85,11 @@ La primera cifra indica la familia:
 | Códigos | Significado | Ejemplo |
 | --- | --- | --- |
 | `2xx` | La petición ha ido bien | `200 OK` |
-| `3xx` | El recurso está en otra dirección | `301 Moved Permanently` |
+| `3xx` | Hace falta otra acción para completar o reutilizar el resultado | `301 Moved Permanently`, `304 Not Modified` |
 | `4xx` | La petición tiene un problema | `404 Not Found` |
 | `5xx` | El servidor ha fallado | `500 Internal Server Error` |
+
+Un `304` no indica una dirección nueva: responde a una petición condicional y permite reutilizar una representación guardada en [caché](/articulos/que-es-una-cache/). No todas las respuestas llevan cuerpo; por ejemplo, `204 No Content` no lo tiene.
 
 <Quiz
 	client:visible
@@ -98,21 +100,27 @@ La primera cifra indica la familia:
 
 ## No tiene memoria
 
-HTTP es un protocolo **sin estado**, o [stateless](/articulos/stateful-y-stateless/): cada petición es independiente y el servidor no recuerda las anteriores. Por sí solo no sabría que la persona que añade un producto al carrito es la misma que inició sesión hace un minuto.
+HTTP es un protocolo **sin estado**, o [stateless](/articulos/stateful-y-stateless/): cada petición tiene una semántica independiente. Esto no prohíbe que la aplicación guarde sesiones y relacione varias peticiones; debe aportar un mecanismo para reconocer esa continuidad.
 
-Para mantener esa continuidad se usan las **cookies**: pequeños datos que el servidor entrega en una respuesta y que el navegador envía de vuelta en las peticiones siguientes. Con ellas el servidor puede reconocer quién le habla.
+Un mecanismo habitual son las **cookies**: datos que el navegador guarda y envía en las peticiones que cumplen sus reglas de ámbito. Una cookie puede contener un identificador que el servidor comprueba para recuperar una sesión; tener cualquier cookie no demuestra la identidad de una persona.
 
 ## HTTPS
 
-Con HTTP tal cual, los mensajes viajan como texto legible. Cualquier equipo por el que pasen podría leerlos o modificarlos.
+Sin cifrado, los mensajes quedan expuestos a quien pueda observar o alterar el tráfico. Que una versión use un formato binario no proporciona confidencialidad.
 
 **HTTPS** es HTTP enviado a través de una conexión cifrada. El mecanismo se explica en [cómo funcionan HTTPS y TLS](/articulos/https-y-tls/). Añade tres garantías:
 
 - **Confidencialidad**: nadie en el camino puede leer el contenido.
 - **Integridad**: nadie puede alterarlo sin que se note.
-- **Autenticidad**: el servidor demuestra que es quien dice ser.
+- **Autenticación del servidor**: la validación del certificado vincula la conexión con el nombre solicitado; no demuestra que el negocio sea honrado.
 
-El candado que muestra el navegador indica que la conexión usa HTTPS.
+La interfaz del navegador permite consultar la seguridad de la conexión. HTTPS no evita por sí solo errores de autorización ni vulnerabilidades en la aplicación.
+
+## Errores comunes
+
+- **Confundir `200` con datos correctos.** El estado describe el resultado HTTP declarado por el servidor; una aplicación puede devolver contenido equivocado.
+- **Suponer que cada petición abre una conexión nueva.** Una conexión puede reutilizarse y, según la versión, transportar varios intercambios a la vez.
+- **Creer que stateless impide las sesiones.** La aplicación puede conservarlas y relacionar peticiones mediante un identificador validado.
 
 ## Términos relacionados
 
@@ -126,8 +134,8 @@ Estas piezas tienen su propia definición: [URL](/articulos/que-es-una-url/), [c
 ## Lo esencial
 
 - HTTP es el protocolo de la web: el cliente pide y el servidor responde.
-- Una petición lleva método, ruta y cabeceras; una respuesta, código de estado, cabeceras y cuerpo.
-- No guarda estado entre peticiones; las cookies lo suplen.
+- Una petición lleva método, destino y cabeceras; una respuesta, código de estado y cabeceras. El cuerpo depende del mensaje.
+- La semántica de cada petición es independiente; la aplicación puede añadir sesiones.
 - HTTPS es HTTP sobre una conexión cifrada.
 
 Los programas también usan HTTP para intercambiar datos entre sí, mediante una [API](/articulos/que-es-una-api/).

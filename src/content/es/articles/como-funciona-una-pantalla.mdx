@@ -1,29 +1,33 @@
 ---
 title: "¿Cómo funciona una pantalla?"
-description: "Una pantalla es una cuadrícula de millones de píxeles que se redibuja decenas de veces por segundo. LCD y OLED los encienden de formas muy distintas."
+description: "Una pantalla convierte datos de imagen en luz. LCD filtra una iluminación de fondo; OLED controla emisores propios. Resolución, refresco y fotogramas describen cosas distintas."
 level: basico
 layer: hardware
 prerequisites:
-  - como-se-representa-una-imagen
   - que-es-una-gpu
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Explain that Stuff: How do LCDs work? (en inglés)"
-    url: https://www.explainthatstuff.com/lcdtv.html
-  - title: "Explain that Stuff: How do OLEDs work? (en inglés)"
-    url: https://www.explainthatstuff.com/how-oleds-and-leps-work.html
+  - title: "EIZO: Desktop Color Handbook, capítulo 3, LCD Monitors (en inglés, PDF)"
+    url: https://www.eizo.com/prodeizo/media/contentassets/2021/07/30/wV6H173_EIZO_DCH_CH3.pdf
+  - title: "LG Display: tecnología Tandem WOLED (en inglés)"
+    url: https://www.lgdisplay.com/eng/technology/tandem-woled
+  - title: "LG Display: atenuación por píxel y por zonas, febrero de 2026 (en inglés)"
+    url: https://www.lgdisplay.com/eng/company/media-center/latest-news?contentId=5507
+  - title: "Microsoft: directrices de pantallas, refresco y reproducción de vídeo (en inglés)"
+    url: https://learn.microsoft.com/en-us/windows-hardware/design/component-guidelines/display
+  - title: "LG: manual de pantallas OLED, retención de imagen (en español e inglés, PDF)"
+    url: https://www.lg.com/cac/support/products/documents/OLED55B3PSA.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una pantalla es una **cuadrícula de píxeles**, puntos diminutos cuyo color se controla por separado. Cada píxel se compone de tres subpíxeles, rojo, verde y azul, cuya mezcla da el color, como explica [cómo se representa una imagen](/articulos/como-se-representa-una-imagen/). La [tarjeta gráfica](/articulos/que-es-una-gpu/) calcula la imagen y la envía a la pantalla, que la **redibuja decenas de veces por segundo**.
+Una pantalla convierte los datos de una imagen en **luz**. Sus píxeles son los pequeños elementos que controlan el color en distintas posiciones. Un diseño común combina subpíxeles rojos, verdes y azules, aunque existen otras disposiciones, como las que añaden un subpíxel blanco.
 
-## Resolución y frecuencia
+La [GPU](/articulos/que-es-una-gpu/) produce la imagen y el sistema la presenta a través de la salida de vídeo. La electrónica de la pantalla recibe esos datos y controla el panel. El archivo de una fotografía, la imagen preparada en memoria y las señales que recibe el panel son representaciones distintas del contenido.
 
-- **Resolución**: cuántos píxeles tiene. 1920 × 1080 son más de dos millones.
-- **Frecuencia de refresco**: cuántas veces por segundo se redibuja, en hercios. A más frecuencia, movimiento más fluido.
+## Cuánta información tiene una imagen
 
-Eso es mucha información:
+La **resolución** indica cuántos píxeles hay en cada dimensión. Para contar datos, supongamos una imagen de 1920 × 1080 en formato RGB sin comprimir: un [byte](/articulos/que-es-un-byte/) para rojo, otro para verde y otro para azul, tres por píxel.
 
 ```js
 const ancho = 1920;
@@ -37,40 +41,58 @@ const porSegundo = bytesPorImagen * 60;
 console.log((porSegundo / 1e6).toFixed(0)); // "373"
 ```
 
-Una imagen ocupa unos 6 megabytes, y a 60 imágenes por segundo son unos 373 megabytes por segundo, sin comprimir, solo para una pantalla normal. Por eso los cables de vídeo necesitan tanto [ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/).
+Son unos 6,22 MB por imagen y 373 MB/s al enviar sesenta de esas imágenes por segundo, redondeando y usando megabytes decimales. El cálculo solo cuenta los valores de color del formato elegido: no incluye control del enlace, intervalos de sincronización ni otras sobrecargas. Tampoco describe una imagen comprimida. [Cómo se representa una imagen](/articulos/como-se-representa-una-imagen/) explica esas diferencias.
 
-## LCD: filtrar una luz
+## LCD: regular una luz que viene de detrás
 
-Una pantalla **LCD**, de cristal líquido, no produce luz en sus píxeles. Detrás hay una **luz de fondo** blanca, siempre encendida. Cada píxel actúa como una persiana que deja pasar más o menos luz:
+En una pantalla **LCD** con iluminación de fondo, los cristales líquidos no generan la luz. El panel regula cuánta llega al observador:
 
-1. La luz atraviesa un **filtro polarizador**, que solo deja pasar la luz que vibra en una dirección.
-2. Pasa por una capa de **cristales líquidos**, que pueden girar esa dirección según la tensión eléctrica que reciben.
-3. Llega a un segundo polarizador. Según cuánto la hayan girado los cristales, pasa más o menos luz.
-4. Un **filtro de color** tiñe cada subpíxel de rojo, verde o azul.
+1. Una fuente situada detrás del panel proporciona iluminación.
+2. Los **polarizadores** seleccionan componentes de la luz según su orientación de vibración.
+3. Una tensión eléctrica cambia la orientación de las moléculas de cristal líquido. Su efecto sobre la luz, combinado con los polarizadores, permite variar cuánto atraviesa el panel.
+4. Los filtros de color seleccionan rojo, verde o azul en los subpíxeles correspondientes.
 
-Como la luz de fondo siempre está encendida, el negro nunca es totalmente negro: algo de luz se escapa.
+Hay distintas maneras de organizar el cristal líquido. Además, la iluminación puede variar: algunos paneles atenúan el fondo completo y otros lo dividen en zonas. Por eso un LCD no consume necesariamente lo mismo con cualquier contenido.
 
-## OLED: cada píxel brilla
+## OLED: controlar la emisión
 
-En una pantalla **OLED**, cada subpíxel es un diodo orgánico que **emite su propia luz**. No hace falta luz de fondo.
+En una pantalla **OLED**, materiales orgánicos emiten luz al recibir corriente. No se necesita la iluminación de fondo de un LCD. Hay diseños con emisores de distintos colores y otros, como WOLED, que combinan emisión blanca con filtros de color.
 
-| | LCD | OLED |
+Comparemos el mismo caso: una estrella pequeña sobre un cielo negro.
+
+| | LCD con atenuación por zonas | OLED |
 | --- | --- | --- |
-| Luz | Luz de fondo filtrada | Cada píxel emite la suya |
-| Negro | Gris muy oscuro | Negro real: el píxel se apaga |
-| Consumo | Constante por la luz de fondo | Depende de lo que se muestre |
-| Grosor | Mayor | Puede ser muy fina, incluso flexible |
-| Desgaste | Bajo | Los píxeles envejecen con el uso |
+| Zona brillante | Se ilumina la zona del fondo que contiene la estrella | Se activan los emisores de la estrella |
+| Negro alrededor | El panel intenta bloquear la luz; puede aparecer un halo | Los píxeles negros pueden dejar de emitir |
+| Límite del control | Una zona puede abarcar muchos píxeles | El control de emisión llega al píxel |
 
-Un fondo negro en OLED ahorra energía, porque esos píxeles están apagados. En LCD, no cambia nada.
+La electrónica de un OLED sigue consumiendo energía aunque muestre negro. Además, la luz del entorno puede reflejarse en la superficie. «Píxel apagado» describe su emisión, no la ausencia de todo consumo o de toda luz visible.
 
-## La pantalla táctil
+Los materiales emisores también cambian con el uso. Mantener repetidamente elementos fijos, como un logotipo brillante, puede dejar diferencias persistentes visibles como una marca. Los mecanismos de protección reducen ese riesgo, pero no hacen al panel inmune al desgaste.
 
-En móviles y tabletas, sobre la pantalla hay una capa transparente que detecta el contacto. Es un dispositivo de entrada separado, que explica [periféricos de entrada](/articulos/perifericos-de-entrada/).
+## Refresco no es lo mismo que imágenes nuevas
+
+La **frecuencia de refresco**, en hercios, indica cuántas actualizaciones por segundo realiza el panel en un modo determinado. Los **fotogramas por segundo**, o FPS, indican cuántas imágenes produce o entrega el contenido.
+
+Un vídeo de 30 FPS en una pantalla fija a 60 Hz puede mostrar cada fotograma durante dos refrescos. Suponemos reproducción regular y sincronizada, sin generar imágenes intermedias. El panel no inventa por ese motivo otros treinta instantes de la escena.
+
+<Quiz
+	client:visible
+	question="En ese vídeo de 30 FPS mostrado a 60 Hz, ¿qué representan los dos refrescos consecutivos?"
+	options={[
+		"Dos fotogramas nuevos producidos por el vídeo",
+		"El mismo fotograma presentado durante dos refrescos",
+		"El doble de píxeles en la pantalla",
+	]}
+	answer={1}
+/>
+
+El **tiempo de respuesta** describe cuánto tarda un píxel en cambiar entre estados. La **latencia** hasta ver una acción incluye también el trabajo de la aplicación, las colas y el procesamiento de imagen. Ninguno de esos tiempos queda descrito completamente por una cifra de hercios.
+
+Por último, detectar dónde tocas requiere otra función: una capa de sensores. [Los periféricos de entrada](/articulos/perifericos-de-entrada/) explican cómo una pantalla táctil devuelve esa información al equipo.
 
 ## Lo esencial
 
-- Una pantalla es una cuadrícula de píxeles, cada uno con subpíxeles rojo, verde y azul.
-- La resolución dice cuántos píxeles tiene; la frecuencia, cuántas veces por segundo se redibuja.
-- Una LCD filtra una luz de fondo con cristales líquidos y polarizadores.
-- En una OLED cada píxel emite su propia luz, lo que da negros reales.
+- La resolución cuenta píxeles; el formato de imagen determina cuántos datos los representan.
+- LCD regula una luz de fondo; OLED controla emisores propios.
+- Refresco, fotogramas por segundo y tiempo de respuesta describen etapas diferentes.

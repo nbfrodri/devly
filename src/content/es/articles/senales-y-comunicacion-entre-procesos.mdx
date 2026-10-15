@@ -1,13 +1,13 @@
 ---
 title: "¿Cómo se comunican los procesos? Señales, tuberías y sockets"
-description: "Los procesos están aislados, pero a menudo necesitan colaborar. El sistema operativo ofrece varios mecanismos: señales, tuberías, sockets y memoria compartida."
+description: "Los procesos colaboran mediante mecanismos autorizados de comunicación. Señales, tuberías, sockets y memoria compartida ofrecen contratos diferentes."
 level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-proceso
   - llamadas-al-sistema
   - terminal-y-shell
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Linux man-pages: signal(7) (en inglés)"
     url: https://man7.org/linux/man-pages/man7/signal.7.html
@@ -15,97 +15,112 @@ sources:
     url: https://man7.org/linux/man-pages/man7/pipe.7.html
   - title: "Linux man-pages: unix(7) (en inglés)"
     url: https://man7.org/linux/man-pages/man7/unix.7.html
+  - title: "Linux man-pages: shm_overview(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/shm_overview.7.html
   - title: "Node.js: Child process (en inglés)"
     url: https://nodejs.org/api/child_process.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Cada [proceso](/articulos/que-es-un-proceso/) tiene su memoria aislada: ninguno puede leer la de otro. Es lo que protege al sistema. Pero muchas veces los procesos necesitan colaborar, avisarse o intercambiar datos. El sistema operativo ofrece para ello mecanismos de **comunicación entre procesos**, o IPC por sus siglas en inglés.
+La **comunicación entre procesos**, o **IPC**, permite que programas en ejecución intercambien datos o se coordinen. Sus espacios de memoria están protegidos, pero el sistema puede autorizar canales o regiones compartidas. Aislamiento no significa imposibilidad de colaborar.
 
-## Señales
+Supón un programa A que genera nombres de frutas y otro B que los ordena. Necesitamos entregar datos, saber cuándo termina la entrada, recibir la respuesta y detectar un fallo. No basta con que ambos procesos existan.
 
-Una **señal** es un aviso breve que se envía a un proceso. No lleva datos: solo un número, que indica qué ha pasado.
+## Tuberías: transportar bytes
 
-| Señal | Cuándo se envía | Efecto habitual |
-| --- | --- | --- |
-| `SIGINT` | Al pulsar Ctrl+C en la terminal | Interrumpir |
-| `SIGTERM` | Para pedir que termine | Terminar de forma ordenada |
-| `SIGKILL` | Para forzar que termine | Terminar inmediatamente |
-| `SIGHUP` | Al cerrarse la terminal | A menudo, recargar la configuración |
-| `SIGSEGV` | Al acceder a memoria prohibida | Terminar, el famoso fallo de segmentación |
-| `SIGCHLD` | Al terminar un proceso hijo | Aviso al padre |
+Una **tubería**, o *pipe*, ofrece un canal de bytes en un sentido. Lo escrito por un extremo se lee por el otro. No conserva por sí sola mensajes: dos escrituras pueden llegar juntas en una lectura o una escritura repartirse en varias. Las aplicaciones deben acordar cómo separar sus datos.
 
-Un proceso puede **capturar** la mayoría de las señales y decidir qué hacer: por ejemplo, al recibir `SIGTERM`, guardar su trabajo y cerrar las conexiones antes de salir.
+En el ejemplo usaremos saltos de línea. A entrega tres nombres y cierra su extremo de escritura; B puede reconocer el fin de entrada y producir la ordenación. Otra conexión devuelve la respuesta.
 
-```javascript
-process.on("SIGTERM", () => {
-	console.log("Cerrando de forma ordenada...");
-	servidor.close(() => process.exit(0));
-});
-```
-
-`SIGKILL` no se puede capturar: el núcleo elimina el proceso sin darle opción. Por eso, para detener un programa, lo correcto es enviar primero `SIGTERM` y recurrir a `SIGKILL` solo si no responde.
-
-En la terminal se envían con la orden `kill`, que, pese a su nombre, sirve para cualquier señal.
-
-## Tuberías
-
-Una **tubería**, en inglés *pipe*, es un canal en un solo sentido: lo que un proceso escribe por un extremo, otro lo lee por el otro, en orden.
-
-Es lo que hace el símbolo `|` de la [terminal](/articulos/terminal-y-shell/):
-
-```bash
-cat registro.txt | grep error | wc -l
-```
-
-Son tres procesos distintos, conectados: la salida de cada uno es la entrada del siguiente.
-
-Un programa puede hacer lo mismo con otro proceso:
+Este programa completo usa Node.js en Linux, con `sort` disponible. Guárdalo como `ordenar.mjs` y ejecútalo con `node ordenar.mjs`:
 
 ```js
 import { spawnSync } from "node:child_process";
 
-const resultado = spawnSync("sort", { input: "pera\nmanzana\nuva\n" });
+const resultado = spawnSync("sort", {
+	input: "pera\nmanzana\nuva\n",
+	encoding: "utf8",
+	env: { ...process.env, LC_ALL: "C" },
+});
 
-console.log(resultado.stdout.toString().trim().split("\n").join(" ")); // "manzana pera uva"
+if (resultado.error) throw resultado.error;
+if (resultado.status !== 0) {
+	throw new Error(`sort no terminó correctamente: ${resultado.status}, ${resultado.signal}`);
+}
+
+console.log(resultado.stdout.trim().split("\n").join(" ")); // "manzana pera uva"
 ```
 
-Node.js lanza el programa `sort` como un proceso aparte, le envía el texto por una tubería y lee la respuesta por otra.
+`LC_ALL=C` fija las reglas de comparación para estos nombres ASCII. Node crea el proceso y gestiona sus conexiones de entrada y salida. `spawnSync` espera su terminación y conserva la respuesta en memoria; es cómodo para este ejemplo pequeño, pero bloquearía trabajo concurrente del programa que lo llama. También impone límites al volumen capturado.
 
-## Sockets
+Una tubería tiene capacidad limitada. Si el receptor no consume datos, el escritor puede quedarse esperando o recibir un resultado que indique que debe intentarlo después, según el modo. Esa **contrapresión** evita tratar el canal como una memoria infinita.
 
-Un **[socket](/articulos/que-es-un-socket/)** es un extremo de una comunicación en **los dos sentidos**. Los de red conectan procesos en máquinas distintas, mediante [TCP o UDP](/articulos/tcp-y-udp/). Los **sockets locales** hacen lo mismo dentro de una máquina, sin pasar por la red, y son más rápidos.
+El lector detecta fin de entrada cuando se han cerrado **todos** los descriptores que conservan el extremo de escritura y ya no quedan datos. Si un proceso deja uno abierto por accidente, el otro puede seguir esperando. La [terminal](/articulos/terminal-y-shell/) usa estas conexiones al interpretar `|`.
 
-Muchos servicios los usan: una base de datos puede atender a las aplicaciones del mismo equipo por un socket local.
+## Señales: notificar acontecimientos
 
-## Memoria compartida
+Una **señal** notifica un acontecimiento a un proceso o hilo. Cada señal tiene una acción predeterminada; muchas permiten instalar un **manejador**, código que responde cuando se entrega. No es lo mismo solicitar una acción que demostrar que ya se ha completado.
 
-Dos procesos pueden pedir al sistema que una misma zona de memoria aparezca en el espacio de ambos. Es el mecanismo **más rápido**: no hay que copiar nada. También el más delicado, porque tiene los riesgos de los [hilos](/articulos/hilos-y-concurrencia/): si los dos escriben a la vez, aparecen [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/), y hacen falta mecanismos de sincronización.
+| Señal | Significado habitual y acción predeterminada en Linux |
+| --- | --- |
+| `SIGINT` | Interrupción, frecuentemente por Ctrl+C; termina el proceso |
+| `SIGTERM` | Solicitud de terminación; termina si no se instala otro manejo |
+| `SIGKILL` | Terminación forzada, sin manejador de la aplicación |
+| `SIGHUP` | Desconexión de terminal; por defecto termina |
+| `SIGCHLD` | Cambio de estado de un hijo; por defecto se ignora la señal |
+| `SIGSTOP` | Detener la ejecución hasta que se permita continuar |
 
-## Comparación
+Algunos servicios interpretan `SIGHUP` como recarga de configuración porque lo programan así; no es el efecto universal de la señal. `SIGKILL` y `SIGSTOP` no pueden capturarse ni ignorarse. Tampoco debe confundirse `SIGKILL` con una promesa de desaparición instantánea: el núcleo puede estar esperando que termine una operación no interrumpible.
 
-| Mecanismo | Datos | Sentido | Alcance | Velocidad |
-| --- | --- | --- | --- | --- |
-| Señal | Solo un número | Uno | Misma máquina | Inmediata |
-| Tubería | Un flujo de bytes | Uno | Misma máquina | Alta |
-| Socket local | Un flujo de bytes o mensajes | Dos | Misma máquina | Alta |
-| Socket de red | Un flujo de bytes o mensajes | Dos | Cualquier máquina | Depende de la red |
-| Memoria compartida | Lo que se quiera | Dos | Misma máquina | La mayor |
+Para cerrar ordenadamente un servicio, un recorrido posible es:
 
-A mayor escala, los servicios distribuidos se comunican con [API](/articulos/que-es-una-api/) o [colas de mensajes](/articulos/colas-de-mensajes/), que en el fondo usan sockets.
+1. El administrador envía `SIGTERM` con la autorización necesaria.
+2. Un manejador instalado por el servicio solicita dejar de aceptar trabajo nuevo.
+3. La aplicación termina o cancela sus operaciones pendientes y cierra recursos.
+4. El proceso termina y quien lo supervisa comprueba el resultado.
+
+Sin ese manejo, `SIGTERM` no guarda por sí sola documentos ni espera tareas de la aplicación. Los manejadores nativos además tienen restricciones sobre las funciones que pueden llamar; un entorno como Node ofrece su propia interfaz de eventos.
 
 <Quiz
 	client:visible
-	question="¿Qué señal conviene enviar primero para detener un programa de forma ordenada?"
-	options={["SIGKILL", "SIGTERM", "SIGSEGV"]}
+	question="Un servicio recibe SIGTERM. ¿Qué hace falta para que termine su trabajo pendiente antes de salir?"
+	options={["Nada: la señal lo garantiza siempre", "Que el servicio implemente ese comportamiento y pueda completarlo", "Cambiar la señal por SIGKILL"]}
 	answer={1}
 />
 
+Las señales pueden incluir información asociada; las de tiempo real admiten colas y valores. Varias señales estándar iguales pendientes pueden agruparse en una sola notificación. Por eso no conviene usar una señal estándar por fruta y suponer que se contará cada envío.
+
+## Sockets: acordar una conversación
+
+Un **[socket](/articulos/que-es-un-socket/)** es un extremo de comunicación. Los sockets locales de tipo Unix conectan procesos de la misma máquina; los de red pueden conectar equipos diferentes o procesos del mismo equipo.
+
+Según su tipo, ofrecen un flujo de bytes o mensajes. Un flujo requiere delimitar cada solicitud, igual que nuestra tubería; una petición podría contener una longitud y después los nombres. La aplicación aún debe acordar respuestas, errores y cierre.
+
+Los sockets locales pueden evitar parte del recorrido de red, pero no hay una ventaja de velocidad universal. Tipo de mensaje, tamaño, copias y carga importan. Si B debe atender a muchos clientes, una conexión por cliente puede expresar mejor la conversación que dos tuberías creadas para un único hijo.
+
+## Memoria compartida: ver la misma región
+
+Dos procesos autorizados pueden mapear una región común en sus espacios de direcciones. A escribiría los nombres allí y B los leería sin transportarlos todos por una tubería. Eso puede reducir copias, pero aún hay costes de preparación, coherencia y coordinación.
+
+Hay que indicar qué datos están completos y quién puede modificarlos. Si A reemplaza una entrada mientras B la interpreta, aparece una [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/). Compartir una dirección accesible no establece un protocolo correcto; hacen falta mecanismos de sincronización y reglas de propiedad.
+
+| Mecanismo | Qué aporta | Qué debe acordar la aplicación |
+| --- | --- | --- |
+| Señal | Notificación con semántica definida | Respuesta y límites de entrega |
+| Tubería | Flujo de bytes en un sentido | Formato, cierre y consumo |
+| Socket | Canal local o de red según su tipo | Protocolo, identificación y errores |
+| Memoria compartida | Región accesible a varios procesos | Publicación, propiedad y sincronización |
+
+## Errores comunes
+
+- **Suponer que una lectura equivale a un mensaje.** Los flujos no conservan esa separación.
+- **Esperar el final sin cerrar la entrada.** El otro proceso puede estar esperando más datos.
+- **Elegir por una tabla de velocidades universales.** Primero define contrato, alcance y volumen; después mide el recorrido real.
+
 ## Lo esencial
 
-- Los procesos están aislados y se comunican con mecanismos del sistema operativo.
-- Las señales son avisos sin datos; SIGTERM pide terminar y SIGKILL lo fuerza.
-- Las tuberías conectan la salida de un proceso con la entrada de otro, como `|` en la terminal.
-- Los sockets comunican en los dos sentidos, en la misma máquina o por la red.
-- La memoria compartida es la más rápida, y la que más cuidado exige.
+- IPC permite colaboración autorizada entre procesos.
+- Enviar, recibir, cerrar y terminar son acontecimientos distintos.
+- Cada mecanismo exige un protocolo y tratamiento de errores.
+- Compartir memoria reduce ciertos movimientos, pero no elimina la sincronización.

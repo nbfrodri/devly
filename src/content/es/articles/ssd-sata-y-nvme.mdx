@@ -1,52 +1,92 @@
 ---
 title: "Diferencias entre un SSD SATA y uno NVMe"
-description: "Los dos son SSD con la misma memoria flash, pero se conectan de forma distinta. SATA viene de los discos duros; NVMe se diseñó para flash y va por PCI Express."
-level: basico
+description: "SATA y NVMe sobre PCIe cambian cómo una SSD recibe órdenes y transfiere datos. M.2 es un formato; el rendimiento depende de toda la operación."
+level: intermedio
 kind: comparacion
 layer: hardware
 prerequisites:
   - discos-duros-y-ssd
   - la-placa-base-y-los-buses
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "NVM Express: About (en inglés)"
-    url: https://nvmexpress.org/about/
-  - title: "Remzi y Andrea Arpaci-Dusseau: Flash-based SSDs, Operating Systems, Three Easy Pieces (en inglés)"
+  - title: "NVM Express: NVMe Overview (en inglés)"
+    url: https://nvmexpress.org/wp-content/uploads/NVMe_Overview.pdf
+  - title: "NVM Express: Specifications, comandos y transportes (en inglés)"
+    url: https://nvmexpress.org/specifications/
+  - title: "NVM Express: NVMe Form Factors, Part III (en inglés)"
+    url: https://nvmexpress.org/nvm-express-blog-series-nvme-form-factors-part-iii-the-importance-of-form/
+  - title: "Arpaci-Dusseau: OSTEP, Flash-based SSDs (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un [SSD](/articulos/discos-duros-y-ssd/) guarda los datos en memoria flash, sin piezas móviles. Pero la memoria es solo la mitad: también importa **cómo se conecta** al resto del equipo. Hay dos formas principales, **SATA** y **NVMe**, y la diferencia de velocidad entre ellas es grande.
+Una [SSD](/articulos/discos-duros-y-ssd/) puede conectarse mediante **SATA** o usar el protocolo **NVMe sobre PCI Express**. Ambas pueden almacenar en flash; lo que comparamos es cómo reciben órdenes y transfieren datos, no dos clases de memoria necesariamente idénticas.
 
-## Para comparar
+## SATA: enlace y peticiones en cola
 
-| | SSD SATA | SSD NVMe |
+SATA es una interfaz de almacenamiento utilizada por discos duros y SSD. El sistema suele manejar su controlador mediante **AHCI**, una interfaz de programación. **NCQ** es un mecanismo de encolado: la unidad admite varias órdenes pendientes y puede organizar su atención. SATA no exige atender siempre una petición aislada antes de recibir otra.
+
+Su capacidad de enlace y su organización de colas pueden limitar una SSD capaz de hacer más trabajo interno. No obstante, muchas tareas esperan a una sola lectura o a otro componente; en ellas el máximo del enlace no es necesariamente el límite que importa.
+
+## NVMe sobre PCIe: más colas y otro enlace
+
+**NVMe** define cómo el software envía órdenes de almacenamiento y recibe sus resultados. Separa las colas de envío de las de finalización y permite múltiples colas, útiles para repartir solicitudes de varios núcleos del procesador. No obliga a que la unidad pueda ejecutar todas las órdenes simultáneamente.
+
+En una SSD local, las órdenes y los datos viajan por **PCI Express**, o PCIe, una conexión de la [placa base](/articulos/la-placa-base-y-los-buses/). Su capacidad depende de la generación, el número de carriles y los enlaces compartidos. NVMe también tiene transportes de red; aquí comparamos únicamente SSD locales por PCIe.
+
+## Copiar el mismo archivo
+
+Supón un archivo de 6000 MB y dos destinos que, en este ejemplo ideal, sostienen 500 MB/s y 3000 MB/s respectivamente. No son mediciones de productos. Si el origen proporciona 4000 MB/s y la copia solapa lectura y escritura, el destino limita el flujo:
+
+```js
+const segundosDeCopia = (mb, origenMBs, destinoMBs) =>
+	mb / Math.min(origenMBs, destinoMBs);
+
+console.log(segundosDeCopia(6000, 4000, 500)); // 12
+console.log(segundosDeCopia(6000, 4000, 3000)); // 2
+console.log(segundosDeCopia(6000, 100, 500)); // 60
+console.log(segundosDeCopia(6000, 100, 3000)); // 60
+```
+
+Al cambiar el origen por uno limitado a 100 MB/s, ambos destinos tardan como mínimo 60 segundos en este modelo. Un destino más rápido no crea los datos que faltan en la entrada. En una copia real también influyen el arranque del flujo, las cachés, el sistema de archivos, la temperatura y otras operaciones.
+
+<Quiz
+	client:visible
+	question="Si el origen solo entrega 100 MB/s, ¿qué logra aumentar el máximo del destino de 500 a 3000 MB/s en el ejemplo?"
+	options={[
+		"No reduce el límite de 60 segundos impuesto por el origen",
+		"Hace que el origen entregue 3000 MB/s",
+		"Reduce siempre seis veces la duración",
+	]}
+	answer={0}
+/>
+
+## Comparación
+
+| Criterio | SSD SATA | SSD NVMe sobre PCIe |
 | --- | --- | --- |
-| Interfaz | SATA, la de los discos duros | NVMe, sobre PCI Express |
-| Pensada para | Un dispositivo lento que atiende una petición tras otra | Memoria flash, con muchas operaciones en paralelo |
-| Formato habitual | Caja de 2,5 pulgadas con cable, o M.2 | Tarjeta M.2 o tarjeta de expansión |
-| Velocidad | Limitada por la interfaz SATA | Varias veces mayor |
-| Compatibilidad | Prácticamente cualquier equipo | Equipos con ranura y soporte adecuados |
+| Conexión local | SATA | PCI Express |
+| Gestión de órdenes | AHCI y NCQ en la configuración habitual | Colas de envío y finalización NVMe |
+| Paralelismo | Admite órdenes pendientes; tiene límites propios | Permite múltiples colas; ejecución según controlador |
+| Formatos posibles | Entre otros, 2,5 pulgadas o M.2 | Entre otros, M.2 o tarjeta de expansión |
+| Límite real | Unidad, enlace y carga | Unidad, generación/carriles PCIe y carga |
 
-## Por qué SATA se queda corto
+## M.2 no significa NVMe
 
-SATA se diseñó para discos duros, donde el cuello de botella es el brazo mecánico que se mueve sobre el plato. Para un dispositivo así, una interfaz modesta bastaba. La memoria flash es mucho más rápida y puede atender muchas peticiones a la vez, y SATA no la deja aprovecharlo.
+**M.2** describe un formato de módulos y conectores. Existen SSD M.2 SATA y PCIe/NVMe. La forma parecida no garantiza compatibilidad: deben coincidir el tipo admitido por la ranura, las muescas del conector, el tamaño del módulo y el soporte del equipo. Para arrancar desde esa unidad importa además el [firmware](/articulos/que-es-el-firmware/).
 
-**NVMe**, según el consorcio que lo mantiene, define la interfaz de registros y el conjunto de órdenes para almacenamiento conectado por **PCI Express**, el bus más rápido de la [placa base](/articulos/la-placa-base-y-los-buses/), y es el estándar de hecho para los SSD de PCIe.
+El manual de la placa especifica qué admite cada ranura y si comparte recursos con otras. Un adaptador que cambia la forma no necesariamente convierte un protocolo en otro.
 
-## La trampa del M.2
+## Cuándo importa la diferencia
 
-**M.2** es un **formato**, la forma del conector y de la tarjeta, no una interfaz. Una tarjeta M.2 puede ser SATA o NVMe, con un aspecto casi idéntico. Antes de comprar hay que comprobar qué admite la ranura de la placa.
+Si la tarea transfiere muchos datos y el resto del equipo puede alimentarla, un enlace PCIe adecuado permite superar el límite de SATA. Si depende de pequeñas lecturas sucesivas, interesa medir su [latencia](/articulos/ancho-de-banda-y-velocidad-de-un-disco/) en esas condiciones. Si espera a la red o al procesador, cambiar el disco puede aportar poco.
 
-## ¿Se nota?
-
-- **Copiar archivos grandes**, cargar proyectos pesados o bases de datos: sí, mucho.
-- **Uso normal**, navegar, ofimática: menos. El salto grande es de disco duro a cualquier SSD; de SSD SATA a NVMe se nota menos en el día a día.
+Ni «NVMe» garantiza una velocidad sostenida determinada ni «SATA» implica incompatibilidad con flash. Tampoco una cifra máxima de lectura describe una escritura larga. Para comparar, usa la misma operación, tamaño, concurrencia y condiciones de caché.
 
 ## Lo esencial
 
-- Ambos son SSD; cambia cómo se conectan.
-- SATA viene de los discos duros y limita la velocidad de la flash.
-- NVMe va por PCI Express y aprovecha el paralelismo de la flash.
-- M.2 es un formato que puede ser SATA o NVMe.
+- SATA admite peticiones en cola; NVMe ofrece una organización diseñada para almacenamiento no volátil y paralelismo.
+- Aquí NVMe usa PCIe, cuya capacidad depende del enlace disponible.
+- M.2 es un formato: hay que comprobar protocolo y compatibilidad.
+- El tiempo de una copia depende del recorrido completo de los datos.

@@ -6,19 +6,21 @@ layer: redes
 prerequisites:
   - que-es-una-direccion-ip
   - que-es-un-bit
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "RFC 4632: Classless Inter-domain Routing (CIDR)"
+  - title: "RFC 3021: Using 31-Bit Prefixes on IPv4 Point-to-Point Links (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc3021.html
+  - title: "RFC 4632: Classless Inter-domain Routing (CIDR) (en inglés)"
     url: https://www.rfc-editor.org/info/rfc4632/
-  - title: "RFC 1918: Address Allocation for Private Internets"
+  - title: "RFC 1918: Address Allocation for Private Internets (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1918/
-  - title: "RFC 791: Internet Protocol"
+  - title: "RFC 791: Internet Protocol (en inglés)"
     url: https://www.rfc-editor.org/info/rfc791/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **subred** es un conjunto de [direcciones IP](/articulos/que-es-una-direccion-ip/) consecutivas que comparten los mismos bits iniciales. Esos bits comunes son el **prefijo**, e identifican la red. Los restantes identifican a cada equipo dentro de ella. La **máscara de subred**, o la notación **CIDR**, indican dónde está la frontera entre las dos partes.
+Una **subred** es una división de una red IP que utiliza un bloque de direcciones con un **prefijo** común: los mismos bits iniciales. Los bits restantes permiten distinguir direcciones dentro del bloque. La **máscara de subred**, o la notación **CIDR**, indican dónde está la frontera entre ambas partes.
 
 Es el concepto que permite a un equipo saber si otro está en su misma red, y a los routers decidir adónde enviar cada paquete.
 
@@ -56,7 +58,16 @@ Cada bit que se añade al prefijo divide el tamaño por dos. Un `/25` es la mita
 
 ## Calcular la red
 
-La dirección de la red se obtiene poniendo a cero los bits de equipo.
+La dirección de la red se obtiene poniendo a cero los bits posteriores al prefijo. Con `192.168.1.130/26`, los primeros tres bytes aportan 24 bits y quedan dos bits de red en el último byte:
+
+```text
+130 en binario:    10 | 000010
+Parte de equipo:     | 000000
+Inicio del bloque: 10 | 000000 = 128
+Final del bloque:  10 | 111111 = 191
+```
+
+Por tanto, el bloque empieza en `192.168.1.128` y termina en `192.168.1.191`. El siguiente ejemplo calcula esa frontera con divisiones. Supone direcciones IPv4 válidas y un prefijo entero entre 0 y 32; no es un validador de entradas.
 
 ```js
 const aNumero = (ip) =>
@@ -78,18 +89,20 @@ console.log(2 ** (32 - 26) - 2); // 62
 
 La misma dirección pertenece a redes distintas según el prefijo. Con `/24`, a la red `192.168.1.0`, que va de la `.0` a la `.255`. Con `/26`, a `192.168.1.128`, que va de la `.128` a la `.191`.
 
-### Dos direcciones reservadas
+### Cuándo se restan dos direcciones
 
-En cada subred IPv4, dos direcciones no se asignan a equipos:
+En una subred IPv4 convencional, como este `/26`, dos direcciones tienen usos especiales:
 
 - La **primera** es la dirección de la propia red.
-- La **última** es la de **difusión**: lo enviado a ella lo reciben todos los equipos de la subred.
+- La **última** es la de **difusión**: representa a los equipos de esa subred, aunque filtros y configuración pueden impedir que todos reciban un envío.
 
-Por eso un `/24` tiene 256 direcciones y 254 utilizables, y un `/26`, 62.
+Por eso un `/24` convencional deja 254 direcciones asignables y un `/26`, 62: en el ejemplo, de `.129` a `.190`.
+
+La resta no es universal. En un enlace **punto a punto**, con solo dos extremos y soporte para RFC 3021, un `/31` usa sus dos direcciones para esos extremos. Un `/32` representa una única dirección, por ejemplo en una ruta específica hacia un destino. Restarle dos no tendría sentido. Un proveedor también puede reservar más direcciones por decisiones de su servicio.
 
 ## Para qué sirve: ¿está en mi red?
 
-Cuando un equipo quiere enviar un paquete, lo primero que decide es si el destino está en su misma subred.
+En el caso sencillo de un equipo con una red local y una salida predeterminada, comparar los prefijos permite decidir si el destino es local. En una configuración con más rutas, la decisión completa depende de la tabla de [enrutamiento](/articulos/enrutamiento/).
 
 ```js
 const aNumero = (ip) =>
@@ -106,23 +119,23 @@ console.log(mismaRed("192.168.1.130", "192.168.1.200", 24)); // true
 ```
 
 - **Si está en la misma**, se lo entrega directamente, por la [capa de enlace](/articulos/capa-de-enlace/).
-- **Si no**, se lo envía al router, la **puerta de enlace**, para que lo encamine.
+- **Si no**, usa la ruta predeterminada hacia el router, la [**puerta de enlace**](/articulos/puerta-de-enlace-predeterminada/), si está configurada.
 
 Una máscara mal configurada produce un fallo característico: el equipo habla con algunos vecinos y con otros no, porque cree que están en otra red, o intenta alcanzar directamente a equipos que no lo están.
 
 <Quiz
 	client:visible
-	question="¿Cuántos equipos pueden tener dirección en una subred /24 de IPv4?"
-	options={["256", "254", "24"]}
+	question="Tu equipo usa 192.168.1.130/26. ¿Qué dirección pertenece a su mismo bloque?"
+	options={["192.168.1.100", "192.168.1.190", "192.168.1.200"]}
 	answer={1}
 />
 
 ## Por qué dividir una red
 
 - **Organización.** Una subred por departamento, por planta o por función.
-- **Seguridad.** Entre subredes, el tráfico pasa por un router, donde un [cortafuegos](/articulos/cortafuegos/) puede filtrarlo. Los servidores, los puestos de trabajo y los invitados van en subredes distintas.
+- **Seguridad.** Separar grupos y aplicar reglas en un [cortafuegos](/articulos/cortafuegos/) permite controlar la comunicación. Asignar prefijos diferentes, por sí solo, no impide que los equipos se comuniquen ni sustituye el aislamiento de la red.
 - **Rendimiento.** Los mensajes de difusión llegan a toda la subred. Con miles de equipos en una sola, ese ruido pesa.
-- **Aprovechar las direcciones.** Un enlace entre dos routers necesita dos direcciones: se le da un `/30`, no un bloque de 256.
+- **Aprovechar las direcciones.** Un enlace entre dos routers puede usar un `/30`, o un `/31` si ambos extremos lo admiten, en lugar de reservar 256 direcciones.
 
 En [la nube](/articulos/computacion-en-la-nube/), diseñar una red es esto: elegir un bloque de direcciones y repartirlo en subredes, unas con salida a internet y otras sin ella, dentro de una [nube privada virtual](/articulos/nube-privada-virtual/).
 
@@ -138,13 +151,13 @@ En 1993 se adoptó **CIDR**, enrutamiento entre dominios sin clases: el prefijo 
 
 CIDR resolvió también otro problema. Los [routers](/articulos/enrutamiento/) de internet guardan una tabla con las redes que conocen. Si cada red pequeña ocupara una línea, la tabla sería inmanejable.
 
-Como los prefijos pueden tener cualquier longitud, varias redes contiguas se anuncian como una sola más grande. Las cuatro redes `10.1.0.0/24` a `10.1.3.0/24` se resumen en `10.1.0.0/22`. Se llama **agregación de rutas**.
+Cuando los bloques cubren exactamente un prefijo común, varias redes se pueden anunciar como una mayor. Las cuatro redes `10.1.0.0/24` a `10.1.3.0/24` se resumen en `10.1.0.0/22`. Se llama **agregación de rutas**. No basta con ser contiguas: `10.1.1.0/24` y `10.1.2.0/24` no forman por sí solas un `/23`, porque cruzan su frontera binaria.
 
 Cuando un paquete coincide con varias entradas de la tabla, el router elige la del **prefijo más largo**, es decir, la más específica.
 
 ## Los rangos privados
 
-Tres bloques están reservados para redes internas, y no circulan por internet:
+Tres bloques están reservados para redes internas y no se enrutan directamente por la internet pública:
 
 | Bloque | Rango | Uso habitual |
 | --- | --- | --- |
@@ -154,14 +167,14 @@ Tres bloques están reservados para redes internas, y no circulan por internet:
 
 Otros bloques con un significado especial:
 
-- `127.0.0.0/8`: el propio equipo. `127.0.0.1` es *localhost*.
-- `0.0.0.0/0`: cualquier dirección. En una tabla de rutas es la **ruta por defecto**; en una regla de cortafuegos, "todo internet".
+- `127.0.0.0/8`: bucle local hacia el propio equipo; `127.0.0.1` es una de sus direcciones.
+- `0.0.0.0/0`: cualquier dirección IPv4, incluidas privadas y especiales. En una tabla de rutas es la **ruta por defecto**; en una regla de cortafuegos no restringe el rango de direcciones.
 
-Ver `0.0.0.0/0` como origen permitido en un puerto de administración es una de las configuraciones peligrosas más frecuentes.
+Permitir `0.0.0.0/0` en un puerto de administración acepta cualquier origen IPv4 que pueda alcanzar ese servicio; hay que evaluar si ese acceso es el deseado.
 
 ## Un error de planificación
 
-Dos redes que usan el mismo rango privado no se pueden conectar entre sí: las direcciones chocan. Pasa al unir dos sedes con una [VPN](/articulos/vpn-y-tuneles/), o dos redes en la nube, cuando ambas eligieron `10.0.0.0/16` porque era el valor por defecto.
+Dos redes que reutilizan el mismo rango crean ambigüedad al intentar unirlas: `10.0.0.20` puede significar dos destinos diferentes. Pasa al conectar sedes con una [VPN](/articulos/vpn-y-tuneles/) o redes de la nube. Puede requerir renumerar, traducir direcciones o separar los contextos de enrutamiento; no basta con añadir un enlace.
 
 Conviene elegir los rangos pensando en lo que habrá que conectar más adelante.
 

@@ -1,98 +1,112 @@
 ---
 title: "¿Qué es un sistema operativo de tiempo real?"
-description: "Un sistema operativo de tiempo real garantiza que cada tarea responde dentro de un plazo fijo. No es el más rápido, sino el más predecible."
+description: "Un RTOS ofrece mecanismos para construir sistemas que cumplen plazos. La garantía exige analizar las tareas, sus interferencias y el hardware."
 level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
   - planificador-de-procesos
-  - microcontrolador-y-microprocesador
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "FreeRTOS: RTOS fundamentals (en inglés)"
-    url: https://www.freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/01-RTOS-fundamentals
-  - title: "seL4: About (en inglés)"
-    url: https://sel4.systems/About/
+  - title: "FreeRTOS: Mastering the FreeRTOS Real Time Kernel, Task Management (en inglés)"
+    url: https://github.com/FreeRTOS/FreeRTOS-Kernel-Book/blob/main/ch04.md
+  - title: "FreeRTOS: Resource Management, inversión y herencia de prioridad (en inglés)"
+    url: https://github.com/FreeRTOS/FreeRTOS-Kernel-Book/blob/main/ch08.md
+  - title: "Zephyr: Scheduling (en inglés)"
+    url: https://docs.zephyrproject.org/latest/kernel/services/scheduling/index.html
+  - title: "Linux Kernel: Real-time, Theory of operation (en inglés)"
+    url: https://docs.kernel.org/core-api/real-time/theory.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **sistema operativo de tiempo real**, o RTOS por sus siglas en inglés, es un [sistema operativo](/articulos/que-es-un-sistema-operativo/) que garantiza que cada tarea se atiende **dentro de un plazo conocido**. Lo importante no es que sea rápido, sino que sea **predecible**: que una respuesta llegue siempre a tiempo, no casi siempre.
+Un **sistema operativo de tiempo real**, o **RTOS**, ofrece mecanismos de ejecución y planificación orientados a cumplir plazos. En un sistema de tiempo real, la corrección depende tanto del resultado como del momento en que llega. Instalar un RTOS no garantiza que cualquier conjunto de tareas llegue a tiempo.
 
-## Qué problema resuelve
+## El tiempo forma parte del requisito
 
-Un sistema operativo de escritorio está diseñado para que todo vaya bien **en promedio**. Si el ratón se queda congelado medio segundo de vez en cuando, molesta, pero no pasa nada.
+Supón un controlador que recibe periódicamente una medida y debe producir una orden. Una respuesta correcta, pero posterior al momento en que debía aplicarse, incumple el contrato.
 
-En otros sistemas, una respuesta tardía es un fallo:
+El **plazo**, o *deadline*, indica cuándo debe estar terminado un trabajo. El **periodo** indica cada cuánto se activa una tarea periódica. No tienen por qué coincidir: una tarea que se activa cada 10 milisegundos puede tener que terminar en los primeros 3.
 
-- El airbag de un coche debe dispararse en milésimas de segundo tras el impacto. Una respuesta correcta que llega tarde no sirve.
-- El control de un motor, de un brazo robótico o de un marcapasos.
-- Los mandos de vuelo de un avión.
+| Requisito | Qué significa incumplir |
+| --- | --- |
+| Tiempo real estricto | Incumplir el plazo es un fallo del requisito temporal |
+| Tiempo real flexible | Un retraso puede reducir la calidad dentro de una tolerancia definida |
 
-Ahí no basta con ir rápido normalmente. Hace falta una garantía.
+En audio, por ejemplo, perder un plazo puede causar un corte. Que un sistema sea estricto no significa que cada fallo cause una catástrofe: la gravedad pertenece a la aplicación. Tampoco todo dispositivo que controla algo necesita un RTOS; algunos utilizan otros diseños de ejecución.
 
-## Estricto y flexible
+## Un calendario que se puede comprobar
 
-| Tipo | Si se incumple un plazo | Ejemplos |
-| --- | --- | --- |
-| Tiempo real estricto | Es un fallo del sistema, potencialmente grave | Airbags, frenos, control de vuelo |
-| Tiempo real flexible | Baja la calidad, pero el sistema sigue sirviendo | Audio y vídeo en directo, videojuegos |
+Usaremos un modelo de un solo procesador, dos tareas y tiempos hipotéticos:
 
-## Cómo lo consigue
+| Tarea | Periodo | CPU que necesita como máximo | Plazo desde su activación |
+| --- | --- | --- | --- |
+| A, calcular una orden | 10 ms | 2 ms | 3 ms |
+| B, preparar un registro | 10 ms | 4 ms | 9 ms |
 
-### Planificación por prioridades estrictas
+Ambas se activan en 0, 10, 20… A tiene mayor prioridad. No comparten recursos que deban reservarse en exclusiva ni esperan dispositivos; primero omitimos el coste del sistema. El recorrido de cada periodo es:
 
-El [planificador](/articulos/planificador-de-procesos/) de un sistema de escritorio intenta repartir el procesador de forma justa. El de un RTOS hace otra cosa: **siempre ejecuta la tarea de mayor prioridad que esté lista**, y le quita el procesador a cualquier otra en el instante en que la necesita.
+1. A ejecuta de 0 a 2 y cumple su plazo de 3.
+2. B ejecuta de 2 a 6 y cumple su plazo de 9.
+3. De 6 a 10 queda capacidad libre.
 
-La tarea que vigila el impacto tiene la máxima prioridad. Cuando ocurre algo, se ejecuta de inmediato, aunque otra tarea estuviera a mitad de su trabajo.
+Consumen `6 / 10 = 60 %` de CPU. Ahora añadimos una interferencia que retrasa el inicio de A: una interrupción que ocupa el procesador antes de que A pueda ejecutar. En este cálculo la agrupamos al principio y no añadimos ninguna otra interferencia.
 
-### Tiempos acotados
+```js
+function plazos(interferencia) {
+	if (!Number.isFinite(interferencia) || interferencia < 0) {
+		throw new TypeError("La interferencia debe ser finita y no negativa");
+	}
+	const finA = interferencia + 2;
+	const finB = finA + 4;
+	return [finA <= 3, finB <= 9];
+}
 
-Cada operación del sistema, cambiar de tarea, atender una [interrupción](/articulos/interrupciones-y-entrada-salida/), reservar memoria, tiene un tiempo máximo conocido. Se evita todo lo que pueda tardar de forma impredecible: la memoria virtual con paginación al disco, la reserva de memoria dinámica sin límite, las cachés difíciles de prever.
+console.log(plazos(0).join(" ")); // "true true"
+console.log(plazos(0.8).join(" ")); // "true true"
+console.log(plazos(1.5).join(" ")); // "false true"
+```
 
-### Pequeño
+Con 0,8 ms, A termina en 2,8 y B en 6,8. Con 1,5 ms, A termina en 3,5: falla aunque el trabajo total del periodo, 7,5 ms, aún quepa en 10. **Capacidad media suficiente no demuestra que cada plazo se cumpla.**
 
-Muchos RTOS caben en unos pocos kilobytes y funcionan en un [microcontrolador](/articulos/microcontrolador-y-microprocesador/). Ofrecen lo mínimo: tareas, prioridades, temporizadores y mecanismos para que las tareas se comuniquen.
-
-## Un problema clásico: la inversión de prioridad
-
-Una tarea de baja prioridad tiene un recurso compartido. La de alta prioridad lo necesita y espera. Mientras, una tarea de prioridad media, que no necesita el recurso, se pone a ejecutar y retrasa a la baja, que no puede terminar y liberarlo. La tarea más importante queda bloqueada por una que no tiene nada que ver.
-
-Es un caso de las [condiciones de carrera y bloqueos](/articulos/condiciones-de-carrera-y-bloqueos/) con consecuencias graves. La solución habitual es la **herencia de prioridad**: mientras la tarea baja tiene el recurso que necesita la alta, se le sube temporalmente la prioridad.
-
-## Comparación
-
-| | Sistema de propósito general | Tiempo real |
-| --- | --- | --- |
-| Objetivo | Rendimiento medio y equidad | Cumplir plazos siempre |
-| Planificación | Reparto justo | Prioridad estricta |
-| Peor caso | Puede ser muy lento | Está acotado |
-| Tamaño | Grande | A menudo diminuto |
-| Ejemplos | Linux, Windows, macOS | FreeRTOS, Zephyr, QNX |
-
-Linux, que es de propósito general, tiene variantes y opciones para comportarse de forma cercana al tiempo real flexible.
-
-## Dónde está
-
-En casi cualquier aparato con electrónica: coches, que llevan decenas de pequeños ordenadores; electrodomésticos; dispositivos médicos; equipos industriales; dispositivos del [internet de las cosas](/articulos/internet-de-las-cosas/); satélites.
-
-En los más críticos, se exige además demostrar que el sistema es correcto. Algunos núcleos pequeños, como seL4, tienen una demostración matemática de su corrección.
+Este código comprueba las cuentas del modelo. No mide latencias reales ni demuestra los plazos de un dispositivo. Para trasladarlo a una máquina habría que justificar los máximos de ejecución, las activaciones y todas las interferencias omitidas.
 
 <Quiz
 	client:visible
-	question="¿Qué es lo más importante en un sistema operativo de tiempo real?"
-	options={[
-		"Ser el más rápido en promedio",
-		"Garantizar que cada tarea responde dentro de un plazo",
-		"Ejecutar muchos programas a la vez",
-	]}
+	question="Con 1,5 ms de interferencia, ¿por qué A incumple aunque quede tiempo libre en el periodo?"
+	options={["Porque cualquier uso de CPU superior al 50 % falla", "Porque termina en 3,5 ms y su plazo es 3 ms", "Porque B tiene necesariamente mayor prioridad"]}
 	answer={1}
 />
 
+## Qué aporta el RTOS
+
+Una política frecuente es **prioridad fija con expropiación**: entre tareas preparadas, ejecutar la de mayor prioridad y permitir que interrumpa a una inferior. FreeRTOS ofrece esa configuración y otras, con reparto por turnos entre prioridades iguales según sus opciones. Zephyr también permite tareas cooperativas y expropiativas; no hay un único algoritmo obligatorio para todos los RTOS.
+
+«Elegir la de mayor prioridad» no significa latencia cero. Puede estar atendiendo una [interrupción](/articulos/interrupciones-y-entrada-salida/) o una sección que no puede interrumpirse todavía. Una tarea bloqueada tampoco ejecuta solo por tener alta prioridad.
+
+El sistema proporciona temporizadores, estados de tareas y coordinación. Para obtener límites temporales útiles hay que controlar también reserva de memoria, esperas de dispositivos, cachés y tramos no interrumpibles. No toda operación de una biblioteca tiene un máximo adecuado para una tarea crítica.
+
+## Inversión de prioridad
+
+Imagina que una tarea de prioridad baja, L, tiene un **cerrojo** que protege un recurso. A lo necesita y queda esperando. Una tarea intermedia, M, puede adelantarse a L y retrasar todavía más a A, aunque M no utilice ese recurso. Es **inversión de prioridad**.
+
+La **herencia de prioridad** puede elevar temporalmente a L para que avance y libere el recurso. Evita parte de la interferencia de M; no elimina el tiempo de la sección protegida, no resuelve un bloqueo mutuo ni demuestra por sí sola el plazo de A. Los protocolos y sus límites se estudian junto con [carreras y bloqueos](/articulos/condiciones-de-carrera-y-bloqueos/).
+
+## Dónde encaja
+
+Muchos RTOS se utilizan en un **[microcontrolador](/articulos/microcontrolador-y-microprocesador/)**, un circuito que integra procesador, memoria y periféricos para controlar dispositivos. Otros sistemas temporales son mayores y necesitan separación de procesos, red y almacenamiento.
+
+Linux dispone de PREEMPT_RT para reducir tramos no expropiables y tratar más interrupciones mediante hilos planificables. Esa posibilidad tampoco concede una garantía universal: el hardware, los controladores, la configuración y la aplicación siguen formando parte del análisis.
+
+## Errores comunes
+
+- **Usar el promedio como límite.** Una medición rápida normalmente no acota el peor caso.
+- **Confundir prioridad con disponibilidad.** Una tarea puede esperar un recurso que tiene otra.
+- **Prometer plazos por el nombre del núcleo.** Deben justificarse para el sistema y la carga concretos.
+
 ## Lo esencial
 
-- Un RTOS garantiza que las tareas responden dentro de un plazo conocido.
-- Importa la predictibilidad, no la velocidad media.
-- Ejecuta siempre la tarea de mayor prioridad, y acota el tiempo de cada operación.
-- La inversión de prioridad es un riesgo clásico, que se resuelve con herencia de prioridad.
-- Está en coches, equipos médicos, industria y dispositivos integrados.
+- En tiempo real, el resultado debe llegar dentro de un plazo definido.
+- El RTOS aporta mecanismos; la garantía depende del diseño completo.
+- Hay que contar ejecución, esperas e interferencias, no solo uso medio de CPU.
+- La herencia de prioridad reduce ciertos retrasos, pero no sustituye el análisis temporal.

@@ -1,25 +1,29 @@
 title: Sistemas operativos a fondo
-description: Cómo gestiona el sistema la memoria y los archivos, y cómo se maneja desde la terminal.
+description: "Tras los fundamentos del ordenador y sus piezas —procesador, RAM, placa, discos, archivos y binarios—, recorre ejecución, memoria y uso del sistema. Los ejemplos requieren programación básica en JavaScript y C; los comandos usan Linux y Bash."
 layer: sistemas
 steps:
   - que-es-un-sistema-operativo
+  - que-es-el-kernel
+  - que-es-un-proceso
+  - hilos-y-concurrencia
   - llamadas-al-sistema
   - nucleo-monolitico-y-micronucleo
+  - que-es-el-firmware
   - arranque-de-un-sistema-operativo
-  - que-es-un-proceso
   - planificador-de-procesos
   - cambio-de-contexto
   - memoria-virtual
   - swap-y-memoria-ram
   - sistema-de-archivos
   - descriptores-de-archivo
-  - fat-y-ntfs
-  - permisos-y-usuarios
   - terminal-y-shell
+  - permisos-y-usuarios
+  - fat-y-ntfs
   - que-es-linux
   - distribuciones-de-linux
   - senales-y-comunicacion-entre-procesos
   - sistemas-operativos-de-tiempo-real
   - linux-windows-y-macos
+  - virtualizacion
   - emuladores
   - del-ejecutable-al-proceso

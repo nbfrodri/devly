@@ -1,117 +1,105 @@
 ---
 title: "Diferencias entre contenedores y máquinas virtuales"
-description: "Una máquina virtual simula un ordenador completo con su propio sistema operativo; un contenedor aísla procesos que comparten el del anfitrión."
+description: "Una máquina virtual ejecuta su propio núcleo invitado; un contenedor Linux puede aislar procesos y bibliotecas mientras comparte el núcleo del entorno donde corre."
 level: intermedio
 kind: comparacion
 layer: sistemas
 prerequisites:
   - que-es-un-sistema-operativo
-  - que-es-docker
-updated: 2026-10-13
+  - que-es-un-proceso
+  - virtualizacion
+updated: 2026-10-15
 sources:
-  - title: "Operating Systems: Three Easy Pieces, Virtual Machine Monitors (en inglés)"
+  - title: "OSTEP: Virtual Machine Monitors (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/vmm-intro.pdf
   - title: "Linux man-pages: namespaces(7) (en inglés)"
     url: https://man7.org/linux/man-pages/man7/namespaces.7.html
-  - title: "Linux man-pages: cgroups(7) (en inglés)"
-    url: https://man7.org/linux/man-pages/man7/cgroups.7.html
+  - title: "Linux Kernel: Control Group v2 (en inglés)"
+    url: https://docs.kernel.org/admin-guide/cgroup-v2.html
   - title: "Docker Docs: What is a container? (en inglés)"
     url: https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **máquina virtual** simula un ordenador completo, con su propio sistema operativo. Un **contenedor** aísla uno o varios procesos, que comparten el sistema operativo de la máquina donde se ejecutan. Las dos técnicas sirven para ejecutar varias cargas de trabajo separadas en una misma máquina física, pero lo consiguen a niveles distintos.
+Una **máquina virtual** ejecuta un sistema invitado con su propio núcleo sobre recursos virtuales. Un **contenedor Linux**, en el modelo habitual de aislamiento de procesos, comparte el núcleo del entorno donde corre, aunque tenga sus propias bibliotecas y archivos. Cambia la frontera que separa las aplicaciones.
 
-## El problema común
+Aquí comparamos VM de sistema con contenedores Linux basados en espacios de nombres. Existen herramientas que combinan contenedores con máquinas virtuales; su nombre comercial no basta para saber qué aislamiento utilizan.
 
-Un servidor físico es caro y casi siempre está infrautilizado. Poner varias aplicaciones en él aprovecha mejor el hardware, pero trae problemas: una necesita una versión de una biblioteca y otra, la contraria; una consume toda la memoria y deja sin ella a las demás; un fallo de seguridad en una expone al resto.
+## El mismo problema: dos versiones de un servicio
 
-Hace falta **aislamiento**: que cada aplicación crea que está sola. Máquinas virtuales y contenedores son dos formas de lograrlo.
+Queremos ejecutar `facturas-a` y `facturas-b`. Son servicios web hipotéticos: ambos escuchan en su puerto 8080, pero requieren versiones incompatibles de una biblioteca. No deben sobrescribir archivos del otro. Además, queremos limitar los recursos que consume B.
 
-## Máquinas virtuales
+Las dos soluciones pueden separar bibliotecas, archivos y red. Veamos qué hay que preparar y qué sigue siendo compartido.
 
-Una máquina virtual se apoya en un programa llamado **hipervisor**, como explica [virtualización](/articulos/virtualizacion/). El hipervisor reparte el hardware real y presenta a cada máquina virtual un hardware simulado: procesador, memoria, disco y tarjeta de red.
+## Resolverlo con máquinas virtuales
 
-Sobre ese hardware simulado se instala un [sistema operativo](/articulos/que-es-un-sistema-operativo/) completo, llamado **invitado**, con su propio núcleo. El invitado no sabe que el hardware no es real.
+Creamos una VM para A y otra para B. Cada una arranca su [sistema operativo](/articulos/que-es-un-sistema-operativo/) invitado e instala sus propias bibliotecas. El **[hipervisor](/articulos/virtualizacion/)** controla CPU, memoria y dispositivos virtuales.
 
-Es como dividir un edificio en casas independientes: cada una tiene sus propios cimientos, su instalación eléctrica y su caldera.
+Cada servicio puede usar el puerto 8080 de su propia dirección de red. Para acceder desde fuera hay que configurar conectividad y, si se reenvían ambos puertos mediante una sola dirección del anfitrión, distinguirlos por puertos externos o por un proxy.
 
-- **Lo que se gana:** un aislamiento muy fuerte, y libertad para ejecutar sistemas operativos distintos en la misma máquina, por ejemplo Windows sobre un servidor Linux.
-- **Lo que cuesta:** cada máquina virtual carga un sistema operativo entero. Ocupa gigabytes, consume memoria aunque no haga nada y tarda decenas de segundos o minutos en arrancar.
+Si B necesita un núcleo diferente compatible con su hardware virtual, puede usarlo sin cambiar el núcleo de A. Reiniciar B tampoco exige reiniciar A. Ambas siguen compartiendo capacidad física: asignar límites ayuda, pero una avería del anfitrión puede afectar a las dos.
 
-## Contenedores
+El coste incluye mantener cada sistema invitado, sus actualizaciones y el estado que necesita al arrancar. No hay un tamaño ni un tiempo de arranque universales: una VM pequeña y una imagen de escritorio tienen necesidades distintas.
 
-Un contenedor no simula hardware ni arranca otro sistema operativo. Es un [proceso](/articulos/que-es-un-proceso/) normal de la máquina anfitriona, al que el núcleo le muestra una vista limitada del sistema.
+## Resolverlo con contenedores
 
-En Linux, eso se consigue con dos mecanismos del núcleo:
+Creamos una **imagen** para cada servicio: un paquete con su programa, bibliotecas y archivos necesarios. El **contenedor** es una instancia en ejecución, formada por uno o varios [procesos](/articulos/que-es-un-proceso/) con una configuración de aislamiento.
 
-- Los **espacios de nombres** (*namespaces*) limitan lo que el proceso **ve**: su propio árbol de archivos, su propia red, su propia lista de procesos.
-- Los **grupos de control** (*cgroups*) limitan lo que el proceso **consume**: cuánta memoria y cuánto procesador puede usar.
+En Linux intervienen, entre otros, dos mecanismos:
 
-Siguiendo la comparación, los contenedores son pisos de un mismo edificio: cada uno tiene su puerta y su intimidad, pero comparten cimientos, estructura y tuberías.
+- **Espacios de nombres**, o *namespaces*: separan vistas de ciertos recursos, como identificadores de proceso, montajes y red. Un espacio de nombres de red propio permite usar el puerto 8080 sin ocupar el de otro contenedor.
+- **Grupos de control**, o *cgroups*: contabilizan recursos y permiten aplicar límites o pesos, por ejemplo de CPU y memoria. Los límites deben configurarse; crear un grupo no significa reservar capacidad ilimitada ni impedir toda interferencia.
 
-- **Lo que se gana:** ligereza. Un contenedor arranca en menos de un segundo, ocupa megabytes y apenas añade carga. En una máquina caben muchos más contenedores que máquinas virtuales.
-- **Lo que cuesta:** todos comparten el núcleo del anfitrión. El aislamiento es más débil, y un contenedor solo puede ejecutar programas compatibles con ese núcleo.
+Cada imagen puede incluir una versión diferente de la biblioteca. **Compartir núcleo no significa compartir todas las bibliotecas o la distribución.** A y B hacen sus llamadas al mismo núcleo, por lo que sus programas deben ser compatibles con él y con las instrucciones disponibles.
 
-## Comparación
+Si se comparte deliberadamente la red o un directorio del anfitrión, esa separación cambia. Dos contenedores con red del anfitrión no obtienen automáticamente dos puertos 8080 independientes. Montar el mismo directorio con escritura permite modificar los mismos datos.
 
-| | Máquina virtual | Contenedor |
+Al arrancar un contenedor de este tipo no se inicia otro núcleo. Eso puede reducir preparación y memoria frente a una VM comparable, pero descargar una imagen grande o iniciar una aplicación pesada sigue costando tiempo y recursos.
+
+## Comparación para el servicio de facturas
+
+| Criterio | Dos VM | Dos contenedores Linux |
 | --- | --- | --- |
-| Qué se virtualiza | El hardware | El sistema operativo |
-| Sistema operativo | Uno completo por máquina | Compartido con el anfitrión |
-| Tamaño habitual | Gigabytes | Megabytes |
-| Arranque | De segundos a minutos | Menos de un segundo |
-| Consumo de recursos | Alto | Bajo |
-| Aislamiento | Muy fuerte | Menor: núcleo compartido |
-| Sistemas distintos del anfitrión | Sí | No |
+| Versiones de bibliotecas | Separadas en cada invitado | Separadas en cada imagen |
+| Núcleo | Uno por invitado | Compartido en el entorno que aloja los procesos |
+| Puerto 8080 | Independiente con red propia de cada VM | Independiente si hay espacios de nombres de red separados |
+| Limitar B | Configuración de recursos de la VM | Límites y pesos de sus grupos de control |
+| Cambiar el núcleo de B | Posible dentro de la compatibilidad de la VM | No cambia por reconstruir su imagen |
+| Fallos comunes | Anfitrión, hipervisor y recursos físicos | Núcleo compartido, entorno de ejecución y recursos físicos |
+
+Ninguna columna garantiza aislamiento absoluto. También importan permisos, dispositivos, redes, volúmenes compartidos y vulnerabilidades. Una comparación de rendimiento debe fijar aplicación, recursos y configuración; «VM» y «contenedor» no son unidades de coste.
 
 <Quiz
 	client:visible
-	question="¿Por qué un contenedor arranca mucho más rápido que una máquina virtual?"
+	question="B necesita una función de un núcleo Linux más nuevo, pero A debe conservar el suyo. ¿Qué opción permite separar esos núcleos?"
 	options={[
-		"Porque usa un procesador más potente",
-		"Porque no tiene que arrancar un sistema operativo completo",
-		"Porque no está aislado en absoluto",
+		"Cambiar solo la biblioteca dentro del contenedor B",
+		"Usar sistemas invitados separados en máquinas virtuales compatibles",
+		"Dar otro nombre a la imagen de B",
 	]}
 	answer={1}
 />
 
-## Cuándo usar cada uno
+## Cuándo conviene cada organización
 
-**Máquinas virtuales** cuando:
+Las **VM** encajan cuando necesitas controlar el núcleo invitado, ejecutar sistemas diferentes o establecer una frontera adicional entre cargas. Hay que mantener los invitados y verificar la configuración del hipervisor y sus recursos.
 
-- hace falta un aislamiento fuerte, por ejemplo al ejecutar código de terceros en los que no confías;
-- se necesita un sistema operativo distinto del anfitrión;
-- la aplicación requiere control sobre el núcleo.
+Los **contenedores** encajan cuando las aplicaciones admiten el mismo núcleo y quieres empaquetar sus dependencias por separado. Facilitan repetir el entorno de archivos y bibliotecas; no garantizan reproducibilidad si cambian datos, configuración o servicios externos.
 
-**Contenedores** cuando:
-
-- se quiere empaquetar y desplegar aplicaciones de forma rápida y repetible;
-- hay muchos servicios pequeños que arrancan y se detienen con frecuencia;
-- se busca aprovechar al máximo el hardware.
-
-## En la práctica se combinan
-
-No son alternativas excluyentes. Lo habitual en [la nube](/articulos/computacion-en-la-nube/) es usar las dos: el proveedor te entrega máquinas virtuales, que separan con fuerza a un cliente de otro, y dentro de ellas ejecutas tus contenedores.
-
-Un detalle lo ilustra. Los contenedores de Linux necesitan un núcleo de Linux. Cuando se usa [Docker](/articulos/que-es-docker/) en Windows o en macOS, por debajo hay una pequeña máquina virtual con Linux en la que corren los contenedores.
-
-También existen soluciones intermedias: máquinas virtuales muy ligeras, que arrancan casi tan rápido como un contenedor y conservan un aislamiento fuerte. Se usan en plataformas que ejecutan código de muchos clientes distintos.
+También puedes alojar los dos contenedores en una VM. En ese caso comparten el núcleo de esa VM, no necesariamente el del ordenador físico de trabajo. Así puede proporcionarse un entorno Linux a contenedores aunque el escritorio del usuario sea otro sistema. [Docker](/articulos/que-es-docker/) es una herramienta para gestionar imágenes y contenedores; no es el concepto de aislamiento en sí.
 
 ## Confusiones frecuentes
 
-- **"Un contenedor es una máquina virtual ligera."** Sirve como primera imagen, pero engaña: un contenedor es un proceso aislado, no un ordenador simulado.
-- **"Los contenedores son igual de seguros."** Comparten núcleo. Una vulnerabilidad del núcleo puede afectar a todos los contenedores de la máquina.
-- **"Los contenedores han sustituido a las máquinas virtuales."** Resuelven problemas distintos y conviven.
+- **«Un contenedor tiene su propio núcleo».** En el modelo descrito, la imagen aporta archivos y programas, no otro núcleo en ejecución.
+- **«Aislar nombres limita consumo».** Espacios de nombres y controles de recursos cumplen funciones diferentes.
+- **«Lo compartido deja de importar».** Un volumen común, una cuota sin configurar o un fallo del anfitrión puede afectar a varias cargas.
 
-## Para comparar
-
-Se compara en detalle en [máquina virtual y contenedor para desarrollar](/articulos/maquina-virtual-y-contenedor-para-desarrollar/).
+La elección de un entorno local se desarrolla en [máquina virtual y contenedor para desarrollar](/articulos/maquina-virtual-y-contenedor-para-desarrollar/).
 
 ## Lo esencial
 
-- Una máquina virtual simula hardware y ejecuta un sistema operativo completo; un contenedor aísla procesos que comparten el núcleo del anfitrión.
-- Las máquinas virtuales aíslan más; los contenedores son más ligeros y rápidos.
-- En Linux, los contenedores se basan en espacios de nombres y grupos de control.
-- Lo habitual es ejecutar contenedores dentro de máquinas virtuales.
+- Una VM puede tener un núcleo invitado propio; los contenedores descritos comparten uno.
+- Ambas opciones permiten separar bibliotecas y archivos de una aplicación.
+- Separación, recursos y acceso exterior requieren configuración explícita.
+- Pueden combinarse; su utilidad depende de las necesidades concretas de la carga.

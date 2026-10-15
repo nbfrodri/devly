@@ -1,15 +1,19 @@
 ---
 title: "¿Qué es el DNS?"
-description: El DNS es el sistema que traduce nombres como ejemplo.com a direcciones IP.
+description: DNS distribuye información sobre nombres de dominio, incluidas sus direcciones IP. Un resolvedor consulta la jerarquía y reutiliza registros en caché.
 level: basico
 layer: redes
 prerequisites:
   - que-es-una-direccion-ip
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
-  - title: "RFC 1034: Domain names, concepts and facilities"
+  - title: "IANA: Example Domains (en inglés)"
+    url: https://www.iana.org/help/example-domains
+  - title: "RFC 2308: Negative Caching of DNS Queries (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc2308.html
+  - title: "RFC 1034: Domain names, concepts and facilities (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1034/
-  - title: "RFC 1035: Domain names, implementation and specification"
+  - title: "RFC 1035: Domain names, implementation and specification (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1035/
   - title: "IANA: Root Servers (en inglés)"
     url: https://www.iana.org/domains/root/servers
@@ -19,11 +23,11 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-El **DNS** (*Domain Name System*, sistema de nombres de dominio) es el servicio que traduce nombres como `ejemplo.com` a [direcciones IP](/articulos/que-es-una-direccion-ip/). Es lo que permite escribir un nombre en el navegador en lugar de un número.
+El **DNS** (*Domain Name System*, sistema de nombres de dominio) es un sistema distribuido que permite consultar información asociada a nombres como `example.com`. Una de sus funciones es obtener [direcciones IP](/articulos/que-es-una-direccion-ip/): así puedes escribir un nombre en el navegador en lugar de recordar una dirección numérica.
 
 ## Qué problema resuelve
 
-Los equipos de una red se localizan por su dirección IP, pero las personas recordamos nombres. Además, la dirección de un servicio puede cambiar, por ejemplo al mudarlo de servidor, y no sería razonable avisar a todos los usuarios cada vez.
+IP dirige paquetes mediante direcciones numéricas, pero las personas recordamos nombres. Además, la dirección de un servicio puede cambiar, por ejemplo al mudarlo de [servidor](/articulos/que-es-un-servidor/), sin que queramos cambiar su nombre público.
 
 El DNS separa las dos cosas: el nombre se mantiene y la dirección a la que apunta se puede actualizar. Funciona como la agenda de contactos del móvil: tú buscas un nombre y la agenda sabe el número.
 
@@ -31,47 +35,51 @@ El DNS separa las dos cosas: el nombre se mantiene y la dirección a la que apun
 
 Al principio de internet, la correspondencia entre nombres y direcciones estaba en un único archivo que se copiaba a todas las máquinas. Con unos cientos de equipos funcionaba. Con millones, no: el archivo crecía sin parar y cada cambio tardaba en llegar a todos.
 
-El DNS lo resolvió repartiendo la información. No hay ningún servidor que conozca todos los nombres. Cada organización mantiene los suyos, y existe un método para encontrar quién sabe qué.
+DNS reparte la información en **zonas**, partes del espacio de nombres administradas por sus responsables. Ningún servidor necesita almacenar todos los nombres. La jerarquía permite encontrar quién tiene autoridad sobre una zona.
 
 ## Un nombre se lee de derecha a izquierda
 
-Un nombre de dominio está formado por partes separadas por puntos, y la jerarquía va de derecha a izquierda. En `www.ejemplo.com`:
+Un nombre de dominio está formado por partes separadas por puntos, y la jerarquía va de derecha a izquierda. En `www.example.com`:
 
 | Parte | Qué es |
 | --- | --- |
 | `com` | Dominio de nivel superior, o TLD |
-| `ejemplo` | Dominio registrado por una organización |
+| `example` | Nombre dentro de `.com` |
 | `www` | Subdominio, definido por esa organización |
 
-Por encima de todos está la **raíz**, que no se escribe.
+Por encima está la **raíz**. Se puede representar con el punto final de un nombre completo: `www.example.com.`. Habitualmente se omite al escribir una dirección web. `example.com` está reservado para documentación; el intercambio siguiente es inventado.
 
 ## Cómo se resuelve un nombre
 
-Cuando escribes `www.ejemplo.com`, tu dispositivo se lo pregunta a un **resolvedor**, un servidor que normalmente pone tu proveedor de internet. Si el resolvedor no conoce la respuesta, la busca bajando por la jerarquía:
+Tu dispositivo envía la consulta a un **resolvedor recursivo**, un servidor que busca la respuesta por ti. Puede proporcionarlo el operador, una organización o un servicio configurado en el sistema o navegador. Supongamos que no tiene los datos en caché:
 
-1. Pregunta a un **servidor raíz**, que no sabe la dirección pero sí quién gestiona los nombres acabados en `.com`.
-2. Pregunta al servidor del **TLD** `.com`, que tampoco la sabe pero indica qué servidor es responsable de `ejemplo.com`.
-3. Pregunta a ese **servidor autoritativo**, que es el que tiene el dato y responde con la dirección IP.
-4. El resolvedor te entrega la respuesta y tu dispositivo ya puede conectarse.
+1. Pregunta por el registro `A` de `www.example.com` a un **servidor raíz**. Recibe una referencia a servidores del dominio superior `.com`.
+2. Consulta a un servidor de `.com`, que le indica los servidores responsables de la zona `example.com`.
+3. Consulta a uno de esos **servidores autoritativos**. En nuestro ejemplo responde con un registro `A`: `203.0.113.10`, y un TTL de 300 segundos.
+4. El resolvedor devuelve el resultado al dispositivo y puede conservarlo temporalmente. Ahora el navegador tiene una dirección con la que intentar la conexión.
 
-Todo esto ocurre en milésimas de segundo, antes de que la página empiece a cargarse.
+Las referencias no son la página ni el archivo solicitado: ayudan a localizar la información de nombres. Si el registro autoritativo es un alias `CNAME`, habrá que resolver también el nombre indicado. Puede haber varias direcciones, errores o ausencia del registro solicitado.
 
 <Quiz
 	client:visible
-	question="¿Qué servidor tiene la dirección IP definitiva de www.ejemplo.com?"
+	question="En la traza, el servidor raíz devuelve servidores de .com. ¿Qué debe hacer el resolvedor?"
 	options={[
-		"Un servidor raíz",
-		"El servidor del TLD .com",
-		"El servidor autoritativo de ejemplo.com",
+		"Tratar esas direcciones como si fueran la página solicitada",
+		"Dar por terminada la búsqueda del registro A",
+		"Continuar la consulta con los servidores indicados",
 	]}
 	answer={2}
 />
 
 ## La caché
 
-Repetir esas preguntas en cada visita sería lento, así que las respuestas se guardan un tiempo. Ese almacenamiento temporal se llama **caché**, y hay una en el resolvedor, otra en tu sistema operativo y otra en el navegador.
+Repetir todas las preguntas en cada visita costaría tiempo y tráfico. Una [**caché**](/articulos/que-es-una-cache/) conserva resultados para reutilizarlos. Puede haber cachés en el resolvedor, el sistema operativo y el navegador; su comportamiento depende de la implementación.
 
-Cada respuesta lleva un número llamado **TTL** (*time to live*), que indica cuántos segundos puede guardarse antes de volver a preguntar. Por eso, cuando se cambia la dirección de un dominio, el cambio no se ve al instante en todas partes: hay que esperar a que caduquen las copias guardadas.
+Cada registro lleva un **TTL** (*time to live*), expresado en segundos. Una respuesta puede contener varios registros, con vigencias distintas. En el ejemplo, tras 120 segundos el registro guardado conserva 180 de vigencia: reutilizarlo no vuelve a poner el contador a 300.
+
+Si la dirección autoritativa cambia durante ese plazo, una caché todavía válida puede seguir contestando con la anterior. No hay un mensaje universal que actualice a la vez todas las copias. También se pueden almacenar respuestas negativas, como que un nombre no existe, siguiendo sus reglas de vigencia.
+
+Este TTL pertenece a datos almacenados; no es el [TTL de un paquete IP](/articulos/ttl-en-ip/), que limita su recorrido por la red.
 
 ## Tipos de registro
 
@@ -83,6 +91,14 @@ La información de un dominio se guarda en **registros**. Cada tipo responde a u
 | `AAAA` | La dirección IPv6 de un nombre |
 | `CNAME` | Otro nombre al que este equivale |
 | `MX` | El servidor que recibe el correo del dominio |
+
+## Errores comunes
+
+- **Confundir resolver con conectar.** Obtener una IP no demuestra que el servicio esté encendido ni que permita el acceso.
+- **Esperar que cambiar un registro borre todas las cachés.** Las copias existentes pueden seguir vigentes; hay que tener en cuenta su TTL anterior.
+- **Suponer que cualquier respuesta contiene una IP.** El tipo consultado importa; un alias requiere continuar la búsqueda y una respuesta negativa no contiene el dato pedido.
+
+La [caída de Facebook, WhatsApp e Instagram de 2021](/articulos/la-caida-de-facebook-de-2021/) muestra otro límite: un servidor DNS puede seguir funcionando y resultar inaccesible porque se pierden las rutas que permiten alcanzarlo.
 
 ## Lo esencial
 

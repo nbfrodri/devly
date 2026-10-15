@@ -7,7 +7,7 @@ layer: sistemas
 prerequisites:
   - que-es-un-proceso
   - hilos-y-concurrencia
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Arpaci-Dusseau: Operating Systems, Three Easy Pieces, The Abstraction: The Process (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf
@@ -17,55 +17,86 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **proceso** es un programa en ejecución, con su propia memoria y sus propios recursos, aislado de los demás. Un **hilo** es una línea de ejecución **dentro** de un proceso. Un proceso puede tener varios hilos, y todos comparten su memoria.
+Un [**proceso**](/articulos/que-es-un-proceso/) reúne un espacio de direcciones, recursos y una ejecución de programa. Un [**hilo**](/articulos/hilos-y-concurrencia/) es un flujo de ejecución dentro de ese proceso. Varios hilos comparten su espacio de direcciones; varios procesos disponen de espacios separados, aunque pueden autorizar memoria compartida.
 
-Si un proceso es una cocina, los hilos son los cocineros que trabajan en ella: comparten los ingredientes y los fogones.
+La decisión cambia qué datos se comparten, cómo se comunican las tareas y cuánto aislamiento hay entre ellas. Ninguna opción garantiza por sí sola más velocidad ni ausencia de errores concurrentes.
 
-## Proceso
+## El mismo trabajo: aclarar una imagen
 
-Como explica el artículo sobre [procesos](/articulos/que-es-un-proceso/), el sistema operativo da a cada uno:
+Imagina una imagen de cuatro intensidades entre 0 y 255: `10, 20, 250, 255`. Queremos sumar 10 a cada intensidad, sin superar 255. El resultado debe ser `20, 30, 255, 255`.
 
-- Su propio espacio de [memoria](/articulos/memoria-virtual/), que los demás no pueden ver.
-- Sus archivos abiertos y sus conexiones.
-- Al menos un hilo de ejecución.
+Dividimos la imagen en dos franjas de dos valores. Transformar cada posición depende únicamente de su valor original: no hay que leer los píxeles vecinos. Esa independencia permite repartir este trabajo concreto; otro filtro podría necesitar bordes compartidos y coordinación adicional.
 
-El aislamiento es la clave: si un proceso falla, los demás siguen funcionando.
+### Con dos procesos trabajadores
 
-## Hilo
+Un proceso coordinador envía la primera franja a A y la segunda a B. En este diseño se transfieren **copias** de los datos mediante mensajes:
 
-Un [hilo](/articulos/hilos-y-concurrencia/) tiene lo mínimo para ejecutar código por su cuenta:
+| Trabajador | Datos recibidos | Resultado devuelto |
+| --- | --- | --- |
+| Proceso A | `10, 20` | `20, 30` |
+| Proceso B | `250, 255` | `255, 255` |
 
-- Su propia posición en el programa: qué instrucción viene ahora.
-- Su propia pila de llamadas y sus registros.
+Cada trabajador tiene sus variables y su memoria privada. El coordinador recoge ambas respuestas y las coloca por índice de franja, aunque B termine primero. Debe detectar si un trabajador falla y decidir si reintenta o rechaza la imagen incompleta.
 
-Todo lo demás, la memoria, las variables globales, los archivos, lo comparte con los otros hilos del mismo proceso.
+Los mensajes y las copias tienen coste. También podríamos diseñar una variante con memoria compartida entre procesos; ahorraría algunas transferencias, pero necesitaría reglas de acceso. Separar procesos no impide compartir archivos, bases de datos o regiones de memoria.
+
+### Con dos hilos trabajadores
+
+Dentro de un solo proceso, la entrada y el array de salida pueden estar en memoria compartida. A procesa las posiciones 0 y 1; B, las posiciones 2 y 3. Cada uno mantiene su punto de ejecución, registros y pila de llamadas.
+
+El resultado numérico es el mismo. La diferencia es que los hilos escriben directamente en regiones distintas del mismo array. La entrada debe permanecer estable y quien consume la imagen debe **esperar la finalización con el mecanismo de sincronización del entorno** antes de leer toda la salida.
+
+No hace falta un cerrojo para cada píxel si el reparto garantiza accesos compatibles según el lenguaje. Pero un contador común de «franjas terminadas» sí necesita coordinación: dos incrementos independientes pueden perder una actualización. Además, variables distintas dentro de una misma línea de caché pueden producir [falsa compartición](/articulos/coherencia-de-cache/), aunque el resultado sea correcto.
+
+Estos recorridos explican la organización; no son mediciones de un programa real. Para cuatro valores, preparar trabajadores probablemente costaría más que transformarlos en el mismo hilo. El reparto tiene sentido al considerar un volumen de trabajo suficiente y recursos disponibles.
+
+<Quiz
+	client:visible
+	question="A escribe la primera franja y B la segunda. ¿Qué debe hacer el coordinador antes de usar la imagen completa?"
+	options={[
+		"Leerla en cuanto termine cualquiera de los dos",
+		"Comprobar la finalización de ambos y tratar los fallos",
+		"Suponer que compartir memoria hace instantáneas las escrituras",
+	]}
+	answer={1}
+/>
 
 ## Comparación
 
-| | Proceso | Hilo |
+| Criterio | Procesos | Hilos de un proceso |
 | --- | --- | --- |
-| Memoria | Propia, aislada | Compartida con los hilos de su proceso |
-| Crear uno | Más costoso | Más ligero |
-| Cambiar de uno a otro | Más costoso | Más barato |
-| Comunicarse | Mecanismos del sistema operativo | Leyendo y escribiendo la misma memoria |
-| Si falla | Solo cae él | Puede arrastrar a todo el proceso |
-| Riesgo principal | Coste | [Condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) |
+| Memoria | Espacios separados; pueden compartir regiones autorizadas | Mismo espacio de direcciones |
+| Estado de ejecución | Cada proceso contiene el estado de sus hilos | Cada hilo tiene registros, punto de ejecución y pila propios |
+| Comunicación | Mensajes, archivos, memoria compartida u otros mecanismos | Acceso a datos comunes o mensajes dentro del programa |
+| Preparación y cambio | Puede requerir más gestión de recursos y direcciones | Compartir recursos puede reducir ciertos costes |
+| Fallo fatal | La protección limita daños directos; pueden fallar dependencias compartidas | Puede terminar el proceso completo |
+| Coordinación | Necesaria para recursos y protocolos compartidos | Necesaria para accesos y publicación de datos compartidos |
 
-## Cuándo usar cada uno
+El coste concreto depende del sistema, la biblioteca, la carga y de si se crean trabajadores por tarea o se reutilizan. «Hilo más ligero» no implica que cualquier programa con hilos sea más rápido.
 
-**Varios procesos** cuando importa el aislamiento: un fallo en uno no debe afectar al resto. Los navegadores ejecutan cada pestaña en un proceso aparte, para que una página que se cuelga no tumbe las demás. Los servidores web lanzan a menudo varios procesos iguales.
+## Cuándo elegir cada organización
 
-**Varios hilos** cuando las tareas necesitan compartir muchos datos y comunicarse con frecuencia: un programa que procesa una imagen repartiendo partes entre varios núcleos.
+**Procesos** encajan cuando interesa separar permisos, aislar componentes o poder reiniciar un trabajador sin terminar los demás. En la imagen, perder un trabajador puede dejar al coordinador vivo, pero este aún debe recuperar o notificar la franja ausente. El aislamiento no completa el trabajo por sí solo.
 
-Lo que se gana compartiendo memoria, se paga con el riesgo de que dos hilos la modifiquen a la vez. Con procesos, ese riesgo no existe, porque no comparten nada.
+**Hilos** encajan cuando compartir muchos datos evita costes relevantes y puede definirse una coordinación clara. En la imagen, repartir regiones disjuntas ayuda; compartir una estructura mutable compleja puede exigir más cuidado.
 
-## Una tercera opción
+Ambas opciones pueden aprovechar varios núcleos si el entorno permite ejecutar sus trabajadores en paralelo. Las restricciones del lenguaje o del entorno de ejecución pueden limitarlo. Crear más tareas no crea más núcleos ni elimina la parte secuencial.
 
-Algunos entornos, como [Node.js](/articulos/que-es-nodejs/), atienden muchas tareas en un solo hilo, sin esperar a ninguna, mediante un bucle de eventos. Es concurrencia sin hilos: evita sus riesgos, a cambio de no aprovechar varios núcleos con un solo proceso.
+## Un bucle de eventos es otra dimensión
+
+Un único hilo puede organizar tareas asíncronas mediante un bucle de eventos, como vimos en hilos y concurrencia. Evita que dos callbacks de ese hilo ejecuten instrucciones simultáneamente, pero una operación que cede con `await` puede intercalarse con otra y sufrir una [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/).
+
+Ese hilo no reparte por sí solo el cálculo entre núcleos. El mismo programa puede combinar un bucle de eventos con otros hilos o procesos: organización asíncrona y distribución del trabajo son decisiones compatibles.
+
+## Confusiones frecuentes
+
+- **Suponer que dos procesos no comparten nada.** Pueden modificar el mismo archivo o dato de una base, además de usar memoria compartida explícita.
+- **Confundir memoria compartida con variables idénticas.** Cada llamada tiene sus variables locales; compartir direcciones permite acceder a datos comunes, pero no convierte todas las variables en una sola.
+- **Dar por aislado cualquier fallo.** Un proceso separado limita daños de memoria, pero puede dejar un resultado incompleto del que otro depende.
 
 ## Lo esencial
 
-- Un proceso es un programa en ejecución con memoria propia y aislada.
-- Un hilo es una línea de ejecución dentro de un proceso, que comparte su memoria.
-- Los hilos son más ligeros y se comunican más fácilmente, pero se pueden estorbar.
-- Los procesos son más costosos, pero un fallo en uno no afecta a los demás.
+- Un proceso organiza memoria y recursos; un hilo aporta un flujo de ejecución dentro de él.
+- Separar procesos facilita aislamiento, con costes de preparación y comunicación que hay que medir.
+- Compartir memoria entre hilos puede evitar copias, pero exige reglas de acceso y finalización.
+- Procesos, hilos y asincronía pueden combinarse; ninguno elimina por sí solo las carreras.

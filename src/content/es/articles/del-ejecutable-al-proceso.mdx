@@ -1,19 +1,21 @@
 ---
 title: "Del ejecutable al proceso: ¿qué pasa al arrancar un programa?"
-description: "Al ejecutar un programa, el sistema operativo crea un proceso, carga el ejecutable en un espacio de memoria propio, enlaza sus bibliotecas y salta a su primera instrucción."
+description: "En Linux, crear un proceso y sustituir su programa son operaciones distintas. Seguimos fork, execve, la carga y la recogida del resultado."
 level: avanzado
 layer: sistemas
 prerequisites:
   - que-es-un-binario
   - que-es-un-proceso
   - llamadas-al-sistema
-updated: 2026-10-14
+  - memoria-virtual
+  - terminal-y-shell
+updated: 2026-10-15
 sources:
   - title: "Linux man-pages: execve(2) (en inglés)"
     url: https://man7.org/linux/man-pages/man2/execve.2.html
   - title: "Linux man-pages: fork(2) (en inglés)"
     url: https://man7.org/linux/man-pages/man2/fork.2.html
-  - title: "Remzi y Andrea Arpaci-Dusseau: The Abstraction, Address Spaces, Operating Systems, Three Easy Pieces (en inglés)"
+  - title: "OSTEP: The Abstraction, Address Spaces (en inglés)"
     url: https://pages.cs.wisc.edu/~remzi/OSTEP/vm-intro.pdf
   - title: "Linux man-pages: wait(2) (en inglés)"
     url: https://man7.org/linux/man-pages/man2/wait.2.html
@@ -23,73 +25,136 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Escribes `ls` en la terminal y pulsas Intro. En unos milisegundos, un archivo del disco se ha convertido en un programa en ejecución. Por el camino, el sistema operativo hace bastante trabajo. Este artículo lo recorre en Linux, aunque la idea es parecida en otros sistemas.
+Ejecutar un **[binario](/articulos/que-es-un-binario/)** requiere preparar su entorno de memoria y transferirle el control. En Linux, **crear un proceso** y **sustituir el programa de un proceso existente** son operaciones distintas. El recorrido clásico de una shell combina `fork`, `execve` y una espera para recoger el resultado.
+
+## 1. Elegir qué ejecutar
+
+Al escribir una orden, la [shell](/articulos/terminal-y-shell/) interpreta la línea y resuelve qué significa. Puede ser una función, una orden interna o un ejecutable externo. Para muchos nombres externos busca en [PATH](/articulos/variable-de-entorno-path/); una ruta explícita no necesita esa búsqueda.
+
+Seguiremos un programa externo, `/bin/echo`, al que pasamos `hola`. No todo comando de una shell sigue este recorrido exacto: una orden interna puede ejecutarse en la propia shell y existen otras interfaces para lanzar programas.
+
+## 2. Crear el hijo con fork
+
+`fork` crea un hijo con un identificador distinto. Ambos continúan desde la llamada: en el hijo devuelve cero; en el padre, el identificador del hijo. Si falla, devuelve -1 y no existe ese hijo.
+
+La memoria privada comienza con contenido equivalente, pero son espacios de direcciones separados. Linux utiliza **copia en escritura**: puede compartir físicamente páginas mientras no se modifiquen y separarlas cuando hace falta. Hay atributos distintos, como los identificadores, y recursos compartidos: los [descriptores](/articulos/descriptores-de-archivo/) heredados pueden referirse a la misma apertura de archivo.
+
+## 3. Sustituir el programa con execve
+
+El hijo llama a `execve` con la ruta, los argumentos y el entorno. Si tiene éxito, **conserva su PID, pero sustituye su programa**. No regresa a la instrucción siguiente de quien llamó. Si devuelve un error, el código anterior continúa y debe tratarlo.
+
+Este programa completo es para Linux, con un compilador C y `/bin/echo` disponibles. Guárdalo como `ejecutar.c`, compílalo con `cc -Wall -Wextra ejecutar.c -o ejecutar` y ejecútalo con `./ejecutar`:
+
+```c
+#include <errno.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main(int argc, char *argv[]) {
+	if (argc > 2) return 2;
+	char *programa = argc == 2 ? argv[1] : "/bin/echo";
+	pid_t pid = fork();
+	if (pid < 0) {
+		perror("fork");
+		return 1;
+	}
+	if (pid == 0) {
+		char *argumentos[] = {programa, "hola", NULL};
+		char *entorno[] = {"LANG=C", NULL};
+		execve(programa, argumentos, entorno);
+		perror("execve");
+		_exit(127);
+	}
+
+	int estado;
+	pid_t esperado;
+	do {
+		esperado = waitpid(pid, &estado, 0);
+	} while (esperado == -1 && errno == EINTR);
+	if (esperado == -1) {
+		perror("waitpid");
+		return 1;
+	}
+	if (WIFEXITED(estado)) {
+		int codigo = WEXITSTATUS(estado);
+		printf("Salida del hijo: %d\n", codigo);
+		return codigo;
+	}
+	if (WIFSIGNALED(estado)) {
+		printf("Senal del hijo: %d\n", WTERMSIG(estado));
+	}
+	return 1;
+}
+```
+
+En el caso correcto imprime `hola` y después `Salida del hijo: 0`. Si pasas una ruta que no existe, `execve` falla: el hijo muestra el error y termina con 127, que recoge el padre. El programa acepta solo esa ruta opcional, no una línea de órdenes completa.
+
+`EINTR` indica que la espera fue interrumpida; aquí volvemos a esperar al mismo hijo. `WIFEXITED` permite interpretar el estado como salida normal; no debemos aplicar `WEXITSTATUS` a una terminación por señal. `_exit` termina el hijo tras el fallo sin continuar por el código del padre. El ejemplo es de un solo hilo; lanzar desde procesos con varios hilos exige precauciones adicionales entre `fork` y `exec`.
+
+<Quiz
+	client:visible
+	question="execve tiene éxito en el hijo. ¿Qué cambia?"
+	options={["Aparece necesariamente otro proceso con un tercer PID", "Se sustituye el programa del hijo conservando su PID", "El padre pasa a ejecutar el programa del hijo"]}
+	answer={1}
+/>
+
+## 4. Preparar la memoria
+
+Para un ejecutable ELF, el núcleo interpreta sus cabeceras y prepara regiones del [espacio virtual](/articulos/memoria-virtual/) con los permisos correspondientes. Una organización habitual de un programa C incluye:
+
+| Región | Contenido o función |
+| --- | --- |
+| Código | Instrucciones, normalmente ejecutables y no escribibles |
+| Datos | Objetos estáticos con valores iniciales almacenados |
+| BSS | Objetos estáticos inicializados a cero, sin guardar cada cero en el archivo |
+| Montículo | Memoria que gestionan los mecanismos de asignación dinámica |
+| Pila | Estado de llamadas y datos según la convención de ejecución |
+
+No es una disposición universal ni implica direcciones o sentidos de crecimiento fijos. La carga bajo demanda permite incorporar páginas cuando hacen falta. Un fallo de página puede resolverse con datos ya en memoria, inicializando ceros o leyendo almacenamiento; no significa siempre una lectura física del disco.
+
+## 5. Enlazar e iniciar el programa
+
+En un ELF dinámico con `PT_INTERP`, esa entrada identifica el intérprete de arranque, normalmente el **cargador dinámico**. Prepara bibliotecas compartidas y resuelve referencias; algunas resoluciones pueden aplazarse hasta su uso según la configuración.
+
+Después se llega al código de entrada del ejecutable. En un programa C habitual, código de inicio prepara el entorno antes de llamar a `main`. Un ejecutable estático no necesita necesariamente ese cargador dinámico.
+
+El [planificador](/articulos/planificador-de-procesos/) ya interviene durante el recorrido; no empieza a repartir CPU solo al llegar a `main`.
 
 ```mermaid
 sequenceDiagram
-	participant S as Shell
+	participant P as Padre
 	participant K as Núcleo
-	participant H as Proceso hijo
-	S->>K: fork()
-	K-->>H: copia de la shell
-	H->>K: execve("/usr/bin/ls")
-	K->>H: carga el ejecutable, nueva memoria
-	H->>H: el cargador dinámico enlaza las bibliotecas
-	H->>H: main() se ejecuta
-	H->>K: exit(0)
-	K-->>S: el hijo ha terminado
+	participant H as Hijo
+	P->>K: fork
+	K-->>P: PID del hijo
+	K-->>H: Continuar con retorno cero
+	H->>K: execve de echo
+	K-->>H: Nuevo programa, mismo PID
+	H->>H: Inicio, imprimir hola
+	H->>K: Terminar con código cero
+	P->>K: waitpid del hijo
+	K-->>P: Estado de terminación
 ```
 
-## 1. Buscar el programa
+El diagrama muestra el caso correcto. El padre puede entrar en `waitpid` antes de que el hijo termine; entonces espera. El código contempla también los errores que el diagrama omite.
 
-La [shell](/articulos/terminal-y-shell/) busca `ls` en los directorios de la variable [PATH](/articulos/variable-de-entorno-path/) y encuentra `/usr/bin/ls`.
+## 6. Terminar y recoger el estado
 
-## 2. Duplicarse: fork
+Al terminar se liberan recursos, pero puede conservarse una entrada con el estado de salida hasta que el padre lo recoja. Ese hijo terminado es un **zombi**; no sigue ejecutando instrucciones. Algunas configuraciones permiten recogida automática.
 
-En Linux, un proceso nuevo nace como **copia** de otro. La shell hace la [llamada al sistema](/articulos/llamadas-al-sistema/) `fork`, y el núcleo crea un proceso **hijo**: según su página de manual, un duplicado exacto del padre, con su propio identificador, que se ejecuta en un espacio de memoria separado. Copiar toda la memoria sería caro: según la página de manual, Linux implementa `fork` con páginas de **copia en escritura**, que se comparten hasta que alguno de los dos procesos las modifica.
+Cero se usa convencionalmente para éxito. Una terminación por señal tiene otra representación en el estado de espera. La shell interpreta esos resultados y ofrece su estado de salida; no es simplemente el entero bruto que devolvió `waitpid`.
 
-## 3. Cambiar de programa: execve
+## Errores comunes
 
-El hijo, que todavía es una copia de la shell, hace `execve` con la ruta del programa, sus argumentos y sus variables de entorno. Según su página de manual, esa llamada **sustituye** el programa del proceso por el nuevo, con la pila, el montículo y los segmentos de datos recién inicializados. Si tiene éxito, no vuelve nunca: el código que la llamó ya no existe en ese proceso.
-
-```c
-pid_t pid = fork();
-if (pid == 0) {
-    char *argumentos[] = {"ls", "-l", NULL};
-    execve("/usr/bin/ls", argumentos, environ); // solo vuelve si falla
-}
-waitpid(pid, NULL, 0); // la shell espera a que termine
-```
-
-## 4. Cargar el ejecutable
-
-El núcleo lee la cabecera del [binario](/articulos/que-es-un-binario/), un ELF en Linux, y prepara el **espacio de direcciones** del proceso: la visión que tiene el programa de la memoria. Como explica el libro OSTEP, contiene todo el estado de memoria del programa:
-
-| Zona | Qué contiene |
-| --- | --- |
-| Código | Las instrucciones del programa, de solo lectura |
-| Datos | Variables globales con valor inicial |
-| BSS | Variables globales sin valor inicial, a cero |
-| Montículo | Memoria pedida durante la ejecución; crece hacia arriba |
-| Pila | Llamadas a funciones y variables locales; crece hacia abajo |
-
-Gracias a la [memoria virtual](/articulos/memoria-virtual/), cada proceso cree tener toda la memoria para él. Además, no se lee el archivo entero del disco: las páginas se cargan cuando se usan por primera vez.
-
-## 5. Enlazar las bibliotecas
-
-Casi ningún programa es autónomo: usa bibliotecas compartidas, como la biblioteca estándar de C. Si el ejecutable está **enlazado dinámicamente**, el núcleo no salta directamente a él, sino al **cargador dinámico**, `ld.so`, que busca y carga las bibliotecas compartidas y resuelve las referencias a sus funciones.
-
-## 6. Ejecutar
-
-Por fin, se salta a la primera instrucción del programa. Un pequeño código de arranque prepara los argumentos y llama a `main`. A partir de aquí, el [planificador](/articulos/planificador-de-procesos/) reparte el procesador entre este proceso y los demás.
-
-## 7. Terminar
-
-Al acabar, el programa llama a `exit` con un **código de salida**: 0 si todo fue bien. El núcleo libera su memoria y avisa al padre, que recoge el código con `wait`. Es el número que la shell guarda en `$?`. Un hijo que ha terminado pero cuyo padre aún no ha recogido su código queda como proceso **zombi**.
+- **Confundir exec con creación.** Sustituye un programa; `fork` creó el hijo del ejemplo.
+- **Continuar como si exec hubiera funcionado.** Si devuelve un error, sigue activo el programa anterior.
+- **Confundir memoria virtual con copia completa desde disco.** Preparar regiones y materializar páginas son operaciones diferentes.
 
 ## Lo esencial
 
-- La shell crea un proceso hijo con fork y le cambia el programa con execve.
-- El núcleo carga el ejecutable en un espacio de direcciones propio: código, datos, montículo y pila.
-- El cargador dinámico enlaza las bibliotecas compartidas antes de llamar a main.
-- Al terminar, el código de salida vuelve al padre.
+- `fork` crea un hijo; `execve` sustituye su programa conservando su PID.
+- Argumentos, entorno, memoria y bibliotecas forman parte del inicio.
+- Cada llamada puede fallar y necesita tratar su resultado.
+- Terminar y recoger el estado del hijo son pasos distintos.

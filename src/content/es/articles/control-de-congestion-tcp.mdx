@@ -14,11 +14,11 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-El **control de congestión de TCP** regula cuánto tráfico mantiene un emisor en vuelo para adaptarse a la capacidad de la red. Intenta aprovecharla sin alimentar indefinidamente colas y pérdidas cuando varios flujos compiten por recursos limitados.
+El **control de congestión de [TCP](/articulos/tcp-y-udp/)** regula cuánto tráfico mantiene un emisor en vuelo para adaptarse a la capacidad de la red. Intenta aprovecharla sin alimentar indefinidamente colas y pérdidas cuando varios flujos compiten por recursos limitados.
 
 ## El receptor no es el único límite
 
-Un servidor puede recibir datos rápidamente y el cliente puede enviarlos todavía más deprisa. Entre ambos hay enlaces y routers con capacidad compartida. Que el receptor tenga memoria libre no significa que el camino pueda transportar cualquier cantidad de tráfico.
+Un [servidor](/articulos/que-es-un-servidor/) puede recibir datos rápidamente y el cliente puede enviarlos todavía más deprisa. Entre ambos hay enlaces y routers con capacidad compartida. Que el receptor tenga memoria libre no significa que el camino pueda transportar cualquier cantidad de tráfico.
 
 Si entran paquetes a un router más rápido de lo que salen, crece su cola. Cuando se agota el espacio, aparecen descartes. Incluso antes de perder paquetes, la espera en la cola puede aumentar la latencia.
 
@@ -50,7 +50,7 @@ El envío de datos nuevos queda condicionado por ambos límites, además de lo q
 
 El mecanismo clásico descrito en el RFC 5681 incluye **arranque lento**, o *slow start*. A pesar del nombre, la ventana puede crecer rápidamente según llegan confirmaciones, aproximadamente duplicándose por ronda bajo condiciones ideales.
 
-Al alcanzar un umbral, pasa a **evitación de congestión**, donde explora capacidad de forma más moderada. El objetivo no es conocer por adelantado el ancho de banda exacto del camino, sino adaptarse a partir de lo observado.
+Al alcanzar un umbral, pasa a **evitación de congestión**, donde explora capacidad de forma más moderada. El objetivo no es conocer por adelantado el [ancho de banda](/articulos/ancho-de-banda-latencia-y-rendimiento/) exacto del camino, sino adaptarse a partir de lo observado.
 
 No confundas la ventana con una tasa fija en bytes por segundo. La relación con el tiempo de ida y vuelta influye en el ritmo efectivo: una cantidad en vuelo tarda más en renovarse si las confirmaciones tardan más.
 

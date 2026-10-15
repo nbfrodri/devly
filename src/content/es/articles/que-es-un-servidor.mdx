@@ -1,0 +1,40 @@
+---
+title: "¿Qué es un servidor?"
+description: "Un servidor es un programa que ofrece un servicio a otros programas; también se llama así al ordenador que lo ejecuta."
+level: basico
+kind: definicion
+layer: aplicaciones
+updated: 2026-10-15
+sources:
+  - title: "MDN: ¿Qué es un servidor web?"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_web_server
+  - title: "MDN: Cómo funciona la web"
+    url: https://developer.mozilla.org/es/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works
+---
+
+Un **servidor** es un programa que ofrece un servicio a otros programas. Quien lo solicita actúa como **cliente**. También llamamos servidor al ordenador donde se ejecuta ese programa: el contexto indica si hablamos del software o de la máquina.
+
+## Un ejemplo: pedir una página
+
+Abres la web de una biblioteca para consultar su horario:
+
+1. Tu navegador, el programa con el que visitas páginas, pide el horario.
+2. Un servidor web recibe la petición y busca el contenido solicitado.
+3. Devuelve una respuesta con la página o con un error si no puede atenderla.
+4. El navegador interpreta lo recibido y lo muestra en tu pantalla.
+
+El servidor no envía una fotografía de su pantalla. Envía datos que el cliente utiliza para presentar el resultado. Las reglas del intercambio son un [protocolo](/articulos/que-es-un-protocolo-de-red/); en la web se usa [HTTP](/articulos/que-es-http/).
+
+## No es un tipo especial de ordenador
+
+Tu portátil puede ejecutar un servidor para compartir un archivo con otro equipo de casa. No necesita una forma especial ni estar conectado a internet: basta con que el cliente pueda comunicarse con ese programa.
+
+Los servicios con muchos usuarios suelen usar máquinas dedicadas, o repartir el trabajo entre varias. **Un servicio no equivale necesariamente a una máquina**. Tampoco una máquina aloja necesariamente un único servidor.
+
+El papel depende del intercambio: el servidor web puede pedir datos a otro programa y actuar entonces como cliente. Esa organización se desarrolla en el [modelo cliente-servidor](/articulos/cliente-servidor/).
+
+## No todos sirven páginas
+
+Un servidor de archivos comparte documentos; uno de correo recibe o entrega mensajes; un servidor [DNS](/articulos/que-es-dns/) responde consultas sobre nombres. No todos necesitan una base de datos ni una pantalla para funcionar.
+
+Cuando se dice que «el servidor está caído», el servicio no responde como se espera. La causa puede ser un programa detenido, una máquina apagada, una sobrecarga o un fallo en el camino de red. El mensaje por sí solo no identifica cuál de ellas ha ocurrido.

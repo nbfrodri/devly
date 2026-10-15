@@ -1,108 +1,134 @@
 ---
 title: "¿Qué es un gestor de paquetes?"
-description: "Un gestor de paquetes instala, actualiza y desinstala programas junto con todo lo que necesitan, desde un repositorio de confianza."
-level: basico
+description: "Un gestor de paquetes utiliza metadatos para seleccionar, instalar y mantener software y sus dependencias. Las versiones, la confianza y el entorno condicionan el resultado."
+level: intermedio
 layer: sistemas
 prerequisites:
   - distribuciones-de-linux
-  - ordenacion-topologica
-updated: 2026-10-14
+  - terminal-y-shell
+updated: 2026-10-15
 sources:
-  - title: "ArchWiki: pacman"
-    url: https://wiki.archlinux.org/title/Pacman_(Espa%C3%B1ol)
-  - title: "Debian: Acerca de Debian"
-    url: https://www.debian.org/intro/about.es.html
+  - title: "Debian Policy: relaciones entre paquetes (en inglés)"
+    url: https://www.debian.org/doc/debian-policy/ch-relationships.html
+  - title: "Debian Policy: formato y comparación de versiones (en inglés)"
+    url: https://www.debian.org/doc/debian-policy/ch-controlfields.html#version
+  - title: "APT: apt-secure(8) (en inglés)"
+    url: https://manpages.debian.org/trixie/apt/apt-secure.8.en.html
+  - title: "APT: apt-get(8) (en inglés)"
+    url: https://manpages.debian.org/trixie/apt/apt-get.8.en.html
+  - title: "Versionado semántico 2.0.0"
+    url: https://semver.org/lang/es/
+  - title: "npm: package-lock.json (en inglés)"
+    url: https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **gestor de paquetes** es una herramienta que instala, actualiza y desinstala programas de forma automática. Descarga cada programa de un **repositorio**, un almacén de confianza, junto con todo lo que necesita para funcionar, y lleva la cuenta de lo instalado.
+Un **gestor de paquetes** instala y mantiene software a partir de información sobre sus componentes. Un **paquete** reúne archivos y metadatos, como nombre, versión y requisitos. Una **dependencia** es otro componente que necesita para cumplir su función.
 
-Existen para los sistemas operativos, como `apt` o `pacman` en [Linux](/articulos/distribuciones-de-linux/), y para los lenguajes de programación, como `npm` para JavaScript o `pip` para Python.
+Herramientas como APT trabajan sobre paquetes de una [distribución Linux](/articulos/distribuciones-de-linux/); otras, como npm, gestionan dependencias de proyectos. No todas usan los mismos formatos, reglas ni permisos.
 
-## Qué problema resuelve
+## Qué trabajo evita
 
-Instalar un programa a mano significa buscarlo en internet, descargarlo de una web que hay que creer legítima, ejecutar un instalador y repetir el proceso con cada biblioteca que necesite. Y después, acordarse de actualizarlo todo.
+Imagina un generador de informes, A, que necesita B para leer datos y C para producir documentos. C necesita a su vez D. Buscar y mantener esas piezas a mano exige saber cuáles son compatibles, de dónde obtenerlas y qué aplicaciones siguen necesitándolas al retirar una.
 
-El gestor lo convierte en una orden:
+El gestor usa un **repositorio**, una fuente de paquetes y sus índices, para consultar candidatos. También conserva un registro local de lo instalado. Un repositorio no se convierte en confiable por llamarse así: su procedencia y los mecanismos de verificación forman parte de la configuración.
 
-```bash
-sudo apt install git
-```
+## Seguir una instalación
 
-## Qué es un paquete
+Para nuestro ejemplo, el repositorio ofrece esta combinación:
 
-Un archivo que contiene el programa y unos **metadatos**: nombre, versión, descripción y, sobre todo, la lista de **dependencias**, los otros paquetes que necesita.
-
-## Las dependencias
-
-Es el trabajo central del gestor. Si A necesita B y C, y C necesita D, hay que instalar D, C y B antes que A. Es una [ordenación topológica](/articulos/ordenacion-topologica/) del grafo de dependencias.
-
-Además, hay que respetar las **versiones**: si A necesita B en la versión 2 o superior, y otro programa necesita B por debajo de la 2, hay un conflicto. Encontrar un conjunto de versiones compatible para todo puede ser un problema difícil.
-
-### Comparar versiones
-
-Las versiones se suelen escribir con el esquema de **versionado semántico**: mayor, menor y corrección, como `2.14.3`. Compararlas no es comparar texto:
-
-```js
-function compararVersiones(a, b) {
-	const partesA = a.split(".").map(Number);
-	const partesB = b.split(".").map(Number);
-
-	for (let i = 0; i < 3; i++) {
-		if (partesA[i] !== partesB[i]) return partesA[i] - partesB[i];
-	}
-
-	return 0;
-}
-
-console.log("1.10.0" < "1.9.0"); // true
-console.log(compararVersiones("1.10.0", "1.9.0") > 0); // true
-```
-
-Como texto, "1.10.0" va antes que "1.9.0", porque el carácter "1" es menor que "9". Como versión, la 1.10 es posterior. Un error clásico.
-
-En el versionado semántico, cambiar el número **mayor** indica cambios incompatibles; el **menor**, funciones nuevas compatibles; el último, solo correcciones.
-
-## Seguridad
-
-- **Firmas.** Los paquetes de las distribuciones están firmados, y el gestor comprueba la firma antes de instalar. Un paquete alterado por el camino se rechaza.
-- **Revisión.** En las distribuciones, los paquetes los preparan y revisan sus mantenedores.
-
-Los repositorios de los lenguajes son distintos: cualquiera puede publicar. Eso los hace enormes y útiles, y también un objetivo: paquetes maliciosos con nombres parecidos a los legítimos, o paquetes legítimos cuyo autor pierde el control de su cuenta. Un proyecto pequeño puede arrastrar cientos de dependencias indirectas, como recuerda el artículo sobre [Node.js](/articulos/que-es-nodejs/). Cómo protegerse lo explica [cadena de suministro de software](/articulos/cadena-de-suministro-de-software/).
-
-## El archivo de bloqueo
-
-En un proyecto, el gestor de paquetes del lenguaje genera un **archivo de bloqueo** que fija la versión exacta de cada dependencia, también de las indirectas. Así todos los que trabajan en el proyecto, y el [pipeline de integración continua](/articulos/integracion-y-despliegue-continuos/), instalan exactamente lo mismo. Ese archivo se guarda en el repositorio.
-
-## Familias
-
-| Gestor | Dónde |
+| Paquete elegido | Necesita |
 | --- | --- |
-| `apt` | Debian, Ubuntu |
-| `dnf` | Fedora, Red Hat |
-| `pacman` | Arch |
-| Homebrew | macOS, y también Linux |
-| `winget` | Windows |
-| `npm`, `pnpm` | JavaScript |
-| `pip` | Python |
-| `cargo` | Rust |
+| A 1.0 | B de la serie 2 y C de la serie 1 |
+| B 2.3 | Ningún otro paquete de este modelo |
+| C 1.4 | D de la serie 3 |
+| D 3.1 | Ningún otro paquete de este modelo |
+
+El recorrido simplificado es:
+
+1. **Consultar requisitos y estado local.** Si B 2.3 ya está instalado y es adecuado, puede reutilizarse.
+2. **Resolver versiones.** Elegir candidatos que cumplan conjuntamente los requisitos, la plataforma y las reglas del gestor.
+3. **Preparar y verificar los archivos.** Obtener los que faltan y comprobarlos mediante el mecanismo de confianza configurado.
+4. **Instalar y configurar.** Registrar archivos y completar las operaciones necesarias para dejar el conjunto utilizable.
+
+En este modelo sin ciclos, D, C, B y A es un orden válido: cada dependencia queda preparada antes de quien la usa. B también podría ir antes de D. La [ordenación topológica](/articulos/ordenacion-topologica/) explica esa parte; resolver versiones es otro problema. Los gestores reales distinguen fases y tipos de dependencia, y pueden tener que tratar ciclos: no toda instalación se reduce a ordenar una lista.
+
+Si otra aplicación exige B de la serie 1 y solo puede existir una versión de B en ese entorno, ambas exigencias chocan. Si el sistema permite versiones aisladas, la solución puede ser diferente. El gestor no puede inventar una combinación compatible cuando ninguna de las disponibles cumple las condiciones.
 
 <Quiz
 	client:visible
-	question="¿Cuál es el trabajo principal de un gestor de paquetes además de descargar programas?"
+	question="A exige B de la serie 2; otra aplicación exige la serie 1. En el entorno solo puede haber una versión de B. ¿Qué debe detectar el gestor?"
 	options={[
-		"Resolver e instalar en orden las dependencias de cada programa",
-		"Comprimir los programas instalados",
-		"Traducir los programas a otros lenguajes",
+		"Un conflicto entre los requisitos que no se arregla descargando más deprisa",
+		"Que cualquier versión más reciente satisface siempre ambas aplicaciones",
+		"Que hay que ordenar los nombres alfabéticamente",
 	]}
 	answer={0}
 />
 
+## Las versiones tienen reglas
+
+Comparar versiones no equivale necesariamente a comparar texto. Este ejemplo acepta únicamente tres enteros decimales sin ceros iniciales, salvo el propio cero. Usa `BigInt`, el tipo de enteros de precisión arbitraria de JavaScript, para comparar sus valores. Rechaza otros formatos; no implementa todo el versionado semántico ni el de Debian:
+
+```js
+function partesVersion(version) {
+	if (typeof version !== "string") throw new TypeError("Se espera texto");
+	const partes = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(version);
+	if (!partes || partes[0] !== version) throw new TypeError("Se esperan tres enteros");
+	return partes.slice(1).map(BigInt);
+}
+
+function compararVersiones(a, b) {
+	const partesA = partesVersion(a);
+	const partesB = partesVersion(b);
+	for (let i = 0; i < 3; i++) {
+		if (partesA[i] < partesB[i]) return -1;
+		if (partesA[i] > partesB[i]) return 1;
+	}
+	return 0;
+}
+
+console.log("1.10.0" < "1.9.0"); // true
+console.log(compararVersiones("1.10.0", "1.9.0")); // 1
+console.log(compararVersiones("2.0.0", "2.0.0")); // 0
+```
+
+La comparación numérica encuentra 10 después de 9 en el segundo componente. **Versionado semántico**, o SemVer, añade un contrato sobre la interfaz pública: en versiones estables, el número mayor señala cambios incompatibles, el menor nuevas funciones compatibles y el último correcciones compatibles. La serie inicial `0.x` tiene reglas de desarrollo distintas; también existen versiones preliminares y metadatos que este código rechaza.
+
+No todos los paquetes siguen SemVer. Debian admite componentes como época y revisión, y reglas propias de ordenación. Para decidir qué instalar se utiliza el comparador del ecosistema correspondiente, junto con las restricciones declaradas.
+
+## Consultar un plan sin instalar
+
+En Debian o Ubuntu con APT e índices de paquetes disponibles, puedes simular una instalación:
+
+```bash
+apt-get -s install git
+```
+
+`-s` muestra el plan sin instalar ni quitar paquetes. La salida depende de los repositorios, sus índices y lo ya instalado; puede indicar que Git está al día o proponer paquetes adicionales. Una simulación no garantiza que una instalación posterior tenga éxito: pueden cambiar los índices, la red o el estado del sistema. No requiere anteponer `sudo` para esta consulta habitual.
+
+## Qué comprueba la autenticación
+
+En APT, la cadena de verificación conecta metadatos firmados del repositorio con resúmenes de los índices y paquetes. No consiste necesariamente en verificar una firma individual dentro de cada paquete. Ayuda a detectar sustituciones respecto a la fuente confiada, pero no demuestra que su código carezca de fallos o comportamiento malicioso.
+
+Los paquetes pueden ejecutar operaciones durante su instalación. Elegir proveedor, revisar cambios y limitar fuentes forma parte de proteger la [cadena de suministro](/articulos/cadena-de-suministro-de-software/). La firma y la revisión del funcionamiento responden a preguntas distintas.
+
+## Qué fija un archivo de bloqueo
+
+En proyectos, un **archivo de bloqueo**, como `package-lock.json` de npm, registra dependencias resueltas, sus versiones y otra información de procedencia o integridad. Guardarlo con el código ayuda a repetir la selección en desarrollo y en [integración continua](/articulos/integracion-y-despliegue-continuos/).
+
+No fija por sí solo toda la máquina. Plataforma, versión de herramientas, dependencias opcionales, opciones de instalación y pasos de compilación pueden alterar el resultado. Además, cada gestor tiene su propio flujo: no todos generan automáticamente el mismo tipo de archivo al instalar.
+
+## Errores comunes
+
+- **Confundir resolver con descargar.** Primero hace falta una combinación que cumpla los requisitos.
+- **Ordenar cualquier versión como texto o como tres números.** El formato define su comparación.
+- **Confundir autenticidad con ausencia de errores.** Un paquete auténtico todavía necesita evaluación y mantenimiento.
+
 ## Lo esencial
 
-- Un gestor de paquetes instala, actualiza y desinstala programas desde un repositorio de confianza.
-- Resuelve las dependencias, instalándolas en el orden correcto y con versiones compatibles.
-- Las versiones se comparan por números, no como texto.
-- Los paquetes firmados protegen de alteraciones; los repositorios abiertos exigen más cuidado.
-- El archivo de bloqueo garantiza que todos instalan las mismas versiones.
+- Los metadatos permiten seleccionar y mantener paquetes relacionados.
+- Dependencias, versiones y plataforma condicionan qué combinaciones son posibles.
+- La verificación establece una cadena de confianza, no una garantía sobre todo el comportamiento.
+- El archivo de bloqueo mejora la reproducción de dependencias; el entorno también cuenta.
