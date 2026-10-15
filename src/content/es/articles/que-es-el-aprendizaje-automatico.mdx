@@ -5,7 +5,7 @@ level: basico
 layer: ia
 prerequisites:
   - funciones
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "Google: ¿Qué es el aprendizaje automático? (curso oficial)"
     url: https://developers.google.com/machine-learning/intro-to-ml/what-is-ml?hl=es-419
@@ -19,7 +19,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-El **aprendizaje automático** (*machine learning*) es una forma de construir programas en la que no escribes las reglas: le das ejemplos al ordenador y él encuentra las reglas. Es la técnica que hay detrás de la mayor parte de lo que hoy se llama inteligencia artificial, incluidos los [modelos de lenguaje](/articulos/modelos-de-lenguaje/).
+El **aprendizaje automático** (*machine learning*) es una forma de construir programas en la que un algoritmo ajusta un modelo a partir de datos. Quien lo diseña sigue eligiendo datos, representación, objetivo y procedimiento de aprendizaje; no escribe a mano cada regla de decisión. Es la técnica que hay detrás de la mayor parte de lo que hoy se llama inteligencia artificial, incluidos los [modelos de lenguaje](/articulos/modelos-de-lenguaje/).
 
 ## Qué problema resuelve
 
@@ -27,12 +27,12 @@ Programar consiste normalmente en escribir reglas. Funciona cuando sabes describ
 
 Hay tareas para las que nadie sabe escribir las reglas. ¿Qué instrucciones exactas distinguen la foto de un gato de la de un perro? Las personas lo hacemos sin esfuerzo, pero no sabemos explicarlo paso a paso.
 
-El aprendizaje automático da la vuelta al planteamiento:
+El aprendizaje **supervisado**, en el que los ejemplos incluyen respuestas conocidas, da la vuelta al planteamiento:
 
 | | Entrada | Resultado |
 | --- | --- | --- |
 | Programación tradicional | Datos y reglas | Respuestas |
-| Aprendizaje automático | Datos y respuestas | Reglas |
+| Aprendizaje supervisado | Datos y respuestas conocidas | Modelo ajustado |
 
 En lugar de reglas, reúnes muchas fotos ya etiquetadas como "gato" o "perro" y dejas que un algoritmo encuentre qué las diferencia.
 
@@ -45,7 +45,7 @@ En lugar de reglas, reúnes muchas fotos ya etiquetadas como "gato" o "perro" y 
 
 ## Entrenar
 
-**Entrenar** es ajustar los parámetros del modelo para que sus predicciones se acerquen a las etiquetas. El proceso es repetitivo:
+En el caso supervisado, **entrenar** es ajustar el modelo según un objetivo que compara predicciones y etiquetas. Muchos métodos lo hacen mediante un proceso repetitivo:
 
 1. El modelo predice con los parámetros que tiene.
 2. Se mide cuánto se ha equivocado.
@@ -76,15 +76,15 @@ const predecir = (x) => peso * x;
 console.log(predecir(4)); // 8
 ```
 
-Nadie le ha dicho al programa que la regla es "multiplica por dos". La ha deducido de los ejemplos, y con ella responde a un caso que no había visto, `x = 4`.
+Hemos elegido la familia de reglas `y = peso * x`, pero no el valor del peso. El programa obtiene `2` porque la suma de productos es `28` y la suma de cuadrados es `14`. Esa fórmula minimiza la suma de errores al cuadrado en esta familia, siempre que el denominador no sea cero. Después calcula `2 * 4 = 8`: es una predicción, no una prueba de que toda entrada futura siga la misma relación.
 
-Aquí el mejor valor se calcula con una fórmula directa. Los modelos reales tienen millones de parámetros y los ajustan poco a poco, pero la idea es la misma.
+Aquí el mejor valor se calcula con una fórmula directa. También hay modelos útiles pequeños y métodos sin ajuste iterativo. Algunas redes neuronales, en cambio, tienen millones de parámetros y necesitan muchas actualizaciones.
 
 ## Entrenar no es usar
 
 Hay dos fases distintas:
 
-- **Entrenamiento**: se ajustan los parámetros con los ejemplos. Es la parte costosa.
+- **Entrenamiento**: se ajusta el modelo con los datos. Puede ser costoso; el coste total también depende de cuántas inferencias se hagan.
 - **Inferencia**: se usa el modelo ya entrenado para predecir sobre datos nuevos.
 
 ## Tres formas de aprender
@@ -104,11 +104,17 @@ Hay dos fases distintas:
 
 Un modelo puede acertar todos los ejemplos de entrenamiento y fallar con datos nuevos. Ocurre cuando ha memorizado los ejemplos en lugar de captar el patrón general. Se llama [**sobreajuste**](/articulos/sobreajuste-y-subajuste/).
 
-Para detectarlo se reserva una parte de los datos y no se usa al entrenar. Después se evalúa el modelo con esa parte, el **conjunto de prueba**. Lo que importa es cómo responde ante lo que no ha visto.
+Para estimar cómo generaliza se evalúa con datos separados del ajuste. Un conjunto de **validación** ayuda a elegir entre modelos; el **conjunto de prueba** se reserva para la evaluación final. Si se toman decisiones repetidamente mirando el resultado de prueba, ese conjunto deja de ser una comprobación independiente.
 
 ## Sus límites
 
 Un modelo solo conoce sus datos. Si son escasos, erróneos o no representan bien la realidad, sus predicciones heredarán esos defectos. Entender los datos antes de usarlos empieza por resumirlos con medidas como la [media, la mediana y la desviación típica](/articulos/media-mediana-y-desviacion/). Además predice a partir de patrones estadísticos: puede dar una respuesta equivocada con total seguridad.
+
+## Errores comunes
+
+- **Creer que aprender elimina las decisiones humanas.** Elegir qué datos, modelo y objetivo usar condiciona el resultado.
+- **Confundir acertar tres ejemplos con descubrir una ley.** Distintas relaciones pueden coincidir en los datos observados y divergir fuera de ellos.
+- **Presentar el acierto de entrenamiento como rendimiento futuro.** El modelo puede ajustarse a peculiaridades de esos datos; hace falta una evaluación separada y representativa.
 
 ## Para comparar
 
@@ -117,7 +123,7 @@ Un modelo solo conoce sus datos. Si son escasos, erróneos o no representan bien
 
 ## Lo esencial
 
-- En el aprendizaje automático el programa obtiene las reglas a partir de ejemplos.
+- En el aprendizaje automático un algoritmo ajusta un modelo a partir de datos y de un objetivo elegido.
 - Un modelo es una función con parámetros que se ajustan durante el entrenamiento.
 - Entrenar ajusta el modelo; inferir es usarlo.
 - Un modelo es bueno si acierta con datos que no ha visto, no si memoriza los de entrenamiento.

@@ -1,13 +1,13 @@
 ---
 title: "¿Cómo funciona una base de datos por dentro? Páginas, WAL y MVCC"
-description: "Una base de datos guarda las filas en páginas, apunta cada cambio en un registro antes de hacerlo y mantiene varias versiones de cada fila para que leer no bloquee a escribir."
+description: "Páginas, registro anticipado y versiones de filas: cómo PostgreSQL organiza datos, recupera cambios y coordina lecturas y escrituras."
 level: avanzado
 layer: datos
 prerequisites:
   - transacciones-y-acid
   - indices-de-bases-de-datos
   - que-es-postgresql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Database Page Layout (en inglés)"
     url: https://www.postgresql.org/docs/current/storage-page-layout.html
@@ -15,6 +15,8 @@ sources:
     url: https://www.postgresql.org/docs/current/wal-intro.html
   - title: "PostgreSQL: Introduction to MVCC (en inglés)"
     url: https://www.postgresql.org/docs/current/mvcc-intro.html
+  - title: "PostgreSQL: Continuous Archiving and Point-in-Time Recovery (en inglés)"
+    url: https://www.postgresql.org/docs/current/continuous-archiving.html
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -38,18 +40,20 @@ Las páginas que se usan se guardan en memoria, en una [caché](/articulos/que-e
 
 Si la base de datos modificara directamente las páginas en el disco y se fuera la luz a mitad, quedarían datos a medias. La solución es el **registro de escritura anticipada** (*write-ahead log*, WAL). La documentación de PostgreSQL resume su idea central: los cambios en los archivos de datos solo se escriben **después** de haber registrado en el WAL, en almacenamiento permanente, una descripción de esos cambios.
 
-1. Una transacción modifica páginas **en memoria**.
-2. Antes de confirmarla, sus cambios se apuntan en el WAL y este se fuerza al disco.
-3. La transacción se considera confirmada. Las páginas modificadas se escribirán más tarde, con calma.
-4. Si el servidor cae, al arrancar **rehace** desde el WAL todo lo confirmado que no llegó a las páginas.
+1. Durante las modificaciones de páginas **en memoria**, se generan registros WAL.
+2. Antes de escribir una página modificada en almacenamiento persistente, debe haberse persistido su WAL correspondiente.
+3. Con confirmación síncrona, antes de responder que la transacción está confirmada se fuerza el WAL necesario, incluido su registro de confirmación. No hace falta esperar a escribir todas las páginas de datos.
+4. Tras una caída, la recuperación **rehace** los cambios necesarios desde el WAL y respeta el estado de confirmación de las transacciones al determinar qué datos son visibles.
 
-Es la misma idea que un [sistema de archivos con registro](/articulos/sistema-de-archivos-con-registro/), y da la durabilidad de [ACID](/articulos/transacciones-y-acid/). Además, es más rápido: el WAL se escribe **secuencialmente**, y basta con forzar al disco ese archivo, no cada página tocada. Con muchas transacciones pequeñas, una sola escritura del WAL puede confirmar varias a la vez. Y guardando el WAL se puede restaurar la base de datos a cualquier instante pasado.
+El orden recuerda al de un [sistema de archivos con registro](/articulos/sistema-de-archivos-con-registro/). La escritura secuencial del WAL permite agrupar trabajo y evita forzar cada página para confirmar. La garantía depende de la configuración y de que el almacenamiento respete la sincronización.
+
+Para recuperar un punto pasado necesitas una **copia base** válida y una secuencia continua de WAL archivado que cubra desde esa copia hasta el objetivo. Guardar solo el WAL no permite reconstruir cualquier fecha ni recuperar segmentos perdidos.
 
 ## MVCC: varias versiones de cada fila
 
-¿Qué pasa si alguien lee una fila mientras otro la está modificando? Con cerrojos, uno esperaría al otro. PostgreSQL usa **control de concurrencia multiversión** (MVCC): según su documentación, cada sentencia ve una **instantánea** de los datos tal como estaban en un momento dado, y así **leer nunca bloquea a escribir, ni escribir a leer**.
+¿Qué pasa si alguien lee una fila mientras otro la modifica? PostgreSQL usa **control de concurrencia multiversión** (MVCC): una lectura ordinaria observa versiones visibles para su **instantánea**. Así no necesita esperar a que termine una actualización de esa fila. Siguen existiendo bloqueos: por ejemplo, escrituras concurrentes, lecturas que piden bloqueo explícito y cambios de esquema pueden esperar.
 
-La idea: un `UPDATE` no sobrescribe la fila. Crea una **versión nueva** y marca la anterior como sustituida, cada una con el número de la transacción que la creó y la que la borró. Cada transacción ve solo las versiones que estaban vigentes en su instantánea:
+La idea: un `UPDATE` crea una **versión nueva** y registra la sustitución de la anterior. Para ver el mecanismo, este modelo usa números como momentos lógicos de confirmación. No simula las reglas reales de visibilidad de PostgreSQL, que también consideran transacciones activas y abortadas:
 
 ```js
 const versiones = [
@@ -63,7 +67,7 @@ const leer = (instantanea) => versiones.filter((v) => visible(v, instantanea)).m
 console.log(leer(15), leer(25)); // 100 70
 ```
 
-Una transacción que empezó en el momento 15 sigue viendo un saldo de 100, aunque la transacción 20 ya lo haya cambiado a 70. Una que empieza en el 25 ve el 70. Ninguna espera a la otra. Así se implementan los [niveles de aislamiento](/articulos/transacciones-y-acid/).
+Una instantánea del momento 15 ve 100; una del 25 ve 70. Cuándo se renueva depende del [nivel de aislamiento](/articulos/niveles-de-aislamiento/): en Read Committed de PostgreSQL hay una nueva por sentencia; en Repeatable Read se conserva durante la transacción. Los números de transacción reales no son marcas temporales intercambiables con los de esta simulación.
 
 El coste: las versiones viejas se acumulan. Cuando ninguna transacción puede verlas ya, hay que limpiarlas. En PostgreSQL lo hace el proceso de **vacuum**, una especie de [recolección de basura](/articulos/recoleccion-de-basura/) de filas.
 
@@ -74,13 +78,28 @@ flowchart TD
 	Q["UPDATE clientes ..."] --> M["Página en memoria:<br>nueva versión de la fila"]
 	M --> W["WAL en disco:<br>se registra el cambio"]
 	W --> C["Confirmación"]
-	M -. "más tarde" .-> D["Página en disco"]
+	W -. "solo después del WAL correspondiente" .-> D["Página en disco"]
 	C -. "si cae el servidor" .-> R["Recuperación desde el WAL"]
 ```
+
+La página puede llegar al disco antes o después de la confirmación: la condición imprescindible es que su WAL correspondiente llegue primero.
+
+<Quiz
+	client:visible
+	question="Hay una copia base, pero falta un segmento de WAL entre ella y el punto al que quieres restaurar. ¿Basta con conservar los segmentos posteriores?"
+	options={["Sí, el último segmento contiene toda la base", "No: la recuperación necesita la secuencia de cambios que cubre ese intervalo", "Sí, si las tablas tienen índices"]}
+	answer={1}
+/>
+
+## Errores comunes
+
+- **Confundir una instantánea con una copia física de toda la base.** Es una regla de visibilidad sobre versiones; no exige copiar todos los datos por lector.
+- **Suponer que MVCC elimina cualquier espera.** Las versiones reducen conflictos entre lecturas ordinarias y escrituras, pero no sustituyen toda coordinación.
+- **Usar WAL como única copia de seguridad.** La recuperación a un punto requiere también una base de partida y continuidad del registro.
 
 ## Lo esencial
 
 - Las bases de datos leen y escriben páginas de tamaño fijo, y cachean en memoria las que usan.
-- El WAL registra cada cambio antes de aplicarlo: permite recuperarse de una caída y confirmar rápido.
-- MVCC guarda varias versiones de cada fila para que leer y escribir no se bloqueen.
+- El WAL correspondiente debe persistirse antes que una página modificada; puede bastar para confirmar sin forzar todas las páginas.
+- MVCC permite leer versiones compatibles con una instantánea y reduce bloqueos entre lecturas ordinarias y escrituras.
 - Las versiones viejas se limpian después, con procesos como el vacuum de PostgreSQL.

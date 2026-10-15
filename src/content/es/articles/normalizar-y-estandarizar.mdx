@@ -1,13 +1,13 @@
 ---
 title: "Diferencias entre normalizar y estandarizar datos"
-description: "Normalizar lleva los datos a un rango fijo, como de 0 a 1; estandarizar los centra en cero con desviación uno. Muchos modelos funcionan mal si las variables tienen escalas distintas."
+description: "Mínimo-máximo reescala el rango de entrenamiento a 0–1; estandarizar resta la media y divide por la desviación. Sus parámetros se reutilizan en datos nuevos."
 level: basico
 kind: comparacion
 layer: datos
 prerequisites:
   - preparacion-de-datos
   - media-mediana-y-desviacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "scikit-learn: Preprocessing data (en inglés)"
     url: https://scikit-learn.org/stable/modules/preprocessing.html
@@ -15,21 +15,21 @@ sources:
     url: https://developers.google.com/machine-learning/crash-course/numerical-data/normalization
 ---
 
-import { Quiz } from "@/components/quiz";
-
-Muchos modelos de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) funcionan mal si las variables tienen escalas muy distintas: una edad entre 18 y 90 junto a unos ingresos entre 10 000 y 200 000. Para igualarlas se **reescalan** los datos, normalmente de dos formas: **normalizar** o **estandarizar**.
+Muchos modelos de [aprendizaje automático](/articulos/que-es-el-aprendizaje-automatico/) son sensibles a las escalas de las variables: una edad entre 18 y 90 junto a unos ingresos entre 10 000 y 200 000. El **escalado mínimo-máximo**, llamado aquí normalización, lleva el mínimo y el máximo de entrenamiento a 0 y 1. La **estandarización** resta la media y divide por la desviación típica. Ambas fórmulas necesitan tratar aparte las columnas constantes. Cambian las unidades sin convertir por sí mismas una variable en más relevante. «Normalizar» también puede significar dividir un vector por su norma; aquí no usamos esa acepción.
 
 ## Para comparar
 
 | | Normalizar (mínimo-máximo) | Estandarizar (puntuación z) |
 | --- | --- | --- |
 | Fórmula | (x − mínimo) / (máximo − mínimo) | (x − media) / desviación típica |
-| Resultado | Valores entre 0 y 1 | Media 0 y desviación típica 1 |
-| Con [valores atípicos](/articulos/valores-atipicos/) | Muy sensible: uno solo aplasta a los demás | Más robusta, aunque también le afectan |
+| Resultado en entrenamiento, si la columna no es constante | Valores entre 0 y 1 | Media 0 y desviación típica 1 |
+| Con [valores atípicos](/articulos/valores-atipicos/) | Los extremos cambian el rango | Los extremos afectan a media y desviación; no es un escalador robusto |
 | En scikit-learn | `MinMaxScaler` | `StandardScaler` |
 | Cuándo | Cuando hace falta un rango fijo, como en píxeles de una imagen | Opción por defecto en muchos modelos |
 
-## Con un valor atípico
+## Los mismos datos de dos formas
+
+El ejemplo usa una columna no vacía de números finitos, con mínimo distinto del máximo y desviación positiva. Compara ambas transformaciones sobre los mismos cinco valores:
 
 ```js
 const datos = [10, 20, 30, 40, 500];
@@ -43,16 +43,24 @@ const desviacion = Math.sqrt(datos.reduce((a, x) => a + (x - media) ** 2, 0) / d
 console.log(datos.map((x) => ((x - media) / desviacion).toFixed(2)).join(" ")); // "-0.58 -0.53 -0.47 -0.42 2.00"
 ```
 
-Al normalizar, el 500 se queda con el 1 y los otros cuatro valores se apiñan entre 0 y 0,06: casi no se distinguen. Al estandarizar, siguen separados. Si hay muchos valores atípicos, existen escaladores robustos que usan la mediana en lugar de la media.
+Al normalizar, el 500 se queda con el 1 y los otros cuatro valores se apiñan entre 0 y 0,06: casi no se distinguen. Estandarizar cambia la escala de separación, pero no recupera información ni elimina el efecto del extremo: ambas transformaciones son afines y conservan las proporciones entre distancias de esa columna. Los escaladores robustos pueden usar mediana y rango intercuartílico; tampoco deciden si un dato extremo es erróneo.
+
+Si todos los valores son iguales, las dos fórmulas dividirían por cero. Una implementación debe definir qué hacer, por ejemplo centrar la columna constante en cero, conservar una escala de uno o retirarla si no aporta información.
 
 ## La regla que no hay que saltarse
 
-Los parámetros del escalado, el mínimo y el máximo o la media y la desviación, se calculan **solo con los datos de entrenamiento** y se aplican igual a los de prueba. Calcularlos con todos los datos filtra información de la prueba al entrenamiento y da resultados demasiado optimistas. La documentación de scikit-learn lo resuelve encadenando el escalado y el modelo en un mismo flujo.
+Los parámetros del escalado, el mínimo y el máximo o la media y la desviación, se calculan **solo con los datos de entrenamiento** y se aplican igual a los de prueba. Calcularlos con todos los datos filtra información de la prueba al entrenamiento y puede dar resultados demasiado optimistas. La documentación de scikit-learn lo resuelve encadenando el escalado y el modelo en un mismo flujo.
 
-## Qué modelos lo necesitan
+Con mínimo 10 y máximo 500, un dato nuevo de 600 se transforma en `(600 - 10) / 490`, aproximadamente 1,204. No está entre cero y uno: el rango garantizado era el de entrenamiento. Recortarlo a uno sería otra operación y perdería la diferencia entre 500 y 600. En la estandarización, los datos nuevos tampoco tienen por qué conservar media cero ni desviación uno.
 
-- **Lo necesitan**: los que miden distancias, como [vecinos más cercanos](/articulos/vecinos-mas-cercanos/) o [k-medias](/articulos/agrupamiento-y-k-medias/), y los que aprenden con [descenso del gradiente](/articulos/descenso-del-gradiente/), como las redes neuronales.
-- **No lo necesitan**: los [árboles de decisión](/articulos/arboles-de-decision/), que solo comparan valores de una misma variable.
+## Cuándo elegir cada uno
+
+Si el rango tiene límites conocidos del dominio, como canales de imagen de 0 a 255, un escalado fijo puede ser más adecuado que aprender los extremos observados. Si buscas centrar variables y expresar distancias en unidades de desviación, estandarizar ofrece esa interpretación. Valida la elección según el modelo; estandarizar no convierte una distribución sesgada en normal.
+
+## Qué modelos son sensibles
+
+- **Sensibles a la escala**: los que miden distancias, como [vecinos más cercanos](/articulos/vecinos-mas-cercanos/) o [k-medias](/articulos/agrupamiento-y-k-medias/), y los que aprenden con [descenso del gradiente](/articulos/descenso-del-gradiente/), como las redes neuronales.
+- **Generalmente no requieren este escalado**: los [árboles de decisión](/articulos/arboles-de-decision/), que solo comparan valores de una misma variable.
 
 ## Y la normalización de bases de datos
 
@@ -60,7 +68,7 @@ No tiene nada que ver: la [normalización de bases de datos](/articulos/normaliz
 
 ## Lo esencial
 
-- Normalizar lleva los datos a un rango, normalmente de 0 a 1.
-- Estandarizar los deja con media 0 y desviación típica 1, y aguanta mejor los valores atípicos.
+- Mínimo-máximo lleva el rango de entrenamiento a 0–1; datos nuevos pueden quedar fuera.
+- Estandarizar centra entrenamiento en cero y, con desviación positiva, lo escala a desviación uno; sigue siendo sensible a extremos.
 - Los parámetros se calculan solo con los datos de entrenamiento.
 - Importa en modelos de distancias y de gradiente, no en árboles de decisión.

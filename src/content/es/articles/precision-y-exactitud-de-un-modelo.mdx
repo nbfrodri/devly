@@ -6,7 +6,7 @@ kind: comparacion
 layer: ia
 prerequisites:
   - como-se-evalua-un-modelo-de-clasificacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google Machine Learning Crash Course: Accuracy, precision, recall (en inglés)"
     url: https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall
@@ -14,9 +14,7 @@ sources:
     url: https://developers.google.com/machine-learning/glossary
 ---
 
-import { Quiz } from "@/components/quiz";
-
-En el habla común, exactitud y precisión parecen lo mismo. Al evaluar un clasificador, son medidas distintas, y confundirlas lleva a creer que un modelo es bueno cuando no sirve para nada. En inglés son *accuracy* y *precision*.
+La **exactitud** (*accuracy*) es la proporción de predicciones correctas sobre el total. La **precisión** (*precision*) es la proporción de positivos reales entre los casos marcados como positivos. Al evaluar un clasificador, responden preguntas distintas.
 
 ## Para comparar
 
@@ -24,8 +22,8 @@ En el habla común, exactitud y precisión parecen lo mismo. Al evaluar un clasi
 | --- | --- | --- |
 | Pregunta | ¿Qué parte de todas las predicciones es correcta? | De lo que el modelo marca como positivo, ¿qué parte lo es? |
 | Fórmula | (VP + VN) / total | VP / (VP + FP) |
-| Le afecta | Que una clase sea mucho más frecuente | Las falsas alarmas |
-| Útil cuando | Las clases están equilibradas | Las falsas alarmas cuestan caro |
+| Le afecta | La frecuencia de las clases y ambos tipos de error | Los positivos detectados y las falsas alarmas; también la frecuencia de la clase |
+| Útil cuando | Importa el porcentaje global de aciertos, con costes comparables | Importa la proporción de alarmas correctas |
 
 VP son verdaderos positivos; VN, verdaderos negativos; FP, falsos positivos. Lo explica la [matriz de confusión](/articulos/como-se-evalua-un-modelo-de-clasificacion/).
 
@@ -38,20 +36,20 @@ const exactitud = (vp, fp, fn, vn) => (vp + vn) / (vp + fp + fn + vn);
 const precision = (vp, fp) => vp / (vp + fp);
 const exhaustividad = (vp, fn) => vp / (vp + fn);
 
-// Un "modelo" que dice siempre que no es spam.
+// Always predict the negative class.
 console.log(exactitud(0, 0, 10, 990)); // 0.99
 
-// Un modelo de verdad.
+// Compare another detector on the same messages.
 console.log(exactitud(8, 12, 2, 978), precision(8, 12), exhaustividad(8, 2)); // 0.986 0.4 0.8
 ```
 
-El modelo que no detecta nada tiene un 99 % de exactitud, más que el que sí funciona. Como señala el curso de Google, la exactitud solo sirve como medida aproximada cuando las clases están equilibradas.
+La referencia que no detecta nada tiene un 99 % de exactitud, más que el segundo detector. Ese porcentaje es correcto, pero no responde cuántos mensajes de spam encuentra. El equilibrio de clases tampoco basta para elegir exactitud: importan los costes de los errores y la pregunta que se quiere responder.
 
-El modelo real atrapa 8 de los 10 spam (**exhaustividad** del 80 %), pero de los 20 correos que marca, solo 8 lo eran: **precisión** del 40 %. Ese dato es el que importa a quien ve sus correos buenos en la carpeta de spam.
+El segundo detector atrapa 8 de los 10 spam (**exhaustividad** del 80 %), pero de los 20 correos que marca, solo 8 lo eran: **precisión** del 40 %. Esa cifra describe sus falsas alarmas; decidir si es útil exige valorar las consecuencias. La precisión de la referencia no está definida por la fórmula, porque no marca ningún positivo y divide cero entre cero. No debe presentarse como precisión perfecta.
 
 ## Precisión y exhaustividad
 
-Suelen ir en direcciones opuestas: un modelo más estricto marca menos y acierta más en lo que marca (más precisión), pero se le escapan más casos (menos exhaustividad). Cuál priorizar depende del coste de cada error:
+Para puntuaciones fijas, subir el umbral reduce o mantiene los casos marcados y no aumenta la exhaustividad. La precisión puede subir o bajar: si la puntuación más alta corresponde a un negativo, quedarse solo con ella empeora la proporción de aciertos. El artículo de [evaluación de clasificadores](/articulos/como-se-evalua-un-modelo-de-clasificacion/) recorre ese contraejemplo. Qué priorizar depende del coste de cada error:
 
 - **Prima la precisión** cuando una falsa alarma es cara: bloquear una cuenta legítima.
 - **Prima la exhaustividad** cuando se escapa algo grave: no detectar una enfermedad.
