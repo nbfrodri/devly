@@ -6,7 +6,7 @@ kind: comparacion
 layer: programacion
 prerequisites:
   - tipos-de-datos
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "TypeScript Handbook: The Basics (en inglés)"
     url: https://www.typescriptlang.org/docs/handbook/2/basic-types.html
@@ -24,7 +24,7 @@ En un lenguaje de **tipado estático**, el [tipo](/articulos/tipos-de-datos/) de
 
 Cada operación tiene sentido para unos tipos y no para otros. Se puede calcular la longitud de un texto, pero no la de un número. **Comprobar los tipos** es verificar que cada operación recibe lo que espera.
 
-Todos los lenguajes lo hacen de algún modo. La diferencia está en el **cuándo**.
+La distinción principal es **cuándo** se comprueba la compatibilidad. El conjunto de errores detectados y la reacción ante uno dependen del lenguaje y de la herramienta.
 
 ## Tipado dinámico
 
@@ -49,7 +49,7 @@ console.log(longitud("hola")); // 4
 console.log(longitud(42)); // undefined
 ```
 
-La segunda llamada es un error de quien programa, pero JavaScript no avisa: devuelve `undefined`, porque un número no tiene `length`, y el fallo saldrá a la luz más adelante, lejos de su causa.
+La segunda llamada incumple la intención de esta función, pero JavaScript permite consultar esa propiedad y devuelve `undefined`. El fallo puede manifestarse más adelante o pasar inadvertido si nadie usa el resultado.
 
 ## Tipado estático
 
@@ -84,9 +84,9 @@ No se ha anotado nada, pero el verificador sabe que `edad` es un número y `nomb
 | | Estático | Dinámico |
 | --- | --- | --- |
 | Cuándo se comprueban los tipos | Antes de ejecutar | Durante la ejecución |
-| El tipo pertenece a | La variable | El valor |
+| Qué se comprueba | Tipos de expresiones y variables antes de ejecutar | Tipos de los valores usados al ejecutar |
 | Los errores de tipo se ven | Al escribir o compilar | Al ejecutar esa línea |
-| Código inicial | Más anotaciones | Más breve |
+| Anotaciones | Pueden ser explícitas o inferidas | No son necesarias para la comprobación dinámica |
 | Ejemplos | Java, C#, Go, Rust, TypeScript | JavaScript, Python, Ruby |
 
 ## Qué aporta cada uno
@@ -94,13 +94,13 @@ No se ha anotado nada, pero el verificador sabe que `edad` es un número y `nomb
 ### El tipado estático
 
 - **Detecta antes toda una clase de errores**: nombres mal escritos, argumentos en mal orden, valores que pueden faltar.
-- **Hace de documentación** que no se queda anticuada. La firma de una función dice qué recibe y qué devuelve.
-- **Mejora las herramientas.** El editor autocompleta con acierto y puede renombrar algo en todo el proyecto con seguridad.
-- **Da confianza al cambiar código.** Si modificas una función, el verificador señala todos los lugares que hay que adaptar.
+- **Documenta restricciones comprobables.** La firma expresa qué recibe y devuelve una función, dentro de lo que el sistema de tipos puede representar.
+- **Mejora las herramientas.** Los tipos ayudan al autocompletado y a localizar referencias al renombrar; el código generado o los accesos dinámicos pueden quedar fuera de ese alcance.
+- **Ayuda al cambiar código.** El verificador señala usos incompatibles que pueda analizar. Un tipo demasiado amplio o una comprobación desactivada reduce esa ayuda.
 
 ### El tipado dinámico
 
-- **Se empieza más rápido.** Menos texto y ningún paso previo.
+- **Puede reducir el trabajo inicial.** No exige expresar restricciones estáticas, aunque la brevedad depende también de la sintaxis y las bibliotecas.
 - **Es flexible** para prototipos, guiones cortos y exploración de datos.
 - **Evita pelear con el sistema de tipos** en casos legítimos que son difíciles de expresar.
 
@@ -121,26 +121,19 @@ Por eso se han extendido las soluciones intermedias. [TypeScript](/articulos/que
 
 ## Otro eje: fuerte y débil
 
-Hay una segunda distinción que se confunde con la anterior. Describe cuánto convierte el lenguaje los tipos por su cuenta.
+Hay una segunda terminología que se confunde con la anterior: tipos «fuertes» o «débiles». No tiene una definición única. A veces describe las conversiones implícitas y otras, las posibilidades de eludir restricciones; conviene hablar de una regla concreta.
 
-- **Tipado débil**: el lenguaje convierte valores automáticamente para que la operación salga adelante.
-- **Tipado fuerte**: se niega y da un error.
+- Una operación puede **convertir valores implícitamente**.
+- Otra puede **rechazar esa combinación** o exigir una conversión explícita.
 
 ```js
 console.log("5" * 2); // 10
 console.log("5" + 2); // "52"
 ```
 
-JavaScript convierte el texto en número en la primera línea y el número en texto en la segunda. Es dinámico y débil. Python, que también es dinámico, da un error al intentar sumar un texto y un número: es dinámico y fuerte.
+JavaScript convierte el texto en número en la primera línea y el número en texto en la segunda. Python también tiene tipado dinámico, pero rechaza la suma de un texto y un entero. Esto distingue esas operaciones, sin afirmar que Python nunca convierta tipos: también combina enteros y números en coma flotante.
 
-Los dos ejes son independientes:
-
-| | Fuerte | Débil |
-| --- | --- | --- |
-| **Estático** | Rust, Java | C |
-| **Dinámico** | Python | JavaScript |
-
-"Fuerte" y "débil" no tienen una definición única, y esta clasificación es orientativa. La distinción entre estático y dinámico sí es precisa.
+La comprobación estática tampoco excluye conversiones automáticas. Por eso «estático» y «sin conversiones implícitas» no son sinónimos.
 
 ## Confusiones frecuentes
 
@@ -151,6 +144,6 @@ Los dos ejes son independientes:
 ## Lo esencial
 
 - El tipado estático comprueba los tipos antes de ejecutar; el dinámico, durante la ejecución.
-- El estático detecta antes los errores y mejora las herramientas; el dinámico es más breve y flexible.
+- El estático detecta ciertas incompatibilidades antes de ejecutar; no demuestra que el programa cumpla su propósito.
 - La ventaja del estático aumenta con el tamaño y la duración del proyecto.
-- Fuerte y débil es otra cuestión: cuánto convierte el lenguaje los tipos automáticamente.
+- Para hablar de conversiones, describe las reglas concretas en vez de confiar solo en las etiquetas fuerte y débil.
