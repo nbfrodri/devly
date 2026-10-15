@@ -1,83 +1,185 @@
 ---
 title: "¿Cómo funciona Git por dentro?"
-description: "Git es, en el fondo, un almacén clave-valor donde cada contenido se guarda con su hash. Archivos, carpetas y confirmaciones son objetos enlazados por esos hashes."
-level: avanzado
+description: "Git enlaza objetos de contenido, árboles y commits, mientras las referencias indican qué versiones identifican las ramas."
+level: intermedio
 layer: programacion
 prerequisites:
   - control-de-versiones-con-git
-  - funciones-hash
-updated: 2026-10-14
+updated: 2026-10-16
 sources:
-  - title: "Pro Git: Git Internals, Git Objects (en inglés)"
-    url: https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
-  - title: "Pro Git: Git Internals, Git References (en inglés)"
-    url: https://git-scm.com/book/en/v2/Git-Internals-Git-References
+  - title: "Pro Git: Los objetos Git"
+    url: https://git-scm.com/book/es/v2/Los-entresijos-internos-de-Git-Los-objetos-Git
+  - title: "Pro Git: Referencias Git"
+    url: https://git-scm.com/book/es/v2/Los-entresijos-internos-de-Git-Referencias-Git
+  - title: "Git: git-init, formatos de objetos (en inglés)"
+    url: https://git-scm.com/docs/git-init
+  - title: "Git: git-cat-file, inspección de objetos (en inglés)"
+    url: https://git-scm.com/docs/git-cat-file
+  - title: "Git: formato de archivos pack (en inglés)"
+    url: https://git-scm.com/docs/gitformat-pack
+  - title: "Git: disposición del repositorio (en inglés)"
+    url: https://git-scm.com/docs/gitrepository-layout
+  - title: "Git: reflog, registro local de referencias (en inglés)"
+    url: https://git-scm.com/docs/git-reflog
+  - title: "Git: recolección de objetos (en inglés)"
+    url: https://git-scm.com/docs/git-gc
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Usar Git con `add`, `commit` y `merge` no exige saber cómo funciona por dentro. Pero entenderlo explica casi todo lo que hace: por qué las ramas son baratas, por qué un commit no se puede modificar sin cambiar su identificador o qué significa realmente "perder" un commit.
+[Git](/articulos/control-de-versiones-con-git/) guarda la historia como **objetos** identificados por su contenido y enlazados entre sí. Las **referencias** son nombres, como el de una rama, que indican dónde encontrar una versión dentro de esa historia.
 
-El libro *Pro Git* lo resume en una frase: en el núcleo de Git hay un simple **almacén clave-valor**.
+## Por qué importa separar objetos y nombres
 
-## Cada contenido, su hash
+Crear una rama no copia todos los archivos del proyecto: crea otro nombre que apunta a un commit existente. Y registrar una versión nueva no exige duplicar el contenido de todos los archivos que siguen iguales.
 
-Cuando Git guarda algo, calcula su **hash SHA-1**: una [función hash](/articulos/funciones-hash/) que convierte el contenido en un identificador de 40 caracteres hexadecimales. Ese hash es la **clave**, y el contenido, comprimido, es el **valor**. Se guarda en `.git/objects`, en una carpeta con los dos primeros caracteres del hash y un archivo con los 38 restantes.
+La separación también explica por qué una rama puede moverse sin modificar los commits anteriores y por qué cambiar el mensaje de un commit puede cambiar su identificador aunque los archivos sean idénticos.
 
-```js
-import { createHash } from "node:crypto";
+## Identificar contenido
 
-function hashDeGit(contenido) {
-	const objeto = `blob ${Buffer.byteLength(contenido)}\0${contenido}`;
-	return createHash("sha1").update(objeto).digest("hex");
-}
+Una [**función hash**](/articulos/funciones-hash/) calcula un resumen de los datos. Con el mismo algoritmo y los mismos datos produce el mismo valor. Git usa ese resumen como identificador para buscar un objeto.
 
-console.log(hashDeGit("what is up, doc?")); // "bd9dbf5aae1a3862dd1526723246b20206e5fc37"
+El cálculo incluye una cabecera con el tipo y el tamaño del objeto, además de sus datos. Para el contenido de un archivo no incluye su nombre: dos archivos con los mismos datos pueden compartir un objeto aunque se llamen de manera distinta.
+
+Los repositorios con **SHA-1** muestran identificadores completos de 40 caracteres; los de **SHA-256**, de 64. Son nombres de dos algoritmos de hash. Git puede manejar ambos formatos de repositorio, según la versión y la compilación. No hay que asumir que todo identificador de Git tiene siempre 40 caracteres ni que distintos formatos se puedan intercambiar sin condiciones.
+
+## Cuatro tipos de objeto
+
+| Tipo | Qué representa |
+| --- | --- |
+| **blob** | El contenido de un archivo, sin su nombre |
+| **tree**, o árbol | Entradas con nombre, modo e identificador: organizan archivos y subcarpetas |
+| **commit**, o confirmación | Un árbol raíz, sus padres y datos como autor, fecha y mensaje |
+| **tag**, o etiqueta anotada | Información sobre un objeto señalado, con autor de la etiqueta y mensaje |
+
+El **modo** de una entrada indica qué clase de entrada es y propiedades como si un archivo es ejecutable. Una etiqueta ligera, en cambio, es solo una referencia: no necesita un objeto `tag`.
+
+Un commit inicial no tiene padres; uno habitual tiene uno; una fusión puede tener varios. El árbol al que apunta representa el estado de los archivos registrados. Los cambios que ves en un diff se calculan comparando estados.
+
+## Inspeccionar un repositorio pequeño
+
+Usa una versión reciente de Git, PowerShell o Bash y un editor de texto. Abre una terminal en una carpeta de prácticas donde no exista `practica-objetos`:
+
+```bash
+mkdir practica-objetos
+cd practica-objetos
+git init --object-format=sha1 -b main
+git config --local user.name "Persona de prueba"
+git config --local user.email "practica@example.com"
 ```
 
-Git no calcula el hash del contenido solo, sino de una **cabecera** con el tipo y el tamaño, seguida del contenido. El resultado coincide con el que da `git hash-object` y con el del ejemplo del libro *Pro Git*.
+Elegimos SHA-1 explícitamente para que el formato del ejemplo sea conocido. Crea `notas.txt` como texto UTF-8 con una línea `hola`. Duplica el archivo con el explorador de archivos y llama a la copia `copia.txt`, manteniendo exactamente el mismo contenido.
 
-Al guardarse por su contenido, el mismo archivo en cien confirmaciones distintas se almacena **una sola vez**. Y si un solo bit cambia, el hash cambia: Git detecta cualquier corrupción.
+```bash
+git add notas.txt copia.txt
+git commit -m "Guarda dos nombres con el mismo contenido"
+git cat-file -t HEAD
+git cat-file -p HEAD
+git ls-tree HEAD
+git cat-file -p HEAD:notas.txt
+```
 
-## Tres tipos de objeto
+**HEAD** señala aquí el commit de la rama actual. `cat-file -t` consulta su tipo: `commit`. `cat-file -p` muestra sus datos: una línea `tree` con el identificador del árbol, datos de autor y de quien registra la confirmación, y el mensaje. No aparece ninguna línea `parent` porque es el primer commit.
+
+`ls-tree` muestra dos entradas, `copia.txt` y `notas.txt`, con el mismo identificador de blob. Los nombres están en el árbol; el texto compartido está en el blob. La última orden recupera ese texto y muestra `hola`.
+
+<Quiz
+	client:visible
+	question="En el ejemplo, copia.txt y notas.txt contienen los mismos datos. ¿Dónde guarda Git sus dos nombres?"
+	options={[
+		"En dos blobs distintos por obligación",
+		"En las entradas del árbol que apuntan al blob compartido",
+		"Solo en el mensaje del commit",
+	]}
+	answer={1}
+/>
+
+### Cambiar un archivo
+
+Sustituye la línea de `notas.txt` por `hola de nuevo`, conservando `copia.txt` tal como estaba:
+
+```bash
+git add notas.txt
+git commit -m "Amplia solo una nota"
+git cat-file -p HEAD
+git ls-tree HEAD
+git show HEAD:copia.txt
+git show HEAD:notas.txt
+```
+
+Ahora el commit contiene una línea `parent` con el identificador de la primera confirmación. El árbol es distinto: `copia.txt` conserva el blob anterior y `notas.txt` apunta a uno nuevo. Las dos consultas muestran `hola` y `hola de nuevo`.
+
+El siguiente esquema muestra los enlaces que guarda Git; aquí las flechas apuntan hacia el objeto referenciado:
 
 ```mermaid
 flowchart TD
-	C2["commit b7e2...<br>autor, fecha, mensaje"] -- padre --> C1["commit 3f1a..."]
-	C2 --> T["tree<br>carpeta raíz"]
-	T --> B1["blob<br>README.md"]
-	T --> T2["tree<br>src/"]
-	T2 --> B2["blob<br>main.js"]
-	C1 --> T0["tree anterior"]
-	T0 --> B1
+	C2["Commit 2"] -- padre --> C1["Commit 1"]
+	C2 --> T2["Árbol 2"]
+	C1 --> T1["Árbol 1"]
+	T2 -- notas.txt --> B2["blob<br>hola de nuevo"]
+	T2 -- copia.txt --> B1["blob<br>hola"]
+	T1 -- "notas.txt<br>copia.txt" --> B1
 ```
 
-- **blob**: el contenido de un archivo. Solo el contenido, sin nombre.
-- **tree** (árbol): una carpeta. Según *Pro Git*, cada entrada lleva el hash de un blob o de otro árbol, con su modo, tipo y nombre. Es el equivalente a un directorio de Unix.
-- **commit** (confirmación): apunta al árbol de la carpeta raíz en ese momento, a su commit **padre** (o padres, en una fusión), y guarda el autor, la fecha y el mensaje.
+La nueva instantánea reutiliza contenido que no cambió. Eso describe el modelo lógico; no exige que cada objeto tenga siempre un archivo físico separado.
 
-Cada confirmación es una **foto completa** del proyecto, no una lista de cambios. Pero como los archivos que no cambian conservan su hash, la foto nueva reutiliza casi todos los objetos de la anterior. En la figura, `README.md` no cambió y los dos árboles apuntan al mismo blob.
+## Referencias, ramas y HEAD
 
-Se pueden inspeccionar con `git cat-file -p` seguido de un hash.
+Una rama es una referencia que avanza al crear commits en ella. **HEAD** suele indicar la rama actual; en el estado llamado **HEAD separado** apunta directamente a un commit, sin situarte en una rama.
 
-## Inmutable por construcción
+Puedes comprobar los nombres del ejemplo:
 
-El hash de un commit depende de su árbol y de su padre, y el del padre, del suyo. Cambiar algo en un commit antiguo cambia su hash, y con él el de todos los posteriores. Por eso:
+```bash
+git symbolic-ref HEAD
+git rev-parse main
+git rev-parse HEAD
+```
 
-- La historia **no se puede alterar sin que se note**.
-- `git commit --amend` o un `rebase` no modifican commits: crean **otros nuevos**, con hashes distintos, como explica [merge y rebase](/articulos/merge-y-rebase/).
+La primera orden muestra `refs/heads/main`. Las dos siguientes imprimen el mismo identificador. `rev-parse` convierte el nombre de una versión en su identificador.
 
-## Las ramas son etiquetas
+En algunos repositorios las referencias están en archivos bajo `.git/refs`; también pueden guardarse juntas, por ejemplo en `packed-refs`. Es mejor consultarlas con órdenes de Git que depender de una ubicación física concreta.
 
-Una **rama** no es una copia del código: es un pequeño archivo, en `.git/refs/heads/`, que contiene el hash de un commit. Crear una rama es escribir 40 caracteres. Al confirmar, Git crea el commit nuevo y mueve la etiqueta de la rama actual hacia él. `HEAD` es otra referencia, que indica en qué rama estás.
+### Otro mensaje, otro commit
 
-## ¿Se pierden los commits?
+En este repositorio de práctica, que no has compartido, conserva el commit actual bajo otro nombre y cambia su mensaje:
 
-Un commit al que no apunta ninguna rama sigue en `.git/objects` durante un tiempo. `git reflog` muestra a qué commits ha apuntado `HEAD` recientemente, y con eso se recupera casi cualquier cosa que parecía perdida. Solo cuando ninguna referencia lo alcanza durante bastante tiempo, la limpieza automática lo elimina. Es una [recolección de basura](/articulos/recoleccion-de-basura/), con la misma idea de alcanzabilidad.
+```bash
+git branch conserva
+git commit --amend -m "Describe la segunda version"
+git rev-parse conserva
+git rev-parse HEAD
+git diff conserva HEAD
+git reflog -3 --oneline
+```
+
+`--amend` crea un commit nuevo que sustituye al anterior en la punta de `main`. Los dos identificadores difieren, pero `git diff` no muestra cambios de archivos: ambos commits señalan el mismo árbol. La rama `conserva` permite seguir encontrando el commit anterior.
+
+El mensaje forma parte de los datos del commit. Su identidad también depende de sus padres y de otros metadatos, no únicamente del contenido de los archivos. Esa es parte de la explicación de lo que ocurre al hacer [rebase](/articulos/merge-y-rebase/).
+
+## Cómo se guarda en disco
+
+Un **objeto suelto** se almacena individualmente y comprimido. Git también agrupa objetos en archivos **pack**, donde puede representar uno mediante diferencias respecto a otro para ahorrar espacio.
+
+Por eso no es correcto describir Git como «siempre guarda copias completas en archivos separados» ni como «solo guarda diferencias». El modelo permite recuperar instantáneas; la representación física puede comprimir y compartir datos. Un mismo objeto lógico tampoco implica una única copia física en todas las circunstancias.
+
+## Qué puede recuperar reflog
+
+El **reflog** registra movimientos recientes de referencias en el repositorio local. En la práctica anterior permite ver la confirmación previa y el cambio producido por `--amend`.
+
+Su utilidad tiene límites: sus entradas pueden caducar y no se comparten como los commits mediante un push normal. Los objetos que dejan de estar protegidos por referencias, el índice, reflogs u otras raíces de conservación pueden eliminarse durante el mantenimiento, según la configuración y los plazos.
+
+Por tanto, reflog puede ayudar a localizar trabajo registrado que dejó de verse en una rama; no recupera cualquier edición nunca guardada en Git ni garantiza conservar objetos indefinidamente.
+
+## Errores comunes
+
+- **Identificar un commit solo con sus archivos.** Dos commits pueden tener el mismo árbol y distintos padres o mensajes.
+- **Suponer que una rama contiene copias de todos sus archivos.** Es un nombre que permite llegar a objetos compartidos.
+- **Editar archivos internos para «arreglar» la historia.** Usa las operaciones de Git; la representación física no es el contrato de uso.
+- **Confundir un hash con una garantía absoluta.** Ayuda a comprobar integridad, pero no sustituye las copias de seguridad ni demuestra por sí solo quién creó los datos.
 
 ## Lo esencial
 
-- Git es un almacén clave-valor: cada objeto se guarda con el hash de su contenido.
-- Hay tres tipos de objeto: blob (contenido), tree (carpeta) y commit (foto con su padre).
-- Cambiar un commit cambia su hash y el de todos los siguientes, así que la historia es inmutable.
-- Una rama es solo un archivo con el hash de un commit.
+- Blobs, árboles y commits separan contenido, nombres e historia.
+- Las referencias apuntan a objetos; los objetos existentes no se editan al mover una rama.
+- Archivos iguales no implican commits iguales.
+- El almacenamiento físico y la recuperación tienen condiciones: no todo es un archivo suelto ni reflog conserva todo para siempre.

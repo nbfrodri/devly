@@ -1,5 +1,5 @@
 title: Git en equipo
-description: "Guardar la historia del código, compartirla y revisar los cambios de los demás."
+description: "Practica versiones locales, colaboración con remotos, integración y revisión; termina inspeccionando cómo Git guarda la historia."
 layer: programacion
 steps:
   - control-de-versiones-con-git
