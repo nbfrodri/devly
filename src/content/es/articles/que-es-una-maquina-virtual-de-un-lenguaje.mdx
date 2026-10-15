@@ -1,13 +1,13 @@
 ---
 title: "¿Qué es la máquina virtual de un lenguaje?"
-description: "Es un programa que ejecuta un código intermedio en lugar del código máquina del procesador. Permite que un mismo programa funcione en cualquier sistema."
+description: "Es un programa que ejecuta un código intermedio en lugar del código máquina del procesador. Facilita ejecutar el mismo código intermedio en entornos compatibles."
 level: basico
 kind: definicion
 layer: programacion
 prerequisites:
   - compilador-e-interprete
   - compilar-y-transpilar
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Oracle: The Java Virtual Machine Specification, Introduction (en inglés)"
     url: https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-1.html
@@ -17,7 +17,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-La **máquina virtual de un lenguaje** es un programa que ejecuta un **código intermedio**, llamado a menudo *bytecode*, en lugar del código máquina de un procesador concreto. El compilador del lenguaje produce ese código intermedio, y la máquina virtual lo ejecuta en cualquier sistema donde esté instalada.
+La **máquina virtual de un lenguaje** es un programa que ejecuta un **código intermedio**, llamado a menudo *bytecode*, en lugar del código máquina de un procesador concreto. El compilador del lenguaje produce ese código intermedio, y una máquina virtual compatible lo ejecuta sobre el sistema anfitrión.
 
 Es la idea que Java resumió en su lema: escribir una vez, ejecutar en cualquier sitio.
 
@@ -28,11 +28,11 @@ flowchart LR
 	A["código fuente"] -- compilar --> B["bytecode"] -- máquina virtual --> C["ejecución"]
 ```
 
-Un programa en Java se compila a bytecode. El mismo archivo funciona en Windows, Linux o macOS, sobre cualquier [arquitectura](/articulos/arquitecturas-x86-y-arm/), porque en cada uno hay una máquina virtual de Java que sabe ejecutarlo.
+Un programa en Java se compila a bytecode. El mismo archivo puede funcionar en Windows, Linux o macOS si hay una JVM compatible con su versión y [arquitectura](/articulos/arquitecturas-x86-y-arm/). Bibliotecas nativas, rutas de archivos y APIs específicas pueden limitar esa portabilidad.
 
 ## Más rápida de lo que parece
 
-Interpretar el bytecode instrucción a instrucción sería lento. Las máquinas virtuales modernas usan **compilación en el momento**, *just in time*: detectan las partes del programa que más se ejecutan y las traducen a código máquina mientras el programa funciona. A menudo el resultado se acerca a la velocidad de un programa compilado.
+Interpretar el bytecode instrucción a instrucción sería lento. Algunas máquinas virtuales usan **compilación en el momento**, *just in time*: detectan las partes del programa que más se ejecutan y las traducen a código máquina mientras el programa funciona. A menudo el resultado se acerca a la velocidad de un programa compilado.
 
 V8, el motor de JavaScript de Chrome y de [Node.js](/articulos/que-es-nodejs/), hace algo parecido: interpreta al principio y compila lo que se repite.
 
@@ -44,4 +44,4 @@ V8, el motor de JavaScript de Chrome y de [Node.js](/articulos/que-es-nodejs/), 
 
 ## Con qué no confundirla
 
-Una **máquina virtual de sistema**, como las que explica [contenedores y máquinas virtuales](/articulos/contenedores-y-maquinas-virtuales/), simula un ordenador completo para ejecutar otro sistema operativo. La de un lenguaje solo ejecuta programas de ese lenguaje. Comparten nombre, no propósito.
+Una **máquina virtual de sistema**, como las que explica [contenedores y máquinas virtuales](/articulos/contenedores-y-maquinas-virtuales/), simula un ordenador completo para ejecutar otro sistema operativo. La máquina virtual de lenguaje ejecuta su formato de programa; varios lenguajes fuente pueden compilar al mismo formato. Comparten nombre, no propósito.

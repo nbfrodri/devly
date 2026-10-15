@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - que-es-una-clase
   - que-es-typescript
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "TypeScript: Object Types (en inglés)"
     url: https://www.typescriptlang.org/docs/handbook/2/objects.html
@@ -34,7 +34,7 @@ class AlmacenEnMemoria implements Almacen {
 }
 ```
 
-Quien usa un `Almacen` no necesita saber si los datos van a memoria, a un archivo o a una base de datos. Se puede cambiar la implementación sin tocar el código que la usa.
+Quien usa un `Almacen` no necesita saber si los datos van a memoria, a un archivo o a una base de datos. Se puede cambiar la implementación si respeta también el comportamiento esperado: persistencia, errores y significado de las operaciones. Una firma compatible no prueba esas propiedades. En TypeScript la interfaz desaparece al compilar y no valida por sí sola datos externos.
 
 ## Para qué sirve
 

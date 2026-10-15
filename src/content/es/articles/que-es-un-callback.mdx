@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - funciones
   - funciones-de-orden-superior-y-clausuras
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Función de retrollamada"
     url: https://developer.mozilla.org/es/docs/Glossary/Callback_function
@@ -17,7 +17,7 @@ import { Quiz } from "@/components/quiz";
 
 Un **callback**, o función de **retrollamada**, es una [función](/articulos/funciones/) que se entrega como argumento a otra función, para que esta la ejecute cuando le corresponda.
 
-La idea se parece a dejar tu teléfono en una tienda: "llámame cuando llegue el pedido". No esperas allí; te avisan.
+La idea se parece a dejar tu teléfono en una tienda: "llámame cuando llegue el pedido". Ilustra un callback asíncrono. Otros se llaman inmediatamente, dentro de la función que los recibe.
 
 ## Dos usos
 
@@ -38,12 +38,13 @@ console.log(dobles.join(" ")); // "2 4 6"
 ### Reaccionar a algo que pasará después
 
 ```javascript
-boton.addEventListener("click", () => {
-	console.log("Han pulsado el botón");
-});
+setTimeout(() => {
+	console.log("Se ejecuta el callback"); // "Se ejecuta el callback"
+}, 0);
+console.log("Primero continúa el programa"); // "Primero continúa el programa"
 ```
 
-La función se ejecutará cuando el usuario pulse, quizá nunca. Es el uso típico en código asíncrono: al terminar una lectura, al llegar una respuesta, al vencer un temporizador.
+La última línea imprime primero; el callback del temporizador se ejecuta después. Cero no significa ejecución inmediata. Los manejadores de eventos de un botón siguen otra condición: se llaman si llega el evento, que podría no ocurrir.
 
 ## El problema de anidar
 

@@ -1,12 +1,12 @@
 ---
 title: "Diferencias entre compilar y transpilar"
-description: "Compilar traduce un lenguaje a otro de más bajo nivel, normalmente código máquina. Transpilar traduce entre lenguajes de nivel parecido, como TypeScript a JavaScript."
+description: "Compilar traduce código a otra representación. Transpilar traduce entre lenguajes de nivel parecido, como TypeScript a JavaScript."
 level: intermedio
 kind: comparacion
 layer: programacion
 prerequisites:
   - compilador-e-interprete
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Compilar"
     url: https://developer.mozilla.org/es/docs/Glossary/Compile
@@ -18,7 +18,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-**Compilar** y **transpilar** son dos formas de traducir código de un lenguaje a otro. La diferencia está en el **nivel** de los lenguajes. Compilar suele llevar de un lenguaje de alto nivel a uno de bajo nivel, como el código máquina. Transpilar traduce entre lenguajes de un nivel parecido, por ejemplo de TypeScript a JavaScript.
+**Transpilar** es una forma de **compilar**: traducir de código fuente a otro código fuente, normalmente de nivel parecido. Compilar es el término general y también incluye producir código máquina o bytecode. No son categorías excluyentes.
 
 ## Compilar
 
@@ -30,7 +30,7 @@ flowchart LR
 	C["Java"] -- compilar --> D["bytecode para una máquina virtual"]
 ```
 
-El resultado no está pensado para que nadie lo lea. Es un archivo ejecutable.
+Esos ejemplos producen código máquina o bytecode, pero el resultado de una compilación también puede ser un archivo objeto o código fuente. No tiene que ser un ejecutable autónomo.
 
 ## Transpilar
 
@@ -49,17 +49,18 @@ flowchart LR
 const usuario = {};
 
 console.log(usuario.direccion?.ciudad); // undefined
-console.log(usuario.direccion && usuario.direccion.ciudad); // undefined
+const direccion = usuario.direccion;
+console.log(direccion === null || direccion === undefined ? undefined : direccion.ciudad); // undefined
 ```
 
-La primera línea usa el encadenamiento opcional, una sintaxis reciente. Un transpilador puede convertirla en algo parecido a la segunda, que entiende cualquier navegador.
+El encadenamiento opcional comprueba `null` o `undefined`, no cualquier valor falsy. Una transformación debe preservar también que `direccion` solo se evalúe una vez: podría ser un getter con efectos. El ejemplo enseña esa condición; el código exacto emitido depende del transpilador y del destino.
 
 ## Comparación
 
 | | Compilar | Transpilar |
 | --- | --- | --- |
-| Destino | Más bajo nivel: código máquina o intermedio | Nivel parecido: otro lenguaje de alto nivel |
-| Resultado legible | No | Sí, más o menos |
+| Destino | Otra representación, incluido código fuente | Código fuente |
+| Resultado legible | Depende del destino | Es texto fuente, aunque puede resultar difícil de leer |
 | Ejemplos | C a código máquina, Java a bytecode | TypeScript a JavaScript, Sass a CSS |
 | Para qué | Ejecutar el programa | Usar un lenguaje o una sintaxis que el destino no entiende |
 
@@ -68,6 +69,12 @@ La primera línea usa el encadenamiento opcional, una sintaxis reciente. Un tran
 Técnicamente, transpilar es un caso de compilar: traducir de un lenguaje a otro. Por eso el compilador de TypeScript se llama así, compilador, aunque produzca JavaScript.
 
 "Transpilar" es un término práctico, muy usado en desarrollo web, que subraya que el resultado sigue siendo código fuente. Muchas herramientas de construcción, como los [empaquetadores](/articulos/que-hace-un-empaquetador/), transpilan como uno de sus pasos.
+
+## Límites y confusiones
+
+- **Cambiar sintaxis no añade APIs al entorno.** Traducir una función flecha no instala `fetch` en un entorno que carece de ella; puede hacer falta una biblioteca o un polyfill.
+- **El destino no garantiza rendimiento.** Elegir código fuente o bytecode responde a una cadena de herramientas y a sus entornos de ejecución.
+- **La transformación debe conservar el comportamiento.** Sustituir `?.` por `&&` sin más cambia el resultado para valores como cero.
 
 ## Lo esencial
 

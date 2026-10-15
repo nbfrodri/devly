@@ -7,7 +7,7 @@ prerequisites:
   - tablas-hash
   - funciones-hash
   - probabilidad-basica
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Redis: Bloom filter (en inglés)"
     url: https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/
@@ -64,7 +64,7 @@ console.log(palabras.every(quizaContiene)); // true
 console.log(filtro.filter((b) => b === 1).length <= 12); // true
 ```
 
-Cada palabra marca 3 bits. Todas las añadidas se encuentran: no hay **falsos negativos**. Y en lugar de guardar las palabras, solo hay 256 bits.
+Cada palabra intenta marcar 3 posiciones, que pueden coincidir. Todas las añadidas se encuentran: no hay **falsos negativos** si se conservan los bits y se consulta con la misma codificación y funciones hash. El ejemplo representa 256 posiciones con números de JavaScript para que se lea fácilmente; no ocupa solo 256 bits. Una representación compacta de 256 bits usaría 32 bytes, aparte de metadatos.
 
 ## La probabilidad de error
 
@@ -78,7 +78,7 @@ function falsosPositivos(bits, elementos, hashes) {
 console.log(falsosPositivos(1000, 100, 7).toFixed(3)); // "0.008"
 ```
 
-Con 1000 bits, 100 elementos y 7 funciones hash, menos del 1 % de las consultas da un falso positivo. Con unos 10 bits por elemento, el error se queda por debajo del 1 %, sea cual sea el tamaño de cada elemento.
+La fórmula es una aproximación bajo hashes uniformes e independientes. Con 1000 bits, 100 elementos insertados y 7 hashes, una consulta a un elemento **no insertado** tiene una probabilidad de falso positivo cercana al 0,8 %. No es el porcentaje de errores de cualquier carga de consultas. La relación de unos 10 bits por elemento da esa estimación aunque las claves tengan longitudes distintas; calcular sus hashes sí depende de su tamaño.
 
 | Si se aumenta | Efecto |
 | --- | --- |
@@ -90,7 +90,7 @@ Con 1000 bits, 100 elementos y 7 funciones hash, menos del 1 % de las consultas 
 
 - **Falsos positivos**: hay que tolerarlos.
 - **No se puede borrar**: poner un bit a 0 podría afectar a otros elementos. Hay variantes que lo permiten, con contadores en lugar de bits.
-- **No se puede listar** lo que contiene: solo responde sí o quizá.
+- **No se puede listar** lo que contiene: solo responde «no» o «quizá».
 
 <Quiz
 	client:visible
@@ -112,7 +112,7 @@ Siempre como **filtro previo**, delante de algo caro:
 - **Seguridad**: comprobar si una contraseña aparece en listas de contraseñas filtradas sin guardar la lista completa.
 - **Rastreadores web**: saber si una dirección ya se visitó.
 
-En todos los casos, un falso positivo solo cuesta hacer el trabajo caro de vez en cuando sin necesidad. Un falso negativo sería un error grave, y el filtro no lo comete.
+Si el filtro solo evita consultas imposibles y todos los positivos se confirman en el conjunto real, un falso positivo añade trabajo innecesario. Si un rastreador descarta una URL porque «quizá ya se visitó», puede omitir una página nueva; si rechazas una contraseña directamente, puedes rechazar una que no estaba en la lista. Las consecuencias dependen de qué decisión tomas con la respuesta. No uses «quizá» como prueba definitiva de pertenencia.
 
 ## Lo esencial
 

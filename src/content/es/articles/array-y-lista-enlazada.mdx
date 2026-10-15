@@ -1,6 +1,6 @@
 ---
 title: "Diferencias entre un array y una lista enlazada"
-description: "Un array guarda los elementos juntos en memoria y permite acceder a cualquiera al instante. Una lista enlazada los guarda sueltos, unidos por enlaces, y facilita insertar."
+description: "Un array contiguo ofrece acceso directo por índice; una lista enlazada conecta nodos y facilita ciertos cambios en posiciones conocidas."
 level: basico
 kind: comparacion
 layer: programacion
@@ -8,7 +8,7 @@ prerequisites:
   - arrays
   - listas-enlazadas
   - complejidad-algoritmica
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Array"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array
@@ -18,11 +18,11 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **[array](/articulos/arrays/)** guarda sus elementos **seguidos** en la memoria, uno detrás de otro. Una **[lista enlazada](/articulos/listas-enlazadas/)** los guarda **sueltos**, en cualquier sitio, y cada uno apunta al siguiente. Esa diferencia determina qué operaciones son rápidas en cada una.
+Un **array contiguo** guarda elementos de tamaño fijo seguidos en memoria. Una **[lista enlazada](/articulos/listas-enlazadas/)** conecta nodos mediante enlaces y no exige que estén juntos. Comparamos un array dinámico contiguo con una lista simplemente enlazada; los [arrays de JavaScript](/articulos/arrays/) no garantizan una representación física única.
 
 ## Acceder a un elemento
 
-En un array, la posición de cada elemento se calcula: si empieza en cierta dirección y cada elemento ocupa lo mismo, el quinto está a cinco elementos del principio. Acceder a cualquiera es inmediato, **O(1)**.
+En un array, la posición de cada elemento se calcula: si empieza en cierta dirección y cada elemento ocupa lo mismo, el quinto está a cuatro tamaños de elemento del principio, en el índice 4. El acceso cuesta **O(1)** en este modelo; no significa tiempo nulo.
 
 En una lista enlazada no hay forma de saltar: para llegar al quinto hay que pasar por los cuatro anteriores. Es **O(n)**.
 
@@ -45,7 +45,7 @@ for (let nodo = lista; nodo; nodo = nodo.siguiente) valores.push(nodo.valor);
 console.log(valores.join(" ")); // "1 2 3"
 ```
 
-Cada inserción al principio es una sola operación, sea cual sea el tamaño.
+Cada inserción cambia un número constante de enlaces. Para insertar también `0` al principio de un array `[1, 2, 3]`, hay que desplazar tres posiciones ocupadas; en la lista basta enlazar el nodo nuevo con la cabeza anterior. El resultado lógico es el mismo: `0, 1, 2, 3`.
 
 ## Comparación
 
@@ -53,26 +53,33 @@ Cada inserción al principio es una sola operación, sea cual sea el tamaño.
 | --- | --- | --- |
 | Acceder por posición | O(1) | O(n) |
 | Insertar o borrar al principio | O(n) | O(1) |
-| Insertar o borrar al final | O(1) normalmente | O(1) si se guarda el último |
-| Insertar en medio, teniendo ya el nodo | O(n) | O(1) |
+| Insertar al final | O(1) amortizado con crecimiento geométrico | O(1) si se guarda el último |
+| Borrar al final | O(1), sin reducir capacidad | O(n): falta localizar el anterior |
+| Insertar después de un punto conocido | O(n) para desplazar | O(1), localizado el nodo |
 | Buscar un valor | O(n) | O(n) |
-| Memoria extra | Ninguna | Un enlace por elemento |
-| Uso de la [caché](/articulos/memoria-cache-del-procesador/) | Excelente | Mala |
+| Memoria extra | Capacidad reservada sin usar y metadatos | Enlaces y posibles costes por nodo |
+| Uso de la [caché](/articulos/memoria-cache-del-procesador/) | Favorece recorridos contiguos | Depende de la ubicación de los nodos |
 
 ## La sorpresa: la caché
 
-Sobre el papel, la lista enlazada gana al insertar. En la práctica, el array suele ser más rápido casi para todo.
+Una inserción local puede ser barata en la lista, pero buscar su posición exige un recorrido. También importa el coste real de acceder a memoria.
 
-La razón es la [caché del procesador](/articulos/memoria-cache-del-procesador/). Los elementos de un array están juntos y llegan a la caché en bloques. Los nodos de una lista están dispersos, y cada salto puede obligar a ir a la memoria principal, mucho más lenta. Desplazar mil elementos seguidos de un array puede costar menos que seguir mil enlaces.
+La razón es la [caché del procesador](/articulos/memoria-cache-del-procesador/). Los elementos de un array están juntos y llegan a la caché en bloques. Los nodos de una lista pueden estar dispersos, y cada salto puede provocar un fallo de caché. Un array de referencias también puede apuntar a objetos dispersos: importa la representación concreta. Desplazar mil elementos seguidos de un array puede costar menos que seguir mil enlaces.
 
 ## Cuándo usar cada una
 
-- **Array**: casi siempre. Es la estructura por defecto en JavaScript, Python y la mayoría de los lenguajes.
+- **Array**: para acceso por índice y recorridos. La variante dinámica facilita además añadir al final.
 - **Lista enlazada**: cuando se insertan y borran muchos elementos en posiciones que ya se tienen localizadas, y nunca se accede por posición. Por ejemplo, para implementar una [cola](/articulos/pilas-y-colas/) o una caché que reordena elementos constantemente.
+
+## Confusiones frecuentes
+
+- **Contar solo el cambio de enlaces.** Si aún hay que buscar la posición, ese recorrido forma parte del coste de insertar o borrar.
+- **Suponer que guardar el último nodo permite borrarlo en tiempo constante.** En una lista simple hay que encontrar el anterior para convertirlo en la nueva cola.
+- **Trasladar el modelo contiguo a cualquier API de array.** La representación y los costes concretos dependen del lenguaje y de su implementación.
 
 ## Lo esencial
 
-- Un array guarda los elementos seguidos; una lista enlazada, sueltos y unidos por enlaces.
-- El array accede a cualquier posición al instante; la lista tiene que recorrerse.
+- El array contiguo guarda elementos seguidos; la lista conecta nodos que pueden estar dispersos.
+- El modelo contiguo accede por índice en O(1); la lista tiene que recorrerse.
 - La lista inserta al principio o en un punto conocido en tiempo constante.
-- Por la caché del procesador, el array suele ser más rápido en la práctica.
+- Guardar la cola no basta para borrar en O(1) el último nodo de una lista simple: falta su predecesor.

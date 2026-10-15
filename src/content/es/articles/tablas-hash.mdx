@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - arrays
   - complejidad-algoritmica
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare: 6.006, Hashing (en inglés)"
     url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-4-hashing/
@@ -26,7 +26,7 @@ En cada lenguaje recibe un nombre: diccionario, mapa, objeto, array asociativo.
 
 Buscar un valor en un [array](/articulos/arrays/) sin ordenar obliga a mirar los elementos uno a uno: [complejidad](/articulos/complejidad-algoritmica/) O(n). Con el array ordenado, la [búsqueda binaria](/articulos/busqueda-binaria/) lo baja a O(log n).
 
-Una tabla hash lo hace en O(1) de media. Encontrar un dato entre diez o entre diez millones cuesta prácticamente lo mismo.
+Una tabla hash lo hace en O(1) de media. Ese análisis supone una dispersión adecuada, un factor de carga controlado y claves cuyo cálculo de hash y comparación tienen coste acotado. No promete iguales milisegundos: la memoria, las colisiones y la longitud de las claves también importan.
 
 ## La idea
 
@@ -88,7 +88,7 @@ En el peor caso, todas las claves caen en la misma cubeta y la tabla se conviert
 
 ## En JavaScript
 
-No hace falta construirla. `Map` es una tabla hash lista para usar:
+No hace falta construir un diccionario para el uso habitual. `Map` ofrece claves y valores; los motores pueden implementarlo con una tabla hash, pero ECMAScript exige acceso medio sublineal, no una representación concreta:
 
 ```js
 const edades = new Map();
@@ -104,7 +104,7 @@ edades.delete("luis");
 console.log(edades.size); // 1
 ```
 
-Los objetos de JavaScript también asocian claves con valores. `Map` es preferible cuando las claves no se conocen de antemano o se añaden y quitan con frecuencia.
+`Map` conserva el orden de inserción, que es distinto de ordenar las claves. Los objetos de JavaScript también asocian claves con valores. `Map` es preferible cuando las claves no se conocen de antemano o se añaden y quitan con frecuencia.
 
 Un uso típico es contar apariciones:
 
@@ -130,6 +130,8 @@ console.log(veces.get("mar")); // 1
 	]}
 	answer={0}
 />
+
+`?? 0` usa cero cuando la clave todavía no existe y `get` devuelve `undefined`. Así, la primera aparición se guarda como 1; las siguientes incrementan el contador anterior.
 
 ## Lo que no ofrece
 

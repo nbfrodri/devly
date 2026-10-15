@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - programacion-funcional
   - que-es-sql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "React: Reaccionar a la entrada con el estado"
     url: https://es.react.dev/learn/reacting-to-input-with-state
@@ -57,7 +57,7 @@ El primero maneja un índice, un contador y una variable que va cambiando. El se
 - **[SQL](/articulos/que-es-sql/)**: `SELECT nombre FROM clientes WHERE ciudad = 'Madrid'` no dice cómo recorrer la tabla ni qué [índice](/articulos/indices-de-bases-de-datos/) usar. Eso lo decide la base de datos.
 - **[HTML](/articulos/que-es-html/) y [CSS](/articulos/que-es-css/)**: se describe qué hay en la página y qué aspecto tiene, no cómo dibujarlo.
 - **[React](/articulos/que-es-react/)**: se describe cómo debe verse la interfaz para cada estado, y React calcula qué cambiar en el [DOM](/articulos/el-dom/).
-- **[Infraestructura como código](/articulos/infraestructura-como-codigo/)**: se describe qué servidores debe haber, y la herramienta los crea.
+- **[Infraestructura como código](/articulos/infraestructura-como-codigo/) declarativa**: se describe el estado deseado, y la herramienta calcula cambios. También existen herramientas de infraestructura con un enfoque imperativo.
 
 ## Comparación
 
@@ -65,19 +65,29 @@ El primero maneja un índice, un contador y una variable que va cambiando. El se
 | --- | --- | --- |
 | Describe | Cómo, paso a paso | Qué resultado |
 | Estado | Se modifica sobre la marcha | Se evita o se oculta |
-| Control | Total, sobre cada paso | Delegado en la herramienta |
-| Legibilidad | Hay que seguir los pasos | Se lee la intención |
+| Control | Explicita más pasos al nivel elegido | Delega esos pasos en una abstracción |
+| Legibilidad | Hay que seguir los pasos | Puede expresar la intención si la abstracción es adecuada |
 | Rendimiento | Se puede afinar a mano | Depende de la herramienta |
 
 ## No es todo o nada
 
-Lo declarativo está construido sobre lo imperativo: alguien escribió, de forma imperativa, el motor de la base de datos que ejecuta tu consulta. Y la mayoría de los programas mezclan los dos estilos.
+Lo declarativo necesita un mecanismo que lo ejecute. Ese motor puede combinar varios estilos; usar un enfoque declarativo en una capa no impone cómo se programó todo lo que hay debajo.
 
 La [programación funcional](/articulos/programacion-funcional/) y la [programación lógica](/articulos/programacion-logica/) son paradigmas declarativos; la [orientada a objetos](/articulos/programacion-orientada-a-objetos/) suele ser imperativa.
+
+## Cuándo conviene cada enfoque
+
+Un bucle permite controlar pasos y fusionar tareas en un recorrido. La combinación `filter` y `reduce` del ejemplo expresa bien la intención, pero hace dos recorridos y crea un array intermedio. Ambos costes pueden ser aceptables; para decidir rendimiento hay que medir el caso real. SQL delega decisiones de acceso a un optimizador con información que el llamador quizá no tiene.
+
+## Confusiones frecuentes
+
+- **Confundir brevedad y claridad.** Una expresión declarativa difícil de entender puede ocultar más de lo que explica.
+- **Creer que desaparece el estado.** Se puede ocultar o gestionar en otra capa; una base de datos declarativa sigue almacenando y cambiando datos.
+- **Tomar `map` o `filter` como garantía de pureza.** Sus callbacks pueden producir efectos secundarios.
 
 ## Lo esencial
 
 - La programación imperativa dice cómo hacer algo, con pasos que cambian el estado.
 - La declarativa dice qué resultado se quiere.
 - SQL, HTML, CSS y React son ejemplos de enfoque declarativo.
-- Lo declarativo es más legible y delega el cómo; lo imperativo da más control.
+- Elige el nivel de abstracción según claridad, control y costes del caso concreto.

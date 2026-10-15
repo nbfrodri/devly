@@ -7,7 +7,7 @@ prerequisites:
   - como-funciona-un-procesador
   - memoria-ram-y-almacenamiento
   - que-es-una-cache
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.004: Computation Structures, cap. 14, Caches and the Memory Hierarchy (en inglés)"
     url: https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c14/
@@ -44,7 +44,7 @@ La solución es combinar varios tipos: poca memoria muy rápida cerca del proces
 
 Las cifras cambian de un equipo a otro; lo que importa es la proporción entre niveles.
 
-Las cachés L1 y L2 suelen ser de cada núcleo. La L3 se comparte entre todos.
+En muchos procesadores, cada núcleo tiene sus propias cachés L1 y L2, y varios núcleos comparten una L3. La distribución exacta depende de la arquitectura.
 
 ## Por qué funciona: la localidad
 
@@ -62,7 +62,7 @@ La memoria se maneja en bloques llamados **líneas de caché**, normalmente de 6
 Cuando el procesador necesita un dato:
 
 - **Acierto.** Está en la caché. Se obtiene en un nanosegundo.
-- **Fallo.** No está. Se trae de la RAM la línea entera que lo contiene, se guarda en la caché y se entrega. Si no hay sitio, se desaloja otra línea.
+- **Fallo.** No está en ese nivel. Se busca en los niveles siguientes; solo se llega a RAM si es necesario. Se instala la línea en la caché y, si no hay sitio, se desaloja otra línea.
 
 Este programa simula una caché mínima y mide qué proporción de accesos son aciertos:
 
@@ -94,7 +94,7 @@ console.log(tasaDeAciertos(aSaltos)); // 0
 
 Con accesos consecutivos, el primero de cada línea falla y los tres siguientes aciertan: un 75 %. Con accesos a saltos grandes, cada uno cae en una línea distinta y **todos fallan**.
 
-El mismo número de accesos, a la misma cantidad de memoria, con un rendimiento muy distinto.
+Son 64 accesos en ambos casos, pero a regiones distintas: el primero usa las direcciones 0 a 63; el segundo, 0, 32, 64 y así hasta 2016. En esta simulación, todos los saltos compiten por la posición 0 de la caché, porque el número de bloque es múltiplo de ocho. El ejemplo muestra tanto localidad espacial como conflictos de colocación; no mide tiempos de un procesador real.
 
 ## Lo que implica al programar
 
@@ -102,13 +102,13 @@ La caché es invisible, y aun así decide el rendimiento del código que maneja 
 
 ### El orden de recorrido
 
-Una tabla de dos dimensiones se guarda en memoria fila tras fila. Recorrerla **por filas** es avanzar por posiciones consecutivas. Recorrerla **por columnas** es saltar de una fila a otra en cada paso.
+Si una tabla de dos dimensiones se almacena fila tras fila, recorrerla **por filas** avanza por posiciones consecutivas. Recorrerla **por columnas** salta de una fila a otra en cada paso. Otros formatos almacenan por columnas: hay que conocer la disposición real. Un array de arrays de JavaScript tampoco garantiza un único bloque contiguo.
 
 Las dos formas leen los mismos datos y hacen las mismas operaciones. Con tablas grandes, la segunda puede ser varias veces más lenta.
 
 ### Arrays frente a listas enlazadas
 
-Los elementos de un array están juntos. Los nodos de una [lista enlazada](/articulos/listas-enlazadas/) pueden estar repartidos por toda la memoria, y cada salto de uno al siguiente es un posible fallo.
+Los elementos de un array contiguo están juntos. Los nodos de una [lista enlazada](/articulos/listas-enlazadas/) pueden estar repartidos por toda la memoria, y cada salto de uno al siguiente es un posible fallo. Los arrays de un lenguaje dinámico pueden contener referencias a objetos almacenados en otras regiones.
 
 Por eso un array suele ser más rápido de recorrer aunque, sobre el papel, las dos estructuras tengan la misma [complejidad](/articulos/complejidad-algoritmica/). La notación O cuenta operaciones, no lo que tarda cada una.
 
@@ -122,7 +122,7 @@ Si dos [hilos](/articulos/hilos-y-concurrencia/), en núcleos distintos, modific
 
 <Quiz
 	client:visible
-	question="¿Por qué recorrer un array en orden es rápido para la caché?"
+	question="¿Por qué recorrer un array contiguo en orden favorece a la caché?"
 	options={[
 		"Porque los arrays se guardan dentro del procesador",
 		"Porque sus elementos están contiguos y llegan juntos en la misma línea",

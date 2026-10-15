@@ -1,13 +1,13 @@
 ---
 title: "¿Qué es un puntero o una referencia?"
-description: "Un puntero es un valor que guarda la dirección de memoria donde está otro dato. Una referencia es una forma más segura de lo mismo."
+description: "Un puntero es un valor que guarda la dirección de memoria donde está otro dato. Las garantías de una referencia dependen del lenguaje."
 level: basico
 kind: definicion
 layer: programacion
 prerequisites:
   - que-es-una-variable
   - pila-y-monticulo-de-memoria
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "cppreference: Pointer declaration, C (en inglés)"
     url: https://en.cppreference.com/w/c/language/pointer
@@ -17,7 +17,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **puntero** es una [variable](/articulos/que-es-una-variable/) que no guarda un dato, sino la **dirección de memoria** donde está ese dato. Es como una nota que dice "lo que buscas está en el cajón 42". Una **referencia** cumple la misma función con más reglas que impiden usarla mal.
+Un **puntero** es un valor que permite designar una posición de memoria, por ejemplo la de otro dato. Puede guardarse en una [variable](/articulos/que-es-una-variable/). La dirección también es un dato; no es el contenido al que apunta. Es como una nota que dice "lo que buscas está en el cajón 42". Una **referencia** permite acceder a otro valor, pero sus reglas cambian entre lenguajes: no toda referencia impide por sí sola los accesos inválidos.
 
 ## En C
 
@@ -40,7 +40,7 @@ int *puntero = &edad;   // guarda la dirección de edad
 
 Los punteros sin control son una de las mayores fuentes de errores y vulnerabilidades:
 
-- **Puntero nulo**: no apunta a nada, y usarlo detiene el programa.
+- **Puntero nulo**: no designa un objeto. Desreferenciarlo en C tiene comportamiento indefinido; no se garantiza un cierre limpio del programa.
 - **Puntero colgante**: apunta a memoria que ya se liberó.
 - **Desbordamiento**: escribir más allá del espacio reservado, y pisar otros datos. Lo aprovechó, por ejemplo, el [gusano Morris](/articulos/el-gusano-morris/).
 
@@ -59,4 +59,4 @@ console.log(a.valor); // 2
 
 `a` y `b` son referencias al mismo objeto.
 
-Rust va más allá: su compilador comprueba que cada referencia apunta a algo válido mientras se usa, y evita así los errores de memoria sin recolector de basura.
+En Rust seguro, el compilador comprueba préstamos y tiempos de vida para impedir referencias inválidas. El código `unsafe` y las interfaces con otros lenguajes requieren mantener manualmente las condiciones que esas comprobaciones presuponen.

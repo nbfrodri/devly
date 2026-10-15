@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - condicionales
   - bucles
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Boaz Barak: Universality and Uncomputability (en inglés)"
     url: https://introtcs.org/public/lec_08_uncomputability.html
@@ -24,7 +24,7 @@ Una **máquina de Turing** es un modelo matemático de un dispositivo de cálcul
 
 A principios del siglo XX, los matemáticos se preguntaban si existía un método mecánico capaz de resolver cualquier problema matemático. Para responder hacía falta algo previo: definir con exactitud qué es un "método mecánico". La intuición no bastaba.
 
-Turing propuso una máquina tan simple que nadie pudiera dudar de que cada paso es puramente mecánico, y a la vez lo bastante capaz para expresar cualquier cálculo. Lo hizo antes de que existieran los ordenadores.
+Turing propuso una máquina con pasos puramente mecánicos y capacidad para expresar los procedimientos de cálculo del modelo. Lo hizo antes de la construcción de los ordenadores electrónicos de propósito general.
 
 ## Las piezas
 
@@ -82,17 +82,17 @@ function ejecutar(entrada) {
 console.log(ejecutar("1011")); // "0100"
 ```
 
-El guion bajo representa una casilla en blanco. Al encontrarla, la máquina sabe que ha terminado.
+El guion bajo representa una casilla en blanco. Al encontrarla, esta máquina termina. El simulador admite cadenas formadas por `0` y `1` y solo necesita avanzar hacia la derecha; no implementa todas las posibles máquinas de Turing.
 
 ## Por qué importa algo tan simple
 
 ### La tesis de Church-Turing
 
-Con el tiempo se propusieron otros modelos de cálculo muy diferentes, y todos resultaron equivalentes: lo que puede calcular uno lo pueden calcular los demás.
+Otros modelos generales, como el cálculo lambda y las funciones recursivas, resultaron equivalentes: expresan las mismas funciones computables. No todos los modelos tienen esa capacidad; los autómatas finitos, por ejemplo, están más restringidos.
 
 De ahí la **tesis de Church-Turing**: todo lo que puede calcularse siguiendo un procedimiento mecánico puede calcularlo una máquina de Turing. No es un teorema demostrado, porque "procedimiento mecánico" es una noción intuitiva, pero nadie ha encontrado un contraejemplo.
 
-La consecuencia es llamativa. Un superordenador no puede calcular nada que no pueda esta máquina de cinta y cabezal. Lo hace muchísimo más rápido, pero el conjunto de problemas resolubles es el mismo.
+La consecuencia es llamativa: el modelo puede simular los cálculos de un ordenador convencional. Para comparar su capacidad general idealizamos que hay memoria y tiempo suficientes. Una máquina física concreta tiene recursos finitos; la cinta del modelo puede crecer cuanto haga falta.
 
 ### La máquina universal
 
@@ -102,7 +102,7 @@ Es la idea que sostiene a los ordenadores actuales: el programa es un dato más,
 
 ### Turing completo
 
-De un lenguaje o sistema capaz de calcular todo lo que calcula una máquina de Turing se dice que es **Turing completo**. Los lenguajes de programación de uso general lo son. Les basta con poder guardar datos, tomar decisiones y repetir, que es lo que hacen los [condicionales](/articulos/condicionales/) y los [bucles](/articulos/bucles/).
+De un lenguaje o sistema capaz de expresar todo lo que calcula una máquina de Turing se dice que es **Turing completo**. Muchos lenguajes de uso general lo son bajo la idealización de memoria no acotada. Guardar datos, tomar decisiones y repetir permite construir simulaciones; un límite fijo de memoria o de iteraciones cambia esa capacidad.
 
 <Quiz
 	client:visible
@@ -160,5 +160,5 @@ Un [autómata finito](/articulos/automatas-finitos/) tiene un conjunto fijo de e
 
 - Una máquina de Turing tiene una cinta, un cabezal, un estado y una tabla de reglas.
 - Define con precisión qué significa calcular.
-- Según la tesis de Church-Turing, cualquier ordenador calcula lo mismo que ella; solo cambia la velocidad.
+- La tesis de Church-Turing identifica los procedimientos mecánicos de cálculo con lo que expresa este modelo, sin límites fijos de memoria.
 - Existen problemas, como el de la parada, que ningún programa puede resolver.

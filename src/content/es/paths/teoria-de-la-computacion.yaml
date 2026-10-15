@@ -1,11 +1,11 @@
 title: Teoría de la computación
-description: Qué significa calcular, qué se puede calcular y cuánto cuesta.
+description: "Después de Fundamentos de programación: qué significa calcular, qué se puede calcular y cuánto cuesta."
 layer: programacion
 steps:
   - logica-booleana
+  - arrays
+  - complejidad-algoritmica
   - automatas-finitos
   - maquina-de-turing
-  - complejidad-algoritmica
   - p-np-y-np-completos
-  - arrays
   - analisis-amortizado

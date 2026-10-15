@@ -1,5 +1,5 @@
 title: Algoritmos sobre grafos
-description: Caminos más cortos, dependencias y redes de coste mínimo.
+description: "Después de Estructuras de datos: caminos más cortos, dependencias y redes de coste mínimo, con sus condiciones de validez."
 layer: programacion
 steps:
   - grafos

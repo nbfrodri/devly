@@ -7,7 +7,7 @@ prerequisites:
   - algoritmos-de-ordenacion
   - recursividad
   - complejidad-algoritmica
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Sedgewick y Wayne: Algorithms, 2.3 Quicksort (en inglés)"
     url: https://algs4.cs.princeton.edu/23quicksort/
@@ -110,8 +110,12 @@ function comparaciones(lista) {
 	if (lista.length <= 1) return 0;
 
 	const [pivote, ...resto] = lista;
-	const menores = resto.filter((x) => x < pivote);
-	const mayores = resto.filter((x) => x >= pivote);
+	const menores = [];
+	const mayores = [];
+	for (const valor of resto) {
+		if (valor < pivote) menores.push(valor);
+		else mayores.push(valor);
+	}
 
 	return resto.length + comparaciones(menores) + comparaciones(mayores);
 }
@@ -122,7 +126,7 @@ console.log(comparaciones(yaOrdenada)); // 4950
 console.log(comparaciones([4, 2, 6, 1, 3, 5, 7])); // 10
 ```
 
-Con el primer elemento como pivote, una lista **ya ordenada** de 100 elementos es el peor caso: 4950 comparaciones. Con particiones equilibradas harían falta unas 600.
+Este contador hace una comparación con el pivote por elemento restante. Con el primero como pivote, una lista **ya ordenada** de 100 elementos exige 99 + 98 + … + 1 = 4950 comparaciones. El ejemplo de siete elementos hace 6 en la raíz y 2 en cada mitad: 10. La primera versión, con dos filtros, compara cada elemento dos veces por partición; comparte el orden de crecimiento, pero no este recuento exacto.
 
 Es una ironía conocida: la versión ingenua de quicksort es lentísima justo con los datos que ya están en orden, que en la práctica son frecuentes.
 
@@ -135,12 +139,12 @@ Es una ironía conocida: la versión ingenua de quicksort es lentísima justo co
 
 Todo depende de esa elección.
 
-- **Al azar.** Ninguna entrada concreta provoca el peor caso de forma sistemática. Sigue siendo posible, con una probabilidad despreciable.
-- **Mediana de tres.** Se miran el primero, el del medio y el último, y se toma el de valor intermedio. Evita el problema con datos ordenados.
+- **Al azar.** Con claves distintas y elecciones uniformes independientes, da coste esperado O(n log n) para cualquier orden inicial. El peor caso sigue siendo posible.
+- **Mediana de tres.** Se miran el primero, el del medio y el último, y se toma el de valor intermedio. Mejora ciertas entradas, pero otras pueden seguir produciendo particiones desequilibradas.
 
 Elegir siempre el primero o el último solo vale para explicar el algoritmo.
 
-Hay además un aspecto de [seguridad](/articulos/que-es-la-ciberseguridad/): si un atacante sabe cómo se elige el pivote, puede enviar datos preparados para provocar el peor caso y saturar un servidor. Elegirlo al azar lo impide.
+Hay además un aspecto de [seguridad](/articulos/que-es-la-ciberseguridad/): una regla predecible facilita preparar entradas costosas. Aleatorizar reduce ese riesgo bajo sus supuestos, pero no es una garantía. Con todos los valores iguales, la partición de dos zonas mostrada sigue separando cero elementos a un lado y `n - 1` al otro, elijas el pivote que elijas.
 
 <Quiz
 	client:visible
@@ -159,7 +163,7 @@ Hay además un aspecto de [seguridad](/articulos/que-es-la-ciberseguridad/): si 
 | --- | --- | --- |
 | Caso medio | O(n log n) | O(n log n) |
 | Peor caso | O(n²) | O(n log n) |
-| Memoria adicional | O(log n) | O(n) |
+| Memoria adicional | O(log n) esperada; O(n) en el peor caso de la recursión mostrada | O(n) en la implementación habitual sobre arrays |
 | Estable | No | Sí |
 | El trabajo está en | Dividir | Combinar |
 
@@ -169,7 +173,7 @@ Si quicksort tiene peor caso, ¿por qué se usa tanto?
 
 - **Es rápido de verdad.** Hace pocos movimientos de datos y recorre la memoria de forma consecutiva, lo que aprovecha bien la [caché del procesador](/articulos/memoria-cache-del-procesador/).
 - **Casi no usa memoria extra.**
-- **El peor caso se evita** con una buena elección de pivote.
+- **El coste esperado se controla** con una elección aleatoria adecuada; una estrategia híbrida puede aportar una garantía de peor caso.
 
 ### No es estable
 
@@ -194,5 +198,5 @@ Rara vez hay que escribir un quicksort. Conocerlo sirve para entender qué hace 
 - Quicksort elige un pivote, separa menores y mayores, y repite con cada parte.
 - La partición coloca el pivote en su posición definitiva.
 - En promedio es O(n log n); con malos pivotes, O(n²).
-- Elegir el pivote al azar o por mediana de tres evita el peor caso.
+- Elegir mejor el pivote reduce particiones malas, pero no elimina por sí solo el peor caso ni el problema de las claves repetidas.
 - Ordena en el propio array, con poca memoria extra, y no es estable.

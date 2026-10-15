@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - programacion-orientada-a-objetos
   - que-es-una-clase
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "React (documentación anterior): Composition vs Inheritance (en inglés)"
     url: https://legacy.reactjs.org/docs/composition-vs-inheritance.html
@@ -48,17 +48,19 @@ console.log(coche.arrancar()); // "arrancado"
 const motor = { arrancar: () => "arrancado" };
 const bocina = { sonar: () => "piii" };
 
-function crearCoche() {
+function crearCoche(motor, bocina) {
 	return {
 		arrancar: () => motor.arrancar(),
 		tocarClaxon: () => bocina.sonar(),
 	};
 }
 
-console.log(crearCoche().tocarClaxon()); // "piii"
+const coche = crearCoche(motor, bocina);
+console.log(coche.arrancar()); // "arrancado"
+console.log(coche.tocarClaxon()); // "piii"
 ```
 
-El coche no es un tipo de motor: **tiene** un motor y una bocina, y les delega.
+El coche no es un tipo de motor: **tiene** un motor y una bocina, y les delega. Ambos ejemplos independientes arrancan un coche. En el segundo puedes entregar otro objeto `motor` que respete `arrancar`, sin crear una subclase de coche.
 
 ## El problema de la herencia
 
@@ -77,8 +79,8 @@ Con composición, se combinan las piezas necesarias: un motor eléctrico y un si
 | --- | --- | --- |
 | Relación | "Es un" | "Tiene un" |
 | Se decide | Al escribir el código | Se puede cambiar al ejecutar |
-| Acoplamiento | Alto: la clase hija depende de los detalles de la base | Bajo: se depende solo de lo que ofrece cada pieza |
-| Flexibilidad | Baja, una jerarquía fija | Alta, se combinan piezas |
+| Acoplamiento | La hija depende del contrato y de la implementación heredada | Depende de los contratos entre piezas; también puede hacerse excesivo |
+| Flexibilidad | Reutiliza una jerarquía de tipos | Permite sustituir piezas si sus contratos son compatibles |
 | Riesgo | Jerarquías profundas y frágiles | Más piezas que conectar |
 
 ## Preferir la composición
@@ -88,6 +90,12 @@ Es un consejo clásico del diseño orientado a objetos: **preferir la composici�
 La herencia encaja cuando la relación "es un" es real y estable, y la clase hija puede sustituir a la base en cualquier sitio sin sorpresas, como pide uno de los [principios SOLID](/articulos/principios-solid/).
 
 [React](/articulos/que-es-react/), por ejemplo, desaconseja la herencia entre componentes: se construye todo combinando unos dentro de otros.
+
+## Confusiones frecuentes
+
+- **Elegir herencia por una frase del mundo real.** Que un coche «sea un vehículo» no basta: debe poder cumplir todas las operaciones del contrato de `Vehiculo`.
+- **Suponer que componer elimina dependencias.** Si una pieza inspecciona los detalles internos de otra, el acoplamiento sigue existiendo.
+- **Compartir una pieza con estado sin decidirlo.** Dos coches que reciben el mismo objeto motor comparten su estado; crea instancias distintas si necesitan independencia.
 
 ## Lo esencial
 

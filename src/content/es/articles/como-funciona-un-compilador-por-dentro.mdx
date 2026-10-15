@@ -6,7 +6,8 @@ layer: programacion
 prerequisites:
   - compilador-e-interprete
   - que-es-un-lenguaje-de-programacion
-updated: 2026-10-14
+  - recursividad
+updated: 2026-10-15
 sources:
   - title: "Robert Nystrom: Crafting Interpreters, A Map of the Territory (en inglés)"
     url: https://craftinginterpreters.com/a-map-of-the-territory.html
@@ -28,11 +29,11 @@ flowchart LR
 	G --> E["Código máquina<br>o bytecode"]
 ```
 
-Vamos a recorrer las fases con un compilador de juguete para expresiones como `2 + 3 * 4`.
+Vamos a recorrer las fases con un compilador de juguete para expresiones como `2 + 3 * 4`. Ejecuta los bloques JavaScript **en orden, en un mismo archivo**: cada fase reutiliza las funciones y los datos de la anterior. Admitimos números enteros pequeños sin signo, los cuatro operadores y paréntesis; las operaciones usan la aritmética de `Number`. No implementamos variables, comentarios ni un lenguaje completo.
 
 ## 1. Análisis léxico: de caracteres a tokens
 
-La primera fase, el **análisis léxico** o escaneo, recorre el texto carácter a carácter y lo agrupa en **tokens**: las "palabras" del lenguaje. Un número, un operador, un paréntesis. Los espacios y los comentarios, que no significan nada, se descartan.
+La primera fase, el **análisis léxico** o escaneo, recorre el texto carácter a carácter y lo agrupa en **tokens**: las "palabras" del lenguaje. Un número, un operador, un paréntesis. Nuestro lenguaje descarta espacios en blanco. En otros lenguajes la sangría o los saltos de línea pueden afectar a la sintaxis; no se deben descartar por sistema.
 
 ```js
 function lexico(texto) {
@@ -40,7 +41,7 @@ function lexico(texto) {
 	let i = 0;
 	while (i < texto.length) {
 		const c = texto[i];
-		if (c === " ") {
+		if (/\s/.test(c)) {
 			i++;
 		} else if (/[0-9]/.test(c)) {
 			let numero = "";
@@ -110,18 +111,20 @@ function sintactico(tokens) {
 		throw new Error("Expresión mal formada");
 	}
 
-	return expresion();
+	const resultado = expresion();
+	if (pos !== tokens.length) throw new Error("Sobran tokens tras la expresión");
+	return resultado;
 }
 
 const arbol = sintactico(lexico("2 + 3 * 4"));
 console.log(JSON.stringify(arbol)); // {"op":"+","izq":{"numero":2},"der":{"op":"*","izq":{"numero":3},"der":{"numero":4}}}
 ```
 
-Como `termino` se resuelve dentro de `expresion`, la multiplicación queda más abajo en el árbol y se calcula antes. Aquí se detectan los **errores de sintaxis**: un paréntesis sin cerrar, un operador sin operando.
+Como `termino` se resuelve dentro de `expresion`, la multiplicación queda más abajo en el árbol y se calcula antes. Aquí se detectan los **errores de sintaxis**: un paréntesis sin cerrar, un operador sin operando. También se exige consumir todos los tokens: `2 3` no es una expresión válida, aunque su primer token sí lo sea. En las reglas, `|` significa alternativa y `*`, repetición de cero o más veces.
 
 ## 3. Análisis semántico
 
-Un programa puede estar bien escrito y no tener sentido: usar una variable que no existe, sumar un número a una función. El **análisis semántico** recorre el árbol y comprueba nombres y tipos. En lenguajes con [tipado estático](/articulos/tipado-estatico-y-dinamico/), es donde aparecen los errores de tipos.
+Un programa puede estar bien escrito y no tener sentido: usar una variable que no existe, sumar un número a una función. El **análisis semántico** comprueba restricciones como nombres y tipos, según el lenguaje. En uno con [tipado estático](/articulos/tipado-estatico-y-dinamico/), aquí pueden detectarse incompatibilidades. Nuestro ejemplo solo tiene números y operadores numéricos: no implementa una fase de resolución de nombres ni un verificador de tipos.
 
 ## 4. Optimización
 
@@ -158,20 +161,39 @@ function generar(nodo) {
 console.log(generar(arbol).join("; ")); // "APILAR 2; APILAR 3; APILAR 4; MULTIPLICAR; SUMAR"
 ```
 
-Primero se apilan los operandos y después se aplica la operación: la multiplicación ocurre antes que la suma, tal como dictaba el árbol.
+Primero se apilan los operandos y después se aplica la operación: la multiplicación ocurre antes que la suma, tal como dictaba el árbol. La pila pasa por `[2]`, `[2, 3]`, `[2, 3, 4]`, `[2, 12]` y `[14]`. Al restar o dividir, se extrae primero el operando derecho y después el izquierdo: invertirlos cambiaría el resultado.
+
+Aquí generamos desde el árbol original para ver las instrucciones. `generar(plegar(arbol))` produciría solo `APILAR 14`. Generar ese texto no lo ejecuta: haría falta un intérprete para estas instrucciones de juguete.
+
+<Quiz
+	client:visible
+	question="¿Por qué el analizador debe comprobar que ha consumido todos los tokens?"
+	options={[
+		"Para evitar aceptar solo un prefijo válido de una entrada incorrecta",
+		"Para obligar a que todas las expresiones tengan paréntesis",
+		"Para calcular la suma antes que la multiplicación",
+	]}
+	answer={0}
+/>
 
 ## Delante y detrás
 
 Las fases se agrupan en dos mitades:
 
 - **Parte delantera** (*front end*): léxico, sintáctico y semántico. Depende del **lenguaje** de entrada.
-- **Parte trasera** (*back end*): optimización y generación. Depende de la **máquina** de destino.
+- **Parte trasera** (*back end*): generación y optimizaciones dependientes de la **máquina** de destino. Muchas herramientas separan además una parte intermedia con optimizaciones independientes del destino.
 
 Separarlas permite reutilizar: varios lenguajes pueden compartir la misma parte trasera, y un lenguaje puede generar código para muchos procesadores, como [x86 y ARM](/articulos/arquitecturas-x86-y-arm/). Un **intérprete** comparte las primeras fases, pero en lugar de generar código, recorre el árbol o el bytecode y lo ejecuta directamente.
 
 ## Las reglas del lenguaje
 
 Una [gramática formal](/articulos/gramaticas-formales/) especifica qué estructuras sintácticas admite el lenguaje. El análisis sintáctico aplica esas reglas; comprobar que los nombres existen y los tipos encajan requiere fases adicionales.
+
+## Errores comunes
+
+- **Aceptar una expresión y olvidar el resto.** Sin comprobar el final, una entrada como `2 3` se confundiría con `2`.
+- **Confundir simplificación y ejecución.** Plegar constantes transforma el programa. Una operación con datos desconocidos al compilar debe conservar su comportamiento para cuando lleguen.
+- **Usar reglas aritméticas sin respetar el lenguaje.** Desbordamientos, redondeos y efectos secundarios pueden invalidar una transformación que sería correcta sobre números matemáticos ideales.
 
 ## Lo esencial
 

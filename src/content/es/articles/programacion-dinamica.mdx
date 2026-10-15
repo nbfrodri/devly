@@ -7,7 +7,7 @@ prerequisites:
   - recursividad
   - complejidad-algoritmica
   - tablas-hash
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Jeff Erickson: Algorithms, cap. 3, Dynamic Programming (en inglés)"
     url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/03-dynprog.pdf
@@ -156,9 +156,21 @@ console.log(minimoDeMonedas([1, 3, 4], 6)); // 2
 console.log(minimoDeMonedas([1, 2, 5], 11)); // 3
 ```
 
-`mejor[c]` guarda el mínimo de monedas para la cantidad c. Se calcula para cada cantidad desde 1, y cada una se apoya en las anteriores.
+`mejor[c]` guarda el mínimo de monedas para la cantidad c. Se calcula para cada cantidad desde 1, y cada una se apoya en las anteriores. Se suponen monedas enteras positivas, disponibilidad ilimitada y cantidad entera no negativa.
 
-El coste es el número de cantidades por el número de monedas. Probar todas las combinaciones sería exponencial.
+| Cantidad c | `mejor[c]` con monedas 1, 3 y 4 | Decisión que alcanza el mínimo |
+| --- | --- | --- |
+| 0 | 0 | No hace falta ninguna moneda |
+| 1 | 1 | 1 |
+| 2 | 2 | 1 + 1 |
+| 3 | 1 | 3 |
+| 4 | 1 | 4 |
+| 5 | 2 | 4 + 1 |
+| 6 | 2 | `mejor[3] + 1`, usando otra moneda de 3 |
+
+En 6, terminar con una moneda de 1 exigiría `mejor[5] + 1 = 3`; terminar con una de 4 también daría 3. Probar la última moneda de 3 descubre la solución de dos. Si una cantidad es imposible, como 3 con monedas de 2, permanece `Infinity`: no significa que se haya encontrado un cambio válido.
+
+El coste es O(C · m), con C la cantidad y m las denominaciones. Depende del valor numérico de C, no solo de cuántos dígitos ocupa: por eso se llama **seudopolinómico**. Una cantidad enorme puede hacer inviable la tabla aunque su representación escrita sea corta.
 
 ## Cómo plantear un problema
 

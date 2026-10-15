@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - arboles-binarios-de-busqueda
   - tablas-hash
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Sedgewick y Wayne: Algorithms, 5.2 Tries (en inglés)"
     url: https://algs4.cs.princeton.edu/52trie/
@@ -62,7 +62,10 @@ function conPrefijo(raiz, prefijo) {
 	const resultado = [];
 	const recorrer = (actual, texto) => {
 		if (actual.fin) resultado.push(texto);
-		for (const [letra, hijo] of Object.entries(actual.hijos)) {
+		const hijos = Object.entries(actual.hijos).sort(([a], [b]) =>
+			a < b ? -1 : a > b ? 1 : 0,
+		);
+		for (const [letra, hijo] of hijos) {
 			recorrer(hijo, texto + letra);
 		}
 	};
@@ -77,24 +80,24 @@ for (const palabra of ["casa", "casco", "cama", "perro"]) {
 }
 
 console.log(conPrefijo(raiz, "cas").join(" ")); // "casa casco"
-console.log(conPrefijo(raiz, "ca").join(" ")); // "casa casco cama"
+console.log(conPrefijo(raiz, "ca").join(" ")); // "cama casa casco"
 console.log(conPrefijo(raiz, "x").length); // 0
 ```
 
-Para encontrar las palabras que empiezan por "cas", se baja tres niveles y se recorre lo que cuelga de ahí. El resto del diccionario no se toca.
+Para encontrar las palabras que empiezan por "cas", se baja tres niveles y se recorre lo que cuelga de ahí. El resto del diccionario no se toca. El ejemplo ordena los hijos para producir un orden lexicográfico de JavaScript; no aplica las reglas lingüísticas de un idioma. Sin esa ordenación, los hijos del objeto seguirían su orden de enumeración. `fin` distingue una palabra completa de un prefijo: guardar «casa» no implica haber guardado «cas».
 
 ## Cuánto cuesta
 
-Buscar una palabra cuesta tanto como **su longitud**, no como el número de palabras guardadas. Da igual que haya cien palabras o diez millones: buscar "casa" son cuatro pasos.
+Localizar una palabra de longitud L requiere O(L) accesos a hijos, suponiendo que cada acceso tiene coste constante. «Casa» tiene cuatro pasos. Devolver todas las palabras de un prefijo cuesta además recorrer sus descendientes y construir los resultados: un prefijo frecuente puede producir millones de palabras.
 
 | Operación | Trie | [Tabla hash](/articulos/tablas-hash/) | [Árbol equilibrado](/articulos/arboles-equilibrados/) |
 | --- | --- | --- | --- |
-| Buscar una palabra | Según su longitud | Constante, en promedio | Logarítmica |
-| Todas las que empiezan por un prefijo | Muy rápido | Hay que recorrer todo | Posible, con un rango |
-| Recorrer en orden alfabético | Sí | No | Sí |
+| Buscar una palabra | O(L) accesos | Calcular hash O(L), más búsqueda esperada O(1) | O(log n) comparaciones; comparar cadenas también cuesta |
+| Todas las que empiezan por un prefijo | Localizar prefijo y recorrer resultados | Habitualmente hay que recorrer todo | Posible, con un rango |
+| Recorrer en orden de claves | Ordenando los hijos | No por sí sola | Sí, según su comparador |
 | Memoria | Alta | Media | Media |
 
-La tabla hash es más rápida para buscar una palabra exacta. El trie gana cuando importan los **prefijos**.
+Una tabla hash suele ser una buena opción para igualdad exacta, pero cuál es más rápida depende de las claves y la representación. El trie ofrece una ventaja estructural cuando importan los **prefijos**: permite descartar ramas que no pueden contener resultados.
 
 ## Dónde se usa
 

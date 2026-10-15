@@ -7,7 +7,7 @@ prerequisites:
   - arboles-binarios-de-busqueda
   - complejidad-algoritmica
   - recursividad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare 6.006: Lecture 7, Binary Trees, Part 2: AVL (en inglés)"
     url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/mit6_006s20_lec7/
@@ -25,7 +25,7 @@ Un **árbol equilibrado** es un [árbol binario de búsqueda](/articulos/arboles
 
 En un árbol de búsqueda, cada operación recorre un camino desde la raíz. Su coste depende de la altura del árbol.
 
-Si los datos llegan desordenados, el árbol queda más o menos frondoso, con una altura cercana a log n. Pero si llegan **ordenados**, cada valor nuevo va a la derecha del anterior, y el árbol se convierte en una lista: altura n. Buscar deja de ser logarítmico y pasa a ser lineal.
+Con un orden de inserción aleatorio de claves distintas, la altura esperada es O(log n). Que una entrada no esté ordenada no basta para garantizarlo: también puede producir una cadena larga. Pero si llegan **ordenados**, cada valor nuevo va a la derecha del anterior, y el árbol se convierte en una lista: altura n. Buscar deja de ser logarítmico y pasa a ser lineal.
 
 Y los datos ordenados no son un caso raro: identificadores que crecen, fechas, nombres ya clasificados.
 
@@ -118,7 +118,7 @@ Cien valores ordenados. El árbol simple acaba con altura 100: una lista. El AVL
 
 ## Árboles rojo-negro
 
-Usan una regla más relajada. Cada nodo se marca como **rojo** o **negro**, y se exige, entre otras cosas, que no haya dos rojos seguidos y que todos los caminos de la raíz a las hojas tengan el mismo número de nodos negros.
+Usan una regla más relajada. Cada nodo se marca como **rojo** o **negro**, y se exige, entre otras cosas, que no haya dos rojos seguidos y que todos los caminos desde un nodo hasta sus hojas nulas tengan el mismo número de nodos negros. Esas hojas nulas representan enlaces vacíos y se consideran negras.
 
 Eso garantiza que el camino más largo no mide más del doble que el más corto. El árbol está algo menos equilibrado que un AVL, pero necesita **menos rotaciones** al insertar y borrar.
 
@@ -130,7 +130,7 @@ Eso garantiza que el camino más largo no mide más del doble que el más corto.
 | Inserciones y borrados | Más rotaciones | Menos rotaciones |
 | Conviene cuando | Se busca mucho más de lo que se modifica | Hay muchas modificaciones |
 
-Los dos garantizan O(log n) en todas las operaciones.
+Los dos garantizan O(log n) para buscar, insertar y borrar una clave. Recorrer todos los elementos sigue costando O(n). Las diferencias de velocidad de la tabla son tendencias: dependen de la implementación y la carga de trabajo.
 
 <Quiz
 	client:visible

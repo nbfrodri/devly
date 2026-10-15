@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - arboles-binarios-de-busqueda
   - pilas-y-colas
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare: 6.006, Breadth-First Search (en inglés)"
     url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-9-breadth-first-search/
@@ -92,21 +92,26 @@ const grafo = {
 };
 
 function caminoMasCorto(inicio, destino) {
-	const cola = [[inicio]];
-	const visitados = new Set([inicio]);
+	const cola = [inicio];
+	const anterior = new Map([[inicio, null]]);
+	let cabeza = 0;
 
-	while (cola.length > 0) {
-		const camino = cola.shift();
-		const nodo = camino[camino.length - 1];
+	while (cabeza < cola.length) {
+		const nodo = cola[cabeza++];
 
 		if (nodo === destino) {
+			const camino = [];
+			for (let actual = destino; actual !== null; actual = anterior.get(actual)) {
+				camino.push(actual);
+			}
+			camino.reverse();
 			return camino;
 		}
 
 		for (const vecino of grafo[nodo]) {
-			if (!visitados.has(vecino)) {
-				visitados.add(vecino);
-				cola.push([...camino, vecino]);
+			if (!anterior.has(vecino)) {
+				anterior.set(vecino, nodo);
+				cola.push(vecino);
 			}
 		}
 	}
@@ -116,6 +121,8 @@ function caminoMasCorto(inicio, destino) {
 
 console.log(caminoMasCorto("A", "E").join(" ")); // "A B D E"
 ```
+
+`cabeza` avanza sobre la cola sin desplazar sus elementos. `anterior` guarda desde qué nodo se descubrió cada vecino y también indica si ya fue visitado. Al sacar A se añaden B y C; al sacar B se descubre D; C no vuelve a añadirlo. D descubre E. Al llegar a E se reconstruye E, D, B, A y se invierte el resultado. Guardar solo el predecesor evita copiar un camino completo por cada vecino.
 
 ### En profundidad
 
@@ -132,16 +139,17 @@ const grafo = {
 	E: ["D"],
 };
 
-function recorrer(nodo, visitados = []) {
-	visitados.push(nodo);
+function recorrer(nodo, visitados = new Set(), orden = []) {
+	visitados.add(nodo);
+	orden.push(nodo);
 
 	for (const vecino of grafo[nodo]) {
-		if (!visitados.includes(vecino)) {
-			recorrer(vecino, visitados);
+		if (!visitados.has(vecino)) {
+			recorrer(vecino, visitados, orden);
 		}
 	}
 
-	return visitados;
+	return orden;
 }
 
 console.log(recorrer("A").join(" ")); // "A B D C E"
@@ -153,7 +161,7 @@ console.log(recorrer("A").join(" ")); // "A B D C E"
 | Orden | Por niveles | Por ramas |
 | Sirve para | El camino más corto sin pesos | Detectar ciclos, ordenar dependencias |
 
-Las dos visitan cada nodo y cada arista una vez, así que su [complejidad](/articulos/complejidad-algoritmica/) es proporcional al tamaño del grafo.
+Con listas de adyacencia y comprobación de visitados de coste esperado constante, las dos tienen [coste](/articulos/complejidad-algoritmica/) O(V + E), donde V cuenta vértices y E aristas. En un grafo no dirigido cada arista aparece en dos listas, un factor constante. `Set` evita buscar en un array de visitados en cada paso; el ejemplo conserva además un array con el orden de salida. Solo se recorre la parte alcanzable desde el inicio y se supone que todos los vecinos tienen su entrada en `grafo`.
 
 <Quiz
 	client:visible

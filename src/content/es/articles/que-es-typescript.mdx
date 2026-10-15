@@ -136,7 +136,7 @@ function longitud(texto?: string) {
 }
 ```
 
-Hay que comprobarlo antes. Solo esta comprobación elimina una clase entera de errores.
+Hay que comprobarlo antes. Esta comprobación detecta el acceso inseguro del ejemplo; no elimina todos los fallos por valores ausentes, porque los datos externos, `any` o unas declaraciones de tipos incorrectas pueden ocultarlos.
 
 ### Genéricos
 
@@ -157,7 +157,7 @@ const texto = primero(["a", "b"]);
 
 - **Errores antes de ejecutar.**
 - **Un editor que ayuda.** Autocompletado fiable, ir a la definición, ver qué acepta una función. Para mucha gente es la ventaja principal.
-- **Cambiar con seguridad.** Al renombrar una propiedad o cambiar una función, el compilador señala cada sitio que se ha roto. En un proyecto grande, es lo que permite reorganizar el código sin miedo.
+- **Revisar cambios.** Al renombrar una propiedad o cambiar una función, el compilador señala usos incompatibles con los tipos que conoce. Ayuda a reorganizar el código, aunque siguen haciendo falta pruebas para comprobar el comportamiento.
 - **Contratos comprobables.** Los tipos expresan parte de lo que espera y devuelve una función. No describen por sí solos unidades, reglas de negocio ni todos sus efectos.
 
 <Quiz

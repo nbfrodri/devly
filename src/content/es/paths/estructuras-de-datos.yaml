@@ -1,5 +1,5 @@
 title: Estructuras de datos
-description: Las formas básicas de organizar la información y cuándo conviene cada una.
+description: "Después de Introducción a los algoritmos: cómo organizar información, seguir sus operaciones y justificar sus costes. Repasa objetos y referencias de JavaScript."
 layer: programacion
 steps:
   - arrays

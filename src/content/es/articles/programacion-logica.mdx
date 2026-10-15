@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - logica-booleana
   - recursividad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "SWI-Prolog: manual de referencia, introducción (en inglés)"
     url: https://www.swi-prolog.org/pldoc/man?section=intro
@@ -28,7 +28,7 @@ En la programación habitual, llamada **imperativa**, das órdenes: haz esto, lu
 
 En la programación lógica describes el problema y dejas el camino al sistema. Es un estilo **declarativo**, como [SQL](/articulos/que-es-sql/): dices qué quieres, no cómo obtenerlo.
 
-Una frase resume la idea: un algoritmo es **lógica más control**. La lógica es lo que se sabe del problema; el control, la estrategia para usarlo. En un lenguaje imperativo escribes las dos cosas mezcladas. En Prolog escribes la lógica, y el control lo pone el lenguaje.
+Una frase resume la idea: un algoritmo es **lógica más control**. La lógica es lo que se sabe del problema; el control, la estrategia para usarlo. Prolog aporta una estrategia de búsqueda, pero el orden en que escribes las reglas y sus condiciones influye en el recorrido y puede determinar si termina.
 
 ## Las tres piezas
 
@@ -83,7 +83,7 @@ Con la misma regla `abuelo` se puede preguntar:
 - ¿Quién es abuelo de Pablo? Buscar abuelos.
 - ¿Qué parejas de abuelo y nieto hay? Enumerar todas.
 
-En un lenguaje imperativo harían falta cuatro funciones.
+En un lenguaje imperativo puedes programar una búsqueda general o varias funciones. La diferencia es que aquí las cuatro consultas reutilizan directamente la relación declarada, sin escribir un recorrido específico para cada dirección. No todas las relaciones de Prolog funcionan igual de bien en cualquier dirección: algunas operaciones requieren argumentos ya conocidos.
 
 ## Cómo encuentra las respuestas
 
@@ -149,7 +149,7 @@ antepasado(X, Y) :- progenitor(X, Y).
 antepasado(X, Y) :- progenitor(X, Z), antepasado(Z, Y).
 ```
 
-X es antepasado de Y si es su progenitor, o si es progenitor de alguien que es antepasado de Y. Con dos líneas se cubren todas las generaciones.
+X es antepasado de Y si es su progenitor, o si es progenitor de alguien que es antepasado de Y. En estos datos finitos y sin ciclos, la búsqueda alcanza todas las generaciones. Si añades relaciones cíclicas o colocas una llamada recursiva sin avance antes de la comprobación de progenitor, una consulta puede no terminar.
 
 <Quiz
 	client:visible

@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - complejidad-algoritmica
   - algoritmos-de-ordenacion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Jeff Erickson: Algorithms, cap. 4, Greedy Algorithms (en inglés)"
     url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/04-greedy.pdf
@@ -42,7 +42,7 @@ function cambio(monedas, cantidad) {
 console.log(cambio([50, 20, 10, 5, 2, 1], 87).join(" ")); // "50 20 10 5 2"
 ```
 
-Cinco monedas, y es lo óptimo. No se ha probado ninguna alternativa ni se ha mirado más allá del paso actual.
+Cinco monedas, y es lo óptimo para esa cantidad y esas denominaciones. El ejemplo supone valores enteros positivos, ordenados de mayor a menor, una cantidad no negativa y disponibilidad ilimitada. Si queda un resto sin cubrir, la lista devuelta no representa una solución completa; un programa real debe comprobarlo.
 
 ## Cuando falla
 
@@ -70,7 +70,7 @@ Tres monedas. Con dos de 3 habría bastado.
 
 Coger la de 4 era la mejor decisión **inmediata**, y condenó al resto: quedaban 2, que solo se pueden dar con dos monedas de 1. El algoritmo no puede darse cuenta, porque no revisa.
 
-Este es el riesgo de fondo: **una decisión óptima en cada paso no garantiza un resultado óptimo en conjunto**. Los sistemas de monedas reales están diseñados para que la estrategia voraz funcione. Uno arbitrario, no. Para el caso general hace falta [programación dinámica](/articulos/programacion-dinamica/).
+Este es el riesgo de fondo: **una decisión óptima en cada paso no garantiza un resultado óptimo en conjunto**. Algunos sistemas habituales permiten esa estrategia con disponibilidad ilimitada, pero no es una propiedad de cualquier moneda real ni de un monedero con existencias limitadas. El caso general puede resolverse con [programación dinámica](/articulos/programacion-dinamica/).
 
 ## Cuándo sí funciona
 
@@ -129,7 +129,9 @@ function elegir(actividades) {
 console.log(elegir(actividades).join(" ")); // "A C E"
 ```
 
-Tres actividades, y no caben más. La F, que empieza a primera hora y dura todo el día, queda fuera.
+Tres actividades, y no caben más. La F, que empieza a primera hora y dura todo el día, queda fuera. Se permite que una actividad empiece justo cuando termina otra, y todas cuentan lo mismo. Si cada actividad pagara una cantidad distinta, maximizar el número ya no equivaldría a maximizar los ingresos.
+
+El intercambio se puede seguir: toma una solución óptima cuya primera actividad termine a la hora `t`. La que termina antes acaba como muy tarde a `t`; sustituir la primera por ella no impide ninguna actividad posterior. Después de esa elección, el mismo argumento se aplica a las actividades compatibles restantes.
 
 El ejemplo enseña algo general: para un mismo problema hay varias reglas voraces plausibles, y normalmente solo una, o ninguna, es correcta.
 
@@ -184,8 +186,8 @@ También el [balanceador de carga](/articulos/balanceador-de-carga/) que envía 
 | --- | --- | --- | --- |
 | Opciones que considera | Una por paso | Todas, sin repetir trabajo | Todas, descartando ramas |
 | Revisa decisiones | No | Sí, de hecho las compara | Sí |
-| Rapidez | La mayor | Intermedia | La menor |
-| Da el óptimo | Solo en ciertos problemas | Sí | Sí |
+| Coste | Depende de ordenar y elegir candidatos | Depende de estados y transiciones | Depende del árbol explorado y las podas |
+| Da el óptimo | Si la regla tiene demostración | Si la recurrencia modela correctamente el problema | Si se exploran las opciones necesarias con podas correctas |
 
 Ante un problema de optimización, un orden sensato: buscar una regla voraz e intentar romperla con un contraejemplo. Si resiste y se puede justificar, se usa. Si no, se pasa a programación dinámica o a [vuelta atrás](/articulos/vuelta-atras/).
 

@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - que-es-typescript
   - tipado-estatico-y-dinamico
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "TypeScript: TypeScript for JavaScript Programmers (en inglés)"
     url: https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html
@@ -19,7 +19,7 @@ import { Quiz } from "@/components/quiz";
 
 **JavaScript** es el lenguaje que ejecutan los navegadores y [Node.js](/articulos/que-es-nodejs/). **[TypeScript](/articulos/que-es-typescript/)** es JavaScript con **tipos estáticos** añadidos: se escribe casi igual, con anotaciones que indican qué tipo tiene cada valor, y una herramienta comprueba los errores antes de ejecutar. Después, TypeScript se convierte en JavaScript normal.
 
-Todo JavaScript válido es TypeScript válido. TypeScript solo añade.
+TypeScript conserva la mayor parte de la sintaxis de JavaScript y permite una adopción gradual. Eso no significa que cualquier programa JavaScript pase su verificador: puede señalar errores o requerir anotaciones según la configuración.
 
 ## La diferencia en un ejemplo
 
@@ -54,12 +54,12 @@ El error aparece en el editor, antes de ejecutar nada.
 | | JavaScript | TypeScript |
 | --- | --- | --- |
 | Tipado | [Dinámico](/articulos/tipado-estatico-y-dinamico/) | Estático, opcional en parte |
-| Errores de tipo | Al ejecutar, o nunca | Antes de ejecutar |
+| Errores de tipo | El lenguaje comprueba al ejecutar; otras herramientas pueden analizar antes | Detecta ciertas incompatibilidades antes de ejecutar si se pasa el verificador |
 | Se ejecuta directamente | Sí | No: se [transpila](/articulos/compilar-y-transpilar/) a JavaScript |
 | Paso de construcción | No hace falta | Sí, o un entorno que lo admita |
-| Ayuda del editor | Limitada | Autocompletado y navegación muy precisos |
+| Ayuda del editor | Puede inferir tipos y usar anotaciones JSDoc | Usa tipos inferidos y declarados para navegación y comprobaciones |
 | Curva de aprendizaje | Menor | Algo mayor |
-| Proyectos grandes | Más difíciles de mantener | Más seguros de cambiar |
+| Mantenimiento | Depende de contratos, pruebas y herramientas | Añade comprobaciones estáticas a esas prácticas |
 
 ## Lo que TypeScript no cambia
 
@@ -70,7 +70,7 @@ El error aparece en el editor, antes de ejecutar nada.
 ## Cuándo usar cada uno
 
 - **JavaScript**: scripts pequeños, prototipos rápidos, páginas con poco código.
-- **TypeScript**: proyectos de cierto tamaño, de larga duración o en equipo. La inversión en tipos se recupera cada vez que hay que cambiar algo sin romper nada.
+- **TypeScript**: cuando compensa expresar contratos y detectar usos incompatibles antes de ejecutar. Hay que mantener tipos, configuración y herramientas; no garantiza cambios sin errores.
 
 No es una elección para siempre: un proyecto de JavaScript puede adoptar TypeScript poco a poco, archivo a archivo.
 
@@ -81,9 +81,15 @@ No es una elección para siempre: un proyecto de JavaScript puede adoptar TypeSc
 	answer={1}
 />
 
+## Confusiones frecuentes
+
+- **Confundir quitar tipos con comprobarlos.** Algunas herramientas solo transforman la sintaxis. Ejecuta el verificador, por ejemplo `tsc --noEmit`, como paso propio.
+- **Creer que `any` prueba compatibilidad.** Desactiva parte de las comprobaciones y permite que pase código incorrecto.
+- **Confiar en una anotación para datos de una API.** La respuesta debe validarse al ejecutar; sus bytes no obedecen a una declaración de tipos.
+
 ## Lo esencial
 
 - TypeScript es JavaScript con tipos estáticos.
-- Los errores de tipo aparecen antes de ejecutar, en el editor.
+- El verificador detecta ciertas incompatibilidades antes de ejecutar, con el alcance de sus tipos y configuración.
 - TypeScript se convierte en JavaScript, y los tipos desaparecen al ejecutar.
 - Compensa en proyectos medianos y grandes; para scripts pequeños, JavaScript basta.

@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - que-es-una-variable
   - logica-booleana
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Operador"
     url: https://developer.mozilla.org/es/docs/Glossary/Operator
@@ -23,15 +23,16 @@ Un **operador** es un símbolo, o a veces una palabra, que realiza una operació
 
 | Tipo | Ejemplos | Resultado |
 | --- | --- | --- |
-| Aritméticos | `+`, `-`, `*`, `/`, `%`, `**` | Un número |
+| Aritméticos | `+`, `-`, `*`, `/`, `%`, `**` | Normalmente un número; `+` también concatena textos |
 | De comparación | `===`, `!==`, `<`, `>=` | Verdadero o falso |
-| Lógicos | `&&`, `\|\|`, `!` | Verdadero o falso |
+| Lógicos | `&&`, `\|\|`, `!` | `&&` y `\|\|` devuelven un operando; `!`, un booleano |
 | De asignación | `=`, `+=` | Guarda un valor |
 
 ```js
 console.log(7 % 3); // 1
 console.log(2 ** 3); // 8
 console.log(5 > 3 && 2 > 1); // true
+console.log("" || "anónimo"); // "anónimo"
 ```
 
 `%` da el resto de una división; `**`, la potencia. Los lógicos se explican en [lógica booleana](/articulos/logica-booleana/).

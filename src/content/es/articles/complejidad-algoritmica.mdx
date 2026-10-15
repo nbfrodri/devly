@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - bucles
   - arrays
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare: 6.006 Introduction to Algorithms (en inglés)"
     url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/
@@ -24,7 +24,7 @@ Un **algoritmo** es una secuencia de pasos precisos para resolver un problema.
 
 Dos programas pueden dar el mismo resultado y comportarse de forma muy distinta. Con cien datos, los dos responden al instante. Con un millón, uno tarda un segundo y el otro, días.
 
-Medir con un cronómetro no sirve para comparar algoritmos, porque el tiempo depende del ordenador, del lenguaje y de lo que esté haciendo la máquina en ese momento. La complejidad ignora todo eso y se fija en una sola cosa: cuántos pasos hacen falta según el tamaño de la entrada, al que se llama `n`.
+Medir con un cronómetro permite comparar implementaciones en un entorno concreto, pero no basta para explicar cómo crecerán sus costes: influyen el ordenador, el lenguaje y otras tareas. La complejidad usa un modelo de operaciones y estudia cuántas hacen falta según el tamaño de la entrada, al que se llama `n`.
 
 ## Contar pasos
 
@@ -50,11 +50,13 @@ console.log(buscar([4, 8, 15, 16, 23, 42], 42)); // 6
 
 Si el valor está al principio, basta un paso. Si está al final, o no está, hacen falta tantos pasos como elementos.
 
-Al analizar un algoritmo interesa sobre todo el **peor caso**, porque es una garantía: nunca tardará más que eso. Aquí el peor caso son `n` pasos.
+El **peor caso** acota el trabajo para todas las entradas de un tamaño bajo el modelo elegido. Aquí son `n` comparaciones; no es una garantía de segundos. También se estudian el mejor caso, el coste medio bajo una distribución de entradas y el coste esperado cuando el algoritmo usa azar.
 
 ## La notación O grande
 
-El crecimiento se expresa con la **notación O grande**. Que la búsqueda anterior sea O(n) significa que, en el peor caso, el número de pasos crece en proporción al tamaño de la lista: el doble de datos, el doble de trabajo.
+La **notación O grande** expresa una cota superior del crecimiento: a partir de cierto tamaño, el coste no supera una constante multiplicada por la función indicada. La búsqueda anterior es O(n) en el peor caso. Como hace exactamente `n` comparaciones, también tiene una cota ajustada, escrita **Θ(n)**: su trabajo crece linealmente.
+
+O(n²) por sí sola no significa «exactamente cuadrático»: un coste lineal también cumple esa cota, aunque sea poco informativa. En las tablas de algoritmos se suele buscar la cota más ajustada conocida.
 
 La notación se queda con lo que domina cuando `n` es grande y descarta el resto:
 
@@ -71,9 +73,9 @@ La notación se queda con lo que domina cuando `n` es grande y descarta el resto
 | O(n log n) | Casi lineal | Los buenos [algoritmos de ordenación](/articulos/algoritmos-de-ordenacion/) |
 | O(n²) | Cuadrática | Comparar cada elemento con todos los demás |
 
-La diferencia se aprecia con números. Estos son los pasos aproximados para distintos tamaños:
+La diferencia se aprecia comparando las funciones de crecimiento, con logaritmos en base dos y redondeo. Son valores ilustrativos, sin constantes de una implementación ni predicciones de tiempo:
 
-| n | O(log n) | O(n) | O(n log n) | O(n²) |
+| n | log₂ n | n | n log₂ n | n² |
 | --- | --- | --- | --- | --- |
 | 10 | 3 | 10 | 33 | 100 |
 | 1000 | 10 | 1000 | 10 000 | 1 000 000 |
@@ -106,8 +108,8 @@ Al duplicar los datos, de tres a seis, el trabajo se multiplica por cuatro. Esa 
 
 <Quiz
 	client:visible
-	question="Un algoritmo O(n²) tarda 1 segundo con 1000 datos. ¿Cuánto tardará aproximadamente con 2000?"
-	options={["2 segundos", "4 segundos", "1000 segundos"]}
+	question="Si el trabajo dominante es exactamente n² operaciones, ¿por cuánto se multiplica al duplicar n?"
+	options={["Por 2", "Por 4", "Por 1000"]}
 	answer={1}
 />
 
@@ -129,5 +131,5 @@ El [análisis amortizado](/articulos/analisis-amortizado/) acota secuencias comp
 
 - La complejidad mide cómo crece el trabajo con el tamaño de la entrada, no el tiempo exacto.
 - La notación O grande conserva el término que domina y descarta constantes.
-- Se analiza el peor caso porque da una garantía.
+- El peor caso acota operaciones; no promete un tiempo de reloj.
 - Un bucle dentro de otro sobre los mismos datos suele ser O(n²).

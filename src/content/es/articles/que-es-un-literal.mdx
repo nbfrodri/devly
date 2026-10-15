@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - que-es-una-variable
   - tipos-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Literal (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Glossary/Literal
@@ -21,7 +21,7 @@ Un **literal** es un valor que aparece escrito directamente en el código fuente
 
 ## Tipos de literales
 
-Hay uno por cada [tipo de dato](/articulos/tipos-de-datos/) básico:
+JavaScript tiene estas formas de escribir valores. No todo [tipo de dato](/articulos/tipos-de-datos/) tiene un literal propio: por ejemplo, `undefined` es un nombre, no un literal.
 
 | Literal | Tipo |
 | --- | --- |
@@ -49,7 +49,8 @@ Un literal numérico que aparece en el código sin explicación, como `if (estad
 
 ```javascript
 const ESTADO_ENVIADO = 3;
-if (estado === ESTADO_ENVIADO) { /* ... */ }
+const estado = ESTADO_ENVIADO;
+console.log(estado === ESTADO_ENVIADO); // true
 ```
 
 El valor es el mismo, pero el código se explica solo.

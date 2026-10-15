@@ -1,5 +1,5 @@
 title: Introducción a los algoritmos
-description: Cómo se mide la eficiencia de un algoritmo y los ejemplos clásicos que la aprovechan.
+description: "Después de Fundamentos de programación: cómo medir la eficiencia y seguir búsquedas, recursión y ordenación."
 layer: programacion
 steps:
   - arrays
