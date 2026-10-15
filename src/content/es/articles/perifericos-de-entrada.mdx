@@ -1,79 +1,100 @@
 ---
 title: "¿Cómo funcionan el teclado, el ratón y la pantalla táctil?"
-description: "Los periféricos de entrada convierten acciones físicas en datos: una tecla cierra un circuito, un ratón fotografía la mesa y una pantalla táctil mide cambios eléctricos."
+description: "Los periféricos convierten acciones físicas en datos. El teclado identifica posiciones, el ratón mide desplazamientos y un sensor táctil localiza contactos."
 level: basico
 layer: hardware
 prerequisites:
   - partes-de-un-ordenador
-  - interrupciones-y-entrada-salida
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Explain that Stuff: Computer keyboards (en inglés)"
-    url: https://www.explainthatstuff.com/computerkeyboards.html
-  - title: "Explain that Stuff: How does a computer mouse work? (en inglés)"
-    url: https://www.explainthatstuff.com/computermouse.html
-  - title: "Explain that Stuff: How do touchscreens work? (en inglés)"
-    url: https://www.explainthatstuff.com/touchscreens.html
-  - title: "USB-IF: Human Interface Devices (HID) (en inglés)"
-    url: https://www.usb.org/hid
+  - title: "QMK: cómo funciona una matriz de teclado (en inglés)"
+    url: https://docs.qmk.fm/how_a_matrix_works
+  - title: "QMK: filtrado de rebotes de las teclas (en inglés)"
+    url: https://docs.qmk.fm/feature_debounce_type
+  - title: "USB-IF: Device Class Definition for HID 1.11 (en inglés, PDF)"
+    url: https://www.usb.org/sites/default/files/documents/hid1_11.pdf
+  - title: "Logitech: funcionamiento de sensores ópticos y Darkfield, 2009 (en inglés)"
+    url: https://news.logitech.com/press-releases/news-details/2009/Logitech-Unveils-Mice-That-Work-Where-Others-Fail/default.aspx
+  - title: "Texas Instruments: fundamentos de detección capacitiva (en inglés)"
+    url: https://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPWare/latest/exports/MSPWare_3_30_00_18/captivate/docs/users_guide/html/ch_basics.html
+  - title: "Texas Instruments: detección capacitiva a través de guantes y vidrio (en inglés)"
+    url: https://www.ti.com/document-viewer/lit/html/SSZTBE0
+  - title: "Texas Instruments: Introduction to capacitive touch-screen controllers, páginas 29–30 (en inglés, PDF)"
+    url: https://www.ti.com/lit/an/slyt511/slyt511.pdf
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Los **periféricos de entrada** son los dispositivos con los que una persona da órdenes a un ordenador: el teclado, el ratón, la pantalla táctil, el micrófono, la cámara. Todos hacen lo mismo en el fondo: convierten una **acción física** en **datos** que el ordenador puede procesar.
+Los **periféricos de entrada** convierten acciones o fenómenos físicos en datos que el ordenador puede procesar. Un teclado detecta pulsaciones; un ratón, movimientos; un micrófono, variaciones de presión del aire. Aquí seguiremos los tres dispositivos con los que solemos manejar una interfaz: teclado, ratón y pantalla táctil.
 
-## El teclado
+## El teclado identifica una posición
 
-Bajo las teclas hay una placa de circuito con pistas eléctricas. Al pulsar una tecla, un contacto conductor en su base toca las pistas y **cierra un circuito**, como un interruptor.
+En un teclado de contactos, pulsar una tecla cierra un circuito eléctrico. Las conexiones suelen organizarse en una **matriz** de filas y columnas. El controlador activa sucesivamente unas líneas y observa las otras: la intersección permite saber qué posición está pulsada.
 
-Para no necesitar un cable por cada tecla, las pistas forman una **matriz** de filas y columnas. El chip del teclado recorre las filas muy rápido y comprueba qué columnas reciben corriente. La intersección indica qué tecla está pulsada.
+Este modelo de seis posiciones muestra la idea. Los índices empiezan en cero y suponemos que siempre recibimos una fila y una columna válidas:
 
 ```js
 const matriz = [
-	["q", "w", "e"],
-	["a", "s", "d"],
+	["R0C0", "R0C1", "R0C2"],
+	["R1C0", "R1C1", "R1C2"],
 ];
 
-function teclaPulsada(fila, columna) {
+function posicionDetectada(fila, columna) {
 	return matriz[fila][columna];
 }
 
-console.log(teclaPulsada(1, 2)); // "d"
+console.log(posicionDetectada(1, 2)); // "R1C2"
 ```
 
-Seis teclas con cinco cables en lugar de seis. Con un teclado completo, el ahorro es enorme. El teclado no envía letras, sino un **código de tecla**. Es el sistema operativo el que decide qué carácter corresponde según la distribución de teclado configurada, como la española o la [QWERTY](/articulos/por-que-el-teclado-es-qwerty/) estadounidense.
+Son dos líneas de fila y tres de columna para seis teclas. Esas cinco líneas pertenecen al circuito de exploración; no son todos los conductores del teclado ni del cable USB.
 
-## El ratón
+Con varias teclas pulsadas pueden aparecer caminos eléctricos que hagan parecer pulsada otra. Los diodos, componentes que conducen principalmente en un sentido, permiten evitar esos caminos en matrices diseñadas para ello. Otros teclados emplean sensores ópticos o magnéticos en lugar de contactos.
 
-Los ratones antiguos tenían una bola de goma que hacía girar dos ruedas, una por eje. Los actuales son **ópticos**: un LED ilumina la superficie y un pequeño sensor, una cámara muy simple, toma cientos de imágenes por segundo de la mesa. Comparando cada imagen con la anterior, el chip del ratón calcula cuánto y hacia dónde se ha movido.
+## Una pulsación no es cada cambio eléctrico
 
-El ratón no envía una posición, sino **desplazamientos**: "me he movido tanto a la derecha y tanto hacia abajo". El sistema operativo los suma a la posición del puntero.
+Un contacto mecánico puede rebotar al cerrarse: durante un intervalo corto alterna entre abierto y cerrado. Contar cada transición como una pulsación produciría varias entradas aunque la persona solo haya pulsado una vez.
 
-## La pantalla táctil
+El **filtrado de rebotes**, o *debouncing*, convierte esas lecturas en un estado estable. Una estrategia consiste en esperar un tiempo sin cambios antes de aceptar el nuevo estado. Esperar demasiado aumenta el retraso; esperar demasiado poco puede aceptar rebotes como pulsaciones. El método y los tiempos dependen del teclado.
 
-Hay varias tecnologías:
+## Del teclado a una letra en pantalla
 
-| Tipo | Cómo detecta | Multitáctil |
-| --- | --- | --- |
-| Resistiva | Dos capas que se tocan al presionar | Normalmente no |
-| Capacitiva | El dedo, que conduce la electricidad, altera un campo eléctrico | Sí |
-| Infrarroja | El dedo corta haces de luz invisibles en los bordes | Según el modelo |
+El controlador convierte la posición detectada en un código y prepara un informe de las teclas y modificadores activos, como Mayúsculas. En un teclado USB convencional, el ordenador consulta periódicamente el canal de entrada y el dispositivo responde cuando corresponde.
 
-Los móviles usan pantallas **capacitivas**: una cuadrícula de electrodos transparentes detecta en qué puntos el dedo cambia la carga eléctrica. Por eso pueden detectar varios dedos a la vez, y por eso no responden con guantes normales.
+Ese tipo de transferencia se llama *interrupt* en USB, pero no significa que cada tecla envíe directamente una [interrupción a la CPU](/articulos/interrupciones-y-entrada-salida/). El controlador USB gestiona las transferencias y comunica sus resultados al sistema.
 
-## Cómo llegan los datos al ordenador
+El estándar **HID**, de dispositivos de interfaz humana, define cómo describir e intercambiar esos informes. Un [driver](/articulos/que-es-un-driver/) genérico del sistema puede interpretar las funciones estándar; sigue existiendo un controlador aunque no tengas que instalar uno específico.
 
-Cada vez que hay un dato nuevo, el periférico avisa al procesador con una [interrupción](/articulos/interrupciones-y-entrada-salida/), o el sistema le pregunta periódicamente.
+El sistema combina código, modificadores y distribución de teclado. Después, la aplicación decide si inserta texto o ejecuta una orden. La misma tecla puede escribir una letra, mover un personaje o activar un atajo. [QWERTY](/articulos/por-que-el-teclado-es-qwerty/) describe una disposición, no el significado obligatorio de cada pulsación para todos los programas.
 
-Para no necesitar un [driver](/articulos/que-es-un-driver/) distinto para cada modelo, los teclados, ratones y mandos usan la clase estándar **HID**, de dispositivos de interfaz humana, definida para USB. Un ratón describe qué datos envía siguiendo ese estándar, y el sistema operativo lo entiende sin instalar nada. Por eso un teclado USB funciona nada más conectarlo. Bluetooth tiene un perfil equivalente.
+<Quiz
+	client:visible
+	question="¿Por qué la misma tecla puede escribir texto en un editor y mover un personaje en un juego?"
+	options={[
+		"El teclado reconoce por sí solo todos los programas",
+		"La aplicación interpreta los eventos de entrada según sus funciones",
+		"El cable USB cambia físicamente la posición de la tecla",
+	]}
+	answer={1}
+/>
 
-## Accesibilidad
+## El ratón mide desplazamientos
 
-Teclado, ratón y pantalla táctil no son las únicas formas de dar órdenes. Hay personas que usan solo el teclado, conmutadores, control por voz o seguimiento de la mirada. Una buena interfaz no depende de un único periférico, como explica [accesibilidad web](/articulos/accesibilidad-web/).
+Un ratón óptico ilumina la superficie, mediante un LED o un láser según el diseño, y un sensor obtiene imágenes sucesivas. Al comparar sus detalles, calcula cuánto y hacia dónde se ha desplazado. Una superficie sin rasgos que el sensor pueda distinguir dificulta esa estimación.
+
+Un ratón convencional comunica cambios relativos, como «tres unidades hacia la derecha», junto con botones y rueda. El sistema transforma esas unidades en movimiento del puntero según su configuración; puede aplicar escala o aceleración. No tiene por qué equivaler a sumar tres píxeles. Una tableta digitalizadora, en cambio, puede enviar posiciones absolutas dentro de su superficie.
+
+## La pantalla táctil localiza contactos
+
+En un sensor **capacitivo**, unos electrodos permiten medir cómo cambia el comportamiento eléctrico cuando se acerca un dedo conductor. La distribución de esos cambios ayuda a localizar el contacto. Un diseño puede medir cada electrodo respecto al entorno o el acoplamiento entre pares de electrodos.
+
+Detectar varios dedos requiere una matriz, un controlador y un procesamiento preparados para distinguirlos. El funcionamiento con guantes depende del material, el grosor y la sensibilidad del diseño; no todos los sensores responden igual.
+
+Otra tecnología es la **resistiva**: al presionar, se ponen en contacto dos capas conductoras y se mide la posición de ese contacto. La presión mecánica permite accionarla con objetos que un sensor capacitivo podría no detectar. El número de contactos simultáneos que reconoce depende de su diseño.
+
+El panel que [muestra la imagen](/articulos/como-funciona-una-pantalla/) y el sensor que detecta contactos realizan funciones distintas, aunque se integren en la misma superficie. Por eso una aplicación debe poder ofrecer alternativas de entrada: [la accesibilidad web](/articulos/accesibilidad-web/) explica cómo evitar que una función dependa exclusivamente del ratón o del tacto.
 
 ## Lo esencial
 
-- Los periféricos de entrada convierten acciones físicas en datos.
-- El teclado detecta las teclas con una matriz de filas y columnas, y envía códigos, no letras.
-- El ratón óptico compara imágenes de la superficie y envía desplazamientos.
-- Las pantallas táctiles capacitivas detectan cambios eléctricos, y admiten varios dedos.
+- Detectar una posición, interpretar una tecla y ejecutar una orden son pasos distintos.
+- El ratón mide desplazamientos que el sistema transforma en movimiento del puntero.
+- La detección táctil depende del sensor y su procesamiento, no del mecanismo que produce la imagen.

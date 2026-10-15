@@ -69,7 +69,7 @@ Verificación de interfaz: `pnpm check` pasa (558 tests, cero errores y avisos d
 
 Aceptación: «bit» enlaza «byte» y se revisan sistemáticamente las menciones del catálogo, con una lista explícita de grupos pendientes hasta cerrar la auditoría.
 
-Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos, y en el primer grupo de seis artículos de hardware y almacenamiento registrados en el backlog 8: 58 artículos distintos, incluidos los cinco nuevos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
+Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos, y en los dos grupos de hardware y almacenamiento registrados en el backlog 8: 64 artículos distintos, incluidos los cinco nuevos. La ruta de piezas del ordenador queda revisada en sus catorce pasos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
 
 ## 6. Fundamentos y redes para principiantes
 

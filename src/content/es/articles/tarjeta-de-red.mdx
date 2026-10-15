@@ -1,61 +1,84 @@
 ---
 title: "¿Qué es una tarjeta de red?"
-description: "La tarjeta de red es el componente que conecta un ordenador a una red, por cable o por radio. Convierte los datos en señales y tiene su propia dirección MAC."
+description: "La tarjeta de red intercambia datos con otros equipos mediante señales. El controlador, las colas en memoria y las direcciones locales permiten organizar ese intercambio."
 level: basico
 layer: hardware
 prerequisites:
   - partes-de-un-ordenador
-  - que-es-una-direccion-mac
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "Explain that Stuff: How computer networks work (en inglés)"
-    url: https://www.explainthatstuff.com/howcomputernetworkswork.html
-  - title: "IEEE 802.3 Ethernet Working Group (en inglés)"
+  - title: "IEEE: grupo de trabajo de Ethernet 802.3 (en inglés)"
     url: https://www.ieee802.org/3/
+  - title: "Operating Systems: Three Easy Pieces, I/O Devices (en inglés, PDF)"
+    url: https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf
   - title: "The Linux Kernel documentation: NAPI (en inglés)"
     url: https://docs.kernel.org/networking/napi.html
+  - title: "Apple: uso de direcciones wifi privadas (en inglés)"
+    url: https://support.apple.com/en-us/102509
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **tarjeta de red**, o interfaz de red, es el componente que conecta un ordenador a una red. Convierte los datos del ordenador en **señales** que viajan por un cable o por el aire, y al revés. Hoy casi siempre va integrada en la placa base, pero sigue siendo una pieza distinta, con su propio chip.
+La **tarjeta de red** es el hardware que permite intercambiar datos con otros equipos por una red. Convierte bits en señales y recupera bits de las señales recibidas. También se llama **NIC**, por *network interface controller*, controlador de interfaz de red.
 
-## Con cable y sin cable
+Puede ser una tarjeta conectada a la placa base, un adaptador USB o circuitería integrada en el equipo. «Interfaz de red» es un término más amplio: el sistema operativo también puede presentar interfaces virtuales que no corresponden a una tarjeta física independiente.
+
+## Con cable o por radio
 
 | | Ethernet | Wifi |
 | --- | --- | --- |
-| Medio | Cable de cobre o fibra | Ondas de radio |
-| Estándar | IEEE 802.3 | IEEE 802.11 |
-| Ventajas | Estable, rápida, poca latencia | Movilidad, sin cables |
-| Inconvenientes | Hay que llevar el cable | Interferencias, comparte el medio |
+| Medio habitual | Cable de cobre o fibra óptica | Ondas de radio |
+| Familia de estándares | IEEE 802.3 | IEEE 802.11 |
+| Restricción del enlace | Necesita el cable y los conectores adecuados | Comparte el canal de radio y depende de cobertura e interferencias |
 
-Un portátil suele tener las dos. Cada una es una interfaz distinta para el sistema operativo. El funcionamiento por radio lo explica [cómo funciona el wifi](/articulos/como-funciona-el-wifi/).
+La velocidad real depende de los dispositivos, el enlace y el tráfico; «con cable» no significa automáticamente «más rápido que cualquier wifi». Un ordenador puede tener varias interfaces y usarlas para redes distintas. [Cómo funciona el wifi](/articulos/como-funciona-el-wifi/) desarrolla el caso por radio.
 
-## Su identidad: la dirección MAC
+## Los datos viajan en tramas
 
-Cada tarjeta de red lleva grabado de fábrica un identificador único, la [dirección MAC](/articulos/que-es-una-direccion-mac/). Es la dirección que se usa dentro de una red local, en la [capa de enlace](/articulos/capa-de-enlace/), para que un [switch](/articulos/hub-switch-y-router/) sepa a qué equipo entregar cada trama.
+La tarjeta no recibe una «página web» como objeto completo. Intercambia **tramas**: unidades que agrupan datos con información de control, como direcciones locales y un código para detectar alteraciones durante la transmisión.
 
-## Qué hace por dentro
+La [dirección MAC](/articulos/que-es-una-direccion-mac/) identifica una interfaz en ese intercambio local. Una dirección puede venir asignada por el fabricante, pero también puede configurarse mediante software. Por ejemplo, algunos dispositivos emplean direcciones wifi privadas que cambian para dificultar el seguimiento. No es una identidad permanente e infalsificable de la persona o del ordenador.
 
-- **Física**: convierte los bits en señales eléctricas, de luz o de radio, con la [modulación](/articulos/modulacion/) adecuada.
-- **Tramas**: monta y desmonta las tramas, y comprueba que llegan sin errores con una suma de verificación.
-- **Filtrado**: descarta las tramas que no van dirigidas a su dirección MAC.
-- **Memoria propia**: guarda temporalmente los paquetes que llegan y salen.
-- **Copia directa a memoria**: deja los datos en la RAM sin ocupar al procesador.
+El filtrado puede aceptar tramas para la propia interfaz y también envíos a grupos o a toda la red local. Un código de detección de errores permite descartar muchas tramas dañadas; no demuestra que cualquier alteración imaginable sea imposible ni que una aplicación haya recibido ya su contenido.
 
-## Avisar o preguntar
+## Seguir el envío de un mensaje
 
-Cuando llega un paquete, la tarjeta avisa al procesador con una [interrupción](/articulos/interrupciones-y-entrada-salida/). Con tráfico normal funciona bien. Pero a gran velocidad pueden llegar millones de paquetes por segundo, y atender una interrupción por cada uno saturaría el procesador.
+Supongamos que escribes «hola» en una aplicación:
 
-Linux lo resuelve con un mecanismo llamado NAPI: tras la primera interrupción, el sistema deja de recibir avisos y pasa a **preguntar** a la tarjeta, procesando los paquetes por lotes. Cuando el tráfico baja, vuelve a las interrupciones. Es la misma idea que distingue sondear de esperar avisos en tantos otros lugares.
+1. La aplicación entrega datos al sistema operativo. Sus [protocolos de red](/articulos/que-es-un-protocolo-de-red/) añaden la información necesaria para transportarlos.
+2. El **driver**, o [controlador de dispositivo](/articulos/que-es-un-driver/), prepara espacios de memoria con datos e instrucciones para la tarjeta.
+3. La tarjeta obtiene los datos pendientes, realiza las operaciones que le correspondan y transmite las tramas mediante señales.
+4. En el destino, otra interfaz recibe señales, comprueba las tramas y deja datos disponibles para que el sistema los procese.
 
-## El driver
+El reparto exacto de tareas entre software y tarjeta varía. Un mecanismo habitual es el **acceso directo a memoria**, o DMA: el dispositivo transfiere datos a la [RAM](/articulos/memoria-ram-y-almacenamiento/) sin que la CPU copie cada byte. La CPU sigue preparando y atendiendo la operación; DMA no elimina todo su trabajo.
 
-El sistema operativo habla con la tarjeta a través de su [driver](/articulos/que-es-un-driver/). Por encima, la pila de red del sistema implementa [TCP, UDP](/articulos/tcp-y-udp/) e [IP](/articulos/que-es-una-direccion-ip/). Algunas tarjetas de servidores descargan parte de ese trabajo en su propio chip, como calcular sumas de verificación o trocear los datos.
+## Avisar una vez y atender un lote
+
+Una [interrupción](/articulos/interrupciones-y-entrada-salida/) es un aviso al procesador de que hay trabajo que atender. Generar y gestionar un aviso separado para cada paquete puede resultar costoso con mucho tráfico.
+
+Linux utiliza **NAPI** para combinar avisos y procesamiento por lotes. En una configuración habitual, una interrupción inicia la atención de una cola; mientras se procesa, se mantienen desactivados los avisos correspondientes a ese trabajo. No se desactivan todas las interrupciones del ordenador.
+
+Imagina tres paquetes en una cola y un presupuesto de dos por turno. El primer turno procesa dos y solicita otro; el segundo procesa el restante. Cuando termina el trabajo pendiente, se puede volver a habilitar el aviso. Ese presupuesto evita que una cola monopolice indefinidamente la atención. Existen también modos de sondeo sin una interrupción inicial.
+
+<Quiz
+	client:visible
+	question="¿Qué trabajo evita DMA al recibir datos en memoria?"
+	options={[
+		"Que la CPU copie por sí misma cada byte recibido",
+		"Cualquier intervención del sistema operativo",
+		"La necesidad de comprobar y procesar los datos",
+	]}
+	answer={0}
+/>
+
+## Tener enlace no equivale a tener internet
+
+Una tarjeta puede estar conectada correctamente y aun así fallar la configuración [IP](/articulos/que-es-una-direccion-ip/), la resolución de nombres mediante [DNS](/articulos/que-es-dns/) o el [servidor](/articulos/que-es-un-servidor/) solicitado. Son pasos distintos del recorrido.
+
+Del mismo modo, que la tarjeta haya recibido datos no significa que la aplicación los haya leído o que la persona haya visto el mensaje. La interfaz resuelve el intercambio con la red; el resto de la comunicación necesita otras piezas.
 
 ## Lo esencial
 
-- La tarjeta de red conecta el ordenador a una red, por cable (Ethernet) o por radio (wifi).
-- Cada una tiene una dirección MAC única para la red local.
-- Convierte bits en señales, monta tramas y copia los datos directamente a la memoria.
-- A gran velocidad, el sistema deja de recibir interrupciones y procesa los paquetes por lotes.
+- La interfaz física intercambia tramas mediante señales; el sistema organiza el recorrido de los datos.
+- Una MAC es una dirección local configurable, no una identidad personal permanente.
+- DMA y el procesamiento por lotes reducen trabajo de la CPU, pero no eliminan su intervención.
