@@ -1,14 +1,15 @@
 title: Linux para desarrolladores
-description: "Lo que hay que saber de Linux para trabajar a diario con servidores, contenedores y la terminal."
+description: "Tras los fundamentos de sistemas operativos —archivos, procesos, arranque y comunicación entre procesos—, aplica Linux a la terminal, paquetes, servicios y automatización. Los modelos de código requieren JavaScript básico."
 layer: sistemas
 steps:
   - que-es-linux
   - distribuciones-de-linux
-  - jerarquia-de-directorios-de-linux
   - terminal-y-shell
+  - jerarquia-de-directorios-de-linux
   - variable-de-entorno-path
   - permisos-y-usuarios
   - gestores-de-paquetes
   - servicios-y-demonios
   - tareas-programadas-cron
+  - licencias-de-software
   - software-libre-y-codigo-abierto

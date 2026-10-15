@@ -1,110 +1,133 @@
 ---
 title: "¿Qué son los servicios y los demonios?"
-description: "Un demonio es un programa que se ejecuta en segundo plano, sin interfaz, esperando a hacer su trabajo. El sistema de inicio los arranca, los vigila y los reinicia."
-level: basico
+description: "Un demonio presta funciones en segundo plano. Un gestor de servicios coordina su ejecución, sus dependencias y su estado según una configuración."
+level: intermedio
 layer: sistemas
 prerequisites:
   - que-es-un-proceso
   - arranque-de-un-sistema-operativo
   - senales-y-comunicacion-entre-procesos
-updated: 2026-10-14
+  - permisos-y-usuarios
+updated: 2026-10-15
 sources:
-  - title: "Linux man-pages: daemon(7) (en inglés)"
+  - title: "systemd: daemon(7), manual alojado en man7 (en inglés)"
     url: https://man7.org/linux/man-pages/man7/daemon.7.html
-  - title: "Linux man-pages: systemd(1) (en inglés)"
-    url: https://man7.org/linux/man-pages/man1/systemd.1.html
-  - title: "Linux man-pages: systemd.service(5) (en inglés)"
+  - title: "systemd: systemd.service(5) (en inglés)"
     url: https://man7.org/linux/man-pages/man5/systemd.service.5.html
+  - title: "systemd: systemd.unit(5) (en inglés)"
+    url: https://man7.org/linux/man-pages/man5/systemd.unit.5.html
+  - title: "systemd: systemctl(1) (en inglés)"
+    url: https://man7.org/linux/man-pages/man1/systemctl.1.html
+  - title: "systemd: systemd-analyze(1) (en inglés)"
+    url: https://man7.org/linux/man-pages/man1/systemd-analyze.1.html
+  - title: "systemd: systemd.special(7) (en inglés)"
+    url: https://man7.org/linux/man-pages/man7/systemd.special.7.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Un **demonio**, en inglés *daemon*, es un programa que se ejecuta en **segundo plano**, sin ventana ni terminal, y que normalmente arranca con el sistema y se queda esperando a hacer su trabajo. En Windows se llaman **servicios**, y en Linux se usa también esa palabra para el programa junto con su configuración.
+Un **demonio**, o *daemon*, es un [proceso](/articulos/que-es-un-proceso/) que presta una función en segundo plano, sin requerir una interacción continua con una [terminal](/articulos/terminal-y-shell/). Un [servidor](/articulos/que-es-un-servidor/) web o un programa que sincroniza la hora pueden trabajar así.
 
-Un servidor web, una base de datos, el programa que sincroniza la hora o el que registra los eventos del sistema son demonios.
+Un **servicio** es una unidad de trabajo administrada por un gestor: incluye cómo ejecutar un programa y cómo seguir su estado. Puede mantener un demonio en marcha, pero también ejecutar una tarea breve y terminar. Aquí usaremos **systemd**, un gestor de sistemas y servicios utilizado por distintas distribuciones Linux.
 
-## El nombre
+## Por qué hace falta un gestor
 
-No tiene nada de diabólico. Viene del "demonio de Maxwell", un ser imaginario de un experimento mental de física que trabaja sin descanso en segundo plano. Los programadores del MIT adoptaron la palabra en los años sesenta para estos procesos.
+Imagina una aplicación que recibe peticiones y produce informes. Si la inicias desde una terminal, aún quedan decisiones: con qué identidad trabaja, dónde escribe sus registros, qué ocurre al fallar y quién solicita su parada.
 
-Por tradición, muchos terminan en "d": `sshd`, el servidor de acceso remoto; `systemd`, el sistema de inicio; `crond`, el de [tareas programadas](/articulos/tareas-programadas-cron/).
+El gestor conserva una configuración y coordina esas operaciones. La aplicación sigue siendo responsable de interpretar las peticiones y producir informes correctos. Mantener vivo su proceso no demuestra que esté atendiendo bien a sus clientes.
 
-## Qué los distingue
+La gestión tampoco exige que todo empiece al encender el ordenador. Hay servicios activados manualmente, por una conexión, por un dispositivo o por un [temporizador](/articulos/tareas-programadas-cron/).
 
-- **No dependen de una sesión**: siguen funcionando aunque nadie haya iniciado sesión, y no se cierran al cerrar una terminal.
-- **Arrancan solos** con el sistema.
-- **Esperan**: casi todo el tiempo están parados, hasta que llega una conexión, se cumple una hora o pasa algo.
-- **Escriben en registros** en lugar de en pantalla.
+## Una unidad concreta
 
-## Quién los gestiona
-
-El **sistema de inicio**, el primer proceso que arranca el núcleo, como explica [el arranque de un sistema operativo](/articulos/arranque-de-un-sistema-operativo/). En la mayoría de las distribuciones de Linux es **systemd**.
-
-Cada servicio se describe en un archivo de **unidad**:
+En systemd, una **unidad** es un objeto administrado. Las de tipo servicio suelen describirse en archivos con extensión `.service`. Esta unidad completa ejecuta una tarea mínima: imprimir un mensaje y terminar. Guarda el bloque como `devly-informe.service`:
 
 ```ini
 [Unit]
-Description=Mi aplicación web
-After=network.target
+Description=Informe de demostracion
 
 [Service]
-ExecStart=/usr/bin/node /srv/app/servidor.js
-User=app
-Restart=on-failure
-Environment=PUERTO=3000
+Type=oneshot
+ExecStart=/usr/bin/printf "Informe listo\n"
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 ```
 
-Dice qué programa ejecutar, con qué usuario, que arranque después de la red, y que lo reinicie si falla.
+Requiere un sistema Linux con systemd y el ejecutable `/usr/bin/printf`. `ExecStart` indica programa y argumentos. No pasa automáticamente por una shell: escribir una tubería o una redirección aquí no tiene el mismo significado que hacerlo en Bash.
 
-Se maneja con órdenes como estas:
+`Type=oneshot` pide esperar a que termine la orden. En esta unidad, sin `RemainAfterExit=yes`, una finalización correcta deja el servicio inactivo: **inactivo no equivale a fallido**. No necesita mantener un proceso esperando cuando su trabajo ya está hecho.
+
+Antes de instalarla puedes comprobar el archivo desde la carpeta donde lo guardaste:
 
 ```bash
-sudo systemctl start mi-app       # arrancar
-sudo systemctl stop mi-app        # parar
-sudo systemctl enable mi-app      # que arranque con el sistema
-systemctl status mi-app           # ver su estado
-journalctl -u mi-app              # ver sus registros
+systemd-analyze verify ./devly-informe.service
 ```
 
-## Lo que hace el gestor por ti
+La herramienta detecta problemas de sintaxis, referencias y órdenes, entre otros. Una salida sin diagnósticos no demuestra que una aplicación real funcione: verificar la unidad y ejecutar su trabajo son comprobaciones distintas.
 
-- **Arrancar en orden**, respetando dependencias.
-- **Reiniciar** el servicio si se cae.
-- **Parar de forma ordenada**, enviando primero la [señal](/articulos/senales-y-comunicacion-entre-procesos/) SIGTERM y, si no responde, SIGKILL.
-- **Recoger los registros** de todos los servicios en un sitio.
-- **Limitar recursos**: memoria máxima, uso de procesador.
-- **Aislar**: ejecutar con un usuario sin privilegios, sin acceso a ciertas carpetas.
-
-Antes, cada demonio tenía que hacer buena parte de esto por su cuenta, con técnicas complejas para separarse de la terminal. Hoy, el programa se ejecuta como uno normal y el gestor se ocupa del resto.
-
-## Buenas prácticas
-
-- **Un usuario propio y sin privilegios** por servicio, siguiendo el principio de mínimo privilegio que explica [permisos y usuarios](/articulos/permisos-y-usuarios/). Si alguien lo compromete, no obtiene el control del sistema.
-- **Configuración por [variables de entorno](/articulos/variables-de-entorno-y-secretos/)**, no escrita en el código.
-- **Terminar bien** al recibir SIGTERM: cerrar conexiones y terminar lo que estaba haciendo.
-- **Registros útiles**, para saber qué ha pasado sin estar delante, como explica [observabilidad](/articulos/observabilidad/).
-
-## En contenedores y Kubernetes
-
-Dentro de un [contenedor](/articulos/que-es-docker/) no suele haber un sistema de inicio: la aplicación es el proceso principal, y es Docker o [Kubernetes](/articulos/que-es-kubernetes/) quien la arranca, la vigila y la reinicia. La idea es la misma, a otra escala.
+Si el gestor activa la unidad del ejemplo, la secuencia prevista es: preparar el proceso, ejecutar `printf`, recibir su mensaje y recoger su salida correcta. El mensaje «Informe listo» ilustra la salida de una tarea; no genera por sí solo un documento.
 
 <Quiz
 	client:visible
-	question="¿Qué caracteriza a un demonio?"
+	question="La tarea oneshot del ejemplo termina correctamente y el servicio queda inactivo. ¿Qué significa?"
 	options={[
-		"Que tiene una ventana propia",
-		"Que se ejecuta en segundo plano, sin depender de una sesión, esperando a hacer su trabajo",
-		"Que es un programa malicioso",
+		"Que cualquier servicio inactivo está averiado",
+		"Que completó su ejecución y no mantiene un proceso residente",
+		"Que se ejecutará de nuevo inmediatamente por obligación",
 	]}
 	answer={1}
 />
 
+## Iniciar y habilitar son acciones distintas
+
+Una vez instalada una unidad en la ubicación y el ámbito correspondientes, `systemctl` permite gestionarla:
+
+| Operación | Efecto |
+| --- | --- |
+| `start` | Solicitar que se active ahora |
+| `stop` | Solicitar su parada |
+| `restart` | Parar y volver a iniciar |
+| `enable` | Preparar los enlaces de activación descritos en `[Install]` |
+| `disable` | Retirar esos enlaces; no implica detener una ejecución actual |
+| `status` | Consultar estado y datos de ejecución |
+| `daemon-reload` | Volver a cargar las definiciones de las unidades |
+
+En el ejemplo, `WantedBy=default.target` indica cómo se asociará la unidad con ese objetivo al habilitarla. Un **target** agrupa unidades. Habilitar no equivale a ejecutar ahora; algunas órdenes combinan ambas acciones mediante opciones.
+
+También importa el **ámbito**. El gestor del sistema administra servicios del equipo; un gestor de usuario administra los de esa cuenta y se consulta con `systemctl --user`. No comparten necesariamente configuración ni duración. Un servicio de usuario puede depender del ciclo de vida de su gestor: no prometas que cualquier servicio continúa tras cerrar sesión.
+
+## Arranque, disponibilidad y dependencias
+
+Para un servidor que permanece en marcha, `Type=exec` permite detectar que se consiguió ejecutar su programa. Eso todavía no confirma que haya abierto su puerto o cargado los datos. `Type=notify` permite que una aplicación compatible avise cuando está preparada.
+
+`After=otra.service` establece orden si ambas unidades se activan; no obliga por sí solo a iniciar la otra. Relaciones como `Wants=` y `Requires=` tienen otras funciones. Confundir orden con dependencia puede dejar una aplicación arrancada sin la pieza que esperaba.
+
+Lo mismo ocurre con la red: `After=network.target` no garantiza acceso a internet. `network-online.target` representa una espera definida por la configuración local, no disponibilidad permanente de un servidor remoto. La aplicación aún debe tratar conexiones fallidas y desconexiones posteriores.
+
+## Fallos y parada
+
+Una política como `Restart=on-failure` permite reintentar determinados fallos. Los límites de frecuencia y otras opciones condicionan esos intentos; una parada administrativa no se interpreta simplemente como una caída que haya que deshacer.
+
+Al detener un servicio, el gestor puede enviar una [señal](/articulos/senales-y-comunicacion-entre-procesos/), esperar y recurrir a una terminación forzada según su configuración. La aplicación debe implementar el cierre ordenado: dejar de admitir trabajo, completar o cancelar operaciones y liberar recursos. Recibir SIGTERM no garantiza que todo eso suceda.
+
+Los demonios tradicionales podían separarse de la terminal por su cuenta. Bajo un supervisor moderno, normalmente conviene mantener el proceso principal identificable y dejar que el gestor controle su ejecución. Añadir `&` por costumbre puede dificultar ese seguimiento.
+
+## Registros y acceso
+
+systemd puede conectar la salida y los errores con el registro del sistema. `journalctl` permite consultarlos según permisos y configuración; su conservación también depende de la política de registros. La ausencia de mensajes no demuestra éxito: deben existir comprobaciones útiles sobre la tarea.
+
+Ejecutar con una identidad adecuada y [permisos limitados](/articulos/permisos-y-usuarios/) reduce los recursos accesibles. No demuestra aislamiento absoluto: cuentan los archivos compartidos, las credenciales y otras restricciones. Del mismo modo, una variable de entorno es una vía de configuración, no una protección automática de secretos.
+
+## Errores comunes
+
+- **Confundir habilitado con activo.** Uno describe activación configurada; el otro, estado actual.
+- **Confundir proceso vivo con servicio disponible.** Hace falta comprobar el trabajo que ofrece.
+- **Confiar en reiniciar como reparación universal.** Una configuración incorrecta puede producir el mismo fallo una y otra vez.
+
 ## Lo esencial
 
-- Un demonio es un programa en segundo plano, sin interfaz, que arranca con el sistema.
-- En Linux los gestiona el sistema de inicio, normalmente systemd, mediante archivos de unidad.
-- El gestor los arranca en orden, los reinicia si fallan y recoge sus registros.
-- Conviene que cada servicio use un usuario sin privilegios y termine de forma ordenada.
+- Un demonio presta funciones en segundo plano; un servicio administrado también puede ser una tarea breve.
+- El gestor aplica políticas de activación, supervisión y parada.
+- Orden, dependencia y disponibilidad son propiedades distintas.
+- La aplicación conserva responsabilidades sobre resultados, errores y cierre.
