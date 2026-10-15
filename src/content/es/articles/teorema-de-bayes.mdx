@@ -1,11 +1,11 @@
 ---
 title: "¿Qué es el teorema de Bayes?"
-description: "El teorema de Bayes dice cómo actualizar una probabilidad al recibir información nueva. Explica por qué un test positivo de una enfermedad rara suele ser un falso positivo."
+description: "El teorema de Bayes actualiza una probabilidad con nueva información. La frecuencia de partida y la fiabilidad de la evidencia importan tanto como el resultado observado."
 level: intermedio
 layer: datos
 prerequisites:
   - probabilidad-basica
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Seeing Theory, Brown University: Bayesian Inference (en inglés)"
     url: https://seeing-theory.brown.edu/bayesian-inference/index.html
@@ -21,16 +21,16 @@ El **teorema de Bayes** es la regla para **actualizar una probabilidad cuando se
 P(A | B) = P(B | A) × P(A) / P(B)
 ```
 
-Se lee: la probabilidad de A sabiendo que ha ocurrido B es igual a la probabilidad de B si A es cierto, por la probabilidad previa de A, dividido por la probabilidad total de B. Lo explica la notación de [probabilidad básica](/articulos/probabilidad-basica/).
+Se lee: la probabilidad de A sabiendo que ha ocurrido B es igual a la probabilidad de B si A es cierto, por la probabilidad previa de A, dividido por la probabilidad total de B. Se requiere `P(B) > 0`. Lo explica la notación de [probabilidad básica](/articulos/probabilidad-basica/).
 
 ## El ejemplo clásico: un test médico
 
-Te haces una prueba para una enfermedad rara, que tiene el 1 % de la población. La prueba es buena:
+En este modelo hipotético, se elige al azar a una persona de una población donde el 1 % tiene una enfermedad. Se conocen estas propiedades de la prueba en esa población:
 
 - Si tienes la enfermedad, da positivo el 99 % de las veces (**sensibilidad**).
 - Si no la tienes, da negativo el 95 % de las veces (**especificidad**). Es decir, un 5 % de **falsos positivos**.
 
-Das positivo. ¿Qué probabilidad hay de que tengas la enfermedad? La intuición dice 99 %. Bayes dice otra cosa:
+La persona da positivo. El 99 % describe `P(positivo | enfermedad)`, pero buscamos `P(enfermedad | positivo)`. Bayes permite pasar de una a otra:
 
 ```js
 const prevalencia = 0.01;
@@ -61,7 +61,33 @@ Hay 594 positivos, y solo 99 son de personas enfermas. Como la enfermedad es rar
 | Verosimilitud | 99 %: lo probable que es el resultado si la hipótesis es cierta |
 | Probabilidad posterior | 16,7 %: lo que se sabe después |
 
-Y se puede **encadenar**: si te repites la prueba y vuelve a dar positivo, la nueva previa es 16,7 %, y la posterior sube mucho más. Cada dato nuevo actualiza la creencia anterior.
+### Qué pasa con una segunda prueba
+
+Se puede **encadenar** la actualización, pero la evidencia nueva debe modelarse condicionada a lo que ya se sabe. Solo podemos reutilizar sensibilidad y especificidad sin cambiarlas si las dos pruebas son independientes **dado que hay enfermedad**, y también **dado que no la hay**. No es lo mismo que suponer independencia sin condiciones.
+
+Con esos supuestos adicionales, este programa independiente calcula ambas actualizaciones:
+
+```js
+function actualizar(previa, sensibilidad, especificidad) {
+	const positivosConEnfermedad = previa * sensibilidad;
+	const positivosSinEnfermedad = (1 - previa) * (1 - especificidad);
+	return positivosConEnfermedad / (positivosConEnfermedad + positivosSinEnfermedad);
+}
+
+const primera = actualizar(0.01, 0.99, 0.95);
+const segunda = actualizar(primera, 0.99, 0.95);
+console.log((primera * 100).toFixed(1)); // "16.7"
+console.log((segunda * 100).toFixed(1)); // "79.8"
+```
+
+Copiar dos veces el mismo resultado no aporta evidencia nueva. Tampoco basta que haya dos aparatos si comparten una causa de falsos positivos: en ese caso hace falta modelar su dependencia.
+
+<Quiz
+	client:visible
+	question="Lees dos copias del mismo resultado positivo. ¿Puedes aplicar dos veces la actualización como si fueran pruebas independientes?"
+	options={["Sí, cada copia aumenta la probabilidad", "No, la segunda copia no aporta evidencia nueva", "Sí, si la enfermedad es rara"]}
+	answer={1}
+/>
 
 ## Dónde aparece en informática
 
@@ -70,9 +96,15 @@ Y se puede **encadenar**: si te repites la prueba y vuelve a dar positivo, la nu
 - **Pruebas A/B** con enfoque bayesiano, como explica [pruebas A/B](/articulos/pruebas-a-b/).
 - **Seguridad**: un sistema de detección de intrusos con pocos falsos positivos puede seguir generando casi solo falsas alarmas si los ataques son raros.
 
+## Errores comunes
+
+- **Confundir sensibilidad con probabilidad posterior.** Sus denominadores son distintos: casos con enfermedad frente a todos los positivos.
+- **Usar una tasa base de otra población sin justificarla.** La probabilidad previa del grupo estudiado cambia el resultado.
+- **Contar dos veces evidencia dependiente.** Puede inflar la confianza sin añadir información equivalente a una observación independiente.
+
 ## Lo esencial
 
 - El teorema de Bayes actualiza una probabilidad previa con la evidencia para obtener la posterior.
-- Con una situación rara, incluso una prueba muy buena da más falsos positivos que verdaderos.
+- Con una situación rara, los falsos positivos pueden superar a los verdaderos; depende también de sensibilidad y especificidad.
 - Ese error de olvidar la frecuencia de partida se llama error de la tasa base.
 - Es la base de los filtros de spam bayesianos y explica el comportamiento de muchos clasificadores.

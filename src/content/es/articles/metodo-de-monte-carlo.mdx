@@ -6,10 +6,11 @@ layer: datos
 prerequisites:
   - media-mediana-y-desviacion
   - bucles
-updated: 2026-10-13
+  - numeros-aleatorios-y-pseudoaleatorios
+updated: 2026-10-15
 sources:
   - title: "N. Metropolis: The Beginning of the Monte Carlo Method, Los Alamos Science (1987, en inglés)"
-    url: https://mcnp.lanl.gov/pdf_files/Article_1987_LAS_Metropolis_125--130.pdf
+    url: https://permalink.lanl.gov/object/tr?what=info%3Alanl-repo%2Flareport%2FLA-UR-88-9067
   - title: "MDN: Math.random()"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Math/random
   - title: "Python: random, generación de números pseudoaleatorios"
@@ -28,17 +29,23 @@ A Ulam se le ocurrió convaleciente, jugando al solitario. Quiso saber qué prob
 
 Esa es toda la idea. Si no sabes calcular algo, simúlalo muchas veces y mira qué ocurre.
 
-Funciona gracias a una propiedad del azar: al repetir un experimento aleatorio un número suficiente de veces, la proporción de resultados se acerca a la probabilidad real. Una moneda puede salir cara siete veces de diez, pero es muy raro que salga siete mil veces de diez mil.
+Para repeticiones independientes de un mismo experimento, la ley de los grandes números justifica que la frecuencia se aproxime a la probabilidad del **modelo**. Una moneda equilibrada puede dar siete caras de diez; siete mil de diez mil sería mucho más improbable. Más repeticiones reducen la incertidumbre de muestreo, no los errores de un modelo inadecuado.
 
 ## Un ejemplo con dados
 
 ¿Qué probabilidad hay de sacar un 7 al sumar dos dados?
 
-Aquí se puede calcular: de las 36 combinaciones posibles, 6 suman 7, así que es 6 entre 36, un 16,67 %. Sirve para comprobar que la simulación acierta.
+Con dados equilibrados e independientes, seis de las 36 parejas posibles suman 7: `1 / 6 ≈ 0,1667`. Sirve para contrastar la simulación. Usamos un generador determinista sencillo con semilla fija para reproducir el ejemplo; no es un generador de seguridad ni una recomendación para simulaciones exigentes. El número de tiradas debe ser un entero positivo.
 
 ```js
+let estado = 42;
+function aleatorio() {
+	estado = (estado * 16807) % 2147483647;
+	return (estado - 1) / 2147483646;
+}
+
 function tirarDado() {
-	return Math.floor(Math.random() * 6) + 1;
+	return Math.floor(aleatorio() * 6) + 1;
 }
 
 function estimarProbabilidadDeSiete(tiradas) {
@@ -57,7 +64,7 @@ const estimacion = estimarProbabilidadDeSiete(1000000);
 console.log(Math.abs(estimacion - 1 / 6) < 0.005); // true
 ```
 
-El resultado exacto cambia en cada ejecución, pero con un millón de tiradas se queda muy cerca de 0,1667. El programa no sabe nada de combinatoria: solo tira dados y cuenta.
+Con este generador, semilla y orden de llamadas, el resultado se repite y cumple la tolerancia mostrada. Cambiar la semilla cambia la estimación; el método no garantiza esa tolerancia para cualquier ejecución. El programa no enumera combinaciones: genera pares de dados y cuenta aciertos.
 
 ## Los cuatro pasos
 
@@ -74,17 +81,23 @@ El ejemplo clásico muestra que el método sirve incluso para problemas sin azar
 
 Dibuja un cuadrado de lado 1 y, dentro, un cuarto de círculo de radio 1 con centro en una esquina. El área del cuarto de círculo es pi dividido entre 4.
 
-Si lanzas puntos al azar dentro del cuadrado, la proporción que cae dentro del cuarto de círculo se aproxima a esa área. Multiplicándola por 4, obtienes pi.
+Si generas puntos uniformes e independientes dentro del cuadrado, la proporción que cae dentro del cuarto de círculo aproxima la razón de áreas, `π / 4`. Multiplicándola por 4, estimas pi. El siguiente bloque es independiente y reinicia su propio generador; `puntos` debe ser un entero positivo.
 
 Un punto está dentro si su distancia a la esquina es como mucho 1, es decir, si `x² + y²` no pasa de 1.
 
 ```js
+let estado = 42;
+function aleatorio() {
+	estado = (estado * 16807) % 2147483647;
+	return (estado - 1) / 2147483646;
+}
+
 function estimarPi(puntos) {
 	let dentro = 0;
 
 	for (let i = 0; i < puntos; i++) {
-		const x = Math.random();
-		const y = Math.random();
+		const x = aleatorio();
+		const y = aleatorio();
 
 		if (x * x + y * y <= 1) {
 			dentro = dentro + 1;
@@ -99,20 +112,20 @@ console.log(Math.abs(estimarPi(1000000) - Math.PI) < 0.02); // true
 
 ## La precisión cuesta
 
-El error de una estimación de Monte Carlo disminuye con la raíz cuadrada del número de repeticiones. En la práctica:
+Para una media de repeticiones independientes con varianza finita, el **error estándar** disminuye como `1 / √n`. Es una medida de la variabilidad entre ejecuciones, no una promesa de que el error observado baje en cada paso. Manteniendo el modelo y el método:
 
-| Repeticiones | El error se reduce |
+| Repeticiones | El error estándar se reduce |
 | --- | --- |
 | 100 veces más | 10 veces |
 | 10 000 veces más | 100 veces |
 
-Cada cifra decimal adicional exige cien veces más trabajo. El método llega pronto a una respuesta razonable y muy despacio a una exacta.
+Reducir diez veces ese error típico exige cien veces más repeticiones. Para los dados, con `p = 1/6` y un millón de tiradas independientes, es `√(p(1-p)/1000000) ≈ 0,000373`. Esto explica el orden de precisión, pero no elimina la posibilidad de una desviación mayor.
 
-Por eso no es la herramienta adecuada cuando existe una fórmula: para calcular pi hay métodos muchísimo mejores. Su terreno son los problemas en los que no hay alternativa.
+Para calcular pi hay métodos mucho más eficientes. Monte Carlo resulta útil cuando el cálculo directo es difícil o costoso; también puede combinarse con soluciones analíticas para parte del problema.
 
 <Quiz
 	client:visible
-	question="Quieres reducir a la décima parte el error de una simulación de Monte Carlo. ¿Cuántas repeticiones más necesitas?"
+	question="Con repeticiones independientes de varianza finita, quieres reducir diez veces el error estándar. ¿Cuántas repeticiones necesitas respecto a las actuales?"
 	options={["10 veces más", "100 veces más", "1000 veces más"]}
 	answer={1}
 />
@@ -129,21 +142,21 @@ Lo que tienen en común es que hay demasiadas variables, o demasiado enredadas, 
 
 ## El azar de un ordenador
 
-Un ordenador sigue instrucciones exactas, así que no produce azar verdadero. `Math.random` genera números [**pseudoaleatorios**](/articulos/numeros-aleatorios-y-pseudoaleatorios/): una secuencia calculada con una fórmula a partir de un valor inicial, la **semilla**, que parece aleatoria sin serlo.
+Los ejemplos usan números [**pseudoaleatorios**](/articulos/numeros-aleatorios-y-pseudoaleatorios/): una secuencia calculada a partir de un estado inicial. El generador y su calidad estadística forman parte del experimento.
 
-Para simular es suficiente, e incluso ventajoso: con la misma semilla se obtiene la misma secuencia, y el experimento se puede repetir de forma idéntica.
+Un generador adecuado puede ser útil para simular y reproducir resultados. Se deben conservar semilla, algoritmo, implementación y orden de llamadas. `Math.random()` no permite fijar su semilla desde JavaScript; por eso aquí hemos usado un generador explícito.
 
-No lo es para la seguridad. Una clave o un identificador de sesión no deben generarse con `Math.random`, porque su secuencia se puede predecir. Para eso existen generadores específicos.
+Los generadores sencillos del ejemplo y `Math.random` no ofrecen garantías criptográficas. Para claves y tokens secretos se necesita un generador diseñado para seguridad, como los que expone Web Crypto.
 
 ## Errores comunes
 
-- **Pocas repeticiones.** Con cien pruebas el resultado es poco más que ruido.
+- **Elegir un número de repeticiones sin fijar la precisión necesaria.** Cien pueden bastar para un efecto grande y ser insuficientes para un suceso raro; depende de la variabilidad y del objetivo.
 - **Confiar en una sola cifra.** Conviene acompañar la estimación de su dispersión, o repetir la simulación para ver cuánto varía.
-- **Simular un modelo equivocado.** La simulación responde con exactitud a las reglas que le has dado. Si esas reglas no describen la realidad, la respuesta tampoco.
+- **Simular un modelo equivocado.** La estimación conserva incertidumbre estadística y se refiere a las reglas elegidas. Más repeticiones no corrigen reglas que describen mal la realidad.
 
 ## Lo esencial
 
 - Monte Carlo estima un resultado repitiendo muchas veces un experimento aleatorio.
 - Se apoya en que, con muchas repeticiones, las proporciones se acercan a las probabilidades reales.
-- El error baja con la raíz cuadrada de las repeticiones: ganar precisión es caro.
+- Bajo los supuestos indicados, el error estándar baja con la raíz cuadrada de las repeticiones: ganar precisión es caro.
 - Es útil cuando no hay fórmula o el problema tiene demasiadas variables.

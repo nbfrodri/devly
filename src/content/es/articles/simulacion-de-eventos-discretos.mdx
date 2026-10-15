@@ -6,19 +6,21 @@ layer: datos
 prerequisites:
   - metodo-de-monte-carlo
   - monticulos-y-colas-de-prioridad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "SimPy: Discrete event simulation for Python (en inglés)"
     url: https://simpy.readthedocs.io/en/latest/
   - title: "Python: heapq, Heap queue algorithm (en inglés)"
     url: https://docs.python.org/3/library/heapq.html
+  - title: "SimPy: Time and Scheduling (en inglés)"
+    url: https://simpy.readthedocs.io/en/stable/topical_guides/time_and_scheduling.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
 Una **simulación de eventos discretos** modela un sistema como una sucesión de **eventos** que ocurren en momentos concretos: un cliente llega, empieza a ser atendido, se va. Entre un evento y el siguiente no pasa nada relevante, así que la simulación **salta** directamente de uno a otro en lugar de avanzar segundo a segundo.
 
-Sirve para responder preguntas como: ¿cuántas cajas hacen falta en un supermercado para que nadie espere más de cinco minutos? ¿Cuántos servidores necesita un servicio para atender las peticiones de la hora punta?
+Sirve para estimar, bajo un modelo, qué proporción de clientes esperaría más de cinco minutos con distintas cantidades de cajas, o qué carga podrían atender unos servidores en hora punta. Una simulación finita no demuestra que nunca habrá una espera mayor.
 
 ## Las piezas
 
@@ -29,11 +31,12 @@ Sirve para responder preguntas como: ¿cuántas cajas hacen falta en un supermer
 
 ## Un ejemplo: una ventanilla
 
-Clientes que llegan a una ventanilla con un solo empleado. Cada uno tarda 1,5 minutos en ser atendido.
+Clientes que llegan a una ventanilla con un solo empleado. Cada uno tarda 1,5 minutos en ser atendido, por orden de llegada. El ejemplo recibe llegadas finitas no negativas y una duración finita positiva; en llegadas simultáneas manda el orden del array. Si varios eventos tienen el mismo tiempo, se procesa primero el que se programó antes.
 
 ```js
 function simular(llegadas, duracionServicio) {
-	const eventos = llegadas.map((tiempo, cliente) => ({ tiempo, tipo: "llegada", cliente }));
+	const eventos = llegadas.map((tiempo, cliente) => ({ tiempo, tipo: "llegada", cliente, orden: cliente }));
+	let siguienteOrden = eventos.length;
 	const cola = [];
 	const esperas = [];
 	let ocupado = false;
@@ -41,11 +44,11 @@ function simular(llegadas, duracionServicio) {
 	const empezar = (cliente, ahora) => {
 		ocupado = true;
 		esperas.push(ahora - llegadas[cliente]);
-		eventos.push({ tiempo: ahora + duracionServicio, tipo: "salida", cliente });
+		eventos.push({ tiempo: ahora + duracionServicio, tipo: "salida", cliente, orden: siguienteOrden++ });
 	};
 
 	while (eventos.length > 0) {
-		eventos.sort((a, b) => a.tiempo - b.tiempo);
+		eventos.sort((a, b) => a.tiempo - b.tiempo || a.orden - b.orden);
 		const evento = eventos.shift();
 
 		if (evento.tipo === "llegada") {
@@ -63,19 +66,49 @@ const esperas = simular([0, 1, 2, 3, 4], 1.5);
 console.log(esperas.join(" ")); // "0 0.5 1 1.5 2"
 ```
 
-Los clientes llegan cada minuto, pero cada uno tarda un minuto y medio. La cola crece y cada cliente espera medio minuto más que el anterior: el sistema está **saturado**. Con dos empleados, o con un servicio más rápido, la espera no crecería.
+El estado después de cada evento permite explicar esas esperas. Los clientes se numeran desde cero; «cola» excluye al que está siendo atendido:
+
+| Tiempo | Evento | Cliente en servicio | Cola | Nueva espera registrada |
+| --- | --- | --- | --- | --- |
+| 0 | Llega 0 | 0 | Vacía | 0 |
+| 1 | Llega 1 | 0 | 1 | — |
+| 1,5 | Sale 0 | 1 | Vacía | 0,5 |
+| 2 | Llega 2 | 1 | 2 | — |
+| 3 | Llega 3 | 1 | 2, 3 | — |
+| 3 | Sale 1 | 2 | 3 | 1 |
+| 4 | Llega 4 | 2 | 3, 4 | — |
+| 4,5 | Sale 2 | 3 | 4 | 1,5 |
+| 6 | Sale 3 | 4 | Vacía | 2 |
+| 7,5 | Sale 4 | Nadie | Vacía | — |
+
+La llegada del cliente 3 estaba programada desde el principio, antes que la salida del 1, y por eso se procesa primero en el empate. Se atienden a razón de `1 / 1,5 ≈ 0,667` clientes por minuto, mientras llegan a razón de uno por minuto. Si esa pauta continuase indefinidamente, la cola crecería sin estabilizarse. Con estas llegadas regulares, dos empleados de igual velocidad bastarían para empezar cada atención sin espera; el código mostrado solo modela uno.
+
+<Quiz
+	client:visible
+	question="El cliente 2 llega en el minuto 2 y empieza a ser atendido en el 3. ¿Por qué espera un minuto?"
+	options={["Porque cada evento avanza el reloj un minuto", "Porque el único empleado termina de atender al cliente 1 en el minuto 3", "Porque hay dos empleados ocupados"]}
+	answer={1}
+/>
 
 La simulación no avanza minuto a minuto: salta de evento en evento. Si entre dos clientes pasan tres horas, se resuelve en un paso.
+
+Aquí se reordena un array en cada extracción para que el código sea corto. Eso no tiene el coste de un montículo: puede repetir trabajo sobre muchos eventos pendientes. Una implementación de mayor tamaño suele usar una cola de prioridad con inserción y extracción logarítmicas, más una cola FIFO eficiente para los clientes.
 
 ## Con azar
 
 En la realidad, las llegadas y las duraciones varían. Se generan con [números aleatorios](/articulos/numeros-aleatorios-y-pseudoaleatorios/) que siguen distribuciones realistas, y se repite la simulación muchas veces, como en el [método de Monte Carlo](/articulos/metodo-de-monte-carlo/), para obtener no solo la espera media, sino cuánto puede variar.
 
-Un resultado típico de estas simulaciones: cuando un recurso se acerca al 100 % de ocupación, las esperas no crecen poco a poco, sino que se disparan. Por eso los sistemas se dimensionan con margen, como recuerda [escalado vertical y horizontal](/articulos/escalado-vertical-y-horizontal/).
+En muchos modelos de colas con llegadas o servicios variables, las esperas crecen mucho al acercarse al 100 % de utilización: queda poco margen para absorber una racha de llegadas. No es una ley de cualquier sistema; llegadas perfectamente espaciadas y servicio determinista pueden comportarse de otra forma. Para dimensionar conviene representar esa variabilidad, como recuerda [escalado vertical y horizontal](/articulos/escalado-vertical-y-horizontal/).
 
 ## Herramientas
 
 Para modelos reales hay bibliotecas especializadas. SimPy, en Python, define cada componente activo, un cliente, un vehículo, como un proceso, y ofrece recursos compartidos de capacidad limitada, como servidores o ventanillas. La propia documentación avisa de que es excesivo para simulaciones de paso fijo sin interacción entre procesos.
+
+## Errores comunes
+
+- **No definir desempates.** Dos eventos simultáneos se procesan en algún orden; si cambia el estado que observa cada uno, puede cambiar el resultado.
+- **Tomar una ejecución como garantía de servicio.** Una muestra de llegadas no cubre todas las rachas posibles; se necesitan repeticiones y un modelo validado.
+- **Medir solo la espera media.** Puede ocultar una minoría de esperas muy largas; conviene estudiar también percentiles y proporciones que superan el objetivo.
 
 ## Lo esencial
 

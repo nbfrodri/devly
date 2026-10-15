@@ -1,13 +1,13 @@
 ---
 title: "¿Qué son el contraste de hipótesis y el valor p?"
-description: "Un contraste de hipótesis comprueba si un resultado puede explicarse por azar. El valor p mide lo raro que sería ese resultado si no hubiera ningún efecto real."
+description: "Un contraste compara los datos con una hipótesis y sus supuestos. El valor p mide la probabilidad de un resultado al menos tan extremo bajo ese modelo."
 level: avanzado
 layer: datos
 prerequisites:
   - probabilidad-basica
   - distribucion-normal
   - intervalos-de-confianza
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "NIST/SEMATECH e-Handbook: Critical values and p values (en inglés)"
     url: https://www.itl.nist.gov/div898/handbook/prc/section1/prc131.htm
@@ -17,13 +17,13 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **contraste de hipótesis** es un método para decidir si lo que se ha observado en unos datos refleja un **efecto real** o puede explicarse por **azar**. El **valor p** es el número que resume esa decisión, y probablemente la cifra peor entendida de toda la estadística.
+Un **contraste de hipótesis** compara los datos observados con una hipótesis y un modelo de cómo se obtendrían esos datos. El **valor p** es la probabilidad, bajo ese modelo, de un resultado al menos tan extremo como el observado según un criterio elegido. Ayuda a evaluar incompatibilidad con el modelo; no decide por sí solo si hay una causa real.
 
 ## El razonamiento
 
-Se lanza una moneda 100 veces y salen 60 caras. ¿Está trucada?
+Se lanza una moneda 100 veces de forma independiente y salen 60 caras. ¿Son estos datos incompatibles con una probabilidad de cara de 0,5?
 
-1. Se plantea la **hipótesis nula**: no hay efecto. La moneda es justa.
+1. Se plantea la **hipótesis nula**: la probabilidad de cara es 0,5. Aquí representa ausencia de sesgo; en otros contrastes la hipótesis puede especificar otro valor.
 2. Se calcula lo raro que sería un resultado **al menos tan extremo** como el observado **si la hipótesis nula fuera cierta**. Ese es el **valor p**.
 3. Si es muy raro, se **rechaza** la hipótesis nula. Si no, no hay pruebas suficientes para rechazarla.
 
@@ -47,7 +47,7 @@ Con una moneda justa, obtener 60 caras o más, o 40 o menos, ocurre un 5,7 % de 
 
 ## El umbral
 
-Antes de mirar los datos se fija un **nivel de significación**, α, a menudo 0,05. Si el valor p es menor, se rechaza la hipótesis nula. Según el manual del NIST, un α de 0,05 implica que se rechaza la hipótesis nula un 5 % de las veces en que en realidad es cierta.
+Antes de mirar los datos se fija un **nivel de significación**, α, por ejemplo 0,05. Se rechaza cuando el valor p queda por debajo del umbral establecido. Bajo los supuestos de un contraste válido, α controla la probabilidad de rechazar una hipótesis nula verdadera. En un contraste exacto discreto, como este recuento de caras, la tasa puede ser menor que el nivel nominal: los resultados posibles dan saltos.
 
 Aquí, 0,0569 es mayor que 0,05: no se puede afirmar que la moneda esté trucada. Eso **no** demuestra que sea justa; solo que estos datos no bastan para decir lo contrario.
 
@@ -55,10 +55,10 @@ Aquí, 0,0569 es mayor que 0,05: no se puede afirmar que la moneda esté trucada
 
 | | La hipótesis nula es cierta | La hipótesis nula es falsa |
 | --- | --- | --- |
-| Se rechaza | Error de tipo I: falso positivo (probabilidad α) | Acierto |
+| Se rechaza | Error de tipo I: falso positivo, controlado por α | Acierto |
 | No se rechaza | Acierto | Error de tipo II: falso negativo |
 
-Bajar α reduce los falsos positivos, pero aumenta los falsos negativos. Con más datos, se reducen los dos.
+Bajar α, manteniendo muestra y procedimiento, suele reducir falsos positivos a costa de detectar menos efectos. Con más observaciones independientes, un contraste adecuado puede ganar **potencia** —probabilidad de rechazar una nula falsa para un efecto concreto— manteniendo el mismo α. Aumentar la muestra no reduce automáticamente ese nivel de falsos positivos.
 
 ## Lo que el valor p no es
 
@@ -68,15 +68,24 @@ En 2016, la Asociación Estadounidense de Estadística publicó una declaración
 - Las decisiones científicas o de negocio **no** deberían basarse solo en si el valor p supera un umbral.
 - Un valor p no mide el **tamaño** del efecto ni su importancia. Con muestras enormes, una diferencia minúscula e irrelevante puede dar un valor p diminuto.
 
-Por eso conviene acompañarlo de un [intervalo de confianza](/articulos/intervalos-de-confianza/), que dice cuánto vale el efecto, no solo si existe.
+Por eso conviene acompañarlo de una estimación del efecto y un [intervalo de confianza](/articulos/intervalos-de-confianza/) que exprese su incertidumbre, junto con los supuestos y el contexto del estudio.
 
 ## La trampa de buscar hasta encontrar
 
-Si se prueban 20 cosas distintas con α = 0,05, es esperable que una salga "significativa" por puro azar. Probar muchas hipótesis y publicar solo la que funcionó se llama, en la declaración de la asociación, *p-hacking* o "dragado de datos". Es la misma trampa que acecha a las [pruebas A/B](/articulos/pruebas-a-b/) cuando se miran los resultados cada día y se paran en cuanto parecen buenos.
+Si 20 hipótesis nulas son verdaderas y cada prueba tiene una tasa de error de 0,05, el número esperado de falsos positivos es `20 × 0,05 = 1`. No significa que aparezca exactamente uno. Si además las pruebas son independientes, la probabilidad de al menos uno es `1 - 0,95²⁰ ≈ 0,642`, no el 100 %. La dependencia cambia esta última cuenta.
+
+Probar muchas hipótesis y publicar solo la que salió favorable es una forma de *p-hacking* o «dragado de datos». También se altera el error si se mira un contraste de muestra fija cada día y se detiene cuando parece favorable. Para varias comparaciones o análisis secuenciales hacen falta procedimientos diseñados para ello, como se explica en [pruebas A/B](/articulos/pruebas-a-b/).
+
+<Quiz
+	client:visible
+	question="El contraste de la moneda da p = 0,0569 con α = 0,05. ¿Qué conclusión permite?"
+	options={["La moneda es justa con probabilidad 0,9431", "No se rechaza la hipótesis con este procedimiento; eso no demuestra que sea cierta", "Hay un 5,69 % de probabilidad de que los datos sean azar"]}
+	answer={1}
+/>
 
 ## Lo esencial
 
-- Un contraste de hipótesis comprueba si un resultado puede explicarse por azar.
-- El valor p es la probabilidad de un resultado al menos tan extremo si no hubiera efecto.
+- Un contraste compara datos con una hipótesis y sus supuestos.
+- El valor p mide la probabilidad de resultados al menos tan extremos bajo ese modelo.
 - Un valor p bajo no dice que la hipótesis sea cierta ni lo grande que es el efecto.
-- Probar muchas hipótesis y quedarse con la que sale garantiza falsos positivos.
+- Seleccionar solo las pruebas favorables aumenta el riesgo de conclusiones falsas y oculta cuántas oportunidades de error hubo.
