@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución.** La primera tanda revisa Fundamentos de programación. Las casillas siguientes representan recorridos por revisar, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Ninguna ruta se considera cerrada todavía.
+**Estado: en ejecución y entrega incremental.** Once de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -53,22 +53,22 @@ Resultado esperado: modelar datos, anticipar el resultado de una consulta y expl
 Resultado esperado: seguir cómo se representa un dato, lo procesa el hardware y lo administra el sistema operativo.
 
 - [ ] Cómo se representa la información (`como-se-representa-la-informacion`): bits, bytes, signo, orden y precisión; revisar la progresión byte/hexadecimal/endianness y mostrar conversiones completas.
-- [ ] Las piezas de un ordenador (`piezas-de-un-ordenador`): función, conexiones y límites de cada componente con operaciones concretas.
-- [ ] Cómo funciona un ordenador (`como-funciona-un-ordenador`): conectar circuito, instrucciones, memoria, ejecutable y proceso sin exigir explicaciones que aparecen después.
-- [ ] Arquitectura de computadores (`arquitectura-de-computadores`): seguir instrucciones y transferencias; distinguir coherencia, dependencias, interrupciones y DMA; comprobar diagramas y cálculos de Amdahl.
-- [ ] Sistemas operativos a fondo (`sistemas-operativos-a-fondo`): trazar procesos, memoria, archivos y llamadas al sistema; revisar el lugar del recorrido del ejecutable al proceso.
-- [ ] Linux para desarrolladores (`linux-para-desarrolladores`): comandos con contexto, resultados y consecuencias; evitar ejemplos que requieran alterar una máquina real para aprender.
-- [ ] Binarios y emulación (`binarios-y-emulacion`): enlazar formato, ABI, carga y ejecución; aclarar qué reproduce cada mecanismo.
-- [ ] Concurrencia (`concurrencia`): mostrar intercalados concretos, invariantes y fallos; distinguir exclusión mutua, permisos y ejecución simultánea.
+- [x] Las piezas de un ordenador (`piezas-de-un-ordenador`): función, conexiones y límites de cada componente con operaciones concretas.
+- [x] Cómo funciona un ordenador (`como-funciona-un-ordenador`): conectar circuito, instrucciones, memoria, ejecutable y proceso sin exigir explicaciones que aparecen después.
+- [x] Arquitectura de computadores (`arquitectura-de-computadores`): seguir instrucciones y transferencias; distinguir coherencia, dependencias, interrupciones y DMA; comprobar diagramas y cálculos de Amdahl.
+- [x] Sistemas operativos a fondo (`sistemas-operativos-a-fondo`): trazar procesos, memoria, archivos y llamadas al sistema; revisar el lugar del recorrido del ejecutable al proceso.
+- [x] Linux para desarrolladores (`linux-para-desarrolladores`): comandos con contexto, resultados y consecuencias; evitar ejemplos que requieran alterar una máquina real para aprender.
+- [x] Binarios y emulación (`binarios-y-emulacion`): enlazar formato, ABI, carga y ejecución; aclarar qué reproduce cada mecanismo.
+- [x] Concurrencia (`concurrencia`): mostrar intercalados concretos, invariantes y fallos; distinguir exclusión mutua, permisos y ejecución simultánea.
 
 ### 4. Redes y señales
 
 Resultado esperado: reconstruir un intercambio de datos y explicar dónde intervienen direccionamiento, transporte y medio físico.
 
-- [ ] Cómo funciona internet (`como-funciona-internet`): seguir una petición con DNS, direcciones y transporte; explicar responsabilidades de las capas.
-- [ ] Redes por dentro (`redes-por-dentro`): revisar IP y subredes antes de los pasos que los necesitan; trazar ARP, enrutamiento, TTL, MTU y congestión en un caso coherente.
-- [ ] Telecomunicaciones (`telecomunicaciones`): conectar muestreo, aliasing, Fourier, filtrado y modulación con señales y unidades verificables, sin exigir matemática no explicada.
-- [ ] Internet de las cosas (`internet-de-las-cosas`): seguir un dato del sensor al consumidor; explicar pérdidas, restricciones y papel de MQTT y las colas.
+- [x] Cómo funciona internet (`como-funciona-internet`): seguir una petición con DNS, direcciones y transporte; explicar responsabilidades de las capas.
+- [x] Redes por dentro (`redes-por-dentro`): revisar IP y subredes antes de los pasos que los necesitan; trazar ARP, enrutamiento, TTL, MTU y congestión en un caso coherente.
+- [x] Telecomunicaciones (`telecomunicaciones`): conectar muestreo, aliasing, Fourier, filtrado y modulación con señales y unidades verificables, sin exigir matemática no explicada.
+- [x] Internet de las cosas (`internet-de-las-cosas`): seguir un dato del sensor al consumidor; explicar pérdidas, restricciones y papel de MQTT y las colas.
 
 ### 5. Aplicaciones y experiencia de uso
 
@@ -602,3 +602,13 @@ Servicios utiliza una unidad reproducible de una sola ejecución y separa inicia
 La versión final pasa `pnpm check`: 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados; permanece el aviso conocido de tamaño de un fragmento JavaScript. Se corrige el import de Quiz detectado por la compilación y se repite la suite completa. Los siete artículos pasan catorce casos de Chromium a 1280 y 390 píxeles, con respuestas correctas e incorrectas donde corresponde y sin desbordamiento de página. Se inspeccionan las catorce capturas completas.
 
 **Cierre del recorrido en la rama:** terminal precede a jerarquía y se incorpora el artículo existente de licencias antes de libre/código abierto. Se declaran los fundamentos de sistemas operativos y JavaScript necesarios y se contrastan todos los prerrequisitos. Los once pasos pasan veintidós visitas sin JavaScript, incluidos anterior, siguiente y fin; se reutilizan las revisiones vigentes de Linux, distribuciones, terminal y permisos. El inventario alcanza 284 artículos distintos leídos. Linux queda revisado y comprobado, pendiente de integración; no se marcan casillas de publicación. Siguen abiertos los demás recorridos, las comprobaciones expresamente pendientes de tandas anteriores y la auditoría sistemática de enlaces del plan 9.
+
+
+### Entrega incremental de las tandas comprobadas
+
+El usuario solicita publicar por tandas sin esperar a terminar todo el backlog. Se separan la interfaz y el contenido terminado del trabajo que conserva comprobaciones pendientes. Esta entrega toma los textos finales de las once rutas verificadas —internet, redes, telecomunicaciones, IoT, piezas del ordenador, arquitectura, funcionamiento del ordenador, concurrencia, binarios/emulación, sistemas operativos y Linux— y sus enlaces y prerrequisitos revisados. Los registros anteriores describen el historial completo de la rama de trabajo: sus tandas aún abiertas no se dan por publicadas ni cerradas mediante esta entrega.
+
+**Verificación de la combinación entregada:** los textos y los once archivos de ruta coinciden exactamente con sus versiones comprobadas de `b0aae57`; se conservan válidas sus fuentes, ejemplos, relecturas y capturas registradas. Sobre `main` con la interfaz integrada, pasa `pnpm check`: 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Se vuelven a recorrer las once rutas completas en escritorio y móvil sin JavaScript: 316 visitas con anterior, siguiente y fin, sin desbordamiento. La comprobación de enlaces y prerrequisitos pasa sobre este catálogo combinado. Continúan los límites ya registrados de ejecución nativa en macOS y del ciclo de vida con un gestor systemd activo. El aviso conocido de tamaño de un fragmento JavaScript permanece.
+
+
+**Publicación del 16 de octubre de 2026:** la [PR #3](https://github.com/nbfrodri/devly/pull/3) integra la interfaz en `a5d0d88` y la [PR #4](https://github.com/nbfrodri/devly/pull/4) integra las once rutas verificadas y sus artículos relacionados en `67c156a`. Ambas se integran después de superar CI y la compilación de Cloudflare. Las once casillas de ruta se marcan tras la integración. Las demás rutas, el inventario fuera de rutas, las comprobaciones abiertas de tandas anteriores y la auditoría general de enlaces siguen pendientes. La entrega incremental sustituye la espera al cierre completo del backlog; no cambia sus criterios editoriales.
