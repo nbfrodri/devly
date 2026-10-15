@@ -1,0 +1,40 @@
+---
+import Icon from "@/components/icon.astro";
+import SpriteIcon from "@/components/sprite-icon.astro";
+
+type Props = {
+	id: string;
+	scope: "article" | "path";
+	title?: string;
+	compact?: boolean;
+};
+
+const { id, scope, title, compact = false } = Astro.props;
+---
+
+<button
+	class:list={["progress-button progress-button-pending", { "card-save": compact }]}
+	type="button"
+	aria-pressed="false"
+	aria-label={title ? `Guardar para después: ${title}` : undefined}
+	title={compact ? `Guardar para después: ${title}` : undefined}
+	data-progress-toggle="pendiente"
+	data-progress-scope={scope}
+	data-progress-id={id}
+	data-progress-title={title}
+	data-label-off="Guardar para después"
+	data-label-on="Pendiente"
+	data-pagefind-ignore
+>
+	{
+		compact ? (
+			<SpriteIcon name="bookmark-filled" />
+		) : (
+			<>
+				<Icon name="bookmark" class="progress-icon-off" />
+				<Icon name="bookmark-filled" class="progress-icon-on" />
+			</>
+		)
+	}
+	<span data-label class:list={{ "visually-hidden": compact }}>Guardar para después</span>
+</button>

@@ -1,4 +1,6 @@
 ---
+import SpriteIcon from "@/components/sprite-icon.astro";
+
 // The Pagefind bundle only exists after `pnpm build`, so search is empty in dev.
 
 type Props = {
@@ -20,6 +22,16 @@ const id = `search-${variant}`;
 			{variant === "header" ? "Buscar un concepto" : "variable, DNS, proceso"}
 		</button>
 	</div>
+	<template data-search-progress>
+		<span class="search-result-progress">
+			<span class="progress-badge progress-badge-read">
+				<SpriteIcon name="circle-check-filled" /> Leído
+			</span>
+			<span class="progress-badge progress-badge-pending">
+				<SpriteIcon name="bookmark-filled" /> Pendiente
+			</span>
+		</span>
+	</template>
 </div>
 <script is:inline define:vars={{ id, variant }}>
 	// The search engine (script and styles) is fetched once per page, when the
@@ -29,7 +41,29 @@ const id = `search-${variant}`;
 		const box = document.getElementById(id);
 		const wrapper = box.closest("[data-search]");
 		const placeholder = box.querySelector("[data-search-placeholder]");
+		const progressTemplate = wrapper.querySelector("[data-search-progress]");
 		let started = false;
+
+		// Pagefind inserts and replaces results after each query and pagination.
+		// Decorate only new article results; a scoped refresh leaves other lists alone.
+		new MutationObserver(() => {
+			let changed = false;
+			for (const result of box.querySelectorAll(".pagefind-ui__result")) {
+				const link = result.querySelector(".pagefind-ui__result-link");
+				if (!link) continue;
+				const url = new URL(link.href);
+				const match = url.pathname.match(/^\/articulos\/([^/]+)\/?$/);
+				if (url.origin !== location.origin || !match) continue;
+				if (result.dataset.progressArticle === match[1] && result.querySelector(".search-result-progress")) continue;
+				result.dataset.progressArticle = match[1];
+				result.querySelector(".search-result-progress")?.remove();
+				result.querySelector(".pagefind-ui__result-title")?.after(
+					progressTemplate.content.cloneNode(true),
+				);
+				changed = true;
+			}
+			if (changed) box.dispatchEvent(new CustomEvent("devly:progress-refresh", { bubbles: true }));
+		}).observe(box, { childList: true, subtree: true });
 
 		function loadEngine() {
 			if (window.devlySearchEngine) return window.devlySearchEngine;
@@ -48,10 +82,13 @@ const id = `search-${variant}`;
 			return window.devlySearchEngine;
 		}
 
-		function start(focusAfter) {
+		function start() {
 			if (started) return;
 			started = true;
 			loadEngine().then(() => {
+				// The visitor may focus the placeholder while an idle load is pending,
+				// or move elsewhere before it finishes. Preserve their current choice.
+				const focused = box.contains(document.activeElement);
 				box.replaceChildren();
 				new window.PagefindUI({
 					element: `#${id}`,
@@ -63,16 +100,16 @@ const id = `search-${variant}`;
 				});
 				const input = box.querySelector("input");
 				if (input) input.spellcheck = false;
-				if (focusAfter) input?.focus();
+				if (focused) input?.focus({ preventScroll: true });
 			});
 		}
 
-		placeholder.addEventListener("click", () => start(true));
-		placeholder.addEventListener("focus", () => start(true));
+		placeholder.addEventListener("click", start);
+		placeholder.addEventListener("focus", start);
 
 		// The box only starts by itself where it is visible.
 		const idle = () => {
-			if (wrapper.offsetParent !== null) start(false);
+			if (wrapper.offsetParent !== null) start();
 			else loadEngine();
 		};
 		if ("requestIdleCallback" in window) {

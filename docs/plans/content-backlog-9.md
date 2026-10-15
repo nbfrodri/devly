@@ -31,19 +31,19 @@ Aceptación: desde «bit» se puede escoger «byte» dentro de representación y
 
 ## 2. Corregir el salto del buscador
 
-- [ ] Reproducir en `pnpm preview`, con el índice real: búsqueda fría y ya cargada, página desplazada, cabecera y portada móvil, escritura, borrado y cambio de consulta. Registrar posición y foco para localizar la causa.
+- [x] Reproducir en `pnpm preview`, con el índice real: búsqueda fría y ya cargada, página desplazada, cabecera y portada móvil, escritura, borrado y cambio de consulta. Registrar posición y foco para localizar la causa.
 - [x] Corregir únicamente el mecanismo responsable en `src/components/search.astro`, sus estilos o el script afectado. Evitar restauraciones periódicas del scroll que impidan desplazarse al usuario.
-- [ ] Conservar una regresión reproducible y comprobar teclado, Escape, cierre al pulsar fuera, resultados vacíos y carga diferida.
+- [x] Comprobar la regresión con pulsaciones reales, teclado, Escape, cierre al pulsar fuera, resultados vacíos y carga diferida.
 
 Aceptación: escribir o actualizar resultados no cambia la posición de la página; abrir un resultado sí navega normalmente. El foco sigue en el campo y el contenido continúa siendo accesible.
 
-Comprobación inicial: con pulsaciones reales, cada letra movía el scroll de escritorio 59 píxeles hacia arriba. Se sustituye el `scroll-padding-top` global por `scroll-margin-top` en `:target`. La portada y un artículo mantienen ahora 1200 píxeles de desplazamiento durante la escritura; la portada móvil mantiene 250. También pasan cambio a una consulta sin resultados y borrado. Quedan las comprobaciones de carga fría, cierre y enlaces a fragmentos. Las transiciones entre documentos se limitan a la preferencia de movimiento normal: la animación predeterminada seguía activa con movimiento reducido y bloqueaba la prueba de navegación sin JavaScript.
+Comprobación: con pulsaciones reales, cada letra movía el scroll de escritorio 59 píxeles hacia arriba. Se sustituye el `scroll-padding-top` global por `scroll-margin-top` en `:target`. La portada y un artículo mantienen ahora 1200 píxeles de desplazamiento durante la escritura; la portada móvil mantiene 250. También pasan cambio a una consulta sin resultados, borrado, carga fría, cierre y enlaces a fragmentos. Al retrasar deliberadamente la carga de Pagefind se detectó una pérdida de foco si el usuario pulsaba el campo durante una carga iniciada en reposo; el montaje conserva ahora el foco actual sin desplazar la página. Las transiciones entre documentos se limitan a la preferencia de movimiento normal: la animación predeterminada seguía activa con movimiento reducido y bloqueaba la prueba de navegación sin JavaScript.
 
 ## 3. Progreso visible en la búsqueda
 
-- [ ] Añadir a cada resultado de artículo las marcas «Leído» con tick verde y «Pendiente» con marcador, reutilizando los iconos y colores semánticos existentes.
-- [ ] Integrar los resultados dinámicos de Pagefind con `src/scripts/progress.ts` y su evento `devly:progress-refresh`, o con una actualización acotada equivalente si el evento completo afecta al foco o al scroll. Evitar almacenar copias divergentes del progreso.
-- [ ] Comprobar estados iniciales, cambio de consulta, más resultados y cambios desde otra pestaña. Mantener título y enlaces de subsecciones, sin introducir el estado local en el índice público.
+- [x] Añadir a cada resultado de artículo las marcas «Leído» con tick verde y «Pendiente» con marcador, reutilizando los iconos y colores semánticos existentes.
+- [x] Integrar los resultados dinámicos de Pagefind con `src/scripts/progress.ts` y su evento `devly:progress-refresh`, acotado al buscador para no reconstruir las listas guardadas. Evitar almacenar copias divergentes del progreso.
+- [x] Comprobar estados iniciales, cambio de consulta, más resultados y cambios desde otra pestaña. Mantener título y enlaces de subsecciones, sin introducir el estado local en el índice público.
 
 Archivos: `src/components/search.astro`, `src/scripts/progress.ts`, `src/styles/global.css` y, solo si se necesita lógica pura nueva, un módulo con su prueba en `src/lib/`.
 
@@ -51,12 +51,14 @@ Aceptación: un artículo marcado leído aparece con icono verde y texto; uno gu
 
 ## 4. Guardar desde las tarjetas
 
-- [ ] Añadir «Guardar para después» a `src/components/article-card.astro` y `src/components/path-card.astro`, reutilizando los controles de `src/components/progress-buttons.astro` y el modelo existente.
-- [ ] Mantener el botón separado del enlace: guardar no abre el artículo ni la ruta. Identificar el contenido al usar teclado o lector de pantalla y reflejar el estado con `aria-pressed`.
-- [ ] Actualizar también las tarjetas que `/progreso/` construye dinámicamente en `src/pages/progreso/index.astro`; comprobar todos los consumidores de las tarjetas, incluidos portada, capas, listados y pasos de rutas.
-- [ ] Verificar guardar, desguardar, recargar y sincronizar entre pestañas, además de filtros, ordenación y rutas completadas. Preservar la semántica actual de leído frente a pendiente y los datos anteriores.
+- [x] Añadir «Guardar para después» a `src/components/article-card.astro` y `src/components/path-card.astro`, reutilizando los controles de `src/components/progress-buttons.astro` y el modelo existente mediante el nuevo componente `src/components/save-button.astro`.
+- [x] Mantener el botón separado del enlace: guardar no abre el artículo ni la ruta. Identificar el contenido al usar teclado o lector de pantalla y reflejar el estado con `aria-pressed`.
+- [x] Actualizar también las tarjetas que `/progreso/` construye dinámicamente en `src/pages/progreso/index.astro`; comprobar los consumidores de las tarjetas, incluidos portada, capas, listados y pasos de rutas.
+- [x] Verificar guardar, desguardar, recargar y sincronizar entre pestañas, además de filtros, ordenación y rutas completadas. Preservar la semántica actual de leído frente a pendiente y los datos anteriores.
 
 Aceptación: se puede guardar y retirar un artículo o ruta desde su tarjeta sin navegar. El cambio aparece inmediatamente en las marcas y en `/progreso/`, y persiste al recargar.
+
+Verificación de interfaz: `pnpm check` pasa (558 tests, cero errores y avisos de Astro, 593 páginas y 533 artículos indexados). Pruebas de Chromium a 1280 y 390 píxeles, temas claro y oscuro: guardar y retirar desde tarjetas, persistencia, actualización entre pestañas, los tres estados en búsqueda, paginación, filtrado y ordenación, conservación de una ruta completada y controles ocultos sin almacenamiento. Se comprueba que una búsqueda en `/progreso/` conserva los nodos de las tarjetas y que retirar la última tarjeta mantiene el foco en su sección. Inspección visual de las tarjetas y resultados en ambos tamaños y temas. Estas comprobaciones cierran la parte funcional; los apartados editoriales siguen pendientes.
 
 ## 5. Auditoría de enlaces entre artículos
 
@@ -99,6 +101,12 @@ Aceptación: el lector puede relacionar una acción familiar con sus mecanismos 
 - [ ] Enlazar los nuevos artículos desde el de cúbit y comprobar sus prerrequisitos matemáticos. Explicar también límites y errores comunes; no convertir ventajas de algoritmos concretos en una aceleración universal.
 
 Aceptación: la ampliación responde a huecos identificados, con ejemplos comprensibles y fuentes primarias, no a una cuota de artículos.
+
+## Hallazgos editoriales antes de la siguiente tanda
+
+La lectura inicial de `cliente-servidor`, `tipos-de-redes`, `que-es-una-direccion-ip`, `modelos-osi-y-tcp-ip` y `que-es-un-cubit` confirma huecos concretos. La ruta de internet introduce subredes antes de explicar servidor y protocolo. «Tipos de redes» presupone OSI y switches pese a declararse básico; presenta la comunicación entre todos los equipos locales como universal. La definición de IP necesita distinguir dirección de interfaz e identidad del dispositivo, contemplar NAT del operador y evitar exigir IP estática a cualquier servidor. OSI presenta la entrega de TCP como garantía sin fallo y niega que un router pueda inspeccionar capas superiores. Cliente-servidor niega cualquier servidor central en P2P, aunque pueden existir servicios de descubrimiento.
+
+El artículo de cúbit necesita delimitar medición en una base, usar el módulo al cuadrado para amplitudes complejas, acotar la correlación del entrelazamiento a un ejemplo concreto y distinguir un vector de estado general de simulaciones clásicas más compactas. Estos hallazgos justifican revisar la introducción y evaluar artículos separados sobre puertas e interferencia y sobre entrelazamiento. Todavía no se han corregido ni contrastado sus fuentes en esta tanda.
 
 ## Verificación y entrega
 
