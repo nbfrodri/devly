@@ -68,10 +68,30 @@ function fillLists() {
 				progress.articles[element.dataset.progressArticle ?? ""] === wanted
 			);
 		});
+		const focused = document.activeElement;
+		const hadFocus = focused instanceof HTMLElement && list.contains(focused);
+		const focusedIndex = [...list.children].findIndex((item) =>
+			item.contains(focused),
+		);
 		list.replaceChildren(...items.map((item) => item.cloneNode(true)));
 		list.removeAttribute("aria-busy");
 
 		const section = list.closest<HTMLElement>("[data-progress-section]");
+		if (hadFocus) {
+			const sameButton = [
+				...list.querySelectorAll<HTMLButtonElement>("button"),
+			].find(
+				(button) => button.dataset.progressId === focused.dataset.progressId,
+			);
+			const nextItem =
+				list.children[Math.min(focusedIndex, list.children.length - 1)];
+			const next =
+				sameButton ??
+				nextItem?.querySelector<HTMLElement>("button, a") ??
+				section?.querySelector<HTMLElement>("h2");
+			if (next?.tagName === "H2") next.tabIndex = -1;
+			next?.focus({ preventScroll: true });
+		}
 		if (!section) continue;
 		section.dataset.ready = "";
 		for (const count of section.querySelectorAll<HTMLElement>(
@@ -87,10 +107,10 @@ function fillLists() {
 	}
 }
 
-function render() {
-	fillLists();
+function render(root: ParentNode = document) {
+	if (root === document) fillLists();
 
-	for (const element of document.querySelectorAll<HTMLElement>(
+	for (const element of root.querySelectorAll<HTMLElement>(
 		"[data-progress-article]",
 	)) {
 		setStatus(
@@ -100,7 +120,7 @@ function render() {
 	}
 
 	// Layers use the same display as paths, without a pending mark of their own.
-	for (const element of document.querySelectorAll<HTMLElement>(
+	for (const element of root.querySelectorAll<HTMLElement>(
 		"[data-progress-path], [data-progress-group]",
 	)) {
 		const steps = (element.dataset.steps ?? "").split(" ").filter(Boolean);
@@ -129,7 +149,7 @@ function render() {
 		}
 	}
 
-	for (const button of document.querySelectorAll<HTMLButtonElement>(
+	for (const button of root.querySelectorAll<HTMLButtonElement>(
 		"[data-progress-toggle]",
 	)) {
 		const id = button.dataset.progressId ?? "";
@@ -141,6 +161,12 @@ function render() {
 		const label = pressed ? button.dataset.labelOn : button.dataset.labelOff;
 		const text = button.querySelector("[data-label]");
 		if (text && label) text.textContent = label;
+		if (button.dataset.progressTitle) {
+			const action = pressed ? "Quitar de pendientes" : "Guardar para después";
+			const description = `${action}: ${button.dataset.progressTitle}`;
+			button.setAttribute("aria-label", description);
+			button.title = description;
+		}
 	}
 }
 
@@ -161,16 +187,20 @@ document.addEventListener("click", (event) => {
 				);
 	save();
 	render();
+	document.dispatchEvent(new Event("devly:progress-change"));
 });
 
-// Pages that load content later ask for a new pass.
-document.addEventListener("devly:progress-refresh", render);
+// A bubbling event from an element refreshes only that subtree.
+document.addEventListener("devly:progress-refresh", (event) => {
+	render(event.target instanceof Element ? event.target : document);
+});
 
 // Keeps several open tabs in step.
 window.addEventListener("storage", (event) => {
 	if (event.key !== STORAGE_KEY) return;
 	progress = load();
 	render();
+	document.dispatchEvent(new Event("devly:progress-change"));
 });
 
 render();
