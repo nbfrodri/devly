@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - compilador-e-interprete
   - que-es-una-maquina-virtual-de-un-lenguaje
-updated: 2026-10-15
+updated: 2026-10-16
 sources:
   - title: "V8: Launching Ignition and TurboFan (en inglés)"
     url: https://v8.dev/blog/launching-ignition-and-turbofan
@@ -27,7 +27,7 @@ El navegador recibe código fuente y necesita empezar a responder pronto. Compil
 ## Por niveles
 
 ```mermaid
-flowchart LR
+flowchart TB
 	F["Código fuente"] --> B["Bytecode"]
 	B --> I["Ignition<br>intérprete"]
 	I -- "función templada" --> S["Sparkplug<br>compilación rápida"]
