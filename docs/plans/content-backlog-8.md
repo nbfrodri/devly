@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución y entrega incremental.** Dieciséis de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
+**Estado: en ejecución y entrega incremental.** Diecisiete de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -46,7 +46,7 @@ Resultado esperado: modelar datos, anticipar el resultado de una consulta y expl
 - [ ] SQL en la práctica (`sql-en-la-practica`): conjuntos pequeños ejecutables en SQLite, resultados explícitos y estados transaccionales; comprobar si cardinalidad debe explicarse antes de leer planes.
 - [ ] Bases de datos (`bases-de-datos`): claves, relaciones, normalización, índices y alternativas; justificar decisiones y límites de consistencia, réplica y copia de seguridad.
 - [x] Estadística y simulación (`estadistica-y-simulacion`): cálculos reproducibles, supuestos y límites de interpretación; distinguir incertidumbre, asociación y causalidad.
-- [ ] Análisis de datos (`analisis-de-datos`): seguir datos desde su preparación hasta su interpretación; comprobar prerrequisitos de regresión y evaluación y cuándo aparecen los conceptos estadísticos necesarios.
+- [x] Análisis de datos (`analisis-de-datos`): seguir datos desde su preparación hasta su interpretación; comprobar prerrequisitos de regresión y evaluación y cuándo aparecen los conceptos estadísticos necesarios.
 
 ### 3. De la información al proceso
 
@@ -701,6 +701,8 @@ La comparación con `main` encuentra versiones anteriores de callback, compilaci
 
 La inspección visual actual detecta cinco diagramas con etiquetas demasiado reducidas en móvil: JIT, bucle de eventos, máquina virtual y los dos flujos de compilación/transpilación. Se ajustará únicamente su disposición en los cuatro artículos afectados y se repetirán capturas y suite; el resto de los cuerpos inspeccionados no requiere cambios por presentación.
 
+La revisión de integración encuentra una contradicción puntual en la primera definición de compilador de la comparación: limita la salida a máquina o código intermedio, aunque después explica que puede ser otro lenguaje de alto nivel. Se precisará esa definición general, dejando máquina y bytecode como ejemplos, y se volverán a comprobar las capturas y el archivo final antes de publicar JavaScript.
+
 ### Continuación de Introducción a los algoritmos
 
 Se conserva la entrada explícita «Después de Fundamentos de programación» y sus seis pasos; no se duplica la ruta básica ya publicada. Arrays y funciones se reutilizan en sus versiones congeladas. La relectura señala cinco artículos que requieren ajustes concretos antes del cierre.
@@ -720,3 +722,29 @@ La comprobación del enlace a Precisión/exactitud encuentra otra contradicción
 El manifiesto se amplía a veintiún archivos propios de esta entrega. Falta comprobar la combinación sobre `main`, publicar la PR y registrar el merge para marcar la ruta; las revisiones de otras rutas continúan abiertas.
 
 **Combinación comprobada:** pasan las suites completas de revisión y entrega con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Los veintidós pasos de la entrega pasan 44 visitas sin JavaScript a 1280 y 390 píxeles con las versiones estadísticas ya publicadas. No quedan bloqueos editoriales o de integración de esta tanda; resta superar los checks remotos y publicarla.
+
+**Publicación:** la [PR #12](https://github.com/nbfrodri/devly/pull/12) se integra en `af9efe6` tras superar CI y Cloudflare. Los checks de `main` pasan; una primera visita todavía recibe la ruta anterior durante la actualización, pero la comprobación posterior normal confirma los veintidós pasos publicados y la navegación sin JavaScript. Se marca Análisis de datos: diecisiete rutas publicadas y treinta pendientes.
+
+### Continuación de Bases de datos
+
+La relectura de los veintiocho pasos conserva los artículos congelados de Análisis y encuentra ajustes acotados: LAG llama «mes pasado» a la fila anterior pese a faltar meses en el ejemplo; índice compuesto promete acelerar toda lectura y abaratar relativamente toda escritura; Vistas repite el mismo caso; MongoDB omite la mayoría necesaria para elegir primario; Redis impone sesiones compartidas y resta importancia a perder la caché; NoSQL omite condiciones de convergencia; Vectoriales atribuye significado universal a un vector. Se corregirán esas explicaciones sin cambiar sus ejemplos por sistema.
+
+El contraste de entrada con `main` detecta contradicciones necesarias para esta ruta: Embeddings promete propiedades semánticas y de latencia, y Escalado exige ausencia de estado. Se comprobarán e incorporarán sus versiones ya revisadas y el prerrequisito Stateful/stateless. Las diferencias pendientes de árboles, grafos y hash no impiden seguir los usos de esta ruta y permanecen en el cierre de Estructuras.
+
+### Continuación de Estructuras de datos
+
+La relectura de los doce pasos conserva arrays y montículos ya publicados. Listas enlazadas necesita explicar que una referencia enlaza al mismo objeto y acotar la comparación de memoria al modelo de array contiguo, sin presentarlo como garantía de JavaScript. El resumen de pilas y colas debe distinguir costes según implementación y costes amortizados; «deben ser constantes» contradice su propio ejemplo con `shift`. Se harán únicamente esos ajustes identificados y los que requiera la revisión completa restante.
+
+La entrada depende de la revisión de Algoritmos en curso y, para árboles B, de Índices de bases de datos. Este último ya está releído y congelado en la tanda de Bases; se publicará antes de cerrar la entrega de Estructuras. No se duplican responsables de esos archivos.
+
+La inspección móvil detecta que el diagrama de árboles B comprime demasiado sus cuatro hijos y etiquetas. Se ajustará solo la disposición, conservando claves, intervalos y relaciones; los otros diagramas de árboles ya inspeccionados son legibles.
+
+### Cierre editorial de JavaScript a fondo
+
+Se releen los diecisiete artículos y la ruta final de dieciséis pasos. Los cuatro pasos añadidos resuelven las entradas a motores/JIT y TypeScript; callback queda explicado y enlazado como prerrequisito. Los ocho prerrequisitos externos coinciden con lo publicado en `main`, y los 63 destinos internos existen.
+
+Se conservan 58 bloques JavaScript y nueve TypeScript idénticos a `35d4d06`, con salidas y diagnósticos anteriores contrastados. Las correcciones editoriales previas pendientes de igualdad, callback, compilación, máquina virtual, tipado y TypeScript se transportan sin reescribirlas. La definición inicial de compilación se precisa tras la revisión de integración y se contrasta de nuevo con MDN; no cambian los ejemplos.
+
+Se inspeccionan las 34 capturas completas finales y dieciséis pies actuales de navegación. Los cinco diagramas pasan a una disposición vertical legible en móvil; sus nodos y relaciones visibles se conservan. Pasan quizzes afectados, 32 visitas sin JavaScript y el acceso a 84 bloques, tablas y diagramas. Tras la última precisión se repiten las dos capturas completas de compilación/transpilación y la suite, con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. El manifiesto final congela dieciocho archivos; quedan pendientes la combinación y publicación de la entrega.
+
+**Combinación final comprobada:** las suites de revisión y entrega aprueban 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados después de la última precisión. La ruta integrada pasa otras 32 visitas sin JavaScript en escritorio y móvil. Queda pendiente la publicación mediante PR y sus checks remotos.

@@ -71,6 +71,8 @@ Aceptación: «bit» enlaza «byte» y se revisan sistemáticamente las mencione
 
 Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos, y en los dos grupos de hardware y almacenamiento registrados en el backlog 8: 64 artículos distintos, incluidos los cinco nuevos de fundamentos. A esos grupos se añade la revisión de los cuatro casos cotidianos, CDN, cifrado y caché de la tanda 10, con enlaces entrantes desde compresión y DNS. La ruta de piezas del ordenador queda revisada en sus catorce pasos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
 
+Se genera además un inventario inicial sobre los 544 artículos: 1344 pares candidatos de mención y destino, agrupados por rutas y con hash y línea del artículo de origen. Se excluyen metadatos, código, quizzes y enlaces presentes; no se modifica ningún artículo automáticamente. Este inventario ayuda a repartir la revisión editorial y requiere descartar ambigüedades y comprobar la utilidad de cada enlace. La existencia de candidatos no equivale a confirmar 1344 errores ni a cerrar la auditoría.
+
 ## 6. Fundamentos y redes para principiantes
 
 Leer primero las rutas `como-funciona-internet.yaml`, `redes-por-dentro.yaml` y `telecomunicaciones.yaml`, junto con los artículos introductorios que usan. Identificar palabras que dan por supuestos conocimientos de informática. Reforzar las explicaciones existentes cuando el concepto ya tenga artículo; crear los siguientes solo para cubrir huecos concretos.

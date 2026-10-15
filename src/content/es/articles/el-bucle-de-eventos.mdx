@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - promesas-y-async-await
   - que-es-un-callback
-updated: 2026-10-15
+updated: 2026-10-16
 sources:
   - title: "MDN: JavaScript execution model (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model
@@ -27,10 +27,11 @@ Una página necesita responder a clics mientras espera datos de la red. No puede
 MDN lo explica así: cuando una acción asíncrona termina, por ejemplo una petición con `fetch`, el código que debe ejecutarse después se define como un [callback](/articulos/que-es-un-callback/). Ese callback se convierte en un **trabajo** que se añade a una cola. El motor saca trabajos de la cola y los ejecuta de uno en uno.
 
 ```mermaid
-flowchart LR
+flowchart TB
 	P["Pila de llamadas<br>ejecuta un trabajo"] -- "vacía" --> M["Cola de microtareas<br>promesas"]
 	M -- "vacía" --> T["Cola de tareas<br>temporizadores, eventos, red"]
 	T --> P
+	M ~~~ W
 	W["Navegador o Node.js<br>red, temporizadores, disco"] -- "al terminar" --> T
 ```
 

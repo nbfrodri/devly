@@ -11,6 +11,10 @@ steps:
   - manejo-de-errores-y-excepciones
   - promesas-y-async-await
   - el-bucle-de-eventos
+  - compilador-e-interprete
+  - compilar-y-transpilar
+  - que-es-una-maquina-virtual-de-un-lenguaje
   - motores-de-javascript-y-jit
   - expresiones-regulares
+  - tipado-estatico-y-dinamico
   - que-es-typescript

@@ -6,7 +6,7 @@ kind: comparacion
 layer: programacion
 prerequisites:
   - compilador-e-interprete
-updated: 2026-10-15
+updated: 2026-10-16
 sources:
   - title: "MDN: Compilar"
     url: https://developer.mozilla.org/es/docs/Glossary/Compile
@@ -22,11 +22,12 @@ import { Quiz } from "@/components/quiz";
 
 ## Compilar
 
-Un [compilador](/articulos/compilador-e-interprete/) traduce un programa escrito para personas en instrucciones que una máquina ejecuta directamente, o en un código intermedio cercano a ellas.
+Un [compilador](/articulos/compilador-e-interprete/) traduce un programa de un lenguaje o formato a otro. Entre sus posibles resultados están las instrucciones que ejecuta directamente un procesador y el bytecode que ejecuta una máquina virtual.
 
 ```mermaid
-flowchart LR
+flowchart TB
 	A["C, Rust, Go"] -- compilar --> B["código máquina"]
+	B ~~~ C
 	C["Java"] -- compilar --> D["bytecode para una máquina virtual"]
 ```
 
@@ -37,9 +38,11 @@ Esos ejemplos producen código máquina o bytecode, pero el resultado de una com
 Un transpilador, o compilador de fuente a fuente, traduce a otro lenguaje de alto nivel, que sigue siendo legible.
 
 ```mermaid
-flowchart LR
+flowchart TB
 	A["TypeScript"] -- transpilar --> B["JavaScript"]
+	B ~~~ C
 	C["JavaScript nuevo"] -- transpilar --> D["JavaScript que entienden navegadores antiguos"]
+	D ~~~ E
 	E["Sass"] -- transpilar --> F["CSS"]
 ```
 
