@@ -1,5 +1,5 @@
 title: Técnicas de diseño de algoritmos
-description: Las estrategias generales con las que se ataca un problema nuevo.
+description: "Después de Introducción a los algoritmos: divide y vencerás, decisiones voraces, programación dinámica y vuelta atrás."
 layer: programacion
 steps:
   - recursividad

@@ -8,7 +8,7 @@ prerequisites:
   - recursividad
   - bucles
   - pila-y-monticulo-de-memoria
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Recursión"
     url: https://developer.mozilla.org/es/docs/Glossary/Recursion
@@ -22,7 +22,7 @@ La **iteración** repite un cálculo con un [bucle](/articulos/bucles/). La **re
 
 ## El mismo cálculo, de las dos formas
 
-Sumar los números del 1 al n:
+Sumar del 1 a `n`, con `n` entero no negativo y resultados dentro de la precisión de `Number`:
 
 ```js
 const sumaRecursiva = (n) => (n === 0 ? 0 : n + sumaRecursiva(n - 1));
@@ -34,6 +34,7 @@ function sumaIterativa(n) {
 }
 
 console.log(sumaRecursiva(100)); // 5050
+console.log(sumaIterativa(100)); // 5050
 console.log(sumaIterativa(100000)); // 5000050000
 
 try {
@@ -43,16 +44,16 @@ try {
 }
 ```
 
-Las dos dan el mismo resultado. Pero la recursiva, con un millón, falla: cada llamada ocupa un hueco en la **pila**, y la pila se agota, como explica [la pila y el montículo](/articulos/pila-y-monticulo-de-memoria/). La iterativa no tiene ese límite.
+Las dos dan el mismo resultado. Pero la recursiva, con un millón, falla: cada llamada ocupa un hueco en la **pila**, y la pila se agota, como explica [la pila y el montículo](/articulos/pila-y-monticulo-de-memoria/). Esta versión iterativa no acumula llamadas, aunque sigue limitada por tiempo, memoria y precisión numérica.
 
 ## Comparación
 
 | | Recursión | Iteración |
 | --- | --- | --- |
 | Cómo repite | La función se llama a sí misma | Un bucle |
-| Memoria | Un marco de pila por llamada | Constante |
-| Límite de profundidad | Sí, el tamaño de la pila | No |
-| Velocidad | Algo más lenta, por las llamadas | Algo más rápida |
+| Memoria en esta suma | O(n) llamadas pendientes sin optimización de cola | O(1) adicional |
+| Trabajo pendiente | Puede agotar la pila de llamadas | Si usa una pila explícita, también puede agotar memoria |
+| Rendimiento | Depende de llamadas, optimizaciones y algoritmo | Depende de bucles, datos y algoritmo |
 | Claridad | Muy clara para problemas con estructura recursiva | Muy clara para recorridos lineales |
 
 ## Cuándo es mejor la recursión
@@ -63,7 +64,7 @@ Cuando el problema **es recursivo por naturaleza**:
 - **Divide y vencerás**: [quicksort](/articulos/quicksort/), la ordenación por mezcla.
 - **[Vuelta atrás](/articulos/vuelta-atras/)**: probar opciones y retroceder.
 
-Escritos con bucles, estos problemas necesitan una pila manual y quedan mucho más enrevesados.
+Las versiones iterativas pueden necesitar una pila explícita para recordar trabajo pendiente. Cambiar llamadas por bucles no elimina automáticamente esa memoria.
 
 ## Cuándo es mejor la iteración
 
@@ -71,13 +72,19 @@ Cuando se recorre algo **lineal** o se repite un número de veces: sumar una lis
 
 ## Recursión sin pila
 
-Algunos lenguajes optimizan las **llamadas en cola**: si la llamada recursiva es lo último que hace la función, reutilizan el mismo marco de pila y no se agota. Los lenguajes funcionales dependen de ello. JavaScript, en la práctica, no lo hace en casi ningún entorno.
+Algunos lenguajes optimizan las **llamadas en cola**: si la llamada recursiva es lo último que hace la función, reutilizan el mismo marco de pila y no se agota. Su disponibilidad depende del lenguaje y del motor. No bases la corrección de un ejemplo JavaScript en que ocurra: comprueba tu entorno. La suma recursiva anterior ni siquiera es de cola, porque aún debe sumar `n` tras volver de la llamada.
 
 Y la [programación dinámica](/articulos/programacion-dinamica/) suele empezar con una versión recursiva que después se convierte en un bucle que rellena una tabla.
+
+## Confusiones frecuentes
+
+- **Cambiar llamadas por una pila explícita y anunciar memoria constante.** El trabajo pendiente sigue almacenado, aunque lo gestione el programa.
+- **Añadir un caso base sin garantizar que se alcanza.** La suma requiere un entero no negativo: un valor negativo se alejaría de cero.
+- **Esperar optimización de cola en cualquier recursión.** Aquí queda una suma pendiente después de volver; la llamada no está en posición de cola.
 
 ## Lo esencial
 
 - La iteración repite con un bucle; la recursión, con una función que se llama a sí misma.
-- Cada llamada recursiva ocupa pila, y una recursión muy profunda la agota.
+- Sin eliminación de llamadas en cola, las llamadas pendientes consumen pila y pueden agotarla.
 - La recursión es más clara para árboles y problemas que se dividen; la iteración, para recorridos lineales.
 - Cualquier algoritmo recursivo se puede reescribir con un bucle y una pila.

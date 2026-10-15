@@ -7,7 +7,7 @@ prerequisites:
   - que-es-una-base-de-datos
   - teorema-cap
   - escalado-vertical-y-horizontal
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: High Availability, Load Balancing, and Replication (en inglés)"
     url: https://www.postgresql.org/docs/current/high-availability.html
@@ -50,16 +50,16 @@ Si el líder falla, una seguidora ocupa su lugar. Elegir cuál, sin que dos se c
 
 | | Síncrona | Asíncrona |
 | --- | --- | --- |
-| El líder confirma | Cuando la réplica tiene el dato | En cuanto lo guarda él |
-| Si el líder cae | No se pierde nada | Se pueden perder los últimos cambios |
-| Velocidad de escritura | Menor | Mayor |
-| Si la réplica cae | Las escrituras se detienen | El líder sigue |
+| El líder confirma | Tras la confirmación exigida a las réplicas configuradas | Sin esperar que una réplica confirme ese cambio |
+| Si el líder cae | La recuperación depende de qué réplicas confirmaron, qué conservaron y cuál se promociona | Una réplica puede carecer de cambios ya confirmados al cliente |
+| Coste de escritura | Añade la espera por confirmaciones | Evita esa espera, con menor garantía sobre las copias |
+| Si una réplica cae | Puede bloquear si falta el conjunto de confirmaciones requerido | El líder puede seguir, mientras conserva recursos y su función de líder |
 
-Es la elección entre consistencia y disponibilidad que describe el [teorema CAP](/articulos/teorema-cap/).
+Esta elección afecta a latencia y durabilidad, pero no determina por sí sola la clasificación CAP. También importan las lecturas, la elección de líder y qué operaciones se admiten durante una partición de red.
 
 ### El retraso de las réplicas
 
-Con replicación asíncrona, una réplica va siempre un poco por detrás. Normalmente milisegundos; con carga, segundos.
+Con replicación asíncrona, una réplica puede ir por detrás. El retraso puede ser nulo cuando está al día o crecer mucho por carga, fallos o interrupciones; hay que medirlo.
 
 Efecto típico: un usuario cambia su nombre, la página se recarga leyendo de una réplica que aún no tiene el cambio, y ve el nombre antiguo. Parece que el cambio se ha perdido.
 
@@ -84,12 +84,12 @@ La pregunta es cómo decidir a qué partición va cada dato. Se elige un campo, 
 
 Cada partición guarda un intervalo de claves: de la A a la F en una, de la G a la M en otra.
 
-- **A favor:** las consultas por rango, como "todos los pedidos de marzo", tocan una sola partición.
+- **A favor:** una consulta por rango puede dirigirse a las particiones cuyos intervalos intersecta, sin visitar las demás.
 - **En contra:** el reparto puede ser desigual. Si la clave es la fecha, todas las escrituras de hoy van a la misma partición.
 
 ### Por hash
 
-Se calcula un [hash](/articulos/funciones-hash/) de la clave y ese número decide la partición. Las claves quedan repartidas de forma uniforme.
+Se calcula un [hash](/articulos/funciones-hash/) de la clave y ese número decide la partición. Un hash adecuado puede repartir bien muchas claves; no garantiza que todas reciban la misma actividad.
 
 ```js
 function particion(clave, total) {
@@ -110,7 +110,7 @@ console.log(claves.map((c) => particion(c, 4)).join(" ")); // "0 1 1 2"
 
 El hash del ejemplo es deliberadamente simple; los reales reparten mejor.
 
-- **A favor:** carga equilibrada.
+- **A favor:** puede repartir muchas claves de forma equilibrada.
 - **En contra:** las claves cercanas quedan dispersas, así que una consulta por rango tiene que preguntar a todas las particiones.
 
 ### Añadir una máquina
@@ -141,7 +141,7 @@ En una sola máquina, muchas cosas son fáciles. Repartidas, no.
 - **Los [JOIN](/articulos/tipos-de-join/) entre particiones** son lentos o no existen.
 - **Las [transacciones](/articulos/transacciones-y-acid/) que tocan varias particiones** necesitan protocolos de coordinación costosos.
 - **Las consultas que no usan la clave de partición** tienen que preguntar a todas.
-- **Los identificadores únicos** ya no se pueden generar con un simple contador.
+- **Los identificadores globales** necesitan coordinación, rangos reservados u otro diseño; un contador independiente por máquina puede repetir valores.
 
 Por eso muchas [bases de datos NoSQL](/articulos/bases-de-datos-nosql/), diseñadas para repartirse, renunciaron a los JOIN y limitaron las transacciones.
 
@@ -149,6 +149,12 @@ Por eso muchas [bases de datos NoSQL](/articulos/bases-de-datos-nosql/), diseña
 
 - **Replicación:** casi siempre. Una base de datos en producción sin ninguna copia depende de que una máquina no falle.
 - **Particionado:** cuanto más tarde, mejor. Añade mucha complejidad. Antes conviene agotar las alternativas: una máquina mayor, índices, réplicas de lectura, caché.
+
+## Errores comunes
+
+- **Promocionar cualquier réplica y prometer cero pérdidas.** Hay que conocer qué cambios confirmó y conservó esa copia.
+- **Confundir reparto uniforme de claves y de carga.** Una sola clave muy consultada puede concentrar gran parte del trabajo.
+- **Suponer que una consulta por rango toca una sola partición.** Puede cruzar varios intervalos; el enrutamiento depende de sus límites.
 
 ## Lo esencial
 

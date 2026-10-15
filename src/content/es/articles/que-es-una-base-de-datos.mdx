@@ -3,7 +3,7 @@ title: "¿Qué es una base de datos?"
 description: Una base de datos guarda información de forma organizada para poder consultarla y modificarla con seguridad.
 level: basico
 layer: datos
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "E. F. Codd: A Relational Model of Data for Large Shared Data Banks (1970, en inglés)"
     url: https://www.seas.upenn.edu/~zives/03f/cis550/codd.pdf
@@ -11,11 +11,13 @@ sources:
     url: https://www.postgresql.org/docs/current/tutorial-concepts.html
   - title: "SQLite: SQLite Foreign Key Support (en inglés)"
     url: https://www.sqlite.org/foreignkeys.html
+  - title: "SQLite: Quirks, Caveats, and Gotchas (en inglés)"
+    url: https://www.sqlite.org/quirks.html
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **base de datos** es un conjunto de información guardada de forma organizada, de manera que un programa pueda consultarla y modificarla con rapidez y sin estropearla.
+Una **base de datos** es un conjunto organizado de información que un programa puede consultar y modificar. El sistema que la gestiona ofrece mecanismos para buscar, conservar datos y controlar cambios; sus garantías dependen del diseño y de la configuración.
 
 ## Qué problema resuelve
 
@@ -28,7 +30,7 @@ Lo más simple sería usar un archivo de texto. Funciona con pocos datos, pero p
 - **Un corte a medias deja datos rotos.** Si el programa falla mientras escribe, el archivo puede quedar incompleto.
 - **Nada impide datos sin sentido.** Una edad con letras, un pedido de un cliente que no existe.
 
-Una base de datos resuelve estos cuatro problemas. El programa que la gestiona se llama **sistema gestor de bases de datos**. [PostgreSQL](/articulos/que-es-postgresql/), MySQL y SQLite son ejemplos.
+El programa que gestiona una base de datos se llama **sistema gestor de bases de datos**. Ofrece mecanismos para abordar esos problemas, como índices, restricciones y transacciones. [PostgreSQL](/articulos/que-es-postgresql/), MySQL y SQLite son ejemplos. Hay que elegir y configurar esos mecanismos: guardar algo en una base no garantiza por sí solo que sea correcto.
 
 ## El modelo relacional
 
@@ -43,9 +45,9 @@ Una tabla se parece a una hoja de cálculo:
 | 3 | Marta | Madrid |
 
 - Cada **fila** es un elemento: aquí, un cliente.
-- Cada **columna** es un dato de ese elemento y tiene un [tipo](/articulos/tipos-de-datos/) fijo: número, texto, fecha.
+- Cada **columna** representa un atributo, como nombre o ciudad, con reglas sobre los valores que admite.
 
-La diferencia con una hoja de cálculo es que la estructura se define de antemano y la base de datos la hace cumplir. No deja guardar texto en una columna numérica.
+El esquema declara columnas, [tipos](/articulos/tipos-de-datos/) y restricciones. Su cumplimiento depende del motor: PostgreSQL rechaza texto no convertible en una columna entera; SQLite admite tipado flexible por defecto y ofrece tablas `STRICT` para imponer tipos más rígidos. También hay que declarar las reglas de negocio que se quieran comprobar.
 
 ## Identificar cada fila
 
@@ -61,7 +63,7 @@ Los pedidos de esos clientes van en otra tabla. En lugar de repetir el nombre y 
 | 11 | 1 | 40 |
 | 12 | 3 | 15 |
 
-La columna `cliente_id` es una **clave foránea**: su valor apunta a la clave primaria de otra tabla. Los pedidos 10 y 11 son de Ana; el 12, de Marta.
+La columna `cliente_id` es una **[clave foránea](/articulos/que-es-una-clave-foranea/)**: aquí referencia la clave primaria de clientes. Los pedidos 10 y 11 son de Ana; el 12, de Marta. En general, una clave foránea puede comprender varias columnas y referenciar una clave única admitida por el motor, incluso dentro de su misma tabla.
 
 Guardar cada dato una sola vez, que es el objetivo de la [normalización](/articulos/normalizacion-de-bases-de-datos/), tiene una ventaja importante. Si Ana se muda, se cambia su ciudad en una única fila y todos sus pedidos quedan actualizados, porque nunca copiaron el dato.
 
@@ -78,19 +80,25 @@ La base de datos también vigila estas relaciones: se le puede indicar que recha
 
 Una transferencia bancaria tiene dos pasos: restar de una cuenta y sumar en otra. Si el sistema falla entre los dos, el dinero desaparecería.
 
-Una [**transacción**](/articulos/transacciones-y-acid/) agrupa varias operaciones para que se apliquen todas o ninguna. Si algo falla a mitad, la base de datos deshace lo que llevaba hecho y los datos quedan como antes de empezar.
+Una [**transacción**](/articulos/transacciones-y-acid/) agrupa cambios para confirmarlos juntos o descartarlos. La aplicación debe comprobar que ambas operaciones lograron lo esperado y confirmar solo entonces. Un error de una sentencia no provoca automáticamente la anulación de toda la transacción en todos los motores.
 
 ## Encontrar rápido
 
-Para no recorrer la tabla entera en cada búsqueda, se crean [**índices**](/articulos/indices-de-bases-de-datos/). Un índice funciona como el de un libro: una estructura ordenada que dice dónde está cada valor. Al estar ordenada, permite buscar descartando la mitad de los datos en cada paso, como en la [búsqueda binaria](/articulos/busqueda-binaria/). Acelera las búsquedas a cambio de ocupar espacio y de hacer algo más lentas las escrituras, porque hay que mantenerlo al día.
+Para evitar ciertos recorridos completos, se crean [**índices**](/articulos/indices-de-bases-de-datos/). Los basados en árboles mantienen claves ordenadas y permiten descartar regiones en cada paso, una idea relacionada con la [búsqueda binaria](/articulos/busqueda-binaria/). Hay otros tipos de índice. Pueden acelerar consultas compatibles, a cambio de ocupar espacio y añadir trabajo a las escrituras que los modifican.
 
 ## Otros tipos
 
 No todas las bases de datos son relacionales. Las llamadas [**NoSQL**](/articulos/bases-de-datos-nosql/) organizan los datos de otra forma: como documentos, como pares de clave y valor o como grafos. Se eligen cuando la forma de los datos o el volumen encajan mal en tablas. Las relacionales siguen siendo la opción habitual para la mayoría de aplicaciones.
 
+## Errores comunes
+
+- **Esperar que el gestor conozca las reglas del negocio.** Una cantidad negativa puede ser válida para el tipo numérico; hay que declarar la restricción que la prohíba cuando corresponda.
+- **Confiar en una relación solo porque la columna acaba en `_id`.** Hay que declarar la clave foránea y comprobar que se aplica. En SQLite se activa con `PRAGMA foreign_keys = ON` en cada conexión.
+- **Confundir transacción y copia de seguridad.** La transacción controla cambios; una [copia](/articulos/copias-de-seguridad/) permite recuperar un estado anterior ante otros fallos.
+
 ## Lo esencial
 
-- Una base de datos guarda información de forma duradera, organizada y segura frente a fallos y accesos simultáneos.
+- Una base de datos organiza información; el gestor ofrece mecanismos de persistencia, consulta y control de cambios.
 - En el modelo relacional los datos van en tablas de filas y columnas.
 - La clave primaria identifica cada fila; la clave foránea relaciona una tabla con otra. Cómo se diseñan esas relaciones lo explica el [modelo entidad-relación](/articulos/modelo-entidad-relacion/).
 - Las transacciones garantizan que un grupo de cambios se aplica entero o no se aplica.

@@ -5,8 +5,7 @@ level: avanzado
 layer: programacion
 prerequisites:
   - grafos
-  - arbol-de-expansion-minima
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Sedgewick y Wayne: Algorithms, 1.5 Case Study: Union-Find (en inglés)"
     url: https://algs4.cs.princeton.edu/15uf/
@@ -34,8 +33,10 @@ Cada conjunto se representa como un **árbol**, y su raíz es el **representante
 ```js
 function crearConjuntos(elementos) {
 	const padre = Object.fromEntries(elementos.map((e) => [e, e]));
+	const tamano = Object.fromEntries(elementos.map((e) => [e, 1]));
 
 	function encontrar(x) {
+		if (!Object.hasOwn(padre, x)) throw new Error("Elemento desconocido");
 		if (padre[x] !== x) {
 			padre[x] = encontrar(padre[x]);
 		}
@@ -43,7 +44,14 @@ function crearConjuntos(elementos) {
 	}
 
 	function unir(a, b) {
-		padre[encontrar(a)] = encontrar(b);
+		let raizA = encontrar(a);
+		let raizB = encontrar(b);
+		if (raizA === raizB) return;
+		if (tamano[raizA] < tamano[raizB]) {
+			[raizA, raizB] = [raizB, raizA];
+		}
+		padre[raizB] = raizA;
+		tamano[raizA] += tamano[raizB];
 	}
 
 	const conectados = (a, b) => encontrar(a) === encontrar(b);
@@ -63,7 +71,9 @@ console.log(red.conectados("A", "D")); // false
 console.log(red.cuantos()); // 3
 ```
 
-Tras tres conexiones quedan tres grupos: A, B y C; D y E; y F solo.
+Tras tres conexiones quedan tres grupos: A, B y C; D y E; y F solo. El ejemplo supone identificadores de texto distintos. `encontrar` rechaza los desconocidos; consultar dos nombres ausentes no significa que pertenezcan al mismo grupo.
+
+Al unir A y B se conserva A como raíz y su tamaño pasa a 2. Al unir B y C, primero se descubre que la raíz de B es A: C queda bajo A, cuyo tamaño pasa a 3. Unir A y C otra vez no cambia ni enlaces ni tamaño, porque ya comparten representante. Los tamaños solo se consultan en las raíces.
 
 ## Las dos mejoras
 
@@ -72,7 +82,7 @@ Sin cuidado, los árboles pueden crecer como una cadena, y encontrar la raíz se
 - **Compresión de caminos.** Al buscar la raíz de un elemento, se hace que todos los nodos recorridos apunten **directamente** a ella. Es la línea `padre[x] = encontrar(padre[x])` del ejemplo. La siguiente vez, el camino es de un solo paso.
 - **Unión por tamaño o rango.** Al unir, el árbol más pequeño se cuelga del más grande, nunca al revés, para que la altura crezca lo mínimo.
 
-Con las dos, cada operación cuesta en la práctica un tiempo **casi constante**. Técnicamente, crece con una función que aumenta tan despacio que, para cualquier cantidad de datos que quepa en el universo, no pasa de 5.
+Con ambas mejoras, el coste **amortizado** de encontrar o unir es O(α(n)), donde α es la inversa de la función de Ackermann, de crecimiento extremadamente lento. No significa que cada llamada individual tarde lo mismo. Además, `cuantos` en el ejemplo vuelve a consultar todos los elementos: no es una de esas operaciones casi constantes.
 
 <Quiz
 	client:visible

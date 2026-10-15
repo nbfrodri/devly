@@ -7,7 +7,7 @@ prerequisites:
   - arboles-equilibrados
   - indices-de-bases-de-datos
   - discos-duros-y-ssd
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: B-Tree Indexes (en inglés)"
     url: https://www.postgresql.org/docs/current/btree.html
@@ -25,7 +25,7 @@ Un **árbol B** es un árbol de búsqueda equilibrado en el que cada nodo guarda
 
 En memoria, un [árbol equilibrado](/articulos/arboles-equilibrados/) binario es excelente. Para mil millones de claves tiene unos 30 niveles: 30 comparaciones.
 
-Pero si el árbol está en disco, cada nivel es una **lectura**. Leer de un [disco o una SSD](/articulos/discos-duros-y-ssd/) es miles de veces más lento que comparar dos números en memoria. Treinta lecturas por búsqueda es demasiado.
+Si los nodos no están en caché y cada uno requiere acceder a una página distinta, cada nivel puede suponer una **lectura** de almacenamiento. Leer de un [disco o una SSD](/articulos/discos-duros-y-ssd/) es miles de veces más lento que comparar dos números en memoria. Treinta lecturas por búsqueda es demasiado.
 
 Además, el disco no lee bytes sueltos, sino **bloques** de varios kilobytes. Leer un nodo binario, que ocupa unos pocos bytes, desperdicia casi todo el bloque.
 
@@ -33,10 +33,12 @@ Además, el disco no lee bytes sueltos, sino **bloques** de varios kilobytes. Le
 
 Si de todos modos se lee un bloque entero, que el nodo **llene el bloque**. En lugar de una clave y dos hijos, cientos de claves y cientos de hijos.
 
-```
-              [ 20 | 40 | 60 ]
-            /     |     |     \
-   [5|12|17] [25|31|38] [44|52] [66|80|91]
+```mermaid
+flowchart TD
+  R["20 · 40 · 60"] -->|menor que 20| A["5 · 12 · 17"]
+  R -->|entre 20 y 40| B["25 · 31 · 38"]
+  R -->|entre 40 y 60| C["44 · 52"]
+  R -->|mayor que 60| D["66 · 80 · 91"]
 ```
 
 Dentro de un nodo, las claves están ordenadas. Para buscar el 31, se mira el nodo raíz: está entre 20 y 40, así que se baja por el segundo hijo, y ahí se encuentra.
@@ -51,7 +53,7 @@ console.log(niveles(1e9, 2)); // 30
 console.log(niveles(1e9, 500)); // 4
 ```
 
-Mil millones de claves caben en un árbol de 4 niveles, con 500 hijos por nodo. Y la raíz y el primer nivel suelen estar siempre en memoria, así que encontrar cualquier clave cuesta una o dos lecturas de disco.
+El cálculo ilustra el orden de magnitud, suponiendo una ramificación efectiva cercana a 500; no calcula la altura exacta de cualquier árbol B. La ocupación, el tamaño de las claves y las divisiones modifican esa cifra. Mantener los niveles superiores en caché reduce las lecturas de almacenamiento, pero no garantiza una o dos en todos los casos.
 
 ## Cómo se mantiene equilibrado
 
@@ -92,12 +94,12 @@ Explica por qué un índice permite **buscar por igualdad, por rangos y ordenar*
 
 ## Con qué no confundirlo
 
-La B no significa "binario". Un árbol binario tiene dos hijos por nodo; un árbol B, muchos. Sus creadores, Rudolf Bayer y Edward McCreight, nunca explicaron del todo qué significa la B.
+La B no significa "binario". Un árbol binario tiene dos hijos por nodo; un árbol B, muchos. El nombre no determina su capacidad: cada implementación fija cuántas claves caben por nodo y cómo mantiene la ocupación.
 
 ## Lo esencial
 
 - Un árbol B guarda muchas claves y muchos hijos en cada nodo.
-- Está pensado para el disco: cada nodo llena un bloque, y cada nivel cuesta una lectura.
+- Agrupar claves en páginas reduce la altura y las lecturas necesarias; la caché puede resolver parte de ellas.
 - Con cientos de hijos por nodo, mil millones de claves caben en unos pocos niveles.
 - Se mantiene equilibrado dividiendo y fusionando nodos.
 - Es la estructura de los índices de casi todas las bases de datos.

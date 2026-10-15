@@ -6,7 +6,8 @@ layer: programacion
 prerequisites:
   - funciones
   - condicionales
-updated: 2026-10-13
+  - arrays
+updated: 2026-10-15
 sources:
   - title: "MDN: Recursión (glosario)"
     url: https://developer.mozilla.org/es/docs/Glossary/Recursion
@@ -51,7 +52,7 @@ function factorial(n) {
 console.log(factorial(5)); // 120
 ```
 
-El `if` es el caso base. La última línea es el caso recursivo.
+El `if` es el caso base. La última línea es el caso recursivo. El ejemplo supone enteros no negativos pequeños: también devuelve correctamente `factorial(0) = 1`, pero no valida entradas. Un negativo devolvería 1 sin significado matemático y un valor grande puede perder precisión numérica o agotar la pila.
 
 ## Qué ocurre por dentro
 
@@ -144,7 +145,7 @@ function fibonacci(n) {
 console.log(fibonacci(50)); // 12586269025
 ```
 
-Ahora cada valor se calcula una sola vez y el resultado es inmediato.
+Ahora cada valor se calcula una sola vez: para `n = 50`, el resultado llega con muy pocas operaciones. `Map` guarda pares de clave y valor; `has` comprueba si existe una clave, `set` guarda su resultado y `get` lo recupera. Los ejemplos de Fibonacci también suponen enteros no negativos y no garantizan exactitud para valores grandes representados como `number`.
 
 ## Recursión o bucle
 
@@ -153,7 +154,7 @@ Todo lo que se resuelve con recursión puede resolverse con bucles, y al revés.
 | | Recursión | Bucle |
 | --- | --- | --- |
 | Encaja con | Estructuras anidadas, problemas que se dividen | Repeticiones simples |
-| Memoria | Una entrada en la pila por llamada | Constante |
+| Memoria | Una entrada por llamada pendiente, salvo optimizaciones | Puede ser constante; recorrer un árbol puede exigir una pila explícita |
 | Riesgo | Desbordar la pila | Bucle infinito |
 
 Para contar del 1 al 100, un bucle es más directo. Para recorrer un árbol, la versión recursiva suele ser mucho más corta y fácil de leer.

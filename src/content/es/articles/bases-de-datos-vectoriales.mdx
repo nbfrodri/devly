@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - embeddings
   - indices-de-bases-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Malkov y Yashunin: Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs (2016, en inglés)"
     url: https://arxiv.org/abs/1603.09320
@@ -26,15 +26,15 @@ Esos vectores son [embeddings](/articulos/embeddings/). Las bases vectoriales so
 
 ## Qué problema resuelve
 
-Una base de datos tradicional busca coincidencias exactas o por rangos: el usuario con este identificador, los pedidos de marzo. Sus [índices](/articulos/indices-de-bases-de-datos/) se apoyan en que los datos se pueden ordenar.
+Muchas consultas tradicionales buscan coincidencias exactas o por rangos: el usuario con este identificador, los pedidos de marzo. Un [índice](/articulos/indices-de-bases-de-datos/) de árbol B aprovecha un orden por claves; hay otros tipos de índices y consultas.
 
 La búsqueda por significado es otra cosa. Para "cómo devuelvo un pedido" hay que encontrar un texto que diga "política de reembolsos", sin ninguna palabra en común. Se convierten ambos en vectores y se busca el más cercano.
 
-Los vectores no se pueden ordenar de forma útil: tienen cientos o miles de dimensiones, y "cerca" depende de todas a la vez. Un índice corriente no sirve.
+Ordenar por una coordenada no basta para localizar los vecinos en muchas dimensiones. Se pueden ordenar los vectores de varias maneras, pero eso no convierte un árbol B corriente en una solución eficaz para cualquier búsqueda de proximidad.
 
 ## La forma directa
 
-Comparar la consulta con todos los vectores y quedarse con los mejores.
+Comparamos la consulta con todos los vectores y conservamos los mejores. El ejemplo utiliza vectores no nulos de dos coordenadas finitas y un número positivo de resultados; son valores inventados para mostrar la geometría, no embeddings obtenidos de un modelo.
 
 ```js
 function coseno(a, b) {
@@ -59,15 +59,15 @@ function masCercanos(consulta, cuantos) {
 console.log(masCercanos([1, 0.2], 2).join(" ")); // "gato perro"
 ```
 
-Es la búsqueda **exacta** de los vecinos más cercanos. Da siempre el resultado correcto.
+Es una búsqueda **exacta** respecto a la similitud calculada: examina todos los vectores. Eso no demuestra que los resultados sean relevantes para una persona; la aritmética también tiene precisión finita. Aquí gato obtiene una similitud aproximada de 0,996 y perro de 0,987, por eso quedan en ese orden.
 
-Su coste crece con el número de vectores: con cien millones, cada consulta hace cien millones de comparaciones, cada una sobre cientos de números. Demasiado lento.
+Con N vectores de d dimensiones, calcular las similitudes cuesta O(N·d). Este ejemplo además ordena N resultados, con un coste habitual O(N log N); existen formas de seleccionar solo los mejores sin ordenarlos todos. A gran escala ese trabajo puede superar el presupuesto de tiempo.
 
 ## La idea: aproximar
 
-Las bases vectoriales renuncian a la exactitud. Usan búsqueda **aproximada** de vecinos más cercanos: encuentran casi siempre los mejores resultados, mirando solo una pequeña parte de los datos.
+Muchos sistemas ofrecen tanto búsqueda exacta como **aproximada** de vecinos más cercanos. La aproximada utiliza índices para explorar menos candidatos, con el riesgo de omitir alguno de los vecinos reales.
 
-Se acepta porque la búsqueda por significado ya es imprecisa por naturaleza. Que se escape el séptimo resultado más parecido rara vez importa.
+Aceptar esa omisión depende del uso. Para algunos sistemas de recomendación puede compensar; para otros requisitos hay que aumentar la exhaustividad o utilizar búsqueda exacta. Se mide sobre consultas representativas.
 
 La calidad se mide con la **exhaustividad**: qué proporción de los verdaderos vecinos más cercanos se ha encontrado. Un 95 % significa que, de los 10 mejores reales, la búsqueda devuelve de media 9,5.
 
@@ -77,7 +77,7 @@ La calidad se mide con la **exhaustividad**: qué proporción de los verdaderos 
 
 El método más extendido, llamado HNSW, organiza los vectores en un [grafo](/articulos/grafos/): cada vector se conecta con algunos de sus vecinos cercanos.
 
-Para buscar, se entra por un punto y se salta, una y otra vez, al vecino que esté más cerca de la consulta, hasta que ninguno mejora.
+La búsqueda empieza en las capas superiores con saltos hacia puntos más cercanos. En la capa inferior explora un conjunto de candidatos y mantiene vecinos prometedores; no es simplemente una única cadena de saltos que termina en el primer mínimo local.
 
 Para no dar miles de pasos pequeños, hay varias capas. Las superiores tienen pocos vectores y conexiones largas, que cruzan el espacio de un salto. Las inferiores, todos los vectores y conexiones cortas. Se empieza arriba, se llega deprisa a la zona adecuada y se baja para afinar.
 
@@ -95,7 +95,7 @@ Otro método divide los vectores en grupos de vectores parecidos. Al buscar, se 
 
 ### Comprimir
 
-Un vector de 1536 números ocupa unos 6 kilobytes. Cien millones, 600 gigabytes. La **cuantización** los guarda con menos precisión, o resumidos. Se pierde algo de exactitud y se gana mucho espacio.
+Con 1536 componentes de 32 bits, un vector ocupa 6144 bytes (6 KiB). Cien millones ocupan 614,4 GB decimales solo en componentes, antes de sumar índices, identificadores y metadatos. La **cuantización** los guarda con menos precisión, o resumidos. Se pierde algo de exactitud y se gana mucho espacio.
 
 ## El compromiso
 
@@ -130,7 +130,7 @@ No hay un ajuste universal. Se prueba con datos y consultas reales.
 
 Hay que usar la medida con la que se entrenó el modelo de embeddings. Su documentación lo indica.
 
-Otra regla, fácil de incumplir: **todos los vectores deben venir del mismo modelo**. Los de modelos distintos no son comparables. Cambiar de modelo obliga a recalcularlo todo.
+Los vectores de consulta y documentos deben pertenecer a un **espacio compatible**. Tener la misma dimensión no basta. Lo habitual es usar la misma versión y configuración de embeddings, o codificadores distintos entrenados para compartir espacio. Una migración a un espacio incompatible exige recalcular los vectores que se quieran comparar.
 
 ## Filtros
 
@@ -141,7 +141,7 @@ Hacerlo bien es difícil:
 - Filtrar **después** de buscar puede dejar sin resultados: los diez más parecidos eran todos de otro cliente.
 - Filtrar **antes** puede inutilizar el índice.
 
-Cómo resuelve esto cada sistema es una de las diferencias reales entre ellos. Y el filtro por usuario no es opcional: es lo que impide que alguien recupere documentos ajenos.
+Cómo resuelve esto cada sistema es una de las diferencias reales entre ellos. Si hay documentos con permisos distintos, la autorización debe aplicarse en el servidor y cubrir los candidatos devueltos. Un filtro enviado libremente por el cliente no constituye por sí solo una barrera de acceso.
 
 ## Opciones
 
@@ -154,8 +154,8 @@ Cómo resuelve esto cada sistema es una de las diferencias reales entre ellos. Y
 
 A menudo, no.
 
-- **Con unos pocos miles de vectores**, la búsqueda exacta tarda milisegundos. No hace falta índice ni sistema nuevo.
-- **Si ya se usa PostgreSQL**, su extensión cubre hasta varios millones de vectores sin añadir otra pieza que mantener y sincronizar.
+- **Con un conjunto pequeño**, mide primero una búsqueda exacta: puede satisfacer el requisito sin mantener otro índice.
+- **Si ya se usa PostgreSQL**, evalúa `pgvector` con tus dimensiones, filtros, carga y objetivos de latencia. No hay un umbral universal por número de vectores.
 - **Una base dedicada** compensa con volúmenes muy grandes o exigencias de rendimiento altas.
 
 Añadir un sistema significa mantener dos copias de los datos al día. Es un coste real.
@@ -167,10 +167,16 @@ Añadir un sistema significa mantener dos copias de los datos al día. Es un cos
 - **Las actualizaciones cuestan.** Insertar y borrar en algunos índices es lento o los degrada.
 - **Resultados que varían** un poco, al ser aproximados.
 
+## Errores comunes
+
+- **Confundir vecino geométrico y respuesta pertinente.** Una buena exhaustividad del índice no corrige embeddings inadecuados.
+- **Mezclar espacios porque tienen igual dimensión.** Las coordenadas pueden representar cosas diferentes y producir distancias sin utilidad.
+- **Medir solo consultas sin filtros.** Los permisos y metadatos pueden cambiar tanto el coste como los resultados disponibles.
+
 ## Lo esencial
 
 - Una base de datos vectorial guarda embeddings y busca los más parecidos a uno dado.
-- La búsqueda exacta compara con todos y no escala; se usa búsqueda aproximada.
+- La búsqueda exacta y la aproximada tienen costes y garantías diferentes; se eligen según la carga y la calidad requerida.
 - Los índices, como los grafos navegables, miran solo una pequeña parte de los datos.
 - Hay un equilibrio entre exhaustividad, velocidad y memoria.
 - Con pocos vectores, o con PostgreSQL ya en uso, puede no hacer falta un sistema aparte.

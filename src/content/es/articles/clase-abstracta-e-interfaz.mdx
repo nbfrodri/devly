@@ -8,7 +8,7 @@ prerequisites:
   - que-es-una-interfaz
   - que-es-una-clase
   - herencia-y-composicion
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "TypeScript: Classes (en inglés)"
     url: https://www.typescriptlang.org/docs/handbook/2/classes.html
@@ -22,18 +22,21 @@ Una **[interfaz](/articulos/que-es-una-interfaz/)** describe solo **qué** debe 
 
 ## Interfaz
 
+Los bloques TypeScript son variantes independientes del mismo cuadrado de lado 3. Aquí una interfaz describe su operación:
+
 ```ts
 interface Figura {
 	area(): number;
 }
 
-class Circulo implements Figura {
-	constructor(private radio: number) {}
-	area() { return Math.PI * this.radio ** 2; }
+class Cuadrado implements Figura {
+	constructor(private lado: number) {}
+	area() { return this.lado ** 2; }
 }
+console.log(new Cuadrado(3).area()); // 9
 ```
 
-La interfaz no aporta nada de código. Cualquier clase que tenga un método `area` la cumple. Una clase puede cumplir **varias** interfaces a la vez.
+En TypeScript, la interfaz no aporta código ejecutable. La cumple cualquier objeto con un método `area` de firma compatible, aunque no sea una instancia de clase. Esa compatibilidad de tipos no demuestra que el cálculo sea correcto. Una clase puede cumplir **varias** interfaces a la vez.
 
 ## Clase abstracta
 
@@ -45,9 +48,15 @@ abstract class Figura {
 		return `Área: ${this.area()}`;
 	}
 }
+
+class Cuadrado extends Figura {
+	constructor(private lado: number) { super(); }
+	area() { return this.lado ** 2; }
+}
+console.log(new Cuadrado(3).describir()); // "Área: 9"
 ```
 
-`area` queda pendiente; `describir` ya está hecho, y lo heredan todas las figuras.
+`area` queda pendiente en la base; `describir` ya está hecho y lo hereda el cuadrado. Para calcular el área bastaba la interfaz; para compartir esta implementación de descripción, la clase abstracta ofrece una opción.
 
 JavaScript no tiene clases abstractas, pero se puede imitar:
 
@@ -84,6 +93,8 @@ try {
 
 ## Comparación
 
+Esta tabla se refiere a TypeScript. Otros lenguajes permiten, por ejemplo, implementaciones predeterminadas en interfaces.
+
 | | Interfaz | Clase abstracta |
 | --- | --- | --- |
 | Contiene código | No | Sí, en parte |
@@ -98,7 +109,13 @@ try {
 - **Interfaz** cuando se quiere definir un contrato que cosas muy distintas pueden cumplir. Es la opción más flexible, y la que encaja con la idea de [preferir la composición a la herencia](/articulos/herencia-y-composicion/).
 - **Clase abstracta** cuando varias clases comparten de verdad una parte del código y una relación "es un" clara.
 
-En la práctica, las interfaces se usan mucho más. Algunos lenguajes, como Go, ni siquiera tienen herencia de clases.
+También puedes compartir código con una función que reciba la interfaz, sin heredar. La elección depende de qué comportamiento y estado necesitas compartir, no de que una opción sea siempre superior.
+
+## Confusiones frecuentes
+
+- **Esperar validación al ejecutar una interfaz.** TypeScript la borra al generar JavaScript. Para datos externos hacen falta comprobaciones reales.
+- **Confundir `abstract` con una barrera de ejecución.** La prohibición de instanciar la clase abstracta pertenece al verificador de TypeScript; el ejemplo JavaScript implementa una comprobación distinta en su constructor.
+- **Exigir herencia para cualquier contrato.** Un objeto literal con `area(): number` también puede cumplir `Figura` en TypeScript.
 
 ## Lo esencial
 

@@ -7,8 +7,10 @@ layer: datos
 prerequisites:
   - que-es-una-base-de-datos
   - bases-de-datos-nosql
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
+  - title: "MongoDB: Schema Validation (en inglés)"
+    url: https://www.mongodb.com/docs/manual/core/schema-validation/
   - title: "E. F. Codd: A Relational Model of Data for Large Shared Data Banks (1970, en inglés)"
     url: https://www.seas.upenn.edu/~zives/03f/cis550/codd.pdf
   - title: "PostgreSQL: Conceptos (documentación oficial, en inglés)"
@@ -21,17 +23,17 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Una base de datos **SQL**, o relacional, guarda la información en tablas con una estructura fija y relaciones entre ellas. Una base de datos **NoSQL** la guarda con otras formas, más flexibles, pensadas para casos en los que las tablas encajan mal.
+En esta comparación, **SQL** se usa como abreviatura habitual de base **relacional**: organiza datos en tablas y relaciones. **NoSQL** agrupa modelos diferentes, como documentos, clave-valor y grafos. SQL es un lenguaje, no una garantía de arquitectura: la distinción no clasifica por sí sola todas las capacidades de un producto.
 
-A las primeras también se las llama **estructuradas** y a las segundas **no estructuradas**, aunque los datos de una base NoSQL sí tienen estructura: lo que cambia es que no está fijada de antemano.
+NoSQL no significa datos sin estructura. Un documento tiene campos y tipos; lo que cambia es cómo se modelan, consultan y hacen cumplir sus reglas.
 
 Este artículo las compara. Cada una tiene su explicación completa en [qué es una base de datos](/articulos/que-es-una-base-de-datos/) y [qué es una base de datos NoSQL](/articulos/bases-de-datos-nosql/).
 
 ## La diferencia de fondo
 
-En una base relacional **defines la estructura antes de guardar nada**: qué tablas hay, qué columnas tiene cada una y de qué tipo. La base de datos rechaza lo que no encaje.
+En una base relacional **defines la estructura antes de guardar nada**: qué tablas hay, qué columnas tiene cada una y de qué tipo. El motor aplica las restricciones declaradas según sus reglas de tipos y configuración.
 
-En una base NoSQL **guardas los datos con la forma que tengan**. Cada elemento puede ser distinto del anterior, y de que tengan sentido se ocupa tu programa.
+En una base de documentos se pueden admitir formas distintas dentro de una colección. Eso no impide declarar validación: MongoDB, por ejemplo, puede rechazar documentos que incumplan el esquema configurado. Otras familias NoSQL tienen reglas diferentes.
 
 ## El mismo dato en los dos modelos
 
@@ -46,7 +48,7 @@ Un cliente con dos pedidos, en una base relacional, se reparte en dos tablas uni
 | 10 | 1 | 25 |
 | 11 | 1 | 40 |
 
-En una base de documentos, el cliente y sus pedidos van juntos:
+Una opción en una base de documentos es guardar juntos el cliente y un conjunto acotado de pedidos:
 
 ```js
 const cliente = {
@@ -60,19 +62,19 @@ const cliente = {
 console.log(cliente.pedidos.length); // 2
 ```
 
-En el primer caso, para ver a Ana con sus pedidos hay que combinar las dos tablas. En el segundo se lee un solo documento. A cambio, en el primero cada dato está escrito una única vez, y en el segundo, si los pedidos se consultan también por otros caminos, es fácil acabar con copias que hay que mantener iguales.
+En el primer caso, para ver a Ana con sus pedidos hay que combinar las dos tablas. En el segundo se lee un solo documento. En este ejemplo ninguno duplica los pedidos. Si en el modelo documental se decide copiarlos en otra colección para otras consultas, habrá que mantener ambas versiones; también se pueden referenciar. Si la lista crece sin límite, incrustarla deja de ser adecuada.
 
 ## Comparación
 
 | | SQL (relacional) | NoSQL |
 | --- | --- | --- |
 | Forma de los datos | Tablas de filas y columnas | Documentos, clave-valor, columnas anchas o grafos |
-| Estructura | Fija, definida antes | Flexible, puede variar por elemento |
-| Relaciones | Claves foráneas y combinación de tablas | Limitadas; se guarda junto lo que se lee junto |
+| Estructura | Esquema declarado; también puede almacenar JSON | Depende del modelo; documentos pueden variar y tener validación |
+| Relaciones | Claves y uniones de tablas | Dependen de la familia; en grafos son centrales |
 | Lenguaje de consulta | [SQL](/articulos/que-es-sql/), común a todas | Propio de cada sistema |
-| Transacciones | Garantías fuertes | Depende del sistema; a menudo más limitadas |
-| Crecimiento | Sobre todo con una máquina más potente | Pensadas para repartirse entre muchas máquinas |
-| Quién valida los datos | La base de datos | El programa |
+| Transacciones | Habituales; alcance y aislamiento dependen del motor | Disponibilidad, alcance y aislamiento dependen del motor |
+| Distribución | Hay motores locales y distribuidos | Hay motores locales y distribuidos |
+| Quién valida | Motor y aplicación, según las reglas | Motor y aplicación, según sus capacidades y configuración |
 
 Son tendencias generales. Hay bases relacionales que se reparten entre máquinas y bases NoSQL con transacciones completas.
 
@@ -80,21 +82,21 @@ Son tendencias generales. Hay bases relacionales que se reparten entre máquinas
 
 ### Con una base relacional
 
-- **Los datos son coherentes.** La base de datos impide un pedido sin cliente o una fecha con letras.
-- **Cualquier pregunta es posible.** Como los datos están separados y relacionados, puedes combinarlos de formas que no habías previsto al diseñar.
+- **Restricciones explícitas.** Una clave foránea activa puede impedir un pedido huérfano; no demuestra que todos sus datos reflejen la realidad.
+- **Consultas combinables.** Como los datos están separados y relacionados, puedes combinarlos de formas que no habías previsto al diseñar.
 - **Cambiar la estructura cuesta.** Añadir una columna a una tabla con millones de filas hay que planificarlo.
 
 ### Con una base NoSQL
 
-- **Empezar y cambiar es rápido.** No hay que definir ni migrar una estructura.
+- **Flexibilidad de escritura.** Se pueden admitir documentos con campos nuevos sin alterar una tabla, pero el código, la validación y los datos antiguos pueden necesitar migración.
 - **Las lecturas previstas son muy eficientes**, porque los datos se guardan con la forma en que se van a pedir.
 - **Las preguntas imprevistas son difíciles.** Si necesitas los datos de una forma que no anticipaste, puede hacer falta reorganizarlos.
-- **La coherencia depende de ti.** Nada impide guardar dos documentos del mismo tipo con campos distintos.
+- **Reglas según el motor.** Hay que comprobar validación, unicidad, relaciones y transacciones; no se deducen de la palabra NoSQL.
 
 <Quiz
 	client:visible
-	question="Una aplicación bancaria debe garantizar que una transferencia resta de una cuenta y suma en otra, sin posibilidad de quedarse a medias. ¿Qué encaja mejor?"
-	options={["Una base relacional", "Una base clave-valor", "Da igual"]}
+	question="Para aplicar juntos el débito y el abono de una transferencia, ¿qué hay que comprobar en el motor elegido?"
+	options={["Que ofrezca una transacción adecuada al alcance y se use correctamente", "Solo que se anuncie como SQL", "Solo que guarde documentos"]}
 	answer={0}
 />
 
@@ -113,7 +115,7 @@ Elige **NoSQL** cuando:
 - el volumen exige repartir los datos entre muchas máquinas;
 - lo importante son las conexiones entre elementos, caso en el que encaja una base de grafos.
 
-Si dudas, una base relacional es el punto de partida más seguro: cubre bien la mayoría de las aplicaciones y es más fácil pasar de un modelo estricto a uno flexible que al revés.
+Si predominan relaciones, restricciones y consultas cambiantes, una base relacional suele ser un buen punto de partida. Compara productos concretos con tus consultas, volumen y requisitos de recuperación; migrar entre modelos también tiene coste.
 
 ## No hay que elegir solo una
 
@@ -122,12 +124,12 @@ Muchas aplicaciones combinan las dos: una base relacional para los datos princip
 ## Confusiones frecuentes
 
 - **"NoSQL es más moderno, luego es mejor."** Resuelve problemas distintos. Las bases relacionales siguen siendo las más usadas.
-- **"NoSQL no tiene estructura."** La tiene, pero no la impone la base de datos.
+- **"NoSQL no tiene estructura."** La tiene y, según el motor, puede imponer reglas de validación.
 - **"SQL no escala."** Escala hasta volúmenes muy grandes; lo que resulta más difícil es repartirla entre muchas máquinas, como explica [replicación y particionado](/articulos/replicacion-y-particionado/).
 
 ## Lo esencial
 
-- Una base relacional fija la estructura y garantiza la coherencia; una NoSQL da flexibilidad y la coherencia queda en manos del programa.
+- Relacional y NoSQL describen familias de modelos; las garantías dependen del motor, de la configuración y del uso.
 - La relacional responde bien a preguntas imprevistas; la NoSQL, a las lecturas para las que se diseñó.
 - La elección depende de la forma de los datos y de cómo se van a consultar.
 - Es habitual usar las dos en la misma aplicación.

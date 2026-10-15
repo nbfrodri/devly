@@ -1,28 +1,32 @@
 title: Bases de datos
-description: Del modelo relacional y SQL a las alternativas NoSQL.
+description: "Del modelo relacional a los motores y la recuperación. Parte de Fundamentos de programación y Estructuras de datos; el tramo vectorial requiere Embeddings y el distribuido, Escalado vertical y horizontal."
 layer: datos
 steps:
   - que-es-una-base-de-datos
+  - que-es-sql
+  - que-es-una-clave-primaria
+  - que-es-una-clave-candidata
   - modelo-entidad-relacion
   - que-es-una-clave-foranea
-  - que-es-sql
-  - delete-truncate-y-drop
   - tipos-de-join
   - funciones-de-ventana-en-sql
   - normalizacion-de-bases-de-datos
   - indices-de-bases-de-datos
   - que-es-un-indice-compuesto
-  - vistas-y-procedimientos-almacenados
   - transacciones-y-acid
+  - delete-truncate-y-drop
+  - vistas-y-procedimientos-almacenados
   - que-es-postgresql
+  - una-base-de-datos-por-dentro
   - bases-de-datos-nosql
+  - sql-frente-a-nosql
+  - formatos-de-datos-json-csv-xml
   - que-es-mongodb
+  - que-es-una-cache
   - que-es-redis
   - bases-de-datos-de-grafos
   - bases-de-datos-vectoriales
-  - sql-frente-a-nosql
   - teorema-cap
   - replicacion-y-particionado
   - copias-de-seguridad
   - calidad-de-datos
-  - una-base-de-datos-por-dentro

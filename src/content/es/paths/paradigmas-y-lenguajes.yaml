@@ -1,5 +1,5 @@
 title: Paradigmas y lenguajes
-description: Las formas de organizar un programa y cómo trata un lenguaje los tipos y la ejecución.
+description: "Después de Fundamentos de programación e Introducción a los algoritmos: paradigmas, tipos, traducción y ejecución. Para el último paso, repasa grafos y pila y montículo de memoria."
 layer: programacion
 steps:
   - programacion-orientada-a-objetos

@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - algoritmo-de-dijkstra
   - grafos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Red Blob Games: Introduction to the A* Algorithm (en inglés)"
     url: https://www.redblobgames.com/pathfinding/a-star/introduction.html
@@ -38,7 +38,7 @@ Dijkstra elige en cada paso el nodo con menor coste desde el origen. A\* elige e
 
 | Término | Significado |
 | --- | --- |
-| g | El coste real desde el origen hasta este nodo |
+| g | El mejor coste encontrado hasta ahora desde el origen hasta este nodo |
 | h | La estimación del coste desde este nodo hasta el destino |
 | f | La estimación del coste total de un camino que pase por aquí |
 
@@ -115,16 +115,22 @@ Para que A\* dé siempre el camino más corto, la heurística debe ser **admisib
 
 Si exagera, puede descartar el camino bueno creyéndolo peor de lo que es. Si se queda corta, lo peor que pasa es que explora de más.
 
-La distancia en línea recta es admisible: ningún camino real es más corto que la recta.
+La distancia en línea recta es admisible si los pesos miden longitud y los movimientos no permiten atajos más baratos que esa distancia. Si los pesos miden segundos, sumar metros sería incorrecto: hay que convertir la estimación a una cota de tiempo.
+
+### Reabrir nodos y detenerse en el momento correcto
+
+Aquí el grafo es finito, cada movimiento cuesta 1 y la heurística vale 0 en la meta. El código vuelve a introducir un nodo si encuentra un coste menor, aunque ya lo hubiera examinado. Con una heurística admisible, esa reapertura permite corregir caminos anteriores; se termina al extraer la meta como mejor candidata, no al descubrirla como vecina.
+
+Si una implementación cierra nodos definitivamente, necesita una condición más fuerte para conservar esta garantía: **consistencia**, `h(u) ≤ coste(u, v) + h(v)` en cada arista. Significa que la estimación no cae más que lo que cuesta avanzar. Manhattan cumple esa regla en la cuadrícula de cuatro direcciones y coste unitario. No basta copiar una fórmula de otro mapa sin revisar movimientos, unidades y costes.
 
 ### El equilibrio
 
 | Heurística | Efecto |
 | --- | --- |
-| Siempre 0 | Es Dijkstra: correcto y lento |
-| Menor que el coste real | Correcto; cuanto más se acerca, más rápido |
-| Igual al coste real | Va directo al destino, sin desviarse |
-| Mayor que el coste real | Más rápido, pero el camino puede no ser el mejor |
+| Siempre 0 | Se comporta como Dijkstra |
+| Cota admisible informativa | Puede evitar explorar candidatos que no mejoran la solución |
+| Igual al coste restante | Aún puede haber empates entre caminos óptimos |
+| Puede superar el coste restante | Se pierde la garantía de optimalidad; tampoco se garantiza mayor velocidad |
 
 A veces se sobrestima a propósito. En un videojuego, un camino casi óptimo calculado al instante vale más que el óptimo calculado tarde.
 
@@ -143,7 +149,7 @@ La distancia Manhattan toma su nombre del trazado en cuadrícula de las calles d
 
 <Quiz
 	client:visible
-	question="¿Qué debe cumplir una heurística para que A* encuentre siempre el camino más corto?"
+	question="¿Qué significa que una heurística sea admisible?"
 	options={[
 		"No sobrestimar nunca el coste real que falta",
 		"Devolver siempre cero",
@@ -156,7 +162,7 @@ La distancia Manhattan toma su nombre del trazado en cuadrícula de las calles d
 
 En una cuadrícula vacía, A\* parece magia. Con muros, tiene que rodearlos, y explora más: la estimación en línea recta apunta a un sitio por el que no se puede pasar.
 
-Aun así, sigue examinando menos que Dijkstra en casi todos los casos. En el peor, un laberinto donde la estimación no ayuda en nada, hace el mismo trabajo.
+Una estimación útil puede ahorrar exploraciones, pero el resultado depende de los empates y la implementación. Calcular la heurística también cuesta; una heurística inconsistente puede obligar a reabrir nodos. Se deben medir expansiones, memoria y tiempo por separado.
 
 ## Lo que cuesta
 
@@ -178,14 +184,14 @@ Son el mismo esquema, con distinta forma de decidir qué nodo va a continuación
 | Algoritmo | Elige el nodo con menor | Camino óptimo |
 | --- | --- | --- |
 | Búsqueda en anchura | Número de pasos | Solo sin pesos |
-| Dijkstra | Coste desde el origen | Sí |
+| Dijkstra | Coste desde el origen | Con pesos no negativos |
 | Voraz, solo con heurística | Estimación hasta el destino | No |
-| A\* | Coste desde el origen más estimación | Sí, con heurística admisible |
+| A\* | Coste desde el origen más estimación | Con las condiciones de coste, heurística y reapertura descritas |
 
 ## Lo esencial
 
 - A\* busca el camino más corto guiándose por una estimación de lo que falta.
 - Ordena los nodos por el coste recorrido más el coste estimado restante.
-- Con una heurística que no sobrestima, el camino que encuentra es óptimo.
-- Cuanto mejor es la estimación, menos nodos examina.
+- La garantía requiere una heurística admisible y gestionar correctamente reaperturas y terminación.
+- Una estimación útil puede reducir exploraciones; los empates y su coste también importan.
 - Con una heurística nula, se comporta como Dijkstra.

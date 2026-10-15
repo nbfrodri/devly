@@ -5,7 +5,7 @@ level: avanzado
 layer: datos
 prerequisites:
   - bases-de-datos-nosql
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "Eric Brewer: Towards Robust Distributed Systems, conferencia PODC (2000, en inglés)"
     url: https://people.eecs.berkeley.edu/~brewer/cs262b-2004/PODC-keynote.pdf
@@ -17,7 +17,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-El **teorema CAP** establece un límite para los sistemas que guardan datos repartidos entre varias máquinas: cuando la comunicación entre ellas falla, hay que elegir entre responder siempre o responder siempre con el dato correcto. No se pueden garantizar las dos cosas.
+El **teorema CAP** establece un límite para un sistema distribuido que admite particiones de red: no puede garantizar simultáneamente **linealizabilidad**, una visión de las operaciones compatible con una copia única y su orden temporal, y **disponibilidad** para todas las peticiones a nodos que no han fallado.
 
 Lo planteó Eric Brewer en el año 2000 y lo demostraron formalmente Seth Gilbert y Nancy Lynch en 2002.
 
@@ -25,13 +25,13 @@ Lo planteó Eric Brewer en el año 2000 y lo demostraron formalmente Seth Gilber
 
 Un **sistema distribuido** es un conjunto de máquinas que trabajan juntas y se muestran al exterior como un solo sistema. Las bases de datos se reparten así por dos motivos: para atender más carga de la que soporta una máquina y para seguir funcionando si una se estropea.
 
-Repartir implica tener **copias** del mismo dato en varias máquinas, y mantenerlas iguales exige que se comuniquen. Ahí nace el problema.
+Un sistema distribuido puede repartir datos distintos y también mantener **copias** del mismo dato. En el caso replicado que veremos, coordinar lo que observan los clientes exige comunicación.
 
 ## Las tres propiedades
 
-- **Consistencia (C).** Todas las máquinas ven el mismo dato en el mismo momento. Tras una escritura, cualquier lectura devuelve el valor nuevo, se pregunte a quien se pregunte.
-- **Disponibilidad (A, de *availability*).** Toda petición que llega a una máquina que funciona recibe una respuesta, no un error.
-- **Tolerancia a particiones (P).** El sistema sigue funcionando aunque se pierdan mensajes entre algunas máquinas.
+- **Consistencia (C).** Las operaciones parecen ocurrir sobre una única copia en un orden que respeta el tiempo real. Una lectura iniciada después de terminar una escritura no puede ignorarla, salvo que otra escritura posterior determine el valor. No exige actualizar físicamente todas las réplicas al mismo instante.
+- **Disponibilidad (A, de *availability*).** Toda petición a un nodo que no falla termina con una respuesta válida para la operación. Un error que rechaza la operación no basta; el teorema tampoco fija un plazo máximo.
+- **Particiones (P).** El modelo admite pérdidas de comunicación entre grupos de nodos, incluso mientras siguen funcionando.
 
 Una **partición** es un corte de comunicación que deja a las máquinas separadas en grupos que no pueden hablarse, aunque cada una siga encendida.
 
@@ -69,19 +69,25 @@ La decisión real es más estrecha: **cuando hay una partición**, ¿se sacrific
 | Riesgo | El servicio deja de atender | Copias que difieren y hay que reconciliar |
 | Encaja con | Saldos, reservas, inventario | Carritos, "me gusta", contenido de redes sociales |
 
-En el segundo enfoque, las copias vuelven a igualarse cuando la comunicación se restablece. A ese comportamiento se le llama [**consistencia eventual**](/articulos/consistencia-eventual/), y es habitual en las [bases de datos NoSQL](/articulos/bases-de-datos-nosql/).
+Un sistema que prioriza disponibilidad puede diseñarse para reconciliar cambios y ofrecer [**consistencia eventual**](/articulos/consistencia-eventual/). Esa convergencia necesita un mecanismo y condiciones de comunicación; CAP no la garantiza automáticamente por llamar AP al sistema.
 
 La elección depende de qué es peor para el negocio. Que un banco muestre un saldo equivocado es inaceptable. Que una red social tarde unos segundos en mostrar un comentario apenas importa, mientras que no poder publicar sí molesta.
 
 ## Matices importantes
 
 - **No es todo o nada.** Un mismo sistema puede tratar distintos datos de forma distinta, y muchas bases de datos permiten ajustarlo operación a operación.
-- **La consistencia de CAP no es la de las transacciones.** En CAP significa que todas las copias coinciden. En una [transacción](/articulos/transacciones-y-acid/) de base de datos, "consistencia" se refiere a que los datos cumplan las reglas definidas. Comparten palabra y son ideas diferentes.
+- **La consistencia de CAP no es la de ACID.** CAP usa linealizabilidad. En [ACID](/articulos/transacciones-y-acid/), la consistencia se refiere a preservar las reglas o invariantes definidas para los datos.
 - **No habla de velocidad.** Incluso sin particiones hay un coste: mantener todas las copias iguales exige esperar a que se coordinen, y eso añade retraso.
+
+## Errores comunes
+
+- **Elegir dos letras como si fueran funciones independientes.** La imposibilidad se manifiesta cuando se permite una partición; no desaparece por escoger un producto CP o AP.
+- **Confundir disponibilidad con responder HTTP 500.** Rechazar una operación no cumple la disponibilidad que define el teorema.
+- **Suponer que AP arregla los conflictos por sí solo.** Hay que definir cómo se reconcilian escrituras y qué resultados tolera la aplicación.
 
 ## Lo esencial
 
 - CAP relaciona consistencia, disponibilidad y tolerancia a particiones en los sistemas distribuidos.
 - Las particiones son inevitables, así que la elección real es entre consistencia y disponibilidad mientras duran.
-- Un sistema CP prefiere no responder antes que dar un dato incorrecto; uno AP prefiere responder aunque el dato sea antiguo.
+- Ante una partición, conservar linealizabilidad puede exigir rechazar o retrasar operaciones; atenderlas todas exige renunciar a esa garantía.
 - La elección depende de qué fallo es más grave en cada caso.

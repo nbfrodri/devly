@@ -7,7 +7,7 @@ layer: programacion
 prerequisites:
   - funciones
   - inmutabilidad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Funciones"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Functions
@@ -17,7 +17,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Cuando se llama a una [función](/articulos/funciones/) con un argumento, hay dos formas de entregárselo. Con **paso por valor**, la función recibe una **copia**: lo que haga con ella no afecta al original. Con **paso por referencia**, recibe **acceso al original**: si lo cambia, el cambio se ve fuera.
+Cuando se llama a una [función](/articulos/funciones/) con un argumento, hay dos formas de entregárselo. Con **paso por valor**, el parámetro recibe una copia del valor del argumento: reasignar ese parámetro no reasigna la variable del llamador. Con **paso por referencia**, el parámetro es un alias de la variable original. Si el valor copiado designa un objeto compartido, modificar ese objeto sí puede observarse fuera.
 
 ## Paso por valor
 
@@ -39,9 +39,17 @@ La función trabaja con una copia. `x` sigue valiendo 5.
 
 En lenguajes como C++ se puede pasar la propia variable. Si la función la modifica, se modifica la del llamador. Es como dar las llaves de tu casa en lugar de una foto de ella.
 
+Para comparar el mismo caso, partimos de `x = 5` y hacemos que `duplicar` asigne el doble al parámetro:
+
+| Paso | Parámetro por valor | Parámetro por referencia |
+| --- | --- | --- |
+| Entrar en la función | Otra variable recibe el valor 5 | El parámetro es un alias de `x` |
+| Asignar el doble | Cambia la variable local a 10 | Cambia `x` a 10 |
+| Volver al llamador | `x` sigue en 5 | `x` vale 10 |
+
 ## El caso de JavaScript
 
-JavaScript, como Python o Java, hace algo intermedio que confunde: **siempre pasa por valor, pero con los objetos ese valor es una referencia**.
+JavaScript, como Python o Java, puede compartir objetos entre llamador y función: **siempre pasa por valor, pero con los objetos ese valor es una referencia**.
 
 ```js
 function cambiarPropiedad(objeto) {
@@ -70,20 +78,26 @@ A este comportamiento se le llama a veces **paso por compartición**.
 
 | | Por valor | Por referencia | JavaScript con objetos |
 | --- | --- | --- | --- |
-| Qué recibe la función | Una copia | El original | Una copia de la referencia |
-| Modificar el contenido | No afecta fuera | Afecta fuera | Afecta fuera |
+| Qué recibe la función | Una copia del valor | Un alias de la variable | Una copia de la referencia al objeto |
+| Mutar un objeto alcanzable | Puede afectar fuera si se comparte | Puede afectar fuera | Afecta al objeto compartido |
 | Reasignar la variable | No afecta fuera | Afecta fuera | No afecta fuera |
-| Coste con datos grandes | Copiarlos | Nulo | Nulo |
+| Coste de paso | Depende del valor copiado; no exige copia profunda | No exige copiar todo el dato | Copia la referencia, no todo el objeto |
 
 ## Por qué importa
 
 El error habitual es una función que modifica sin querer el objeto o el array que recibe, y el cambio aparece en otra parte del programa. Por ejemplo, ordenar con `sort` dentro de una función, que reordena el array del llamador.
 
-La defensa es la [inmutabilidad](/articulos/inmutabilidad/): no modificar lo que se recibe, sino devolver una copia nueva con los cambios.
+Una opción es la [inmutabilidad](/articulos/inmutabilidad/): no modificar lo que se recibe, sino devolver un resultado nuevo. Si la función debe modificar un objeto, ese efecto tiene que formar parte de su contrato.
+
+## Confusiones frecuentes
+
+- **Llamar paso por referencia a cualquier objeto compartido.** En JavaScript se puede mutar el objeto, pero reasignar el parámetro no reasigna la variable del llamador.
+- **Esperar una copia profunda al pasar por valor.** Copiar una referencia conserva el acceso al mismo objeto.
+- **Copiar solo el objeto exterior y modificar uno anidado.** Una copia superficial puede seguir compartiendo objetos interiores.
 
 ## Lo esencial
 
-- Por valor, la función recibe una copia; por referencia, el original.
+- Por valor se copia el valor del argumento; por referencia se da un alias de la variable original.
 - JavaScript pasa siempre por valor, pero el valor de un objeto es una referencia a él.
 - Modificar una propiedad del objeto recibido afecta al original; reasignar la variable, no.
-- Para evitar sorpresas, no se modifica lo que se recibe.
+- Decide y documenta si la función muta objetos compartidos o devuelve un resultado nuevo.

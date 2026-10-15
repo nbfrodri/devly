@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - que-es-una-base-de-datos
   - que-es-sql
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Transactions (documentación oficial, en inglés)"
     url: https://www.postgresql.org/docs/current/tutorial-transactions.html
@@ -30,44 +30,52 @@ Una transacción elimina ese estado intermedio: las dos operaciones tienen éxit
 
 ## Cómo se usa
 
-En [SQL](/articulos/que-es-sql/), una transacción se delimita con tres órdenes:
+En [SQL](/articulos/que-es-sql/), una transacción se delimita con tres órdenes. Este ejemplo completo se ejecuta en SQLite; los saldos son unidades enteras de una simulación:
 
 ```sql
+CREATE TABLE cuentas (titular TEXT PRIMARY KEY NOT NULL, saldo INTEGER NOT NULL CHECK (saldo >= 0));
+INSERT INTO cuentas VALUES ('ana', 100), ('luis', 50);
+
 BEGIN;
 
 UPDATE cuentas SET saldo = saldo - 30 WHERE titular = 'ana';
 UPDATE cuentas SET saldo = saldo + 30 WHERE titular = 'luis';
 
 COMMIT;
+SELECT titular, saldo FROM cuentas ORDER BY titular;
 ```
+
+El resultado es Ana con 70 y Luis con 80.
 
 - `BEGIN` abre la transacción.
 - `COMMIT` la **confirma**: los cambios pasan a ser definitivos.
-- `ROLLBACK`, en lugar de `COMMIT`, la **deshace**: la base de datos queda como estaba antes del `BEGIN`.
+- `ROLLBACK`, en lugar de `COMMIT`, **deshace los cambios de esa transacción**. No deshace los cambios confirmados por otros trabajos.
 
-Este programa lo muestra con una base de datos en memoria. La tabla prohíbe los saldos negativos:
+Este programa independiente usa `node:sqlite` de Node.js 22.13 o posterior. La tabla prohíbe saldos negativos, y la aplicación comprueba que ambas cuentas existen:
 
 ```js
 import { DatabaseSync } from "node:sqlite";
 
 const db = new DatabaseSync(":memory:");
 db.exec(
-	"CREATE TABLE cuentas (titular TEXT, saldo INTEGER CHECK (saldo >= 0))",
+	"CREATE TABLE cuentas (titular TEXT PRIMARY KEY NOT NULL, saldo INTEGER NOT NULL CHECK (saldo >= 0))",
 );
 db.exec("INSERT INTO cuentas VALUES ('ana', 100), ('luis', 50)");
 
 function transferir(origen, destino, importe) {
+	if (!Number.isSafeInteger(importe) || importe <= 0 || origen === destino) return false;
 	db.exec("BEGIN");
 
 	try {
-		db.prepare("UPDATE cuentas SET saldo = saldo + ? WHERE titular = ?").run(
+		const abono = db.prepare("UPDATE cuentas SET saldo = saldo + ? WHERE titular = ?").run(
 			importe,
 			destino,
 		);
-		db.prepare("UPDATE cuentas SET saldo = saldo - ? WHERE titular = ?").run(
+		const cargo = db.prepare("UPDATE cuentas SET saldo = saldo - ? WHERE titular = ?").run(
 			importe,
 			origen,
 		);
+		if (abono.changes !== 1 || cargo.changes !== 1) throw new Error("Cuenta inexistente");
 		db.exec("COMMIT");
 		return true;
 	} catch {
@@ -85,15 +93,19 @@ console.log(transferir("ana", "luis", 500)); // false
 console.log(saldoDe("luis")); // 50
 console.log(transferir("ana", "luis", 30)); // true
 console.log(saldoDe("ana")); // 70
+console.log(transferir("ana", "cuenta-inexistente", 10)); // false
+console.log(saldoDe("ana")); // 70
 ```
 
 En la primera transferencia, sumar 500 a Luis funciona, pero restar 500 a Ana viola la regla del saldo. Al deshacer la transacción, la suma a Luis también desaparece: sigue teniendo 50.
+
+Un `UPDATE` que encuentra cero filas no es un error SQL. Sin comprobar `changes`, el intento hacia una cuenta inexistente podría restar saldo sin abonarlo a nadie. La transacción agrupa las operaciones; la aplicación todavía debe expresar la regla correcta.
 
 ## Las cuatro propiedades
 
 ### A: atomicidad
 
-**Todo o nada.** Una transacción no puede quedar aplicada a medias. Si algo falla, se deshace por completo. Es la propiedad que acaba de mostrar el ejemplo. No hay que confundirla con la [idempotencia](/articulos/atomicidad-e-idempotencia/), que trata de qué ocurre al repetir una operación.
+**Confirmar o abortar como una unidad.** Al abortar la transacción se deshacen todos sus cambios. Un error de sentencia no siempre provoca ese aborto automáticamente: depende del motor y del error. En el ejemplo, la aplicación ejecuta `ROLLBACK`. No hay que confundirlo con la [idempotencia](/articulos/atomicidad-e-idempotencia/), que trata de qué ocurre al repetir una operación.
 
 ### C: consistencia
 
@@ -101,33 +113,33 @@ En la primera transferencia, sumar 500 a Luis funciona, pero restar 500 a Ana vi
 
 Esta garantía es compartida. La base de datos hace cumplir las reglas que se le han declarado; las que solo existen en la cabeza de quien programa tiene que mantenerlas la aplicación.
 
-No es la misma "consistencia" del [teorema CAP](/articulos/teorema-cap/), que habla de que las copias de un dato coincidan entre máquinas.
+No es la misma «consistencia» del [teorema CAP](/articulos/teorema-cap/), que trata de una garantía de observación de operaciones distribuidas.
 
 ### I: aislamiento
 
-**Las transacciones simultáneas no se estorban.** Aunque muchas se ejecuten a la vez, el resultado debe ser como si se hubieran ejecutado una detrás de otra.
+**Control de las interferencias entre transacciones.** El nivel serializable exige un resultado equivalente a algún orden secuencial de las transacciones confirmadas. Los niveles menos fuertes permiten determinadas anomalías.
 
 Es la respuesta de las bases de datos a las [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/). Sin aislamiento, una transacción podría leer datos que otra todavía no ha confirmado, o dos podrían pisarse al actualizar la misma fila.
 
 ### D: durabilidad
 
-**Lo confirmado no se pierde.** Una vez que `COMMIT` responde, los cambios sobreviven a un fallo del programa o a un corte de corriente.
+**Persistencia de lo confirmado dentro del modelo de fallos configurado.** Con almacenamiento duradero y sincronización adecuada, confirmar implica que el cambio sobrevivirá a una caída del proceso o del sistema. Nuestra base en memoria no ofrece persistencia tras cerrar el proceso.
 
-Se consigue escribiendo los cambios en un registro en el disco antes de darlos por confirmados. Si el sistema cae, al arrancar reconstruye su estado a partir de ese registro.
+Un mecanismo habitual es forzar un registro persistente antes de confirmar y recuperarse con él tras una caída. No sustituye a una copia de seguridad ante pérdida del dispositivo, ni permite ignorar opciones que desactivan la sincronización.
 
 | Propiedad | Garantiza | Protege de |
 | --- | --- | --- |
 | Atomicidad | Todo o nada | Operaciones a medias |
 | Consistencia | Se cumplen las reglas | Datos inválidos |
-| Aislamiento | Las transacciones no interfieren | Errores por accesos simultáneos |
-| Durabilidad | Lo confirmado permanece | Pérdidas por fallos |
+| Aislamiento | Interferencias limitadas según el nivel | Determinadas anomalías concurrentes |
+| Durabilidad | Persistencia según almacenamiento y configuración | Fallos cubiertos por ese contrato |
 
 <Quiz
 	client:visible
-	question="Una transacción hace tres cambios y falla en el tercero. ¿Qué garantiza la atomicidad?"
+	question="Una transacción hace dos cambios y la aplicación la aborta con ROLLBACK al fallar el tercero. ¿Qué ocurre?"
 	options={[
 		"Que se conservan los dos primeros",
-		"Que se deshacen los tres",
+		"Que no queda confirmado ninguno de los cambios de esa transacción",
 		"Que el tercero se reintenta hasta funcionar",
 	]}
 	answer={1}
@@ -135,20 +147,20 @@ Se consigue escribiendo los cambios en un registro en el disco antes de darlos p
 
 ## El aislamiento tiene niveles
 
-El aislamiento perfecto es costoso: obliga a que las transacciones se esperen unas a otras. Por eso las bases de datos ofrecen varios [**niveles de aislamiento**](/articulos/niveles-de-aislamiento/), que cambian protección por rendimiento. Cómo se implementan, con varias versiones de cada fila, lo explica [una base de datos por dentro](/articulos/una-base-de-datos-por-dentro/).
+La serialización puede requerir coordinación, esperas o abortos con reintento; no obliga a ejecutar físicamente una transacción cada vez. Los [**niveles de aislamiento**](/articulos/niveles-de-aislamiento/) ofrecen contratos distintos. Los mecanismos con versiones de cada fila se explican en [una base de datos por dentro](/articulos/una-base-de-datos-por-dentro/).
 
 | Nivel | Qué evita |
 | --- | --- |
 | Lectura confirmada | Leer datos que otra transacción aún no ha confirmado |
 | Lectura repetible | Además, que una fila ya leída cambie dentro de la misma transacción |
-| Serializable | Todo: equivale a ejecutarlas una tras otra |
+| Serializable | Anomalías de serialización: las confirmadas equivalen a algún orden secuencial |
 
 El nivel por defecto varía de una base de datos a otra y no suele ser el más estricto. Conviene saber cuál se está usando, porque con niveles bajos siguen siendo posibles algunas anomalías.
 
 ## Buenas prácticas
 
 - **Transacciones cortas.** Mientras una está abierta puede bloquear a otras. No hay que dejarla abierta esperando a una persona o a un servicio externo.
-- **Tratar siempre el error.** Una transacción que falla y no se deshace queda abierta, reteniendo recursos.
+- **Tratar el estado tras un error.** Puede haber una transacción abierta o ya abortada. Cerrar o revertir según el contrato del motor evita retener recursos y confirmar cambios no deseados.
 - **No dar por hecho el aislamiento.** Conocer el nivel por defecto y subirlo cuando la operación lo exija.
 
 ## Más allá de una sola base de datos

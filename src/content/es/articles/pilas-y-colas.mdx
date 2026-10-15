@@ -5,7 +5,7 @@ level: basico
 layer: programacion
 prerequisites:
   - arrays
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "Pat Morin: Open Data Structures, libro de texto libre (en inglés)"
     url: https://opendatastructures.org/
@@ -139,7 +139,7 @@ Los elementos salen en el mismo orden en que entraron.
 
 ## El coste de las operaciones
 
-En una pila hecha con un array, `push` y `pop` trabajan sobre el final y son inmediatas, de [complejidad](/articulos/complejidad-algoritmica/) O(1).
+En el modelo habitual de array dinámico, `push` y `pop` trabajan sobre el final con [coste amortizado](/articulos/analisis-amortizado/) O(1): una operación concreta puede copiar datos al cambiar la capacidad, pero el trabajo total de muchas operaciones crece linealmente. Esto no promete un tiempo exacto para un motor de JavaScript.
 
 En la cola del ejemplo hay un detalle: `shift` quita el primer elemento y obliga a mover todos los demás una posición. Su coste es O(n). Con pocas decenas de elementos no se nota; con colas grandes y muy usadas conviene otra implementación, como una [lista enlazada](/articulos/listas-enlazadas/), en la que sacar del principio es inmediato.
 
@@ -147,6 +147,11 @@ En la cola del ejemplo hay un detalle: `shift` quita el primer elemento y obliga
 
 - **Cola doble** (*deque*): permite añadir y sacar por los dos extremos.
 - **Cola de prioridad**: no sale el más antiguo, sino el de mayor prioridad. Es la que usa una sala de urgencias.
+
+## Errores comunes
+
+- **Sacar de una estructura vacía.** En estos ejemplos, `pop` y `shift` devuelven `undefined`; comprueba el tamaño si ese valor puede confundirse con un dato válido.
+- **Usar una cola FIFO donde hay prioridades.** El orden de llegada no expresa urgencia; ese requisito necesita una cola de prioridad.
 
 ## Lo esencial
 

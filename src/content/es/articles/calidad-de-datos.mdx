@@ -4,9 +4,8 @@ description: "Unos datos tienen calidad si son adecuados para el uso que se les 
 level: basico
 layer: datos
 prerequisites:
-  - preparacion-de-datos
   - que-es-una-base-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "UK Government: The Government Data Quality Framework (en inglés)"
     url: https://www.gov.uk/government/publications/the-government-data-quality-framework
@@ -35,7 +34,7 @@ El marco de calidad de datos del gobierno británico, una de las referencias pú
 
 ## Medirla
 
-La calidad se mide con reglas automáticas:
+Parte de la calidad se puede medir con reglas automáticas. En este ejemplo, el formulario admite edades enteras de 0 a 120; es una regla del sistema, no una prueba de la edad real:
 
 ```js
 const clientes = [
@@ -46,15 +45,25 @@ const clientes = [
 ];
 
 const completos = clientes.filter((c) => c.correo).length / clientes.length;
-const validos = clientes.filter((c) => c.edad >= 0 && c.edad <= 120).length;
-const unicos = new Set(clientes.map((c) => c.correo)).size;
+const validos = clientes.filter(
+	(c) => Number.isInteger(c.edad) && c.edad >= 0 && c.edad <= 120,
+).length;
+const correosPresentes = clientes.map((c) => c.correo).filter(Boolean);
+const correosDistintos = new Set(correosPresentes).size;
 
 console.log(completos); // 0.75
 console.log(validos); // 3
-console.log(unicos); // 3
+console.log(correosDistintos); // 2
 ```
 
-Un cuarto de los clientes no tiene correo, uno tiene una edad imposible y hay un duplicado.
+Un cuarto de las filas no tiene correo; tres cumplen la regla de edad. Hay tres correos presentes y dos valores distintos: uno se repite. Eso no demuestra por sí solo que se haya duplicado una persona, porque dos personas podrían compartir una dirección. Tampoco se ha comprobado que los correos sean utilizables ni que las edades reflejen la realidad.
+
+<Quiz
+	client:visible
+	question="Una edad de 34 pasa la regla de formato y rango. ¿Qué sabemos?"
+	options={["Que la persona tiene 34 años", "Que cumple esa regla, pero puede no ser su edad real", "Que el registro no está duplicado"]}
+	answer={1}
+/>
 
 ## Mejor prevenir
 
@@ -68,9 +77,15 @@ Corregir datos después es caro. Es más eficaz impedir que entren mal:
 
 La [deriva de datos y de concepto](/articulos/deriva-de-datos-y-de-concepto/) obliga a distinguir cambios del entorno, fallos de preparación y pérdida de calidad predictiva.
 
+## Errores comunes
+
+- **Confundir validez y exactitud.** Un precio bien formado puede ser incorrecto; contrastarlo exige una fuente fiable.
+- **Contar valores ausentes como identificadores distintos.** Un `null` en un conjunto no representa una persona única.
+- **Eliminar duplicados solo por coincidencia de un campo.** Antes hay que decidir qué identifica a la entidad y qué coincidencias son legítimas.
+
 ## Lo esencial
 
 - Unos datos tienen calidad si sirven para el uso previsto.
 - Se valora en dimensiones: completitud, exactitud, unicidad, coherencia, actualidad y validez.
-- Se mide con reglas automáticas.
+- Las reglas automáticas detectan ciertos defectos; la exactitud también requiere contrastar con la realidad.
 - Prevenir con restricciones y validación es más barato que corregir después.

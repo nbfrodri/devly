@@ -7,8 +7,14 @@ prerequisites:
   - que-es-una-cache
   - bases-de-datos-nosql
   - tablas-hash
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "Redis: Key eviction (en inglés)"
+    url: https://redis.io/docs/latest/develop/reference/eviction/
+  - title: "Redis: Licenses (en inglés)"
+    url: https://redis.io/legal/licenses/
+  - title: "Redis: INCR (en inglés)"
+    url: https://redis.io/docs/latest/commands/incr/
   - title: "Redis: Data types (en inglés)"
     url: https://redis.io/docs/latest/develop/data-types/
   - title: "Redis: Persistence (en inglés)"
@@ -19,21 +25,21 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-**Redis** es un almacén de datos que guarda la información en la memoria [RAM](/articulos/memoria-ram-y-almacenamiento/), en lugar de en disco. Funciona como un gran diccionario: a cada **clave** le corresponde un **valor**. Eso lo hace extremadamente rápido, y lo convierte en la herramienta habitual para cachés, sesiones, contadores y colas.
+**Redis** es un almacén de datos que guarda la información en la memoria [RAM](/articulos/memoria-ram-y-almacenamiento/), y ofrece mecanismos de persistencia en disco. Funciona como un gran diccionario: a cada **clave** le corresponde un **valor**. Eso lo hace extremadamente rápido, y lo convierte en la herramienta habitual para cachés, sesiones, contadores y colas.
 
 Es una [base de datos NoSQL](/articulos/bases-de-datos-nosql/) del tipo clave-valor.
 
 ## Qué problema resuelve
 
-Una base de datos tradicional guarda los datos en disco y está pensada para consultas complejas. Es fiable, y cada operación cuesta del orden de milisegundos.
+Una base relacional puede resolver consultas y restricciones complejas, y también utiliza memoria para evitar accesos a disco. Redis se especializa en operaciones sobre estructuras mantenidas en memoria; no toda consulta necesita el mismo trabajo.
 
 Hay datos que se leen miles de veces por segundo y que no necesitan nada de eso: la sesión de un usuario, el resultado de una consulta cara, un contador de visitas. Para ellos, lo que importa es la velocidad.
 
-La memoria es miles de veces más rápida que el disco. Redis guarda todo ahí y responde en menos de un milisegundo.
+Trabajar en memoria y ofrecer operaciones concretas puede reducir la latencia. El tiempo observado depende también de la red, la carga, el tamaño de los datos y la orden; no hay una garantía universal de menos de un milisegundo.
 
 ## Claves y valores
 
-Las operaciones básicas son guardar, leer y borrar por clave:
+Las operaciones básicas son guardar, leer y borrar por clave. Los bloques de órdenes se ejecutan en `redis-cli`, conectado a un servidor de práctica vacío:
 
 ```
 SET usuario:42:nombre "Ana"
@@ -41,9 +47,9 @@ GET usuario:42:nombre
 DEL usuario:42:nombre
 ```
 
-Los dos puntos en las claves son una convención para organizarlas. Redis no los interpreta.
+Las respuestas son `OK`, `Ana` y `1` (una clave borrada). Los dos puntos en las claves son una convención para organizarlas. Redis no los interpreta.
 
-Por dentro, la búsqueda por clave es la de una [tabla hash](/articulos/tablas-hash/): cuesta lo mismo con mil claves que con mil millones.
+La búsqueda por clave se apoya en una [tabla hash](/articulos/tablas-hash/) y tiene coste esperado constante respecto al número de claves bajo sus supuestos. Eso no significa idéntica latencia con cualquier carga, tamaño de clave o resultado.
 
 ## Más que texto: las estructuras
 
@@ -64,7 +70,7 @@ Un contador:
 INCR visitas:portada
 ```
 
-`INCR` suma uno y devuelve el resultado. Es **atómico**: si mil clientes lo ejecutan a la vez, el contador sube exactamente mil. Sin esa garantía, dos clientes podrían leer el mismo valor y escribir el mismo resultado, la [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) clásica.
+En el servidor vacío devuelve 1: `INCR` inicia la clave ausente en cero y la incrementa. Es **atómico** frente a otras órdenes: mil incrementos ejecutados con éxito sobre el mismo contador, sin otras modificaciones, lo aumentan en mil. Reintentar tras una respuesta perdida podría incrementarlo otra vez. Sin esa garantía, dos clientes podrían leer el mismo valor y escribir el mismo resultado, la [condición de carrera](/articulos/condiciones-de-carrera-y-bloqueos/) clásica.
 
 Una clasificación, con un conjunto ordenado:
 
@@ -123,21 +129,21 @@ La caducidad es lo que hace a Redis tan adecuado para una [caché](/articulos/qu
 
 <Quiz
 	client:visible
-	question="¿Por qué Redis responde mucho más rápido que una base de datos tradicional?"
+	question="¿Qué ventaja aporta mantener las estructuras de trabajo en RAM?"
 	options={[
-		"Porque comprime los datos",
-		"Porque guarda los datos en memoria en lugar de en disco",
-		"Porque solo admite un usuario a la vez",
+		"Garantiza que nunca se pierdan",
+		"Evita muchos accesos a disco, aunque red y operación sigan teniendo coste",
+		"Hace que cualquier operación tarde lo mismo",
 	]}
 	answer={1}
 />
 
-## Un solo hilo
+## Ejecución de las órdenes
 
-Redis ejecuta las órdenes de una en una, en un solo [hilo](/articulos/hilos-y-concurrencia/). Parece un límite, y es una ventaja:
+En una instancia, las operaciones ordinarias sobre estas estructuras se ejecutan de forma serializada en el hilo principal. Redis también utiliza otros hilos para ciertos trabajos, incluida entrada/salida según versión y configuración:
 
-- **Cada orden es atómica.** No hay dos ejecutándose a la vez, así que no necesita bloqueos.
-- **Es rápido de todos modos**, porque las operaciones en memoria duran microsegundos.
+- **Una operación como `INCR` no intercala un incremento ajeno entre su lectura y escritura.** Eso no convierte varias órdenes independientes en una sola operación atómica.
+- **El coste depende de la orden.** Recorrer o devolver muchas claves cuesta más que consultar una pequeña por su nombre.
 
 La consecuencia es la misma que en [Node.js](/articulos/que-es-nodejs/): una orden lenta detiene a todas las demás. Pedir todas las claves de una base grande con `KEYS *` puede dejar el servidor sin responder. En producción se evita.
 
@@ -148,9 +154,9 @@ La memoria se pierde al cortarse la corriente. Redis ofrece dos formas de guarda
 | Mecanismo | Cómo funciona | Qué se puede perder |
 | --- | --- | --- |
 | Instantáneas | Vuelca toda la memoria a un archivo cada cierto tiempo | Lo escrito desde la última |
-| Registro de órdenes | Anota cada escritura en un archivo | Como mucho, el último segundo |
+| Registro de órdenes (AOF) | Registra escrituras; la política decide cuándo sincronizar | Con sincronización cada segundo, puede perderse alrededor del último segundo; otras políticas tienen otros límites |
 
-Se pueden combinar. Aun así, la durabilidad de Redis es más débil que la de una base de datos con [transacciones ACID](/articulos/transacciones-y-acid/).
+Se pueden combinar. La durabilidad depende de persistencia, sincronización, almacenamiento y fallos previstos. La atomicidad de una orden no garantiza por sí sola su conservación tras una caída; son propiedades distintas de [ACID](/articulos/transacciones-y-acid/).
 
 Para una caché no importa: si se pierde, se reconstruye. Para datos que no existen en ningún otro sitio, hay que pensarlo.
 
@@ -158,7 +164,7 @@ Para una caché no importa: si se pierde, se reconstruye. Para datos que no exis
 
 La memoria es limitada, y más cara que el disco. Se configura un máximo y una **política de expulsión**: qué borrar para hacer sitio. Lo habitual en una caché es eliminar lo que lleva más tiempo sin usarse.
 
-Sin esa configuración, Redis rechaza las escrituras cuando se llena.
+Al alcanzar `maxmemory`, la política `noeviction` rechaza las escrituras que necesitan más memoria. Con políticas de expulsión puede borrar claves elegibles; si no las hay, también puede rechazar. En Redis de 64 bits, `maxmemory` vale 0 por defecto, sin límite configurado: no hay que esperar que eso proteja al proceso de agotar la memoria del sistema.
 
 ## Varias máquinas
 
@@ -169,18 +175,24 @@ Son la [replicación y el particionado](/articulos/replicacion-y-particionado/) 
 
 ## Lo que no es
 
-- **No sustituye a la base de datos principal.** No tiene consultas flexibles ni relaciones: se busca por clave, y poco más. La información importante vive en una base como [PostgreSQL](/articulos/que-es-postgresql/), y Redis la acompaña.
+- **Elegirlo como almacén principal requiere estudiar las garantías.** Su uso como caché junto a [PostgreSQL](/articulos/que-es-postgresql/) es distinto de conservar datos que no existen en otro lugar. Además de clave-valor, versiones y productos actuales ofrecen búsqueda, documentos y otras capacidades.
 - **No es gratis.** Todo ocupa RAM.
 - **Introduce datos duplicados.** Una caché puede quedar desactualizada respecto al original. Decidir cuándo invalidarla es la parte difícil.
 
 ## Licencia y alternativas
 
-Redis cambió sus condiciones de licencia en 2024, y de ahí surgió Valkey, una bifurcación mantenida por la Linux Foundation. Hay otros almacenes compatibles con su protocolo. Para quien los usa, las órdenes son las mismas.
+Redis cambió sus condiciones de licencia en 2024, y de ahí surgió Valkey, una bifurcación mantenida por la Linux Foundation. Hay otros almacenes compatibles con su protocolo. La compatibilidad de órdenes y funciones depende de cada producto y versión. Redis 8 añadió AGPLv3 como opción junto a RSALv2 y SSPLv1; hay que consultar la licencia concreta de la distribución elegida.
+
+## Errores comunes
+
+- **Confundir caducidad y validez del dato.** El origen puede cambiar antes de que venza la clave; la caché necesita una política de actualización.
+- **Separar una operación compuesta en lectura y escritura.** Dos clientes pueden intercalarse; usa una operación atómica adecuada al caso.
+- **Tratar memoria, persistencia y réplica como una sola garantía.** Hay que decidir cuánto se puede perder y comprobar la recuperación con la configuración elegida.
 
 ## Lo esencial
 
 - Redis guarda los datos en memoria, como pares de clave y valor.
 - Sus valores pueden ser listas, conjuntos, hashes y otras estructuras.
 - Las claves pueden caducar solas, lo que lo hace ideal como caché.
-- Ejecuta las órdenes de una en una, así que cada una es atómica.
-- Acompaña a la base de datos principal; no la reemplaza.
+- Operaciones como `INCR` son atómicas frente a otras órdenes; una secuencia de órdenes requiere coordinación propia.
+- Su papel como caché o almacén principal exige garantías y políticas de recuperación diferentes.

@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - recursividad
   - grafos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Jeff Erickson: Algorithms, cap. 2, Backtracking (en inglés)"
     url: https://jeffe.cs.illinois.edu/teaching/algorithms/book/02-backtracking.pdf
@@ -56,7 +56,7 @@ La vuelta atrás recorre ese árbol en profundidad, como la búsqueda en profund
 
 ## Un ejemplo: elegir números que sumen
 
-De una lista de números, encontrar algunos que sumen exactamente una cantidad.
+De una lista de enteros positivos, encontrar algunos que sumen una cantidad entera no negativa, usando cada posición como máximo una vez. Esta restricción permite la poda: un número que supera lo que falta no puede compensarse después con valores negativos.
 
 ```js
 function buscarSuma(numeros, objetivo, desde = 0, elegidos = []) {
@@ -88,7 +88,7 @@ Para sumar 9:
 - El 12 y el 5 no caben. Se podan.
 - Coge el 2. Faltan 0: solución.
 
-La línea `if (numeros[i] > objetivo) continue` es la poda. Sin ella el resultado sería el mismo, tras explorar muchas más combinaciones.
+La línea `if (numeros[i] > objetivo) continue` es la poda. Sin ella el resultado sería el mismo para estas entradas positivas, tras explorar más combinaciones. Con `[10, -1]` y objetivo 9, en cambio, esa poda descartaría una solución válida. Una poda necesita una justificación ligada al dominio de entrada.
 
 Para 30 no hay solución. El algoritmo lo descubre tras agotar las opciones, y devuelve `null`.
 

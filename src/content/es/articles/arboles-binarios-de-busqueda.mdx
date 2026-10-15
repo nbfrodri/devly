@@ -1,12 +1,12 @@
 ---
 title: "¿Qué es un árbol binario de búsqueda?"
-description: "Un árbol binario de búsqueda guarda valores ordenados en una estructura ramificada que permite buscar descartando la mitad en cada paso."
+description: "Un árbol binario de búsqueda guarda valores ordenados en una estructura ramificada que permite buscar descartando un subárbol en cada paso; su coste depende de la altura."
 level: intermedio
 layer: programacion
 prerequisites:
   - recursividad
   - busqueda-binaria
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "MIT OpenCourseWare: 6.006, Binary Trees, Part 1 (en inglés)"
     url: https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-6-binary-trees-part-1/
@@ -45,12 +45,13 @@ Un ABB es un árbol binario que cumple una condición en **todos** sus nodos:
 
 Este árbol la cumple:
 
-```
-        8
-      /   \
-     3     10
-    / \      \
-   1   6      14
+```mermaid
+flowchart TD
+  R[8] -->|izquierda| A[3]
+  R -->|derecha| B[10]
+  A --> C[1]
+  A --> D[6]
+  B -->|derecha| E[14]
 ```
 
 A la izquierda del 8 están 3, 1 y 6, todos menores. A la derecha, 10 y 14, mayores. Y lo mismo se cumple dentro de cada subárbol.
@@ -118,6 +119,20 @@ console.log(contiene(raiz, 7)); // false
 
 Las dos funciones son [recursivas](/articulos/recursividad/): cada subárbol es a su vez un árbol, así que el mismo procedimiento sirve en cada nivel. El caso base es encontrar un hueco.
 
+## Borrar sin romper el orden
+
+El caso depende de los hijos del nodo localizado. En el árbol anterior:
+
+| Nodo que se borra | Situación | Cambio |
+| --- | --- | --- |
+| 1 | Es una hoja | El enlace izquierdo de 3 pasa a `null` |
+| 10 | Tiene un hijo, 14 | El enlace derecho de 8 pasa a 14 |
+| 3 | Tiene dos hijos, 1 y 6 | Se sustituye su valor por 6, el menor de su subárbol derecho, y se elimina el antiguo nodo 6 |
+
+Son tres operaciones independientes sobre el árbol original. En el tercer caso, el sucesor en orden no tiene hijo izquierdo: eliminarlo se reduce a uno de los dos casos sencillos. Reemplazar el nodo por cualquier descendiente podría dejar valores en el lado incorrecto. Buscar el nodo y localizar su sucesor cuesta O(h), donde `h` es la altura.
+
+El código de inserción ignora los valores repetidos: representa un conjunto. Si necesitas duplicados, debes decidir si contar apariciones o añadir otro criterio de orden.
+
 ## Recorrer en orden
 
 Si visitas primero el subárbol izquierdo, después el nodo y por último el derecho, obtienes los valores ordenados de menor a mayor. Se llama **recorrido en orden**.
@@ -156,14 +171,12 @@ Si el árbol está **equilibrado**, con los nodos repartidos por igual a los dos
 
 Pero la forma depende del orden de inserción. Si insertas valores ya ordenados, como 1, 2, 3, 4 y 5, cada uno es mayor que el anterior y va siempre a la derecha:
 
-```
-1
- \
-  2
-   \
-    3
-     \
-      4
+```mermaid
+flowchart TD
+  A[1] -->|derecha| B[2]
+  B -->|derecha| C[3]
+  C -->|derecha| D[4]
+  D -->|derecha| E[5]
 ```
 
 El árbol degenera en una [lista enlazada](/articulos/listas-enlazadas/) y las operaciones pasan a costar O(n).
@@ -193,6 +206,11 @@ Los índices de una [base de datos](/articulos/que-es-una-base-de-datos/) se apo
 ## Para seguir
 
 Para que el árbol no degenere en una lista, existen los [árboles equilibrados](/articulos/arboles-equilibrados/). Las bases de datos usan una variante con muchos hijos por nodo, el [árbol B](/articulos/arboles-b/). Para buscar por prefijos existe el [trie](/articulos/tries/).
+
+## Errores comunes
+
+- **Suponer que cada rama contiene la mitad de los nodos.** La regla de orden no garantiza equilibrio; el coste depende de la altura.
+- **Borrar un nodo con dos hijos como si fuera una hoja.** Desconectar el nodo también perdería sus descendientes; hay que conservar los enlaces y el orden.
 
 ## Lo esencial
 

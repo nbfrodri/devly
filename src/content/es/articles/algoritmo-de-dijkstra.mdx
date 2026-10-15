@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - grafos
   - complejidad-algoritmica
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Edsger W. Dijkstra: A Note on Two Problems in Connexion with Graphs (1959, en inglés)"
     url: https://ir.cwi.nl/pub/9256/9256D.pdf
@@ -18,7 +18,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-El **algoritmo de Dijkstra** calcula el camino de menor coste desde un nodo de un [grafo](/articulos/grafos/) hasta todos los demás, cuando cada arista tiene un **peso**: una distancia, un tiempo, un precio. Lo ideó el informático neerlandés Edsger Dijkstra en 1956 y lo publicó en 1959.
+El **algoritmo de Dijkstra** calcula el camino de menor coste desde un nodo de un [grafo](/articulos/grafos/) hasta todos los demás, cuando las aristas tienen **pesos no negativos**: distancias, tiempos o costes. Lo ideó el informático neerlandés Edsger Dijkstra en 1956 y lo publicó en 1959.
 
 Es el algoritmo que hay detrás de los navegadores de rutas y de parte del [enrutamiento](/articulos/enrutamiento/) en redes.
 
@@ -54,11 +54,15 @@ Este razonamiento tiene una condición: que no haya pesos negativos.
 
 Con este grafo, y saliendo de A:
 
-```
-A -> B (4)    A -> C (2)
-C -> B (1)    C -> D (8)    C -> E (10)
-B -> D (5)
-D -> E (2)
+```mermaid
+flowchart LR
+  A -->|4| B
+  A -->|2| C
+  C -->|1| B
+  C -->|8| D
+  C -->|10| E
+  B -->|5| D
+  D -->|2| E
 ```
 
 | Paso | Se visita | A | B | C | D | E |
@@ -117,7 +121,8 @@ function dijkstra(grafo, origen) {
 	return { distancias, anterior };
 }
 
-function camino(anterior, destino) {
+function camino(anterior, distancias, destino) {
+	if (!Number.isFinite(distancias[destino])) return null;
 	const nodos = [destino];
 
 	while (anterior[nodos[0]] !== undefined) {
@@ -131,12 +136,12 @@ const { distancias, anterior } = dijkstra(grafo, "A");
 
 console.log(distancias.B); // 3
 console.log(distancias.E); // 10
-console.log(camino(anterior, "E").join(" ")); // "A C B D E"
+console.log(camino(anterior, distancias, "E").join(" ")); // "A C B D E"
 ```
 
 Para reconstruir el camino, y no solo su coste, se anota de dónde se llegó a cada nodo. Al terminar, se sigue ese rastro hacia atrás desde el destino.
 
-El `break` cubre el caso en que lo que queda sin visitar es inalcanzable.
+El `break` cubre el caso en que lo que queda sin visitar es inalcanzable. Su distancia permanece en `Infinity` y `camino` devuelve `null`, no una ruta de un solo nodo. El ejemplo supone un origen existente, todos los vecinos declarados y pesos finitos no negativos.
 
 ## Cuánto cuesta
 

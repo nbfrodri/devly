@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - que-es-sql
   - arboles-binarios-de-busqueda
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "PostgreSQL: Indexes, Introduction (documentación oficial, en inglés)"
     url: https://www.postgresql.org/docs/current/indexes-intro.html
@@ -22,25 +22,26 @@ Un **índice** es una estructura auxiliar que una [base de datos](/articulos/que
 
 ## Qué problema resuelve
 
-Sin índice, para encontrar las filas que cumplen una condición la base de datos solo puede hacer una cosa: leer la tabla entera, fila por fila, comprobando cada una. Se llama **recorrido completo** (*full scan*).
+Para filtrar una tabla sin un acceso alternativo útil, el motor puede leerla fila por fila y comprobar la condición. Se llama **recorrido completo** (*full scan*).
 
-Con mil filas no se nota. Con cien millones, una consulta que debería tardar milisegundos tarda minutos.
+El coste crece con los datos visitados. No hay una conversión fija a milisegundos: influyen la memoria disponible, el almacenamiento, el ancho de las filas y cuántas necesita devolver la consulta.
 
 Un índice funciona como el de un libro. Para encontrar dónde se habla de un tema no lees el libro entero: vas al índice alfabético del final, localizas la palabra y saltas a la página.
 
 ## Cómo es por dentro
 
-Un índice es una copia de una o varias columnas, **ordenada**, donde cada valor lleva una referencia a la fila de la tabla en la que está.
+Un índice de tipo **árbol B** guarda claves ordenadas y referencias a las filas. Puede incluir una o varias columnas; otros tipos de índice, como hash, organizan la información de otra manera.
 
-Como está ordenado, se puede buscar descartando la mitad en cada paso, igual que en la [búsqueda binaria](/articulos/busqueda-binaria/). La estructura más habitual es el **árbol B**, una variante de los [árboles de búsqueda](/articulos/arboles-binarios-de-busqueda/) con muchos hijos por nodo, pensada para necesitar muy pocas lecturas de disco.
+Como está ordenado, se puede descartar parte de las claves en cada paso. El [árbol B](/articulos/arboles-b/) tiene muchos hijos por nodo: cada página permite elegir el intervalo que contiene la clave. Su altura reducida ayuda a limitar accesos a páginas; no significa que cada paso descarte exactamente la mitad.
 
-El efecto en la [complejidad](/articulos/complejidad-algoritmica/) es enorme:
+En un modelo de comparación de claves de tamaño fijo, la [complejidad](/articulos/complejidad-algoritmica/) distingue localizar el comienzo de un resultado y recorrerlo:
 
-| | Sin índice | Con índice |
+| Operación | Recorrido completo | Búsqueda en un árbol equilibrado |
 | --- | --- | --- |
-| Complejidad | O(n) | O(log n) |
-| Con mil filas | Hasta 1000 comprobaciones | Unas 10 |
-| Con mil millones | Hasta mil millones | Unas 30 |
+| Localizar una clave | O(n) | O(log n) |
+| Entregar k coincidencias | Recorrer las n filas y producir el resultado | Localizar el intervalo y recorrer sus k entradas |
+
+El índice no elimina el coste de entregar muchas filas ni los accesos a la tabla para obtener columnas que no contiene. Un resultado de casi toda la tabla puede favorecer el recorrido completo.
 
 ## Verlo en funcionamiento
 
@@ -76,9 +77,9 @@ La orden para ver el plan cambia de nombre según el sistema; en la mayoría es 
 Si los índices solo tuvieran ventajas, se crearía uno por cada columna. No es así.
 
 - **Ocupan espacio.** Cada índice es una copia de datos.
-- **Ralentizan las escrituras.** Cada vez que se inserta, modifica o borra una fila, hay que actualizar también todos los índices de la tabla.
+- **Añaden trabajo a las escrituras.** Insertar o borrar exige mantener los índices afectados; una actualización puede alterar las claves y requerir mantenimiento adicional.
 
-Un índice es un intercambio: lecturas más rápidas a cambio de escrituras más lentas y más disco. Una tabla con diez índices se consulta muy bien y se actualiza muy mal.
+Un índice intercambia espacio y mantenimiento por accesos potencialmente más baratos. Diez índices inútiles pueden encarecer las escrituras sin mejorar las consultas que importan.
 
 ## Qué columnas indexar
 
@@ -88,12 +89,12 @@ Las que aparecen en las condiciones de las consultas frecuentes:
 - En las combinaciones entre tablas: las claves foráneas que se usan en un `JOIN`.
 - En el `ORDER BY`: como el índice ya está ordenado, puede ahorrar la ordenación.
 
-La clave primaria tiene siempre un índice, creado automáticamente.
+Los motores suelen respaldar una clave primaria con una estructura de acceso. PostgreSQL crea un índice único; en SQLite, `INTEGER PRIMARY KEY` puede ser el identificador de fila del propio almacenamiento, sin un índice secundario separado.
 
 ### Cuándo no ayuda
 
-- **Tablas pequeñas.** Leerlas enteras es más rápido que consultar un índice.
-- **Columnas con pocos valores distintos.** Un índice sobre una columna que solo vale "sí" o "no" apenas descarta filas.
+- **Tablas pequeñas.** Leerlas enteras puede ser más barato.
+- **Filtros que conservan muchas filas.** Importa la distribución: aunque una columna solo tenga «sí» y «no», buscar un «sí» muy raro sí puede aprovechar un índice.
 - **Tablas en las que se escribe mucho y se lee poco**, como un registro de eventos.
 
 ## Índices de varias columnas
@@ -102,13 +103,13 @@ Un índice puede abarcar varias columnas, y **el orden importa**.
 
 Un índice sobre `(ciudad, apellido)` está ordenado primero por ciudad y, dentro de cada ciudad, por apellido. Como una guía telefónica ordenada por población y luego por nombre.
 
-| Consulta | ¿Aprovecha el índice? |
+| Consulta | Acceso que permite el orden |
 | --- | --- |
-| Por ciudad | Sí |
-| Por ciudad y apellido | Sí |
-| Solo por apellido | No |
+| Por ciudad | Localizar el grupo de esa ciudad |
+| Por ciudad y apellido | Localizar un intervalo dentro del grupo |
+| Solo por apellido | No forma un único intervalo; depende de recorridos y optimizaciones del motor |
 
-Buscar un apellido sin saber la ciudad obligaría a mirar en todas las ciudades. La regla: el índice sirve para las consultas que usan sus primeras columnas, de izquierda a derecha.
+Buscar un apellido sin fijar ciudad puede requerir visitar varios grupos. Algunos motores aprovechan *skip scan* para realizar búsquedas por grupo cuando compensa. El prefijo izquierdo es una buena guía para el acceso directo, no una prohibición absoluta de usar otras columnas.
 
 <Quiz
 	client:visible
@@ -121,8 +122,8 @@ Buscar un apellido sin saber la ciudad obligaría a mirar en todas las ciudades.
 
 Es frecuente crear un índice y comprobar que la consulta sigue lenta. Las causas habituales:
 
-- **Aplicar una función a la columna.** `WHERE LOWER(correo) = ...` no puede usar un índice sobre `correo`, porque lo indexado es el valor original.
-- **Buscar por el final de un texto.** `LIKE '%gmail.com'` no aprovecha el orden. `LIKE 'ana%'`, sí.
+- **Aplicar una función a la columna.** `WHERE LOWER(correo) = ...` no ofrece el mismo acceso que comparar el valor original; puede necesitar un índice sobre la expresión.
+- **Buscar por el final de un texto.** `LIKE '%gmail.com'` no delimita un prefijo en el árbol B. `LIKE 'ana%'` puede hacerlo si la intercalación y las reglas del motor son compatibles.
 - **Que la consulta devuelva casi toda la tabla.** Si hay que leer la mayoría de las filas, el recorrido completo es más barato y la base de datos lo elige.
 
 ## Índices únicos
@@ -143,8 +144,8 @@ La estructura que usan casi todos los índices se explica en [qué es un árbol 
 
 ## Lo esencial
 
-- Un índice es una copia ordenada de una o varias columnas, con referencias a las filas.
-- Convierte búsquedas de coste lineal en búsquedas de coste logarítmico.
-- Acelera las lecturas y encarece las escrituras y el espacio.
+- Un índice es una estructura de acceso; un árbol B organiza claves ordenadas y referencias.
+- Puede reducir el trabajo para localizar filas, pero el tamaño del resultado sigue importando.
+- Su utilidad debe compensar espacio y mantenimiento de escrituras.
 - En un índice de varias columnas, el orden determina qué consultas lo aprovechan.
 - El plan de ejecución muestra si una consulta lo está usando.

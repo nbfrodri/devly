@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - arrays
   - programacion-orientada-a-objetos
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "Pat Morin: Open Data Structures, libro de texto libre (en inglés)"
     url: https://opendatastructures.org/
@@ -16,7 +16,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Una **lista enlazada** es una estructura de datos formada por **nodos**. Cada nodo guarda un valor y una referencia al nodo siguiente. Los elementos no están juntos en la memoria: lo que los mantiene en orden son esos enlaces.
+Una **lista enlazada** es una estructura de datos formada por **nodos**. Cada nodo guarda un valor y una referencia al nodo siguiente. Los elementos no necesitan estar juntos en la memoria: lo que los mantiene en orden son esos enlaces.
 
 ## Qué problema resuelve
 
@@ -82,7 +82,7 @@ No hay índices. Para visitar los elementos se empieza en la cabeza y se sigue e
 
 Para insertar un nodo después de otro, se cambian dos enlaces: el nuevo apunta al que venía después, y el anterior apunta al nuevo.
 
-Para quitar un nodo, basta con que el anterior salte por encima y apunte al siguiente. El nodo descartado queda sin referencias y el lenguaje libera su memoria.
+Para quitar un nodo, basta con que el anterior salte por encima y apunte al siguiente. En JavaScript, su memoria podrá recuperarse cuando deje de ser accesible desde cualquier parte del programa; quitarlo de esta lista no basta si otro código conserva una referencia.
 
 En los dos casos el cambio en sí es inmediato. Lo que cuesta es **llegar** hasta ese punto, porque hay que recorrer la lista desde la cabeza.
 
@@ -92,11 +92,14 @@ En los dos casos el cambio en sí es inmediato. Lo que cuesta es **llegar** hast
 | --- | --- | --- |
 | Leer el elemento de una posición | O(1) | O(n) |
 | Insertar o quitar al principio | O(n) | O(1) |
-| Insertar o quitar al final | O(1) | O(n), o O(1) si se guarda una referencia al último |
+| Insertar al final | O(1) amortizado | O(1) con referencia al último; O(n) sin ella |
+| Quitar al final | O(1) amortizado | O(n) en una lista simple: hay que localizar al penúltimo |
 | Insertar o quitar en un punto ya localizado | O(n) | O(1) |
 | Buscar un valor | O(n) | O(n) |
 
 Las letras expresan la [complejidad](/articulos/complejidad-algoritmica/) de cada operación.
+
+La tabla describe una lista simplemente enlazada. En una lista con `a`, `b` y `c`, guardar una referencia a `c` permite añadir `d`, pero para quitar `c` debes cambiar `b.siguiente` a `null`. Desde `c` no puedes retroceder hasta `b`. Una lista doble con referencia al último sí permite ese borrado en O(1).
 
 <Quiz
 	client:visible

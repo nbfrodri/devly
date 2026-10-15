@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - grafos
   - pilas-y-colas
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Sedgewick y Wayne: Algorithms, 4.2 Directed Graphs (en inglés)"
     url: https://algs4.cs.princeton.edu/42digraph/
@@ -65,6 +65,13 @@ const dependencias = {
 };
 
 function ordenar(dependencias) {
+	for (const requisitos of Object.values(dependencias)) {
+		for (const requisito of requisitos) {
+			if (!Object.hasOwn(dependencias, requisito)) {
+				throw new Error(`Dependencia desconocida: ${requisito}`);
+			}
+		}
+	}
 	const pendientes = new Map(
 		Object.entries(dependencias).map(([tarea, requisitos]) => [
 			tarea,
@@ -112,7 +119,7 @@ El código es deliberadamente simple. La versión eficiente lleva la cuenta de c
 
 En el ejemplo, `probar` y `empaquetar` quedan libres en la misma ronda. No dependen entre sí, así que pueden ejecutarse **a la vez**.
 
-Cada ronda del algoritmo es un grupo de tareas simultáneas. Es lo que aprovechan las herramientas de construcción para repartir el trabajo entre varios [procesadores](/articulos/como-funciona-un-procesador/).
+Cada ronda identifica tareas sin dependencias pendientes entre sí. Pueden compartir recursos o escribir en el mismo archivo, así que la ausencia de una arista no basta para ejecutarlas con seguridad en paralelo: esas restricciones también deben modelarse. Es lo que aprovechan las herramientas de construcción para repartir el trabajo entre varios [procesadores](/articulos/como-funciona-un-procesador/).
 
 ## Con búsqueda en profundidad
 

@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - grafos
   - algoritmos-voraces
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Sedgewick y Wayne: Algorithms, 4.3 Minimum Spanning Trees (en inglés)"
     url: https://algs4.cs.princeton.edu/43mst/
@@ -18,7 +18,7 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Un **árbol de expansión mínima** es el subconjunto de aristas de un [grafo](/articulos/grafos/) con pesos que conecta **todos** los nodos con el **menor coste total** posible. Como no tiene ninguna arista de más, no contiene ciclos: es un árbol.
+Un **árbol de expansión mínima** es un árbol formado por aristas de un [grafo](/articulos/grafos/) no dirigido y conexo, con pesos, que conecta **todos** los nodos con el **menor coste total** posible. Como no tiene ninguna arista de más, no contiene ciclos: es un árbol.
 
 Los dos algoritmos clásicos para encontrarlo son el de **Kruskal** y el de **Prim**.
 
@@ -38,9 +38,9 @@ No es lo mismo que el camino más corto. El [algoritmo de Dijkstra](/articulos/a
 
 ## La propiedad que lo hace fácil
 
-Si se dividen los nodos en dos grupos cualesquiera, la arista más barata que cruza de un grupo al otro pertenece al árbol de expansión mínima.
+Si se dividen los nodos en dos grupos, una arista de peso mínimo que cruza ese corte pertenece a **algún** árbol de expansión mínima. Si es la única más barata, pertenece a todos. Con empates no puedes afirmar que una arista concreta aparezca en todos los árboles mínimos.
 
-Tiene sentido: los dos grupos deben quedar unidos por algo, y no hay motivo para elegir una arista más cara.
+Para verlo, parte de un árbol mínimo que no contenga esa arista y añádela: se forma un ciclo. Ese ciclo contiene otra arista que cruza el corte y no es más barata. Al quitarla recuperas un árbol cuyo coste no aumenta. Ese intercambio justifica la elección; no basta con que parezca barata.
 
 Esta propiedad permite construir el árbol con decisiones locales, cogiendo cada vez la arista más barata que sea segura. Es un caso en que un [algoritmo voraz](/articulos/algoritmos-voraces/) da el resultado óptimo. Kruskal y Prim la aplican de dos formas.
 
@@ -110,7 +110,7 @@ La arista A-B, de peso 4, se descarta: cuando le llega el turno, A y B ya están
 
 En `buscar`, cada nodo consultado queda apuntando directamente a su representante. Ese detalle, la **compresión de caminos**, hace que las consultas siguientes sean casi instantáneas.
 
-El coste lo domina la ordenación: O(E log E).
+Con una estructura union-find adecuada, el coste habitual lo domina la ordenación: O(E log E). El ejemplo muestra compresión de caminos; la [unión por tamaño](/articulos/conjuntos-disjuntos-union-find/) completa la implementación habitual. Si el grafo no es conexo, el resultado tiene menos de N − 1 aristas y es un bosque mínimo, no un árbol que conecte todos los nodos.
 
 ## Prim
 
@@ -161,7 +161,7 @@ Los dos dan un árbol del mismo coste. Si hay pesos repetidos puede haber varios
 ## Lo esencial
 
 - El árbol de expansión mínima conecta todos los nodos con el menor coste total.
-- Tiene siempre un nodo menos de aristas, y ningún ciclo.
+- En un grafo conexo tiene N − 1 aristas para N nodos, y ningún ciclo.
 - Kruskal añade las aristas de menor a mayor, saltándose las que cierran un ciclo.
 - Prim hace crecer un árbol añadiendo cada vez la arista más barata que sale de él.
 - Los dos son algoritmos voraces que dan el resultado óptimo.

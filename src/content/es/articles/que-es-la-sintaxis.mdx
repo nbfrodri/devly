@@ -6,7 +6,7 @@ kind: definicion
 layer: programacion
 prerequisites:
   - compilador-e-interprete
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Syntax (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Glossary/Syntax
@@ -23,14 +23,15 @@ La **sintaxis** de un lenguaje de programación es el conjunto de reglas que det
 En JavaScript, un condicional se escribe así:
 
 ```javascript
+const edad = 20;
 if (edad >= 18) {
-	console.log("Mayor de edad");
+	console.log("Mayor de edad"); // "Mayor de edad"
 }
 ```
 
 Los paréntesis alrededor de la condición y las llaves alrededor del bloque son sintaxis. En Python, la misma idea se escribe sin paréntesis ni llaves, con dos puntos y sangría.
 
-Si se incumple una regla, el programa ni siquiera empieza a ejecutarse: el [compilador o el intérprete](/articulos/compilador-e-interprete/) lo rechaza con un **error de sintaxis**.
+Si se incumple una regla, el [compilador o el intérprete](/articulos/compilador-e-interprete/) rechaza ese código con un **error de sintaxis** al analizarlo. Puede ocurrir antes de empezar o durante la ejecución si se analiza código nuevo, como en este ejemplo:
 
 ```js
 try {
@@ -47,8 +48,8 @@ Con qué no confundirla:
 - La **sintaxis** dice si un programa está **bien escrito**.
 - La **semántica** dice **qué significa**, qué hace al ejecutarse.
 
-Un programa puede tener una sintaxis perfecta y hacer algo absurdo: sumar donde había que restar. La sintaxis la comprueba la máquina antes de ejecutar; la semántica, solo las [pruebas](/articulos/pruebas-de-software/) y quien lee el código.
+Un programa puede tener una sintaxis perfecta y hacer algo absurdo: sumar donde había que restar. Las herramientas también comprueban ciertas reglas semánticas, como compatibilidad de tipos. Las [pruebas](/articulos/pruebas-de-software/) y la revisión ayudan a comprobar si el comportamiento corresponde al propósito; ninguna comprobación sintáctica demuestra eso.
 
 ## Azúcar sintáctico
 
-Se llama así a una forma más cómoda de escribir algo que ya se podía expresar de otro modo. Las funciones flecha de JavaScript, `(x) => x * 2`, son en buena parte azúcar sintáctico sobre las funciones normales.
+Se llama así a una forma más cómoda de escribir algo que ya se podía expresar de otro modo. Para una variable numérica sencilla, `x += 1` expresa de forma breve `x = x + 1`. Una forma más corta no siempre es equivalente: las funciones flecha, por ejemplo, tienen reglas de `this` distintas de las funciones normales.

@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - pila-y-monticulo-de-memoria
   - grafos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Gestión de memoria"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Memory_management
@@ -16,13 +16,13 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-En lenguajes como JavaScript, Java, Python o Go, nunca liberas la memoria a mano: creas objetos y, cuando ya no los usas, desaparecen solos. De eso se encarga el **recolector de basura**: una parte del entorno de ejecución que detecta qué memoria ya no se necesita y la libera. Como resume MDN, su función es rastrear las reservas de memoria y su uso, para encontrar cuándo una parte ya no es necesaria y liberarla automáticamente.
+El **recolector de basura** administra automáticamente la memoria de los objetos gestionados por un entorno de ejecución. En lenguajes como JavaScript, Java, Python o Go, normalmente no liberas cada objeto a mano. El recolector puede recuperar objetos inalcanzables; no sabe si un objeto que todavía guardas te será útil y no promete liberarlo inmediatamente al dejar de usarlo.
 
-En C, en cambio, hay que liberar cada reserva con `free`. Olvidarlo produce fugas de memoria; hacerlo dos veces o usar memoria ya liberada, fallos graves de seguridad.
+En C, la memoria reservada con `malloc` necesita una liberación correspondiente con `free` cuando deja de ser necesaria. Esto no se aplica a toda variable de C. Olvidar una reserva puede producir una fuga; liberarla dos veces o seguir usándola tiene comportamiento indefinido.
 
 ## ¿Qué es basura?
 
-Los objetos viven en el [montículo](/articulos/pila-y-monticulo-de-memoria/) y se apuntan unos a otros: forman un [grafo](/articulos/grafos/). Un objeto es **basura** cuando ya no hay forma de llegar a él desde el programa. El punto de partida son las **raíces**: las variables globales y las variables locales de las funciones que se están ejecutando.
+En el modelo que usaremos, los objetos viven en el [montículo](/articulos/pila-y-monticulo-de-memoria/) y se apuntan unos a otros: forman un [grafo](/articulos/grafos/). Un objeto es **basura** cuando ya no hay forma de llegar a él desde las **raíces** del entorno: por ejemplo, referencias en la pila de ejecución, globales y referencias que conserva el propio entorno. Las raíces exactas dependen de la implementación.
 
 ## Primera idea: contar referencias
 
@@ -65,23 +65,34 @@ console.log([...vivos].join(""), basura.join("")); // abc def
 
 `d` y `e` forman un ciclo, pero como nadie llega a ellos desde las raíces, son basura. Marcar y barrer resuelve los ciclos que el conteo de referencias no puede. Es un recorrido de grafo, como el de [búsqueda en profundidad](/articulos/busqueda-en-anchura-y-en-profundidad/).
 
+<Quiz
+	client:visible
+	question="Si una caché global conserva una referencia a d, ¿puede el recolector liberar el ciclo d–e de este ejemplo?"
+	options={[
+		"Sí, porque formar un ciclo basta para ser basura",
+		"No, ambos objetos vuelven a ser alcanzables desde una raíz",
+		"Solo puede liberar e",
+	]}
+	answer={1}
+/>
+
 Tras barrer, la memoria libre queda **fragmentada** en huecos. Muchos recolectores **compactan**: mueven los objetos vivos juntos y actualizan los punteros.
 
 ## La hipótesis generacional
 
-La mayoría de los objetos **mueren jóvenes**: se crean, se usan un momento y se abandonan, como los objetos temporales dentro de una función. El equipo de V8, el motor de JavaScript de Chrome y Node.js, la llama la **hipótesis generacional**, y explica que se cumple en la mayoría de los lenguajes dinámicos.
+La **hipótesis generacional** dice que muchos objetos tienen una vida corta: se crean, se usan y pronto dejan de ser alcanzables. Es un patrón frecuente que aprovechan ciertos recolectores, no una ley para cualquier programa. Una aplicación que retiene todos sus datos tiene otro comportamiento.
 
-Así que el montículo se divide en **generaciones**:
+Un recolector generacional divide el montículo en **generaciones**:
 
 ```mermaid
 flowchart LR
-	N["Generación joven<br>recolección frecuente y rápida"] -- "sobrevive dos veces" --> O["Generación vieja<br>recolección rara y completa"]
+	N["Generación joven"] -- "sobrevive según la política del recolector" --> O["Generación vieja"]
 ```
 
 - Los objetos nuevos nacen en la **generación joven**, que se limpia a menudo. Como casi todo está muerto, solo hay que copiar lo poco que sobrevive.
 - Lo que sobrevive a varias recolecciones pasa a la **generación vieja**, que se revisa con mucha menos frecuencia.
 
-En V8, según su blog, los objetos nacen en una zona de la generación joven, pasan a otra si sobreviven a una recolección, y a la generación vieja si sobreviven a otra más.
+El artículo de V8 de 2019 describe una política concreta: una primera supervivencia mantiene el objeto en la generación joven y una segunda lo promociona. Es un ejemplo de implementación de esa fecha, no una regla de JavaScript ni de todos los recolectores.
 
 ## Las pausas
 
@@ -101,5 +112,5 @@ Un recolector solo libera lo inalcanzable. Si el programa guarda referencias que
 
 - El recolector libera los objetos que ya no se pueden alcanzar desde las raíces del programa.
 - Contar referencias no libera los ciclos; marcar y barrer sí.
-- Como casi todos los objetos mueren jóvenes, el montículo se divide en generaciones.
-- Los recolectores modernos son paralelos, incrementales y concurrentes para reducir las pausas.
+- Los recolectores generacionales aprovechan que muchos objetos suelen tener una vida corta.
+- Paralelismo, trabajo incremental y concurrencia son técnicas para reducir pausas, con costes de coordinación.

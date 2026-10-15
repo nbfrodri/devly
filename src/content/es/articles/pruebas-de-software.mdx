@@ -5,6 +5,7 @@ level: basico
 layer: aplicaciones
 prerequisites:
   - funciones
+  - arrays
 updated: 2026-10-15
 sources:
   - title: "Martin Fowler: Mocks Aren't Stubs (en inglés)"
@@ -35,7 +36,7 @@ A los errores de un programa se les llama *bugs*, por una [historia curiosa](/ar
 
 ## Cómo es una prueba
 
-Toda prueba sigue tres pasos: preparar los datos, ejecutar el código y comprobar el resultado. Esa comprobación se llama [**aserción**](/articulos/que-es-una-asercion/).
+Toda prueba sigue tres pasos: preparar los datos, ejecutar el código y comprobar el resultado. Esa comprobación se llama [**aserción**](/articulos/que-es-una-asercion/). Debe verificar un resultado observable, como el valor devuelto o un error esperado; ejecutar una función sin comprobar nada puede dejar pasar un fallo.
 
 ```js
 import assert from "node:assert/strict";
@@ -83,7 +84,7 @@ Son las que dan más confianza en que todo funciona de verdad. También son las 
 
 ## La pirámide de pruebas
 
-Como cada tipo tiene costes distintos, se recomienda repartirlas en forma de pirámide:
+La **pirámide de pruebas** orienta cómo combinar alcances y costes. Propone muchas comprobaciones pequeñas y reservar los recorridos completos para los riesgos que necesitan varias piezas reales:
 
 | Nivel | Cantidad | Velocidad | Coste de mantener |
 | --- | --- | --- | --- |
@@ -91,15 +92,15 @@ Como cada tipo tiene costes distintos, se recomienda repartirlas en forma de pir
 | De integración | Algunas | Medias | Medio |
 | Unitarias | Muchas | Muy rápidas | Bajo |
 
-Muchas pruebas rápidas en la base, que cubren la lógica con detalle, y pocas pruebas lentas arriba, para los recorridos críticos.
+La tabla resume tendencias, no tiempos garantizados ni cuotas. Una aplicación con mucha lógica de cálculo puede necesitar numerosas unitarias; una capa que conecta servicios puede concentrar más comprobaciones de integración. Decide según los fallos que quieres detectar y el coste de preparar y mantener cada prueba.
 
-El error contrario es apoyarse casi solo en pruebas de extremo a extremo. El conjunto tarda tanto y falla tan a menudo sin motivo que la gente deja de ejecutarlo.
+Duplicar todos los casos en recorridos completos suele añadir espera y dificultar el diagnóstico. Una prueba que falla de forma intermitente tiene una causa que investigar, como estado compartido o sincronización incorrecta; no debe descartarse como ruido inevitable.
 
 <Quiz
 	client:visible
-	question="¿Qué tipo de prueba conviene tener en mayor cantidad?"
-	options={["Unitarias", "De integración", "De extremo a extremo"]}
-	answer={0}
+	question="El cálculo pasa aislado, pero el pedido no se guarda por una consulta SQL incorrecta. ¿Qué comprobación falta?"
+	options={["Repetir la misma unitaria", "Probar la integración con la base de datos", "Medir solo la cobertura"]}
+	answer={1}
 />
 
 ## Dobles de prueba
@@ -110,41 +111,7 @@ Permiten probar sin red y simular situaciones difíciles de provocar, como un se
 
 Conviene no abusar. Una prueba que sustituye casi todo acaba comprobando que los sustitutos se comportan como se programaron, no que el código funcione. Esta posibilidad de cambiar unas piezas por otras es una de las ventajas de la inversión de dependencias que describen los [principios SOLID](/articulos/principios-solid/).
 
-## Qué hace buena a una prueba
-
-- **Es rápida.** Si tarda, no se ejecuta.
-- **Es independiente.** No depende de que otra prueba haya ido antes.
-- **Es determinista.** Da siempre el mismo resultado. Una prueba que falla "a veces" enseña al equipo a ignorar los fallos.
-- **Comprueba el comportamiento, no los detalles internos.** Si reorganizas el código sin cambiar lo que hace, las pruebas deben seguir pasando.
-- **Su nombre dice qué comprueba.** Al fallar, debe quedar claro qué se ha roto.
-
-## Escribir la prueba antes
-
-En el **desarrollo guiado por pruebas** (TDD) se invierte el orden habitual:
-
-1. Se escribe una prueba para lo que se quiere conseguir. Falla, porque el código aún no existe.
-2. Se escribe el código mínimo para que pase.
-3. Se mejora el código, con la prueba como red de seguridad.
-
-Obliga a pensar primero en cómo se va a usar el código y garantiza que nada queda sin probar. Lo explica a fondo [desarrollo guiado por pruebas](/articulos/desarrollo-guiado-por-pruebas/).
-
-## Lo que las pruebas no dan
-
-Las pruebas demuestran que hay errores, no que no los haya. Solo comprueban los casos que alguien pensó.
-
-La **cobertura** mide qué porcentaje del código se ejecuta durante las pruebas. Sirve para localizar zonas sin probar, pero un 100 % no significa ausencia de errores: una línea puede ejecutarse sin que nadie compruebe su resultado.
-
-## Para comparar
-
-Los tipos de prueba según su alcance se comparan en [pruebas unitarias, de integración y de extremo a extremo](/articulos/pruebas-unitarias-de-integracion-y-de-extremo-a-extremo/).
-
-## Comprobar una expectativa
-
-Cada comprobación explícita de una condición esperada es una [aserción](/articulos/que-es-una-asercion/). En las pruebas conviene expresar resultados observables, como el valor devuelto o el error esperado, para que una refactorización interna no rompa comprobaciones innecesarias.
-
-Una [prueba intermitente](/articulos/pruebas-intermitentes/) puede pasar o fallar según tiempos, orden o estado compartido. Repetirla hasta que pase no explica la causa.
-
-## Mock, stub y fake
+### Mock, stub y fake
 
 Los **dobles de prueba** sustituyen dependencias, pero no todos tienen el mismo papel. Un **stub** entrega respuestas preparadas; un **fake** ofrece una implementación simplificada que funciona dentro de unos límites; un **mock** incorpora expectativas sobre interacciones que después se verifican. Los nombres de las bibliotecas no siempre utilizan esta terminología con la misma precisión.
 
@@ -170,13 +137,47 @@ El fake también necesita límites explícitos: un almacén en memoria puede no 
 
 Ningún doble demuestra por sí solo que la dependencia real se comporta igual. Las [pruebas de contrato](/articulos/pruebas-de-contrato/) ayudan a conectar esa simulación con un proveedor real. Conserva también las comprobaciones de integración que necesite el sistema.
 
+## Qué hace buena a una prueba
+
+- **Es rápida.** Si tarda, no se ejecuta.
+- **Es independiente.** No depende de que otra prueba haya ido antes.
+- **Es determinista.** Da siempre el mismo resultado. Una prueba que falla "a veces" enseña al equipo a ignorar los fallos.
+- **Comprueba el comportamiento, no los detalles internos.** Si reorganizas el código sin cambiar lo que hace, las pruebas deben seguir pasando.
+- **Su nombre dice qué comprueba.** Al fallar, debe quedar claro qué se ha roto.
+
+## Escribir la prueba antes
+
+En el **desarrollo guiado por pruebas** (TDD) se invierte el orden habitual:
+
+1. Se escribe una prueba para lo que se quiere conseguir. Falla, porque el código aún no existe.
+2. Se escribe el código mínimo para que pase.
+3. Se mejora el código, con la prueba como red de seguridad.
+
+Ayuda a pensar primero en cómo se va a usar el código y deja pruebas de los casos elegidos. No garantiza cubrir todos los requisitos, entradas o fallos de integración: también puedes olvidar un caso al escribir la prueba primero. Lo explica a fondo [desarrollo guiado por pruebas](/articulos/desarrollo-guiado-por-pruebas/).
+
+## Lo que las pruebas no dan
+
+Las pruebas demuestran que hay errores, no que no los haya. Solo comprueban los casos que alguien pensó.
+
+La **cobertura** mide qué porcentaje del código se ejecuta durante las pruebas. Sirve para localizar zonas sin probar, pero un 100 % no significa ausencia de errores: una línea puede ejecutarse sin que nadie compruebe su resultado.
+
+## Para comparar
+
+Los tipos de prueba según su alcance se comparan en [pruebas unitarias, de integración y de extremo a extremo](/articulos/pruebas-unitarias-de-integracion-y-de-extremo-a-extremo/).
+
 Las [pruebas basadas en propiedades](/articulos/pruebas-basadas-en-propiedades/) exploran reglas generales mediante entradas generadas y buscan contraejemplos pequeños.
 
 Las [pruebas de carga y de estrés](/articulos/pruebas-de-carga-y-estres/) estudian capacidad, límites y recuperación bajo escenarios definidos.
+
+## Errores comunes
+
+- **Confundir cobertura con corrección.** Ejecutar una línea no implica comprobar su resultado ni todas sus entradas.
+- **Repetir hasta que pase.** Una [prueba intermitente](/articulos/pruebas-intermitentes/) necesita investigar tiempos, orden y estado compartido; un éxito posterior no explica el fallo.
+- **Simular todas las dependencias.** Los dobles no acreditan que las piezas reales cumplan el mismo contrato.
 
 ## Lo esencial
 
 - Una prueba automática ejecuta código con datos conocidos y comprueba el resultado.
 - Su principal valor es detectar regresiones y permitir cambiar el código con confianza.
-- Hay pruebas unitarias, de integración y de extremo a extremo; conviene tener muchas de las primeras y pocas de las últimas.
+- Combina pruebas unitarias, de integración y de extremo a extremo según los riesgos y costes del sistema.
 - Una buena prueba es rápida, independiente y determinista.
