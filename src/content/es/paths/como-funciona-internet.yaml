@@ -1,5 +1,5 @@
 title: Cómo funciona internet
-description: De una red local y un servidor a una petición web completa, con direcciones, transporte y decisiones de enrutamiento explicadas paso a paso.
+description: De una red local a una petición web completa, para entender después Spotify, WhatsApp, Cloudflare y una caída que afectó a los tres servicios de Facebook.
 layer: redes
 steps:
   - tipos-de-redes
@@ -16,3 +16,7 @@ steps:
   - enrutamiento
   - como-viaja-un-paquete-por-internet
   - que-es-ntp
+  - como-funciona-spotify
+  - como-funciona-whatsapp
+  - que-hace-cloudflare
+  - la-caida-de-facebook-de-2021

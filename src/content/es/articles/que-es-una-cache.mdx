@@ -27,9 +27,9 @@ Una caché se apoya en lo mismo: obtener un dato del sitio original cuesta, hay 
 
 ## Aciertos y fallos
 
-Cuando se pide un dato:
+En una caché sencilla que carga los datos cuando faltan y tiene permiso para almacenarlos:
 
-- Si está en la caché, es un **acierto** (*hit*): se devuelve al momento.
+- Si hay una copia utilizable en la caché, es un **acierto** (*hit*): se devuelve sin repetir la operación de origen.
 - Si no está, es un **fallo** (*miss*): se obtiene del origen, se guarda en la caché y se devuelve.
 
 La proporción de aciertos mide lo útil que es una caché. Si casi todo son fallos, solo añade trabajo.
@@ -87,9 +87,9 @@ Decidir cuándo una copia deja de valer se llama **invalidación**, y tiene fama
 
 ### Caducidad por tiempo
 
-Cada dato se guarda con un **tiempo de vida** (TTL). Pasado ese tiempo, se descarta y se vuelve a pedir.
+Cada dato puede tener un **tiempo de vida** (TTL). Al agotarse, deja de poder reutilizarse sin seguir la política de renovación. Según el sistema, puede eliminarse, obtenerse otra vez o conservarse mientras se comprueba si cambió. En HTTP, perder frescura no obliga por sí solo a borrar el cuerpo guardado.
 
-Es simple y robusto, y obliga a elegir: un TTL largo da más aciertos y más riesgo de servir datos viejos; uno corto, lo contrario.
+Esta política obliga a elegir: un TTL largo permite más reutilización, pero también aceptar datos antiguos durante más tiempo; uno corto requiere renovaciones más frecuentes. El resultado depende de las peticiones y de cuándo cambie el original.
 
 ### Invalidación explícita
 
@@ -97,11 +97,11 @@ Cuando el dato original cambia, se borra o se actualiza la copia. Es preciso, pe
 
 ### Nombres que cambian con el contenido
 
-Si el nombre de un archivo incluye una huella de su contenido, como `estilos.3f9a2c.css`, cualquier cambio produce un nombre nuevo. El archivo puede guardarse en caché para siempre, porque nunca cambiará: lo que cambia es a qué nombre apunta la página.
+Si el nombre de un archivo incluye una huella de su contenido, como `estilos.3f9a2c.css`, cualquier cambio produce un nombre nuevo. Si se respeta la regla de no cambiar el contenido bajo ese mismo nombre, la copia puede tener una vida de frescura larga. Eso no garantiza que se conserve: el espacio es limitado y puede desalojarse. También hay que actualizar la página para que apunte al nombre nuevo.
 
 ## Cuando la caché se llena
 
-La memoria es limitada, así que en algún momento hay que tirar algo. La regla que decide qué se elimina es la **política de desalojo**. La más habitual es **LRU** (*least recently used*): se descarta lo que lleva más tiempo sin usarse.
+La memoria es limitada, así que en algún momento hay que tirar algo. La regla que decide qué se elimina es la **política de desalojo**. Una política habitual es **LRU** (*least recently used*): se descarta lo que lleva más tiempo sin usarse.
 
 ```js
 class CacheLRU {
@@ -182,7 +182,7 @@ Cuando una copia deja de estar fresca y dispone de un validador, como una etique
 
 ## Cuándo usarla
 
-Una caché compensa cuando el dato **cuesta de obtener**, se **lee mucho más de lo que cambia** y se tolera que esté **ligeramente desactualizado**.
+Una caché suele compensar cuando el dato **cuesta de obtener** y se **reutiliza mucho**. Si no se tolera desactualización, hace falta un mecanismo de coherencia o validación apropiado, con su coste. El [caso de Cloudflare](/articulos/que-hace-cloudflare/) sigue tres visitas para distinguir frescura, actualización y permanencia de una copia.
 
 Mide el coste de obtener datos, la tasa de aciertos y la antigüedad tolerable. Una caché puede ser parte del diseño adecuado, pero también añade trabajo y reglas que mantener; no sustituye corregir una consulta innecesariamente costosa.
 
@@ -191,5 +191,4 @@ Mide el coste de obtener datos, la tasa de aciertos y la antigüedad tolerable. 
 - Una caché guarda una copia de un resultado costoso para reutilizarla.
 - Un acierto evita el trabajo; un fallo obliga a ir al origen.
 - Lo difícil es la invalidación: saber cuándo la copia deja de ser válida.
-- Cuando se llena, una política de desalojo como LRU decide qué eliminar.
-- Sirve para datos que se leen mucho y cambian poco.
+- Cuando se llena, una política de desalojo como LRU decide qué eliminar, aunque la copia siga vigente.

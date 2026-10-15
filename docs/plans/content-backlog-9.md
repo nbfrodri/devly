@@ -69,7 +69,7 @@ Verificación de interfaz: `pnpm check` pasa (558 tests, cero errores y avisos d
 
 Aceptación: «bit» enlaza «byte» y se revisan sistemáticamente las menciones del catálogo, con una lista explícita de grupos pendientes hasta cerrar la auditoría.
 
-Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos, y en los dos grupos de hardware y almacenamiento registrados en el backlog 8: 64 artículos distintos, incluidos los cinco nuevos. La ruta de piezas del ordenador queda revisada en sus catorce pasos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
+Avance: revisadas las primeras menciones y los enlaces necesarios en las tandas de internet, redes, telecomunicaciones e IoT con sus prerrequisitos, y en los dos grupos de hardware y almacenamiento registrados en el backlog 8: 64 artículos distintos, incluidos los cinco nuevos de fundamentos. A esos grupos se añade la revisión de los cuatro casos cotidianos, CDN, cifrado y caché de la tanda 10, con enlaces entrantes desde compresión y DNS. La ruta de piezas del ordenador queda revisada en sus catorce pasos. La auditoría sistemática del resto del catálogo sigue pendiente; comprobar destinos válidos no permite cerrarla.
 
 ## 6. Fundamentos y redes para principiantes
 
@@ -93,10 +93,14 @@ Investigar fuentes oficiales antes de fijar el alcance. Separar mecanismos docum
 - [ ] Spotify: explicar cómo llega el audio y por qué puede empezar antes de descargar la canción completa; conectar representación del sonido, compresión, búfer y distribución. Propuesta nueva: `src/content/es/articles/como-funciona-spotify.mdx`.
 - [ ] WhatsApp: seguir un mensaje entre dos personas, con cifrado de extremo a extremo, entrega y límites claramente separados. Propuesta nueva: `src/content/es/articles/como-funciona-whatsapp.mdx`.
 - [ ] Cloudflare: seguir una petición y explicar el papel de DNS, proxy y caché mediante un caso concreto, sin intentar catalogar todos sus productos. Propuesta nueva: `src/content/es/articles/que-hace-cloudflare.mdx`.
-- [ ] Elegir al menos un incidente con informe técnico primario y efectos cotidianos documentados. Explicar desencadenante, propagación, recuperación y lección, enlazando conceptos ya enseñados. Propuesta nueva: un artículo en `src/content/es/articles/` cuyo nombre se fijará al elegir y contrastar el caso.
+- [ ] Explicar la caída de Facebook, WhatsApp e Instagram del 4 de octubre de 2021: desencadenante, propagación por red y DNS, recuperación y efectos cotidianos documentados. Caso elegido tras contrastar el informe de sus ingenieros y las observaciones externas de Cloudflare. Artículo: `src/content/es/articles/la-caida-de-facebook-de-2021.mdx`.
 - [ ] Integrar los casos en rutas existentes de internet, aplicaciones web o historia cuando encajen; añadir enlaces desde los conceptos que ilustran.
 
 Aceptación: el lector puede relacionar una acción familiar con sus mecanismos y explicar por qué un fallo concreto afectó a un servicio. Las conclusiones se apoyan en fuentes abiertas y citadas.
+
+La tanda 10 del backlog 8 registra el alcance y los hallazgos previos. Los cuatro casos ampliarán la ruta de internet de catorce a dieciocho pasos. Se corregirán primero las explicaciones necesarias de CDN, cifrado y caducidad de caché; este trabajo no da por revisadas las demás rutas que las usan.
+
+**Resultado en la rama:** los cuatro casos y las tres bases están redactados, releídos y comprobados. La ruta de dieciocho pasos pasa en móvil y escritorio sin JavaScript. Pasan los cuatro ejemplos ejecutables, tres grupos de casos límite, catorce combinaciones de navegador y ocho visitas a enlaces entrantes; se inspeccionan las capturas completas. `pnpm check` pasa con 567 pruebas, 602 páginas y 542 artículos indexados. Las casillas de publicación permanecen abiertas hasta integrar la rama; el detalle está en la tanda 10 del backlog 8.
 
 ## 8. Computación cuántica, según los huecos encontrados
 
