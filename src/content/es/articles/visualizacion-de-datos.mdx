@@ -6,7 +6,7 @@ layer: datos
 prerequisites:
   - media-mediana-y-desviacion
   - correlacion-y-causalidad
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Financial Times: Visual Vocabulary (en inglés)"
     url: https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary
@@ -14,11 +14,13 @@ sources:
     url: https://www.data-to-viz.com/
   - title: "Datawrapper Academy (en inglés)"
     url: https://academy.datawrapper.de/
+  - title: "W3C WAI: Complex Images (en inglés)"
+    url: https://www.w3.org/WAI/tutorials/images/complex/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-La **visualización de datos** es la representación gráfica de información para que se entienda de un vistazo. Su regla fundamental es que **el gráfico depende de la pregunta**: cada tipo muestra bien una relación concreta, y mal las demás.
+La **visualización de datos** es la representación gráfica de información para que se entienda de un vistazo. Su regla fundamental es que **el gráfico depende de la pregunta**: cada tipo destaca unas relaciones y puede ocultar otras.
 
 Un buen gráfico revela en segundos lo que una tabla esconde. Uno malo confunde, o engaña.
 
@@ -43,7 +45,7 @@ Para **comparar cantidades** entre categorías. El ojo compara longitudes con mu
 
 - Con nombres largos, mejor horizontales.
 - Ordenadas de mayor a menor, salvo que las categorías tengan un orden propio, como los meses.
-- **El eje empieza en cero.** Siempre. La longitud de la barra es el dato.
+- **La base de las barras debe representar cero** cuando su longitud codifica una cantidad. Si necesitas destacar pequeñas diferencias sin mostrar toda esa longitud, utiliza puntos o líneas y etiqueta la escala.
 
 ### Líneas
 
@@ -65,7 +67,7 @@ Un promedio no enseña nada de esto. Dos conjuntos con la misma media y la misma
 
 ### Sectores
 
-El gráfico de tarta es el más usado y el más criticado. El ojo compara mal ángulos y áreas: entre un 23 % y un 27 % apenas se nota la diferencia. Solo funciona con dos o tres partes muy distintas. Para lo demás, barras.
+Los sectores representan partes de un total: sus porcentajes deben sumar el 100 %. Comparar ángulos próximos, como un 23 % y un 27 %, suele resultar más difícil que comparar longitudes. Con pocas partes claramente distintas puede servir; para comparar diferencias pequeñas, las barras facilitan la lectura.
 
 <Quiz
 	client:visible
@@ -92,12 +94,12 @@ console.log(diferenciaReal.toFixed(2)); // "1.02"
 console.log(diferenciaAparente.toFixed(2)); // "1.67"
 ```
 
-La diferencia real es del 2 %. La barra de 100 parece un 67 % más larga. El gráfico cuenta una historia que los datos no contienen.
+El aumento real es de aproximadamente un 2,04 %. La barra de 100 parece un 67 % más larga. El gráfico cuenta una historia que los datos no contienen.
 
 ### Otros trucos
 
 - **Escalas distintas** en dos gráficos que se colocan juntos para compararlos.
-- **Dos ejes verticales** en el mismo gráfico: ajustando sus escalas, cualquier par de series parece moverse a la vez.
+- **Dos ejes verticales** en el mismo gráfico: ajustando sus escalas se pueden exagerar coincidencias de nivel o amplitud. Eso no demuestra una relación estadística ni puede cambiar arbitrariamente la forma de las series.
 - **Áreas para cantidades**: si se dobla el lado de un icono para representar el doble, su área se cuadruplica.
 - **Elegir el intervalo** que conviene: una caída de un año parece una subida si se empieza a mirar en el punto más bajo.
 - **Efectos en tres dimensiones**, que deforman las proporciones.
@@ -108,7 +110,7 @@ La diferencia real es del 2 %. La barra de 100 parece un 67 % más larga. El gr�
 - **Quitar lo que sobra.** Bordes, sombras, líneas de cuadrícula densas, leyendas que se podrían sustituir por etiquetas junto a cada serie.
 - **Destacar lo importante.** La serie que importa, en color; las demás, en gris.
 - **Etiquetar.** Ejes con nombre y unidad. Fuente de los datos.
-- **Accesibilidad.** No depender solo del color para distinguir series: alrededor de una de cada doce personas tiene alguna dificultad para distinguir colores. Añadir etiquetas o formas, y un texto alternativo que resuma lo que muestra el gráfico, como explica [accesibilidad web](/articulos/accesibilidad-web/).
+- **Accesibilidad.** No depender solo del color para distinguir series. Añadir etiquetas o formas, un texto que resuma la conclusión y, cuando se necesiten los valores, una tabla o descripción detallada, como explica [accesibilidad web](/articulos/accesibilidad-web/).
 
 ## A veces, una tabla
 
@@ -122,6 +124,6 @@ Visualizar no es solo comunicar. Es también la primera forma de **entender** un
 
 - El gráfico se elige según la pregunta: comparar, ver evolución, composición, distribución o relación.
 - Barras para comparar, líneas para el tiempo, dispersión para relaciones, histograma para distribuciones.
-- En un gráfico de barras, el eje empieza en cero.
+- Cuando la longitud de la barra representa una cantidad, su base debe corresponder a cero.
 - Los ejes recortados, las escalas manipuladas y los efectos 3D distorsionan los datos.
 - Un buen gráfico tiene un mensaje claro y no depende solo del color.

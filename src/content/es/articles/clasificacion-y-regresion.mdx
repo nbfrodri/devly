@@ -6,7 +6,7 @@ kind: comparacion
 layer: ia
 prerequisites:
   - que-es-el-aprendizaje-automatico
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "Google: Clasificación (Machine Learning Crash Course)"
     url: https://developers.google.com/machine-learning/crash-course/classification?hl=es-419
@@ -33,7 +33,7 @@ No depende de los datos de entrada, sino de lo que se quiere predecir.
 | ¿Cuánto costará esta vivienda? | 215 000 | Regresión |
 | ¿Cuántos grados hará mañana? | 18,5 | Regresión |
 
-Una buena prueba: ¿tiene sentido hablar de un valor intermedio? Entre 200 000 y 220 000 euros hay un precio de 210 000. Entre "gato" y "perro" no hay nada.
+Una pista es preguntar si la salida representa una magnitud, con diferencias numéricas que tienen significado. Entre 200 000 y 220 000 euros hay un precio de 210 000. Entre las etiquetas "gato" y "perro" no hay una distancia numérica natural. No es una prueba universal: predecir un recuento sigue siendo regresión aunque los resultados observables sean enteros.
 
 ## Regresión
 
@@ -63,7 +63,7 @@ console.log(precioPorMetro); // 2
 console.log(predecir(70)); // 140
 ```
 
-A partir de tres viviendas, el modelo deduce un precio por metro y lo aplica a una que no había visto. Los precios están en miles.
+A partir de tres viviendas ficticias, el ajuste de mínimos cuadrados **sin intercepto** obtiene un precio por metro y lo aplica a una superficie nueva. Los precios están en miles de euros. Forzar la recta a pasar por cero es una decisión del ejemplo, no una propiedad de todas las regresiones.
 
 ### Cómo se mide
 
@@ -81,7 +81,7 @@ El modelo asigna cada caso a una de varias categorías, llamadas **clases**.
 
 ### Por dentro, una probabilidad
 
-Casi ningún clasificador responde directamente "sí" o "no". Calcula una **probabilidad**: "hay un 87 % de que sea no deseado".
+Muchos clasificadores producen una puntuación o una **probabilidad estimada** antes de decidir. Una puntuación no es necesariamente una probabilidad; incluso una salida entre cero y uno necesita comprobar su calibración. Otros clasificadores pueden entregar directamente una etiqueta.
 
 Para convertirla en una decisión se fija un **umbral**. Lo habitual es 0,5, pero se puede mover:
 
@@ -95,7 +95,7 @@ console.log(clasificar(0.6, 0.5)); // "no deseado"
 console.log(clasificar(0.6, 0.8)); // "normal"
 ```
 
-Con un umbral de 0,8, un correo con probabilidad 0,6 se deja pasar. Subir el umbral hace al modelo más prudente: marca menos correos y se equivoca menos al marcarlos, a costa de dejar escapar más.
+Con un umbral de 0,8, un correo con probabilidad 0,6 se deja pasar. Con las mismas puntuaciones y correos, subir el umbral no puede aumentar el número de positivos ni de falsas alarmas, pero puede dejar escapar positivos reales. La proporción de aciertos entre los marcados, llamada precisión, no tiene por qué aumentar.
 
 Dónde poner el umbral depende de qué error sale más caro. Mandar un correo importante a la carpeta de no deseados es peor que dejar pasar publicidad.
 
@@ -108,8 +108,8 @@ La pregunta es **cuántas veces acierta**, y hay más de una forma de contarlo. 
 | | Clasificación | Regresión |
 | --- | --- | --- |
 | Predice | Una categoría | Un número |
-| Valores posibles | Un conjunto finito | Un rango continuo |
-| Salida interna | Probabilidad de cada clase | El valor |
+| Valores posibles | Categorías, también etiquetas escritas con cifras | Magnitudes continuas o recuentos |
+| Salida interna | Etiqueta, puntuaciones o probabilidades, según el modelo | Valor o distribución, según el modelo |
 | Se mide con | Aciertos: exactitud, precisión, exhaustividad | Distancias: error medio |
 | Ejemplos | Detección de fraude, diagnóstico | Precios, demanda, temperatura |
 
@@ -132,7 +132,9 @@ Que la respuesta sea un número no la convierte en regresión. Un código postal
 
 ### El mismo problema, de dos formas
 
-A veces se puede elegir. Predecir la edad de una persona es regresión. Predecir si es "niño", "adulto" o "mayor" es clasificación.
+A veces se puede elegir. En el mismo servicio de reparto, predecir **cuántos días** tardará un paquete es regresión. Predecir **si llegará tarde** es clasificación: hace falta definir el plazo que separa las etiquetas y evaluar los errores de esa decisión. El modelo numérico también permite derivar una etiqueta comparando días con plazo, pero no garantiza por ello una buena probabilidad de retraso.
+
+Otro ejemplo: predecir la edad es regresión; predecir si es "niño", "adulto" o "mayor" es clasificación.
 
 Convertir un número en categorías simplifica el problema, pero tira información: para ese modelo, 17 y 19 años caen en categorías distintas, y 19 y 60, en la misma.
 
@@ -142,7 +144,7 @@ Las valoraciones de una a cinco estrellas son categorías, pero ordenadas. Trata
 
 ## Qué tienen en común
 
-Las diferencias están en la salida y en la medida. Todo lo demás se comparte:
+Las diferencias están en la salida y en la medida. Comparten varios aspectos del flujo de trabajo:
 
 - Los dos aprenden de ejemplos etiquetados.
 - Los dos pueden [sobreajustar](/articulos/sobreajuste-y-subajuste/).
@@ -156,7 +158,7 @@ La [regresión logística](/articulos/regresion-logistica/), pese al nombre, est
 ## Lo esencial
 
 - La clasificación predice una categoría; la regresión, un número.
-- La prueba: si tiene sentido un valor intermedio, es regresión.
-- Un clasificador calcula probabilidades y decide con un umbral, que se ajusta según qué error cuesta más.
+- La salida representa una categoría o una magnitud; escribirla con cifras no decide el tipo.
+- Muchos clasificadores usan puntuaciones o probabilidades y un umbral elegido según los errores y sus costes.
 - La regresión se mide por la distancia al valor real; la clasificación, por los aciertos.
 - La regresión logística, pese a su nombre, clasifica.
