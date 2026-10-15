@@ -1,54 +1,65 @@
 ---
 title: "Diferencias entre IPv4 e IPv6"
-description: "IPv4 usa direcciones de 32 bits y se ha quedado sin ellas. IPv6 usa 128 bits. Las dos versiones conviven, y no son compatibles entre sí."
+description: "IPv4 usa direcciones de 32 bits e IPv6 de 128. Compara sus formatos, configuración y recorrido sin confundir una dirección global con acceso permitido."
 level: basico
 kind: comparacion
 layer: redes
 prerequisites:
   - que-es-una-direccion-ip
-  - sistema-hexadecimal
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "RFC 791: Internet Protocol"
+  - title: "RFC 3849: IPv6 Address Prefix Reserved for Documentation (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc3849.html
+  - title: "RFC 5952: IPv6 Address Text Representation (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc5952.html
+  - title: "RFC 4862: IPv6 Stateless Address Autoconfiguration (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc4862.html
+  - title: "RFC 3927: IPv4 Link-Local Addresses (en inglés)"
+    url: https://datatracker.ietf.org/doc/html/rfc3927
+  - title: "RFC 8305: Happy Eyeballs Version 2 (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc8305.html
+  - title: "RFC 8981: Temporary IPv6 Addresses (en inglés)"
+    url: https://datatracker.ietf.org/doc/html/rfc8981
+  - title: "RFC 791: Internet Protocol (en inglés)"
     url: https://www.rfc-editor.org/info/rfc791/
-  - title: "RFC 8200: Internet Protocol, Version 6 (IPv6) Specification"
+  - title: "RFC 8200: Internet Protocol, Version 6 (IPv6) Specification (en inglés)"
     url: https://www.rfc-editor.org/info/rfc8200/
-  - title: "RFC 4291: IP Version 6 Addressing Architecture"
+  - title: "RFC 4291: IP Version 6 Addressing Architecture (en inglés)"
     url: https://www.rfc-editor.org/info/rfc4291/
-  - title: "RFC 1918: Address Allocation for Private Internets"
+  - title: "RFC 1918: Address Allocation for Private Internets (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1918/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-**IPv4** e **IPv6** son las dos versiones del protocolo de internet, el que da a cada dispositivo una [dirección](/articulos/que-es-una-direccion-ip/) y lleva los paquetes de una a otra. IPv4, de 1981, usa direcciones de 32 bits. IPv6, su sucesor, usa 128. Se creó porque las direcciones de IPv4 se acabaron.
+**IPv4** e **IPv6** son dos versiones del protocolo que dirige paquetes entre redes mediante [direcciones IP](/articulos/que-es-una-direccion-ip/). IPv4 usa direcciones de 32 bits e IPv6 de 128. Ese aumento permite un espacio de direcciones muchísimo mayor, pero también cambian el formato del paquete y algunos mecanismos de configuración.
 
-Hoy conviven. No hubo una versión 5 en uso: ese número se asignó a un protocolo experimental.
+Un equipo puede implementar ambas. Tener IPv6 no convierte automáticamente un paquete en IPv4: sus formatos son diferentes.
 
-## El problema: se acabaron las direcciones
+## Un espacio de direcciones mucho mayor
 
-Con 32 bits hay unos 4300 millones de direcciones. En 1981 parecía de sobra. Hoy hay más dispositivos conectados que personas.
+Con 32 bits hay unos 4300 millones de valores. Parte de ese espacio está reservado, y asignar direcciones públicas distintas consume un recurso limitado.
 
 ```js
 console.log(2 ** 32); // 4294967296
 console.log((2n ** 128n).toString().length); // 39
 ```
 
-IPv6 tiene un número de direcciones de 39 cifras. No es cuatro veces más que IPv4: es una cantidad que no se puede agotar en la práctica. Hay suficientes para dar miles de millones de direcciones a cada persona.
+IPv6 tiene un número de direcciones de 39 cifras: `2^128`, frente a `2^32`. Cuadruplicar el número de bits multiplica las combinaciones por `2^96`; no multiplica las direcciones por cuatro.
 
-Los organismos que reparten las direcciones IPv4 entregaron sus últimos bloques libres hace años. Las que quedan se compran y se venden.
+Ese espacio permite asignar bloques amplios sin recurrir al mismo ahorro de direcciones que en IPv4. Aun así, las redes necesitan prefijos organizados y rutas correctas.
 
 ## Cómo aguantó IPv4
 
-Con un apaño: **[NAT](/articulos/que-es-nat/)**, la traducción de direcciones. Todos los dispositivos de una casa usan direcciones privadas, que se repiten en todas las casas del mundo, y comparten una sola dirección pública, la del router.
+Una forma de ahorrar IPv4 públicas es **[NAT](/articulos/que-es-nat/)**: varios dispositivos con direcciones privadas pueden compartir una pública mediante traducción de direcciones y puertos. Es una configuración doméstica habitual, no un requisito de IPv4; también existen equipos con IPv4 pública propia.
 
 Funcionó, y tiene costes:
 
-- **Rompe la conexión directa.** Un dispositivo tras NAT puede iniciar conexiones, y no recibirlas. Las videollamadas y los juegos necesitan trucos y servidores intermedios para atravesarlo.
+- **Complica conexiones entrantes.** Sin una correspondencia apropiada, el traductor no sabe a qué equipo interno entregar un nuevo envío. Una redirección de puertos, técnicas de establecimiento de conexiones o un intermediario pueden resolver distintos casos.
 - **Añade complejidad** y estado en los routers.
-- **No ha bastado.** Muchos proveedores aplican ya una segunda capa de NAT, compartiendo una dirección pública entre varios clientes.
+- **Puede haber varias traducciones.** Un operador puede compartir una IPv4 pública entre varios clientes, además del NAT doméstico.
 
-IPv6 devuelve la idea original de internet: cada dispositivo, una dirección propia, alcanzable de extremo a extremo.
+IPv6 permite asignar direcciones globales a las interfaces sin compartirlas para ahorrar espacio. Eso no garantiza acceso desde fuera: siguen importando las rutas, el servicio y el cortafuegos.
 
 ## Las direcciones
 
@@ -58,7 +69,7 @@ Una dirección IPv4 se escribe como cuatro números decimales:
 192.168.1.10
 ```
 
-Una IPv6, como ocho grupos de cuatro cifras [hexadecimales](/articulos/sistema-hexadecimal/):
+Una IPv6 completa, como ocho grupos de cuatro cifras [hexadecimales](/articulos/sistema-hexadecimal/): los símbolos `0`–`9` y `a`–`f` representan dieciséis valores.
 
 ```
 2001:0db8:0000:0000:0000:0000:0000:0001
@@ -69,41 +80,50 @@ Como son largas, hay dos reglas para abreviar:
 - Se quitan los ceros a la izquierda de cada grupo.
 - **Una** serie de grupos a cero se sustituye por `::`. Solo una vez por dirección, o no se sabría cuántos ceros representa cada una.
 
-```js
-function abreviar(direccion) {
-	const grupos = direccion.split(":").map((g) => g.replace(/^0+(?=.)/, ""));
-	const texto = grupos.join(":");
+El recorrido del ejemplo es:
 
-	return texto.replace(/(^|:)0(:0)+(:|$)/, "::");
-}
-
-console.log(abreviar("2001:0db8:0000:0000:0000:0000:0000:0001")); // "2001:db8::1"
-console.log(abreviar("fe80:0000:0000:0000:0202:b3ff:fe1e:8329")); // "fe80::202:b3ff:fe1e:8329"
+```text
+2001:0db8:0000:0000:0000:0000:0000:0001
+2001:db8:0:0:0:0:0:1
+2001:db8::1
 ```
 
-La función es una simplificación, que basta para estos casos.
+Para escribirla de forma canónica, RFC 5952 pide minúsculas y comprimir la secuencia más larga de grupos a cero; si hay empate, la primera. No se comprime un único grupo cero. Así `2001:0:0:1:0:0:0:1` se escribe `2001:0:0:1::1`, porque el segundo tramo tiene tres grupos y el primero solo dos.
 
-Lo habitual es que los primeros 64 bits identifiquen la red y los otros 64, al dispositivo dentro de ella. Una sola red doméstica tiene más direcciones que todo IPv4.
+Una subred IPv6 que utiliza la autoconfiguración habitual suele tener un [prefijo](/articulos/subredes-y-cidr/) `/64`: 64 bits para el prefijo y 64 para la parte de interfaz. No significa que cada interfaz tenga una única dirección ni que cualquier enlace IPv6 deba usar `/64`.
 
 ## Qué más cambia
 
 ### Cabecera más simple
 
-La de IPv6 tiene un tamaño fijo y menos campos. Lo opcional va en **cabeceras de extensión**, que solo se incluyen cuando hacen falta. Los routers procesan los paquetes con menos trabajo.
+La cabecera base de IPv6 ocupa 40 bytes. La de IPv4 ocupa al menos 20 y puede llevar opciones. IPv6 utiliza **cabeceras de extensión** para funciones adicionales; que su base sea fija no garantiza que cualquier equipo lo procese más rápido.
 
 ### Los routers no fragmentan
 
-En IPv4, un [router](/articulos/enrutamiento/) puede partir un paquete demasiado grande para el enlace siguiente. En IPv6, no: si no cabe, lo descarta y avisa al emisor, que es quien debe ajustar el tamaño.
+En IPv4, un [router](/articulos/enrutamiento/) puede fragmentar un paquete si está permitido. En IPv6 los routers no lo fragmentan: si supera la [MTU](/articulos/que-es-una-mtu/) del enlace, lo descartan y deben enviar un aviso ICMPv6 de paquete demasiado grande. El emisor necesita ajustar lo que envía; el aviso puede perderse o filtrarse.
 
 Por eso bloquear por completo los mensajes de control, ICMPv6, rompe las conexiones IPv6 de formas difíciles de diagnosticar.
 
 ### Configuración automática
 
-Un dispositivo IPv6 puede darse una dirección él mismo, a partir del prefijo de red que anuncia el router, sin necesidad de un servidor que las reparta. En IPv4 hace falta DHCP, o configurarlo a mano.
+IPv6 admite **SLAAC**, autoconfiguración a partir de anuncios del router, además de DHCPv6 y configuración manual. IPv4 utiliza con frecuencia DHCP; también admite autoconfiguración de direcciones locales de enlace `169.254.0.0/16`. Estas últimas no dan por sí solas acceso a internet.
 
 ### Sin difusión
 
-IPv4 tiene mensajes de **difusión**, que reciben todos los equipos de la red. IPv6 los elimina y usa **multidifusión**, dirigida solo a los interesados. El protocolo ARP de la [capa de enlace](/articulos/capa-de-enlace/) se sustituye por otro mecanismo, el descubrimiento de vecinos.
+IPv4 admite **difusión**, dirigida al conjunto de equipos del ámbito correspondiente. IPv6 usa **multidifusión**, dirigida a grupos; algunos grupos incluyen a todos los nodos del enlace. IPv6 emplea descubrimiento de vecinos, mediante ICMPv6, en lugar de [ARP](/articulos/que-es-arp/).
+
+## La misma petición en dos redes
+
+Un portátil quiere pedir una página a un servidor. Estas direcciones son ejemplos reservados para documentación; no representan servicios reales:
+
+| Paso | IPv4 con NAT doméstico | IPv6 con dirección global y sin NAT |
+| --- | --- | --- |
+| El portátil prepara el envío | Origen `192.168.1.20`, destino `203.0.113.10` | Origen `2001:db8:1::20`, destino `2001:db8:2::10` |
+| Sale por el router | NAT cambia el origen, por ejemplo a `198.51.100.7`, y guarda la correspondencia | El router reenvía sin traducir esas direcciones |
+| Vuelve la respuesta | La traducción devuelve el destino a `192.168.1.20` | El destino sigue siendo `2001:db8:1::20` |
+| Se permite el tráfico | Depende de las rutas, la traducción y los filtros | Depende de las rutas y los filtros |
+
+La aplicación puede pedir el mismo contenido en ambos casos. Lo distinto es cómo se direcciona y transporta su intercambio, no el significado de la página.
 
 ## Comparación
 
@@ -111,21 +131,21 @@ IPv4 tiene mensajes de **difusión**, que reciben todos los equipos de la red. I
 | --- | --- | --- |
 | Tamaño de la dirección | 32 bits | 128 bits |
 | Notación | Decimal, con puntos | Hexadecimal, con dos puntos |
-| Direcciones | Unos 4300 millones | Prácticamente ilimitadas |
-| NAT | Imprescindible | Innecesario |
-| Configuración | Manual o por DHCP | También automática |
-| Cabecera | Variable, con suma de comprobación | Fija, más simple |
+| Valores de dirección | `2^32` | `2^128` |
+| NAT para ahorrar direcciones | Habitual, no obligatorio | No se necesita por ese motivo |
+| Configuración | Manual, DHCP, local de enlace | Manual, SLAAC, DHCPv6 |
+| Cabecera base | 20–60 bytes, con comprobación de cabecera | 40 bytes, con extensiones separadas |
 | Fragmentación | Routers y emisor | Solo el emisor |
 | Difusión | Sí | No; multidifusión |
 | Registro DNS | `A` | `AAAA` |
 
 <Quiz
 	client:visible
-	question="¿Cuál fue el motivo principal para crear IPv6?"
+	question="En el ejemplo IPv6, ¿basta tener una dirección global para aceptar cualquier conexión entrante?"
 	options={[
-		"IPv4 era demasiado lento",
-		"Las direcciones de IPv4 se agotaban",
-		"IPv4 no permitía cifrar",
+		"Sí, todas las direcciones IPv6 son accesibles",
+		"No: también hacen falta rutas, un servicio y reglas que lo permitan",
+		"No, porque IPv6 siempre necesita NAT",
 	]}
 	answer={1}
 />
@@ -136,39 +156,34 @@ Es la razón de que la transición lleve décadas. Un equipo que solo habla IPv4
 
 No se pudo "apagar IPv4 y encender IPv6". Hubo que hacer que convivan.
 
-- **Doble pila.** El equipo tiene las dos, y usa IPv6 cuando el destino lo admite. Es lo más común. Los programas intentan las dos a la vez y se quedan con la que responde antes, para que el usuario no note si una falla.
+- **Doble pila.** El equipo admite las dos. Algunas aplicaciones usan *Happy Eyeballs*: escalonan intentos con distintas direcciones para evitar una espera larga si una alternativa falla. No todos los programas hacen intentos simultáneos ni siguen exactamente la misma política.
 - **Túneles.** Los paquetes IPv6 viajan dentro de paquetes IPv4 por los tramos que solo entienden estos, como explica el artículo sobre [túneles](/articulos/vpn-y-tuneles/).
 - **Traducción.** Una pasarela convierte entre los dos, para que una red solo IPv6 alcance servicios solo IPv4. Es habitual en redes móviles.
 
-## Por qué va tan despacio
+## Qué necesita una migración
 
-- **No hay recompensa inmediata.** Para el usuario, nada cambia. El coste lo paga quien migra, y el beneficio es colectivo.
-- **NAT funciona lo bastante bien.**
-- **Hay que cambiarlo todo**: routers, cortafuegos, programas, herramientas de monitorización, conocimientos.
-- **Mantener las dos** es más trabajo que mantener una.
-
-Aun así, avanza. Una parte considerable del tráfico mundial es ya IPv6, con grandes diferencias entre países. Las redes móviles, que necesitan direcciones para millones de teléfonos, van por delante.
+Hay que comprobar el soporte del proveedor, los equipos, las aplicaciones, DNS y los filtros. Parte del software puede admitir IPv6 sin cambios; otra parte necesita ajustes. Mantener ambas versiones obliga a probar los dos recorridos y observar si uno falla aunque el otro siga funcionando.
 
 ## Seguridad
 
-- **NAT no era un cortafuegos.** Al impedir las conexiones entrantes, protegía de rebote. Con IPv6, cada dispositivo es alcanzable, y esa protección debe darla un [cortafuegos](/articulos/cortafuegos/) con estado. Los routers domésticos lo traen activado.
+- **NAT no sustituye un cortafuegos.** Tanto con IPv4 como con IPv6 hay que definir qué conexiones permite el [cortafuegos](/articulos/cortafuegos/). Una dirección global no elimina esos controles.
 - **Las reglas se duplican.** Un cortafuegos bien ajustado para IPv4 y abierto para IPv6 es un descuido frecuente.
 - **No es más seguro por sí mismo.** El cifrado es opcional en la práctica, igual que en IPv4.
-- **Privacidad.** Una dirección derivada del identificador físico del dispositivo permitiría seguirlo de red en red. Los sistemas actuales usan direcciones temporales que cambian.
+- **Privacidad.** Reutilizar una parte de dirección derivada del identificador físico puede facilitar seguimiento. Las direcciones temporales son una medida para reducirlo, según la configuración; no convierten al usuario en anónimo.
 
 ## Al desarrollar
 
 - **No dar por hecho el formato.** Una columna de 15 caracteres, o una validación que solo acepta cuatro números con puntos, falla con IPv6.
 - **En una dirección web**, una IPv6 va entre corchetes, porque los dos puntos separan también el puerto: `http://[2001:db8::1]:8080/`.
-- **Limitar por dirección.** Un solo usuario dispone de una red entera de direcciones IPv6. Para [limitar peticiones](/articulos/limitacion-de-peticiones/) se agrupa por prefijo, no por dirección.
+- **Limitar por dirección.** Una persona puede usar varias direcciones y un prefijo puede agrupar varios usuarios. Los [límites de peticiones](/articulos/limitacion-de-peticiones/) necesitan una política acorde al servicio; ni una IP ni un prefijo equivalen siempre a una persona.
 - **Probar con las dos.**
 
 La [elección de los 32 bits de IPv4](/articulos/por-que-ipv4-tiene-32-bits/) se entiende mejor distinguiendo documentos del protocolo y recuerdos de sus participantes.
 
 ## Lo esencial
 
-- IPv4 tiene direcciones de 32 bits, y se han agotado; IPv6, de 128.
+- IPv4 usa direcciones de 32 bits e IPv6 de 128.
 - NAT prolongó la vida de IPv4, a costa de romper la conexión directa entre equipos.
 - Las direcciones IPv6 se escriben en hexadecimal y se abrevian con `::`.
 - Las dos versiones son incompatibles, y conviven mediante doble pila, túneles y traducción.
-- Sin NAT, la protección de los equipos depende de un cortafuegos.
+- Ambas versiones necesitan rutas, configuración y controles de acceso adecuados.

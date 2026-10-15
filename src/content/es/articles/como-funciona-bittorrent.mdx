@@ -1,0 +1,92 @@
+---
+title: "¿Cómo funciona BitTorrent? Descargar y compartir por piezas"
+description: "BitTorrent reparte archivos entre participantes que intercambian piezas verificables; el torrent y el enlace magnet ayudan a identificar lo que se busca."
+level: basico
+layer: redes
+prerequisites:
+  - redes-peer-to-peer
+updated: 2026-10-15
+sources:
+  - title: "BitTorrent: BEP 3, The BitTorrent Protocol Specification (en inglés)"
+    url: https://www.bittorrent.org/beps/bep_0003.html
+  - title: "BitTorrent: BEP 5, DHT Protocol (en inglés)"
+    url: https://www.bittorrent.org/beps/bep_0005.html
+  - title: "BitTorrent: BEP 9, Extension for Peers to Send Metadata Files (en inglés)"
+    url: https://www.bittorrent.org/beps/bep_0009.html
+  - title: "BitTorrent: BEP 52, The BitTorrent Protocol Specification v2 (en inglés)"
+    url: https://www.bittorrent.org/beps/bep_0052.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+**BitTorrent** es un [protocolo](/articulos/que-es-un-protocolo-de-red/) para distribuir archivos mediante una [red entre pares](/articulos/redes-peer-to-peer/). Los participantes descargan partes y pueden compartir las que ya tienen, sin esperar a completar el archivo.
+
+## Qué problema resuelve
+
+Si una asociación publica un vídeo propio y muchas personas lo descargan a la vez desde un único servidor, toda la capacidad de envío depende de ese origen. BitTorrent permite que los receptores también aporten capacidad de subida.
+
+El grupo que intercambia un mismo torrent se llama **enjambre**, o *swarm*. Cada participante es un **par**, o *peer*. Una **semilla**, o *seed*, conserva el contenido completo y lo ofrece a los demás.
+
+## El archivo torrent no es el vídeo
+
+Un archivo **`.torrent`** contiene **metadatos**: información que describe los archivos, sus tamaños y cómo comprobar las piezas que se descargan. Puede incluir la dirección de un **tracker**, un servicio de seguimiento que ayuda a encontrar otros participantes.
+
+El tracker devuelve contactos, no los bytes del vídeo. Aunque responda perfectamente, la descarga necesita pares accesibles que tengan las partes buscadas.
+
+Un **enlace magnet** puede identificar el torrent mediante un **infohash**, una huella calculada sobre su información descriptiva. Con la extensión de intercambio de metadatos, el programa obtiene de otros pares la información que le falta y comprueba que corresponde a esa huella. El magnet no contiene todos los archivos ni garantiza que alguien los siga compartiendo.
+
+## Encontrar participantes
+
+Además del tracker, se puede usar una **DHT**, o tabla hash distribuida: varios nodos guardan y buscan contactos de pares asociados a un torrent. Hay que poder contactar con algún nodo para empezar a consultar esa red.
+
+La DHT de BitTorrent **no almacena el vídeo completo** ni sustituye a los pares que lo ofrecen. Tampoco todos los torrents tienen por qué utilizarla. Separa dos tareas: localizar participantes y transferir contenido.
+
+## Una descarga de cuatro piezas
+
+Para fijar las ideas, usamos el formato de piezas de BitTorrent v1. Nuestro archivo tiene 4 MiB y se divide en cuatro piezas de 1 MiB; un MiB son 1 048 576 [bytes](/articulos/que-es-un-byte/). Las numeramos desde cero:
+
+| Pieza | Posición dentro del archivo | Participantes que la ofrecen en el ejemplo |
+| --- | --- | --- |
+| 0 | Primer MiB | Ana |
+| 1 | Segundo MiB | Bruno |
+| 2 | Tercer MiB | Ana y Bruno |
+| 3 | Cuarto MiB | Carla |
+
+El programa sigue este recorrido:
+
+1. Lee los metadatos y conoce el tamaño y las huellas esperadas.
+2. Descubre pares y establece conexiones con algunos de ellos.
+3. Intercambia información sobre las piezas disponibles. Saber que existe un par no significa que tenga todas.
+4. Solicita bloques de las piezas que le faltan. Una pieza puede necesitar muchos mensajes; no equivale a un [paquete de red](/articulos/como-viaja-un-paquete-por-internet/).
+5. Cuando completa una pieza, calcula su huella y la compara con la esperada. Si no coincide, no la acepta como válida y debe obtenerla de nuevo.
+6. Anuncia las piezas verificadas que ya puede compartir. Al reunir las cuatro, dispone del archivo completo.
+
+Puede recibir primero la pieza 3 y después la 0. El índice indica dónde corresponde cada una: **el orden de llegada no es el orden del archivo**. Los clientes coordinan peticiones y capacidad de subida; no envían todo a todos simultáneamente.
+
+<Quiz
+	client:visible
+	question="Ya descargaste y verificaste la pieza 3, pero todavía te faltan las otras tres. ¿Qué puedes hacer?"
+	options={["Compartir la pieza 3 mientras sigues descargando", "Compartir únicamente después de terminar todo", "Crear las piezas restantes a partir de la huella"]}
+	answer={0}
+/>
+
+## Qué comprueba una huella
+
+Una [**función hash**](/articulos/funciones-hash/) transforma datos en una huella de tamaño fijo. Compararla ayuda a detectar que una pieza no corresponde al contenido descrito. No permite reconstruir los bytes que faltan.
+
+BitTorrent v1 usa SHA-1 para las piezas. El formato v2 cambia la organización de la verificación y utiliza SHA-256; no basta con cambiar el nombre del algoritmo en un torrent v1. Es una diferencia entre formatos, no una recomendación de usar SHA-1 para diseños nuevos.
+
+Verificar una descarga tampoco demuestra que su autor sea quien dice ser o que un programa descargado sea seguro. Si los metadatos describen otro archivo, sus piezas pueden verificarse correctamente. La procedencia del torrent sigue importando.
+
+## Por qué puede quedarse esperando
+
+Si Carla se desconecta y nadie más tiene la pieza 3, los demás pueden repartir las piezas 0, 1 y 2, pero no completar nuestro archivo. Por eso importa la **disponibilidad de cada pieza**, además del número de participantes. No hace falta una semilla completa si, entre todos los pares accesibles, están todas las piezas.
+
+También influyen la capacidad de subida de los pares, los límites de tu conexión y las restricciones de red. BitTorrent reparte trabajo; no crea ancho de banda ilimitado.
+
+## Lo esencial
+
+- El torrent describe el contenido; los pares entregan sus piezas.
+- Trackers y DHT ayudan a encontrar participantes, no a recuperar piezas ausentes por sí solos.
+- Cada pieza se verifica y se coloca por su índice, aunque llegue desordenada.
+- Puedes compartir piezas antes de terminar, pero completar la descarga exige conseguirlas todas.

@@ -1,63 +1,67 @@
 ---
 title: ¿Qué es una dirección IP?
-description: Una dirección IP es el número que identifica a un dispositivo dentro de una red.
+description: Una dirección IP identifica una interfaz en una red y permite dirigir paquetes hacia ella; no es la identidad permanente de una persona o dispositivo.
 level: basico
 layer: redes
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
-  - title: "RFC 791: Internet Protocol"
+  - title: "RFC 4291: IP Version 6 Addressing Architecture (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc4291.html
+  - title: "RFC 6598: Shared Address Space (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc6598.html
+  - title: "RFC 791: Internet Protocol (en inglés)"
     url: https://www.rfc-editor.org/info/rfc791/
-  - title: "RFC 8200: Internet Protocol, Version 6 (IPv6) Specification"
+  - title: "RFC 8200: Internet Protocol, Version 6 (IPv6) Specification (en inglés)"
     url: https://www.rfc-editor.org/info/rfc8200/
-  - title: "RFC 1918: Address Allocation for Private Internets"
+  - title: "RFC 1918: Address Allocation for Private Internets (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1918/
-  - title: "RFC 3022: Traditional IP Network Address Translator (NAT)"
+  - title: "RFC 3022: Traditional IP Network Address Translator (NAT) (en inglés)"
     url: https://www.rfc-editor.org/info/rfc3022/
-  - title: "RFC 2131: Dynamic Host Configuration Protocol"
+  - title: "RFC 2131: Dynamic Host Configuration Protocol (en inglés)"
     url: https://www.rfc-editor.org/info/rfc2131/
-  - title: "RFC 6890: Special-Purpose IP Address Registries"
+  - title: "RFC 6890: Special-Purpose IP Address Registries (en inglés)"
     url: https://www.rfc-editor.org/info/rfc6890/
-  - title: "RFC 1034: Domain names, concepts and facilities"
+  - title: "RFC 1034: Domain names, concepts and facilities (en inglés)"
     url: https://www.rfc-editor.org/info/rfc1034/
 ---
 
 import { Quiz } from "@/components/quiz";
 
-Una **dirección IP** es el número que identifica a un dispositivo dentro de una red. Cumple el papel de una dirección postal: para que los datos lleguen a un dispositivo, hay que saber adónde enviarlos.
+Una **dirección IP** es una dirección numérica usada para dirigir datos hacia una **interfaz de red**, la conexión de un equipo con una red. Un portátil puede tener una interfaz wifi y otra de cable, con direcciones distintas. Una interfaz también puede tener varias IP.
 
-IP son las siglas de *Internet Protocol*, el conjunto de reglas que define cómo se direccionan y se envían los datos en internet. Ocupa la capa de red de los [modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/).
+IP son las siglas de *Internet Protocol*: un [protocolo de red](/articulos/que-es-un-protocolo-de-red/) que define direcciones y reglas para transportar datos entre redes. La dirección ayuda a localizar un destino, como una dirección postal; no identifica permanentemente a su dueño. Su lugar entre otros protocolos se explica en los [modelos OSI y TCP/IP](/articulos/modelos-osi-y-tcp-ip/).
 
 ## Qué problema resuelve
 
-Cuando abres una página web, tu dispositivo y el servidor que la tiene intercambian datos. Esos datos no viajan de una vez: se dividen en trozos pequeños llamados **paquetes**, que pasan por muchos equipos intermedios hasta llegar.
+Cuando abres una página web, tu dispositivo y el [servidor](/articulos/que-es-un-servidor/) que la ofrece intercambian datos. IP los transporta en unidades llamadas **paquetes**: cada una contiene datos y una cabecera con información para tratarlos. Un mensaje grande puede necesitar muchos paquetes.
 
-Cada paquete lleva escritas dos direcciones IP: la de origen y la de destino. Con la de destino, cada equipo del camino decide hacia dónde reenviarlo. Con la de origen, el destinatario sabe a quién contestar. De que los paquetes lleguen completos y en orden se ocupa otro protocolo, [TCP](/articulos/tcp-y-udp/). Sin direcciones no habría forma de entregar nada.
+Cada paquete lleva una IP de origen y otra de destino. Los **routers**, equipos que conectan redes, consultan la de destino para elegir el siguiente tramo. IP por sí solo no reenvía lo perdido ni ordena lo recibido. Algunos intercambios añaden [TCP](/articulos/tcp-y-udp/), que detecta pérdidas y retransmite para ofrecer un flujo ordenado de datos; la conexión también puede fallar.
 
 ## Qué aspecto tiene
 
-La versión más extendida es **IPv4**. Escribe la dirección como cuatro números separados por puntos, cada uno entre 0 y 255:
+**IPv4** escribe la dirección como cuatro números separados por puntos, cada uno entre 0 y 255:
 
 ```
 192.168.1.20
 ```
 
-Ese rango no es casual. Cada número ocupa un byte, y con los 8 [bits](/articulos/que-es-un-bit/) de un byte se pueden representar 256 valores, del 0 al 255. Cuatro bytes son 32 bits.
+Ese rango no es casual. Cada número ocupa un [byte](/articulos/que-es-un-byte/), y con sus 8 [bits](/articulos/que-es-un-bit/) se representan 256 valores, del 0 al 255. Cuatro bytes son 32 bits.
 
 ```js
 console.log(2 ** 32); // 4294967296
 ```
 
-Unos 4.300 millones de direcciones parecían de sobra cuando se diseñó. Hoy hay más dispositivos conectados que direcciones IPv4.
+Son unos 4300 millones de valores posibles; algunos están reservados para usos especiales. Asignar una dirección pública diferente a cada conexión consume ese espacio limitado.
 
 ### IPv6
 
-Para resolverlo se creó [**IPv6**](/articulos/ipv4-frente-a-ipv6/), que usa 128 bits. Se escribe con ocho grupos de cifras hexadecimales separados por dos puntos:
+Para ampliar el espacio se creó [**IPv6**](/articulos/ipv4-frente-a-ipv6/), que usa 128 bits. Su forma completa tiene ocho grupos de cifras [hexadecimales](/articulos/sistema-hexadecimal/) separados por dos puntos:
 
 ```
 2001:0db8:85a3:0000:0000:8a2e:0370:7334
 ```
 
-La cantidad de direcciones posibles es tan grande que no hay riesgo de que se agoten. Las dos versiones conviven: la transición es lenta porque exige actualizar equipos en todo el mundo.
+Sus `2^128` valores permiten un espacio muchísimo mayor. No hacen innecesaria la planificación de direcciones. Las dos versiones tienen formatos distintos; una conexión necesita soporte compatible o un mecanismo de traducción.
 
 <Quiz
 	client:visible
@@ -70,9 +74,9 @@ La cantidad de direcciones posibles es tan grande que no hay riesgo de que se ag
 
 No todas las direcciones sirven para lo mismo.
 
-Una **IP pública** es única en todo internet. La asigna tu proveedor de conexión y es la que ven los servidores a los que te conectas.
+Una **IP pública** pertenece al espacio destinado a comunicación global. Tu proveedor puede asignarte una para salir a internet, pero tenerla no garantiza que otro equipo pueda conectarse: también hacen falta una ruta, un programa que atienda y reglas que permitan el tráfico.
 
-Una **IP privada** solo vale dentro de una red local, como la de tu casa. Hay tres rangos reservados para esto, y cualquier red del mundo puede reutilizarlos:
+Una **IP privada** puede usarse dentro de redes administradas de forma privada, incluso entre varias sedes, pero no se enruta directamente por la internet pública. IPv4 reserva tres rangos que distintas organizaciones pueden reutilizar:
 
 | Rango | Uso habitual |
 | --- | --- |
@@ -84,19 +88,19 @@ Por eso tu ordenador y el de otra persona en otra ciudad pueden tener los dos la
 
 ### Cómo sale a internet una IP privada
 
-En tu casa, el router tiene dos direcciones: una privada hacia dentro y la pública hacia fuera. Cuando un dispositivo envía algo a internet, el router sustituye la dirección privada por la pública y recuerda a quién pertenecía la petición para entregarle la respuesta. Esta técnica se llama **NAT**, traducción de direcciones de red.
+En una configuración doméstica habitual, el router tiene una dirección privada hacia dentro y una pública hacia fuera. Al salir un paquete, sustituye su dirección de origen y normalmente su puerto; guarda la correspondencia para devolver la respuesta al equipo correcto. Es una forma de [**NAT**](/articulos/que-es-nat/), traducción de direcciones.
 
-Gracias a NAT, todos los dispositivos de una casa comparten una sola IP pública. Es una de las razones por las que IPv4 ha aguantado tanto con tan pocas direcciones.
+Así varios dispositivos pueden compartir una IP pública. El operador también puede aplicar NAT: en ese caso el router doméstico no recibe necesariamente una pública propia. Por eso una IP observada por una web no demuestra qué persona o dispositivo hizo la petición.
 
 ## Quién asigna la dirección
 
 Normalmente no la configuras tú. Al conectarte a una red, tu dispositivo pide una dirección y el router le presta una libre durante un tiempo. El mecanismo se llama **[DHCP](/articulos/que-es-dhcp/)**. Por eso la IP privada de tu móvil puede cambiar de un día para otro.
 
-Una dirección que cambia se llama **dinámica**. Una **estática** es siempre la misma, y la necesitan los servidores para que se los pueda encontrar.
+Una asignación **dinámica** puede cambiar al renovarse o cambiar de red. Una dirección **estática** se configura para mantenerse mientras no se modifique esa configuración. Un servidor puede usar una IP dinámica si su nombre o el punto de entrada se actualiza; no necesita por definición una dirección fija.
 
 ## Una dirección especial
 
-`127.0.0.1` siempre significa "este mismo dispositivo". Se la conoce como *localhost* y se usa para que un programa se comunique con otro que está en la misma máquina. Es la dirección que verás al desarrollar una web en tu ordenador antes de publicarla.
+`127.0.0.1` es una dirección de **bucle local**: el tráfico vuelve al propio equipo, sin salir a la red. Pertenece al bloque IPv4 reservado `127.0.0.0/8`. El nombre `localhost` suele resolver a ella y a `::1`, su equivalente IPv6. Sirve, por ejemplo, para probar una web en tu ordenador.
 
 ## Direcciones y nombres
 
@@ -106,7 +110,7 @@ El tamaño de un paquete también está condicionado por la [MTU](/articulos/que
 
 ## Lo esencial
 
-- Una dirección IP identifica a un dispositivo en una red y permite entregarle datos.
+- Una IP permite dirigir paquetes hacia una interfaz; un equipo puede tener varias.
 - IPv4 usa 32 bits y se escribe como cuatro números de 0 a 255; IPv6 usa 128 bits.
-- Las IP privadas, agrupadas en [subredes](/articulos/subredes-y-cidr/), solo valen dentro de una red local; el router las traduce a una pública con NAT.
+- Las IP privadas se reutilizan en redes distintas y no se enrutan directamente por internet; NAT puede permitir su salida.
 - `127.0.0.1` es tu propio dispositivo.

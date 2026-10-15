@@ -1,13 +1,18 @@
 title: Cómo funciona internet
-description: Qué ocurre desde que escribes una dirección hasta que recibes la página.
+description: De una red local y un servidor a una petición web completa, con direcciones, transporte y decisiones de enrutamiento explicadas paso a paso.
 layer: redes
 steps:
+  - tipos-de-redes
+  - que-es-un-servidor
+  - que-es-un-protocolo-de-red
+  - cliente-servidor
   - que-es-una-direccion-ip
-  - subredes-y-cidr
   - ipv4-frente-a-ipv6
   - modelos-osi-y-tcp-ip
   - tcp-y-udp
   - que-es-dns
   - que-es-http
+  - subredes-y-cidr
+  - enrutamiento
   - como-viaja-un-paquete-por-internet
   - que-es-ntp

@@ -1,0 +1,84 @@
+---
+title: "¿Qué es un protocolo de red?"
+description: "Un protocolo fija el formato, el significado y las reglas de intercambio de los mensajes para que distintos equipos puedan comunicarse."
+level: basico
+layer: redes
+updated: 2026-10-15
+sources:
+  - title: "MDN: Protocolo"
+    url: https://developer.mozilla.org/es/docs/Glossary/Protocol
+  - title: "RFC 1122: Requirements for Internet Hosts, Communication Layers (en inglés)"
+    url: https://www.rfc-editor.org/info/rfc1122/
+  - title: "RFC 9110: HTTP Semantics (en inglés)"
+    url: https://www.rfc-editor.org/rfc/rfc9110.html
+---
+
+import { Quiz } from "@/components/quiz";
+
+Un **protocolo de red** es un conjunto de reglas que permite intercambiar mensajes entre equipos. Define cómo se representan esos mensajes, qué significan y qué debe hacer cada participante al recibirlos.
+
+Una **red** conecta dispositivos para que intercambien datos, mediante cables, radio u otros medios. Tener conexión física no basta para entenderse: los programas también necesitan reglas comunes.
+
+## Qué problema resuelve
+
+Imagina que una aplicación envía `10:30`. ¿Es una hora del día, una duración de diez minutos y treinta segundos o el marcador de un partido? Los mismos caracteres admiten varios significados.
+
+También faltan otras decisiones: quién empieza a hablar, cómo termina cada mensaje, qué respuesta se espera y qué ocurre si algo falla. Un protocolo hace explícitas esas decisiones. Dos equipos de fabricantes distintos pueden comunicarse si sus programas implementan reglas compatibles.
+
+## Un protocolo pequeño, de principio a fin
+
+Inventemos un servicio para consultar la hora. Este ejemplo es didáctico: **no es el protocolo real de sincronización de relojes**, que se llama [NTP](/articulos/que-es-ntp/).
+
+El programa que pregunta es el **cliente**; el que atiende la consulta es el [**servidor**](/articulos/que-es-un-servidor/). Acordamos estas reglas:
+
+- Los mensajes son texto, con campos separados por un espacio. Terminan con un salto de línea.
+- La petición tiene la forma `HORA identificador`. El identificador es un entero positivo que permite relacionar la respuesta con la consulta.
+- La respuesta correcta tiene la forma `OK identificador hh:mm`, usando hora UTC, una referencia horaria compartida, y formato de 24 horas.
+- Si el mensaje termina pero no tiene una forma válida, el servidor responde `ERROR FORMATO`.
+- El cliente admite una consulta pendiente cada vez y deja de esperar tras cinco segundos. Ese plazo es una decisión de nuestro ejemplo.
+
+El intercambio, mostrando cada mensaje en una línea, sería:
+
+```text
+Cliente:  HORA 17
+Servidor: OK 17 10:30
+```
+
+Podemos seguirlo sin adivinar qué ocurre:
+
+1. El cliente prepara la consulta con identificador `17` y la envía.
+2. El servidor acumula lo recibido hasta encontrar el salto de línea. No supone que todo llegará de una vez.
+3. Comprueba que hay dos campos, que el primero es `HORA` y que el segundo es un entero positivo.
+4. Consulta su reloj y responde `OK 17 10:30`, seguido del salto de línea.
+5. El cliente reconoce `OK`, comprueba el identificador y lee la hora según el formato acordado.
+
+Si recibiera `10:30 OK 17`, los mismos datos estarían en un orden que este protocolo no acepta. Y si el reloj del servidor estuviera mal, el mensaje podría ser válido y contener una hora equivocada: **cumplir el formato no demuestra que el dato sea cierto**.
+
+<Quiz
+	client:visible
+	question="El cliente interpreta 10:30 como diez minutos y treinta segundos, pero el servidor lo envía como hora del día. ¿Qué falta acordar?"
+	options={["El significado del dato", "El color del cable", "El tamaño de la pantalla"]}
+	answer={0}
+/>
+
+## Un protocolo no resuelve todos los problemas
+
+Nuestra consulta establece un formato y un plazo. No corrige un reloj desajustado, no cifra la conversación y no demuestra quién respondió. Esas propiedades requieren mecanismos adicionales.
+
+Si pasan cinco segundos, el cliente sabe que **no obtuvo una respuesta a tiempo**. No sabe si la petición se perdió, si el servidor está ocupado o si la respuesta sigue de camino. Los protocolos reales deben definir cómo reaccionar, y las aplicaciones deben tratar esos fallos.
+
+Para repartir responsabilidades se combinan protocolos en [capas](/articulos/modelos-osi-y-tcp-ip/). Por ejemplo, [IP](/articulos/que-es-una-direccion-ip/) permite direccionar paquetes, pequeños bloques de datos; [TCP](/articulos/tcp-y-udp/) organiza una comunicación fiable y ordenada entre programas; [HTTP](/articulos/que-es-http/) define peticiones y respuestas de la web. Cada uno aporta reglas distintas al mismo intercambio.
+
+## Errores comunes
+
+- **Confundir protocolo con programa.** HTTP es un conjunto de reglas; un navegador es un programa que las aplica.
+- **Confundir protocolo con cable.** El medio transporta señales; los protocolos determinan cómo se interpretan y qué intercambio forman.
+- **Creer que todos cifran o recuperan pérdidas.** Las garantías dependen del protocolo y de los mecanismos que se combinen con él.
+- **Suponer que cualquier versión se entiende con las demás.** Un cambio incompatible necesita negociación, adaptación o programas que soporten ambas versiones.
+
+## Lo esencial
+
+- Un protocolo acuerda formato, significado y reglas de intercambio.
+- Conectar físicamente dos equipos no garantiza que sus programas se entiendan.
+- Un mensaje correcto puede contener datos incorrectos; un plazo vencido tampoco explica por sí solo la causa del fallo.
+- Los protocolos se combinan para resolver partes diferentes de la comunicación.

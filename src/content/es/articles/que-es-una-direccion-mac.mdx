@@ -1,21 +1,23 @@
 ---
 title: "¿Qué es una dirección MAC?"
-description: "Una dirección MAC es el identificador de una tarjeta de red, usado para entregar datos dentro de una misma red local."
+description: "Una dirección MAC se usa para entregar tramas en redes como Ethernet y wifi. Puede cambiar y no demuestra la identidad de una persona o equipo."
 level: basico
 kind: definicion
 layer: redes
 prerequisites:
   - capa-de-enlace
   - que-es-una-direccion-ip
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "IEEE: Registration Authority FAQs (en inglés)"
+    url: https://standards.ieee.org/faqs/regauth/
+  - title: "Apple: Private Wi-Fi Addresses (en inglés)"
+    url: https://support.apple.com/en-us/102509
   - title: "NIST: Glossary, media access control address (en inglés)"
     url: https://csrc.nist.gov/glossary/term/media_access_control_address
 ---
 
-import { Quiz } from "@/components/quiz";
-
-Una **dirección MAC** es un identificador de 48 bits asociado a una **[tarjeta de red](/articulos/tarjeta-de-red/)**. Sirve para entregar datos de un equipo a otro **dentro de una misma red local**. Se escribe como seis pares de cifras [hexadecimales](/articulos/sistema-hexadecimal/): `00:1A:2B:3C:4D:5E`.
+Una **dirección MAC** es una dirección de la [capa de enlace](/articulos/capa-de-enlace/), usada para entregar tramas en redes como Ethernet y wifi. En estas tecnologías tiene 48 [bits](/articulos/que-es-un-bit/) y suele escribirse como seis pares [hexadecimales](/articulos/sistema-hexadecimal/): `00:1A:2B:3C:4D:5E`. Una interfaz de una [tarjeta de red](/articulos/tarjeta-de-red/) puede usar una MAC asignada por el fabricante o configurada localmente.
 
 MAC son las siglas de *media access control*, control de acceso al medio.
 
@@ -30,28 +32,28 @@ console.log(partes.slice(0, 3).join(":")); // "00:1A:2B"
 console.log(2 ** 48); // 281474976710656
 ```
 
-Los tres primeros bytes identifican al **fabricante**, que tiene asignado ese prefijo. Los tres últimos los elige el fabricante para cada tarjeta.
+En una asignación global del tipo MA-L, los primeros tres bytes corresponden al bloque de una organización; esta asigna los restantes. IEEE también ofrece bloques de otros tamaños. Una MAC administrada localmente no permite deducir el fabricante por esos tres bytes.
 
 ## Para qué sirve
 
 Trabaja en la [capa de enlace](/articulos/capa-de-enlace/). Cuando un equipo envía algo a otro de su misma red, el conmutador mira la dirección MAC de destino para saber por qué cable sacarlo, o el punto de acceso, a qué dispositivo enviarlo.
 
-Para saber qué MAC corresponde a una [dirección IP](/articulos/que-es-una-direccion-ip/) de la red local, se usa el protocolo [ARP](/articulos/que-es-arp/).
+Para obtener la MAC del siguiente destinatario en IPv4 sobre Ethernet se usa [ARP](/articulos/que-es-arp/). IPv6 emplea descubrimiento de vecinos.
 
 ## MAC e IP
 
 | | Dirección MAC | Dirección IP |
 | --- | --- | --- |
-| Identifica | La tarjeta de red | El equipo en una red |
-| Ámbito | La red local | Toda internet |
+| Uso | Entregar tramas en el ámbito de enlace | Dirigir paquetes entre redes |
+| Ámbito | Enlace o red local | Depende del tipo de dirección y las rutas |
 | Capa | Enlace | Red |
-| Cambia | Normalmente no | Al cambiar de red |
+| Puede cambiar | Sí: configuración, privacidad | Sí: configuración, cambio de red |
 
-Cuando un paquete sale de la red local, la MAC no viaja con él hasta el destino: cada salto entre [routers](/articulos/enrutamiento/) usa las MAC de ese tramo. La IP es la que se mantiene de principio a fin.
+Un router no arrastra la cabecera Ethernet original hasta el destino remoto. Crea el envoltorio adecuado para el siguiente enlace. Las IP pueden conservarse durante el recorrido, pero una traducción [NAT](/articulos/que-es-nat/) puede modificarlas.
 
 ## Privacidad
 
-Como era fija, una dirección MAC permitía reconocer un dispositivo en cualquier red wifi a la que se conectara. Por eso los móviles y ordenadores actuales usan **direcciones aleatorias**, distintas para cada red.
+Reutilizar una MAC facilita relacionar conexiones del mismo dispositivo. Algunos sistemas usan **direcciones privadas**, que pueden variar según la red o con el tiempo. Su comportamiento depende del sistema y la configuración. Una MAC tampoco es una prueba de identidad: puede copiarse o modificarse.
 
 ## Con qué no confundirla
 

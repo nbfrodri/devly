@@ -5,11 +5,13 @@ level: basico
 layer: aplicaciones
 updated: 2026-10-15
 sources:
+  - title: "RFC 5694: Peer-to-Peer Architecture (en inglés)"
+    url: https://www.rfc-editor.org/info/rfc5694/
   - title: "MDN: Visión general cliente-servidor"
     url: https://developer.mozilla.org/es/docs/Learn_web_development/Extensions/Server-side/First_steps/Client-Server_overview
   - title: "MDN: Cómo funciona la web"
     url: https://developer.mozilla.org/es/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works
-  - title: "RFC 9110: HTTP Semantics"
+  - title: "RFC 9110: HTTP Semantics (en inglés)"
     url: https://www.rfc-editor.org/info/rfc9110/
   - title: "MDN: WebSocket API (en inglés)"
     url: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
@@ -17,19 +19,19 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-El **modelo cliente-servidor** es una forma de organizar una aplicación en dos tipos de programas: los **clientes**, que piden cosas, y los **servidores**, que las ofrecen. Casi todo lo que usas en internet funciona así.
+El **modelo cliente-servidor** organiza la comunicación en dos papeles: el **cliente** solicita un servicio y el [**servidor**](/articulos/que-es-un-servidor/) lo ofrece. Un mismo programa puede ser servidor en un intercambio y cliente en otro, como cuando recibe una petición web y consulta una base de datos.
 
 ## Qué problema resuelve
 
-Imagina una red social en la que cada persona tuviera en su móvil una copia de todas las publicaciones. Las copias no coincidirían, ocuparían demasiado y nadie podría fiarse de los datos de otro.
+Imagina una red social en la que cada persona tuviera en su móvil una copia de todas las publicaciones. Haría falta propagar cada cambio, resolver discrepancias y validar los datos recibidos. Además, cada móvil tendría que almacenar toda esa información.
 
 Una solución es concentrar la gestión de los datos y las reglas en un servicio al que se conectan los clientes. Ese servicio puede ejecutarse en varias máquinas. Facilita aplicar reglas comunes, pero la consistencia de las copias y la seguridad siguen necesitando un diseño explícito.
 
 ## Los dos papeles
 
-Un **cliente** es el programa que inicia la comunicación. Suele ser lo que tienes delante: el navegador o una aplicación del móvil. Se encarga de mostrar la información y de recoger lo que haces.
+Un **cliente** es el programa que inicia la comunicación. Suele ser lo que tienes delante: el navegador o una aplicación del móvil. En esos casos muestra la información y recoge lo que haces. También puede ser un programa automático, sin pantalla, que consulta otro servicio.
 
-Un **servidor** es un programa que espera peticiones y las responde. Guarda los datos, aplica las reglas y decide qué puede ver cada cliente.
+Un **servidor** es un programa que ofrece un servicio a otros. Según la aplicación, puede guardar datos, aplicar reglas y decidir qué puede ver cada cliente.
 
 "Servidor" se usa para dos cosas: el programa y la máquina donde se ejecuta. Lo que define a un servidor es el papel que cumple, no el tipo de ordenador. Tu propio portátil hace de servidor cuando desarrollas una web en él.
 
@@ -74,11 +76,11 @@ Si una web oculta el botón de borrar a quien no es administrador, eso es una co
 
 ## Muchos clientes a la vez
 
-Un servidor atiende a muchos clientes simultáneamente. Cuando las peticiones superan lo que una máquina puede procesar, hay dos salidas: usar una máquina más potente o repartir el trabajo entre varias. Repartirlo es lo que permite que servicios muy grandes sigan funcionando con millones de usuarios, y resulta mucho más fácil si los servidores no guardan nada entre peticiones, es decir, si son [stateless](/articulos/stateful-y-stateless/).
+Un servidor puede atender a muchos clientes simultáneamente. Cuando las peticiones superan lo que una máquina puede procesar, hay dos salidas: usar una máquina más potente o repartir el trabajo entre varias. Repartirlo es lo que permite que servicios muy grandes sigan funcionando con millones de usuarios, y resulta mucho más fácil si los servidores no guardan nada entre peticiones, es decir, si son [stateless](/articulos/stateful-y-stateless/).
 
 ## No es el único modelo
 
-En una red **entre pares** o *peer-to-peer* no hay un servidor central: cada participante hace de cliente y de servidor a la vez. Se usa, por ejemplo, para compartir archivos. La mayoría de las aplicaciones web, sin embargo, siguen el modelo cliente-servidor.
+En una [red **entre pares**, o *peer-to-peer*](/articulos/redes-peer-to-peer/), los participantes pueden consumir y aportar recursos a otros pares. Puede existir un servicio central para localizarlos sin que los archivos pasen por él. [BitTorrent](/articulos/como-funciona-bittorrent/) permite seguir ese reparto pieza a pieza.
 
 ## Errores comunes
 
@@ -88,7 +90,7 @@ En una red **entre pares** o *peer-to-peer* no hay un servidor central: cada par
 
 ## Lo esencial
 
-- El cliente pide y muestra; el servidor guarda, decide y responde.
+- El cliente solicita un servicio; el servidor lo ofrece. Ninguno requiere por definición una interfaz gráfica.
 - En una petición HTTP, el cliente inicia el intercambio y el servidor responde.
 - El frontend presenta la interfaz; el backend atiende servicios y aplica reglas.
 - Las comprobaciones de seguridad se hacen en el servidor.

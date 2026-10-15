@@ -1,13 +1,14 @@
 ---
 title: "¿Qué es NTP? Cómo se sincronizan los relojes"
-description: "NTP mantiene en hora los relojes de los ordenadores a través de internet, compensando lo que tardan los mensajes en viajar. Sin relojes sincronizados fallan certificados, registros y sistemas distribuidos."
+description: "NTP estima el desfase entre relojes mediante cuatro marcas de tiempo. La diferencia entre los retardos de ida y vuelta limita la exactitud del ajuste."
 level: basico
 layer: redes
 prerequisites:
   - tcp-y-udp
-  - consenso-distribuido
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
+  - title: "MDN: Performance.now y relojes monotónicos (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
   - title: "RFC 5905: Network Time Protocol Version 4 (en inglés)"
     url: https://www.rfc-editor.org/rfc/rfc5905
   - title: "NTP.org: Documentation (en inglés)"
@@ -16,27 +17,28 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-**NTP**, protocolo de tiempo de red, sincroniza los relojes de los ordenadores a través de internet. Tu equipo y tu móvil lo usan sin que lo notes para mantener la hora correcta. Funciona sobre [UDP](/articulos/tcp-y-udp/), en el puerto 123.
+**NTP**, *Network Time Protocol* o protocolo de tiempo de red, permite estimar y corregir la diferencia entre el reloj de un equipo y sus referencias de tiempo. Funciona sobre [UDP](/articulos/tcp-y-udp/), normalmente con servidores en el puerto 123. Puede usarse en una red local o a través de internet; no es el único mecanismo de sincronización existente.
 
 ## Por qué hace falta
 
-Los relojes de los ordenadores se desvían: unos segundos al día no es raro. Y mucho depende de la hora:
+Los relojes físicos avanzan a ritmos ligeramente distintos. Sin ajustes, sus diferencias pueden crecer, y eso afecta a varios usos:
 
 - Los [certificados](/articulos/que-es-un-certificado-digital/) tienen fecha de caducidad; con la hora mal, [HTTPS](/articulos/https-y-tls/) falla.
-- Los [tokens](/articulos/que-es-un-jwt/) y los códigos de [doble factor](/articulos/que-es-la-autenticacion-en-dos-factores/) dependen del tiempo.
-- Los registros de varios servidores son imposibles de ordenar si cada uno tiene su hora.
-- Los [sistemas distribuidos](/articulos/consenso-distribuido/) necesitan saber qué ocurrió antes.
+- Algunos [tokens](/articulos/que-es-un-jwt/) y códigos de [doble factor](/articulos/que-es-la-autenticacion-en-dos-factores/) tienen ventanas de validez temporal.
+- Al comparar registros de varios servidores, un reloj adelantado puede hacer parecer anterior un suceso que ocurrió después.
+
+Sincronizar reduce ese error, pero no establece por sí solo un orden causal exacto de todos los sucesos de un sistema distribuido.
 
 ## El truco: medir el viaje
 
-El problema de pedir la hora por la red es que el mensaje tarda en llegar. NTP lo resuelve anotando **cuatro marcas de tiempo**:
+Pedir la hora no basta: cuando llega la respuesta, ha pasado un tiempo. El intercambio básico anota **cuatro marcas de tiempo**:
 
 1. T1: el cliente envía la petición (según su reloj).
 2. T2: el servidor la recibe (según el suyo).
-3. T3: el servidor responde.
-4. T4: el cliente recibe la respuesta.
+3. T3: el servidor responde, según el reloj del servidor.
+4. T4: el cliente recibe la respuesta, según el reloj del cliente.
 
-Con ellas, el estándar calcula el **desfase** del reloj del cliente y el **retardo** de ida y vuelta, suponiendo que la ida y la vuelta tardan lo mismo:
+Con ellas se estima el **desfase** —cuánto va por delante el reloj del servidor respecto al cliente— y el **retardo de red de ida y vuelta**, descontando el tiempo que el servidor tarda en contestar. Para atribuir correctamente la mitad del retardo a cada dirección se supone un recorrido simétrico. Todas las cifras siguientes están en segundos y usamos relojes estables durante el intercambio:
 
 ```js
 const T1 = 100.0; // cliente envía
@@ -50,11 +52,46 @@ const retardo = (T4 - T1) - (T3 - T2);
 console.log(desfase.toFixed(3), retardo.toFixed(3)); // 5.000 0.040
 ```
 
-El reloj del cliente va 5 segundos atrasado, y el viaje de ida y vuelta duró 40 milisegundos. El cliente no salta de golpe a la hora correcta: la ajusta poco a poco, acelerando o frenando su reloj, para no provocar saltos que confundan a los programas.
+El cliente observa 41 ms entre envío y recepción. El servidor emplea 1 ms en responder, así que el retardo estimado de red es 40 ms. Si cada dirección tarda 20 ms, el desfase calculado de 5 segundos coincide con el real.
+
+## Qué ocurre si la ida y la vuelta son distintas
+
+Mantén un desfase real de 5 segundos, pero cambia el camino: ahora la ida tarda 30 ms y la vuelta 10 ms. El servidor sigue tardando 1 ms en responder:
+
+```js
+const T1 = 100.0;
+const T2 = 105.03;
+const T3 = 105.031;
+const T4 = 100.041;
+
+const desfase = ((T2 - T1) + (T3 - T4)) / 2;
+const retardo = (T4 - T1) - (T3 - T2);
+
+console.log(desfase.toFixed(3), retardo.toFixed(3)); // 5.010 0.040
+```
+
+El viaje sigue sumando 40 ms, pero la estimación adelanta 10 ms de más: la mitad de la diferencia de 20 ms entre direcciones. Las cuatro marcas no permiten separar por completo un desfase del reloj de una asimetría del camino.
+
+NTP utiliza varias muestras y puede comparar fuentes para filtrar observaciones problemáticas. Eso ayuda con variaciones y fuentes discordantes; no permite conocer mágicamente el retardo exacto de cada dirección.
+
+<Quiz
+	client:visible
+	question="Los dos ejemplos tienen 40 ms de retardo total. ¿Por qué cambia el desfase estimado?"
+	options={[
+		"Porque UDP cambia la unidad de segundos a milisegundos",
+		"Porque la fórmula no distingue por completo la asimetría del camino del desfase",
+		"Porque toda respuesta NTP debe retrasarse 10 ms",
+	]}
+	answer={1}
+/>
+
+## Cómo se corrige el reloj
+
+Una implementación puede corregir desviaciones pequeñas gradualmente, acelerando o frenando ligeramente el reloj. También puede realizar un salto, por ejemplo al arrancar con una diferencia grande, según sus reglas y configuración. Por eso restar dos horas del reloj civil no siempre mide con seguridad la duración de una operación; para duraciones se utilizan relojes monotónicos, diseñados para no retroceder por estos ajustes.
 
 ## Los estratos
 
-NTP organiza los servidores en una jerarquía de **estratos**, siguiendo una convención de la industria telefónica:
+NTP organiza las referencias en **estratos**, que indican su distancia lógica respecto a una fuente primaria:
 
 | Estrato | Qué es |
 | --- | --- |
@@ -63,15 +100,21 @@ NTP organiza los servidores en una jerarquía de **estratos**, siguiendo una con
 | 2 | Servidores que se sincronizan con los de estrato 1 |
 | 3 y siguientes | Cada nivel, con el anterior |
 
-Según el estándar, a medida que aumenta el estrato, la precisión empeora según el camino de red y la estabilidad de cada reloj. Un equipo doméstico suele sincronizarse con servidores de estrato 2 o 3, con una precisión de milisegundos, más que suficiente.
+El estrato no es una nota de exactitud. Un servidor de estrato 1 accesible por un camino muy variable puede dar peores resultados a un cliente que otro de estrato 2 cercano y estable. También importan el estado de la fuente, los retardos y la estabilidad de los relojes.
 
 ## Por qué UDP
 
-El propio estándar explica que una entrega fiable como la de TCP empeoraría NTP: los reintentos aumentarían el retardo y estropearían la medida. Para medir tiempos, es mejor perder un paquete que recibirlo tarde.
+NTP intercambia datagramas con sus propias marcas de tiempo y controles. No necesita que TCP retenga mensajes posteriores hasta recuperar uno perdido: puede volver a obtener muestras y evaluar su calidad. Eso no significa que UDP mida mejor por sí mismo; las colas, pérdidas y asimetrías siguen afectando al resultado.
+
+## Errores comunes
+
+- **Tomar la estimación como una hora exacta sin incertidumbre.** La asimetría puede sesgarla incluso con mensajes correctos.
+- **Elegir una fuente solo por su estrato.** El camino y la calidad de la referencia también importan.
+- **Confiar ciegamente en cualquier servidor horario.** Una fuente errónea o un intercambio manipulado puede alterar la estimación; NTP básico no convierte cualquier fuente en fiable.
 
 ## Lo esencial
 
 - NTP sincroniza los relojes de los equipos por la red.
-- Con cuatro marcas de tiempo calcula el desfase y el retardo del viaje.
+- Con cuatro marcas estima el desfase y el retardo; la asimetría limita la exactitud.
 - Los servidores se organizan en estratos, desde los relojes de referencia.
-- Funciona sobre UDP porque los reintentos de TCP falsearían la medida.
+- Funciona sobre UDP y evalúa muestras; el ajuste puede ser gradual o producir un salto.
