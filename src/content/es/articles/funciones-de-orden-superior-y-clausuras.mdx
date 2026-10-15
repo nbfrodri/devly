@@ -6,7 +6,8 @@ layer: programacion
 prerequisites:
   - funciones
   - programacion-funcional
-updated: 2026-10-14
+  - ambito-de-una-variable
+updated: 2026-10-15
 sources:
   - title: "MDN: Closures"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Closures
@@ -169,6 +170,8 @@ console.log(inicializaciones); // 1
 
 `unaVez` recibe una función y devuelve otra: es de orden superior. Y la que devuelve recuerda `hecho` y `resultado`: es una clausura.
 
+En `(...argumentos)`, los tres puntos reúnen los argumentos recibidos en un array; en `funcion(...argumentos)`, los vuelven a pasar por separado. El ejemplo marca el intento antes de llamar: si `funcion` lanza una excepción, no vuelve a intentarlo y una llamada posterior devuelve `undefined`. Esa política puede servir para «intentar una vez», pero no garantiza una inicialización correcta ni es un mecanismo general de reintentos.
+
 ### Recordar resultados
 
 Guardar en una clausura los resultados ya calculados para no repetirlos, técnica que se llama memorización y que es una forma de [caché](/articulos/que-es-una-cache/).
@@ -215,6 +218,5 @@ Las variables que captura una clausura no se liberan mientras la función siga v
 
 - Una función de orden superior recibe o devuelve funciones.
 - Permiten separar una tarea general, como recorrer una lista, de lo que se hace en cada paso.
-- Una clausura es una función que conserva acceso a las variables del entorno donde se creó.
-- Captura las variables, no una copia de sus valores.
+- Una clausura conserva acceso a las variables de su entorno, no una copia de sus valores.
 - Sirven para configurar funciones y para mantener un estado privado.

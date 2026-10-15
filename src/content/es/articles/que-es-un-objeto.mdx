@@ -7,15 +7,14 @@ layer: programacion
 prerequisites:
   - que-es-una-variable
   - tipos-de-datos
-updated: 2026-10-14
+  - funciones
+updated: 2026-10-15
 sources:
   - title: "MDN: Objeto"
     url: https://developer.mozilla.org/es/docs/Glossary/Object
   - title: "MDN: Trabajando con objetos"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Working_with_objects
 ---
-
-import { Quiz } from "@/components/quiz";
 
 Un **objeto** es una estructura que agrupa datos relacionados bajo un mismo nombre. Cada dato es una **propiedad**, con un nombre y un valor. Si el objeto incluye funciones que trabajan con sus datos, esas funciones se llaman **métodos**.
 
@@ -35,7 +34,7 @@ console.log(libro.titulo); // "Rayuela"
 console.log(libro.progreso()); // 25
 ```
 
-`titulo`, `paginas` y `leidas` son propiedades. `progreso` es un método: usa los datos del propio objeto, a los que accede con `this`.
+`titulo`, `paginas` y `leidas` son propiedades. `progreso` es un método: usa los datos del propio objeto, a los que accede con `this`. La notación `libro.titulo` lee una propiedad; los paréntesis de `libro.progreso()` llaman al método. `Math.round` redondea el porcentaje al entero más cercano.
 
 ## Por qué son útiles
 
@@ -43,7 +42,7 @@ Sin objetos, un libro serían tres variables sueltas: `tituloLibro`, `paginasLib
 
 ## Con qué no confundirlo
 
-- **Clase.** Una [clase](/articulos/que-es-una-clase/) es el molde; un objeto, una pieza concreta hecha con él. Todos los libros comparten estructura; cada uno tiene sus valores.
+- **Clase.** Una [clase](/articulos/que-es-una-clase/) permite crear objetos con una estructura y un comportamiento comunes. No todo objeto exige declarar una clase: el ejemplo crea `libro` directamente con llaves.
 - **[JSON](/articulos/formatos-de-datos-json-csv-xml/).** Se parece mucho a un objeto de JavaScript, pero es solo texto: un formato para guardar o transmitir datos, sin métodos.
 
 En la [programación orientada a objetos](/articulos/programacion-orientada-a-objetos/), los objetos son la unidad central con la que se organiza un programa.

@@ -5,7 +5,7 @@ level: intermedio
 layer: programacion
 prerequisites:
   - tipos-de-datos
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Expresiones regulares"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Regular_expressions
@@ -42,9 +42,9 @@ Describen **qué** carácter puede aparecer en una posición.
 
 | Patrón | Encaja con |
 | --- | --- |
-| `.` | Cualquier carácter |
-| `\d` | Una cifra |
-| `\w` | Una letra, una cifra o un guion bajo |
+| `.` | Un carácter salvo terminadores de línea, sin el modificador `s` |
+| `\d` | Una cifra ASCII, de `0` a `9` |
+| `\w` | Normalmente una letra ASCII, una cifra ASCII o `_`; no todas las letras de Unicode |
 | `\s` | Un espacio, tabulación o salto de línea |
 | `[abc]` | Una `a`, una `b` o una `c` |
 | `[a-z]` | Una letra minúscula de la `a` a la `z` |
@@ -86,6 +86,8 @@ console.log(/^\d{5}$/.test("280011")); // false
 ```
 
 El primer patrón encuentra cinco cifras dentro de un texto más largo. El segundo exige que el texto **entero** sean exactamente cinco cifras.
+
+Aquí no usamos el modificador `m`: con él, las anclas se aplican también a límites de línea, y una línea válida podría estar rodeada de otras que no lo sean. Comprobar la forma de una fecha tampoco comprueba el calendario: `2026-99-99` encaja con el patrón de grupos del apartado siguiente, pero no representa una fecha válida.
 
 Olvidar las anclas al validar es el error más frecuente: sin ellas se aceptan textos con basura alrededor.
 
@@ -190,6 +192,5 @@ Si el patrón se complica demasiado, unas líneas de código normal suelen ser m
 
 - Una expresión regular es un patrón que describe una forma de texto.
 - Las clases dicen qué caracteres valen; los cuantificadores, cuántas veces.
-- Las anclas `^` y `$` son imprescindibles para validar un texto entero.
-- Los grupos capturan fragmentos para leerlos o reordenarlos.
+- Las anclas delimitan la coincidencia y los grupos capturan fragmentos; sus reglas dependen de los modificadores.
 - No sirven para estructuras anidadas, y un patrón complejo cuesta de mantener.

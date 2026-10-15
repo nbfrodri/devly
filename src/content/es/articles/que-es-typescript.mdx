@@ -7,7 +7,7 @@ prerequisites:
   - tipado-estatico-y-dinamico
   - tipos-de-datos
   - compilador-e-interprete
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "TypeScript: TypeScript for JavaScript Programmers (en inglés)"
     url: https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html
@@ -59,7 +59,7 @@ El error aparece **al escribir**, subrayado en el editor, antes de ejecutar nada
 
 ## Cómo funciona
 
-TypeScript es un **superconjunto** de JavaScript: todo JavaScript válido es TypeScript válido. Se añaden tipos encima.
+TypeScript amplía la sintaxis de JavaScript con tipos. Poder interpretar la sintaxis de un programa JavaScript no significa que ese programa supere la comprobación de tipos: precisamente puede señalar errores en código que JavaScript permite ejecutar.
 
 El proceso tiene dos partes:
 
@@ -151,14 +151,14 @@ const numero = primero([1, 2, 3]);
 const texto = primero(["a", "b"]);
 ```
 
-`T` es un tipo que se decide en cada llamada. `numero` es un número y `texto`, un texto.
+`T` se infiere en cada llamada. Con comprobación estricta, el tipo de `numero` es `number | undefined` y el de `texto`, `string | undefined`: la función permite recibir una lista vacía. Aunque esas dos llamadas concretas devuelven valores, la firma no promete que siempre haya un primer elemento.
 
 ## Lo que se gana
 
 - **Errores antes de ejecutar.**
 - **Un editor que ayuda.** Autocompletado fiable, ir a la definición, ver qué acepta una función. Para mucha gente es la ventaja principal.
 - **Cambiar con seguridad.** Al renombrar una propiedad o cambiar una función, el compilador señala cada sitio que se ha roto. En un proyecto grande, es lo que permite reorganizar el código sin miedo.
-- **Documentación que no caduca.** Los tipos dicen qué espera y qué devuelve cada función, y se comprueban.
+- **Contratos comprobables.** Los tipos expresan parte de lo que espera y devuelve una función. No describen por sí solos unidades, reglas de negocio ni todos sus efectos.
 
 <Quiz
 	client:visible
@@ -213,12 +213,11 @@ Conviene activar el **modo estricto** desde el principio. Sin él, se pierden co
 
 Las bibliotecas escritas en JavaScript suelen ir acompañadas de archivos que describen sus tipos, de modo que se usan con todas las ayudas.
 
-Hoy es la opción habitual en proyectos nuevos de cierto tamaño, tanto con [React](/articulos/que-es-react/) en el navegador como con [Node.js](/articulos/que-es-nodejs/) en el servidor.
+Puede utilizarse tanto con [React](/articulos/que-es-react/) en el navegador como con [Node.js](/articulos/que-es-nodejs/) en el servidor. La decisión depende del proyecto y del valor que aporte la comprobación estática.
 
 ## Lo esencial
 
 - TypeScript es JavaScript con tipos estáticos, que se comprueban antes de ejecutar.
 - Los tipos se borran al compilar: al ejecutar solo hay JavaScript.
-- Infiere la mayoría de los tipos y sigue el flujo del programa para afinarlos.
-- Detecta errores pronto, mejora el editor y hace seguros los cambios grandes.
+- Infiere tipos y sigue el flujo para afinarlos, ayudando a detectar errores durante los cambios.
 - No valida los datos que llegan de fuera, ni garantiza que la lógica sea correcta.

@@ -5,7 +5,7 @@ level: intermedio
 layer: programacion
 prerequisites:
   - funciones
-  - hilos-y-concurrencia
+  - manejo-de-errores-y-excepciones
 updated: 2026-10-15
 sources:
   - title: "MDN: Promise"
@@ -18,13 +18,13 @@ sources:
 
 import { Quiz } from "@/components/quiz";
 
-Una **promesa** es un objeto que representa el resultado de una operación que todavía no ha terminado. **`async`** y **`await`** son una forma de escribir código que usa promesas para que se lea de arriba abajo, como el código normal.
+Una **promesa** es un objeto que representa la finalización de una operación y su resultado o motivo de fallo. Puede estar pendiente o haber terminado ya. **`async`** y **`await`** permiten escribir código que usa promesas con una secuencia de pasos explícita.
 
 Son la manera habitual de manejar operaciones que tardan en JavaScript.
 
 ## Qué problema resuelven
 
-Pedir datos a un servidor o leer un archivo lleva tiempo. JavaScript ejecuta el código en un solo hilo, como explica el artículo sobre [concurrencia](/articulos/hilos-y-concurrencia/): si se quedara esperando, todo lo demás se detendría, y la página dejaría de responder.
+Pedir datos a un servidor o leer un archivo lleva tiempo. En el hilo principal de una página, bloquearse esperando impediría atender interacciones. Una operación asíncrona permite solapar esa espera con otro trabajo; esta forma de [concurrencia](/articulos/hilos-y-concurrencia/) no requiere ejecutar el código de dos callbacks a la vez.
 
 La solución es no esperar. Se inicia la operación, se indica qué hacer cuando termine y el programa sigue con otra cosa. Es el modelo **asíncrono**.
 
@@ -32,17 +32,23 @@ La solución es no esperar. Se inicia la operación, se indica qué hacer cuando
 
 La primera forma de indicarlo fue pasar una función que se ejecutaría al terminar. Con varias operaciones encadenadas, el código se anidaba cada vez más:
 
-```javascript
-obtenerUsuario(id, (usuario) => {
+```js
+function obtenerUsuario(id, continuar) {
+	setTimeout(() => continuar({ id, nombre: "Ana" }), 0);
+}
+
+function obtenerPedidos(usuario, continuar) {
+	setTimeout(() => continuar([{ usuario: usuario.id, total: 25 }]), 0);
+}
+
+obtenerUsuario(7, (usuario) => {
 	obtenerPedidos(usuario, (pedidos) => {
-		obtenerDetalle(pedidos[0], (detalle) => {
-			mostrar(detalle);
-		});
+		console.log(`${usuario.nombre}: ${pedidos[0].total}`); // "Ana: 25"
 	});
 });
 ```
 
-Difícil de leer, y gestionar los errores en cada nivel era todavía peor. Las promesas nacieron para arreglarlo.
+Los temporizadores simulan dos respuestas diferidas, sin necesitar una red real. La segunda llamada depende del usuario recibido en la primera. Al añadir pasos, aumentan el anidamiento y los lugares donde hay que propagar fallos; las promesas permiten expresar esa cadena de otra forma.
 
 ## Qué es una promesa
 
@@ -71,12 +77,12 @@ function esperar(milisegundos, valor) {
 
 const registro = [];
 
-esperar(20, "dato").then((valor) => {
+const completada = esperar(20, "dato").then((valor) => {
 	registro.push(`recibido: ${valor}`);
 });
 registro.push("sigo trabajando");
 
-await esperar(50);
+await completada;
 console.log(registro.join(", ")); // "sigo trabajando, recibido: dato"
 ```
 
@@ -132,43 +138,42 @@ async function cargar() {
 console.log(await cargar()); // "fallo: sin conexión"
 ```
 
-Una promesa rechazada que nadie trata es un error silencioso. Toda cadena necesita un `catch` en algún punto.
+Un rechazo sin manejar puede producir un aviso o terminar el proceso, según el entorno. Debe existir un punto responsable de tratarlo: un `catch` en la cadena o un `try/catch` alrededor del `await`. Un `try` que solo inicia la operación y no espera su promesa no captura un rechazo posterior.
 
 ## En serie o a la vez
 
-Dos `await` seguidos se ejecutan uno detrás de otro: el segundo no empieza hasta que termina el primero. Si las operaciones no dependen entre sí, es tiempo perdido.
+Si llamas a la segunda operación después del primer `await`, solo empieza cuando termina la primera. Si ya habías iniciado ambas antes, esperar sus promesas una detrás de otra no deshace ese solapamiento.
 
-`Promise.all` las lanza todas y espera a que acaben:
+En este ejemplo, las llamadas a `iniciar` crean las operaciones. `Promise.all` reúne sus resultados:
 
 ```js
-function esperar(milisegundos, valor) {
-	return new Promise((resolver) => {
-		setTimeout(() => resolver(valor), milisegundos);
+const pasos = [];
+function iniciar(nombre) {
+	pasos.push(`inicio ${nombre}`);
+	return Promise.resolve().then(() => {
+		pasos.push(`fin ${nombre}`);
+		return nombre;
 	});
 }
 
-const inicioSerie = Date.now();
-await esperar(100, "a");
-await esperar(100, "b");
-const tiempoEnSerie = Date.now() - inicioSerie;
+await iniciar("a");
+await iniciar("b");
+console.log(pasos.join(", ")); // "inicio a, fin a, inicio b, fin b"
 
-const inicioParalelo = Date.now();
-const resultados = await Promise.all([esperar(100, "a"), esperar(100, "b")]);
-const tiempoALaVez = Date.now() - inicioParalelo;
-
+pasos.length = 0;
+const resultados = await Promise.all([iniciar("a"), iniciar("b")]);
+console.log(pasos.join(", ")); // "inicio a, inicio b, fin a, fin b"
 console.log(resultados.join(" ")); // "a b"
-console.log(tiempoEnSerie >= 190); // true
-console.log(tiempoALaVez < 190); // true
 ```
 
-En serie tarda unos 200 milisegundos; a la vez, unos 100. Es una de las optimizaciones más sencillas y más olvidadas.
+La traza permite ver el orden sin exigir tiempos exactos. En el segundo recorrido se inician ambas operaciones antes de recibir sus resultados. Con esperas reales independientes esto puede reducir el tiempo total, pero no garantiza una duración concreta ni acelera el cálculo de cada operación.
 
 | Método | Se resuelve cuando |
 | --- | --- |
 | `Promise.all` | Todas terminan bien; falla si una falla |
 | `Promise.allSettled` | Todas terminan, bien o mal |
 | `Promise.race` | Termina la primera, bien o mal |
-| `Promise.any` | Termina bien la primera |
+| `Promise.any` | Se cumple una; rechaza si todas rechazan |
 
 <Quiz
 	client:visible
@@ -184,9 +189,9 @@ En serie tarda unos 200 milisegundos; a la vez, unos 100. Es una de las optimiza
 ## Errores comunes
 
 - **Olvidar `await`.** Sin él no se obtiene el valor, sino la promesa. Comparar o mostrar una promesa da resultados absurdos.
-- **Esperar en serie lo que podía ir a la vez.**
+- **Esperar en serie operaciones independientes.** Iniciar la segunda después de recibir la primera impide solapar sus esperas.
 - **Usar `await` dentro de `forEach`.** `forEach` no espera a las funciones que recibe. Para esperar en orden se usa un bucle `for...of`; para lanzarlas a la vez, `map` con `Promise.all`.
-- **No tratar los rechazos.**
+- **No tratar los rechazos.** La respuesta de error debe llegar a un punto que pueda registrarla o actuar sobre ella.
 - **Creer que hace el código más rápido.** No acelera nada: evita bloquear mientras se espera.
 
 ## Código síncrono frente a asíncrono
@@ -218,8 +223,7 @@ En cambio, si la primera devuelve la dirección que necesitas para solicitar la 
 
 ## Lo esencial
 
-- Una promesa representa un resultado futuro, y está pendiente, cumplida o rechazada.
+- Una promesa representa un resultado y puede estar pendiente, cumplida o rechazada.
 - `then` y `catch` indican qué hacer cuando termina.
 - `await` suspende la función `async` mientras permite que el hilo atienda otro trabajo.
-- Los errores se tratan con `try` y `catch`.
 - `Promise.all` reúne varias promesas; iniciar operaciones independientes antes de esperarlas permite solapar sus esperas.

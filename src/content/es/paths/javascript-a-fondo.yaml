@@ -1,7 +1,8 @@
 title: JavaScript a fondo
-description: Las ideas del lenguaje que separan a quien empieza de quien lo domina.
+description: "Después de Fundamentos de programación: funciones, estado, asincronía y ejecución de JavaScript."
 layer: programacion
 steps:
+  - programacion-funcional
   - funciones-de-orden-superior-y-clausuras
   - que-es-un-iterador
   - que-es-un-generador

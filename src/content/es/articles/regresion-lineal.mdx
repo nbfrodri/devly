@@ -75,7 +75,15 @@ Los [valores atípicos](/articulos/valores-atipicos/) pueden influir mucho porqu
 
 ## Un ajuste con errores reales
 
-Ahora cambia los tiempos observados a `3, 5, 8`. La recta de mínimos cuadrados tiene pendiente `2,5` e intercepto aproximadamente `0,333`. Sus predicciones son `2,833`, `5,333` y `7,833`. Los residuos son aproximadamente `0,167`, `-0,333` y `0,167`: ya no hay una recta que pase por todos los puntos.
+Ahora cambia los tiempos observados a `3, 5, 8`. La recta de mínimos cuadrados tiene pendiente `2,5` e intercepto `1/3`. Con valores redondeados a tres decimales, el recorrido queda así:
+
+| Entrada | Tiempo observado | Predicción | Residuo: observado menos predicho |
+| --- | --- | --- | --- |
+| 1 | 3 | 2,833 | 0,167 |
+| 2 | 5 | 5,333 | -0,333 |
+| 3 | 8 | 7,833 | 0,167 |
+
+Ya no hay una recta que pase por todos los puntos. El signo permite distinguir infraestimación y sobreestimación; al elevar al cuadrado para medir el error se pierde ese signo.
 
 ### Medir el error
 
@@ -85,7 +93,9 @@ El **error cuadrático medio**, o MSE, promedia sus cuadrados: aproximadamente `
 
 ¿Cómo sabemos si la recta aporta algo? Una referencia sencilla predice siempre el tiempo medio, aquí `5,333`. Su MSE en estos tres datos ronda `4,222`. La recta mejora ese ajuste porque utiliza la relación con el tamaño. La comparación que importa para el uso real se hace también con observaciones que no participaron en el ajuste.
 
-Con varias características aparece otro problema: si dos entradas contienen casi la misma información, distintos pesos pueden compensarse y producir predicciones parecidas. No conviene interpretar cada coeficiente como una medida independiente de importancia. La **regularización** penaliza ciertos tamaños de los pesos y puede estabilizar el ajuste, a cambio de introducir otra decisión que debe validarse.
+### Cuando varias características se parecen
+
+Si dos entradas contienen casi la misma información, distintos pesos pueden compensarse y producir predicciones parecidas. No conviene interpretar cada coeficiente como una medida independiente de importancia. La **regularización** penaliza ciertos tamaños de los pesos y puede estabilizar el ajuste, a cambio de introducir otra decisión que debe validarse.
 
 ## Predecir no es explicar causas
 

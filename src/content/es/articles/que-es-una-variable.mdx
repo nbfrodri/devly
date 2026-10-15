@@ -3,7 +3,7 @@ title: ¿Qué es una variable?
 description: El concepto más básico de la programación, un nombre que guarda un valor.
 level: basico
 layer: programacion
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "MDN: Gramática y tipos"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Grammar_and_types
@@ -32,7 +32,7 @@ let edad = 30;
 console.log(edad); // 30
 ```
 
-Esta línea hace dos cosas. **Declara** la variable, es decir, le dice al programa que a partir de ahora existe algo llamado `edad`. Y le **asigna** un valor, 30.
+La primera línea hace dos cosas. **Declara** la variable, es decir, le dice al programa que a partir de ahora existe algo llamado `edad`. Y le **asigna** un valor, 30. La segunda usa `console.log` para mostrar el resultado en la consola, una salida de texto del programa. En los ejemplos, lo que sigue a `//` es un comentario: explica el resultado y no se ejecuta.
 
 El signo `=` no significa "es igual a" como en matemáticas. Significa "guarda lo de la derecha en lo de la izquierda". Por eso se llama operador de asignación.
 
@@ -63,16 +63,18 @@ console.log(puntos); // 15
 	answer={2}
 />
 
-## Valores que no cambian
+## Impedir una nueva asignación
 
-Si un valor no debe cambiar nunca, se declara con `const` en lugar de `let`. Si después intentas darle otro valor, el programa se detiene con un error:
+Si no necesitas asignar otro valor a ese nombre, declara la variable con `const` en lugar de `let`. Intentar reasignarla produce un error:
 
 ```js
 const diasDeLaSemana = 7;
 console.log(diasDeLaSemana); // 7
 ```
 
-Usar `const` siempre que puedas tiene una ventaja: quien lea el código sabe de un vistazo que ese valor no va a cambiar más abajo.
+Usar `const` siempre que puedas permite saber que ese nombre seguirá asociado al mismo valor. Debes asignárselo al declararlo: `const diasDeLaSemana;` sería un error.
+
+Esto no congela el contenido de un [objeto](/articulos/que-es-un-objeto/) o un [array](/articulos/arrays/). Más adelante verás listas declaradas con `const` a las que se añaden elementos: se modifica la lista existente, sin asignar otra al nombre. La diferencia es entre **reasignar** una variable y **modificar** un dato.
 
 ## Poner nombres
 
@@ -93,7 +95,7 @@ Un buen nombre dice qué contiene. `precioConIva` se entiende solo; `x` o `dato2
 ## Lo esencial
 
 - Una variable es un nombre asociado a un valor.
-- `let` crea una variable cuyo valor puede cambiar; `const`, una que no.
+- `let` permite reasignar la variable; `const` impide reasignarla, pero no congela objetos ni listas.
 - `=` guarda un valor, no compara.
 
 El siguiente paso es saber qué clases de valores puede guardar una variable: los [tipos de datos](/articulos/tipos-de-datos/).

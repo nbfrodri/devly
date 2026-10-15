@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: plan preparado; revisión editorial pendiente.** Se han leído la guía y las definiciones de las rutas para organizar el trabajo. Esto no equivale a haber auditado todos sus artículos. Las casillas siguientes representan recorridos por revisar, no defectos confirmados ni una obligación de reescribir lo que ya funciona.
+**Estado: en ejecución.** La primera tanda revisa Fundamentos de programación. Las casillas siguientes representan recorridos por revisar, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Ninguna ruta se considera cerrada todavía.
 
 ## Contrato de revisión
 
@@ -120,6 +120,14 @@ Resultado esperado: conectar hechos documentados con mecanismos ya aprendidos y 
 
 ## Contenido fuera de las rutas
 
+### Comprobación expresa del plan 7
+
+Petición del 15 de octubre de 2026: volver a comprobar el cumplimiento íntegro de la guía en los 72 artículos nuevos del plan 7 y en sus ampliaciones de artículos anteriores. Las pasadas anteriores no se aceptan como prueba de conformidad. Esta comprobación se integra en las rutas y en el inventario del catálogo; no se limita a contar títulos o quizzes.
+
+- [ ] Inventariar los artículos nuevos y ampliados del plan 7 y registrar su revisión individual, también cuando se conserven sin cambios.
+- [ ] Contrastar estructura según el tipo, profundidad, ejemplos, errores con causas, preguntas, fuentes y conexiones; corregir los incumplimientos concretos.
+- [ ] Releer cada artículo corregido y comprobar sus recursos en navegador antes de cerrar la revisión.
+
 Las rutas organizan la revisión, pero no contienen todo el catálogo. Las definiciones, comparaciones y curiosidades enlazadas también forman parte de la experiencia de aprendizaje.
 
 - [ ] Al revisar cada bloque, inventariar los artículos relacionados que no son pasos de sus rutas. Revisar los necesarios para entender el recorrido y registrar los restantes sin insertarlos artificialmente en `steps`.
@@ -153,4 +161,29 @@ Estas casillas se aplican a cada ruta; no basta con completarlas una vez para to
 
 Añadir una entrada por tanda con: ruta y artículos leídos; problemas concretos encontrados; cambios y decisiones de conservación; fuentes y ejemplos comprobados; revisión visual y resultado de `pnpm check`; integración y pendientes. Mantener aquí el seguimiento, sin crear un documento por artículo.
 
-Todavía no hay tandas ejecutadas. La primera comienza por **Fundamentos de programación**, con lectura completa antes de decidir qué modificar.
+### Tanda 1 · Fundamentos, JavaScript y comprobación del plan 7 (en curso)
+
+Lectura completa de los 72 artículos nuevos del plan 7 y primera revisión de Fundamentos de programación y JavaScript a fondo. Esta lectura no equivale al cierre editorial: faltan fuentes por contrastar, ampliaciones de artículos anteriores, relecturas de rutas completas y revisión visual.
+
+**Correcciones realizadas:**
+
+| Artículos | Problema y cambio |
+| --- | --- |
+| `que-es-una-variable`, `tipos-de-datos`, `arrays`, `funciones`, `logica-booleana`, `bucles` | Precisar reasignación e inmutabilidad, unidades UTF-16, huecos de arrays, funciones sin nombre y cortocircuito. Añadir estados intermedios del acumulador y corregir ejemplos y prerrequisitos. |
+| `que-es-un-objeto`, `que-es-una-clase`, `programacion-orientada-a-objetos`, `que-es-un-enum` | Separar objetos de clases, explicar límites de los ejemplos y distinguir congelación, validación y comprobación exhaustiva. Colocar objetos antes de enum en la ruta. |
+| `promesas-y-async-await`, `el-bucle-de-eventos` | Corregir quién inicia las operaciones, bloqueo del hilo, microtareas y rechazos. Sustituir ejemplos dependientes de tiempos aproximados por trazas reproducibles. |
+| `inmutabilidad`, `que-es-typescript`, `expresiones-regulares`, `manejo-de-errores-y-excepciones`, `funciones-de-orden-superior-y-clausuras`, `programacion-funcional` | Precisar límites de clonación, tipos, expresiones regulares, excepciones y funciones puras; explicar sintaxis asumida y ajustar resúmenes. |
+| `motores-de-javascript-y-jit` | Definir motor y JIT, contextualizar los niveles documentados de V8, distinguir la simulación de una medición real y añadir recorrido, pregunta y errores con causas. |
+| `acceso-directo-a-memoria-dma`, `automatas-finitos`, `gramaticas-formales`, `analisis-amortizado` | Dividir mecanismos en subsecciones y desarrollar tablas de propiedad del búfer, transiciones, precedencia y créditos amortizados. |
+| `circuit-breaker`, `presupuestos-de-error`, `control-de-congestion-tcp` | Preguntar por el motivo de la recuperación controlada, acotar el denominador del presupuesto y calcular el margen de datos en vuelo. |
+| `regresion-lineal`, `tensores-en-aprendizaje-automatico`, `transformada-de-fourier`, `filtros-digitales` | Mostrar residuos y transformaciones de forma en tablas, definir amplitud y fase y corregir un encabezado que prometía un ejemplo distinto. |
+| `que-es-un-origen-web`, `cardinalidad-de-una-consulta` | Acotar la definición del origen a HTTP/HTTPS y resolver el orden entre cardinalidad y planes de ejecución en la ruta SQL. |
+| `codd-y-el-modelo-relacional`, `de-sequel-a-sql`, `por-que-ethernet-se-llama-asi` | Integrar explicaciones repetidas conservando mecanismos, casos y enlaces útiles. |
+
+Se conservan provisionalmente los demás artículos nuevos del plan 7: su lectura no justifica una reescritura uniforme por longitud o número de encabezados. Falta registrar el contraste individual completo antes de marcar su revisión como terminada.
+
+**Verificación:** 105 bloques JavaScript de fundamentos, JavaScript y ejemplos relacionados ejecutados, con 190 comprobaciones de resultados en comentarios y revisión de las salidas restantes. Además, ejecutados los 39 ejemplos JavaScript/SQL del inventario nuevo del plan 7 y el caso Python/SQLite de aislamiento (salidas `1`, `1`, `2`). Son conjuntos parcialmente solapados; no deben sumarse como ejemplos únicos. Fuentes primarias abiertas para las correcciones: MDN, TypeScript, V8, documentación del kernel, materiales universitarios, SRE, RFC y publicaciones originales. El enlace de Therac-25 necesita resolver su disponibilidad y contrastar una copia accesible.
+
+`pnpm check` ha pasado tras las correcciones de esta tanda: 558 tests, sin errores de Astro y 593 páginas generadas. También se ejecutó la simulación de JIT y se comprobó su salida. Persisten los avisos de build sobre el lenguaje `svg` en Shiki y el tamaño de un fragmento JavaScript. La revisión visual sigue pendiente: la sesión de control de navegador no ofrece superficies disponibles. No se considera sustituida por el build.
+
+**Integración y alcance pendiente:** cambios en la rama `docs/content-plan-8`, todavía sin integrar en `main`. Ninguna ruta cerrada. Continúan pendientes las ampliaciones anteriores del plan 7, el resto de rutas y el cruce final con todo el catálogo. La guía sigue siendo el contrato vigente; no se modifica para acomodar los artículos. El backlog inicial conserva su estado histórico; este registro documenta la revisión actual de DMA y los demás artículos.

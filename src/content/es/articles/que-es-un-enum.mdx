@@ -6,7 +6,9 @@ layer: programacion
 prerequisites:
   - tipos-de-datos
   - condicionales
-updated: 2026-10-14
+  - que-es-un-objeto
+  - funciones
+updated: 2026-10-15
 sources:
   - title: "TypeScript Handbook: Enums (en inglés)"
     url: https://www.typescriptlang.org/docs/handbook/enums.html
@@ -18,6 +20,8 @@ sources:
     url: https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html
   - title: "MDN: Object.freeze()"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
+  - title: "TypeScript Handbook: comprobación exhaustiva de uniones (en inglés)"
+    url: https://www.typescriptlang.org/docs/handbook/unions-and-intersections.html#union-exhaustiveness-checking
 ---
 
 import { Quiz } from "@/components/quiz";
@@ -60,7 +64,14 @@ console.log(Estado.ENVIDO); // undefined
 console.log(Object.values(Estado).length); // 3
 ```
 
-Escribir mal el nombre da `undefined`, que al menos se detecta, y el editor puede autocompletar. Pero el lenguaje no impide guardar cualquier otro texto en `pedido.estado`.
+Escribir mal el nombre da `undefined`: no lanza un error automáticamente. El editor puede ayudar con autocompletado, pero el lenguaje no impide guardar cualquier otro texto en `pedido.estado`. `Object.freeze` protege las propiedades del objeto `Estado`, no los valores que aceptan otras variables.
+
+<Quiz
+	client:visible
+	question='Si Estado está congelado, ¿qué ocurre al asignar pedido.estado = "perdido"?'
+	options={["Object.freeze lo rechaza", "La asignación se permite: pedido es otro objeto", "Se transforma en PENDIENTE"]}
+	answer={1}
+/>
 
 ## En TypeScript
 
@@ -106,13 +117,20 @@ const ETIQUETAS = {
 	entregado: "Entregado",
 };
 
-const etiqueta = (estado) => ETIQUETAS[estado] ?? "Estado desconocido";
+function etiqueta(estado) {
+	if (Object.hasOwn(ETIQUETAS, estado)) {
+		return ETIQUETAS[estado];
+	}
+	return "Estado desconocido";
+}
 
 console.log(etiqueta("enviado")); // "En camino"
 console.log(etiqueta("perdido")); // "Estado desconocido"
 ```
 
-En lenguajes como TypeScript o Rust, el compilador puede avisar si una [condicional](/articulos/condicionales/) olvida un caso. Al añadir un estado nuevo, el compilador señala todos los lugares que hay que actualizar.
+`Object.hasOwn` comprueba si la tabla tiene una propiedad propia con ese nombre. Si existe, `ETIQUETAS[estado]` obtiene su texto; si no, la función devuelve el mensaje alternativo. Este código maneja un valor inesperado, pero no comprueba que la tabla incluya todos los estados posibles.
+
+En Rust, una expresión `match` exige cubrir todas las variantes. En TypeScript puedes comprobar exhaustividad mediante una rama que deba recibir el tipo `never`, que representa un caso imposible. Una cadena cualquiera de `if` no obtiene esa garantía automáticamente. Solo los lugares preparados para esa comprobación avisarán al añadir un estado nuevo.
 
 ## Cuándo usarlos
 
@@ -120,6 +138,12 @@ En lenguajes como TypeScript o Rust, el compilador puede avisar si una [condicio
 - No cuando los valores cambian con frecuencia o los define el usuario, como las categorías de una tienda: eso va en una [base de datos](/articulos/que-es-una-base-de-datos/).
 
 Los estados de un enum son a menudo los de una máquina de estados, como los que dibuja un diagrama de estados de [UML](/articulos/uml/).
+
+## Errores comunes
+
+- **Creer que nombres compartidos validan entradas externas.** Un texto recibido de una API debe comprobarse antes de tratarlo como un estado válido; los tipos de TypeScript no se ejecutan en producción.
+- **Confundir casos posibles con transiciones permitidas.** Que existan `PENDIENTE` y `ENTREGADO` no decide si se puede pasar directamente de uno al otro. Esa regla requiere lógica adicional.
+- **Suponer exhaustividad automática.** Un valor por defecto puede ocultar que falta tratar una nueva variante. Hay que elegir una comprobación que detecte ese caso.
 
 ## Lo esencial
 

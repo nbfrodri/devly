@@ -6,12 +6,14 @@ layer: programacion
 prerequisites:
   - arrays
   - programacion-funcional
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: Object.freeze()"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
   - title: "MDN: const"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/const
+  - title: "MDN: structuredClone (en inglés)"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone
   - title: "John Hughes: Why Functional Programming Matters (1990, en inglés)"
     url: https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf
 ---
@@ -142,7 +144,7 @@ console.log(usuario.direccion.ciudad); // "Sevilla"
 
 `copia` es un objeto nuevo, pero su `direccion` es el mismo objeto que el del original.
 
-Para una copia completa, o **profunda**, existe `structuredClone`:
+Para una copia **profunda** de datos compatibles, existe `structuredClone`:
 
 ```js
 const usuario = { nombre: "Ana", direccion: { ciudad: "Madrid" } };
@@ -153,11 +155,15 @@ copia.direccion.ciudad = "Sevilla";
 console.log(usuario.direccion.ciudad); // "Madrid"
 ```
 
+No copia cualquier valor: por ejemplo, una función no se puede clonar con esta API. Tampoco congela el resultado. Si solo cambia una propiedad anidada, puedes copiar los niveles afectados en lugar de duplicar todo el conjunto.
+
 ## Impedir los cambios
 
 `Object.freeze` congela un objeto: ya no se puede modificar.
 
 ```js
+"use strict";
+
 const configuracion = Object.freeze({ idioma: "es" });
 
 try {
@@ -190,7 +196,7 @@ También es superficial: los objetos que haya dentro siguen siendo modificables.
 - **Menos sorpresas.** Si un dato no puede cambiar, da igual a quién se lo pases.
 - **Código más fácil de seguir.** Para saber cuánto vale algo, basta mirar dónde se creó.
 - **Detectar cambios es barato.** Como cada cambio produce un objeto nuevo, saber si algo ha cambiado es comparar dos referencias. Las bibliotecas de interfaces se apoyan en esto para decidir qué volver a dibujar.
-- **Historial gratis.** Si se conservan las versiones anteriores, deshacer es volver a una de ellas.
+- **Historial de versiones.** Conservar versiones anteriores facilita deshacer, a costa del espacio que ocupen y de gestionar cuándo liberarlas.
 - **Concurrencia más segura.** Un dato que nadie modifica puede leerse desde varias tareas a la vez sin [condiciones de carrera](/articulos/condiciones-de-carrera-y-bloqueos/).
 
 ## Qué cuesta
@@ -214,5 +220,4 @@ Así una función puede construir un resultado paso a paso, de forma eficiente, 
 - Un dato inmutable no cambia: los cambios producen datos nuevos.
 - Los objetos y los arrays se comparten por referencia, y modificarlos afecta a todos los que los usan.
 - `const` impide reasignar la variable, no modificar su contenido.
-- Las copias con `...` son superficiales; `structuredClone` copia en profundidad.
-- La inmutabilidad evita cambios inesperados a cambio de copiar más.
+- Las copias con `...` son superficiales; `structuredClone` copia en profundidad los datos compatibles, con un coste de tiempo y memoria.

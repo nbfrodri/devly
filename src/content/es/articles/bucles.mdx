@@ -5,7 +5,7 @@ level: basico
 layer: programacion
 prerequisites:
   - condicionales
-updated: 2026-10-13
+updated: 2026-10-15
 sources:
   - title: "MDN: Bucles e iteración"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Loops_and_iteration
@@ -48,7 +48,7 @@ La condición se comprueba **antes** de cada vuelta. Si fuera falsa desde el pri
 
 La línea `contador = contador + 1` es imprescindible. Sin ella `contador` valdría siempre 1, la condición nunca dejaría de cumplirse y el programa repetiría el bloque sin parar. Eso es un **bucle infinito**, y normalmente deja el programa bloqueado.
 
-Todo bucle necesita que algo cambie en cada vuelta para que la condición acabe siendo falsa.
+Para que este bucle termine, el contador debe avanzar hacia el límite. En general, necesitas una condición de salida alcanzable: puede depender de los datos recorridos o de una salida explícita con `break`, que veremos más abajo. No todos los bucles terminan porque cambie una variable en cada vuelta.
 
 ## Repetir un número de veces
 
@@ -89,7 +89,7 @@ for (const fruta of frutas) {
 // Muestra manzana, pera y uva
 ```
 
-En cada vuelta, `fruta` contiene el siguiente elemento. El bucle termina solo cuando se acaba la lista.
+Los corchetes crean una lista de valores separados por comas. En cada vuelta se crea una variable `fruta` con el siguiente elemento; por eso se puede usar `const` sin reasignar la variable de la vuelta anterior. El bucle termina cuando se acaba la lista, salvo que lo interrumpas antes.
 
 ## Acumular un resultado
 
@@ -107,6 +107,14 @@ console.log(total); // 40
 ```
 
 `total` se declara fuera del bucle. Si se declarase dentro, volvería a valer 0 en cada vuelta.
+
+| Vuelta | `precio` | `total` antes | `total` después |
+| --- | --- | --- | --- |
+| 1 | 10 | 0 | 10 |
+| 2 | 25 | 10 | 35 |
+| 3 | 5 | 35 | 40 |
+
+Si la lista estuviera vacía, no habría ninguna vuelta y el total seguiría siendo 0. Elegir el valor inicial forma parte del algoritmo: para sumar se empieza en 0; para multiplicar valores, normalmente en 1.
 
 ## Salir antes o saltarse una vuelta
 
@@ -136,4 +144,4 @@ for (let i = 1; i <= 5; i++) {
 
 - Un bucle repite un bloque mientras se cumpla una condición.
 - `while` sirve cuando no sabes cuántas vueltas hacen falta; `for`, cuando lo sabes; `for...of`, para recorrer una lista.
-- Algo debe cambiar en cada vuelta para que el bucle termine.
+- Un bucle que deba terminar necesita una condición de salida alcanzable.

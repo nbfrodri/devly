@@ -9,8 +9,8 @@ steps:
   - tipos-de-join
   - indices-de-bases-de-datos
   - que-es-un-indice-compuesto
-  - planes-de-ejecucion-sql
   - cardinalidad-de-una-consulta
+  - planes-de-ejecucion-sql
   - transacciones-y-acid
   - una-base-de-datos-por-dentro
   - niveles-de-aislamiento

@@ -6,7 +6,7 @@ layer: programacion
 prerequisites:
   - funciones
   - condicionales
-updated: 2026-10-14
+updated: 2026-10-15
 sources:
   - title: "MDN: try...catch"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Statements/try...catch
@@ -27,7 +27,7 @@ La forma más antigua de avisar de un fallo es devolver un valor especial: un �
 - **Es fácil de ignorar.** Si quien llama no comprueba el valor, el programa sigue adelante con un dato incorrecto y falla más tarde, lejos de la causa.
 - **Hay que comprobarlo en cada nivel.** Si el error ocurre cinco llamadas más abajo, cada función intermedia tiene que detectarlo y pasarlo hacia arriba.
 
-Las excepciones resuelven las dos cosas: no se pueden ignorar sin querer, y suben solas hasta donde alguien las trate.
+Las excepciones interrumpen el camino normal y se propagan hasta un manejador, sin que cada función intermedia tenga que devolver un indicador de error. Aun así, se pueden ocultar por accidente con un `catch` que no haga nada útil.
 
 ## Lanzar una excepción
 
@@ -109,11 +109,11 @@ console.log(manejarEnvio({ edad: "treinta" })); // "No es un número: treinta"
 
 Esa es la ventaja: el error se trata en el nivel que tiene contexto para hacerlo bien, no necesariamente donde ocurre.
 
-Si nadie la captura, el programa se detiene.
+Si nadie la captura, termina esa ejecución de la pila de llamadas. La consecuencia para el resto depende del entorno: una página puede seguir atendiendo otros eventos, mientras que un proceso de Node.js puede terminar. No conviene confundir el fallo de una tarea con que siempre se detenga toda la aplicación.
 
 ## finally
 
-El bloque `finally` se ejecuta siempre, haya habido error o no. Sirve para liberar recursos: cerrar un archivo, soltar una conexión, quitar un indicador de carga.
+El bloque `finally` se ejecuta al salir de `try` o `catch`, haya habido error o no, incluso si se devuelve un valor con `return`. Sirve para liberar recursos: cerrar un archivo, soltar una conexión, quitar un indicador de carga. No es una garantía frente a la terminación forzada del proceso o un corte de alimentación.
 
 ```js
 function procesar(fallar) {
@@ -138,7 +138,7 @@ console.log(procesar(false)); // "abrir, trabajar, cerrar"
 console.log(procesar(true)); // "abrir, tratar el error, cerrar"
 ```
 
-En los dos casos se cierra.
+En los dos casos se registra el cierre. Evita devolver un valor o lanzar otro error desde `finally` sin una razón explícita: puede sustituir el resultado o el error que estabas intentando propagar.
 
 ## Tipos de error
 
@@ -170,7 +170,7 @@ try {
 }
 ```
 
-El `else` vuelve a lanzar lo que no es un error de validación. Es importante: un `catch` debe tratar los errores que sabe tratar y dejar pasar los demás.
+El `else` vuelve a lanzar lo que no es un error de validación. Un `catch` debe tratar los errores que sabe tratar y dejar pasar los demás. La comprobación de `@` solo permite demostrar el flujo: no valida por completo una dirección de correo. De igual forma, `leerEdad` detecta conversiones a `NaN`, pero no comprueba edades negativas, vacías o fuera de rango.
 
 <Quiz
 	client:visible
@@ -207,12 +207,11 @@ Con [promesas](/articulos/promesas-y-async-await/), un fallo es una promesa rech
 
 ## Otros enfoques
 
-No todos los lenguajes usan excepciones. Go devuelve el error como un valor más, junto al resultado, y obliga a mirarlo. Rust usa un tipo que contiene o el resultado o el error, y el compilador no deja ignorarlo. Buscan lo mismo por otra vía: que un fallo no pase desapercibido.
+Otra opción consiste en devolver un resultado que distinga explícitamente éxito y fallo. Permite manejar ambos como datos, pero exige comprobar esa alternativa en los puntos adecuados. La elección depende del lenguaje y del contrato de la función; ni una excepción ni un valor de error sustituyen una política clara de tratamiento.
 
 ## Lo esencial
 
 - Una excepción interrumpe la ejecución y sube por las llamadas hasta que alguien la captura.
-- `throw` la lanza, `try` y `catch` la tratan, y `finally` se ejecuta siempre.
+- `throw` la lanza, `try` y `catch` la tratan, y `finally` realiza la limpieza al salir del bloque.
 - Se captura en el nivel que sabe cómo responder.
-- Los errores esperables se tratan; los de programación se corrigen.
-- Nunca se debe silenciar un error.
+- Los fallos deben quedar visibles: los esperables se tratan y los de programación se corrigen.
