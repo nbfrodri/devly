@@ -2,7 +2,7 @@
 
 Continúa el [plan 7](content-backlog-7.md). Punto de partida a 15 de octubre de 2026: 533 artículos y 47 rutas. El objetivo es que el lector pueda recorrer una ruta, entender sus mecanismos y resolver casos sencillos sin saltos de conocimientos. La cantidad y la calidad del contenido tienen prioridad sobre cerrar tareas; no hay una cuota de artículos nuevos ni de artículos modificados.
 
-**Estado: en ejecución y entrega incremental.** Trece de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
+**Estado: en ejecución y entrega incremental.** Catorce de las 47 rutas están revisadas, comprobadas e integradas en `main`. Las casillas representan recorridos publicados tras cumplir los criterios de cierre, no defectos confirmados ni una obligación de reescribir lo que ya funciona. Las tandas pendientes permanecen en la rama de revisión y no bloquean la publicación de las terminadas.
 
 ## Contrato de revisión
 
@@ -45,7 +45,7 @@ Resultado esperado: modelar datos, anticipar el resultado de una consulta y expl
 
 - [ ] SQL en la práctica (`sql-en-la-practica`): conjuntos pequeños ejecutables en SQLite, resultados explícitos y estados transaccionales; comprobar si cardinalidad debe explicarse antes de leer planes.
 - [ ] Bases de datos (`bases-de-datos`): claves, relaciones, normalización, índices y alternativas; justificar decisiones y límites de consistencia, réplica y copia de seguridad.
-- [ ] Estadística y simulación (`estadistica-y-simulacion`): cálculos reproducibles, supuestos y límites de interpretación; distinguir incertidumbre, asociación y causalidad.
+- [x] Estadística y simulación (`estadistica-y-simulacion`): cálculos reproducibles, supuestos y límites de interpretación; distinguir incertidumbre, asociación y causalidad.
 - [ ] Análisis de datos (`analisis-de-datos`): seguir datos desde su preparación hasta su interpretación; comprobar prerrequisitos de regresión y evaluación y cuándo aparecen los conceptos estadísticos necesarios.
 
 ### 3. De la información al proceso
@@ -649,6 +649,8 @@ Se desarrollarán ejemplos aislados de colaboración con remoto local y dos clon
 
 La relectura de Análisis de datos encuentra dos prerrequisitos que no cubren las rutas declaradas de entrada: aprendizaje automático antes de preparación y clasificación, y programación funcional antes de MapReduce. Se incorporarán como pasos en esos puntos, tras revisar sus artículos; la ruta pasará de diecinueve a veintiún pasos. La versión revisada de aprendizaje automático aún difiere de la publicada, por lo que debe incluirse y comprobarse en la misma entrega. Los tres pasos estadísticos compartidos conservan un único responsable de revisión.
 
+Al contrastar la entrada con `main`, Bases de datos aún no incluye Formatos de datos, requerido por ETL. Se añade ese paso antes de ETL: Análisis tendrá veintidós pasos. La versión publicada de Formatos confunde línea y registro CSV, niega esquemas de validación y compara datos diferentes entre formatos; se comprobará e incluirá su corrección existente, con campos multilínea, CSVW y el mismo caso. No se incorpora por ello el resto de la revisión pendiente de Bases de datos.
+
 En Fundamentos de programación, la relectura detecta una frase de `arrays` que atribuye recibir una función a todos los métodos enumerados, incluidos `includes` e `indexOf`, que reciben valores. Se acotará a los métodos de transformación y selección que corresponden, sin cambiar los ejemplos ni los prerrequisitos. Para entregar Estadística con sus conocimientos previos coherentes se comprobará también la versión revisada de montículos: la publicada aún contiene un dibujo de texto y una garantía excesiva de memoria auxiliar.
 
 ### Publicación de fundamentos web
@@ -664,3 +666,21 @@ Se inspeccionan completas las 22 capturas de los artículos en escritorio y móv
 La entrega incluye la versión corregida de montículos, idéntica a `35d4d06`, porque aún no estaba publicada: sustituye el dibujo de texto por Mermaid, desarrolla la extracción y distingue la memoria del ejemplo de la variante in situ. Se relee, se inspeccionan sus dos capturas completas y se conserva la ejecución del ejemplo, cuya salida es `1 2 3 5 8 9`. No se incorporan otros artículos de estructuras por este motivo.
 
 Sobre la combinación exacta de entrega con lo publicado, `pnpm check` pasa: 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. El recorrido integrado de once pasos pasa otras 22 visitas sin JavaScript a 1280 y 390 píxeles. Los trece archivos quedan congelados en un manifiesto de hashes. No quedan bloqueos editoriales de esta ruta; su casilla permanece abierta hasta el merge. Estas comprobaciones no cierran las otras rutas ni la auditoría general de enlaces.
+
+**Publicación:** la [PR #9](https://github.com/nbfrodri/devly/pull/9) se integra en `72c0f28` tras superar CI y Cloudflare. Se marca Estadística y simulación: catorce rutas publicadas y treinta y tres pendientes.
+
+### Cierre editorial de Fundamentos de programación
+
+Se releen los once pasos y se comprueba que sus prerrequisitos aparecen antes de necesitarlos. Diez artículos son idénticos a `35d4d06`; arrays solo precisa el párrafo de métodos registrado antes. Se conservan los 47 bloques JavaScript y el diagnóstico intencional del ejemplo TypeScript por igualdad de código. Se ejecutan de nuevo el bloque afectado de arrays, sus casos con huecos y el enum de Python. Los artículos breves de ámbito y objeto se conservan porque cumplen su función sin necesitar secciones adicionales.
+
+Se inspeccionan completas las 22 capturas finales y seis capturas actuales de navegación. Pasan las 22 visitas sin JavaScript, los 51 destinos internos y el acceso horizontal de los 56 bloques y tablas revisados en móvil. Los quizzes de arrays se comprueban de nuevo. La suite completa posterior a su corrección pasa con 569 pruebas, cero errores y avisos de Astro y 544 artículos indexados.
+
+El manifiesto congela los once artículos y la ruta. Frente a `main`, solo funciones y arrays necesitan transportarse; los otros nueve artículos y el YAML ya coinciden. La ruta queda editorialmente cerrada, pendiente de comprobar la combinación de entrega e integrarla antes de marcar su casilla.
+
+**Combinación de entrega comprobada:** pasan las suites completas de la rama de revisión y de la entrega independiente, ambas con 569 pruebas, cero errores y avisos de Astro, 604 páginas y 544 artículos indexados. Sus once pasos pasan 22 visitas actuales sin JavaScript a 1280 y 390 píxeles. Queda pendiente únicamente integrar esta tanda para registrar su publicación.
+
+### Continuación de JavaScript a fondo
+
+La relectura de sus doce pasos detecta que la entrada desde Fundamentos no cubre los conocimientos de compilación, máquinas virtuales y tipado que requieren JIT y TypeScript. Se incorporan, antes de necesitarlos, compilador/intérprete, compilación/transpilación, máquina virtual de lenguaje y tipado estático/dinámico: dieciséis pasos. Callback queda como prerrequisito enlazado y explicado en clausuras, sin duplicar un paso.
+
+La comparación con `main` encuentra versiones anteriores de callback, compilación/transpilación, máquina virtual y tipado. Máquina virtual promete portabilidad sin condiciones y tipado exagera sus garantías; se ampliará la entrega a sus versiones ya revisadas, comprobando de nuevo su continuidad y evidencia visual. Compilador/intérprete y sus bases de procesador y bit ya coinciden con lo publicado. No se modifica ningún archivo congelado de las entregas anteriores.

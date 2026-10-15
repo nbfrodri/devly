@@ -7,7 +7,7 @@ prerequisites:
   - que-es-una-variable
   - bucles
   - funciones
-updated: 2026-10-15
+updated: 2026-10-16
 sources:
   - title: "MDN: Array"
     url: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array
@@ -102,7 +102,7 @@ Si necesitas también la posición, se usa un `for` con contador, que va de 0 a 
 
 ## Transformar con métodos
 
-Los arrays traen métodos que resuelven las tareas más repetidas. Reciben una [función](/articulos/funciones/) y la aplican a cada elemento:
+Los arrays traen funciones asociadas, llamadas **métodos**, para las tareas más repetidas. Algunos, como `map` y `filter`, reciben otra [función](/articulos/funciones/) y la aplican a los elementos presentes. Otros, como `includes` e `indexOf`, reciben el valor que quieres buscar:
 
 ```js
 const precios = [10, 25, 5];
@@ -152,6 +152,6 @@ Un [iterador](/articulos/que-es-un-iterador/) permite obtener los elementos uno 
 ## Lo esencial
 
 - Un array es una lista ordenada de valores con posiciones numeradas desde 0.
-- `length` da el número de elementos; el último está en `length - 1`.
+- En arrays sin huecos, `length` coincide con el número de elementos; el último está en `length - 1`.
 - `push` y `pop` añaden y quitan por el final.
 - `map` y `filter` crean arrays nuevos a partir de uno existente.
