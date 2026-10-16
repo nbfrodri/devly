@@ -116,6 +116,33 @@ Aceptación: la ampliación responde a huecos identificados, con ejemplos compre
 
 **Resultado en la rama:** los tres artículos están escritos, releídos y comprobados con fuentes primarias. Los cuatro ejemplos coinciden con sus salidas y pasan los casos de fase, medición intermedia, CNOT, Bell y mezcla clásica. Se inspeccionan los tres artículos completos en móvil y escritorio; la ruta ampliada a diecinueve pasos pasa sin JavaScript. `pnpm check`: 569 pruebas, 604 páginas y 544 artículos indexados. La tanda 11 también completa la revisión clásica de arquitectura y sus prerrequisitos; las casillas de publicación permanecen abiertas hasta integrar la rama. Esa revisión añade conexiones de procesador a ALU, caché a byte y coherencia, y hilos a la pila de llamadas; no sustituye la auditoría de enlaces del catálogo completo.
 
+## 9. Contraste del botón de guardado en modo nocturno
+
+Petición del 16 de octubre de 2026, 02:56: al guardar un artículo o una ruta, el estado del botón apenas se distingue en modo nocturno; en modo claro sí se aprecia. Fallo comunicado, pendiente de reproducir y diagnosticar.
+
+- [ ] Reproducir los estados guardado y sin guardar en tarjetas de artículos y rutas, incluidos los listados dinámicos de progreso, en modo nocturno y claro.
+- [ ] Corregir el contraste del estado guardado con los tokens de diseño existentes, conservando una señal que no dependa solo del color y el estado accesible del control.
+- [ ] Comprobar guardar y retirar, recarga, sincronización entre pestañas, foco y estados de interacción en móvil y escritorio, sin empeorar el modo claro.
+
+Aceptación: en modo nocturno se distingue claramente si un artículo o una ruta está guardado, tanto antes como después de interactuar; el icono, el texto y el foco mantienen contraste suficiente.
+
+## 10. Lentitud al mostrar más elementos
+
+Petición del 16 de octubre de 2026, 02:58: el botón «Ver otras seis/ocho» tarda demasiado. Pendiente identificar los listados y controles concretos, reproducir la demora y medir su causa; no se presupone que sea el buscador ni una petición de red.
+
+- [ ] Localizar los controles correspondientes y medir desde la pulsación hasta que los nuevos elementos aparecen y se pueden usar, con las condiciones de reproducción registradas.
+- [ ] Corregir el trabajo o la espera responsable de la demora, preservando el número de elementos mostrado, su orden y sus controles de progreso.
+- [ ] Comparar tiempos antes y después en móvil y escritorio y comprobar pulsaciones sucesivas, último grupo de elementos y navegación con teclado.
+
+Aceptación: los controles responden sin una espera perceptible injustificada; el registro de cierre incluye mediciones comparables y confirma que no se omiten ni duplican elementos.
+
+## Trazabilidad de las peticiones de contenido del 15 de octubre
+
+- **03:11 · Reforzar las bases para alguien totalmente nuevo y ajeno a la informática**, incluidas las explicaciones de servidor y protocolos: recogido en el apartado 6, cuya primera tanda y encaje en fundamentos web están publicados. La revisión transversal de conocimientos previos y continuidad sigue abierta en el backlog 8; esa primera entrega no significa que todo el catálogo esté adaptado ya a una persona sin experiencia.
+- **03:17 · Explicar aplicaciones cotidianas y sucesos de software con efectos en la vida diaria**, como Spotify, WhatsApp y Cloudflare: recogido en el apartado 7 y publicado con esos tres casos y la caída de Facebook de 2021. Estos ejemplos satisfacen la tanda concretada; cualquier ampliación futura debe registrar casos específicos y evitar duplicar artículos existentes.
+
+Las dos peticiones se conservan como objetivos editoriales de referencia, sin duplicar las tareas ya terminadas. Los fallos de interfaz comunicados el 16 de octubre se siguen por separado en los apartados 9 y 10 y permanecen pendientes.
+
 ## Hallazgos editoriales antes de la siguiente tanda
 
 La lectura inicial de `cliente-servidor`, `tipos-de-redes`, `que-es-una-direccion-ip`, `modelos-osi-y-tcp-ip` y `que-es-un-cubit` confirma huecos concretos. La ruta de internet introduce subredes antes de explicar servidor y protocolo. «Tipos de redes» presupone OSI y switches pese a declararse básico; presenta la comunicación entre todos los equipos locales como universal. La definición de IP necesita distinguir dirección de interfaz e identidad del dispositivo, contemplar NAT del operador y evitar exigir IP estática a cualquier servidor. OSI presenta la entrega de TCP como garantía sin fallo y niega que un router pueda inspeccionar capas superiores. Cliente-servidor niega cualquier servidor central en P2P, aunque pueden existir servicios de descubrimiento.
