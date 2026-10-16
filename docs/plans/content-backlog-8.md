@@ -134,6 +134,19 @@ Las rutas organizan la revisión, pero no contienen todo el catálogo. Las defin
 - [ ] Tras las nueve fases, cruzar el catálogo completo con el registro de artículos revisados. Asignar cada artículo pendiente al bloque temático adecuado y revisarlo con los mismos criterios según su tipo.
 - [ ] Comprobar enlaces entrantes, duplicidades y contradicciones entre artículos, incluidos los conservados sin cambios. No declarar revisado todo el sitio por haber terminado las rutas.
 
+## Revisión ortográfica y de redacción en español
+
+Petición del 16 de octubre de 2026. **Estado: pendiente.** Revisar todos los artículos del catálogo, también los que no forman parte de rutas y los de rutas ya cerradas, para corregir ortografía y mejorar la claridad de la redacción sin alterar el significado técnico. Los cierres anteriores no acreditan esta revisión lingüística específica.
+
+- [ ] Inventariar los artículos y registrar por tandas cuáles se han revisado, cuáles se conservan sin cambios y cuáles siguen pendientes, reutilizando el registro de ejecución de este backlog.
+- [ ] Revisar tildes, incluidas las diacríticas y las de interrogativos y exclamativos, erratas, mayúsculas, puntuación y signos de apertura y cierre.
+- [ ] Corregir concordancia, construcciones gramaticales, repeticiones, ambigüedades y frases difíciles de seguir; mantener una redacción natural y comprensible para el nivel declarado de cada artículo.
+- [ ] Comprobar títulos, descripciones, cuerpo, tablas, pies y etiquetas de diagramas, preguntas y respuestas de quizzes y textos de enlaces. Mantener un uso coherente de términos técnicos y siglas, respetando nombres propios, identificadores, sintaxis de código y citas literales.
+- [ ] Releer cada artículo corregido para confirmar que conserva la precisión técnica y sus conexiones didácticas. Comprobar en navegador los recursos afectados y ejecutar `pnpm check` antes de publicar cada tanda.
+- [ ] Cruzar el inventario con el catálogo al finalizar, incorporar los artículos añadidos durante la revisión y cerrar la tarea solo cuando todos tengan una revisión lingüística registrada y sus correcciones estén integradas en `main`.
+
+Aceptación: todo el catálogo tiene una revisión de ortografía, gramática y redacción documentada; las tandas publicadas identifican los artículos revisados y los pendientes. Un corrector automático puede aportar candidatos, pero cada cambio requiere lectura en contexto y no sustituye la revisión completa.
+
 ## Cuándo añadir un artículo
 
 Crear contenido nuevo solo cuando la lectura detecte un concepto independiente necesario y el catálogo no lo explique suficientemente. Antes, buscarlo por nombre y sinónimos y leer sus menciones, no solo sus títulos.
